@@ -4,7 +4,7 @@ resource "aws_vpc" "ipv" {
   enable_dns_support   = true
 
   tags = merge(local.default_tags, {
-    Name = "${var.environment}-ipv-vpc"
+    Name = "${var.environment}-ipv"
   })
 }
 
@@ -17,7 +17,7 @@ resource "aws_subnet" "ipv_public" {
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = merge(local.default_tags, {
-    Name = "${var.environment}-public-${data.aws_availability_zones.available.names[count.index]}"
+    Name = "${var.environment}-ipv-public-${data.aws_availability_zones.available.names[count.index]}"
   })
 }
 
@@ -33,7 +33,7 @@ resource "aws_route_table" "public_route_table" {
   vpc_id = aws_vpc.ipv.id
 
   tags = merge(local.default_tags, {
-    Name = "${var.environment}-public-ipv"
+    Name = "${var.environment}-ipv-public"
   })
 }
 
