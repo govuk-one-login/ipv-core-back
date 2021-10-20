@@ -13,7 +13,7 @@ data "aws_availability_zones" "available" {}
 resource "aws_subnet" "ipv_public" {
   count             = length(data.aws_availability_zones.available.names)
   vpc_id            = aws_vpc.ipv.id
-  cidr_block        = "10.1.${count.index + 128}.0/24"
+  cidr_block        = cidrsubnet("10.1.0.0/16", 8, 128 + count.index)
   availability_zone = data.aws_availability_zones.available.names[count.index]
 
   tags = merge(local.default_tags, {
