@@ -26,3 +26,11 @@ java {
     targetCompatibility = JavaVersion.VERSION_11
 }
 
+
+task buildZip(type: Zip) {
+    from compileJava
+    from processResources
+    into("lib") {
+        from configurations.runtimeClasspath
+    }
+}
