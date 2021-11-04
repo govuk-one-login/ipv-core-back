@@ -2,13 +2,86 @@ package uk.gov.di.ipv.lambda;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.oauth2.sdk.AuthorizationCode;
+import com.nimbusds.oauth2.sdk.AuthorizationSuccessResponse;
+import com.nimbusds.oauth2.sdk.ParseException;
+import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import uk.gov.di.ipv.entity.ErrorResponse;
+import uk.gov.di.ipv.service.AuthorizationCodeService;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import static uk.gov.di.ipv.helpers.ApiGatewayResponseHelper.generateApiGatewayProxyErrorResponse;
+import static uk.gov.di.ipv.helpers.ApiGatewayResponseHelper.generateApiGatewayProxyResponse;
 
 public class AuthorizationHandler
-        implements RequestHandler<Object, String> {
+        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent>  {
 
-    @Override
-    public String handleRequest(Object input, Context context) {
-        return "Hello, this is the stub AuthorizationHandler";
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthorizationHandler.class);
+
+    private final AuthorizationCodeService authorizationCodeService;
+
+    public AuthorizationHandler(final AuthorizationCodeService authorizationCodeService) {
+        this.authorizationCodeService = authorizationCodeService;
     }
 
+    public AuthorizationHandler() {
+        this.authorizationCodeService = new AuthorizationCodeService();
+    }
+
+    @Override
+    public APIGatewayProxyResponseEvent handleRequest(final APIGatewayProxyRequestEvent input, final Context context) {
+        final Map<String, List<String>> queryStringParameters = getQueryStringParametersAsMap(input);
+        final AuthenticationRequest authenticationRequest;
+
+        try {
+            if (queryStringParameters == null || queryStringParameters.isEmpty()) {
+                LOGGER.error("Missing required query parameters for authorisation request");
+                return generateApiGatewayProxyErrorResponse(400, ErrorResponse.ERROR_1000);
+            }
+            authenticationRequest = AuthenticationRequest.parse(queryStringParameters);
+            LOGGER.info("Successfully parsed authentication request");
+        } catch (ParseException e) {
+            LOGGER.error("Authentication request could not be parsed", e);
+            return generateApiGatewayProxyErrorResponse(400, ErrorResponse.ERROR_1001);
+        }
+
+        final AuthorizationCode authorizationCode = authorizationCodeService.generateAuthorisationCode();
+
+        final AuthorizationSuccessResponse authorizationResponse = new AuthorizationSuccessResponse(
+                authenticationRequest.getRedirectionURI(),
+                authorizationCode,
+                null,
+                authenticationRequest.getState(),
+                authenticationRequest.getResponseMode()
+        );
+
+        return generateApiGatewayProxyResponse(200, generateResponseBody(authorizationResponse));
+    }
+
+    private Map<String, List<String>> getQueryStringParametersAsMap(final APIGatewayProxyRequestEvent input) {
+        if (input.getQueryStringParameters() != null) {
+            return input.getQueryStringParameters().entrySet().stream()
+                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> List.of(entry.getValue())));
+        }
+        return Collections.emptyMap();
+    }
+
+    private String generateResponseBody(final AuthorizationSuccessResponse authorizationResponse) {
+        try {
+            return new ObjectMapper().writeValueAsString(authorizationResponse);
+        } catch (final JsonProcessingException e) {
+            LOGGER.error("Failed to process AuthorisationSuccessResponse");
+            throw new RuntimeException(e);
+        }
+    }
 }
