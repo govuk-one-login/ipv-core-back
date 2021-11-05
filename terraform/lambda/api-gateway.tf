@@ -4,17 +4,32 @@ resource "aws_api_gateway_rest_api" "ipv_internal" {
   tags = local.default_tags
 }
 
+data "archive_file" "dummy" {
+  type        = "zip"
+  output_path = "${path.module}/lambda_function_payload.zip"
+
+  source {
+    content   = "hello"
+    filename  = "dummy.txt"
+  }
+}
 
 resource "aws_lambda_function" "authorize" {
-  filename         = var.lambda_zip_file
+  filename         = data.archive_file.dummy.output_path
   function_name    = "${var.environment}-authorize"
   role             = aws_iam_role.lambda_iam_role.arn
   handler          = "uk.gov.di.ipv.lambda.AuthorizationHandler::handleRequest"
   runtime          = "java11"
   source_code_hash = filebase64sha256(var.lambda_zip_file)
-  publish          = true
+  publish          = false
   timeout          = 30
   memory_size      = 2048
+
+  # There is an outstanding bug in terraform (Issue #3630) that means it always tries to update the
+  # last modified date, even if no other attributes in the lambda need changing
+  lifecycle {
+    ignore_changes = [last_modified, filename]
+  }
 }
 
 resource "aws_lambda_alias" "authorize_active" {
