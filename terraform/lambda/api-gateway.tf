@@ -20,7 +20,7 @@ resource "aws_lambda_function" "authorize" {
   role             = aws_iam_role.lambda_iam_role.arn
   handler          = "uk.gov.di.ipv.lambda.AuthorizationHandler::handleRequest"
   runtime          = "java11"
-  source_code_hash = filebase64sha256(var.lambda_zip_file)
+  source_code_hash = filebase64sha256(data.archive_file.dummy.output_path)
   publish          = false
   timeout          = 30
   memory_size      = 2048
