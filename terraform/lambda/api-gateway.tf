@@ -78,6 +78,12 @@ resource "aws_api_gateway_integration_response" "endpoint_integration_response" 
   http_method = aws_api_gateway_method.endpoint_method.http_method
   status_code = aws_api_gateway_method_response.response_200.status_code
 
+  depends_on = [
+    aws_api_gateway_rest_api.ipv_internal,
+    aws_api_gateway_method_response.response_200,
+    aws_api_gateway_method.endpoint_method
+  ]
+
 }
 
 
