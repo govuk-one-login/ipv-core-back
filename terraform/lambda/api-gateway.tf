@@ -1,7 +1,7 @@
 resource "aws_api_gateway_rest_api" "ipv_internal" {
-  name = "${var.environment}-ipv-internal"
-
-  tags = local.default_tags
+  name        = "${var.environment}-ipv-internal"
+  description = "The api accessed by internal IPV systems, e.g. di-ipv-core-front"
+  tags        = local.default_tags
 }
 
 data "archive_file" "dummy" {
@@ -40,15 +40,15 @@ resource "aws_lambda_alias" "authorize_active" {
 }
 
 
-resource "aws_api_gateway_resource" "endpoint_resource" {
+resource "aws_api_gateway_resource" "authorize_endpoint" {
   rest_api_id = aws_api_gateway_rest_api.ipv_internal.id
   parent_id   = aws_api_gateway_rest_api.ipv_internal.root_resource_id
-  path_part   = "hello"
+  path_part   = "authorize"
 }
 
-resource "aws_api_gateway_method" "endpoint_method" {
+resource "aws_api_gateway_method" "authorize_endpoint_method" {
   rest_api_id = aws_api_gateway_rest_api.ipv_internal.id
-  resource_id = aws_api_gateway_resource.endpoint_resource.parent_id
+  resource_id = aws_api_gateway_resource.authorize_endpoint.id
   http_method = "GET"
   authorization = "NONE"
   api_key_required   = false
@@ -56,44 +56,20 @@ resource "aws_api_gateway_method" "endpoint_method" {
 
 resource "aws_api_gateway_integration" "endpoint_integration" {
   rest_api_id        = aws_api_gateway_rest_api.ipv_internal.id
-  resource_id        = aws_api_gateway_rest_api.ipv_internal.root_resource_id
-  http_method        = aws_api_gateway_method.endpoint_method.http_method
+  resource_id        = aws_api_gateway_resource.authorize_endpoint.id
+  http_method        = aws_api_gateway_method.authorize_endpoint_method.http_method
 
   integration_http_method = "POST"
-  type                    = "AWS"
+  type                    = "AWS_PROXY"
   uri                     = aws_lambda_alias.authorize_active.invoke_arn
 }
-
-
-resource "aws_api_gateway_method_response" "response_200" {
-  rest_api_id = aws_api_gateway_rest_api.ipv_internal.id
-  resource_id = aws_api_gateway_rest_api.ipv_internal.root_resource_id
-  http_method = aws_api_gateway_method.endpoint_method.http_method
-  status_code = "200"
-}
-
-resource "aws_api_gateway_integration_response" "endpoint_integration_response" {
-  rest_api_id = aws_api_gateway_rest_api.ipv_internal.id
-  resource_id = aws_api_gateway_rest_api.ipv_internal.root_resource_id
-  http_method = aws_api_gateway_method.endpoint_method.http_method
-  status_code = aws_api_gateway_method_response.response_200.status_code
-
-  depends_on = [
-    aws_api_gateway_rest_api.ipv_internal,
-    aws_api_gateway_method_response.response_200,
-    aws_api_gateway_method.endpoint_method
-  ]
-
-}
-
 
 resource "aws_lambda_permission" "endpoint_execution_base_permission" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.authorize.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn = "${aws_api_gateway_rest_api.ipv_internal.execution_arn}/*/*/"
-
+  source_arn = "${aws_api_gateway_rest_api.ipv_internal.execution_arn}/*/*/authorize"
 }
 
 resource "aws_lambda_permission" "endpoint_execution_permission" {
@@ -102,14 +78,7 @@ resource "aws_lambda_permission" "endpoint_execution_permission" {
   function_name = aws_lambda_function.authorize.function_name
   principal     = "apigateway.amazonaws.com"
   qualifier     = aws_lambda_alias.authorize_active.name
-
-  # The "/*/*" portion grants access from any method on any resource
-  # within the API Gateway REST API.
-#  source_arn = "${var.execution_arn}/*/*"
-
-
-  source_arn = "${aws_api_gateway_rest_api.ipv_internal.execution_arn}/*/*/"
-
+  source_arn = "${aws_api_gateway_rest_api.ipv_internal.execution_arn}/*/*/authorize"
 }
 
 resource "aws_api_gateway_deployment" "deployment" {
