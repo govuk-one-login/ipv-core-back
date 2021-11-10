@@ -7,22 +7,22 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.entity.ErrorResponse;
 
-public class ApiGatewayResponseHelper {
+public class ApiGatewayResponseGenerator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ApiGatewayResponseHelper.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ApiGatewayResponseGenerator.class);
 
-    public static APIGatewayProxyResponseEvent generateApiGatewayProxyErrorResponse(
+    public static APIGatewayProxyResponseEvent proxyErrorResponse(
             int statusCode, ErrorResponse errorResponse) {
         try {
-            return generateApiGatewayProxyResponse(
+            return proxyResponse(
                     statusCode, new ObjectMapper().writeValueAsString(errorResponse));
         } catch (JsonProcessingException e) {
             LOGGER.warn("Unable to generateApiGatewayProxyErrorResponse: " + e);
-            return generateApiGatewayProxyResponse(500, "Internal server error");
+            return proxyResponse(500, "Internal server error");
         }
     }
 
-    public static APIGatewayProxyResponseEvent generateApiGatewayProxyResponse(
+    public static APIGatewayProxyResponseEvent proxyResponse(
             int statusCode, String body) {
         APIGatewayProxyResponseEvent apiGatewayProxyResponseEvent =
                 new APIGatewayProxyResponseEvent();

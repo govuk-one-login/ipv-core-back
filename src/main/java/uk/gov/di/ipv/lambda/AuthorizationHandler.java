@@ -13,15 +13,13 @@ import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.entity.ErrorResponse;
+import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.service.AuthorizationCodeService;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static uk.gov.di.ipv.helpers.ApiGatewayResponseHelper.generateApiGatewayProxyErrorResponse;
-import static uk.gov.di.ipv.helpers.ApiGatewayResponseHelper.generateApiGatewayProxyResponse;
 
 public class AuthorizationHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent>  {
@@ -46,13 +44,13 @@ public class AuthorizationHandler
         try {
             if (queryStringParameters == null || queryStringParameters.isEmpty()) {
                 LOGGER.error("Missing required query parameters for authorisation request");
-                return generateApiGatewayProxyErrorResponse(400, ErrorResponse.ERROR_1000);
+                return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.ERROR_1000);
             }
             authenticationRequest = AuthenticationRequest.parse(queryStringParameters);
             LOGGER.info("Successfully parsed authentication request");
         } catch (ParseException e) {
             LOGGER.error("Authentication request could not be parsed", e);
-            return generateApiGatewayProxyErrorResponse(400, ErrorResponse.ERROR_1001);
+            return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.ERROR_1001);
         }
 
         final AuthorizationCode authorizationCode = authorizationCodeService.generateAuthorisationCode();
@@ -65,7 +63,7 @@ public class AuthorizationHandler
                 authenticationRequest.getResponseMode()
         );
 
-        return generateApiGatewayProxyResponse(200, generateResponseBody(authorizationResponse));
+        return ApiGatewayResponseGenerator.proxyResponse(200, generateResponseBody(authorizationResponse));
     }
 
     private Map<String, List<String>> getQueryStringParametersAsMap(final APIGatewayProxyRequestEvent input) {
