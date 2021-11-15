@@ -36,8 +36,8 @@ public class UserInfoHandler implements RequestHandler<APIGatewayProxyRequestEve
         String accessTokenString = input.getHeaders().get(AUTHORIZATION_HEADER);
 
         if (accessTokenString == null || accessTokenString.isEmpty()) {
-            LOGGER.error("Missing required query parameters for authorisation request");
-            return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.ERROR_1004);
+            LOGGER.error("Missing access token from Authorization header");
+            return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.MissingAccessToken);
         }
 
         try {
@@ -51,7 +51,7 @@ public class UserInfoHandler implements RequestHandler<APIGatewayProxyRequestEve
 
         } catch (ParseException | JsonProcessingException e) {
             LOGGER.error("Failed to parse access token");
-            return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.ERROR_1005);
+            return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.FailedToParseAccessToken);
         }
     }
 }

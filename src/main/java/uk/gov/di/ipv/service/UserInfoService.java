@@ -8,7 +8,6 @@ import uk.gov.di.ipv.domain.gpg45.IdentityProfileIdentifier;
 import uk.gov.di.ipv.dto.UserInfoDto;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 public class UserInfoService {
@@ -25,7 +24,6 @@ public class UserInfoService {
 
 
     private UserInfoDto createUserInfoResponse() {
-
         IdentityProfile identityProfile = IdentityProfile.builder()
                 .identityProfileIdentifier(IdentityProfileIdentifier.H1A)
                 .description("Test identity profile")
@@ -33,17 +31,14 @@ public class UserInfoService {
                 .evidenceScoreCriteria(Collections.singletonList(new EvidenceScore()))
                 .build();
 
-        Map<String,Object> userInfo = new HashMap<>();
-
-        userInfo.put("iss", ISSUER_URN);
-        userInfo.put("aud", ORCHESTRATOR_URN);
-        userInfo.put("sub", ORCHESTRATOR_URN);
-        userInfo.put("identityProfile", identityProfile);
-        userInfo.put("requestedLevelOfConfidence", ConfidenceLevel.MEDIUM);
+        Map<String, Object> userInfo = Map.of(
+                "iss", ISSUER_URN,
+                "aud", ORCHESTRATOR_URN,
+                "sub", ORCHESTRATOR_URN,
+                "identityProfile", identityProfile,
+                "requestedLevelOfConfidence", ConfidenceLevel.MEDIUM);
 
         return new UserInfoDto(userInfo);
-
-
     }
 
     private boolean isTokenValid(AccessToken accessToken) {

@@ -44,13 +44,13 @@ public class AuthorizationHandler
         try {
             if (queryStringParameters == null || queryStringParameters.isEmpty()) {
                 LOGGER.error("Missing required query parameters for authorisation request");
-                return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.ERROR_1000);
+                return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.MissingQueryParameters);
             }
             authenticationRequest = AuthenticationRequest.parse(queryStringParameters);
             LOGGER.info("Successfully parsed authentication request");
         } catch (ParseException e) {
             LOGGER.error("Authentication request could not be parsed", e);
-            return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.ERROR_1001);
+            return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.MissingRedirectURI);
         }
 
         AuthorizationCode authorizationCode = authorizationCodeService.generateAuthorisationCode();
