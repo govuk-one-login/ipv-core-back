@@ -12,7 +12,6 @@ class UserInfoServiceTest {
 
     @Test
     public void whenValidTokenShouldReturnUserInfo() {
-
         UserInfoService userInfoService = new UserInfoService();
         AccessToken accessToken = new BearerAccessToken();
 
@@ -20,7 +19,5 @@ class UserInfoServiceTest {
         assertNotNull(userInfo);
         assertEquals("urn:di:ipv:ipv-core", userInfo.getJsonAttributes().get("iss"));
         assertEquals("urn:di:ipv:orchestrator", userInfo.getJsonAttributes().get("sub"));
-
     }
-
 }

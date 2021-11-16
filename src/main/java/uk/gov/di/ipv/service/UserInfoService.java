@@ -1,13 +1,8 @@
 package uk.gov.di.ipv.service;
 
 import com.nimbusds.oauth2.sdk.token.AccessToken;
-import uk.gov.di.ipv.domain.gpg45.ConfidenceLevel;
-import uk.gov.di.ipv.domain.gpg45.EvidenceScore;
-import uk.gov.di.ipv.domain.gpg45.IdentityProfile;
-import uk.gov.di.ipv.domain.gpg45.IdentityProfileIdentifier;
 import uk.gov.di.ipv.dto.UserInfoDto;
 
-import java.util.Collections;
 import java.util.Map;
 
 public class UserInfoService {
@@ -24,19 +19,12 @@ public class UserInfoService {
 
 
     private UserInfoDto createUserInfoResponse() {
-        IdentityProfile identityProfile = IdentityProfile.builder()
-                .identityProfileIdentifier(IdentityProfileIdentifier.H1A)
-                .description("Test identity profile")
-                .levelOfConfidence(ConfidenceLevel.MEDIUM)
-                .evidenceScoreCriteria(Collections.singletonList(new EvidenceScore()))
-                .build();
-
         Map<String, Object> userInfo = Map.of(
                 "iss", ISSUER_URN,
                 "aud", ORCHESTRATOR_URN,
                 "sub", ORCHESTRATOR_URN,
-                "identityProfile", identityProfile,
-                "requestedLevelOfConfidence", ConfidenceLevel.MEDIUM);
+                "identityProfile", "Test identity profile",
+                "requestedLevelOfConfidence", "Medium");
 
         return new UserInfoDto(userInfo);
     }

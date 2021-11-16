@@ -7,15 +7,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import com.nimbusds.openid.connect.sdk.claims.UserInfo;
-import net.minidev.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.domain.ErrorResponse;
-import uk.gov.di.ipv.domain.gpg45.ConfidenceLevel;
-import uk.gov.di.ipv.domain.gpg45.EvidenceScore;
-import uk.gov.di.ipv.domain.gpg45.IdentityProfile;
-import uk.gov.di.ipv.domain.gpg45.IdentityProfileIdentifier;
 import uk.gov.di.ipv.dto.UserInfoDto;
 import uk.gov.di.ipv.service.UserInfoService;
 
@@ -40,21 +34,13 @@ class UserInfoHandlerTest {
 
     @BeforeEach
     public void setUp() {
-
-        IdentityProfile identityProfile = IdentityProfile.builder()
-                .identityProfileIdentifier(IdentityProfileIdentifier.H1A)
-                .description("Test identity profile")
-                .levelOfConfidence(ConfidenceLevel.MEDIUM)
-                .evidenceScoreCriteria(Collections.singletonList(new EvidenceScore()))
-                .build();
-
         Map<String, Object> userInfo = new HashMap<>();
 
         userInfo.put("iss", "Test iss");
         userInfo.put("aud", "Test aud");
         userInfo.put("sub", "Test sub");
-        userInfo.put("identityProfile", identityProfile);
-        userInfo.put("requestedLevelOfConfidence", ConfidenceLevel.MEDIUM);
+        userInfo.put("identityProfile", "Test identity profile");
+        userInfo.put("requestedLevelOfConfidence", "Medium");
 
         userInfoDto = new UserInfoDto(userInfo);
         when(userInfoService.handleUserInfo(any())).thenReturn(userInfoDto);
