@@ -27,7 +27,7 @@ data "aws_iam_policy_document" "lambda_can_assume_policy" {
 }
 
 resource "aws_iam_role" "lambda_iam_role" {
-  name = "${var.environment}-lambda-role"
+  name = var.role_name
 
   assume_role_policy = data.aws_iam_policy_document.lambda_can_assume_policy.json
 
@@ -35,11 +35,11 @@ resource "aws_iam_role" "lambda_iam_role" {
 }
 
 
-resource "aws_lambda_function" "authorize" {
+resource "aws_lambda_function" "lambda_function" {
   filename         = data.archive_file.dummy.output_path
-  function_name    = "${var.environment}-authorize"
+  function_name    = var.function_name
   role             = aws_iam_role.lambda_iam_role.arn
-  handler          = "uk.gov.di.ipv.lambda.AuthorizationHandler::handleRequest"
+  handler          = var.handler
   runtime          = "java11"
   source_code_hash = filebase64sha256(data.archive_file.dummy.output_path)
   publish          = false
@@ -53,23 +53,23 @@ resource "aws_lambda_function" "authorize" {
   }
 }
 
-resource "aws_lambda_alias" "authorize_active" {
+resource "aws_lambda_alias" "alias_active" {
   name             = "active"
   description      = "Alias pointing at active version of Lambda"
-  function_name    = aws_lambda_function.authorize.arn
-  function_version = aws_lambda_function.authorize.version
+  function_name    = aws_lambda_function.lambda_function.arn
+  function_version = aws_lambda_function.lambda_function.version
 }
 
 
-resource "aws_api_gateway_resource" "authorize_endpoint" {
+resource "aws_api_gateway_resource" "endpoint" {
   rest_api_id = var.rest_api_id
   parent_id   = var.root_resource_id
   path_part   = var.path_part
 }
 
-resource "aws_api_gateway_method" "authorize_endpoint_method" {
+resource "aws_api_gateway_method" "endpoint_method" {
   rest_api_id      = var.rest_api_id
-  resource_id      = aws_api_gateway_resource.authorize_endpoint.id
+  resource_id      = aws_api_gateway_resource.endpoint.id
   http_method      = "GET"
   authorization    = "NONE"
   api_key_required = false
@@ -77,28 +77,28 @@ resource "aws_api_gateway_method" "authorize_endpoint_method" {
 
 resource "aws_api_gateway_integration" "endpoint_integration" {
   rest_api_id = var.rest_api_id
-  resource_id = aws_api_gateway_resource.authorize_endpoint.id
-  http_method = aws_api_gateway_method.authorize_endpoint_method.http_method
+  resource_id = aws_api_gateway_resource.endpoint.id
+  http_method = aws_api_gateway_method.endpoint_method.http_method
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
-  uri                     = aws_lambda_alias.authorize_active.invoke_arn
+  uri                     = aws_lambda_alias.alias_active.invoke_arn
 }
 
 resource "aws_lambda_permission" "endpoint_execution_base_permission" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.authorize.function_name
+  function_name = aws_lambda_function.lambda_function.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${var.rest_api_execution_arn}/*/${aws_api_gateway_method.authorize_endpoint_method.http_method}/${var.path_part}"
+  source_arn    = "${var.rest_api_execution_arn}/*/${aws_api_gateway_method.endpoint_method.http_method}/${var.path_part}"
 }
 
 resource "aws_lambda_permission" "endpoint_execution_permission" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.authorize.function_name
+  function_name = aws_lambda_function.lambda_function.function_name
   principal     = "apigateway.amazonaws.com"
-  qualifier     = aws_lambda_alias.authorize_active.name
-  source_arn    = "${var.rest_api_execution_arn}/*/${aws_api_gateway_method.authorize_endpoint_method.http_method}/${var.path_part}"
+  qualifier     = aws_lambda_alias.alias_active.name
+  source_arn    = "${var.rest_api_execution_arn}/*/${aws_api_gateway_method.endpoint_method.http_method}/${var.path_part}"
 
 }

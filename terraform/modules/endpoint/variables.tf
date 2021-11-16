@@ -22,6 +22,21 @@ variable "path_part" {
   description = "path part to register the new resource under"
 }
 
+variable "handler" {
+  type       = string
+  description = "Class handler for each of the lambdas"
+}
+
+variable "function_name" {
+  type       = string
+  description = "Lambda function name"
+}
+
+variable "role_name" {
+  type       = string
+  description = "Lambda iam role name"
+}
+
 locals {
   default_tags = {
     Environment = var.environment
