@@ -17,6 +17,11 @@ variable "root_resource_id" {
   description = "id of the root resource within the REST API to register the lambda with"
 }
 
+variable "http_method" {
+  type        = string
+  description = "http request type"
+}
+
 variable "path_part" {
   type        = string
   description = "path part to register the new resource under"
