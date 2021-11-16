@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.gov.di.ipv.entity.ErrorResponse;
+import uk.gov.di.ipv.domain.ErrorResponse;
 
 public class ApiGatewayResponseGenerator {
 
