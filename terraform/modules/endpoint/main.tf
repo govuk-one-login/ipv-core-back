@@ -70,7 +70,7 @@ resource "aws_api_gateway_resource" "endpoint" {
 resource "aws_api_gateway_method" "endpoint_method" {
   rest_api_id      = var.rest_api_id
   resource_id      = aws_api_gateway_resource.endpoint.id
-  http_method      = "GET"
+  http_method      = var.http_method
   authorization    = "NONE"
   api_key_required = false
 }
