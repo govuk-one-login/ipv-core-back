@@ -12,7 +12,7 @@ import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.gov.di.ipv.entity.ErrorResponse;
+import uk.gov.di.ipv.domain.ErrorResponse;
 import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.service.AuthorizationCodeService;
 
@@ -28,7 +28,7 @@ public class AuthorizationHandler
 
     private final AuthorizationCodeService authorizationCodeService;
 
-    public AuthorizationHandler(final AuthorizationCodeService authorizationCodeService) {
+    public AuthorizationHandler(AuthorizationCodeService authorizationCodeService) {
         this.authorizationCodeService = authorizationCodeService;
     }
 
@@ -37,10 +37,10 @@ public class AuthorizationHandler
     }
 
     @Override
-    public APIGatewayProxyResponseEvent handleRequest(final APIGatewayProxyRequestEvent input, final Context context) {
-        final Map<String, List<String>> queryStringParameters = getQueryStringParametersAsMap(input);
-        final AuthenticationRequest authenticationRequest;
+    public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
+        Map<String, List<String>> queryStringParameters = getQueryStringParametersAsMap(input);
 
+        final AuthenticationRequest authenticationRequest;
         try {
             if (queryStringParameters == null || queryStringParameters.isEmpty()) {
                 LOGGER.error("Missing required query parameters for authorisation request");
@@ -53,9 +53,9 @@ public class AuthorizationHandler
             return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.ERROR_1001);
         }
 
-        final AuthorizationCode authorizationCode = authorizationCodeService.generateAuthorisationCode();
+        AuthorizationCode authorizationCode = authorizationCodeService.generateAuthorisationCode();
 
-        final AuthorizationSuccessResponse authorizationResponse = new AuthorizationSuccessResponse(
+        AuthorizationSuccessResponse authorizationResponse = new AuthorizationSuccessResponse(
                 authenticationRequest.getRedirectionURI(),
                 authorizationCode,
                 null,
@@ -66,7 +66,7 @@ public class AuthorizationHandler
         return ApiGatewayResponseGenerator.proxyResponse(200, generateResponseBody(authorizationResponse));
     }
 
-    private Map<String, List<String>> getQueryStringParametersAsMap(final APIGatewayProxyRequestEvent input) {
+    private Map<String, List<String>> getQueryStringParametersAsMap(APIGatewayProxyRequestEvent input) {
         if (input.getQueryStringParameters() != null) {
             return input.getQueryStringParameters().entrySet().stream()
                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> List.of(entry.getValue())));
@@ -74,10 +74,10 @@ public class AuthorizationHandler
         return Collections.emptyMap();
     }
 
-    private String generateResponseBody(final AuthorizationSuccessResponse authorizationResponse) {
+    private String generateResponseBody(AuthorizationSuccessResponse authorizationResponse) {
         try {
             return new ObjectMapper().writeValueAsString(authorizationResponse);
-        } catch (final JsonProcessingException e) {
+        } catch (JsonProcessingException e) {
             LOGGER.error("Failed to process AuthorisationSuccessResponse");
             throw new RuntimeException(e);
         }
