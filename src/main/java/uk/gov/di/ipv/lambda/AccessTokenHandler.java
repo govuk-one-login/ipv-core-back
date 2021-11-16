@@ -43,7 +43,7 @@ public class AccessTokenHandler
 
             if (tokenRequestDto.getCode().isEmpty()) {
                 LOGGER.error("Missing authorisation code from the token request");
-                return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.ERROR_1003);
+                return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.MissingAuthorisationCode);
             }
 
             TokenRequest tokenRequest = new TokenRequest(
@@ -58,14 +58,15 @@ public class AccessTokenHandler
 
             if (tokenResponse instanceof TokenErrorResponse) {
                 TokenErrorResponse tokenErrorResponse = tokenResponse.toErrorResponse();
-                return ApiGatewayResponseGenerator.proxyResponse(400, tokenErrorResponse.toJSONObject().toJSONString());
+                LOGGER.error(tokenErrorResponse.getErrorObject().getDescription());
+                return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.FailedToExchangeAuthorizationCode);
             }
 
             AccessTokenResponse accessTokenResponse = tokenResponse.toSuccessResponse();
             return ApiGatewayResponseGenerator.proxyResponse(200, accessTokenResponse.toJSONObject().toJSONString());
         } catch (JsonProcessingException e) {
             LOGGER.error("Token request could not be parsed", e);
-            return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.ERROR_1002);
+            return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.FailedToParseTokenRequest);
         }
     }
 }

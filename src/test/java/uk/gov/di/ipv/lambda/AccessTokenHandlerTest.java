@@ -88,8 +88,8 @@ public class AccessTokenHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.ERROR_1002.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.ERROR_1002.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.FailedToParseTokenRequest.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.FailedToParseTokenRequest.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -113,8 +113,8 @@ public class AccessTokenHandlerTest {
         Map<String, String> responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(tokenErrorObject.getCode(), responseBody.get("error"));
-        assertEquals(tokenErrorObject.getDescription(), responseBody.get("error_description"));
+        assertEquals(ErrorResponse.FailedToExchangeAuthorizationCode.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.FailedToExchangeAuthorizationCode.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -134,7 +134,7 @@ public class AccessTokenHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.ERROR_1003.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.ERROR_1003.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.MissingAuthorisationCode.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.MissingAuthorisationCode.getMessage(), responseBody.get("message"));
     }
 }

@@ -82,8 +82,8 @@ public class AuthorizationHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.ERROR_1001.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.ERROR_1001.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.MissingRedirectURI.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.MissingRedirectURI.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -101,8 +101,8 @@ public class AuthorizationHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.ERROR_1001.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.ERROR_1001.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.MissingRedirectURI.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.MissingRedirectURI.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -120,8 +120,8 @@ public class AuthorizationHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.ERROR_1001.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.ERROR_1001.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.MissingRedirectURI.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.MissingRedirectURI.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -139,8 +139,8 @@ public class AuthorizationHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.ERROR_1001.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.ERROR_1001.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.MissingRedirectURI.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.MissingRedirectURI.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -153,7 +153,7 @@ public class AuthorizationHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.ERROR_1000.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.ERROR_1000.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.MissingQueryParameters.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.MissingQueryParameters.getMessage(), responseBody.get("message"));
     }
 }
