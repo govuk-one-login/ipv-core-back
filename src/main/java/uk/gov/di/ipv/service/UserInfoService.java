@@ -24,7 +24,8 @@ public class UserInfoService {
                 "aud", ORCHESTRATOR_URN,
                 "sub", ORCHESTRATOR_URN,
                 "identityProfile", "Test identity profile",
-                "requestedLevelOfConfidence", "Medium");
+                "requestedLevelOfConfidence", "Medium",
+                "foo", "bar");
 
         return new UserInfoDto(userInfo);
     }
