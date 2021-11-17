@@ -86,7 +86,7 @@ resource "aws_api_gateway_integration" "endpoint_integration" {
 }
 
 resource "aws_lambda_permission" "endpoint_execution_base_permission" {
-  statement_id  = "AllowAPIGatewayInvoke"
+  statement_id  = "AllowAPIGatewayInvokeBase"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.lambda_function.function_name
   principal     = "apigateway.amazonaws.com"
