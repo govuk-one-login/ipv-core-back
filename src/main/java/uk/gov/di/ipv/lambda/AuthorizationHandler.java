@@ -8,6 +8,7 @@ import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationSuccessResponse;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
+import org.apache.http.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.domain.ErrorResponse;
@@ -22,7 +23,6 @@ import java.util.stream.Collectors;
 public class AuthorizationHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent>  {
 
-    private static final String LOCATION_HEADER = "Location";
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthorizationHandler.class);
 
     private final AuthorizationCodeService authorizationCodeService;
@@ -62,7 +62,7 @@ public class AuthorizationHandler
                 authenticationRequest.getResponseMode()
         );
 
-        Map<String, String> headers = Map.of(LOCATION_HEADER, authorizationResponse.toURI().toString());
+        Map<String, String> headers = Map.of(HttpHeaders.LOCATION, authorizationResponse.toURI().toString());
 
         return ApiGatewayResponseGenerator.proxyFormUrlEncodedResponse(302, null, headers);
     }
