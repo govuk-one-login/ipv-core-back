@@ -4,12 +4,11 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationSuccessResponse;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
+import org.apache.http.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.domain.ErrorResponse;
@@ -63,7 +62,9 @@ public class AuthorizationHandler
                 authenticationRequest.getResponseMode()
         );
 
-        return ApiGatewayResponseGenerator.proxyResponse(200, generateResponseBody(authorizationResponse));
+        Map<String, String> headers = Map.of(HttpHeaders.LOCATION, authorizationResponse.toURI().toString());
+
+        return ApiGatewayResponseGenerator.proxyFormUrlEncodedResponse(302, null, headers);
     }
 
     private Map<String, List<String>> getQueryStringParametersAsMap(APIGatewayProxyRequestEvent input) {
@@ -72,14 +73,5 @@ public class AuthorizationHandler
                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> List.of(entry.getValue())));
         }
         return Collections.emptyMap();
-    }
-
-    private String generateResponseBody(AuthorizationSuccessResponse authorizationResponse) {
-        try {
-            return new ObjectMapper().writeValueAsString(authorizationResponse);
-        } catch (JsonProcessingException e) {
-            LOGGER.error("Failed to process AuthorisationSuccessResponse");
-            throw new RuntimeException(e);
-        }
     }
 }

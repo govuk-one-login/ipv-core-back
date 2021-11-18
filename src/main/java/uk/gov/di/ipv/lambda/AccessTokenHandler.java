@@ -20,6 +20,7 @@ import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.helpers.ResponseBodyHelper;
 import uk.gov.di.ipv.service.AccessTokenService;
 
+import java.util.Collections;
 import java.util.Map;
 
 public class AccessTokenHandler
@@ -67,7 +68,7 @@ public class AccessTokenHandler
             }
 
             AccessTokenResponse accessTokenResponse = tokenResponse.toSuccessResponse();
-            return ApiGatewayResponseGenerator.proxyResponse(200, accessTokenResponse.toJSONObject().toJSONString());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(200, accessTokenResponse.toJSONObject().toJSONString(), Collections.emptyMap());
         } catch (IllegalArgumentException e) {
             LOGGER.error("Token request could not be parsed", e);
             return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.FailedToParseTokenRequest);

@@ -8,6 +8,7 @@ import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.domain.ErrorResponse;
+import uk.gov.di.ipv.helpers.ResponseBodyHelper;
 import uk.gov.di.ipv.service.AuthorizationCodeService;
 
 import java.util.HashMap;
@@ -33,10 +34,10 @@ public class AuthorizationHandlerTest {
     }
 
     @Test
-    public void shouldReturn200OnSuccessfulOauthRequest(){
+    public void shouldReturn302OnSuccessfulOauthRequest(){
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> params = new HashMap<>();
-        params.put("redirect_uri", "http://test.co.uk");
+        params.put("redirect_uri", "http://example.com");
         params.put("client_id", "12345");
         params.put("response_type", "code");
         params.put("scope", "openid");
@@ -44,14 +45,14 @@ public class AuthorizationHandlerTest {
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
-        assertEquals(200, response.getStatusCode());
+        assertEquals(302, response.getStatusCode());
     }
 
     @Test
     public void shouldReturnAuthResponseOnSuccessfulOauthRequest() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> params = new HashMap<>();
-        params.put("redirect_uri", "http://test.co.uk");
+        params.put("redirect_uri", "http://example.com");
         params.put("client_id", "12345");
         params.put("response_type", "code");
         params.put("scope", "openid");
@@ -59,12 +60,7 @@ public class AuthorizationHandlerTest {
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
-        Map<String, String> authCode = (Map) responseBody.get("authorizationCode");
-
-        assertEquals(authorizationCode.toString(), authCode.get("value"));
-        assertEquals(event.getQueryStringParameters().get("redirect_uri"), responseBody.get("redirectionURI"));
+        assertEquals("http://example.com?code="+authorizationCode.getValue(), response.getHeaders().get("Location"));
     }
 
     @Test
@@ -90,7 +86,7 @@ public class AuthorizationHandlerTest {
     public void shouldReturn400OnMissingClientIdParam() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> params = new HashMap<>();
-        params.put("redirect_uri", "http://test.co.uk");
+        params.put("redirect_uri", "http://example.com");
         params.put("response_type", "code");
         params.put("scope", "openid");
         event.setQueryStringParameters(params);
@@ -109,7 +105,7 @@ public class AuthorizationHandlerTest {
     public void shouldReturn400OnMissingResponseTypeParam() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> params = new HashMap<>();
-        params.put("redirect_uri", "http://test.co.uk");
+        params.put("redirect_uri", "http://example.com");
         params.put("client_id", "12345");
         params.put("scope", "openid");
         event.setQueryStringParameters(params);
@@ -128,7 +124,7 @@ public class AuthorizationHandlerTest {
     public void shouldReturn400OnMissingScopeParam() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> params = new HashMap<>();
-        params.put("redirect_uri", "http://test.co.uk");
+        params.put("redirect_uri", "http://example.com");
         params.put("client_id", "12345");
         params.put("response_type", "code");
         event.setQueryStringParameters(params);
