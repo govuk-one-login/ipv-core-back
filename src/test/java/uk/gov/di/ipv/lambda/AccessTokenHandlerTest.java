@@ -14,10 +14,8 @@ import com.nimbusds.oauth2.sdk.token.Tokens;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.domain.ErrorResponse;
-import uk.gov.di.ipv.dto.TokenRequestDto;
 import uk.gov.di.ipv.service.AccessTokenService;
 
-import java.net.URI;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,13 +42,8 @@ public class AccessTokenHandlerTest {
     @Test
     public void shouldReturn200OnSuccessfulAccessTokenExchange() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        TokenRequestDto tokenRequestDto = new TokenRequestDto(
-                "12345",
-                new URI("http://test.com"),
-                "test_grant_type",
-                "test_client_id"
-        );
-        event.setBody(new ObjectMapper().writeValueAsString(tokenRequestDto));
+        String tokenRequestBody = "code=12345&redirect_uri=http://test.com&grant_type=test_grant_type&client_id=test_client_id";
+        event.setBody(tokenRequestBody);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
@@ -60,13 +53,8 @@ public class AccessTokenHandlerTest {
     @Test
     public void shouldReturnAccessTokenOnSuccessfulExchange() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        TokenRequestDto tokenRequestDto = new TokenRequestDto(
-                "12345",
-                new URI("http://test.com"),
-                "test_grant_type",
-                "test_client_id"
-        );
-        event.setBody(new ObjectMapper().writeValueAsString(tokenRequestDto));
+        String tokenRequestBody = "code=12345&redirect_uri=http://test.com&grant_type=test_grant_type&client_id=test_client_id";
+        event.setBody(tokenRequestBody);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
@@ -99,13 +87,9 @@ public class AccessTokenHandlerTest {
         when(accessTokenService.exchangeCodeForToken(any())).thenReturn(tokenResponse);
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        TokenRequestDto tokenRequestDto = new TokenRequestDto(
-                "12345",
-                new URI("http://test.com"),
-                "test_grant_type",
-                "test_client_id"
-        );
-        event.setBody(new ObjectMapper().writeValueAsString(tokenRequestDto));
+        String tokenRequestBody = "code=12345&redirect_uri=http://test.com&grant_type=test_grant_type&client_id=test_client_id";
+
+        event.setBody(tokenRequestBody);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
@@ -120,13 +104,10 @@ public class AccessTokenHandlerTest {
     @Test
     public void shouldReturn400OnMissingAuthorisationCode() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        TokenRequestDto tokenRequestDto = new TokenRequestDto(
-                "",
-                new URI("http://test.com"),
-                "test_grant_type",
-                "test_client_id"
-        );
-        event.setBody(new ObjectMapper().writeValueAsString(tokenRequestDto));
+
+        String tokenRequestBody = "code=&redirect_uri=http://test.com&grant_type=test_grant_type&client_id=test_client_id";
+
+        event.setBody(tokenRequestBody);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
