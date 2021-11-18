@@ -15,6 +15,8 @@ import uk.gov.di.ipv.dto.UserInfoDto;
 import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.service.UserInfoService;
 
+import java.util.Collections;
+
 public class UserInfoHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserInfoHandler.class);
@@ -47,8 +49,7 @@ public class UserInfoHandler implements RequestHandler<APIGatewayProxyRequestEve
             ObjectMapper objectMapper = new ObjectMapper();
             String userInfoJson = objectMapper.writeValueAsString(userInfo);
 
-            return ApiGatewayResponseGenerator.proxyResponse(200, userInfoJson);
-
+            return ApiGatewayResponseGenerator.proxyJsonResponse(200, userInfoJson, Collections.emptyMap());
         } catch (ParseException | JsonProcessingException e) {
             LOGGER.error("Failed to parse access token");
             return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.FailedToParseAccessToken);
