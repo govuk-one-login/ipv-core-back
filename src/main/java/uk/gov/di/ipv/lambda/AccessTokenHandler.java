@@ -20,7 +20,6 @@ import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.helpers.ResponseBodyHelper;
 import uk.gov.di.ipv.service.AccessTokenService;
 
-import java.util.Collections;
 import java.util.Map;
 
 public class AccessTokenHandler
@@ -48,7 +47,7 @@ public class AccessTokenHandler
 
             if (tokenRequestDto.getCode().isEmpty()) {
                 LOGGER.error("Missing authorisation code from the token request");
-                return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.MissingAuthorisationCode);
+                return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingAuthorisationCode);
             }
 
             TokenRequest tokenRequest = new TokenRequest(
@@ -64,14 +63,15 @@ public class AccessTokenHandler
             if (tokenResponse instanceof TokenErrorResponse) {
                 TokenErrorResponse tokenErrorResponse = tokenResponse.toErrorResponse();
                 LOGGER.error(tokenErrorResponse.getErrorObject().getDescription());
-                return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.FailedToExchangeAuthorizationCode);
+                return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.FailedToExchangeAuthorizationCode);
             }
 
             AccessTokenResponse accessTokenResponse = tokenResponse.toSuccessResponse();
-            return ApiGatewayResponseGenerator.proxyJsonResponse(200, accessTokenResponse.toJSONObject().toJSONString(), Collections.emptyMap());
+
+            return ApiGatewayResponseGenerator.proxyJsonResponse(200, accessTokenResponse.toJSONObject());
         } catch (IllegalArgumentException e) {
             LOGGER.error("Token request could not be parsed", e);
-            return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.FailedToParseTokenRequest);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.FailedToParseTokenRequest);
         }
     }
 }

@@ -6,42 +6,25 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.gov.di.ipv.domain.ErrorResponse;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 public class ApiGatewayResponseGenerator {
 
     private static final String JSON_CONTENT_TYPE_VALUE = "application/json";
-    private static final String FORM_URL_ENCODED_CONTENT_TYPE_VALUE = "application/x-www-form-urlencoded";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApiGatewayResponseGenerator.class);
 
-    public static APIGatewayProxyResponseEvent proxyErrorResponse(
-            int statusCode, ErrorResponse errorResponse) {
+    public static <T> APIGatewayProxyResponseEvent proxyJsonResponse(int statusCode, T body) {
+        Map<String, String> responseHeaders = Map.of(HttpHeaders.CONTENT_TYPE, JSON_CONTENT_TYPE_VALUE);
+
         try {
-            return proxyJsonResponse(
-                    statusCode, new ObjectMapper().writeValueAsString(errorResponse), Collections.emptyMap());
+            return proxyResponse(statusCode, generateResponseBody(body), responseHeaders);
         } catch (JsonProcessingException e) {
-            LOGGER.warn("Unable to generateApiGatewayProxyErrorResponse: " + e);
+            LOGGER.error("Unable to generateApiGatewayProxyErrorResponse", e);
             return proxyResponse(500, "Internal server error", Collections.emptyMap());
         }
-    }
-
-    public static APIGatewayProxyResponseEvent proxyJsonResponse(int statusCode, String body, Map<String, String> headers) {
-        Map<String, String> responseHeaders = new HashMap<>(headers);
-        responseHeaders.putIfAbsent(HttpHeaders.CONTENT_TYPE, JSON_CONTENT_TYPE_VALUE);
-
-        return proxyResponse(statusCode, body, responseHeaders);
-    }
-
-    public static APIGatewayProxyResponseEvent proxyFormUrlEncodedResponse(int statusCode, String body, Map<String, String> headers) {
-        Map<String, String> responseHeaders = new HashMap<>(headers);
-        responseHeaders.putIfAbsent(HttpHeaders.CONTENT_TYPE, FORM_URL_ENCODED_CONTENT_TYPE_VALUE);
-
-        return proxyResponse(statusCode, body, responseHeaders);
     }
 
     public static APIGatewayProxyResponseEvent proxyResponse(
@@ -54,4 +37,9 @@ public class ApiGatewayResponseGenerator {
 
         return apiGatewayProxyResponseEvent;
     }
+
+    private static <T> String generateResponseBody(T body) throws JsonProcessingException {
+            return new ObjectMapper().writeValueAsString(body);
+    }
+
 }

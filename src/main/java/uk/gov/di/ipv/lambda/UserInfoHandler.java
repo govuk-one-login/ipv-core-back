@@ -4,8 +4,6 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import org.slf4j.Logger;
@@ -14,8 +12,6 @@ import uk.gov.di.ipv.domain.ErrorResponse;
 import uk.gov.di.ipv.dto.UserInfoDto;
 import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.service.UserInfoService;
-
-import java.util.Collections;
 
 public class UserInfoHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
@@ -39,20 +35,17 @@ public class UserInfoHandler implements RequestHandler<APIGatewayProxyRequestEve
 
         if (accessTokenString == null || accessTokenString.isEmpty()) {
             LOGGER.error("Missing access token from Authorization header");
-            return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.MissingAccessToken);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingAccessToken);
         }
 
         try {
             AccessToken accessToken = AccessToken.parse(accessTokenString);
             UserInfoDto userInfo = userInfoService.handleUserInfo(accessToken);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            String userInfoJson = objectMapper.writeValueAsString(userInfo);
-
-            return ApiGatewayResponseGenerator.proxyJsonResponse(200, userInfoJson, Collections.emptyMap());
-        } catch (ParseException | JsonProcessingException e) {
+            return ApiGatewayResponseGenerator.proxyJsonResponse(200, userInfo);
+        } catch (ParseException e) {
             LOGGER.error("Failed to parse access token");
-            return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.FailedToParseAccessToken);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.FailedToParseAccessToken);
         }
     }
 }

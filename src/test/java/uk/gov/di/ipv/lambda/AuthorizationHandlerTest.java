@@ -8,7 +8,6 @@ import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.domain.ErrorResponse;
-import uk.gov.di.ipv.helpers.ResponseBodyHelper;
 import uk.gov.di.ipv.service.AuthorizationCodeService;
 
 import java.util.HashMap;
@@ -34,7 +33,7 @@ public class AuthorizationHandlerTest {
     }
 
     @Test
-    public void shouldReturn302OnSuccessfulOauthRequest(){
+    public void shouldReturn200OnSuccessfulOauthRequest(){
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> params = new HashMap<>();
         params.put("redirect_uri", "http://example.com");
@@ -45,7 +44,7 @@ public class AuthorizationHandlerTest {
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
-        assertEquals(302, response.getStatusCode());
+        assertEquals(200, response.getStatusCode());
     }
 
     @Test
@@ -56,11 +55,16 @@ public class AuthorizationHandlerTest {
         params.put("client_id", "12345");
         params.put("response_type", "code");
         params.put("scope", "openid");
+        params.put("scope", "openid");
         event.setQueryStringParameters(params);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
-        assertEquals("http://example.com?code="+authorizationCode.getValue(), response.getHeaders().get("Location"));
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
+        Map<String, String> authCode = (Map) responseBody.get("code");
+
+        assertEquals(authorizationCode.toString(), authCode.get("value"));
     }
 
     @Test
