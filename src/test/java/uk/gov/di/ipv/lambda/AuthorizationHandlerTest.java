@@ -55,7 +55,6 @@ public class AuthorizationHandlerTest {
         params.put("client_id", "12345");
         params.put("response_type", "code");
         params.put("scope", "openid");
-        params.put("scope", "openid");
         event.setQueryStringParameters(params);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
