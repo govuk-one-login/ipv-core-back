@@ -5,10 +5,9 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
-import com.nimbusds.oauth2.sdk.AuthorizationSuccessResponse;
 import com.nimbusds.oauth2.sdk.ParseException;
+import com.nimbusds.oauth2.sdk.id.Identifier;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
-import org.apache.http.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.domain.ErrorResponse;
@@ -39,32 +38,23 @@ public class AuthorizationHandler
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
         Map<String, List<String>> queryStringParameters = getQueryStringParametersAsMap(input);
 
-        final AuthenticationRequest authenticationRequest;
         try {
             if (queryStringParameters == null || queryStringParameters.isEmpty()) {
                 LOGGER.error("Missing required query parameters for authorisation request");
-                return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.MissingQueryParameters);
+                return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingQueryParameters);
             }
-            authenticationRequest = AuthenticationRequest.parse(queryStringParameters);
+            AuthenticationRequest.parse(queryStringParameters);
             LOGGER.info("Successfully parsed authentication request");
         } catch (ParseException e) {
             LOGGER.error("Authentication request could not be parsed", e);
-            return ApiGatewayResponseGenerator.proxyErrorResponse(400, ErrorResponse.MissingRedirectURI);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingRedirectURI);
         }
 
         AuthorizationCode authorizationCode = authorizationCodeService.generateAuthorisationCode();
 
-        AuthorizationSuccessResponse authorizationResponse = new AuthorizationSuccessResponse(
-                authenticationRequest.getRedirectionURI(),
-                authorizationCode,
-                null,
-                authenticationRequest.getState(),
-                authenticationRequest.getResponseMode()
-        );
+        Map<String, Identifier> payload = Map.of("code", authorizationCode);
 
-        Map<String, String> headers = Map.of(HttpHeaders.LOCATION, authorizationResponse.toURI().toString());
-
-        return ApiGatewayResponseGenerator.proxyFormUrlEncodedResponse(302, null, headers);
+        return ApiGatewayResponseGenerator.proxyJsonResponse(200, payload);
     }
 
     private Map<String, List<String>> getQueryStringParametersAsMap(APIGatewayProxyRequestEvent input) {
