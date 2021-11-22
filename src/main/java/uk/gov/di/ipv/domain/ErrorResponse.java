@@ -11,7 +11,10 @@ public enum ErrorResponse {
     MissingAuthorisationCode(1003, "Missing authorization code for token request"),
     FailedToExchangeAuthorizationCode(1004, "Failed to exchange the authorization code for an access token"),
     MissingAccessToken(1005, "Missing access token from user info request"),
-    FailedToParseAccessToken(1006, "Failed to parse access token");
+    FailedToParseAccessToken(1006, "Failed to parse access token"),
+    MissingAuthorizationCode(1007, "Missing authorization code"),
+    MissingCredentialIssuerId(1008, "Missing valid credential issuer id");
+
 
 
     @JsonProperty("code")

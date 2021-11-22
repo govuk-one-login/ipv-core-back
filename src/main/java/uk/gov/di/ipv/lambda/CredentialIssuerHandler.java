@@ -23,22 +23,19 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
 
         Map<String, String> queryStringParameters = RequestHelper.getQueryStringParametersAsMap(input);
-        String authorizationCode = queryStringParameters.get("authorizationCode");
-        String credentialIssuer = queryStringParameters.get("credentialIssuer");
+        String authorizationCode = queryStringParameters.get("authorization_code");
+        String credentialIssuer = queryStringParameters.get("credential_issuer_id");
 
         if (StringUtils.isBlank(authorizationCode)) {
-
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingQueryParameters);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingAuthorizationCode);
         }
 
         if (StringUtils.isBlank(credentialIssuer) || !validCredentialIssuers.contains(credentialIssuer)) {
-
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingQueryParameters);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingCredentialIssuerId);
         }
 
         return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.EMPTY_MAP);
 
     }
-
 
 }
