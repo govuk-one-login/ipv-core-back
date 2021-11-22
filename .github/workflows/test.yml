@@ -2,6 +2,7 @@
 name: gradle test and build
 
 on:
+
   pull_request:
     branches: main
 
@@ -18,5 +19,19 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
           cache: gradle
-      - name: Build with Gradle
-        run: ./gradlew build
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v1
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
+      - name: Cache Gradle packages
+        uses: actions/cache@v1
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+          restore-keys: ${{ runner.os }}-gradle
+      - name: Build and analyze
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # obtained from https://sonarcloud.io
+        run: ./gradlew build sonarqube --info
