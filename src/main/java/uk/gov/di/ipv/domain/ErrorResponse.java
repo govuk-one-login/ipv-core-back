@@ -13,7 +13,7 @@ public enum ErrorResponse {
     MissingAccessToken(1005, "Missing access token from user info request"),
     FailedToParseAccessToken(1006, "Failed to parse access token"),
     MissingAuthorizationCode(1007, "Missing authorization code"),
-    MissingCredentialIssuerId(1008, "Missing valid credential issuer id");
+    MissingCredentialIssuerId(1008, "Invalid credential issuer id");
 
 
 
