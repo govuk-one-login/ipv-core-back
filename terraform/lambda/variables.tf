@@ -3,7 +3,7 @@ variable "environment" {
 }
 
 variable "use_localstack" {
-  type = bool
+  type    = bool
   default = false
 }
 
