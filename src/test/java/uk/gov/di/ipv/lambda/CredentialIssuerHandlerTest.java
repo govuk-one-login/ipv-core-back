@@ -21,8 +21,8 @@ class CredentialIssuerHandlerTest {
 
         CredentialIssuerHandler handler = new CredentialIssuerHandler();
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
-        input.setQueryStringParameters(Map.of("credential_issuer_id", "foo"));
 
+        input.setBody("credential_issuer_id=foo");
         Context context = mock(Context.class);
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
         Integer statusCode = response.getStatusCode();
@@ -39,7 +39,7 @@ class CredentialIssuerHandlerTest {
 
         CredentialIssuerHandler handler = new CredentialIssuerHandler();
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
-        input.setQueryStringParameters(Map.of("authorization_code", "bar"));
+        input.setBody("authorization_code=bar");
 
         Context context = mock(Context.class);
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
@@ -56,8 +56,8 @@ class CredentialIssuerHandlerTest {
 
         CredentialIssuerHandler handler = new CredentialIssuerHandler();
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
-        input.setQueryStringParameters(Map.of("credential_issuer_id", "foo", "authorization_code", "bar"));
 
+        input.setBody("authorization_code=bar&credential_issuer_id=barx");
         Context context = mock(Context.class);
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
         Integer statusCode = response.getStatusCode();
@@ -73,12 +73,11 @@ class CredentialIssuerHandlerTest {
 
         CredentialIssuerHandler handler = new CredentialIssuerHandler();
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
-        input.setQueryStringParameters(Map.of("credential_issuer_id", "PassportIssuer", "authorization_code", "bar"));
 
+        input.setBody("authorization_code=bar&credential_issuer_id=PassportIssuer");
         Context context = mock(Context.class);
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
         Integer statusCode = response.getStatusCode();
-        Map responseBody = getResponseBodyAsMap(response);
         assertEquals(HTTPResponse.SC_OK, statusCode);
         verifyNoInteractions(context);
 
