@@ -12,6 +12,7 @@ import uk.gov.di.ipv.helpers.RequestBodyHelper;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.Optional;
 
 public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
@@ -24,16 +25,28 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
         String authorizationCode = body.get("authorization_code");
         String credentialIssuer = body.get("credential_issuer_id");
 
+        var errorResponse = validate(authorizationCode, credentialIssuer);
+        if (errorResponse.isPresent()) {
+            return errorResponse.get();
+        } else {
+            return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.EMPTY_MAP);
+        }
+
+    }
+
+    private Optional<APIGatewayProxyResponseEvent> validate(String authorizationCode, String credentialIssuer) {
         if (StringUtils.isBlank(authorizationCode)) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingAuthorizationCode);
+            return Optional.of(ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingAuthorizationCode));
         }
 
-        if (StringUtils.isBlank(credentialIssuer) || !validCredentialIssuers.contains(credentialIssuer)) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingCredentialIssuerId);
+        if (StringUtils.isBlank(credentialIssuer)) {
+            return Optional.of(ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingCredentialIssuerId));
         }
 
-        return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.EMPTY_MAP);
-
+        if (!validCredentialIssuers.contains(credentialIssuer)) {
+            return Optional.of(ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.InvalidCredentialIssuerId));
+        }
+        return Optional.empty();
     }
 
 }

@@ -33,7 +33,6 @@ class CredentialIssuerHandlerTest {
 
     }
 
-
     @Test
     void shouldReceive400ResponseCodeIfCredentialIssuerNotPresent() throws JsonProcessingException {
 
@@ -63,7 +62,7 @@ class CredentialIssuerHandlerTest {
         Integer statusCode = response.getStatusCode();
         Map responseBody = getResponseBodyAsMap(response);
         assertEquals(HTTPResponse.SC_BAD_REQUEST, statusCode);
-        assertEquals(ErrorResponse.MissingCredentialIssuerId.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.InvalidCredentialIssuerId.getCode(), responseBody.get("code"));
         verifyNoInteractions(context);
 
     }
