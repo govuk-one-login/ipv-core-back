@@ -21,7 +21,7 @@ resource "aws_lambda_function" "lambda_function" {
 
   environment {
     variables = {
-      DYNAMODB_USER_CREDENTIALS_TABLE_NAME = var.dynamodb_user_credentials_table_name
+      USER_ISSUED_CREDENTIALS_TABLE_NAME = var.user_issued_credentials_table_name
     }
   }
 
@@ -79,5 +79,4 @@ resource "aws_lambda_permission" "endpoint_execution_permission" {
   principal     = "apigateway.amazonaws.com"
   qualifier     = aws_lambda_alias.alias_active.name
   source_arn    = "${var.rest_api_execution_arn}/*/${aws_api_gateway_method.endpoint_method.http_method}/${var.path_part}"
-
 }

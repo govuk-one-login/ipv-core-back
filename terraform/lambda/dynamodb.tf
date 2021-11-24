@@ -1,5 +1,5 @@
-resource "aws_dynamodb_table" "user-credentials-table" {
-  name         = "user-credentials-table"
+resource "aws_dynamodb_table" "user-issued-credentials" {
+  name         = "${var.environment}-user-issued-credentials"
   hash_key     = "SessionId"
   range_key    = "CredentialIssuer"
   billing_mode = "PAY_PER_REQUEST"
@@ -17,14 +17,14 @@ resource "aws_dynamodb_table" "user-credentials-table" {
   tags = local.default_tags
 }
 
-resource "aws_iam_policy" "dynamo-db-user-credentials-table-policy" {
-  name = "dynamo-db-user-credentials-table-policy"
+resource "aws_iam_policy" "access-user-issued-credentials-table" {
+  name = "access-user-issued-credentials-table"
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Sid = "AllowDynamoDbReadWrite"
+        Sid = "AccessUserIssuedCredentialsTable"
         Action = [
           "dynamodb:PutItem",
           "dynamodb:UpdateItem",
@@ -37,8 +37,8 @@ resource "aws_iam_policy" "dynamo-db-user-credentials-table-policy" {
         ]
         Effect = "Allow"
         Resource = [
-          aws_dynamodb_table.user-credentials-table.arn,
-          "${aws_dynamodb_table.user-credentials-table.arn}/index/*"
+          aws_dynamodb_table.user-issued-credentials.arn,
+          "${aws_dynamodb_table.user-issued-credentials.arn}/index/*"
         ]
       },
     ]

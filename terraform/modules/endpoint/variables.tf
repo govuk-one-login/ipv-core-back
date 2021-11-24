@@ -42,19 +42,19 @@ variable "role_name" {
   description = "Lambda iam role name"
 }
 
-variable "allow_access_to_user_credentials_table" {
+variable "allow_access_to_user_issued_credentials_table" {
   type        = bool
   default     = false
   description = "Should the lambda be given access to the user-credentials DynamoDB table"
 }
 
-variable "dynamodb_user_credentials_table_policy_arn" {
+variable "user_issued_credentials_table_policy_arn" {
   type        = string
   default     = null
   description = "ARN of the policy to allow read write to the user-credentials DynamoDB table"
 }
 
-variable "dynamodb_user_credentials_table_name" {
+variable "user_issued_credentials_table_name" {
   type        = string
   default     = "not-set-for-this-lambda"
   description = "Name of the DynamoDB user-credentials table"
