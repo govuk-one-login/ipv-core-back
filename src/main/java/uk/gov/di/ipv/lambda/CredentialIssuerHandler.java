@@ -4,8 +4,10 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import uk.gov.di.ipv.domain.ErrorResponse;
+import uk.gov.di.ipv.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.helpers.RequestBodyHelper;
 
@@ -22,10 +24,10 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
 
         Map<String, String> body = RequestBodyHelper.parseRequestBody(input.getBody());
-        String authorizationCode = body.get("authorization_code");
-        String credentialIssuer = body.get("credential_issuer_id");
+        ObjectMapper objectMapper = new ObjectMapper();
+        CredentialIssuerRequestDto request = objectMapper.convertValue(body, CredentialIssuerRequestDto.class);
 
-        var errorResponse = validate(authorizationCode, credentialIssuer);
+        var errorResponse = validate(request);
         if (errorResponse.isPresent()) {
             return errorResponse.get();
         } else {
@@ -34,16 +36,16 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
 
     }
 
-    private Optional<APIGatewayProxyResponseEvent> validate(String authorizationCode, String credentialIssuer) {
-        if (StringUtils.isBlank(authorizationCode)) {
+    private Optional<APIGatewayProxyResponseEvent> validate(CredentialIssuerRequestDto request) {
+        if (StringUtils.isBlank(request.getAuthorization_code())) {
             return Optional.of(ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingAuthorizationCode));
         }
 
-        if (StringUtils.isBlank(credentialIssuer)) {
+        if (StringUtils.isBlank(request.getCredential_issuer_id())) {
             return Optional.of(ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingCredentialIssuerId));
         }
 
-        if (!validCredentialIssuers.contains(credentialIssuer)) {
+        if (!validCredentialIssuers.contains(request.getCredential_issuer_id())) {
             return Optional.of(ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.InvalidCredentialIssuerId));
         }
         return Optional.empty();
