@@ -47,7 +47,7 @@ public class AccessTokenHandler
 
             if (tokenRequestDto.getCode().isEmpty()) {
                 LOGGER.error("Missing authorisation code from the token request");
-                return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingAuthorisationCode);
+                return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingAuthorizationCode);
             }
 
             TokenRequest tokenRequest = new TokenRequest(

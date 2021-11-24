@@ -115,7 +115,7 @@ public class AccessTokenHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.MissingAuthorisationCode.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.MissingAuthorisationCode.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.MissingAuthorizationCode.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.MissingAuthorizationCode.getMessage(), responseBody.get("message"));
     }
 }
