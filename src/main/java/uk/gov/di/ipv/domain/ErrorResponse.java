@@ -8,11 +8,12 @@ public enum ErrorResponse {
     MissingQueryParameters(1000, "Missing query parameters for auth request"),
     MissingRedirectURI(1001, "Redirect URI is missing from auth request"),
     FailedToParseTokenRequest(1002, "Failed to parse token request"),
-    MissingAuthorisationCode(1003, "Missing authorization code for token request"),
+    MissingAuthorizationCode(1003, "Missing authorization code"),
     FailedToExchangeAuthorizationCode(1004, "Failed to exchange the authorization code for an access token"),
     MissingAccessToken(1005, "Missing access token from user info request"),
-    FailedToParseAccessToken(1006, "Failed to parse access token");
-
+    FailedToParseAccessToken(1006, "Failed to parse access token"),
+    MissingCredentialIssuerId(1007, "Missing credential issuer id"),
+    InvalidCredentialIssuerId(1008, "Invalid credential issuer id");
 
     @JsonProperty("code")
     private int code;
