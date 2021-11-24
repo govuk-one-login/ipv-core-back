@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.domain.ErrorResponse;
 import uk.gov.di.ipv.dto.TokenRequestDto;
 import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
-import uk.gov.di.ipv.helpers.ResponseBodyHelper;
+import uk.gov.di.ipv.helpers.RequestBodyHelper;
 import uk.gov.di.ipv.service.AccessTokenService;
 
 import java.util.Map;
@@ -40,7 +40,7 @@ public class AccessTokenHandler
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
         ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, String> body = ResponseBodyHelper.parseRequestBody(input.getBody());
+        Map<String, String> body = RequestBodyHelper.parseRequestBody(input.getBody());
 
         try {
             TokenRequestDto tokenRequestDto = objectMapper.convertValue(body, TokenRequestDto.class);
