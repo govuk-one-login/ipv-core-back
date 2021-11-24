@@ -11,8 +11,8 @@ import uk.gov.di.ipv.helpers.RequestBodyHelper;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.Set;
 import java.util.Optional;
+import java.util.Set;
 
 public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
