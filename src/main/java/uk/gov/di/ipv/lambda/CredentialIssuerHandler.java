@@ -44,7 +44,7 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
 
         Map<String, String> body = RequestHelper.parseRequestBody(input.getBody());
         ObjectMapper objectMapper = new ObjectMapper();
-        CredentialIssuerRequestDto request = objectMapper.convertValue(body, CredentialIssuerRequestDto.class);
+        CredentialIssuerRequestDto request =  objectMapper.convertValue(body, CredentialIssuerRequestDto.class);
 
         var errorResponse = validate(request);
         if (errorResponse.isPresent()) {
@@ -57,7 +57,7 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
             TokenRequest tokenRequest = new TokenRequest(
                     credentialIssuerConfig.getTokenUrl(),
                     new ClientID("IPV_CLIENT_1"),
-                    new AuthorizationCodeGrant(authorizationCode, credentialIssuerConfig.getTokenUrl())
+                    new AuthorizationCodeGrant(authorizationCode, URI.create(request.getRedirect_uri()))
             );
 
             HTTPResponse httpResponse = sendHttpRequest(tokenRequest.toHTTPRequest());
@@ -79,6 +79,7 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
         if (!validCredentialIssuers.contains(request.getCredential_issuer_id())) {
             return Optional.of(ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.InvalidCredentialIssuerId));
         }
+        //todo check that the redirect_uri is in config list
         return Optional.empty();
     }
 

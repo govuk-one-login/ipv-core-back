@@ -7,18 +7,21 @@ public class CredentialIssuerRequestDto {
     @JsonProperty("authorization_code")
     private String authorization_code;
 
-
     @JsonProperty("credential_issuer_id")
     private String credential_issuer_id;
 
+    @JsonProperty("redirect_uri")
+    private String redirect_uri;
 
     public CredentialIssuerRequestDto(
             @JsonProperty(value = "authorization_code") String authorization_code,
-            @JsonProperty(value = "credential_issuer_id") String credential_issuer_id
+            @JsonProperty(value = "credential_issuer_id") String credential_issuer_id,
+            @JsonProperty(value = "redirect_uri") String redirect_uri
     ) {
         this.authorization_code = authorization_code;
         this.credential_issuer_id = credential_issuer_id;
-    }
+        this.redirect_uri = redirect_uri;
+     }
 
     public String getAuthorization_code() {
         return authorization_code;
@@ -27,4 +30,9 @@ public class CredentialIssuerRequestDto {
     public String getCredential_issuer_id() {
         return credential_issuer_id;
     }
+
+    public String getRedirect_uri() {
+        return redirect_uri;
+    }
+
 }
