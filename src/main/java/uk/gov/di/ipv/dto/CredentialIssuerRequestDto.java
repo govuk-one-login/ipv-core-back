@@ -11,9 +11,9 @@ public class CredentialIssuerRequestDto {
     private final String redirect_uri;
 
     public CredentialIssuerRequestDto(
-            @JsonProperty(value = "authorization_code", required = true) String authorization_code,
-            @JsonProperty(value = "credential_issuer_id", required = true) String credential_issuer_id,
-            @JsonProperty(value = "redirect_uri", required = true) String redirect_uri
+            @JsonProperty(value = "authorization_code") String authorization_code,
+            @JsonProperty(value = "credential_issuer_id") String credential_issuer_id,
+            @JsonProperty(value = "redirect_uri") String redirect_uri
     ) {
         this.authorization_code = authorization_code;
         this.credential_issuer_id = credential_issuer_id;

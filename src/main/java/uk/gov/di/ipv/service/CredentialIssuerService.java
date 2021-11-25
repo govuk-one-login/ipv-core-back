@@ -14,9 +14,11 @@ import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.gov.di.ipv.domain.CredentialIssuerException;
 import uk.gov.di.ipv.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.dto.CredentialIssuerRequestDto;
 
+import javax.security.auth.login.CredentialException;
 import java.io.IOException;
 import java.net.URI;
 
@@ -38,8 +40,10 @@ public class CredentialIssuerService {
 
             if (tokenResponse instanceof TokenErrorResponse) {
                 TokenErrorResponse errorResponse = tokenResponse.toErrorResponse();
+                var description = errorResponse.getErrorObject().getDescription();
+                var code = errorResponse.getErrorObject().getCode();
                 // todo handle logging
-                return null; //todo handle what exception if any to return
+                throw new CredentialIssuerException(code + " " + description); //todo handle what exception if any to return
 
             }
             return tokenResponse
@@ -47,7 +51,7 @@ public class CredentialIssuerService {
                     .getTokens()
                     .getAccessToken();
         } catch (IOException | ParseException e) {
-            throw new RuntimeException(); //todo fixme
+            throw new CredentialIssuerException(e); //todo fixme
         }
 
     }
