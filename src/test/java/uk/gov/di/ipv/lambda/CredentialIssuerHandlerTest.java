@@ -22,7 +22,7 @@ class CredentialIssuerHandlerTest {
         CredentialIssuerHandler handler = new CredentialIssuerHandler();
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
 
-        input.setBody("credential_issuer_id=foo");
+        input.setBody("credential_issuer_id=foo&redirect_uri=http://www.example.com");
         Context context = mock(Context.class);
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
         Integer statusCode = response.getStatusCode();
@@ -38,7 +38,7 @@ class CredentialIssuerHandlerTest {
 
         CredentialIssuerHandler handler = new CredentialIssuerHandler();
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
-        input.setBody("authorization_code=bar");
+        input.setBody("authorization_code=bar&redirect_uri=http://www.example.com");
 
         Context context = mock(Context.class);
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
@@ -56,7 +56,7 @@ class CredentialIssuerHandlerTest {
         CredentialIssuerHandler handler = new CredentialIssuerHandler();
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
 
-        input.setBody("authorization_code=bar&credential_issuer_id=barx");
+        input.setBody("authorization_code=bar&credential_issuer_id=bar&redirect_uri=http://www.example.com");
         Context context = mock(Context.class);
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
         Integer statusCode = response.getStatusCode();
@@ -68,12 +68,29 @@ class CredentialIssuerHandlerTest {
     }
 
     @Test
-    void shouldReceive200ResponseCodeIfAllRequestParametersValid() throws JsonProcessingException {
+    void shouldReceive400ResponseCodeIfRedirectUriNotPresent() throws JsonProcessingException {
 
         CredentialIssuerHandler handler = new CredentialIssuerHandler();
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
 
         input.setBody("authorization_code=bar&credential_issuer_id=PassportIssuer");
+        Context context = mock(Context.class);
+        APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
+        Integer statusCode = response.getStatusCode();
+        Map responseBody = getResponseBodyAsMap(response);
+        assertEquals(HTTPResponse.SC_BAD_REQUEST, statusCode);
+        assertEquals(ErrorResponse.MissingRedirectURI.getCode(), responseBody.get("code"));
+        verifyNoInteractions(context);
+
+    }
+
+    @Test
+    void shouldReceive200ResponseCodeIfAllRequestParametersValid() throws JsonProcessingException {
+
+        CredentialIssuerHandler handler = new CredentialIssuerHandler();
+        APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
+
+        input.setBody("authorization_code=bar&credential_issuer_id=PassportIssuer&redirect_uri=http://www.example.com");
         Context context = mock(Context.class);
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
         Integer statusCode = response.getStatusCode();

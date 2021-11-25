@@ -36,7 +36,7 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
     private Set<CredentialIssuerConfig> credentialIssuers;
 
     public CredentialIssuerHandler(Set<CredentialIssuerConfig> credentialIssuerConfig) {
-        this.credentialIssuers = Objects.requireNonNull(credentialIssuerConfig);
+        this.credentialIssuers = credentialIssuerConfig;
     }
 
     public CredentialIssuerHandler() {
@@ -67,9 +67,7 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
         );
 
         HTTPResponse httpResponse = sendHttpRequest(tokenRequest.toHTTPRequest());
-
         return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.EMPTY_MAP);
-
 
     }
 
@@ -80,6 +78,10 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
 
         if (StringUtils.isBlank(request.getCredential_issuer_id())) {
             return Optional.of(ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingCredentialIssuerId));
+        }
+
+        if (StringUtils.isBlank(request.getRedirect_uri())) {
+            return Optional.of(ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingRedirectURI));
         }
 
         Optional<CredentialIssuerConfig> first = getCredentialIssuerConfig(request);
