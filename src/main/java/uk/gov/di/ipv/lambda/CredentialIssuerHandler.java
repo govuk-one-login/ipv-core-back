@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -32,38 +33,43 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CredentialIssuerHandler.class);
 
-    private Set<String> validCredentialIssuers = Set.of("PassportIssuer", "FraudIssuer");
+    private Set<CredentialIssuerConfig> credentialIssuers;
 
+    public CredentialIssuerHandler(Set<CredentialIssuerConfig> credentialIssuerConfig) {
+        this.credentialIssuers = Objects.requireNonNull(credentialIssuerConfig);
+    }
 
-    private Map<String, CredentialIssuerConfig> validCredentialIssuers2 = Map.of(
-            "PassportIssuer", new CredentialIssuerConfig("PassportIssuer", URI.create("http://www.example.com"))
-    );
+    public CredentialIssuerHandler() {
+        CredentialIssuerConfig passportIssuer = new CredentialIssuerConfig("PassportIssuer", URI.create("http://www.example.com"));
+        CredentialIssuerConfig fraudIssuer = new CredentialIssuerConfig("FraudIssuer", URI.create("http://www.example.com"));
+        this.credentialIssuers = Set.of(passportIssuer, fraudIssuer);
+    }
 
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
 
         Map<String, String> body = RequestHelper.parseRequestBody(input.getBody());
         ObjectMapper objectMapper = new ObjectMapper();
-        CredentialIssuerRequestDto request =  objectMapper.convertValue(body, CredentialIssuerRequestDto.class);
+        CredentialIssuerRequestDto request = objectMapper.convertValue(body, CredentialIssuerRequestDto.class);
 
         var errorResponse = validate(request);
         if (errorResponse.isPresent()) {
             return errorResponse.get();
-        } else {
-
-            CredentialIssuerConfig credentialIssuerConfig = validCredentialIssuers2.get(request.getCredential_issuer_id());
-
-            AuthorizationCode authorizationCode = new AuthorizationCode(request.getAuthorization_code());
-            TokenRequest tokenRequest = new TokenRequest(
-                    credentialIssuerConfig.getTokenUrl(),
-                    new ClientID("IPV_CLIENT_1"),
-                    new AuthorizationCodeGrant(authorizationCode, URI.create(request.getRedirect_uri()))
-            );
-
-            HTTPResponse httpResponse = sendHttpRequest(tokenRequest.toHTTPRequest());
-
-            return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.EMPTY_MAP);
         }
+
+        CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request).get();
+
+        AuthorizationCode authorizationCode = new AuthorizationCode(request.getAuthorization_code());
+        TokenRequest tokenRequest = new TokenRequest(
+                credentialIssuerConfig.getTokenUrl(),
+                new ClientID("IPV_CLIENT_1"),
+                new AuthorizationCodeGrant(authorizationCode, URI.create(request.getRedirect_uri()))
+        );
+
+        HTTPResponse httpResponse = sendHttpRequest(tokenRequest.toHTTPRequest());
+
+        return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.EMPTY_MAP);
+
 
     }
 
@@ -76,11 +82,19 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
             return Optional.of(ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingCredentialIssuerId));
         }
 
-        if (!validCredentialIssuers.contains(request.getCredential_issuer_id())) {
+        Optional<CredentialIssuerConfig> first = getCredentialIssuerConfig(request);
+        if (first.isEmpty()) {
             return Optional.of(ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.InvalidCredentialIssuerId));
         }
         //todo check that the redirect_uri is in config list
         return Optional.empty();
+    }
+
+    private Optional<CredentialIssuerConfig> getCredentialIssuerConfig(CredentialIssuerRequestDto request) {
+        Optional<CredentialIssuerConfig> first = credentialIssuers.stream()
+                .filter(config -> request.getCredential_issuer_id().equals(config.getId()))
+                .findFirst();
+        return first;
     }
 
     private HTTPResponse sendHttpRequest(HTTPRequest httpRequest) {
