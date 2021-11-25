@@ -4,24 +4,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class CredentialIssuerRequestDto {
 
-    @JsonProperty("authorization_code")
-    private String authorization_code;
+    private final String authorization_code;
 
-    @JsonProperty("credential_issuer_id")
-    private String credential_issuer_id;
+    private final String credential_issuer_id;
 
-    @JsonProperty("redirect_uri")
-    private String redirect_uri;
+    private final String redirect_uri;
 
     public CredentialIssuerRequestDto(
-            @JsonProperty(value = "authorization_code") String authorization_code,
-            @JsonProperty(value = "credential_issuer_id") String credential_issuer_id,
-            @JsonProperty(value = "redirect_uri") String redirect_uri
+            @JsonProperty(value = "authorization_code", required = true) String authorization_code,
+            @JsonProperty(value = "credential_issuer_id", required = true) String credential_issuer_id,
+            @JsonProperty(value = "redirect_uri", required = true) String redirect_uri
     ) {
         this.authorization_code = authorization_code;
         this.credential_issuer_id = credential_issuer_id;
         this.redirect_uri = redirect_uri;
-     }
+    }
 
     public String getAuthorization_code() {
         return authorization_code;
