@@ -2,6 +2,10 @@ resource "aws_api_gateway_rest_api" "ipv_internal" {
   name        = "${var.environment}-ipv-internal"
   description = "The api accessed by internal IPV systems, e.g. di-ipv-core-front"
   tags        = local.default_tags
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
 }
 
 resource "aws_api_gateway_deployment" "deployment" {
