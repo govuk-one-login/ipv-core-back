@@ -2,6 +2,7 @@ package uk.gov.di.ipv.service;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
+import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.SerializeException;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
@@ -21,6 +22,7 @@ import uk.gov.di.ipv.dto.CredentialIssuerRequestDto;
 import javax.security.auth.login.CredentialException;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Objects;
 
 public class CredentialIssuerService {
 
@@ -42,18 +44,18 @@ public class CredentialIssuerService {
 
             if (tokenResponse instanceof TokenErrorResponse) {
                 TokenErrorResponse errorResponse = tokenResponse.toErrorResponse();
-                var description = errorResponse.getErrorObject().getDescription();
-                var code = errorResponse.getErrorObject().getCode();
-                // todo handle logging
-                throw new CredentialIssuerException(code + " " + description); //todo handle what exception if any to return
-
+                ErrorObject errorObject = Objects.requireNonNullElse(
+                        errorResponse.getErrorObject(),
+                        new ErrorObject("unknown", "unknown")
+                );
+                throw new CredentialIssuerException(String.format("%s: %s", errorObject.getCode(), errorObject.getDescription()));
             }
             return tokenResponse
                     .toSuccessResponse()
                     .getTokens()
                     .getAccessToken();
         } catch (IOException | ParseException e) {
-            throw new CredentialIssuerException(e); //todo fixme
+            throw new CredentialIssuerException(e);
         }
 
     }

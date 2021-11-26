@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.domain.CredentialIssuerException;
 import uk.gov.di.ipv.dto.CredentialIssuerConfig;
@@ -20,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class CredentialIssuerServiceTest {
 
     @Test
-    void test_token_response(WireMockRuntimeInfo wmRuntimeInfo) {
+    void test_valid_token_response(WireMockRuntimeInfo wmRuntimeInfo) {
 
         stubFor(post("/token")
                 .willReturn(aResponse()
@@ -75,7 +76,7 @@ class CredentialIssuerServiceTest {
         });
 
         String message = exception.getMessage();
-        assertEquals("invalid_request Request was missing the 'redirect_uri' parameter.", message);
+        assertEquals("invalid_request: Request was missing the 'redirect_uri' parameter.", message);
     }
 
     @Test
