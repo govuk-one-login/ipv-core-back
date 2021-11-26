@@ -6,16 +6,33 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import com.nimbusds.oauth2.sdk.token.AccessToken;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
+import org.mockito.Captor;
+import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.domain.ErrorResponse;
+import uk.gov.di.ipv.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.dto.CredentialIssuerRequestDto;
+import uk.gov.di.ipv.service.CredentialIssuerService;
 
+import java.net.URI;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class CredentialIssuerHandlerTest {
+
+    @Captor
+    private ArgumentCaptor<CredentialIssuerRequestDto> requestDto;
+
     @Test
     void shouldReceive400ResponseCodeIfAuthorizationCodeNotPresent() throws JsonProcessingException {
 
@@ -87,15 +104,39 @@ class CredentialIssuerHandlerTest {
     @Test
     void shouldReceive200ResponseCodeIfAllRequestParametersValid() throws JsonProcessingException {
 
-        CredentialIssuerHandler handler = new CredentialIssuerHandler();
+        String credentialIssuerId = "PassportIssuer";
+        String redirectUri = "http://www.example.com";
+        String authorization_code = "bar";
+
+        CredentialIssuerConfig passportIssuer = new CredentialIssuerConfig(credentialIssuerId, URI.create(redirectUri));
+        CredentialIssuerConfig fraudIssuer = new CredentialIssuerConfig("FraudIssuer", URI.create(redirectUri));
+        Set<CredentialIssuerConfig> configs = Set.of(passportIssuer, fraudIssuer);
+
+        CredentialIssuerService credentialIssuerService = mock(CredentialIssuerService.class);
+        AccessToken accessToken = mock(AccessToken.class);
+
+        when(credentialIssuerService.exchangeCodeForToken(
+                requestDto.capture(),
+                ArgumentMatchers.eq(passportIssuer))
+        ).thenReturn(accessToken);
+
+        CredentialIssuerHandler handler = new CredentialIssuerHandler(credentialIssuerService, configs);
+
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
 
-        input.setBody("authorization_code=bar&credential_issuer_id=PassportIssuer&redirect_uri=http://www.example.com");
+        input.setBody(String.format("authorization_code=%s&credential_issuer_id=%s&redirect_uri=%s", authorization_code, credentialIssuerId, redirectUri));
         Context context = mock(Context.class);
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
         Integer statusCode = response.getStatusCode();
         assertEquals(HTTPResponse.SC_OK, statusCode);
         verifyNoInteractions(context);
+
+        CredentialIssuerRequestDto value = requestDto.getValue();
+
+        assertEquals(redirectUri, value.getRedirect_uri());
+        assertEquals(credentialIssuerId, value.getCredential_issuer_id());
+        assertEquals(authorization_code, value.getAuthorization_code());
+
 
     }
 
