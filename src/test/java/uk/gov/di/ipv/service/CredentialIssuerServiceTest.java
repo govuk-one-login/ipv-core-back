@@ -4,7 +4,6 @@ import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.domain.CredentialIssuerException;
 import uk.gov.di.ipv.dto.CredentialIssuerConfig;
@@ -15,7 +14,9 @@ import java.net.URI;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @WireMockTest
 class CredentialIssuerServiceTest {
@@ -82,7 +83,7 @@ class CredentialIssuerServiceTest {
     @Test
     public void invalidHeaderThrowsCredentialIssuerException(WireMockRuntimeInfo wmRuntimeInfo) {
 
-        RuntimeException exception = assertThrows(CredentialIssuerException.class, () -> {
+        CredentialIssuerException exception = assertThrows(CredentialIssuerException.class, () -> {
             stubFor(post("/token")
                     .willReturn(aResponse()
                             .withHeader("Content-Type", "application/xml")
@@ -96,7 +97,8 @@ class CredentialIssuerServiceTest {
             );
             CredentialIssuerConfig credentialIssuerConfig = new CredentialIssuerConfig(
                     "StubPassport",
-                    URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/token"));;
+                    URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/token"));
+            ;
             AccessToken accessToken = credentialIssuerService.exchangeCodeForToken(credentialIssuerRequestDto, credentialIssuerConfig);
 
         });
@@ -106,9 +108,4 @@ class CredentialIssuerServiceTest {
         assertTrue(actualMessage.contains(expectedMessage));
     }
 
-
-
-
-    }
-
-
+}
