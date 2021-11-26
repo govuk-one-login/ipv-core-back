@@ -28,18 +28,36 @@ variable "path_part" {
 }
 
 variable "handler" {
-  type       = string
+  type        = string
   description = "Class handler for each of the lambdas"
 }
 
 variable "function_name" {
-  type       = string
+  type        = string
   description = "Lambda function name"
 }
 
 variable "role_name" {
-  type       = string
+  type        = string
   description = "Lambda iam role name"
+}
+
+variable "allow_access_to_user_issued_credentials_table" {
+  type        = bool
+  default     = false
+  description = "Should the lambda be given access to the user-credentials DynamoDB table"
+}
+
+variable "user_issued_credentials_table_policy_arn" {
+  type        = string
+  default     = null
+  description = "ARN of the policy to allow read write to the user-credentials DynamoDB table"
+}
+
+variable "user_issued_credentials_table_name" {
+  type        = string
+  default     = "not-set-for-this-lambda"
+  description = "Name of the DynamoDB user-credentials table"
 }
 
 locals {

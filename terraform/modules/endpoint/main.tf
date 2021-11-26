@@ -8,33 +8,6 @@ data "archive_file" "dummy" {
   }
 }
 
-data "aws_iam_policy_document" "lambda_can_assume_policy" {
-  version = "2012-10-17"
-
-  statement {
-    effect = "Allow"
-    principals {
-      identifiers = [
-        "lambda.amazonaws.com"
-      ]
-      type = "Service"
-    }
-
-    actions = [
-      "sts:AssumeRole"
-    ]
-  }
-}
-
-resource "aws_iam_role" "lambda_iam_role" {
-  name = var.role_name
-
-  assume_role_policy = data.aws_iam_policy_document.lambda_can_assume_policy.json
-
-  tags = local.default_tags
-}
-
-
 resource "aws_lambda_function" "lambda_function" {
   filename         = data.archive_file.dummy.output_path
   function_name    = var.function_name
@@ -45,6 +18,12 @@ resource "aws_lambda_function" "lambda_function" {
   publish          = false
   timeout          = 30
   memory_size      = 2048
+
+  environment {
+    variables = {
+      USER_ISSUED_CREDENTIALS_TABLE_NAME = var.user_issued_credentials_table_name
+    }
+  }
 
   # There is an outstanding bug in terraform (Issue #3630) that means it always tries to update the
   # last modified date, even if no other attributes in the lambda need changing
@@ -100,5 +79,4 @@ resource "aws_lambda_permission" "endpoint_execution_permission" {
   principal     = "apigateway.amazonaws.com"
   qualifier     = aws_lambda_alias.alias_active.name
   source_arn    = "${var.rest_api_execution_arn}/*/${aws_api_gateway_method.endpoint_method.http_method}/${var.path_part}"
-
 }
