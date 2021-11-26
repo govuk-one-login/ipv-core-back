@@ -102,7 +102,7 @@ class CredentialIssuerHandlerTest {
     }
 
     @Test
-    void shouldReceive200ResponseCodeIfAllRequestParametersValid() throws JsonProcessingException {
+    void shouldReceive200ResponseCodeIfAllRequestParametersValid() {
 
         String credentialIssuerId = "PassportIssuer";
         String redirectUri = "http://www.example.com";
