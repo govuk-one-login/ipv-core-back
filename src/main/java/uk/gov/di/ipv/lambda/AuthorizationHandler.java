@@ -13,10 +13,12 @@ import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.domain.ErrorResponse;
 import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.service.AuthorizationCodeService;
+import uk.gov.di.ipv.service.ConfigurationService;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class AuthorizationHandler
@@ -26,12 +28,12 @@ public class AuthorizationHandler
 
     private final AuthorizationCodeService authorizationCodeService;
 
-    public AuthorizationHandler(AuthorizationCodeService authorizationCodeService) {
-        this.authorizationCodeService = authorizationCodeService;
-    }
-
     public AuthorizationHandler() {
         this.authorizationCodeService = new AuthorizationCodeService();
+    }
+
+    public AuthorizationHandler(AuthorizationCodeService authorizationCodeService) {
+        this.authorizationCodeService = authorizationCodeService;
     }
 
     @Override
@@ -50,7 +52,10 @@ public class AuthorizationHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingRedirectURI);
         }
 
-        AuthorizationCode authorizationCode = authorizationCodeService.generateAuthorisationCode();
+        AuthorizationCode authorizationCode = authorizationCodeService.generateAuthorizationCode();
+
+        // TODO: Load sessionID value properly
+        authorizationCodeService.persistAuthorizationCode(UUID.randomUUID().toString(), authorizationCode.getValue());
 
         Map<String, Identifier> payload = Map.of("code", authorizationCode);
 
