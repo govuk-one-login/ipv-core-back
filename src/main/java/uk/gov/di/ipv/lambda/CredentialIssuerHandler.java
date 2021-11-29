@@ -80,8 +80,8 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
             return Optional.of(ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingCredentialIssuerId));
         }
 
-        if (StringUtils.isBlank(request.getRedirect_uri())) {
-            return Optional.of(ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingRedirectURI));
+        if (StringUtils.isBlank(request.getSession_id())) {
+            return Optional.of(ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingSessionId));
         }
 
         Optional<CredentialIssuerConfig> first = getCredentialIssuerConfig(request);

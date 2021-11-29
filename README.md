@@ -29,7 +29,7 @@ Request evidence from a credential issuer
  
   * `authorization_code [string, required]`
   * `credential_issuer_id [string, required]`
-  * `redirect_uri [string, required]`
+  * `session_id [string, required]`
 
 
 * **Success Response:**

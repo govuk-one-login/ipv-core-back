@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -20,9 +21,9 @@ import uk.gov.di.ipv.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.service.CredentialIssuerService;
 
-import java.net.URI;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -38,79 +39,93 @@ class CredentialIssuerHandlerTest {
     @Captor
     private ArgumentCaptor<CredentialIssuerRequestDto> requestDto;
 
-    String credentialIssuerId = "PassportIssuer";
-    String redirectUri = "http://www.example.com";
+    @Mock
+    CredentialIssuerConfig passportIssuer;
+
+    @Mock
+    CredentialIssuerConfig fraudIssuer;
+
+    @Mock
+    CredentialIssuerService credentialIssuerService;
+
     String authorization_code = "bar";
+    String sessionId = UUID.randomUUID().toString();
+    String passportIssuerId = "PassportIssuerId";
+    private Set<CredentialIssuerConfig> configs;
+
+    @BeforeEach
+    void setUp() {
+        configs = Set.of(passportIssuer, fraudIssuer);
+    }
 
     @Test
     void shouldReceive400ResponseCodeIfAuthorizationCodeNotPresent() throws JsonProcessingException {
-        APIGatewayProxyRequestEvent input = createRequestEvent("credential_issuer_id=foo&redirect_uri=http://www.example.com");
-        APIGatewayProxyResponseEvent response = new CredentialIssuerHandler().handleRequest(input, context);
+        APIGatewayProxyRequestEvent input = createRequestEvent("credential_issuer_id=foo&session_id=foo");
+        APIGatewayProxyResponseEvent response = new CredentialIssuerHandler(credentialIssuerService, configs).handleRequest(input, context);
         assert400Response(response, ErrorResponse.MissingAuthorizationCode);
     }
 
     @Test
     void shouldReceive400ResponseCodeIfCredentialIssuerNotPresent() throws JsonProcessingException {
-        APIGatewayProxyRequestEvent input = createRequestEvent("authorization_code=bar&redirect_uri=http://www.example.com");
-        APIGatewayProxyResponseEvent response = new CredentialIssuerHandler().handleRequest(input, context);
+        APIGatewayProxyRequestEvent input = createRequestEvent("authorization_code=bar&session_id=foo");
+        APIGatewayProxyResponseEvent response = new CredentialIssuerHandler(credentialIssuerService, configs).handleRequest(input, context);
         assert400Response(response, ErrorResponse.MissingCredentialIssuerId);
     }
 
     @Test
     void shouldReceive400ResponseCodeIfCredentialIssuerNotInPermittedSet() throws JsonProcessingException {
-        APIGatewayProxyRequestEvent input = createRequestEvent("authorization_code=bar&credential_issuer_id=bar&redirect_uri=http://www.example.com");
-        APIGatewayProxyResponseEvent response = new CredentialIssuerHandler().handleRequest(input, context);
+        APIGatewayProxyRequestEvent input = createRequestEvent("authorization_code=bar&credential_issuer_id=bar&session_id=foo");
+        APIGatewayProxyResponseEvent response = new CredentialIssuerHandler(credentialIssuerService, configs).handleRequest(input, context);
         assert400Response(response, ErrorResponse.InvalidCredentialIssuerId);
     }
 
     @Test
-    void shouldReceive400ResponseCodeIfRedirectUriNotPresent() throws JsonProcessingException {
+    void shouldReceive400ResponseCodeIfSessionIdNotPresent() throws JsonProcessingException {
         APIGatewayProxyRequestEvent input = createRequestEvent("authorization_code=bar&credential_issuer_id=PassportIssuer");
-        APIGatewayProxyResponseEvent response = new CredentialIssuerHandler().handleRequest(input, context);
-        assert400Response(response, ErrorResponse.MissingRedirectURI);
+        APIGatewayProxyResponseEvent response = new CredentialIssuerHandler(credentialIssuerService, configs).handleRequest(input, context);
+        assert400Response(response, ErrorResponse.MissingSessionId);
     }
 
     @Test
     void shouldReceive200ResponseCodeIfAllRequestParametersValid() {
-        CredentialIssuerConfig passportIssuer = new CredentialIssuerConfig(credentialIssuerId, URI.create(redirectUri));
-        CredentialIssuerConfig fraudIssuer = new CredentialIssuerConfig("FraudIssuer", URI.create(redirectUri));
-        CredentialIssuerService credentialIssuerService = mock(CredentialIssuerService.class);
         AccessToken accessToken = mock(AccessToken.class);
 
         when(credentialIssuerService.exchangeCodeForToken(
                 requestDto.capture(),
                 ArgumentMatchers.eq(passportIssuer))
         ).thenReturn(accessToken);
+        when(passportIssuer.getId()).thenReturn(passportIssuerId);
 
-        CredentialIssuerHandler handler = new CredentialIssuerHandler(credentialIssuerService, Set.of(passportIssuer, fraudIssuer));
 
-        APIGatewayProxyRequestEvent input = createRequestEvent(String.format("authorization_code=%s&credential_issuer_id=%s&redirect_uri=%s", authorization_code, credentialIssuerId, redirectUri));
+        CredentialIssuerHandler handler = new CredentialIssuerHandler(credentialIssuerService, configs);
+        APIGatewayProxyRequestEvent input = createRequestEvent(String.format("authorization_code=%s&credential_issuer_id=%s&session_id=%s", authorization_code, passportIssuerId, sessionId));
+
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
+
         Integer statusCode = response.getStatusCode();
         assertEquals(HTTPResponse.SC_OK, statusCode);
         CredentialIssuerRequestDto value = requestDto.getValue();
-        assertEquals(redirectUri, value.getRedirect_uri());
-        assertEquals(credentialIssuerId, value.getCredential_issuer_id());
+        assertEquals(sessionId, value.getSession_id());
+        assertEquals(passportIssuerId, value.getCredential_issuer_id());
         assertEquals(authorization_code, value.getAuthorization_code());
         verifyNoInteractions(context);
     }
 
     @Test
     void shouldReceive400ResponseCodeIfCredentialIssuerServiceThrowsException() throws JsonProcessingException {
-        CredentialIssuerConfig passportIssuer = new CredentialIssuerConfig(credentialIssuerId, URI.create(redirectUri));
-        CredentialIssuerConfig fraudIssuer = new CredentialIssuerConfig("FraudIssuer", URI.create(redirectUri));
-        Set<CredentialIssuerConfig> configs = Set.of(passportIssuer, fraudIssuer);
-
-        CredentialIssuerService credentialIssuerService = mock(CredentialIssuerService.class);
-
         CredentialIssuerHandler handler = new CredentialIssuerHandler(credentialIssuerService, configs);
-        APIGatewayProxyRequestEvent input = createRequestEvent(String.format("authorization_code=%s&credential_issuer_id=%s&redirect_uri=%s", authorization_code, credentialIssuerId, redirectUri));
+        APIGatewayProxyRequestEvent input = createRequestEvent(String.format("authorization_code=%s&credential_issuer_id=%s&session_id=%s", authorization_code, passportIssuerId, sessionId));
 
         when(credentialIssuerService.exchangeCodeForToken(requestDto.capture(), ArgumentMatchers.eq(passportIssuer)))
                 .thenThrow(new CredentialIssuerException("code1: message1"));
+        when(passportIssuer.getId()).thenReturn(passportIssuerId);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
-        assert400Response(response, ErrorResponse.InvalidTokenRequest);
+        Integer statusCode = response.getStatusCode();
+        Map responseBody = getResponseBodyAsMap(response);
+        assertEquals(HTTPResponse.SC_BAD_REQUEST, statusCode);
+        assertEquals(ErrorResponse.InvalidTokenRequest.getCode(), responseBody.get("code"));
+        verifyNoInteractions(context);
     }
 
     private Map getResponseBodyAsMap(APIGatewayProxyResponseEvent response) throws JsonProcessingException {
@@ -125,11 +140,11 @@ class CredentialIssuerHandlerTest {
         return input;
     }
 
-    private void assert400Response(APIGatewayProxyResponseEvent response, ErrorResponse missingAuthorizationCode) throws JsonProcessingException {
+    private void assert400Response(APIGatewayProxyResponseEvent response, ErrorResponse errorResponse) throws JsonProcessingException {
         Integer statusCode = response.getStatusCode();
         Map responseBody = getResponseBodyAsMap(response);
         assertEquals(HTTPResponse.SC_BAD_REQUEST, statusCode);
-        assertEquals(missingAuthorizationCode.getCode(), responseBody.get("code"));
-        verifyNoInteractions(context);
+        assertEquals(errorResponse.getCode(), responseBody.get("code"));
+        verifyNoInteractions(context, credentialIssuerService);
     }
 }

@@ -36,7 +36,7 @@ public class CredentialIssuerService {
             TokenRequest tokenRequest = new TokenRequest(
                     config.getTokenUrl(),
                     new ClientID("IPV_CLIENT_1"),
-                    new AuthorizationCodeGrant(authorizationCode, URI.create(request.getRedirect_uri()))
+                    new AuthorizationCodeGrant(authorizationCode, null)
             );
 
             HTTPResponse httpResponse = tokenRequest.toHTTPRequest().send();

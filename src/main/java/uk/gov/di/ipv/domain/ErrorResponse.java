@@ -14,7 +14,8 @@ public enum ErrorResponse {
     FailedToParseAccessToken(1006, "Failed to parse access token"),
     MissingCredentialIssuerId(1007, "Missing credential issuer id"),
     InvalidCredentialIssuerId(1008, "Invalid credential issuer id"),
-    InvalidTokenRequest(1009, "Invalid token request");
+    InvalidTokenRequest(1009, "Invalid token request"),
+    MissingSessionId(1010, "Missing session id");
 
     @JsonProperty("code")
     private int code;
