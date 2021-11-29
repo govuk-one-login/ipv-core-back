@@ -4,7 +4,6 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.AccessTokenResponse;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
@@ -19,8 +18,6 @@ import uk.gov.di.ipv.dto.TokenRequestDto;
 import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.helpers.RequestHelper;
 import uk.gov.di.ipv.service.AccessTokenService;
-
-import java.util.Map;
 
 public class AccessTokenHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -39,11 +36,9 @@ public class AccessTokenHandler
 
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, String> body = RequestHelper.parseRequestBody(input.getBody());
 
         try {
-            TokenRequestDto tokenRequestDto = objectMapper.convertValue(body, TokenRequestDto.class);
+            TokenRequestDto tokenRequestDto = RequestHelper.convertRequestBody(input.getBody(), TokenRequestDto.class);
 
             if (tokenRequestDto.getCode().isEmpty()) {
                 LOGGER.error("Missing authorisation code from the token request");

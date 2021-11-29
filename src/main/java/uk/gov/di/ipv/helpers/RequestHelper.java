@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.helpers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
@@ -11,6 +12,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class RequestHelper {
+
+    public static <T> T convertRequestBody(String body, Class<T> type) {
+        Map<String, String> map = parseRequestBody(body);
+        ObjectMapper objectMapper = new ObjectMapper();
+        return objectMapper.convertValue(map, type);
+    }
 
     public static Map<String, String> parseRequestBody(String body) {
         Map<String, String> query_pairs = new HashMap<>();
