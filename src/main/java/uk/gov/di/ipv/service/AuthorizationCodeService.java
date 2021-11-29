@@ -5,15 +5,12 @@ import uk.gov.di.ipv.persistence.DataStore;
 import uk.gov.di.ipv.persistence.item.AuthorizationCodeItem;
 
 public class AuthorizationCodeService {
-    private final static String AUTH_CODE_TABLE_NAME_SUFFIX = "-auth-codes";
-
     private final DataStore<AuthorizationCodeItem> dataStore;
     private final ConfigurationService configurationService;
 
     public AuthorizationCodeService() {
         this.configurationService = ConfigurationService.getInstance();
-        String tableName = configurationService.getEnvironmentName() + AUTH_CODE_TABLE_NAME_SUFFIX;
-        this.dataStore = new DataStore<>(tableName, AuthorizationCodeItem.class);
+        this.dataStore = new DataStore<>(configurationService.getAuthCodesTableName(), AuthorizationCodeItem.class);
     }
 
     public AuthorizationCodeService(DataStore<AuthorizationCodeItem> dataStore, ConfigurationService configurationService) {

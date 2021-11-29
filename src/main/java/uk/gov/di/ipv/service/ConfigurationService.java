@@ -15,7 +15,7 @@ public class ConfigurationService {
         return Boolean.parseBoolean(System.getenv("IS_LOCAL")) ;
     }
 
-    public String getEnvironmentName() {
-        return System.getenv("ENVIRONMENT");
+    public String getAuthCodesTableName() {
+        return System.getenv("AUTH_CODES_TABLE_NAME");
     }
 }
