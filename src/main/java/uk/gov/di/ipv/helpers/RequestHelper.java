@@ -7,7 +7,7 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
-public class RequestBodyHelper {
+public class RequestHelper {
 
     public static Map<String, String> parseRequestBody(String body) {
         Map<String, String> query_pairs = new HashMap<>();

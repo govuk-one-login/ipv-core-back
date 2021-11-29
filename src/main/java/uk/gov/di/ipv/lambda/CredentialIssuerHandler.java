@@ -9,7 +9,7 @@ import com.nimbusds.oauth2.sdk.util.StringUtils;
 import uk.gov.di.ipv.domain.ErrorResponse;
 import uk.gov.di.ipv.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
-import uk.gov.di.ipv.helpers.RequestBodyHelper;
+import uk.gov.di.ipv.helpers.RequestHelper;
 
 import java.util.Collections;
 import java.util.Map;
@@ -23,7 +23,7 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
 
-        Map<String, String> body = RequestBodyHelper.parseRequestBody(input.getBody());
+        Map<String, String> body = RequestHelper.parseRequestBody(input.getBody());
         ObjectMapper objectMapper = new ObjectMapper();
         CredentialIssuerRequestDto request = objectMapper.convertValue(body, CredentialIssuerRequestDto.class);
 
