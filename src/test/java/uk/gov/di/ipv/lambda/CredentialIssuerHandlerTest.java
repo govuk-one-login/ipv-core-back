@@ -50,7 +50,7 @@ class CredentialIssuerHandlerTest {
                 Map.of("credential_issuer_id", "foo"),
                 Map.of("ipv-session-id", sessionId));
         APIGatewayProxyResponseEvent response = new CredentialIssuerHandler(credentialIssuerService).handleRequest(input, context);
-        assert400Response(response, ErrorResponse.MissingAuthorizationCode);
+        assert400Response(response, ErrorResponse.MISSING_AUTHORIZATION_CODE);
     }
 
     @Test
@@ -60,7 +60,7 @@ class CredentialIssuerHandlerTest {
                 Map.of("ipv-session-id", sessionId));
 
         APIGatewayProxyResponseEvent response = new CredentialIssuerHandler(credentialIssuerService).handleRequest(input, context);
-        assert400Response(response, ErrorResponse.MissingCredentialIssuerId);
+        assert400Response(response, ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
     }
 
     @Test
@@ -69,7 +69,7 @@ class CredentialIssuerHandlerTest {
                 Map.of("authorization_code", "foo", "credential_issuer_id", "an invalid id"),
                 Map.of("ipv-session-id", sessionId));
         APIGatewayProxyResponseEvent response = new CredentialIssuerHandler(credentialIssuerService).handleRequest(input, context);
-        assert400Response(response, ErrorResponse.InvalidCredentialIssuerId);
+        assert400Response(response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
     }
 
     @Test
@@ -78,7 +78,7 @@ class CredentialIssuerHandlerTest {
                 Map.of("authorization_code", "foo", "credential_issuer_id", passportIssuerId),
                 Map.of());
         APIGatewayProxyResponseEvent response = new CredentialIssuerHandler(credentialIssuerService).handleRequest(input, context);
-        assert400Response(response, ErrorResponse.MissingSessionId);
+        assert400Response(response, ErrorResponse.MISSING_SESSION_ID);
     }
 
     @Test
@@ -119,7 +119,7 @@ class CredentialIssuerHandlerTest {
         Integer statusCode = response.getStatusCode();
         Map responseBody = getResponseBodyAsMap(response);
         assertEquals(HTTPResponse.SC_BAD_REQUEST, statusCode);
-        assertEquals(ErrorResponse.InvalidTokenRequest.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.INVALID_TOKEN_REQUEST.getCode(), responseBody.get("code"));
         verifyNoInteractions(context);
     }
 

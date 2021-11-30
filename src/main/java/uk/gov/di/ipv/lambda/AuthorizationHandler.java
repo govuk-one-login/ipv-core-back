@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.domain.ErrorResponse;
 import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.service.AuthorizationCodeService;
-import uk.gov.di.ipv.service.ConfigurationService;
 
 import java.util.Collections;
 import java.util.List;
@@ -43,13 +42,13 @@ public class AuthorizationHandler
         try {
             if (queryStringParameters == null || queryStringParameters.isEmpty()) {
                 LOGGER.error("Missing required query parameters for authorisation request");
-                return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingQueryParameters);
+                return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MISSING_QUERY_PARAMETERS);
             }
             AuthenticationRequest.parse(queryStringParameters);
             LOGGER.info("Successfully parsed authentication request");
         } catch (ParseException e) {
             LOGGER.error("Authentication request could not be parsed", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingRedirectURI);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MISSING_REDIRECT_URI);
         }
 
         AuthorizationCode authorizationCode = authorizationCodeService.generateAuthorizationCode();
