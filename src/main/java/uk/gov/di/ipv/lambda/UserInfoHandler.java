@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.domain.ErrorResponse;
 import uk.gov.di.ipv.dto.UserInfoDto;
 import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.helpers.RequestHelper;
 import uk.gov.di.ipv.service.UserInfoService;
 
 public class UserInfoHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -31,21 +32,20 @@ public class UserInfoHandler implements RequestHandler<APIGatewayProxyRequestEve
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
 
-        String accessTokenString = input.getHeaders().get(AUTHORIZATION_HEADER);
-
-        if (accessTokenString == null || accessTokenString.isEmpty()) {
+        var accessTokenString = RequestHelper.getHeader(input.getHeaders(), AUTHORIZATION_HEADER);
+        if (accessTokenString.isEmpty()) {
             LOGGER.error("Missing access token from Authorization header");
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingAccessToken);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MISSING_ACCESS_TOKEN);
         }
 
         try {
-            AccessToken accessToken = AccessToken.parse(accessTokenString);
+            AccessToken accessToken = AccessToken.parse(accessTokenString.get());
             UserInfoDto userInfo = userInfoService.handleUserInfo(accessToken);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, userInfo);
         } catch (ParseException e) {
             LOGGER.error("Failed to parse access token");
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.FailedToParseAccessToken);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.FAILED_TO_PARSE_ACCESS_TOKEN);
         }
     }
 }

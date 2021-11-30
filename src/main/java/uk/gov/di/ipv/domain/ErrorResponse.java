@@ -5,17 +5,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum ErrorResponse {
-    MissingQueryParameters(1000, "Missing query parameters for auth request"),
-    MissingRedirectURI(1001, "Redirect URI is missing from auth request"),
-    FailedToParseTokenRequest(1002, "Failed to parse token request"),
-    MissingAuthorizationCode(1003, "Missing authorization code"),
-    FailedToExchangeAuthorizationCode(1004, "Failed to exchange the authorization code for an access token"),
-    MissingAccessToken(1005, "Missing access token from user info request"),
-    FailedToParseAccessToken(1006, "Failed to parse access token"),
-    MissingCredentialIssuerId(1007, "Missing credential issuer id"),
-    InvalidCredentialIssuerId(1008, "Invalid credential issuer id"),
-    MissingIpvSessionId(1009, "Missing ipv session id header"),
-    FailedToParseOauthQueryStringParameters(1010, "Failed to parse oauth2-specific query string parameters");
+    MISSING_QUERY_PARAMETERS(1000, "Missing query parameters for auth request"),
+    MISSING_REDIRECT_URI(1001, "Redirect URI is missing from auth request"),
+    FAILED_TO_PARSE_TOKEN_REQUEST(1002, "Failed to parse token request"),
+    MISSING_AUTHORIZATION_CODE(1003, "Missing authorization code"),
+    FAILED_TO_EXCHANGE_AUTHORIZATION_CODE(1004, "Failed to exchange the authorization code for an access token"),
+    MISSING_ACCESS_TOKEN(1005, "Missing access token from user info request"),
+    FAILED_TO_PARSE_ACCESS_TOKEN(1006, "Failed to parse access token"),
+    MISSING_CREDENTIAL_ISSUER_ID(1007, "Missing credential issuer id"),
+    INVALID_CREDENTIAL_ISSUER_ID(1008, "Invalid credential issuer id"),
+    INVALID_TOKEN_REQUEST(1009, "Invalid token request"),
+    MISSING_IPV_SESSION_ID(1010, "Missing ipv session id header"),
+    FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS(1011, "Failed to parse oauth2-specific query string parameters");
 
     @JsonProperty("code")
     private int code;

@@ -92,8 +92,8 @@ public class AuthorizationHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.FailedToParseOauthQueryStringParameters.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.FailedToParseOauthQueryStringParameters.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -113,8 +113,8 @@ public class AuthorizationHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.FailedToParseOauthQueryStringParameters.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.FailedToParseOauthQueryStringParameters.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -134,8 +134,8 @@ public class AuthorizationHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.FailedToParseOauthQueryStringParameters.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.FailedToParseOauthQueryStringParameters.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -155,8 +155,8 @@ public class AuthorizationHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.FailedToParseOauthQueryStringParameters.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.FailedToParseOauthQueryStringParameters.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -171,8 +171,8 @@ public class AuthorizationHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.MissingQueryParameters.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.MissingQueryParameters.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -193,7 +193,7 @@ public class AuthorizationHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.MissingIpvSessionId.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.MissingIpvSessionId.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), responseBody.get("message"));
     }
 }

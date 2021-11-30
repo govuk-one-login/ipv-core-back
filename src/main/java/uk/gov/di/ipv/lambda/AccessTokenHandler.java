@@ -4,7 +4,6 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.AccessTokenResponse;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
@@ -17,10 +16,8 @@ import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.domain.ErrorResponse;
 import uk.gov.di.ipv.dto.TokenRequestDto;
 import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
-import uk.gov.di.ipv.helpers.RequestBodyHelper;
+import uk.gov.di.ipv.helpers.RequestHelper;
 import uk.gov.di.ipv.service.AccessTokenService;
-
-import java.util.Map;
 
 public class AccessTokenHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -39,23 +36,21 @@ public class AccessTokenHandler
 
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, String> body = RequestBodyHelper.parseRequestBody(input.getBody());
 
         try {
-            TokenRequestDto tokenRequestDto = objectMapper.convertValue(body, TokenRequestDto.class);
+            TokenRequestDto tokenRequestDto = RequestHelper.convertRequest(input, TokenRequestDto.class);
 
             if (tokenRequestDto.getCode().isEmpty()) {
                 LOGGER.error("Missing authorisation code from the token request");
-                return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingAuthorizationCode);
+                return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MISSING_AUTHORIZATION_CODE);
             }
 
             TokenRequest tokenRequest = new TokenRequest(
                     null,
-                    new ClientID(tokenRequestDto.getClient_id()),
+                    new ClientID(tokenRequestDto.getClientId()),
                     new AuthorizationCodeGrant(
                             new AuthorizationCode(tokenRequestDto.getCode()),
-                            tokenRequestDto.getRedirect_uri())
+                            tokenRequestDto.getRedirectUri())
             );
 
             TokenResponse tokenResponse = accessTokenService.exchangeCodeForToken(tokenRequest);
@@ -63,7 +58,7 @@ public class AccessTokenHandler
             if (tokenResponse instanceof TokenErrorResponse) {
                 TokenErrorResponse tokenErrorResponse = tokenResponse.toErrorResponse();
                 LOGGER.error(tokenErrorResponse.getErrorObject().getDescription());
-                return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.FailedToExchangeAuthorizationCode);
+                return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE);
             }
 
             AccessTokenResponse accessTokenResponse = tokenResponse.toSuccessResponse();
@@ -71,7 +66,7 @@ public class AccessTokenHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, accessTokenResponse.toJSONObject());
         } catch (IllegalArgumentException e) {
             LOGGER.error("Token request could not be parsed", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.FailedToParseTokenRequest);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.FAILED_TO_PARSE_TOKEN_REQUEST);
         }
     }
 }

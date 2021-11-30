@@ -51,7 +51,7 @@ public class AuthorizationHandler
             LOGGER.info("Successfully parsed authentication request");
         } catch (ParseException e) {
             LOGGER.error("Authentication request could not be parsed", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.FailedToParseOauthQueryStringParameters);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS);
         }
 
         AuthorizationCode authorizationCode = authorizationCodeService.generateAuthorizationCode();
@@ -74,11 +74,11 @@ public class AuthorizationHandler
 
     private ValidationResult validateRequest(Map<String, List<String>> queryStringParameters, Map<String, String> requestHeaders) {
         if (Objects.isNull(queryStringParameters) || queryStringParameters.isEmpty()) {
-            return new ValidationResult(false, ErrorResponse.MissingQueryParameters);
+            return new ValidationResult(false, ErrorResponse.MISSING_QUERY_PARAMETERS);
         }
 
         if (!requestHeaders.containsKey(IPV_SESSION_ID_HEADER_KEY)) {
-            return new ValidationResult(false, ErrorResponse.MissingIpvSessionId);
+            return new ValidationResult(false, ErrorResponse.MISSING_IPV_SESSION_ID);
         }
         return ValidationResult.createValidResult();
     }
