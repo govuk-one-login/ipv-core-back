@@ -4,38 +4,30 @@ import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.ParseException;
-import com.nimbusds.oauth2.sdk.SerializeException;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.TokenResponse;
-import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.domain.CredentialIssuerException;
 import uk.gov.di.ipv.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.dto.CredentialIssuerRequestDto;
 
-import javax.security.auth.login.CredentialException;
 import java.io.IOException;
-import java.net.URI;
 import java.util.Objects;
+import java.util.Optional;
 
 public class CredentialIssuerService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(CredentialIssuerService.class);
 
     public AccessToken exchangeCodeForToken(CredentialIssuerRequestDto request, CredentialIssuerConfig config) {
 
         AuthorizationCode authorizationCode = new AuthorizationCode(request.getAuthorization_code());
-
         try {
             TokenRequest tokenRequest = new TokenRequest(
                     config.getTokenUrl(),
-                    new ClientID("IPV_CLIENT_1"),
+                    new ClientID(getClientId()),
                     new AuthorizationCodeGrant(authorizationCode, null)
             );
 
@@ -57,22 +49,14 @@ public class CredentialIssuerService {
         } catch (IOException | ParseException e) {
             throw new CredentialIssuerException(e);
         }
+    }
 
+    private String getClientId() {
+        return Optional.ofNullable(System.getenv("IPV_CLIENT_ID")).orElse("DI IPV CLIENT");
     }
 
     private TokenResponse parseTokenResponse(HTTPResponse httpResponse) throws ParseException {
         return OIDCTokenResponseParser.parse(httpResponse);
-
-    }
-
-    private HTTPResponse sendHttpRequest(HTTPRequest httpRequest) {
-        try {
-            return httpRequest.send();
-        } catch (IOException | SerializeException exception) {
-            LOGGER.error("Failed to send a http request", exception);
-            // todo what error to throw, and how to handle
-            throw new RuntimeException("Failed to send a http request", exception);
-        }
     }
 
 }
