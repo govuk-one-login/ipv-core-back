@@ -47,10 +47,10 @@ public class AccessTokenHandler
 
             TokenRequest tokenRequest = new TokenRequest(
                     null,
-                    new ClientID(tokenRequestDto.getClient_id()),
+                    new ClientID(tokenRequestDto.getClientId()),
                     new AuthorizationCodeGrant(
                             new AuthorizationCode(tokenRequestDto.getCode()),
-                            tokenRequestDto.getRedirect_uri())
+                            tokenRequestDto.getRedirectUri())
             );
 
             TokenResponse tokenResponse = accessTokenService.exchangeCodeForToken(tokenRequest);

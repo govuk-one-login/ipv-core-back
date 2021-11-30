@@ -24,13 +24,13 @@ public class RequestHelper {
     }
 
     public static Map<String, String> parseRequestBody(String body) {
-        Map<String, String> query_pairs = new HashMap<>();
+        Map<String, String> queryPairs = new HashMap<>();
 
         for (NameValuePair pair : URLEncodedUtils.parse(body, Charset.defaultCharset())) {
-            query_pairs.put(pair.getName(), pair.getValue());
+            queryPairs.put(pair.getName(), pair.getValue());
         }
 
-        return query_pairs;
+        return queryPairs;
     }
 
     public static Optional<String> getHeader(Map<String, String> headers, String headerKey) {
@@ -39,7 +39,7 @@ public class RequestHelper {
         }
         var values = headers.entrySet().stream()
                 .filter(e -> headerKey.equalsIgnoreCase(e.getKey()))
-                .map(e -> e.getValue())
+                .map(Map.Entry::getValue)
                 .collect(Collectors.toList());
         if (values.size() == 1) {
             var value = values.get(0);
