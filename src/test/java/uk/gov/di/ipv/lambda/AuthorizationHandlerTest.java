@@ -44,6 +44,8 @@ public class AuthorizationHandlerTest {
         params.put("scope", "openid");
         event.setQueryStringParameters(params);
 
+        event.setHeaders(Map.of("ipv-session-id", "12345"));
+
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
         assertEquals(200, response.getStatusCode());
@@ -58,6 +60,8 @@ public class AuthorizationHandlerTest {
         params.put("response_type", "code");
         params.put("scope", "openid");
         event.setQueryStringParameters(params);
+
+        event.setHeaders(Map.of("ipv-session-id", "12345"));
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
@@ -77,14 +81,16 @@ public class AuthorizationHandlerTest {
         params.put("scope", "openid");
         event.setQueryStringParameters(params);
 
+        event.setHeaders(Map.of("ipv-session-id", "12345"));
+
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
         ObjectMapper objectMapper = new ObjectMapper();
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.MissingRedirectURI.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.MissingRedirectURI.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.FailedToParseOauthQueryStringParameters.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.FailedToParseOauthQueryStringParameters.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -96,14 +102,16 @@ public class AuthorizationHandlerTest {
         params.put("scope", "openid");
         event.setQueryStringParameters(params);
 
+        event.setHeaders(Map.of("ipv-session-id", "12345"));
+
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
         ObjectMapper objectMapper = new ObjectMapper();
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.MissingRedirectURI.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.MissingRedirectURI.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.FailedToParseOauthQueryStringParameters.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.FailedToParseOauthQueryStringParameters.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -115,14 +123,16 @@ public class AuthorizationHandlerTest {
         params.put("scope", "openid");
         event.setQueryStringParameters(params);
 
+        event.setHeaders(Map.of("ipv-session-id", "12345"));
+
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
         ObjectMapper objectMapper = new ObjectMapper();
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.MissingRedirectURI.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.MissingRedirectURI.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.FailedToParseOauthQueryStringParameters.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.FailedToParseOauthQueryStringParameters.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -134,19 +144,23 @@ public class AuthorizationHandlerTest {
         params.put("response_type", "code");
         event.setQueryStringParameters(params);
 
+        event.setHeaders(Map.of("ipv-session-id", "12345"));
+
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
         ObjectMapper objectMapper = new ObjectMapper();
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.MissingRedirectURI.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.MissingRedirectURI.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.FailedToParseOauthQueryStringParameters.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.FailedToParseOauthQueryStringParameters.getMessage(), responseBody.get("message"));
     }
 
     @Test
     public void shouldReturn400OnMissingQueryParameters() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+
+        event.setHeaders(Map.of("ipv-session-id", "12345"));
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 

@@ -13,7 +13,9 @@ public enum ErrorResponse {
     MissingAccessToken(1005, "Missing access token from user info request"),
     FailedToParseAccessToken(1006, "Failed to parse access token"),
     MissingCredentialIssuerId(1007, "Missing credential issuer id"),
-    InvalidCredentialIssuerId(1008, "Invalid credential issuer id");
+    InvalidCredentialIssuerId(1008, "Invalid credential issuer id"),
+    MissingIpvSessionId(1009, "Missing ipv session id header"),
+    FailedToParseOauthQueryStringParameters(1010, "Failed to parse oauth2-specific query string parameters");
 
     @JsonProperty("code")
     private int code;

@@ -1,11 +1,11 @@
 resource "aws_dynamodb_table" "user-issued-credentials" {
   name         = "${var.environment}-user-issued-credentials"
-  hash_key     = "sessionId"
+  hash_key     = "ipvSessionId"
   range_key    = "credentialIssuer"
   billing_mode = "PAY_PER_REQUEST"
 
   attribute {
-    name = "sessionId"
+    name = "ipvSessionId"
     type = "S"
   }
 
@@ -19,11 +19,11 @@ resource "aws_dynamodb_table" "user-issued-credentials" {
 
 resource "aws_dynamodb_table" "auth-codes" {
   name         = "${var.environment}-auth-codes"
-  hash_key     = "sessionId"
+  hash_key     = "authCode"
   billing_mode = "PAY_PER_REQUEST"
 
   attribute {
-    name = "sessionId"
+    name = "authCode"
     type = "S"
   }
 
@@ -68,13 +68,9 @@ resource "aws_iam_policy" "access-auth-codes-table" {
         Sid = "AccessAuthCodesTable"
         Action = [
           "dynamodb:PutItem",
-          "dynamodb:UpdateItem",
-          "dynamodb:BatchWriteItem",
           "dynamodb:GetItem",
-          "dynamodb:BatchGetItem",
-          "dynamodb:Scan",
-          "dynamodb:Query",
-          "dynamodb:ConditionCheckItem"
+          "dynamodb:DeleteItem",
+          "dynamodb:Query"
         ]
         Effect = "Allow"
         Resource = [

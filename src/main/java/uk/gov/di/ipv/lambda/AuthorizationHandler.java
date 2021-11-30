@@ -13,17 +13,18 @@ import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.domain.ErrorResponse;
 import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.service.AuthorizationCodeService;
-import uk.gov.di.ipv.service.ConfigurationService;
+import uk.gov.di.ipv.validation.ValidationResult;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class AuthorizationHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent>  {
 
+    private static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthorizationHandler.class);
 
     private final AuthorizationCodeService authorizationCodeService;
@@ -41,21 +42,22 @@ public class AuthorizationHandler
         Map<String, List<String>> queryStringParameters = getQueryStringParametersAsMap(input);
 
         try {
-            if (queryStringParameters == null || queryStringParameters.isEmpty()) {
+            ValidationResult validationResult = validateRequest(queryStringParameters, input.getHeaders());
+            if (!validationResult.isValid()) {
                 LOGGER.error("Missing required query parameters for authorisation request");
-                return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingQueryParameters);
+                return ApiGatewayResponseGenerator.proxyJsonResponse(400, validationResult.getError());
             }
             AuthenticationRequest.parse(queryStringParameters);
             LOGGER.info("Successfully parsed authentication request");
         } catch (ParseException e) {
             LOGGER.error("Authentication request could not be parsed", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingRedirectURI);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.FailedToParseOauthQueryStringParameters);
         }
 
         AuthorizationCode authorizationCode = authorizationCodeService.generateAuthorizationCode();
 
-        // TODO: Load sessionID value properly
-        authorizationCodeService.persistAuthorizationCode(UUID.randomUUID().toString(), authorizationCode.getValue());
+        String ipvSessionId = input.getHeaders().get(IPV_SESSION_ID_HEADER_KEY);
+        authorizationCodeService.persistAuthorizationCode(authorizationCode.getValue(),ipvSessionId);
 
         Map<String, Identifier> payload = Map.of("code", authorizationCode);
 
@@ -68,5 +70,16 @@ public class AuthorizationHandler
                     .collect(Collectors.toMap(Map.Entry::getKey, entry -> List.of(entry.getValue())));
         }
         return Collections.emptyMap();
+    }
+
+    private ValidationResult validateRequest(Map<String, List<String>> queryStringParameters, Map<String, String> requestHeaders) {
+        if (Objects.isNull(queryStringParameters) || queryStringParameters.isEmpty()) {
+            return new ValidationResult(false, ErrorResponse.MissingQueryParameters);
+        }
+
+        if (!requestHeaders.containsKey(IPV_SESSION_ID_HEADER_KEY)) {
+            return new ValidationResult(false, ErrorResponse.MissingIpvSessionId);
+        }
+        return ValidationResult.createValidResult();
     }
 }
