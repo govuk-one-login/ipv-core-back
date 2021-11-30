@@ -53,7 +53,7 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
             AccessToken accessToken = credentialIssuerService.exchangeCodeForToken(request, getCredentialIssuerConfig(request));
             // todo var credential = getCredential(accessToken);
             // todo save credential
-            return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.EMPTY_MAP);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.emptyMap());
         } catch (CredentialIssuerException e) {
             LOGGER.error("Could not exchange authorization code for token: {}", e.getMessage(), e);
             return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.INVALID_TOKEN_REQUEST);
