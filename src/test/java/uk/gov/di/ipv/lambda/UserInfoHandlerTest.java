@@ -33,7 +33,7 @@ class UserInfoHandlerTest {
     Map responseBody = new HashMap<>();
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         Map<String, Object> userInfo = new HashMap<>();
 
         userInfo.put("iss", "Test iss");
@@ -49,7 +49,7 @@ class UserInfoHandlerTest {
     }
 
     @Test
-    public void shouldReturn200OnSuccessfulUserInfoRequest() {
+    void shouldReturn200OnSuccessfulUserInfoRequest() {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken();
         Map<String, String> headers = Collections.singletonMap("Authorization", "Bearer " + accessToken);
@@ -61,7 +61,7 @@ class UserInfoHandlerTest {
     }
 
     @Test
-    public void shouldReturnUserInfoObjectOnSuccessfulUserInfoRequest() throws JsonProcessingException {
+    void shouldReturnUserInfoObjectOnSuccessfulUserInfoRequest() throws JsonProcessingException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken();
         Map<String, String> headers = Collections.singletonMap("Authorization", "Bearer " + accessToken);
@@ -79,7 +79,7 @@ class UserInfoHandlerTest {
     }
 
     @Test
-    public void shouldReturnErrorTokenResponseWhenTokenIsNull() throws JsonProcessingException {
+    void shouldReturnErrorTokenResponseWhenTokenIsNull() throws JsonProcessingException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> headers = Collections.singletonMap("Authorization", null);
         event.setHeaders(headers);
@@ -91,7 +91,7 @@ class UserInfoHandlerTest {
     }
 
     @Test
-    public void shouldReturnErrorTokenResponseWhenTokenIsInvalid() throws JsonProcessingException {
+    void shouldReturnErrorTokenResponseWhenTokenIsInvalid() throws JsonProcessingException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> headers = Collections.singletonMap("Authorization", "11111111");
         event.setHeaders(headers);

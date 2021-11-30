@@ -23,7 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class AccessTokenHandlerTest {
+class AccessTokenHandlerTest {
     private final Context context = mock(Context.class);
     private final AccessTokenService accessTokenService = mock(AccessTokenService.class);
 
@@ -31,7 +31,7 @@ public class AccessTokenHandlerTest {
     private TokenResponse tokenResponse;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         AccessToken accessToken = new BearerAccessToken();
         tokenResponse = new AccessTokenResponse(new Tokens(accessToken, null));
         when(accessTokenService.exchangeCodeForToken(any())).thenReturn(tokenResponse);
@@ -40,7 +40,7 @@ public class AccessTokenHandlerTest {
     }
 
     @Test
-    public void shouldReturn200OnSuccessfulAccessTokenExchange() throws Exception {
+    void shouldReturn200OnSuccessfulAccessTokenExchange() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         String tokenRequestBody = "code=12345&redirect_uri=http://test.com&grant_type=test_grant_type&client_id=test_client_id";
         event.setBody(tokenRequestBody);
@@ -51,7 +51,7 @@ public class AccessTokenHandlerTest {
     }
 
     @Test
-    public void shouldReturnAccessTokenOnSuccessfulExchange() throws Exception {
+    void shouldReturnAccessTokenOnSuccessfulExchange() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         String tokenRequestBody = "code=12345&redirect_uri=http://test.com&grant_type=test_grant_type&client_id=test_client_id";
         event.setBody(tokenRequestBody);
@@ -65,7 +65,7 @@ public class AccessTokenHandlerTest {
     }
 
     @Test
-    public void shouldReturn400OnInvalidTokenRequest() throws Exception {
+    void shouldReturn400OnInvalidTokenRequest() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         String invalidTokenRequest = "invalid-token-request";
         event.setBody(invalidTokenRequest);
@@ -81,7 +81,7 @@ public class AccessTokenHandlerTest {
     }
 
     @Test
-    public void shouldReturn400OnFailedTokenExchange() throws Exception {
+    void shouldReturn400OnFailedTokenExchange() throws Exception {
         ErrorObject tokenErrorObject = new ErrorObject("F-001", "Something failed during exchange of code to token");
         tokenResponse = new TokenErrorResponse(tokenErrorObject);
         when(accessTokenService.exchangeCodeForToken(any())).thenReturn(tokenResponse);
@@ -102,7 +102,7 @@ public class AccessTokenHandlerTest {
     }
 
     @Test
-    public void shouldReturn400OnMissingAuthorisationCode() throws Exception {
+    void shouldReturn400OnMissingAuthorisationCode() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         String tokenRequestBody = "code=&redirect_uri=http://test.com&grant_type=test_grant_type&client_id=test_client_id";
