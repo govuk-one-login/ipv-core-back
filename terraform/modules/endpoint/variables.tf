@@ -60,6 +60,24 @@ variable "user_issued_credentials_table_name" {
   description = "Name of the DynamoDB user-credentials table"
 }
 
+variable "allow_access_to_auth_codes_table" {
+  type        = bool
+  default     = false
+  description = "Should the lambda be given access to the auth-codes DynamoDB table"
+}
+
+variable "auth_codes_table_policy_arn" {
+  type        = string
+  default     = null
+  description = "ARN of the policy to allow read write to the auth-codes DynamoDB table"
+}
+
+variable "auth_codes_table_name" {
+  type        = string
+  default     = "not-set-for-this-lambda"
+  description = "Name of the DynamoDB auth-codes table"
+}
+
 locals {
   default_tags = {
     Environment = var.environment

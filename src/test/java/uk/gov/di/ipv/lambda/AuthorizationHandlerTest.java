@@ -19,17 +19,19 @@ import static org.mockito.Mockito.when;
 
 public class AuthorizationHandlerTest {
     private final Context context = mock(Context.class);
-    private final AuthorizationCodeService authorizationCodeService = mock(AuthorizationCodeService.class);
+    private AuthorizationCodeService mockAuthorizationCodeService;
 
     private AuthorizationHandler handler;
     private AuthorizationCode authorizationCode;
 
     @BeforeEach
     public void setUp() {
-        authorizationCode = new AuthorizationCode();
-        when(authorizationCodeService.generateAuthorisationCode()).thenReturn(authorizationCode);
+        mockAuthorizationCodeService = mock(AuthorizationCodeService.class);
 
-        handler = new AuthorizationHandler(authorizationCodeService);
+        authorizationCode = new AuthorizationCode();
+        when(mockAuthorizationCodeService.generateAuthorizationCode()).thenReturn(authorizationCode);
+
+        handler = new AuthorizationHandler(mockAuthorizationCodeService);
     }
 
     @Test
