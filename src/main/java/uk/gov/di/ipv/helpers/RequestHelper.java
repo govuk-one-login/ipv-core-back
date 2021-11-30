@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.helpers;
 
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.NameValuePair;
@@ -13,8 +14,9 @@ import java.util.stream.Collectors;
 
 public class RequestHelper {
 
-    public static <T> T convertRequestBody(String body, Class<T> type) {
-        Map<String, String> map = parseRequestBody(body);
+    public static <T> T convertRequest(APIGatewayProxyRequestEvent request, Class<T> type) {
+        Map<String, String> map = parseRequestBody(request.getBody());
+        getHeader(request.getHeaders(), "ipv-session-id").ifPresent(h -> map.put("ipv_session_id", h));
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.convertValue(map, type);
     }
@@ -30,6 +32,9 @@ public class RequestHelper {
     }
 
     public static Optional<String> getHeader(Map<String, String> headers, String headerKey) {
+        if (headers == null) {
+            return Optional.empty();
+        }
         var values = headers.entrySet().stream()
                 .filter(e -> headerKey.equalsIgnoreCase(e.getKey()))
                 .map(e -> e.getValue())

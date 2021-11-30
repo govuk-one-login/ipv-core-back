@@ -8,16 +8,16 @@ public class CredentialIssuerRequestDto {
 
     private final String credential_issuer_id;
 
-    private final String session_id;
+    private final String ipv_session_id;
 
     public CredentialIssuerRequestDto(
             @JsonProperty(value = "authorization_code") String authorization_code,
             @JsonProperty(value = "credential_issuer_id") String credential_issuer_id,
-            @JsonProperty(value = "session_id") String session_id
+            @JsonProperty(value = "ipv_session_id") String ipv_session_id
     ) {
         this.authorization_code = authorization_code;
         this.credential_issuer_id = credential_issuer_id;
-        this.session_id = session_id;
+        this.ipv_session_id = ipv_session_id;
     }
 
     public String getAuthorization_code() {
@@ -28,7 +28,7 @@ public class CredentialIssuerRequestDto {
         return credential_issuer_id;
     }
 
-    public String getSession_id() {
-        return session_id;
+    public String getIpv_session_id() {
+        return ipv_session_id;
     }
 }

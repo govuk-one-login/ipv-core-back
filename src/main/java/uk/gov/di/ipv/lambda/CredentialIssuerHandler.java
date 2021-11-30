@@ -44,11 +44,11 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
 
-        CredentialIssuerRequestDto request = RequestHelper.convertRequestBody(input.getBody(), CredentialIssuerRequestDto.class);
+        CredentialIssuerRequestDto request = RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
 
         var errorResponse = validate(request);
         if (errorResponse.isPresent()) {
-            return errorResponse.get();
+            return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
         }
 
         CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request).get();
@@ -65,31 +65,29 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
 
     }
 
-    private Optional<APIGatewayProxyResponseEvent> validate(CredentialIssuerRequestDto request) {
+    private Optional<ErrorResponse> validate(CredentialIssuerRequestDto request) {
         if (StringUtils.isBlank(request.getAuthorization_code())) {
-            return Optional.of(ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingAuthorizationCode));
+            return Optional.of(ErrorResponse.MissingAuthorizationCode);
         }
 
         if (StringUtils.isBlank(request.getCredential_issuer_id())) {
-            return Optional.of(ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingCredentialIssuerId));
+            return Optional.of(ErrorResponse.MissingCredentialIssuerId);
         }
 
-        if (StringUtils.isBlank(request.getSession_id())) {
-            return Optional.of(ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingSessionId));
+        if (StringUtils.isBlank(request.getIpv_session_id())) {
+            return Optional.of(ErrorResponse.MissingSessionId);
         }
 
-        Optional<CredentialIssuerConfig> match = getCredentialIssuerConfig(request);
-        if (match.isEmpty()) {
-            return Optional.of(ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.InvalidCredentialIssuerId));
+        if (getCredentialIssuerConfig(request).isEmpty()) {
+            return Optional.of(ErrorResponse.InvalidCredentialIssuerId);
         }
         return Optional.empty();
     }
 
     private Optional<CredentialIssuerConfig> getCredentialIssuerConfig(CredentialIssuerRequestDto request) {
-        Optional<CredentialIssuerConfig> first = credentialIssuers.stream()
+        return credentialIssuers.stream()
                 .filter(config -> request.getCredential_issuer_id().equals(config.getId()))
                 .findFirst();
-        return first;
     }
 
 }

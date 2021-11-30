@@ -38,7 +38,7 @@ public class AccessTokenHandler
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
 
         try {
-            TokenRequestDto tokenRequestDto = RequestHelper.convertRequestBody(input.getBody(), TokenRequestDto.class);
+            TokenRequestDto tokenRequestDto = RequestHelper.convertRequest(input, TokenRequestDto.class);
 
             if (tokenRequestDto.getCode().isEmpty()) {
                 LOGGER.error("Missing authorisation code from the token request");
