@@ -16,6 +16,8 @@ public class ApiGatewayResponseGenerator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApiGatewayResponseGenerator.class);
 
+    private ApiGatewayResponseGenerator() {}
+
     public static <T> APIGatewayProxyResponseEvent proxyJsonResponse(int statusCode, T body) {
         Map<String, String> responseHeaders = Map.of(HttpHeaders.CONTENT_TYPE, JSON_CONTENT_TYPE_VALUE);
 
