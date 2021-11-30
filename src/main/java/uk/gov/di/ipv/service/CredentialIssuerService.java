@@ -23,7 +23,7 @@ public class CredentialIssuerService {
 
     public AccessToken exchangeCodeForToken(CredentialIssuerRequestDto request, CredentialIssuerConfig config) {
 
-        AuthorizationCode authorizationCode = new AuthorizationCode(request.getAuthorization_code());
+        AuthorizationCode authorizationCode = new AuthorizationCode(request.getAuthorizationCode());
         try {
             TokenRequest tokenRequest = new TokenRequest(
                     config.getTokenUrl(),

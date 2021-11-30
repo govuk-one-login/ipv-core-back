@@ -99,9 +99,9 @@ class CredentialIssuerHandlerTest {
         Integer statusCode = response.getStatusCode();
         assertEquals(HTTPResponse.SC_OK, statusCode);
         CredentialIssuerRequestDto value = requestDto.getValue();
-        assertEquals(sessionId, value.getIpv_session_id());
-        assertEquals(passportIssuerId, value.getCredential_issuer_id());
-        assertEquals(authorization_code, value.getAuthorization_code());
+        assertEquals(sessionId, value.getIpvSessionId());
+        assertEquals(passportIssuerId, value.getCredentialIssuerId());
+        assertEquals(authorization_code, value.getAuthorizationCode());
         verifyNoInteractions(context);
     }
 

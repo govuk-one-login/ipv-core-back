@@ -62,15 +62,15 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
     }
 
     private Optional<ErrorResponse> validate(CredentialIssuerRequestDto request) {
-        if (StringUtils.isBlank(request.getAuthorization_code())) {
+        if (StringUtils.isBlank(request.getAuthorizationCode())) {
             return Optional.of(ErrorResponse.MissingAuthorizationCode);
         }
 
-        if (StringUtils.isBlank(request.getCredential_issuer_id())) {
+        if (StringUtils.isBlank(request.getCredentialIssuerId())) {
             return Optional.of(ErrorResponse.MissingCredentialIssuerId);
         }
 
-        if (StringUtils.isBlank(request.getIpv_session_id())) {
+        if (StringUtils.isBlank(request.getIpvSessionId())) {
             return Optional.of(ErrorResponse.MissingSessionId);
         }
 
@@ -82,7 +82,7 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
 
     private CredentialIssuerConfig getCredentialIssuerConfig(CredentialIssuerRequestDto request) {
         return CREDENTIAL_ISSUERS.stream()
-                .filter(config -> request.getCredential_issuer_id().equals(config.getId()))
+                .filter(config -> request.getCredentialIssuerId().equals(config.getId()))
                 .findFirst()
                 .orElse(null);
     }
