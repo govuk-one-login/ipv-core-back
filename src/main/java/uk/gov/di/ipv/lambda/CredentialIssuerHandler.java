@@ -78,8 +78,8 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
             return Optional.of(ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MissingSessionId));
         }
 
-        Optional<CredentialIssuerConfig> first = getCredentialIssuerConfig(request);
-        if (first.isEmpty()) {
+        Optional<CredentialIssuerConfig> match = getCredentialIssuerConfig(request);
+        if (match.isEmpty()) {
             return Optional.of(ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.InvalidCredentialIssuerId));
         }
         return Optional.empty();
@@ -91,6 +91,5 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
                 .findFirst();
         return first;
     }
-
 
 }
