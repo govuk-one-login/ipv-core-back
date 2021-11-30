@@ -39,7 +39,7 @@ public class RequestHelper {
         }
         var values = headers.entrySet().stream()
                 .filter(e -> headerKey.equalsIgnoreCase(e.getKey()))
-                .map(e -> e.getValue())
+                .map(Map.Entry::getValue)
                 .collect(Collectors.toList());
         if (values.size() == 1) {
             var value = values.get(0);
