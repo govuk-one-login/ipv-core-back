@@ -176,7 +176,7 @@ public class AuthorizationHandlerTest {
     }
 
     @Test
-    public void shouldReturn400OnMissingSessionIdHeader() throws Exception {
+    void shouldReturn400OnMissingSessionIdHeader() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> params = new HashMap<>();
         params.put("redirect_uri", "http://example.com");

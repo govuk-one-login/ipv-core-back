@@ -12,7 +12,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class AuthorizationCodeServiceTest {
+class AuthorizationCodeServiceTest {
 
     private final DataStore<AuthorizationCodeItem> mockDataStore = mock(DataStore.class);
     private final ConfigurationService mockConfigurationService = mock(ConfigurationService.class);
@@ -20,14 +20,14 @@ public class AuthorizationCodeServiceTest {
     private AuthorizationCodeService authorizationCodeService;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         when(mockConfigurationService.getAuthCodesTableName()).thenReturn("test-auth-code-table");
 
         authorizationCodeService = new AuthorizationCodeService(mockDataStore, mockConfigurationService);
     }
 
     @Test
-    public void shouldReturnAnAuthorisationCode() {
+    void shouldReturnAnAuthorisationCode() {
         AuthorizationCode result = authorizationCodeService.generateAuthorizationCode();
 
         assertNotNull(result);
@@ -35,7 +35,7 @@ public class AuthorizationCodeServiceTest {
 
 
     @Test
-    public void shouldCreateAuthorizationCodeInDataStore() {
+    void shouldCreateAuthorizationCodeInDataStore() {
         AuthorizationCode testCode = new AuthorizationCode();
         authorizationCodeService.persistAuthorizationCode(testCode.getValue(), "session-12345");
 
