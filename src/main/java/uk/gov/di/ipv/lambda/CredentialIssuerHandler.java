@@ -56,26 +56,26 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.EMPTY_MAP);
         } catch (CredentialIssuerException e) {
             LOGGER.error("Could not exchange authorization code for token: {}", e.getMessage(), e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.InvalidTokenRequest);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.INVALID_TOKEN_REQUEST);
         }
 
     }
 
     private Optional<ErrorResponse> validate(CredentialIssuerRequestDto request) {
         if (StringUtils.isBlank(request.getAuthorizationCode())) {
-            return Optional.of(ErrorResponse.MissingAuthorizationCode);
+            return Optional.of(ErrorResponse.MISSING_AUTHORIZATION_CODE);
         }
 
         if (StringUtils.isBlank(request.getCredentialIssuerId())) {
-            return Optional.of(ErrorResponse.MissingCredentialIssuerId);
+            return Optional.of(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
         }
 
         if (StringUtils.isBlank(request.getIpvSessionId())) {
-            return Optional.of(ErrorResponse.MissingSessionId);
+            return Optional.of(ErrorResponse.MISSING_SESSION_ID);
         }
 
         if (getCredentialIssuerConfig(request) == null) {
-            return Optional.of(ErrorResponse.InvalidCredentialIssuerId);
+            return Optional.of(ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
         }
         return Optional.empty();
     }

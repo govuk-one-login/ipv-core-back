@@ -83,8 +83,8 @@ public class AuthorizationHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.MissingRedirectURI.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.MissingRedirectURI.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.MISSING_REDIRECT_URI.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.MISSING_REDIRECT_URI.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -102,8 +102,8 @@ public class AuthorizationHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.MissingRedirectURI.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.MissingRedirectURI.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.MISSING_REDIRECT_URI.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.MISSING_REDIRECT_URI.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -121,8 +121,8 @@ public class AuthorizationHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.MissingRedirectURI.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.MissingRedirectURI.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.MISSING_REDIRECT_URI.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.MISSING_REDIRECT_URI.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -140,8 +140,8 @@ public class AuthorizationHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.MissingRedirectURI.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.MissingRedirectURI.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.MISSING_REDIRECT_URI.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.MISSING_REDIRECT_URI.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -154,7 +154,7 @@ public class AuthorizationHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.MissingQueryParameters.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.MissingQueryParameters.getMessage(), responseBody.get("message"));
+        assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), responseBody.get("message"));
     }
 }

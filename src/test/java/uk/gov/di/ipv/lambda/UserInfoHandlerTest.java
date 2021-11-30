@@ -86,7 +86,7 @@ class UserInfoHandlerTest {
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, context);
         responseBody = objectMapper.readValue(response.getBody(), Map.class);
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.MissingAccessToken.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.MISSING_ACCESS_TOKEN.getCode(), responseBody.get("code"));
         assertEquals("Missing access token from user info request", responseBody.get("message"));
     }
 
@@ -99,7 +99,7 @@ class UserInfoHandlerTest {
         responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.FailedToParseAccessToken.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.FAILED_TO_PARSE_ACCESS_TOKEN.getCode(), responseBody.get("code"));
         assertEquals("Failed to parse access token", responseBody.get("message"));
 
     }
