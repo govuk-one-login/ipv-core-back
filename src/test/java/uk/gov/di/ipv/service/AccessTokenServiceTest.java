@@ -48,7 +48,7 @@ public class AccessTokenServiceTest {
         TokenResponse response = accessTokenService.exchangeCodeForToken(tokenRequest);
 
         assertInstanceOf(TokenErrorResponse.class, response);
-        assertEquals(response.toErrorResponse().getErrorObject().getCode(), "F-001");
-        assertEquals(response.toErrorResponse().getErrorObject().getDescription(), "Something failed during exchange of code to token");
+        assertEquals("F-001", response.toErrorResponse().getErrorObject().getCode());
+        assertEquals("Something failed during exchange of code to token", response.toErrorResponse().getErrorObject().getDescription());
     }
 }
