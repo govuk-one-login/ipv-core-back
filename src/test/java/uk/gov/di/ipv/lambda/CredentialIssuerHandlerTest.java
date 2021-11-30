@@ -7,7 +7,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -17,12 +16,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.domain.CredentialIssuerException;
 import uk.gov.di.ipv.domain.ErrorResponse;
-import uk.gov.di.ipv.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.service.CredentialIssuerService;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -41,30 +38,18 @@ class CredentialIssuerHandlerTest {
     private ArgumentCaptor<CredentialIssuerRequestDto> requestDto;
 
     @Mock
-    CredentialIssuerConfig passportIssuer;
-
-    @Mock
-    CredentialIssuerConfig fraudIssuer;
-
-    @Mock
     CredentialIssuerService credentialIssuerService;
 
     String authorization_code = "bar";
     String sessionId = UUID.randomUUID().toString();
-    String passportIssuerId = "PassportIssuerId";
-    private Set<CredentialIssuerConfig> configs;
-
-    @BeforeEach
-    void setUp() {
-        configs = Set.of(passportIssuer, fraudIssuer);
-    }
+    String passportIssuerId = "PassportIssuer";
 
     @Test
     void shouldReceive400ResponseCodeIfAuthorizationCodeNotPresent() throws JsonProcessingException {
         APIGatewayProxyRequestEvent input = createRequestEvent(
                 Map.of("credential_issuer_id", "foo"),
                 Map.of("ipv-session-id", sessionId));
-        APIGatewayProxyResponseEvent response = new CredentialIssuerHandler(credentialIssuerService, configs).handleRequest(input, context);
+        APIGatewayProxyResponseEvent response = new CredentialIssuerHandler(credentialIssuerService).handleRequest(input, context);
         assert400Response(response, ErrorResponse.MissingAuthorizationCode);
     }
 
@@ -74,7 +59,7 @@ class CredentialIssuerHandlerTest {
                 Map.of("authorization_code", "foo"),
                 Map.of("ipv-session-id", sessionId));
 
-        APIGatewayProxyResponseEvent response = new CredentialIssuerHandler(credentialIssuerService, configs).handleRequest(input, context);
+        APIGatewayProxyResponseEvent response = new CredentialIssuerHandler(credentialIssuerService).handleRequest(input, context);
         assert400Response(response, ErrorResponse.MissingCredentialIssuerId);
     }
 
@@ -83,7 +68,7 @@ class CredentialIssuerHandlerTest {
         APIGatewayProxyRequestEvent input = createRequestEvent(
                 Map.of("authorization_code", "foo", "credential_issuer_id", "an invalid id"),
                 Map.of("ipv-session-id", sessionId));
-        APIGatewayProxyResponseEvent response = new CredentialIssuerHandler(credentialIssuerService, configs).handleRequest(input, context);
+        APIGatewayProxyResponseEvent response = new CredentialIssuerHandler(credentialIssuerService).handleRequest(input, context);
         assert400Response(response, ErrorResponse.InvalidCredentialIssuerId);
     }
 
@@ -92,7 +77,7 @@ class CredentialIssuerHandlerTest {
         APIGatewayProxyRequestEvent input = createRequestEvent(
                 Map.of("authorization_code", "foo", "credential_issuer_id", passportIssuerId),
                 Map.of());
-        APIGatewayProxyResponseEvent response = new CredentialIssuerHandler(credentialIssuerService, configs).handleRequest(input, context);
+        APIGatewayProxyResponseEvent response = new CredentialIssuerHandler(credentialIssuerService).handleRequest(input, context);
         assert400Response(response, ErrorResponse.MissingSessionId);
     }
 
@@ -102,11 +87,10 @@ class CredentialIssuerHandlerTest {
 
         when(credentialIssuerService.exchangeCodeForToken(
                 requestDto.capture(),
-                ArgumentMatchers.eq(passportIssuer))
+                ArgumentMatchers.eq(CredentialIssuerHandler.PASSPORT_ISSUER))
         ).thenReturn(accessToken);
-        when(passportIssuer.getId()).thenReturn(passportIssuerId);
 
-        CredentialIssuerHandler handler = new CredentialIssuerHandler(credentialIssuerService, configs);
+        CredentialIssuerHandler handler = new CredentialIssuerHandler(credentialIssuerService);
         APIGatewayProxyRequestEvent input = createRequestEvent(
                 Map.of("authorization_code", authorization_code, "credential_issuer_id", passportIssuerId),
                 Map.of("ipv-session-id", sessionId));
@@ -123,14 +107,13 @@ class CredentialIssuerHandlerTest {
 
     @Test
     void shouldReceive400ResponseCodeIfCredentialIssuerServiceThrowsException() throws JsonProcessingException {
-        CredentialIssuerHandler handler = new CredentialIssuerHandler(credentialIssuerService, configs);
+        CredentialIssuerHandler handler = new CredentialIssuerHandler(credentialIssuerService);
         APIGatewayProxyRequestEvent input = createRequestEvent(
                 Map.of("authorization_code", "foo", "credential_issuer_id", passportIssuerId),
                 Map.of("ipv-session-id", sessionId));
 
-        when(credentialIssuerService.exchangeCodeForToken(requestDto.capture(), ArgumentMatchers.eq(passportIssuer)))
+        when(credentialIssuerService.exchangeCodeForToken(requestDto.capture(), ArgumentMatchers.eq(CredentialIssuerHandler.PASSPORT_ISSUER)))
                 .thenThrow(new CredentialIssuerException("code1: message1"));
-        when(passportIssuer.getId()).thenReturn(passportIssuerId);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
         Integer statusCode = response.getStatusCode();

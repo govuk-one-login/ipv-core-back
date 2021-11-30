@@ -27,17 +27,15 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
 
     private final CredentialIssuerService credentialIssuerService;
 
-    private Set<CredentialIssuerConfig> credentialIssuers;
+    protected static final CredentialIssuerConfig PASSPORT_ISSUER = new CredentialIssuerConfig("PassportIssuer", URI.create("http://www.example.com"));
+    protected static final CredentialIssuerConfig FRAUD_ISSUER = new CredentialIssuerConfig("FraudIssuer", URI.create("http://www.example.com"));
+    protected static final Set<CredentialIssuerConfig> CREDENTIAL_ISSUERS = Set.of(PASSPORT_ISSUER, FRAUD_ISSUER);
 
-    public CredentialIssuerHandler(CredentialIssuerService credentialIssuerService, Set<CredentialIssuerConfig> credentialIssuerConfig) {
+    public CredentialIssuerHandler(CredentialIssuerService credentialIssuerService) {
         this.credentialIssuerService = credentialIssuerService;
-        this.credentialIssuers = credentialIssuerConfig;
     }
 
     public CredentialIssuerHandler() {
-        CredentialIssuerConfig passportIssuer = new CredentialIssuerConfig("PassportIssuer", URI.create("http://www.example.com"));
-        CredentialIssuerConfig fraudIssuer = new CredentialIssuerConfig("FraudIssuer", URI.create("http://www.example.com"));
-        this.credentialIssuers = Set.of(passportIssuer, fraudIssuer);
         this.credentialIssuerService = new CredentialIssuerService();
     }
 
@@ -51,10 +49,8 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
             return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
         }
 
-        CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request).get();
-
         try {
-            AccessToken accessToken = credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);
+            AccessToken accessToken = credentialIssuerService.exchangeCodeForToken(request, getCredentialIssuerConfig(request));
             // todo var credential = getCredential(accessToken);
             // todo save credential
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.EMPTY_MAP);
@@ -78,16 +74,17 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
             return Optional.of(ErrorResponse.MissingSessionId);
         }
 
-        if (getCredentialIssuerConfig(request).isEmpty()) {
+        if (getCredentialIssuerConfig(request) == null) {
             return Optional.of(ErrorResponse.InvalidCredentialIssuerId);
         }
         return Optional.empty();
     }
 
-    private Optional<CredentialIssuerConfig> getCredentialIssuerConfig(CredentialIssuerRequestDto request) {
-        return credentialIssuers.stream()
+    private CredentialIssuerConfig getCredentialIssuerConfig(CredentialIssuerRequestDto request) {
+        return CREDENTIAL_ISSUERS.stream()
                 .filter(config -> request.getCredential_issuer_id().equals(config.getId()))
-                .findFirst();
+                .findFirst()
+                .orElse(null);
     }
 
 }
