@@ -98,8 +98,6 @@ public class CredentialIssuerService {
         return OIDCTokenResponseParser.parse(httpResponse);
     }
 
-    // datastore create does not throw any specific exception
-    // just use a general for now
     public void persistUserCredentials(CredentialIssuerRequestDto request) {
         UserIssuedCredentialsItem userIssuedCredentials = new UserIssuedCredentialsItem();
         userIssuedCredentials.setSessionId(request.getIpvSessionId());
