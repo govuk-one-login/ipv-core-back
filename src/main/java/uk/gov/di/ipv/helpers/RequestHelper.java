@@ -9,6 +9,7 @@ import org.apache.http.client.utils.URLEncodedUtils;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -50,5 +51,22 @@ public class RequestHelper {
             }
         }
         return Optional.empty();
+    }
+
+    public static String getHeaderByKey(Map<String, String> headers, String headerKey) {
+        if (Objects.isNull(headers)) {
+            return null;
+        }
+        var values = headers.entrySet().stream()
+                .filter(e -> headerKey.equalsIgnoreCase(e.getKey()))
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
+        if (values.size() == 1) {
+            var value = values.get(0);
+            if (StringUtils.isNotBlank(value)) {
+                return value;
+            }
+        }
+        return null;
     }
 }

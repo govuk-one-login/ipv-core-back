@@ -89,7 +89,7 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
         }
 
         if (StringUtils.isBlank(request.getIpvSessionId())) {
-            return Optional.of(ErrorResponse.MISSING_SESSION_ID);
+            return Optional.of(ErrorResponse.MISSING_IPV_SESSION_ID);
         }
 
         if (getCredentialIssuerConfig(request) == null) {

@@ -15,8 +15,9 @@ public enum ErrorResponse {
     MISSING_CREDENTIAL_ISSUER_ID(1007, "Missing credential issuer id"),
     INVALID_CREDENTIAL_ISSUER_ID(1008, "Invalid credential issuer id"),
     INVALID_TOKEN_REQUEST(1009, "Invalid token request"),
-    MISSING_SESSION_ID(1010, "Missing session id"),
-    FAILED_TO_GET_CREDENTIAL_FROM_ISSUER(1011, "Failed to get credential from issuer");
+    MISSING_IPV_SESSION_ID(1010, "Missing ipv session id header"),
+    FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS(1011, "Failed to parse oauth2-specific query string parameters"),
+    FAILED_TO_GET_CREDENTIAL_FROM_ISSUER(1012, "Failed to get credential from issuer");
 
     @JsonProperty("code")
     private int code;
