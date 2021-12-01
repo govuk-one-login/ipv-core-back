@@ -19,7 +19,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-public class AuthorizationHandlerTest {
+class AuthorizationHandlerTest {
     private final Context context = mock(Context.class);
     private AuthorizationCodeService mockAuthorizationCodeService;
 
@@ -27,7 +27,7 @@ public class AuthorizationHandlerTest {
     private AuthorizationCode authorizationCode;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         mockAuthorizationCodeService = mock(AuthorizationCodeService.class);
 
         authorizationCode = new AuthorizationCode();
@@ -37,7 +37,7 @@ public class AuthorizationHandlerTest {
     }
 
     @Test
-    public void shouldReturn200OnSuccessfulOauthRequest(){
+    void shouldReturn200OnSuccessfulOauthRequest(){
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> params = new HashMap<>();
         params.put("redirect_uri", "http://example.com");
@@ -54,7 +54,7 @@ public class AuthorizationHandlerTest {
     }
 
     @Test
-    public void shouldReturnAuthResponseOnSuccessfulOauthRequest() throws Exception {
+    void shouldReturnAuthResponseOnSuccessfulOauthRequest() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> params = new HashMap<>();
         params.put("redirect_uri", "http://example.com");
@@ -76,7 +76,7 @@ public class AuthorizationHandlerTest {
     }
 
     @Test
-    public void shouldReturn400OnMissingRedirectUriParam() throws Exception {
+    void shouldReturn400OnMissingRedirectUriParam() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> params = new HashMap<>();
         params.put("client_id", "12345");
@@ -97,7 +97,7 @@ public class AuthorizationHandlerTest {
     }
 
     @Test
-    public void shouldReturn400OnMissingClientIdParam() throws Exception {
+    void shouldReturn400OnMissingClientIdParam() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> params = new HashMap<>();
         params.put("redirect_uri", "http://example.com");
@@ -118,7 +118,7 @@ public class AuthorizationHandlerTest {
     }
 
     @Test
-    public void shouldReturn400OnMissingResponseTypeParam() throws Exception {
+    void shouldReturn400OnMissingResponseTypeParam() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> params = new HashMap<>();
         params.put("redirect_uri", "http://example.com");
@@ -139,7 +139,7 @@ public class AuthorizationHandlerTest {
     }
 
     @Test
-    public void shouldReturn400OnMissingScopeParam() throws Exception {
+    void shouldReturn400OnMissingScopeParam() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> params = new HashMap<>();
         params.put("redirect_uri", "http://example.com");
@@ -160,7 +160,7 @@ public class AuthorizationHandlerTest {
     }
 
     @Test
-    public void shouldReturn400OnMissingQueryParameters() throws Exception {
+    void shouldReturn400OnMissingQueryParameters() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         event.setHeaders(Map.of("ipv-session-id", "12345"));
