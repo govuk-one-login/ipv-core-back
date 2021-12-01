@@ -7,10 +7,12 @@ import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.TokenResponse;
+import com.nimbusds.oauth2.sdk.client.ClientReadRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.id.ClientID;
-import com.nimbusds.oauth2.sdk.token.AccessToken;
+import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
+import net.minidev.json.JSONObject;
 import uk.gov.di.ipv.domain.CredentialIssuerException;
 import uk.gov.di.ipv.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.dto.CredentialIssuerRequestDto;
@@ -21,7 +23,7 @@ import java.util.Optional;
 
 public class CredentialIssuerService {
 
-    public AccessToken exchangeCodeForToken(CredentialIssuerRequestDto request, CredentialIssuerConfig config) {
+    public BearerAccessToken exchangeCodeForToken(CredentialIssuerRequestDto request, CredentialIssuerConfig config) {
 
         AuthorizationCode authorizationCode = new AuthorizationCode(request.getAuthorizationCode());
         try {
@@ -45,7 +47,27 @@ public class CredentialIssuerService {
             return tokenResponse
                     .toSuccessResponse()
                     .getTokens()
-                    .getAccessToken();
+                    .getBearerAccessToken();
+        } catch (IOException | ParseException e) {
+            throw new CredentialIssuerException(e);
+        }
+    }
+
+    public JSONObject getCredential(BearerAccessToken accessToken, CredentialIssuerConfig config) {
+        ClientReadRequest credentialRequest = new ClientReadRequest(
+                config.getCredentialUrl(),
+                accessToken
+        );
+
+        try {
+            HTTPResponse response = credentialRequest.toHTTPRequest().send();
+            if (!response.indicatesSuccess()) {
+                throw new CredentialIssuerException(
+                        String.format("%s: %s", response.getStatusCode(), response.getStatusMessage())
+                );
+            }
+
+            return response.getContentAsJSONObject(); // In future we can use response.getContentAsJWT()
         } catch (IOException | ParseException e) {
             throw new CredentialIssuerException(e);
         }
@@ -58,5 +80,4 @@ public class CredentialIssuerService {
     private TokenResponse parseTokenResponse(HTTPResponse httpResponse) throws ParseException {
         return OIDCTokenResponseParser.parse(httpResponse);
     }
-
 }

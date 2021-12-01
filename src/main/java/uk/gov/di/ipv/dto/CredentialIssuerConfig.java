@@ -7,10 +7,12 @@ public class CredentialIssuerConfig {
 
     private final String id;
     private final URI tokenUrl;
+    private final URI credentialUrl;
 
-    public CredentialIssuerConfig(String id, URI tokenUrl) {
+    public CredentialIssuerConfig(String id, URI tokenUrl, URI credentialUrl) {
         this.id = id;
         this.tokenUrl = tokenUrl;
+        this.credentialUrl = credentialUrl;
     }
 
     public String getId() {
@@ -19,6 +21,10 @@ public class CredentialIssuerConfig {
 
     public URI getTokenUrl() {
         return tokenUrl;
+    }
+
+    public URI getCredentialUrl() {
+        return credentialUrl;
     }
 
     @Override
