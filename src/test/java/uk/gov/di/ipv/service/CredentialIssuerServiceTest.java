@@ -29,11 +29,13 @@ class CredentialIssuerServiceTest {
     private DataStore<UserIssuedCredentialsItem> mockDataStore;
     private ConfigurationService mockConfigurationService;
     private CredentialIssuerService credentialIssuerService;
+    private JSONObject mockJSONObject;
 
     @BeforeEach
     public void setUp() {
         mockDataStore = mock(DataStore.class);
         mockConfigurationService = mock(ConfigurationService.class);
+        mockJSONObject = mock(JSONObject.class);
         credentialIssuerService = new CredentialIssuerService(mockDataStore, mockConfigurationService);
     }
 
@@ -119,12 +121,11 @@ class CredentialIssuerServiceTest {
                 "http://www.example.com/redirect"
         );
 
-        credentialIssuerService.persistUserCredentials(credentialIssuerRequestDto);
+        credentialIssuerService.persistUserCredentials(mockJSONObject,credentialIssuerRequestDto);
         verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture());
+        verify(mockJSONObject).toJSONString();
         assertEquals(credentialIssuerRequestDto.getIpvSessionId(), userIssuedCredentialsItemCaptor.getValue().getSessionId());
         assertEquals(credentialIssuerRequestDto.getCredentialIssuerId(), userIssuedCredentialsItemCaptor.getValue().getCredentialIssuer());
-
-
 
     }
 
@@ -138,7 +139,6 @@ class CredentialIssuerServiceTest {
                 )
         );
 
-        CredentialIssuerService credentialIssuerService = new CredentialIssuerService();
         CredentialIssuerConfig credentialIssuerConfig = getStubCredentialIssuerConfig(wmRuntimeInfo);;
         BearerAccessToken accessToken = new BearerAccessToken();
 
@@ -169,7 +169,6 @@ class CredentialIssuerServiceTest {
                 )
         );
 
-        CredentialIssuerService credentialIssuerService = new CredentialIssuerService();
         CredentialIssuerConfig credentialIssuerConfig = getStubCredentialIssuerConfig(wmRuntimeInfo);;
         BearerAccessToken accessToken = new BearerAccessToken();
 
@@ -190,7 +189,6 @@ class CredentialIssuerServiceTest {
                 )
         );
 
-        CredentialIssuerService credentialIssuerService = new CredentialIssuerService();
         CredentialIssuerConfig credentialIssuerConfig = getStubCredentialIssuerConfig(wmRuntimeInfo);
         BearerAccessToken accessToken = new BearerAccessToken();
 

@@ -68,13 +68,21 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
             return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.INVALID_TOKEN_REQUEST);
         }
 
+        JSONObject credential;
         try {
-            JSONObject credential = credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
-            // todo save credential
-            credentialIssuerService.persistUserCredentials(request);
+             credential = credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
+
         } catch (CredentialIssuerException e) {
             LOGGER.error("Could not retrieve protected resource from credential issuer: {}", e.getMessage(), e);
             return ApiGatewayResponseGenerator.proxyJsonResponse(500, ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
+        }
+
+        try {
+            credentialIssuerService.persistUserCredentials(credential,request);
+
+        } catch (CredentialIssuerException e) {
+            LOGGER.error("Could not exchange authorization code for token: {}", e.getMessage(), e);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.INVALID_TOKEN_REQUEST);
         }
 
         return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.EMPTY_MAP);

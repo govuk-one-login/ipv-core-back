@@ -98,10 +98,11 @@ public class CredentialIssuerService {
         return OIDCTokenResponseParser.parse(httpResponse);
     }
 
-    public void persistUserCredentials(CredentialIssuerRequestDto request) {
+    public void persistUserCredentials(JSONObject credential, CredentialIssuerRequestDto request) {
         UserIssuedCredentialsItem userIssuedCredentials = new UserIssuedCredentialsItem();
         userIssuedCredentials.setSessionId(request.getIpvSessionId());
         userIssuedCredentials.setCredentialIssuer(request.getCredentialIssuerId());
+        userIssuedCredentials.setCredential(credential.toJSONString());
         // TODO store json - credentialData
         userIssuedCredentials.setDateCreated(LocalDate.now());
         try {

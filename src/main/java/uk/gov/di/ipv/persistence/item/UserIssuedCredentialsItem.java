@@ -12,7 +12,7 @@ public class UserIssuedCredentialsItem {
 
     private String sessionId;
     private String credentialIssuer;
-   //TODO private CredentialData credentialData; // json
+    private String credential;
     private LocalDate dateCreated;
 
     @DynamoDbPartitionKey
@@ -40,6 +40,14 @@ public class UserIssuedCredentialsItem {
 
     public void setDateCreated(LocalDate dateCreated) {
         this.dateCreated = dateCreated;
+    }
+
+    public String getCredential() {
+        return credential;
+    }
+
+    public void setCredential(String credential) {
+        this.credential = credential;
     }
 
     // TODO
