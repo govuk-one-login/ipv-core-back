@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class UserInfoServiceTest {
 
     @Test
-    public void whenValidTokenShouldReturnUserInfo() {
+    void whenValidTokenShouldReturnUserInfo() {
         UserInfoService userInfoService = new UserInfoService();
         AccessToken accessToken = new BearerAccessToken();
 

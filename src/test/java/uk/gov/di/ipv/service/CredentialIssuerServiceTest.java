@@ -76,7 +76,7 @@ class CredentialIssuerServiceTest {
     }
 
     @Test
-    public void invalidHeaderThrowsCredentialIssuerException(WireMockRuntimeInfo wmRuntimeInfo) {
+    void invalidHeaderThrowsCredentialIssuerException(WireMockRuntimeInfo wmRuntimeInfo) {
 
         stubFor(post("/token")
                 .willReturn(aResponse()

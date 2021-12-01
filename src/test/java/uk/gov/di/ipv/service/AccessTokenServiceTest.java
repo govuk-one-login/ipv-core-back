@@ -17,12 +17,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class AccessTokenServiceTest {
+class AccessTokenServiceTest {
 
     private final AccessTokenService accessTokenService = new AccessTokenService();
 
     @Test
-    public void shouldReturnSuccessfulTokenResponseOnSuccessfulExchange() throws Exception {
+    void shouldReturnSuccessfulTokenResponseOnSuccessfulExchange() throws Exception {
         TokenRequest tokenRequest = new TokenRequest(
                 null,
                 new ClientID("test-client-id"),
@@ -38,7 +38,7 @@ public class AccessTokenServiceTest {
     }
 
     @Test
-    public void shouldReturnErrorTokenResponseOnNonAuthorisationCodeGrant() throws Exception {
+    void shouldReturnErrorTokenResponseOnNonAuthorisationCodeGrant() throws Exception {
         TokenRequest tokenRequest = new TokenRequest(
                 null,
                 new ClientID("test-client-id"),
