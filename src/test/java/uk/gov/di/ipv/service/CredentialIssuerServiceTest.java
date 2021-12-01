@@ -2,6 +2,7 @@ package uk.gov.di.ipv.service;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,6 +11,7 @@ import net.minidev.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import uk.gov.di.ipv.domain.CredentialIssuerException;
+import uk.gov.di.ipv.domain.ErrorResponse;
 import uk.gov.di.ipv.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.persistence.DataStore;
@@ -20,7 +22,6 @@ import java.net.URI;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 @WireMockTest
@@ -83,8 +84,8 @@ class CredentialIssuerServiceTest {
             credentialIssuerService.exchangeCodeForToken(credentialIssuerRequestDto, credentialIssuerConfig);
         });
 
-        String message = exception.getMessage();
-        assertEquals("invalid_request: Request was missing the 'redirect_uri' parameter.", message);
+        assertEquals(HTTPResponse.SC_BAD_REQUEST, exception.getHttpStatusCode());
+        assertEquals(ErrorResponse.INVALID_TOKEN_REQUEST, exception.getErrorResponse());
     }
 
     @Test
@@ -105,9 +106,8 @@ class CredentialIssuerServiceTest {
             credentialIssuerService.exchangeCodeForToken(credentialIssuerRequestDto, credentialIssuerConfig);
         });
 
-        String expectedMessage = "The HTTP Content-Type header must be application/json";
-        String actualMessage = exception.getMessage();
-        assertTrue(actualMessage.contains(expectedMessage));
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE, exception.getErrorResponse());
     }
 
     @Test
@@ -176,7 +176,8 @@ class CredentialIssuerServiceTest {
             credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
         });
 
-        assertTrue(thrown.getMessage().contains("500: Server Error"));
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
     }
 
     @Test
@@ -196,7 +197,8 @@ class CredentialIssuerServiceTest {
             credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
         });
 
-        assertTrue(thrown.getMessage().contains("ParseException: Invalid JSON: Unexpected token What on earth is this?"));
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
     }
 
     private CredentialIssuerConfig getStubCredentialIssuerConfig(WireMockRuntimeInfo wmRuntimeInfo) {

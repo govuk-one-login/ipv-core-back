@@ -1,12 +1,21 @@
 package uk.gov.di.ipv.domain;
 
-public class CredentialIssuerException extends RuntimeException{
+public class CredentialIssuerException extends RuntimeException {
 
-    public CredentialIssuerException(String message) {
-        super(message);
+    private ErrorResponse errorResponse;
+
+    private int httpStatusCode;
+
+    public CredentialIssuerException(int httpStatusCode, ErrorResponse errorResponse) {
+        this.errorResponse = errorResponse;
+        this.httpStatusCode = httpStatusCode;
     }
 
-    public CredentialIssuerException(Throwable cause) {
-        super(cause);
+    public ErrorResponse getErrorResponse() {
+        return errorResponse;
+    }
+
+    public int getHttpStatusCode() {
+        return httpStatusCode;
     }
 }

@@ -59,30 +59,12 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
         }
         CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request);
 
-        BearerAccessToken accessToken;
         try {
-            accessToken = credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);
-
-        } catch (CredentialIssuerException e) {
-            LOGGER.error("Could not exchange authorization code for token: {}", e.getMessage(), e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.INVALID_TOKEN_REQUEST);
-        }
-
-        JSONObject credential;
-        try {
-             credential = credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
-
-        } catch (CredentialIssuerException e) {
-            LOGGER.error("Could not retrieve protected resource from credential issuer: {}", e.getMessage(), e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(500, ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
-        }
-
-        try {
+            BearerAccessToken accessToken = credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);
+            JSONObject credential = credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
             credentialIssuerService.persistUserCredentials(credential,request);
-
         } catch (CredentialIssuerException e) {
-            LOGGER.error("Could not exchange authorization code for token: {}", e.getMessage(), e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.INVALID_TOKEN_REQUEST);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(e.getHttpStatusCode(), e.getErrorResponse());
         }
 
         return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.EMPTY_MAP);
