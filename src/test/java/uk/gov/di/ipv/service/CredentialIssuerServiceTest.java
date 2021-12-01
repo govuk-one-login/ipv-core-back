@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import net.minidev.json.JSONObject;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import uk.gov.di.ipv.domain.CredentialIssuerException;
 import uk.gov.di.ipv.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.dto.CredentialIssuerRequestDto;
@@ -20,7 +21,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 @WireMockTest
 class CredentialIssuerServiceTest {
@@ -105,6 +106,26 @@ class CredentialIssuerServiceTest {
         String expectedMessage = "The HTTP Content-Type header must be application/json";
         String actualMessage = exception.getMessage();
         assertTrue(actualMessage.contains(expectedMessage));
+    }
+
+    @Test
+    public void test_valid_token_response_and_save_credentials() {
+
+        ArgumentCaptor<UserIssuedCredentialsItem> userIssuedCredentialsItemCaptor = ArgumentCaptor.forClass(UserIssuedCredentialsItem.class);
+
+        CredentialIssuerRequestDto credentialIssuerRequestDto = new CredentialIssuerRequestDto(
+                "1234",
+                "cred_issuer_id_1",
+                "http://www.example.com/redirect"
+        );
+
+        credentialIssuerService.persistUserCredentials(credentialIssuerRequestDto);
+        verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture());
+        assertEquals(credentialIssuerRequestDto.getIpvSessionId(), userIssuedCredentialsItemCaptor.getValue().getSessionId());
+        assertEquals(credentialIssuerRequestDto.getCredentialIssuerId(), userIssuedCredentialsItemCaptor.getValue().getCredentialIssuer());
+
+
+
     }
 
     @Test

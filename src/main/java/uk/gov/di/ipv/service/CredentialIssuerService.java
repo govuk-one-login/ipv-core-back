@@ -104,7 +104,7 @@ public class CredentialIssuerService {
         UserIssuedCredentialsItem userIssuedCredentials = new UserIssuedCredentialsItem();
         userIssuedCredentials.setSessionId(request.getIpvSessionId());
         userIssuedCredentials.setCredentialIssuer(request.getCredentialIssuerId());
-        // store json - credentialData
+        // TODO store json - credentialData
         userIssuedCredentials.setDateCreated(LocalDate.now());
         try {
             dataStore.create(userIssuedCredentials);
