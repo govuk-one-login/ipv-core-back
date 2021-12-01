@@ -6,11 +6,11 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import com.nimbusds.oauth2.sdk.token.AccessToken;
+import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import net.minidev.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -24,6 +24,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -83,12 +85,17 @@ class CredentialIssuerHandlerTest {
 
     @Test
     void shouldReceive200ResponseCodeIfAllRequestParametersValid() {
-        AccessToken accessToken = mock(AccessToken.class);
+        BearerAccessToken accessToken = mock(BearerAccessToken.class);
 
         when(credentialIssuerService.exchangeCodeForToken(
                 requestDto.capture(),
-                ArgumentMatchers.eq(CredentialIssuerHandler.PASSPORT_ISSUER))
+                eq(CredentialIssuerHandler.PASSPORT_ISSUER))
         ).thenReturn(accessToken);
+
+        when(credentialIssuerService.getCredential(
+                eq(accessToken),
+                eq(CredentialIssuerHandler.PASSPORT_ISSUER))
+        ).thenReturn(new JSONObject());
 
         CredentialIssuerHandler handler = new CredentialIssuerHandler(credentialIssuerService);
         APIGatewayProxyRequestEvent input = createRequestEvent(
@@ -96,12 +103,13 @@ class CredentialIssuerHandlerTest {
                 Map.of("ipv-session-id", sessionId));
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
 
-        Integer statusCode = response.getStatusCode();
-        assertEquals(HTTPResponse.SC_OK, statusCode);
         CredentialIssuerRequestDto value = requestDto.getValue();
         assertEquals(sessionId, value.getIpvSessionId());
         assertEquals(passportIssuerId, value.getCredentialIssuerId());
         assertEquals(authorization_code, value.getAuthorizationCode());
+
+        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+
         verifyNoInteractions(context);
     }
 
@@ -112,7 +120,7 @@ class CredentialIssuerHandlerTest {
                 Map.of("authorization_code", "foo", "credential_issuer_id", passportIssuerId),
                 Map.of("ipv-session-id", sessionId));
 
-        when(credentialIssuerService.exchangeCodeForToken(requestDto.capture(), ArgumentMatchers.eq(CredentialIssuerHandler.PASSPORT_ISSUER)))
+        when(credentialIssuerService.exchangeCodeForToken(requestDto.capture(), eq(CredentialIssuerHandler.PASSPORT_ISSUER)))
                 .thenThrow(new CredentialIssuerException("code1: message1"));
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
@@ -121,6 +129,24 @@ class CredentialIssuerHandlerTest {
         assertEquals(HTTPResponse.SC_BAD_REQUEST, statusCode);
         assertEquals(ErrorResponse.INVALID_TOKEN_REQUEST.getCode(), responseBody.get("code"));
         verifyNoInteractions(context);
+    }
+
+    @Test
+    void shouldReturn500IfCredentialIssuerServiceGetCredentialThrows() throws JsonProcessingException {
+        when(credentialIssuerService.exchangeCodeForToken(any(), any())).thenReturn(new BearerAccessToken());
+        when(credentialIssuerService.getCredential(any(), any())).thenThrow(new CredentialIssuerException("Something bad happened."));
+
+        CredentialIssuerHandler handler = new CredentialIssuerHandler(credentialIssuerService);
+        APIGatewayProxyRequestEvent input = createRequestEvent(
+                Map.of("authorization_code", authorization_code, "credential_issuer_id", passportIssuerId),
+                Map.of("ipv-session-id", sessionId));
+        APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
+
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, response.getStatusCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER.getCode(),
+                getResponseBodyAsMap(response).get("code")
+        );
     }
 
     private Map getResponseBodyAsMap(APIGatewayProxyResponseEvent response) throws JsonProcessingException {

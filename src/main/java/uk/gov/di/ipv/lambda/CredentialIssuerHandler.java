@@ -4,8 +4,9 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.nimbusds.oauth2.sdk.token.AccessToken;
+import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
+import net.minidev.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.domain.CredentialIssuerException;
@@ -27,8 +28,16 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
 
     private final CredentialIssuerService credentialIssuerService;
 
-    protected static final CredentialIssuerConfig PASSPORT_ISSUER = new CredentialIssuerConfig("PassportIssuer", URI.create("http://www.example.com"));
-    protected static final CredentialIssuerConfig FRAUD_ISSUER = new CredentialIssuerConfig("FraudIssuer", URI.create("http://www.example.com"));
+    protected static final CredentialIssuerConfig PASSPORT_ISSUER = new CredentialIssuerConfig(
+            "PassportIssuer",
+            URI.create("http://www.example.com"),
+            URI.create("http://www.example.com/credential")
+    );
+    protected static final CredentialIssuerConfig FRAUD_ISSUER = new CredentialIssuerConfig(
+            "FraudIssuer",
+            URI.create("http://www.example.com"),
+            URI.create("http://www.example.com/credential")
+    );
     protected static final Set<CredentialIssuerConfig> CREDENTIAL_ISSUERS = Set.of(PASSPORT_ISSUER, FRAUD_ISSUER);
 
     public CredentialIssuerHandler(CredentialIssuerService credentialIssuerService) {
@@ -48,16 +57,25 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
         if (errorResponse.isPresent()) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
         }
+        CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request);
 
+        BearerAccessToken accessToken;
         try {
-            AccessToken accessToken = credentialIssuerService.exchangeCodeForToken(request, getCredentialIssuerConfig(request));
-            // todo var credential = getCredential(accessToken);
-            // todo save credential
-            return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.emptyMap());
+            accessToken = credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);
         } catch (CredentialIssuerException e) {
             LOGGER.error("Could not exchange authorization code for token: {}", e.getMessage(), e);
             return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.INVALID_TOKEN_REQUEST);
         }
+
+        try {
+            JSONObject credential = credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
+            // todo save credential
+        } catch (CredentialIssuerException e) {
+            LOGGER.error("Could not retrieve protected resource from credential issuer: {}", e.getMessage(), e);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(500, ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
+        }
+
+        return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.EMPTY_MAP);
 
     }
 
