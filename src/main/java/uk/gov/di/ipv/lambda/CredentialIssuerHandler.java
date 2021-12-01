@@ -70,6 +70,7 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
         try {
             JSONObject credential = credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
             // todo save credential
+            credentialIssuerService.persistUserCredentials(request);
         } catch (CredentialIssuerException e) {
             LOGGER.error("Could not retrieve protected resource from credential issuer: {}", e.getMessage(), e);
             return ApiGatewayResponseGenerator.proxyJsonResponse(500, ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);

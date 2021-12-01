@@ -18,4 +18,8 @@ public class ConfigurationService {
     public String getAuthCodesTableName() {
         return System.getenv("AUTH_CODES_TABLE_NAME");
     }
+
+    public String getUserIssuedCredentialTableName() {
+        return System.getenv("USER_ISSUED_CREDENTIALS_TABLE_NAME");
+    }
 }

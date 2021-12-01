@@ -16,12 +16,29 @@ import net.minidev.json.JSONObject;
 import uk.gov.di.ipv.domain.CredentialIssuerException;
 import uk.gov.di.ipv.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.dto.CredentialIssuerRequestDto;
+import uk.gov.di.ipv.persistence.DataStore;
+import uk.gov.di.ipv.persistence.item.UserIssuedCredentialsItem;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Objects;
 import java.util.Optional;
 
 public class CredentialIssuerService {
+
+    private final DataStore<UserIssuedCredentialsItem> dataStore;
+    private final ConfigurationService configurationService;
+
+    public CredentialIssuerService() {
+        this.configurationService = ConfigurationService.getInstance();
+        this.dataStore = new DataStore<>(configurationService.getUserIssuedCredentialTableName(), UserIssuedCredentialsItem.class);
+    }
+
+    // used for testing
+    public CredentialIssuerService(DataStore<UserIssuedCredentialsItem> dataStore, ConfigurationService configurationService) {
+        this.configurationService = configurationService;
+        this.dataStore = dataStore;
+    }
 
     public BearerAccessToken exchangeCodeForToken(CredentialIssuerRequestDto request, CredentialIssuerConfig config) {
 
@@ -79,5 +96,20 @@ public class CredentialIssuerService {
 
     private TokenResponse parseTokenResponse(HTTPResponse httpResponse) throws ParseException {
         return OIDCTokenResponseParser.parse(httpResponse);
+    }
+
+    // datastore create does not throw any specific exception
+    // just use a general for now
+    public void persistUserCredentials(CredentialIssuerRequestDto request) {
+        UserIssuedCredentialsItem userIssuedCredentials = new UserIssuedCredentialsItem();
+        userIssuedCredentials.setSessionId(request.getIpvSessionId());
+        userIssuedCredentials.setCredentialIssuer(request.getCredentialIssuerId());
+        // store json - credentialData
+        userIssuedCredentials.setDateCreated(LocalDate.now());
+        try {
+            dataStore.create(userIssuedCredentials);
+        } catch (UnsupportedOperationException e) {
+            throw new CredentialIssuerException(e);
+        }
     }
 }

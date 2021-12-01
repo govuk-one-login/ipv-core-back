@@ -4,12 +4,15 @@ import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
+import org.junit.jupiter.api.BeforeEach;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import net.minidev.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.domain.CredentialIssuerException;
 import uk.gov.di.ipv.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.dto.CredentialIssuerRequestDto;
+import uk.gov.di.ipv.persistence.DataStore;
+import uk.gov.di.ipv.persistence.item.UserIssuedCredentialsItem;
 
 import java.net.URI;
 
@@ -17,9 +20,21 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 @WireMockTest
 class CredentialIssuerServiceTest {
+
+    private DataStore<UserIssuedCredentialsItem> mockDataStore;
+    private ConfigurationService mockConfigurationService;
+    private CredentialIssuerService credentialIssuerService;
+
+    @BeforeEach
+    public void setUp() {
+        mockDataStore = mock(DataStore.class);
+        mockConfigurationService = mock(ConfigurationService.class);
+        credentialIssuerService = new CredentialIssuerService(mockDataStore, mockConfigurationService);
+    }
 
     @Test
     void test_valid_token_response(WireMockRuntimeInfo wmRuntimeInfo) {
@@ -29,7 +44,6 @@ class CredentialIssuerServiceTest {
                         .withHeader("Content-Type", "application/json")
                         .withBody("{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n")));
 
-        CredentialIssuerService credentialIssuerService = new CredentialIssuerService();
         CredentialIssuerRequestDto credentialIssuerRequestDto = new CredentialIssuerRequestDto(
                 "1234",
                 "cred_issuer_id_1",
@@ -55,7 +69,6 @@ class CredentialIssuerServiceTest {
                         .withHeader("Content-Type", "application/json")
                         .withBody(errorJson)));
 
-        CredentialIssuerService credentialIssuerService = new CredentialIssuerService();
         CredentialIssuerRequestDto credentialIssuerRequestDto = new CredentialIssuerRequestDto(
                 "1234",
                 "cred_issuer_id_1",
@@ -79,7 +92,6 @@ class CredentialIssuerServiceTest {
                         .withHeader("Content-Type", "application/xml")
                         .withBody("{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n")));
 
-        CredentialIssuerService credentialIssuerService = new CredentialIssuerService();
         CredentialIssuerRequestDto credentialIssuerRequestDto = new CredentialIssuerRequestDto(
                 "1234",
                 "cred_issuer_id_1",
