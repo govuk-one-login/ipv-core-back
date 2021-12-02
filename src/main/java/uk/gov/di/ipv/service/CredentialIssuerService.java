@@ -23,51 +23,50 @@ import java.util.Optional;
 
 public class CredentialIssuerService {
 
-    public BearerAccessToken exchangeCodeForToken(CredentialIssuerRequestDto request, CredentialIssuerConfig config) {
+    public BearerAccessToken exchangeCodeForToken(
+            CredentialIssuerRequestDto request, CredentialIssuerConfig config) {
 
         AuthorizationCode authorizationCode = new AuthorizationCode(request.getAuthorizationCode());
         try {
-            TokenRequest tokenRequest = new TokenRequest(
-                    config.getTokenUrl(),
-                    new ClientID(getClientId()),
-                    new AuthorizationCodeGrant(authorizationCode, null)
-            );
+            TokenRequest tokenRequest =
+                    new TokenRequest(
+                            config.getTokenUrl(),
+                            new ClientID(getClientId()),
+                            new AuthorizationCodeGrant(authorizationCode, null));
 
             HTTPResponse httpResponse = tokenRequest.toHTTPRequest().send();
             TokenResponse tokenResponse = parseTokenResponse(httpResponse);
 
             if (tokenResponse instanceof TokenErrorResponse) {
                 TokenErrorResponse errorResponse = tokenResponse.toErrorResponse();
-                ErrorObject errorObject = Objects.requireNonNullElse(
-                        errorResponse.getErrorObject(),
-                        new ErrorObject("unknown", "unknown")
-                );
-                throw new CredentialIssuerException(String.format("%s: %s", errorObject.getCode(), errorObject.getDescription()));
+                ErrorObject errorObject =
+                        Objects.requireNonNullElse(
+                                errorResponse.getErrorObject(),
+                                new ErrorObject("unknown", "unknown"));
+                throw new CredentialIssuerException(
+                        String.format(
+                                "%s: %s", errorObject.getCode(), errorObject.getDescription()));
             }
-            return tokenResponse
-                    .toSuccessResponse()
-                    .getTokens()
-                    .getBearerAccessToken();
+            return tokenResponse.toSuccessResponse().getTokens().getBearerAccessToken();
         } catch (IOException | ParseException e) {
             throw new CredentialIssuerException(e);
         }
     }
 
     public JSONObject getCredential(BearerAccessToken accessToken, CredentialIssuerConfig config) {
-        ClientReadRequest credentialRequest = new ClientReadRequest(
-                config.getCredentialUrl(),
-                accessToken
-        );
+        ClientReadRequest credentialRequest =
+                new ClientReadRequest(config.getCredentialUrl(), accessToken);
 
         try {
             HTTPResponse response = credentialRequest.toHTTPRequest().send();
             if (!response.indicatesSuccess()) {
                 throw new CredentialIssuerException(
-                        String.format("%s: %s", response.getStatusCode(), response.getStatusMessage())
-                );
+                        String.format(
+                                "%s: %s", response.getStatusCode(), response.getStatusMessage()));
             }
 
-            return response.getContentAsJSONObject(); // In future we can use response.getContentAsJWT()
+            return response
+                    .getContentAsJSONObject(); // In future we can use response.getContentAsJWT()
         } catch (IOException | ParseException e) {
             throw new CredentialIssuerException(e);
         }

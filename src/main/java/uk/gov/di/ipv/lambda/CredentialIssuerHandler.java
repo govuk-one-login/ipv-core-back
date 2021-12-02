@@ -22,23 +22,25 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 
-public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+public class CredentialIssuerHandler
+        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CredentialIssuerHandler.class);
 
     private final CredentialIssuerService credentialIssuerService;
 
-    protected static final CredentialIssuerConfig PASSPORT_ISSUER = new CredentialIssuerConfig(
-            "PassportIssuer",
-            URI.create("http://www.example.com"),
-            URI.create("http://www.example.com/credential")
-    );
-    protected static final CredentialIssuerConfig FRAUD_ISSUER = new CredentialIssuerConfig(
-            "FraudIssuer",
-            URI.create("http://www.example.com"),
-            URI.create("http://www.example.com/credential")
-    );
-    protected static final Set<CredentialIssuerConfig> CREDENTIAL_ISSUERS = Set.of(PASSPORT_ISSUER, FRAUD_ISSUER);
+    protected static final CredentialIssuerConfig PASSPORT_ISSUER =
+            new CredentialIssuerConfig(
+                    "PassportIssuer",
+                    URI.create("http://www.example.com"),
+                    URI.create("http://www.example.com/credential"));
+    protected static final CredentialIssuerConfig FRAUD_ISSUER =
+            new CredentialIssuerConfig(
+                    "FraudIssuer",
+                    URI.create("http://www.example.com"),
+                    URI.create("http://www.example.com/credential"));
+    protected static final Set<CredentialIssuerConfig> CREDENTIAL_ISSUERS =
+            Set.of(PASSPORT_ISSUER, FRAUD_ISSUER);
 
     public CredentialIssuerHandler(CredentialIssuerService credentialIssuerService) {
         this.credentialIssuerService = credentialIssuerService;
@@ -49,9 +51,11 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
     }
 
     @Override
-    public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
+    public APIGatewayProxyResponseEvent handleRequest(
+            APIGatewayProxyRequestEvent input, Context context) {
 
-        CredentialIssuerRequestDto request = RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
+        CredentialIssuerRequestDto request =
+                RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
 
         var errorResponse = validate(request);
         if (errorResponse.isPresent()) {
@@ -61,22 +65,28 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
 
         BearerAccessToken accessToken;
         try {
-            accessToken = credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);
+            accessToken =
+                    credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);
         } catch (CredentialIssuerException e) {
             LOGGER.error("Could not exchange authorization code for token: {}", e.getMessage(), e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.INVALID_TOKEN_REQUEST);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    400, ErrorResponse.INVALID_TOKEN_REQUEST);
         }
 
         try {
-            JSONObject credential = credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
+            JSONObject credential =
+                    credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
             // todo save credential
         } catch (CredentialIssuerException e) {
-            LOGGER.error("Could not retrieve protected resource from credential issuer: {}", e.getMessage(), e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(500, ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
+            LOGGER.error(
+                    "Could not retrieve protected resource from credential issuer: {}",
+                    e.getMessage(),
+                    e);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    500, ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
         }
 
         return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.EMPTY_MAP);
-
     }
 
     private Optional<ErrorResponse> validate(CredentialIssuerRequestDto request) {
@@ -104,5 +114,4 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
                 .findFirst()
                 .orElse(null);
     }
-
 }

@@ -15,8 +15,7 @@ public class AccessTokenService {
     public TokenResponse exchangeCodeForToken(TokenRequest tokenRequest) {
         if (!tokenRequest.getAuthorizationGrant().getType().equals(GrantType.AUTHORIZATION_CODE)) {
             return new TokenErrorResponse(
-                    new ErrorObject("F-001", "Something failed during exchange of code to token")
-            );
+                    new ErrorObject("F-001", "Something failed during exchange of code to token"));
         }
 
         AccessToken accessToken = new BearerAccessToken();

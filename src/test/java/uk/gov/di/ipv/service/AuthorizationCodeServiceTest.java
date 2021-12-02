@@ -26,7 +26,8 @@ class AuthorizationCodeServiceTest {
         mockConfigurationService = mock(ConfigurationService.class);
         when(mockConfigurationService.getAuthCodesTableName()).thenReturn("test-auth-code-table");
 
-        authorizationCodeService = new AuthorizationCodeService(mockDataStore, mockConfigurationService);
+        authorizationCodeService =
+                new AuthorizationCodeService(mockDataStore, mockConfigurationService);
     }
 
     @Test
@@ -36,16 +37,18 @@ class AuthorizationCodeServiceTest {
         assertNotNull(result);
     }
 
-
     @Test
     void shouldCreateAuthorizationCodeInDataStore() {
         AuthorizationCode testCode = new AuthorizationCode();
         String ipvSessionId = "session-12345";
         authorizationCodeService.persistAuthorizationCode(testCode.getValue(), ipvSessionId);
 
-        ArgumentCaptor<AuthorizationCodeItem> authorizationCodeItemArgumentCaptor = ArgumentCaptor.forClass(AuthorizationCodeItem.class);
+        ArgumentCaptor<AuthorizationCodeItem> authorizationCodeItemArgumentCaptor =
+                ArgumentCaptor.forClass(AuthorizationCodeItem.class);
         verify(mockDataStore).create(authorizationCodeItemArgumentCaptor.capture());
-        assertEquals(ipvSessionId, authorizationCodeItemArgumentCaptor.getValue().getIpvSessionId());
-        assertEquals(testCode.getValue(), authorizationCodeItemArgumentCaptor.getValue().getAuthCode());
+        assertEquals(
+                ipvSessionId, authorizationCodeItemArgumentCaptor.getValue().getIpvSessionId());
+        assertEquals(
+                testCode.getValue(), authorizationCodeItemArgumentCaptor.getValue().getAuthCode());
     }
 }

@@ -14,7 +14,8 @@ import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.helpers.RequestHelper;
 import uk.gov.di.ipv.service.UserInfoService;
 
-public class UserInfoHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+public class UserInfoHandler
+        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserInfoHandler.class);
     private static final String AUTHORIZATION_HEADER = "Authorization";
@@ -30,12 +31,14 @@ public class UserInfoHandler implements RequestHandler<APIGatewayProxyRequestEve
     }
 
     @Override
-    public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
+    public APIGatewayProxyResponseEvent handleRequest(
+            APIGatewayProxyRequestEvent input, Context context) {
 
         var accessTokenString = RequestHelper.getHeader(input.getHeaders(), AUTHORIZATION_HEADER);
         if (accessTokenString.isEmpty()) {
             LOGGER.error("Missing access token from Authorization header");
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MISSING_ACCESS_TOKEN);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    400, ErrorResponse.MISSING_ACCESS_TOKEN);
         }
 
         try {
@@ -45,7 +48,8 @@ public class UserInfoHandler implements RequestHandler<APIGatewayProxyRequestEve
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, userInfo);
         } catch (ParseException e) {
             LOGGER.error("Failed to parse access token");
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.FAILED_TO_PARSE_ACCESS_TOKEN);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    400, ErrorResponse.FAILED_TO_PARSE_ACCESS_TOKEN);
         }
     }
 }

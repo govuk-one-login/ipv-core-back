@@ -24,7 +24,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class AuthorizationHandler
-        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent>  {
+        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthorizationHandler.class);
@@ -40,42 +40,53 @@ public class AuthorizationHandler
     }
 
     @Override
-    public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
+    public APIGatewayProxyResponseEvent handleRequest(
+            APIGatewayProxyRequestEvent input, Context context) {
         Map<String, List<String>> queryStringParameters = getQueryStringParametersAsMap(input);
 
         try {
-            ValidationResult validationResult = validateRequest(queryStringParameters, input.getHeaders());
+            ValidationResult validationResult =
+                    validateRequest(queryStringParameters, input.getHeaders());
             if (!validationResult.isValid()) {
                 LOGGER.error("Missing required query parameters for authorisation request");
-                return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_BAD_REQUEST, validationResult.getError());
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        HttpStatus.SC_BAD_REQUEST, validationResult.getError());
             }
             AuthenticationRequest.parse(queryStringParameters);
             LOGGER.info("Successfully parsed authentication request");
         } catch (ParseException e) {
             LOGGER.error("Authentication request could not be parsed", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_BAD_REQUEST, ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_BAD_REQUEST,
+                    ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS);
         }
 
         AuthorizationCode authorizationCode = authorizationCodeService.generateAuthorizationCode();
 
-        String ipvSessionId = RequestHelper.getHeaderByKey(input.getHeaders(), IPV_SESSION_ID_HEADER_KEY);
+        String ipvSessionId =
+                RequestHelper.getHeaderByKey(input.getHeaders(), IPV_SESSION_ID_HEADER_KEY);
 
-        authorizationCodeService.persistAuthorizationCode(authorizationCode.getValue(),ipvSessionId);
+        authorizationCodeService.persistAuthorizationCode(
+                authorizationCode.getValue(), ipvSessionId);
 
         Map<String, Identifier> payload = Map.of("code", authorizationCode);
 
         return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, payload);
     }
 
-    private Map<String, List<String>> getQueryStringParametersAsMap(APIGatewayProxyRequestEvent input) {
+    private Map<String, List<String>> getQueryStringParametersAsMap(
+            APIGatewayProxyRequestEvent input) {
         if (input.getQueryStringParameters() != null) {
             return input.getQueryStringParameters().entrySet().stream()
-                    .collect(Collectors.toMap(Map.Entry::getKey, entry -> List.of(entry.getValue())));
+                    .collect(
+                            Collectors.toMap(
+                                    Map.Entry::getKey, entry -> List.of(entry.getValue())));
         }
         return Collections.emptyMap();
     }
 
-    private ValidationResult validateRequest(Map<String, List<String>> queryStringParameters, Map<String, String> requestHeaders) {
+    private ValidationResult validateRequest(
+            Map<String, List<String>> queryStringParameters, Map<String, String> requestHeaders) {
         if (Objects.isNull(queryStringParameters) || queryStringParameters.isEmpty()) {
             return new ValidationResult(false, ErrorResponse.MISSING_QUERY_PARAMETERS);
         }

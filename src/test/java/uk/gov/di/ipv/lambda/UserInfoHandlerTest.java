@@ -52,7 +52,8 @@ class UserInfoHandlerTest {
     void shouldReturn200OnSuccessfulUserInfoRequest() {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken();
-        Map<String, String> headers = Collections.singletonMap("Authorization", "Bearer " + accessToken);
+        Map<String, String> headers =
+                Collections.singletonMap("Authorization", "Bearer " + accessToken);
 
         event.setHeaders(headers);
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, context);
@@ -64,7 +65,8 @@ class UserInfoHandlerTest {
     void shouldReturnUserInfoObjectOnSuccessfulUserInfoRequest() throws JsonProcessingException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken();
-        Map<String, String> headers = Collections.singletonMap("Authorization", "Bearer " + accessToken);
+        Map<String, String> headers =
+                Collections.singletonMap("Authorization", "Bearer " + accessToken);
 
         event.setHeaders(headers);
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, context);
@@ -72,10 +74,15 @@ class UserInfoHandlerTest {
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
-        assertEquals(userInfoDto.getJsonAttributes().get("requestedLevelOfConfidence").toString(), responseBody.get("requestedLevelOfConfidence"));
-        assertEquals(userInfoDto.getJsonAttributes().get("iss").toString(), responseBody.get("iss"));
-        assertEquals(userInfoDto.getJsonAttributes().get("aud").toString(), responseBody.get("aud"));
-        assertEquals(userInfoDto.getJsonAttributes().get("sub").toString(), responseBody.get("sub"));
+        assertEquals(
+                userInfoDto.getJsonAttributes().get("requestedLevelOfConfidence").toString(),
+                responseBody.get("requestedLevelOfConfidence"));
+        assertEquals(
+                userInfoDto.getJsonAttributes().get("iss").toString(), responseBody.get("iss"));
+        assertEquals(
+                userInfoDto.getJsonAttributes().get("aud").toString(), responseBody.get("aud"));
+        assertEquals(
+                userInfoDto.getJsonAttributes().get("sub").toString(), responseBody.get("sub"));
     }
 
     @Test
@@ -99,8 +106,8 @@ class UserInfoHandlerTest {
         responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_ACCESS_TOKEN.getCode(), responseBody.get("code"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_ACCESS_TOKEN.getCode(), responseBody.get("code"));
         assertEquals("Failed to parse access token", responseBody.get("message"));
-
     }
 }

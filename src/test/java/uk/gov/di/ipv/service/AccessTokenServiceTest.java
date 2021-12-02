@@ -23,13 +23,12 @@ class AccessTokenServiceTest {
 
     @Test
     void shouldReturnSuccessfulTokenResponseOnSuccessfulExchange() throws Exception {
-        TokenRequest tokenRequest = new TokenRequest(
-                null,
-                new ClientID("test-client-id"),
-                new AuthorizationCodeGrant(
-                        new AuthorizationCode("123456"),
-                        new URI("http://test.com"))
-        );
+        TokenRequest tokenRequest =
+                new TokenRequest(
+                        null,
+                        new ClientID("test-client-id"),
+                        new AuthorizationCodeGrant(
+                                new AuthorizationCode("123456"), new URI("http://test.com")));
 
         TokenResponse response = accessTokenService.exchangeCodeForToken(tokenRequest);
 
@@ -39,16 +38,18 @@ class AccessTokenServiceTest {
 
     @Test
     void shouldReturnErrorTokenResponseOnNonAuthorisationCodeGrant() throws Exception {
-        TokenRequest tokenRequest = new TokenRequest(
-                null,
-                new ClientID("test-client-id"),
-                new RefreshTokenGrant(new RefreshToken())
-        );
+        TokenRequest tokenRequest =
+                new TokenRequest(
+                        null,
+                        new ClientID("test-client-id"),
+                        new RefreshTokenGrant(new RefreshToken()));
 
         TokenResponse response = accessTokenService.exchangeCodeForToken(tokenRequest);
 
         assertInstanceOf(TokenErrorResponse.class, response);
         assertEquals("F-001", response.toErrorResponse().getErrorObject().getCode());
-        assertEquals("Something failed during exchange of code to token", response.toErrorResponse().getErrorObject().getDescription());
+        assertEquals(
+                "Something failed during exchange of code to token",
+                response.toErrorResponse().getErrorObject().getDescription());
     }
 }

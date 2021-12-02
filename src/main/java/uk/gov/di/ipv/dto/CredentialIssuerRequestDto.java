@@ -13,8 +13,7 @@ public class CredentialIssuerRequestDto {
     public CredentialIssuerRequestDto(
             @JsonProperty(value = "authorization_code") String authorizationCode,
             @JsonProperty(value = "credential_issuer_id") String credentialIssuerId,
-            @JsonProperty(value = "ipv_session_id") String ipvSessionId
-    ) {
+            @JsonProperty(value = "ipv_session_id") String ipvSessionId) {
         this.authorizationCode = authorizationCode;
         this.credentialIssuerId = credentialIssuerId;
         this.ipvSessionId = ipvSessionId;

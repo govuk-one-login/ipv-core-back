@@ -25,6 +25,4 @@ public class AuthorizationCodeItem {
     public void setIpvSessionId(String ipvSessionId) {
         this.ipvSessionId = ipvSessionId;
     }
-
-
 }

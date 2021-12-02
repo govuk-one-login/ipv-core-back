@@ -25,13 +25,12 @@ public class DataStore<T> {
 
         configurationService = ConfigurationService.getInstance();
 
-        DynamoDbClient client = configurationService.isRunningLocally()
-                ? createLocalDbClient()
-                : DynamoDbClient.create();
+        DynamoDbClient client =
+                configurationService.isRunningLocally()
+                        ? createLocalDbClient()
+                        : DynamoDbClient.create();
 
-        dynamoDbEnhancedClient = DynamoDbEnhancedClient.builder()
-                .dynamoDbClient(client)
-                .build();
+        dynamoDbEnhancedClient = DynamoDbEnhancedClient.builder().dynamoDbClient(client).build();
     }
 
     public DataStore(
@@ -85,6 +84,7 @@ public class DataStore<T> {
     }
 
     private DynamoDbTable<T> getTable() {
-        return dynamoDbEnhancedClient.table(tableName, TableSchema.fromBean(this.typeParameterClass));
+        return dynamoDbEnhancedClient.table(
+                tableName, TableSchema.fromBean(this.typeParameterClass));
     }
 }

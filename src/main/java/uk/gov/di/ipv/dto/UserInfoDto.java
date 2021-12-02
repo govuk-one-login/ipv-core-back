@@ -8,7 +8,5 @@ import java.util.Map;
 @Data
 public class UserInfoDto {
 
-    @JsonValue
-    private final Map<String, Object> jsonAttributes;
+    @JsonValue private final Map<String, Object> jsonAttributes;
 }
-

@@ -42,7 +42,8 @@ class AccessTokenHandlerTest {
     @Test
     void shouldReturn200OnSuccessfulAccessTokenExchange() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        String tokenRequestBody = "code=12345&redirect_uri=http://test.com&grant_type=test_grant_type&client_id=test_client_id";
+        String tokenRequestBody =
+                "code=12345&redirect_uri=http://test.com&grant_type=test_grant_type&client_id=test_client_id";
         event.setBody(tokenRequestBody);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
@@ -53,7 +54,8 @@ class AccessTokenHandlerTest {
     @Test
     void shouldReturnAccessTokenOnSuccessfulExchange() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        String tokenRequestBody = "code=12345&redirect_uri=http://test.com&grant_type=test_grant_type&client_id=test_client_id";
+        String tokenRequestBody =
+                "code=12345&redirect_uri=http://test.com&grant_type=test_grant_type&client_id=test_client_id";
         event.setBody(tokenRequestBody);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
@@ -61,7 +63,9 @@ class AccessTokenHandlerTest {
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
-        assertEquals(tokenResponse.toSuccessResponse().getTokens().getAccessToken().getValue(), responseBody.get("access_token").toString());
+        assertEquals(
+                tokenResponse.toSuccessResponse().getTokens().getAccessToken().getValue(),
+                responseBody.get("access_token").toString());
     }
 
     @Test
@@ -76,18 +80,23 @@ class AccessTokenHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_TOKEN_REQUEST.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_TOKEN_REQUEST.getMessage(), responseBody.get("message"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_TOKEN_REQUEST.getCode(), responseBody.get("code"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_TOKEN_REQUEST.getMessage(),
+                responseBody.get("message"));
     }
 
     @Test
     void shouldReturn400OnFailedTokenExchange() throws Exception {
-        ErrorObject tokenErrorObject = new ErrorObject("F-001", "Something failed during exchange of code to token");
+        ErrorObject tokenErrorObject =
+                new ErrorObject("F-001", "Something failed during exchange of code to token");
         tokenResponse = new TokenErrorResponse(tokenErrorObject);
         when(accessTokenService.exchangeCodeForToken(any())).thenReturn(tokenResponse);
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        String tokenRequestBody = "code=12345&redirect_uri=http://test.com&grant_type=test_grant_type&client_id=test_client_id";
+        String tokenRequestBody =
+                "code=12345&redirect_uri=http://test.com&grant_type=test_grant_type&client_id=test_client_id";
 
         event.setBody(tokenRequestBody);
 
@@ -97,15 +106,20 @@ class AccessTokenHandlerTest {
         Map<String, String> responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE.getMessage(), responseBody.get("message"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE.getCode(),
+                responseBody.get("code"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE.getMessage(),
+                responseBody.get("message"));
     }
 
     @Test
     void shouldReturn400OnMissingAuthorisationCode() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
-        String tokenRequestBody = "code=&redirect_uri=http://test.com&grant_type=test_grant_type&client_id=test_client_id";
+        String tokenRequestBody =
+                "code=&redirect_uri=http://test.com&grant_type=test_grant_type&client_id=test_client_id";
 
         event.setBody(tokenRequestBody);
 
@@ -116,6 +130,7 @@ class AccessTokenHandlerTest {
 
         assertEquals(400, response.getStatusCode());
         assertEquals(ErrorResponse.MISSING_AUTHORIZATION_CODE.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.MISSING_AUTHORIZATION_CODE.getMessage(), responseBody.get("message"));
+        assertEquals(
+                ErrorResponse.MISSING_AUTHORIZATION_CODE.getMessage(), responseBody.get("message"));
     }
 }

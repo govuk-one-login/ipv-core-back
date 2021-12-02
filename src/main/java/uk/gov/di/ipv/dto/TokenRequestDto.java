@@ -18,11 +18,10 @@ public class TokenRequestDto {
     private String clientId;
 
     public TokenRequestDto(
-            @JsonProperty(value="code") String code,
-            @JsonProperty(value="redirect_uri") URI redirectUri,
-            @JsonProperty(value="grant_type") String grantType,
-            @JsonProperty(value="client_id") String clientId
-    ) {
+            @JsonProperty(value = "code") String code,
+            @JsonProperty(value = "redirect_uri") URI redirectUri,
+            @JsonProperty(value = "grant_type") String grantType,
+            @JsonProperty(value = "client_id") String clientId) {
         this.code = code;
         this.redirectUri = redirectUri;
         this.grantType = grantType;

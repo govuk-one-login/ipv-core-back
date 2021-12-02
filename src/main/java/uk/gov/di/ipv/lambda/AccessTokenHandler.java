@@ -35,38 +35,44 @@ public class AccessTokenHandler
     }
 
     @Override
-    public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
+    public APIGatewayProxyResponseEvent handleRequest(
+            APIGatewayProxyRequestEvent input, Context context) {
 
         try {
-            TokenRequestDto tokenRequestDto = RequestHelper.convertRequest(input, TokenRequestDto.class);
+            TokenRequestDto tokenRequestDto =
+                    RequestHelper.convertRequest(input, TokenRequestDto.class);
 
             if (tokenRequestDto.getCode().isEmpty()) {
                 LOGGER.error("Missing authorisation code from the token request");
-                return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MISSING_AUTHORIZATION_CODE);
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        400, ErrorResponse.MISSING_AUTHORIZATION_CODE);
             }
 
-            TokenRequest tokenRequest = new TokenRequest(
-                    null,
-                    new ClientID(tokenRequestDto.getClientId()),
-                    new AuthorizationCodeGrant(
-                            new AuthorizationCode(tokenRequestDto.getCode()),
-                            tokenRequestDto.getRedirectUri())
-            );
+            TokenRequest tokenRequest =
+                    new TokenRequest(
+                            null,
+                            new ClientID(tokenRequestDto.getClientId()),
+                            new AuthorizationCodeGrant(
+                                    new AuthorizationCode(tokenRequestDto.getCode()),
+                                    tokenRequestDto.getRedirectUri()));
 
             TokenResponse tokenResponse = accessTokenService.exchangeCodeForToken(tokenRequest);
 
             if (tokenResponse instanceof TokenErrorResponse) {
                 TokenErrorResponse tokenErrorResponse = tokenResponse.toErrorResponse();
                 LOGGER.error(tokenErrorResponse.getErrorObject().getDescription());
-                return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE);
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        400, ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE);
             }
 
             AccessTokenResponse accessTokenResponse = tokenResponse.toSuccessResponse();
 
-            return ApiGatewayResponseGenerator.proxyJsonResponse(200, accessTokenResponse.toJSONObject());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    200, accessTokenResponse.toJSONObject());
         } catch (IllegalArgumentException e) {
             LOGGER.error("Token request could not be parsed", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.FAILED_TO_PARSE_TOKEN_REQUEST);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    400, ErrorResponse.FAILED_TO_PARSE_TOKEN_REQUEST);
         }
     }
 }

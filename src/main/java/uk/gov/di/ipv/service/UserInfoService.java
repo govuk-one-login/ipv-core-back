@@ -17,14 +17,14 @@ public class UserInfoService {
         return createUserInfoResponse();
     }
 
-
     private UserInfoDto createUserInfoResponse() {
-        Map<String, Object> userInfo = Map.of(
-                "iss", ISSUER_URN,
-                "aud", ORCHESTRATOR_URN,
-                "sub", ORCHESTRATOR_URN,
-                "identityProfile", "Test identity profile",
-                "requestedLevelOfConfidence", "Medium");
+        Map<String, Object> userInfo =
+                Map.of(
+                        "iss", ISSUER_URN,
+                        "aud", ORCHESTRATOR_URN,
+                        "sub", ORCHESTRATOR_URN,
+                        "identityProfile", "Test identity profile",
+                        "requestedLevelOfConfidence", "Medium");
 
         return new UserInfoDto(userInfo);
     }

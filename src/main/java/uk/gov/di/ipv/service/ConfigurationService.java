@@ -12,7 +12,7 @@ public class ConfigurationService {
     }
 
     public boolean isRunningLocally() {
-        return Boolean.parseBoolean(System.getenv("IS_LOCAL")) ;
+        return Boolean.parseBoolean(System.getenv("IS_LOCAL"));
     }
 
     public String getAuthCodesTableName() {

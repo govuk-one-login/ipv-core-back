@@ -15,5 +15,4 @@ public class ValidationResult {
     public static ValidationResult createValidResult() {
         return new ValidationResult(true, null);
     }
-
 }
