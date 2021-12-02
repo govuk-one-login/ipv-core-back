@@ -4,11 +4,14 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import uk.gov.di.ipv.service.ConfigurationService;
 
 import java.net.URI;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class DataStore<T> {
 
@@ -49,12 +52,19 @@ public class DataStore<T> {
         getTable().putItem(item);
     }
 
-    public T read(String partitionValue, String sortValue) {
-        return read(Key.builder().partitionValue(partitionValue).sortValue(sortValue).build());
+    public T getItem(String partitionValue, String sortValue) {
+        return getItemByKey(Key.builder().partitionValue(partitionValue).sortValue(sortValue).build());
     }
 
-    public T read(String partitionValue) {
-        return read(Key.builder().partitionValue(partitionValue).build());
+    public T getItem(String partitionValue) {
+        return getItemByKey(Key.builder().partitionValue(partitionValue).build());
+    }
+
+    public List<T> getItems(String partitionValue) {
+        return getTable().query(QueryConditional.keyEqualTo(Key.builder().partitionValue(partitionValue).build()))
+                .stream()
+                .flatMap(page -> page.items().stream())
+                .collect(Collectors.toList());
     }
 
     public T update(T item) {
@@ -76,7 +86,7 @@ public class DataStore<T> {
                 .build();
     }
 
-    private T read(Key key) {
+    private T getItemByKey(Key key) {
         return getTable().getItem(key);
     }
 

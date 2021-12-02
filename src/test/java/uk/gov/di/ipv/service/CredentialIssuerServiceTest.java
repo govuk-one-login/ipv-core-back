@@ -19,6 +19,7 @@ import uk.gov.di.ipv.persistence.DataStore;
 import uk.gov.di.ipv.persistence.item.UserIssuedCredentialsItem;
 
 import java.net.URI;
+import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,6 +27,8 @@ import static org.mockito.Mockito.*;
 
 @WireMockTest
 class CredentialIssuerServiceTest {
+
+    private static final String TEST_IPV_SESSION_ID = UUID.randomUUID().toString();
 
     private DataStore<UserIssuedCredentialsItem> mockDataStore;
     private ConfigurationService mockConfigurationService;
@@ -51,6 +54,7 @@ class CredentialIssuerServiceTest {
         CredentialIssuerRequestDto credentialIssuerRequestDto = new CredentialIssuerRequestDto(
                 "1234",
                 "cred_issuer_id_1",
+                UUID.randomUUID().toString(),
                 "http://www.example.com/redirect"
         );
         CredentialIssuerConfig credentialIssuerConfig = getStubCredentialIssuerConfig(wmRuntimeInfo);
@@ -76,6 +80,7 @@ class CredentialIssuerServiceTest {
         CredentialIssuerRequestDto credentialIssuerRequestDto = new CredentialIssuerRequestDto(
                 "1234",
                 "cred_issuer_id_1",
+                TEST_IPV_SESSION_ID,
                 "http://www.example.com/redirect"
         );
         CredentialIssuerConfig credentialIssuerConfig = getStubCredentialIssuerConfig(wmRuntimeInfo);
@@ -99,6 +104,7 @@ class CredentialIssuerServiceTest {
         CredentialIssuerRequestDto credentialIssuerRequestDto = new CredentialIssuerRequestDto(
                 "1234",
                 "cred_issuer_id_1",
+                TEST_IPV_SESSION_ID,
                 "http://www.example.com/redirect"
         );
         CredentialIssuerConfig credentialIssuerConfig = getStubCredentialIssuerConfig(wmRuntimeInfo);
@@ -118,6 +124,7 @@ class CredentialIssuerServiceTest {
         CredentialIssuerRequestDto credentialIssuerRequestDto = new CredentialIssuerRequestDto(
                 "1234",
                 "cred_issuer_id_1",
+                TEST_IPV_SESSION_ID,
                 "http://www.example.com/redirect"
         );
 
@@ -135,6 +142,7 @@ class CredentialIssuerServiceTest {
         CredentialIssuerRequestDto credentialIssuerRequestDto = new CredentialIssuerRequestDto(
                 "1234",
                 "cred_issuer_id_1",
+                TEST_IPV_SESSION_ID,
                 "http://www.example.com/redirect"
         );
 

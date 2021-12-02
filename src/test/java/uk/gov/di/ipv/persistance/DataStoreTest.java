@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.datastore;
+package uk.gov.di.ipv.persistance;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,9 +8,13 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import uk.gov.di.ipv.persistence.DataStore;
 import uk.gov.di.ipv.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.service.ConfigurationService;
+
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -61,8 +65,8 @@ class DataStoreTest {
     }
 
     @Test
-    void shouldReadItemFromDynamoDbTableViaPartitionKeyAndSortKey() {
-        dataStore.read("partition-key-12345", "sort-key-12345");
+    void shouldGetItemFromDynamoDbTableViaPartitionKeyAndSortKey() {
+        dataStore.getItem("partition-key-12345", "sort-key-12345");
 
         ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
 
@@ -73,8 +77,8 @@ class DataStoreTest {
     }
 
     @Test
-    void shouldReadItemFromDynamoDbTableViaPartitionKey() {
-        dataStore.read("partition-key-12345");
+    void shouldGetItemFromDynamoDbTableViaPartitionKey() {
+        dataStore.getItem("partition-key-12345");
 
         ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
 
@@ -82,6 +86,19 @@ class DataStoreTest {
         verify(mockDynamoDbTable).getItem(keyCaptor.capture());
         assertEquals("partition-key-12345", keyCaptor.getValue().partitionKeyValue().s());
         assertTrue(keyCaptor.getValue().sortKeyValue().isEmpty());
+    }
+
+    @Test
+    void shouldGetItemsFromDynamoDbTableViaPartitionKeyQueryRequest() {
+        PageIterable<AuthorizationCodeItem> mockPageIterable = mock(PageIterable.class);
+
+        when(mockDynamoDbTable.query(any(QueryConditional.class))).thenReturn(mockPageIterable);
+        when(mockPageIterable.stream()).thenReturn(Stream.empty());
+
+        dataStore.getItems("partition-key-12345");
+
+        verify(mockDynamoDbEnhancedClient).table(eq(TEST_TABLE_NAME), any(TableSchema.class));
+        verify(mockDynamoDbTable).query(any(QueryConditional.class));
     }
 
     @Test

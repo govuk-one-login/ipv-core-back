@@ -17,6 +17,7 @@ import uk.gov.di.ipv.persistence.DataStore;
 import uk.gov.di.ipv.persistence.item.UserIssuedCredentialsItem;
 
 import java.io.IOException;
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
@@ -46,7 +47,7 @@ public class CredentialIssuerService {
             TokenRequest tokenRequest = new TokenRequest(
                     config.getTokenUrl(),
                     new ClientID(getClientId()),
-                    new AuthorizationCodeGrant(authorizationCode, null)
+                    new AuthorizationCodeGrant(authorizationCode, URI.create(request.getRedirectUri()))
             );
 
             HTTPResponse httpResponse = tokenRequest.toHTTPRequest().send();

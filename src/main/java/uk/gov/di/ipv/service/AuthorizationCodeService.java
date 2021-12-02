@@ -25,7 +25,7 @@ public class AuthorizationCodeService {
     }
 
     public String getIpvSessionIdByAuthorizationCode(String authorizationCode) {
-        AuthorizationCodeItem authorizationCodeItem = dataStore.read(authorizationCode);
+        AuthorizationCodeItem authorizationCodeItem = dataStore.getItem(authorizationCode);
         return Objects.isNull(authorizationCodeItem)
                 ? null
                 : authorizationCodeItem.getIpvSessionId();
