@@ -3,24 +3,46 @@ package uk.gov.di.ipv.service;
 import com.nimbusds.oauth2.sdk.AccessTokenResponse;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GrantType;
-import com.nimbusds.oauth2.sdk.TokenErrorResponse;
+import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
+import uk.gov.di.ipv.persistence.DataStore;
+import uk.gov.di.ipv.persistence.item.AccessTokenItem;
+import uk.gov.di.ipv.validation.ValidationResult;
 
 public class AccessTokenService {
+    private final DataStore<AccessTokenItem> dataStore;
+    private final ConfigurationService configurationService;
 
-    public TokenResponse exchangeCodeForToken(TokenRequest tokenRequest) {
-        if (!tokenRequest.getAuthorizationGrant().getType().equals(GrantType.AUTHORIZATION_CODE)) {
-            return new TokenErrorResponse(
-                    new ErrorObject("F-001", "Something failed during exchange of code to token")
-            );
-        }
+    public AccessTokenService() {
+        this.configurationService = ConfigurationService.getInstance();
+        this.dataStore = new DataStore<>(configurationService.getAccessTokensTableName(), AccessTokenItem.class);
+    }
 
-        AccessToken accessToken = new BearerAccessToken();
+    public AccessTokenService(DataStore<AccessTokenItem> dataStore, ConfigurationService configurationService) {
+        this.dataStore = dataStore;
+        this.configurationService = configurationService;
+    }
 
+    public TokenResponse generateAccessToken(TokenRequest tokenRequest) {
+        AccessToken accessToken = new BearerAccessToken(configurationService.getBearerAccessTokenTtl(), tokenRequest.getScope());
         return new AccessTokenResponse(new Tokens(accessToken, null));
+    }
+
+    public ValidationResult<ErrorObject> validateTokenRequest(TokenRequest tokenRequest) {
+        if (!tokenRequest.getAuthorizationGrant().getType().equals(GrantType.AUTHORIZATION_CODE)) {
+            return new ValidationResult<>(false, OAuth2Error.UNSUPPORTED_GRANT_TYPE);
+        }
+        return ValidationResult.createValidResult();
+    }
+
+    public void persistAccessToken(AccessTokenResponse tokenResponse, String ipvSessionId) {
+        AccessTokenItem accessTokenItem = new AccessTokenItem();
+        accessTokenItem.setAccessToken(tokenResponse.getTokens().getBearerAccessToken().toAuthorizationHeader());
+        accessTokenItem.setIpvSessionId(ipvSessionId);
+        dataStore.create(accessTokenItem);
     }
 }
