@@ -22,10 +22,10 @@ public class AuthorizationCodeService {
         return new AuthorizationCode();
     }
 
-    public void persistAuthorizationCode(String sessionId, String authorizationCode) {
+    public void persistAuthorizationCode(String authorizationCode, String ipvSessionId) {
         AuthorizationCodeItem authorizationCodeItem = new AuthorizationCodeItem();
-        authorizationCodeItem.setSessionId(sessionId);
-        authorizationCodeItem.setCode(authorizationCode);
+        authorizationCodeItem.setAuthCode(authorizationCode);
+        authorizationCodeItem.setIpvSessionId(ipvSessionId);
 
         dataStore.create(authorizationCodeItem);
     }

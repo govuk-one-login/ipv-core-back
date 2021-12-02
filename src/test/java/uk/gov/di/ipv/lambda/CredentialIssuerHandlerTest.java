@@ -80,7 +80,7 @@ class CredentialIssuerHandlerTest {
                 Map.of("authorization_code", "foo", "credential_issuer_id", passportIssuerId),
                 Map.of());
         APIGatewayProxyResponseEvent response = new CredentialIssuerHandler(credentialIssuerService).handleRequest(input, context);
-        assert400Response(response, ErrorResponse.MISSING_SESSION_ID);
+        assert400Response(response, ErrorResponse.MISSING_IPV_SESSION_ID);
     }
 
     @Test
