@@ -10,4 +10,6 @@ module "credential-issuer" {
   handler                = "uk.gov.di.ipv.lambda.CredentialIssuerHandler::handleRequest"
   function_name          = "${var.environment}-credential-issuer"
   role_name              = "${var.environment}-credential-issuer-role"
+
+  credential_issuer_config = var.credential_issuer_config
 }

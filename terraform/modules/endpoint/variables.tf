@@ -78,6 +78,12 @@ variable "auth_codes_table_name" {
   description = "Name of the DynamoDB auth-codes table"
 }
 
+variable "credential_issuer_config" {
+  type = string
+  default = null
+  description = "Base64 encoded YAML credential issuer config"
+}
+
 locals {
   default_tags = {
     Environment = var.environment
