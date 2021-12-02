@@ -23,6 +23,7 @@ resource "aws_lambda_function" "lambda_function" {
     variables = {
       USER_ISSUED_CREDENTIALS_TABLE_NAME = var.user_issued_credentials_table_name
       AUTH_CODES_TABLE_NAME = var.auth_codes_table_name
+      ACCESS_TOKENS_TABLE_NAME = var.access_tokens_table_name
     }
   }
 

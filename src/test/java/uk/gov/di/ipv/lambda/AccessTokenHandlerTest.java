@@ -4,19 +4,27 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.common.contenttype.ContentType;
 import com.nimbusds.oauth2.sdk.AccessTokenResponse;
 import com.nimbusds.oauth2.sdk.ErrorObject;
+import com.nimbusds.oauth2.sdk.GrantType;
+import com.nimbusds.oauth2.sdk.OAuth2Error;
+import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenResponse;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
+import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uk.gov.di.ipv.domain.ErrorResponse;
 import uk.gov.di.ipv.service.AccessTokenService;
+import uk.gov.di.ipv.service.AuthorizationCodeService;
+import uk.gov.di.ipv.validation.ValidationResult;
 
 import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -24,8 +32,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class AccessTokenHandlerTest {
-    private final Context context = mock(Context.class);
-    private final AccessTokenService accessTokenService = mock(AccessTokenService.class);
+    private static final String TEST_IPV_SESSION_ID = UUID.randomUUID().toString();
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private Context context;
+    private AccessTokenService mockAccessTokenService;
+    private AuthorizationCodeService mockAuthorizationCodeService;
 
     private AccessTokenHandler handler;
     private TokenResponse tokenResponse;
@@ -34,88 +46,93 @@ class AccessTokenHandlerTest {
     void setUp() {
         AccessToken accessToken = new BearerAccessToken();
         tokenResponse = new AccessTokenResponse(new Tokens(accessToken, null));
-        when(accessTokenService.exchangeCodeForToken(any())).thenReturn(tokenResponse);
 
-        handler = new AccessTokenHandler(accessTokenService);
-    }
+        mockAccessTokenService = mock(AccessTokenService.class);
+        when(mockAccessTokenService.generateAccessToken(any())).thenReturn(tokenResponse);
 
-    @Test
-    void shouldReturn200OnSuccessfulAccessTokenExchange() throws Exception {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        String tokenRequestBody = "code=12345&redirect_uri=http://test.com&grant_type=test_grant_type&client_id=test_client_id";
-        event.setBody(tokenRequestBody);
+        mockAuthorizationCodeService = mock(AuthorizationCodeService.class);
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+        context = mock(Context.class);
 
-        assertEquals(200, response.getStatusCode());
+        handler = new AccessTokenHandler(mockAccessTokenService, mockAuthorizationCodeService);
     }
 
     @Test
     void shouldReturnAccessTokenOnSuccessfulExchange() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        String tokenRequestBody = "code=12345&redirect_uri=http://test.com&grant_type=test_grant_type&client_id=test_client_id";
+        String tokenRequestBody = "code=12345&redirect_uri=http://test.com&grant_type=authorization_code&client_id=test_client_id";
         event.setBody(tokenRequestBody);
 
+        when(mockAuthorizationCodeService.getIpvSessionIdByAuthorizationCode("12345")).thenReturn(TEST_IPV_SESSION_ID);
+        when(mockAccessTokenService.validateTokenRequest(any())).thenReturn(ValidationResult.createValidResult());
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
-        ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
-
-        assertEquals(tokenResponse.toSuccessResponse().getTokens().getAccessToken().getValue(), responseBody.get("access_token").toString());
+        assertEquals(ContentType.APPLICATION_JSON.getType(), response.getHeaders().get("Content-Type"));
+        assertEquals(200, response.getStatusCode());
+        assertEquals(
+                tokenResponse.toSuccessResponse().getTokens().getAccessToken().getValue(),
+                responseBody.get("access_token").toString());
     }
 
     @Test
-    void shouldReturn400OnInvalidTokenRequest() throws Exception {
+    void shouldReturn400WhenInvalidTokenRequestProvided() throws Exception {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         String invalidTokenRequest = "invalid-token-request";
         event.setBody(invalidTokenRequest);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
+        ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
 
-        assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_TOKEN_REQUEST.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_TOKEN_REQUEST.getMessage(), responseBody.get("message"));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(OAuth2Error.INVALID_REQUEST.getCode(), errorResponse.getCode());
+        assertEquals(OAuth2Error.INVALID_REQUEST.getDescription() + ": Missing grant_type parameter", errorResponse.getDescription());
     }
 
     @Test
-    void shouldReturn400OnFailedTokenExchange() throws Exception {
+    void shouldReturn400WhenInvalidGrantTypeProvided() throws Exception {
         ErrorObject tokenErrorObject = new ErrorObject("F-001", "Something failed during exchange of code to token");
         tokenResponse = new TokenErrorResponse(tokenErrorObject);
-        when(accessTokenService.exchangeCodeForToken(any())).thenReturn(tokenResponse);
+        when(mockAccessTokenService.generateAccessToken(any())).thenReturn(tokenResponse);
+        when(mockAuthorizationCodeService.getIpvSessionIdByAuthorizationCode("12345")).thenReturn(TEST_IPV_SESSION_ID);
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        String tokenRequestBody = "code=12345&redirect_uri=http://test.com&grant_type=test_grant_type&client_id=test_client_id";
+        String tokenRequestBody = "code=12345&redirect_uri=http://test.com&grant_type="+ GrantType.IMPLICIT.getValue() + "&client_id=test_client_id";
 
         event.setBody(tokenRequestBody);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, String> responseBody = objectMapper.readValue(response.getBody(), Map.class);
+        ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
 
-        assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE.getMessage(), responseBody.get("message"));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(OAuth2Error.UNSUPPORTED_GRANT_TYPE.getCode(), errorResponse.getCode());
+        assertEquals(OAuth2Error.UNSUPPORTED_GRANT_TYPE.getDescription(), errorResponse.getDescription());
     }
 
     @Test
-    void shouldReturn400OnMissingAuthorisationCode() throws Exception {
+    void shouldReturn400OWhenInvalidAuthorisationCodeProvided() throws Exception {
+        String tokenRequestBody = "code=12345&redirect_uri=http://test.com&grant_type=authorization_code&client_id=test_client_id";
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        String tokenRequestBody = "code=&redirect_uri=http://test.com&grant_type=test_grant_type&client_id=test_client_id";
-
         event.setBody(tokenRequestBody);
+
+        when(mockAccessTokenService.validateTokenRequest(any())).thenReturn(ValidationResult.createValidResult());
+        when(mockAuthorizationCodeService.getIpvSessionIdByAuthorizationCode("12345")).thenReturn(null);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
+        ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
 
-        assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_AUTHORIZATION_CODE.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.MISSING_AUTHORIZATION_CODE.getMessage(), responseBody.get("message"));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorResponse.getCode());
+        assertEquals(OAuth2Error.INVALID_GRANT.getDescription(), errorResponse.getDescription());
+    }
+
+    private ErrorObject createErrorObjectFromResponse(String responseBody) throws ParseException {
+        HTTPResponse httpErrorResponse = new HTTPResponse(HttpStatus.SC_BAD_REQUEST);
+        httpErrorResponse.setContentType(ContentType.APPLICATION_JSON.getType());
+        httpErrorResponse.setContent(responseBody);
+        return ErrorObject.parse(httpErrorResponse);
     }
 }
