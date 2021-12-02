@@ -72,7 +72,7 @@ test.finalizedBy jacocoTestReport
 
 spotless {
     java {
-        target "**/*.java"
+        target "src/**/*.java"
         googleJavaFormat("1.12.0").aosp()
         importOrder "", "javax", "java", "\\#"
     }
