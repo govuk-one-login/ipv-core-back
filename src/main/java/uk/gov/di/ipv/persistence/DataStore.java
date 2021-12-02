@@ -25,8 +25,7 @@ public class DataStore<T> {
     public DataStore(String tableName, Class<T> typeParameterClass) {
         this.tableName = tableName;
         this.typeParameterClass = typeParameterClass;
-
-        configurationService = ConfigurationService.getInstance();
+        this.configurationService = new ConfigurationService();
 
         DynamoDbClient client = configurationService.isRunningLocally()
                 ? createLocalDbClient()

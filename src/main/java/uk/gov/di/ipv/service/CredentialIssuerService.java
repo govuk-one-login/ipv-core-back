@@ -30,7 +30,7 @@ public class CredentialIssuerService {
     private final ConfigurationService configurationService;
 
     public CredentialIssuerService() {
-        this.configurationService = ConfigurationService.getInstance();
+        this.configurationService =  new ConfigurationService();
         this.dataStore = new DataStore<>(configurationService.getUserIssuedCredentialTableName(), UserIssuedCredentialsItem.class);
     }
 

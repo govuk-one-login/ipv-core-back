@@ -6,43 +6,37 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
+import java.util.Collections;
+import java.util.Optional;
 import net.minidev.json.JSONObject;
 import uk.gov.di.ipv.domain.CredentialIssuerException;
 import uk.gov.di.ipv.domain.ErrorResponse;
 import uk.gov.di.ipv.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.dto.CredentialIssuerRequestDto;
+import uk.gov.di.ipv.dto.CredentialIssuers;
 import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.helpers.RequestHelper;
+import uk.gov.di.ipv.service.ConfigurationService;
 import uk.gov.di.ipv.service.CredentialIssuerService;
-
-import java.net.URI;
-import java.util.Collections;
-import java.util.Optional;
-import java.util.Set;
 
 public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private final CredentialIssuerService credentialIssuerService;
 
-    protected static final CredentialIssuerConfig PASSPORT_ISSUER = new CredentialIssuerConfig(
-            "PassportIssuer",
-            URI.create("http://credential-issuer-stub:8084/token"),
-            URI.create("http://credential-issuer-stub:8084/credential")
-    );
-    protected static final CredentialIssuerConfig FRAUD_ISSUER = new CredentialIssuerConfig(
-            "FraudIssuer",
-            URI.create("http://credential-issuer-stub:8084/token"),
-            URI.create("http://credential-issuer-stub:8084/credential")
-    );
+    private final CredentialIssuers credentialIssuers;
 
-    protected static final Set<CredentialIssuerConfig> CREDENTIAL_ISSUERS = Set.of(PASSPORT_ISSUER, FRAUD_ISSUER);
+    private final ConfigurationService configurationService;
 
-    public CredentialIssuerHandler(CredentialIssuerService credentialIssuerService) {
+    public CredentialIssuerHandler(CredentialIssuerService credentialIssuerService, ConfigurationService configurationService) {
         this.credentialIssuerService = credentialIssuerService;
+        this.configurationService = configurationService;
+        this.credentialIssuers = configurationService.getCredentialIssuers();
     }
 
     public CredentialIssuerHandler() {
+        this.configurationService = new ConfigurationService();
         this.credentialIssuerService = new CredentialIssuerService();
+        this.credentialIssuers = configurationService.getCredentialIssuers();
     }
 
     @Override
@@ -86,7 +80,7 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
     }
 
     private CredentialIssuerConfig getCredentialIssuerConfig(CredentialIssuerRequestDto request) {
-        return CREDENTIAL_ISSUERS.stream()
+        return credentialIssuers.getCredentialIssuerConfigs().stream()
                 .filter(config -> request.getCredentialIssuerId().equals(config.getId()))
                 .findFirst()
                 .orElse(null);

@@ -8,11 +8,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class UserIdentityService {
-    private ConfigurationService configurationService;
-    private DataStore<UserIssuedCredentialsItem> dataStore;
+    private final ConfigurationService configurationService;
+    private final DataStore<UserIssuedCredentialsItem> dataStore;
 
     public UserIdentityService() {
-        this.configurationService = ConfigurationService.getInstance();
+        this.configurationService = new ConfigurationService();
         this.dataStore = new DataStore<>(configurationService.getUserIssuedCredentialTableName(), UserIssuedCredentialsItem.class);
     }
 
