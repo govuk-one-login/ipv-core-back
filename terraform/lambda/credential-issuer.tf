@@ -12,6 +12,6 @@ module "credential-issuer" {
   role_name              = "${var.environment}-credential-issuer-role"
 
   allow_access_to_user_issued_credentials_table = true
-  user_issued_credentials_table_policy_arn      = aws_iam_policy.access-user-issued-credentials-table.arn
+  user_issued_credentials_table_policy_arn      =  aws_iam_policy.access-user-issued-credentials-table.arn
   user_issued_credentials_table_name            = aws_dynamodb_table.user-issued-credentials.name
 }
