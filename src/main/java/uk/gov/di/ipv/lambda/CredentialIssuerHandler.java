@@ -7,8 +7,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import net.minidev.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.domain.CredentialIssuerException;
 import uk.gov.di.ipv.domain.ErrorResponse;
 import uk.gov.di.ipv.dto.CredentialIssuerConfig;
@@ -23,8 +21,6 @@ import java.util.Optional;
 import java.util.Set;
 
 public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(CredentialIssuerHandler.class);
 
     private final CredentialIssuerService credentialIssuerService;
 
@@ -67,7 +63,7 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
             return ApiGatewayResponseGenerator.proxyJsonResponse(e.getHttpStatusCode(), e.getErrorResponse());
         }
 
-        return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.EMPTY_MAP);
+        return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.emptyMap());
 
     }
 

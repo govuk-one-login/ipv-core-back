@@ -1,12 +1,6 @@
 package uk.gov.di.ipv.service;
 
-import com.nimbusds.oauth2.sdk.AuthorizationCode;
-import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
-import com.nimbusds.oauth2.sdk.ErrorObject;
-import com.nimbusds.oauth2.sdk.ParseException;
-import com.nimbusds.oauth2.sdk.TokenErrorResponse;
-import com.nimbusds.oauth2.sdk.TokenRequest;
-import com.nimbusds.oauth2.sdk.TokenResponse;
+import com.nimbusds.oauth2.sdk.*;
 import com.nimbusds.oauth2.sdk.client.ClientReadRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.id.ClientID;
@@ -19,7 +13,6 @@ import uk.gov.di.ipv.domain.CredentialIssuerException;
 import uk.gov.di.ipv.domain.ErrorResponse;
 import uk.gov.di.ipv.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.dto.CredentialIssuerRequestDto;
-import uk.gov.di.ipv.lambda.CredentialIssuerHandler;
 import uk.gov.di.ipv.persistence.DataStore;
 import uk.gov.di.ipv.persistence.item.UserIssuedCredentialsItem;
 
