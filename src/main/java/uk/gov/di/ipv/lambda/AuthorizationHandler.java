@@ -44,7 +44,7 @@ public class AuthorizationHandler
         Map<String, List<String>> queryStringParameters = getQueryStringParametersAsMap(input);
 
         try {
-            ValidationResult validationResult = validateRequest(queryStringParameters, input.getHeaders());
+            ValidationResult<ErrorResponse> validationResult = validateRequest(queryStringParameters, input.getHeaders());
             if (!validationResult.isValid()) {
                 LOGGER.error("Missing required query parameters for authorisation request");
                 return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_BAD_REQUEST, validationResult.getError());
@@ -75,13 +75,13 @@ public class AuthorizationHandler
         return Collections.emptyMap();
     }
 
-    private ValidationResult validateRequest(Map<String, List<String>> queryStringParameters, Map<String, String> requestHeaders) {
+    private ValidationResult<ErrorResponse> validateRequest(Map<String, List<String>> queryStringParameters, Map<String, String> requestHeaders) {
         if (Objects.isNull(queryStringParameters) || queryStringParameters.isEmpty()) {
-            return new ValidationResult(false, ErrorResponse.MISSING_QUERY_PARAMETERS);
+            return new ValidationResult<>(false, ErrorResponse.MISSING_QUERY_PARAMETERS);
         }
 
         if (!requestHeaders.containsKey(IPV_SESSION_ID_HEADER_KEY)) {
-            return new ValidationResult(false, ErrorResponse.MISSING_IPV_SESSION_ID);
+            return new ValidationResult<>(false, ErrorResponse.MISSING_IPV_SESSION_ID);
         }
         return ValidationResult.createValidResult();
     }

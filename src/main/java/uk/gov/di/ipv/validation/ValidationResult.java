@@ -3,17 +3,15 @@ package uk.gov.di.ipv.validation;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import uk.gov.di.ipv.domain.ErrorResponse;
 
 @Getter
 @Setter
 @AllArgsConstructor
-public class ValidationResult {
+public class ValidationResult<T> {
     private final boolean valid;
-    private final ErrorResponse error;
+    private final T error;
 
-    public static ValidationResult createValidResult() {
-        return new ValidationResult(true, null);
+    public static <U> ValidationResult<U> createValidResult() {
+        return new ValidationResult<>(true, null);
     }
-
 }

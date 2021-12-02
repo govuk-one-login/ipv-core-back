@@ -4,20 +4,25 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.nimbusds.common.contenttype.ContentType;
 import com.nimbusds.oauth2.sdk.AccessTokenResponse;
-import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
-import com.nimbusds.oauth2.sdk.TokenErrorResponse;
+import com.nimbusds.oauth2.sdk.ErrorObject;
+import com.nimbusds.oauth2.sdk.OAuth2Error;
+import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.TokenResponse;
-import com.nimbusds.oauth2.sdk.id.ClientID;
+import com.nimbusds.oauth2.sdk.http.HTTPRequest;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.gov.di.ipv.domain.ErrorResponse;
-import uk.gov.di.ipv.dto.TokenRequestDto;
 import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
-import uk.gov.di.ipv.helpers.RequestHelper;
 import uk.gov.di.ipv.service.AccessTokenService;
+import uk.gov.di.ipv.service.AuthorizationCodeService;
+import uk.gov.di.ipv.validation.ValidationResult;
+
+import java.net.URI;
 
 public class AccessTokenHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -25,48 +30,70 @@ public class AccessTokenHandler
     private static final Logger LOGGER = LoggerFactory.getLogger(AccessTokenHandler.class);
 
     private final AccessTokenService accessTokenService;
+    private final AuthorizationCodeService authorizationCodeService;
 
-    public AccessTokenHandler(AccessTokenService accessTokenService) {
+    public AccessTokenHandler(AccessTokenService accessTokenService, AuthorizationCodeService authorizationCodeService) {
         this.accessTokenService = accessTokenService;
+        this.authorizationCodeService = authorizationCodeService;
     }
 
     public AccessTokenHandler() {
         this.accessTokenService = new AccessTokenService();
+        this.authorizationCodeService = new AuthorizationCodeService();
     }
 
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
-
         try {
-            TokenRequestDto tokenRequestDto = RequestHelper.convertRequest(input, TokenRequestDto.class);
+            TokenRequest tokenRequest = createTokenRequest(input.getBody());
 
-            if (tokenRequestDto.getCode().isEmpty()) {
-                LOGGER.error("Missing authorisation code from the token request");
-                return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.MISSING_AUTHORIZATION_CODE);
+            ValidationResult<ErrorObject> validationResult = accessTokenService.validateTokenRequest(tokenRequest);
+            if (!validationResult.isValid()) {
+                LOGGER.error("Invalid access token request, error description: {}", validationResult.getError().getDescription());
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    getHttpStatusCodeForErrorResponse(validationResult.getError()),
+                    validationResult.getError().toJSONObject());
             }
 
-            TokenRequest tokenRequest = new TokenRequest(
-                    null,
-                    new ClientID(tokenRequestDto.getClientId()),
-                    new AuthorizationCodeGrant(
-                            new AuthorizationCode(tokenRequestDto.getCode()),
-                            tokenRequestDto.getRedirectUri())
-            );
+            String authorizationCodeFromRequest = ((AuthorizationCodeGrant)tokenRequest.getAuthorizationGrant()).getAuthorizationCode().getValue();
+            String ipvSessionId = authorizationCodeService.getIpvSessionIdByAuthorizationCode(authorizationCodeFromRequest);
 
-            TokenResponse tokenResponse = accessTokenService.exchangeCodeForToken(tokenRequest);
-
-            if (tokenResponse instanceof TokenErrorResponse) {
-                TokenErrorResponse tokenErrorResponse = tokenResponse.toErrorResponse();
-                LOGGER.error(tokenErrorResponse.getErrorObject().getDescription());
-                return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE);
+            if (StringUtils.isBlank(ipvSessionId)) {
+                LOGGER.error("Access Token could not be issued. The supplied authorization code was not found in the database.");
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        OAuth2Error.INVALID_GRANT.getHTTPStatusCode(),
+                        OAuth2Error.INVALID_GRANT.toJSONObject());
             }
 
+            TokenResponse tokenResponse = accessTokenService.generateAccessToken(tokenRequest);
             AccessTokenResponse accessTokenResponse = tokenResponse.toSuccessResponse();
 
-            return ApiGatewayResponseGenerator.proxyJsonResponse(200, accessTokenResponse.toJSONObject());
-        } catch (IllegalArgumentException e) {
-            LOGGER.error("Token request could not be parsed", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.FAILED_TO_PARSE_TOKEN_REQUEST);
+            accessTokenService.persistAccessToken(accessTokenResponse, ipvSessionId);
+
+            authorizationCodeService.revokeAuthorizationCode(authorizationCodeFromRequest);
+
+            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, accessTokenResponse.toJSONObject());
         }
+        catch (ParseException e) {
+            LOGGER.error("Token request could not be parsed: " + e.getErrorObject().getDescription(), e);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(getHttpStatusCodeForErrorResponse(e.getErrorObject()), e.getErrorObject().toJSONObject());
+        }
+    }
+
+    private TokenRequest createTokenRequest(String requestBody) throws ParseException {
+        // The URI is not needed/consumed in the resultant TokenRequest
+        // therefore any value can be passed here to ensure the parse method
+        // successfully materialises a TokenRequest
+        URI arbitraryUri = URI.create("https://gds");
+        HTTPRequest request = new HTTPRequest(HTTPRequest.Method.POST, arbitraryUri);
+        request.setQuery(requestBody);
+        request.setContentType(ContentType.APPLICATION_URLENCODED.getType());
+        return TokenRequest.parse(request);
+    }
+
+    private int getHttpStatusCodeForErrorResponse(ErrorObject errorObject) {
+        return errorObject.getHTTPStatusCode() > 0
+            ? errorObject.getHTTPStatusCode()
+            : HttpStatus.SC_BAD_REQUEST;
     }
 }

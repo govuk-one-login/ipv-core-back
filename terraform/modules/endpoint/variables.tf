@@ -78,6 +78,24 @@ variable "auth_codes_table_name" {
   description = "Name of the DynamoDB auth-codes table"
 }
 
+variable "allow_access_to_access_tokens_table" {
+  type        = bool
+  default     = false
+  description = "Should the lambda be given access to the access-tokens DynamoDB table"
+}
+
+variable "access_tokens_table_policy_arn" {
+  type        = string
+  default     = null
+  description = "ARN of the policy to allow read write to the access-tokens DynamoDB table"
+}
+
+variable "access_tokens_table_name" {
+  type        = string
+  default     = "not-set-for-this-lambda"
+  description = "Name of the DynamoDB access-tokens table"
+}
+
 locals {
   default_tags = {
     Environment = var.environment

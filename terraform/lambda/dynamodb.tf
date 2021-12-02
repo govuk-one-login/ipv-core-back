@@ -30,14 +30,27 @@ resource "aws_dynamodb_table" "auth-codes" {
   tags = local.default_tags
 }
 
-resource "aws_iam_policy" "access-user-issued-credentials-table" {
-  name = "access-user-issued-credentials-table"
+resource "aws_dynamodb_table" "access-tokens" {
+  name         = "${var.environment}-access-tokens"
+  hash_key     = "accessToken"
+  billing_mode = "PAY_PER_REQUEST"
+
+  attribute {
+    name = "accessToken"
+    type = "S"
+  }
+
+  tags = local.default_tags
+}
+
+resource "aws_iam_policy" "policy-user-issued-credentials-table" {
+  name = "policy-user-issued-credentials-table"
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Sid = "AccessUserIssuedCredentialsTable"
+        Sid = "PolicyUserIssuedCredentialsTable"
         Action = [
           "dynamodb:PutItem",
           "dynamodb:UpdateItem",
@@ -58,14 +71,14 @@ resource "aws_iam_policy" "access-user-issued-credentials-table" {
   })
 }
 
-resource "aws_iam_policy" "access-auth-codes-table" {
-  name = "access-auth-codes-table"
+resource "aws_iam_policy" "policy-auth-codes-table" {
+  name = "policy-auth-codes-table"
 
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Sid = "AccessAuthCodesTable"
+        Sid = "PolicyAuthCodesTable"
         Action = [
           "dynamodb:PutItem",
           "dynamodb:GetItem",
@@ -76,6 +89,30 @@ resource "aws_iam_policy" "access-auth-codes-table" {
         Resource = [
           aws_dynamodb_table.auth-codes.arn,
           "${aws_dynamodb_table.auth-codes.arn}/index/*"
+        ]
+      },
+    ]
+  })
+}
+
+resource "aws_iam_policy" "policy-access-tokens-table" {
+  name = "policy-access-tokens-table"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid = "AccessTokensTable"
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Query"
+        ]
+        Effect = "Allow"
+        Resource = [
+          aws_dynamodb_table.access-tokens.arn,
+          "${aws_dynamodb_table.access-tokens.arn}/index/*"
         ]
       },
     ]
