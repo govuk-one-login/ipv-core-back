@@ -114,7 +114,7 @@ public class CredentialIssuerService {
 
     public void persistUserCredentials(JSONObject credential, CredentialIssuerRequestDto request) {
         UserIssuedCredentialsItem userIssuedCredentials = new UserIssuedCredentialsItem();
-        userIssuedCredentials.setSessionId(request.getIpvSessionId());
+        userIssuedCredentials.setIpvSessionId(request.getIpvSessionId());
         userIssuedCredentials.setCredentialIssuer(request.getCredentialIssuerId());
         userIssuedCredentials.setCredential(credential.toJSONString());
         // TODO store json - credentialData

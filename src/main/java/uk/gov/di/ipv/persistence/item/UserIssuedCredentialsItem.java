@@ -10,18 +10,18 @@ import java.time.LocalDate;
 @DynamoDbBean
 public class UserIssuedCredentialsItem {
 
-    private String sessionId;
+    private String ipvSessionId;
     private String credentialIssuer;
     private String credential;
     private LocalDate dateCreated;
 
     @DynamoDbPartitionKey
-    public String getSessionId() {
-        return sessionId;
+    public String getIpvSessionId() {
+        return ipvSessionId;
     }
 
-    public void setSessionId(String sessionId) {
-        this.sessionId = sessionId;
+    public void setIpvSessionId(String ipvSessionId) {
+        this.ipvSessionId = ipvSessionId;
     }
 
     @DynamoDbSortKey

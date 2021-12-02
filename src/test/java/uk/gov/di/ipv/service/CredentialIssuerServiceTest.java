@@ -124,7 +124,7 @@ class CredentialIssuerServiceTest {
         credentialIssuerService.persistUserCredentials(mockJSONObject,credentialIssuerRequestDto);
         verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture());
         verify(mockJSONObject).toJSONString();
-        assertEquals(credentialIssuerRequestDto.getIpvSessionId(), userIssuedCredentialsItemCaptor.getValue().getSessionId());
+        assertEquals(credentialIssuerRequestDto.getIpvSessionId(), userIssuedCredentialsItemCaptor.getValue().getIpvSessionId());
         assertEquals(credentialIssuerRequestDto.getCredentialIssuerId(), userIssuedCredentialsItemCaptor.getValue().getCredentialIssuer());
 
     }
