@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import net.minidev.json.JSONObject;
@@ -20,8 +21,7 @@ import uk.gov.di.ipv.persistence.item.UserIssuedCredentialsItem;
 import java.net.URI;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @WireMockTest
@@ -111,7 +111,7 @@ class CredentialIssuerServiceTest {
     }
 
     @Test
-    public void test_valid_token_response_and_save_credentials() {
+    public void expectedSuccessWhenSaveCredentials() {
 
         ArgumentCaptor<UserIssuedCredentialsItem> userIssuedCredentialsItemCaptor = ArgumentCaptor.forClass(UserIssuedCredentialsItem.class);
 
@@ -126,6 +126,27 @@ class CredentialIssuerServiceTest {
         verify(mockJSONObject).toJSONString();
         assertEquals(credentialIssuerRequestDto.getIpvSessionId(), userIssuedCredentialsItemCaptor.getValue().getIpvSessionId());
         assertEquals(credentialIssuerRequestDto.getCredentialIssuerId(), userIssuedCredentialsItemCaptor.getValue().getCredentialIssuer());
+
+    }
+
+    @Test
+    public void expectedExceptionWhenSaveCredentials() {
+
+        CredentialIssuerRequestDto credentialIssuerRequestDto = new CredentialIssuerRequestDto(
+                "1234",
+                "cred_issuer_id_1",
+                "http://www.example.com/redirect"
+        );
+
+        doThrow(new UnsupportedOperationException()).when(mockDataStore).create(any());
+
+        CredentialIssuerException thrown = Assertions.assertThrows( CredentialIssuerException.class, () -> {
+            credentialIssuerService.persistUserCredentials(mockJSONObject,credentialIssuerRequestDto);
+        });
+
+        assertNotNull(thrown);
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_SAVE_CREDENTIAL, thrown.getErrorResponse());
 
     }
 
