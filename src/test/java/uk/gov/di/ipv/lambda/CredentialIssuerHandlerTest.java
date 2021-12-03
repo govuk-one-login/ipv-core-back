@@ -121,7 +121,7 @@ class CredentialIssuerHandlerTest {
                 Map.of("ipv-session-id", sessionId));
 
         when(credentialIssuerService.exchangeCodeForToken(requestDto.capture(), eq(CredentialIssuerHandler.PASSPORT_ISSUER)))
-                .thenThrow(new CredentialIssuerException("code1: message1"));
+                .thenThrow(new CredentialIssuerException(HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST));
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
         Integer statusCode = response.getStatusCode();
@@ -134,7 +134,13 @@ class CredentialIssuerHandlerTest {
     @Test
     void shouldReturn500IfCredentialIssuerServiceGetCredentialThrows() throws JsonProcessingException {
         when(credentialIssuerService.exchangeCodeForToken(any(), any())).thenReturn(new BearerAccessToken());
-        when(credentialIssuerService.getCredential(any(), any())).thenThrow(new CredentialIssuerException("Something bad happened."));
+        when(credentialIssuerService.getCredential(any(), any()))
+                .thenThrow(
+                        new CredentialIssuerException(
+                                HTTPResponse.SC_SERVER_ERROR,
+                                ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER
+                        )
+                );
 
         CredentialIssuerHandler handler = new CredentialIssuerHandler(credentialIssuerService);
         APIGatewayProxyRequestEvent input = createRequestEvent(

@@ -7,8 +7,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import net.minidev.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.domain.CredentialIssuerException;
 import uk.gov.di.ipv.domain.ErrorResponse;
 import uk.gov.di.ipv.dto.CredentialIssuerConfig;
@@ -23,8 +21,6 @@ import java.util.Optional;
 import java.util.Set;
 
 public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(CredentialIssuerHandler.class);
 
     private final CredentialIssuerService credentialIssuerService;
 
@@ -59,24 +55,14 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
         }
         CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request);
 
-        BearerAccessToken accessToken;
         try {
-            accessToken = credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);
-        } catch (CredentialIssuerException e) {
-            LOGGER.error("Could not exchange authorization code for token: {}", e.getMessage(), e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, ErrorResponse.INVALID_TOKEN_REQUEST);
-        }
-
-        try {
+            BearerAccessToken accessToken = credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);
             JSONObject credential = credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
-            // todo save credential
+            credentialIssuerService.persistUserCredentials(credential, request);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.emptyMap());
         } catch (CredentialIssuerException e) {
-            LOGGER.error("Could not retrieve protected resource from credential issuer: {}", e.getMessage(), e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(500, ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(e.getHttpStatusCode(), e.getErrorResponse());
         }
-
-        return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.EMPTY_MAP);
-
     }
 
     private Optional<ErrorResponse> validate(CredentialIssuerRequestDto request) {
