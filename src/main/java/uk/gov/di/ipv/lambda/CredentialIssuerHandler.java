@@ -59,12 +59,10 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
             BearerAccessToken accessToken = credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);
             JSONObject credential = credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
             credentialIssuerService.persistUserCredentials(credential, request);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.emptyMap());
         } catch (CredentialIssuerException e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(e.getHttpStatusCode(), e.getErrorResponse());
         }
-
-        return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.emptyMap());
-
     }
 
     private Optional<ErrorResponse> validate(CredentialIssuerRequestDto request) {

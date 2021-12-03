@@ -1,5 +1,7 @@
 package uk.gov.di.ipv.service;
 
+import java.util.Optional;
+
 public class ConfigurationService {
 
     private static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
@@ -25,12 +27,12 @@ public class ConfigurationService {
         return System.getenv("USER_ISSUED_CREDENTIALS_TABLE_NAME");
     }
 
-
     public String getAccessTokensTableName() { return System.getenv("ACCESS_TOKENS_TABLE_NAME"); }
 
     public long getBearerAccessTokenTtl() {
-        return System.getenv().containsKey("BEARER_TOKEN_TTL")
-                ?  Long.parseLong(System.getenv("BEARER_TOKEN_TTL"))
-                : DEFAULT_BEARER_TOKEN_TTL_IN_SECS;
+        return Optional.of(System.getenv("BEARER_TOKEN_TTL"))
+                .map(Long::valueOf)
+                .orElse(DEFAULT_BEARER_TOKEN_TTL_IN_SECS);
     }
+
 }

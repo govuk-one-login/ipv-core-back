@@ -4,7 +4,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @DynamoDbBean
 public class UserIssuedCredentialsItem {
@@ -12,7 +12,7 @@ public class UserIssuedCredentialsItem {
     private String ipvSessionId;
     private String credentialIssuer;
     private String credential;
-    private LocalDate dateCreated;
+    private LocalDateTime dateCreated;
 
     @DynamoDbPartitionKey
     public String getIpvSessionId() {
@@ -28,16 +28,15 @@ public class UserIssuedCredentialsItem {
         return credentialIssuer;
     }
 
-
     public void setCredentialIssuer(String credentialIssuer) {
         this.credentialIssuer = credentialIssuer;
     }
 
-    public LocalDate getDateCreated() {
+    public LocalDateTime getDateCreated() {
         return dateCreated;
     }
 
-    public void setDateCreated(LocalDate dateCreated) {
+    public void setDateCreated(LocalDateTime dateCreated) {
         this.dateCreated = dateCreated;
     }
 
@@ -48,18 +47,6 @@ public class UserIssuedCredentialsItem {
     public void setCredential(String credential) {
         this.credential = credential;
     }
-
-    // TODO
-    /*public CredentialData credentialData() { return credentialData; }
-    public void setCredentialData(CredentialData spec) { this.credentialData = credentialData; }
-
-    @DynamoDBDocument
-    public class CredentialData {
-
-        // some values with getters / setters
-
-
-    }*/
 
 }
 

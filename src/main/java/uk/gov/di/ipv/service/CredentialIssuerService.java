@@ -17,7 +17,7 @@ import uk.gov.di.ipv.persistence.DataStore;
 import uk.gov.di.ipv.persistence.item.UserIssuedCredentialsItem;
 
 import java.io.IOException;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -58,7 +58,7 @@ public class CredentialIssuerService {
                         errorResponse.getErrorObject(),
                         new ErrorObject("unknown", "unknown")
                 );
-                LOGGER.error(String.format("%s: %s", errorObject.getCode(), errorObject.getDescription()));
+                LOGGER.error("{}: {}", errorObject.getCode(), errorObject.getDescription());
                 throw new CredentialIssuerException(HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST);
             }
             return tokenResponse
@@ -110,8 +110,7 @@ public class CredentialIssuerService {
         userIssuedCredentials.setIpvSessionId(request.getIpvSessionId());
         userIssuedCredentials.setCredentialIssuer(request.getCredentialIssuerId());
         userIssuedCredentials.setCredential(credential.toJSONString());
-        // TODO store json - credentialData
-        userIssuedCredentials.setDateCreated(LocalDate.now());
+        userIssuedCredentials.setDateCreated(LocalDateTime.now());
         try {
             dataStore.create(userIssuedCredentials);
         } catch (UnsupportedOperationException e) {
