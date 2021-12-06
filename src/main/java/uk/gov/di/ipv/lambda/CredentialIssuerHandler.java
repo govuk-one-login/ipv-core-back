@@ -25,18 +25,14 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
 
     private final CredentialIssuers credentialIssuers;
 
-    private final ConfigurationService configurationService;
-
     public CredentialIssuerHandler(CredentialIssuerService credentialIssuerService, ConfigurationService configurationService) {
         this.credentialIssuerService = credentialIssuerService;
-        this.configurationService = configurationService;
         this.credentialIssuers = configurationService.getCredentialIssuers();
     }
 
     public CredentialIssuerHandler() {
-        this.configurationService = new ConfigurationService();
         this.credentialIssuerService = new CredentialIssuerService();
-        this.credentialIssuers = configurationService.getCredentialIssuers();
+        this.credentialIssuers = new ConfigurationService().getCredentialIssuers();
     }
 
     @Override

@@ -29,15 +29,17 @@ public class ConfigurationService {
     }
 
     public CredentialIssuers getCredentialIssuers() {
-        String value = ssmProvider.get("credentialIssuerConfig");
-        return CredentialIssuerLoader.loadCredentialIssuers(value);
+        return CredentialIssuerLoader.loadCredentialIssuers(
+            ssmProvider.get(System.getenv("CREDENTIAL_ISSUER_CONFIG_PARAMETER_STORE_KEY")));
     }
 
     public String getUserIssuedCredentialTableName() {
         return System.getenv("USER_ISSUED_CREDENTIALS_TABLE_NAME");
     }
 
-    public String getAccessTokensTableName() { return System.getenv("ACCESS_TOKENS_TABLE_NAME"); }
+    public String getAccessTokensTableName() {
+        return System.getenv("ACCESS_TOKENS_TABLE_NAME");
+    }
 
     public String getIpvSessionTableName() {
         return System.getenv("IPV_SESSIONS_TABLE_NAME");
@@ -45,8 +47,8 @@ public class ConfigurationService {
 
     public long getBearerAccessTokenTtl() {
         return Optional.of(System.getenv("BEARER_TOKEN_TTL"))
-                .map(Long::valueOf)
-                .orElse(DEFAULT_BEARER_TOKEN_TTL_IN_SECS);
+            .map(Long::valueOf)
+            .orElse(DEFAULT_BEARER_TOKEN_TTL_IN_SECS);
     }
 
 }
