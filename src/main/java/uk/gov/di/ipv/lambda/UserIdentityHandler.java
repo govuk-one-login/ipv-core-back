@@ -4,9 +4,9 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.slf4j.Logger;
@@ -15,7 +15,6 @@ import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.helpers.RequestHelper;
 import uk.gov.di.ipv.service.AccessTokenService;
 import uk.gov.di.ipv.service.UserIdentityService;
-import uk.gov.di.ipv.validation.ValidationResult;
 
 import java.util.Map;
 
@@ -39,16 +38,10 @@ public class UserIdentityHandler implements RequestHandler<APIGatewayProxyReques
 
     @Override
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
-        ValidationResult<ErrorObject> validationResult = validateRequest(input.getHeaders());
-
-        if (!validationResult.isValid()) {
-            LOGGER.error(validationResult.getError().getDescription());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(validationResult.getError().getHTTPStatusCode(), validationResult.getError().toJSONObject());
-        }
-
         try {
             String accessTokenString = RequestHelper.getHeaderByKey(input.getHeaders(), AUTHORIZATION_HEADER_KEY);
 
+            // Performs validation on header value and throws a ParseException if invalid
             AccessToken.parse(accessTokenString);
 
             String ipvSessionId = accessTokenService.getIpvSessionIdByAccessToken(accessTokenString);
@@ -61,18 +54,10 @@ public class UserIdentityHandler implements RequestHandler<APIGatewayProxyReques
 
             Map<String, String> credentials = userIdentityService.getUserIssuedCredentials(ipvSessionId);
 
-            return ApiGatewayResponseGenerator.proxyJsonResponse(200, credentials);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(HTTPResponse.SC_OK, credentials);
         } catch (ParseException e) {
             LOGGER.error("Failed to parse access token");
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, OAuth2Error.INVALID_GRANT.appendDescription(" - Failed to parse access token").toJSONObject());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(e.getErrorObject().getHTTPStatusCode(), e.getErrorObject().toJSONObject());
         }
-    }
-
-    private ValidationResult<ErrorObject> validateRequest(Map<String, String> requestHeaders) {
-        if (StringUtils.isBlank(RequestHelper.getHeaderByKey(requestHeaders, AUTHORIZATION_HEADER_KEY))) {
-            return new ValidationResult<>(false, OAuth2Error.INVALID_REQUEST.appendDescription(" - Authorization header is missing from token request"));
-        }
-
-        return ValidationResult.createValidResult();
     }
 }

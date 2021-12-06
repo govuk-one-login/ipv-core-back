@@ -8,9 +8,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import com.nimbusds.oauth2.sdk.token.BearerTokenError;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.service.AccessTokenService;
@@ -40,15 +42,16 @@ class UserIdentityHandlerTest {
     @Mock
     private AccessTokenService mockAccessTokenService;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     private UserIdentityHandler userInfoHandler;
     private Map<String, String> userIssuedCredential;
-
-    ObjectMapper objectMapper = new ObjectMapper();
-    Map<String, String> responseBody = new HashMap<>();
+    private Map<String, String> responseBody;
 
     @BeforeEach
     void setUp() {
         userIssuedCredential = new HashMap<>();
+        responseBody = new HashMap<>();
 
         userIssuedCredential.put("id", "12345");
         userIssuedCredential.put("type", "Test credential");
@@ -99,13 +102,13 @@ class UserIdentityHandlerTest {
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
         responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
-        assertEquals(400, response.getStatusCode());
-        assertEquals(OAuth2Error.INVALID_REQUEST.getCode(), responseBody.get("error"));
-        assertEquals(OAuth2Error.INVALID_REQUEST.appendDescription(" - Authorization header is missing from token request").getDescription(), responseBody.get("error_description"));
+        assertEquals(BearerTokenError.MISSING_TOKEN.getHTTPStatusCode(), response.getStatusCode());
+        assertEquals(BearerTokenError.MISSING_TOKEN.getCode(), responseBody.get("error"));
+        assertEquals(BearerTokenError.MISSING_TOKEN.getDescription(), responseBody.get("error_description"));
     }
 
     @Test
-    void shouldReturnErrorResponseWhenTokenIsInvalid() throws JsonProcessingException {
+    void shouldReturnErrorResponseWhenTokenIsMissingBearerPrefix() throws JsonProcessingException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> headers = Collections.singletonMap("Authorization", "11111111");
         event.setHeaders(headers);
@@ -113,9 +116,9 @@ class UserIdentityHandlerTest {
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
         responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
-        assertEquals(400, response.getStatusCode());
-        assertEquals(OAuth2Error.INVALID_GRANT.getCode(), responseBody.get("error"));
-        assertEquals(OAuth2Error.INVALID_GRANT.appendDescription(" - Failed to parse access token").getDescription(), responseBody.get("error_description"));
+        assertEquals(BearerTokenError.INVALID_REQUEST.getHTTPStatusCode(), response.getStatusCode());
+        assertEquals(BearerTokenError.INVALID_REQUEST.getCode(), responseBody.get("error"));
+        assertEquals(BearerTokenError.INVALID_REQUEST.getDescription(), responseBody.get("error_description"));
     }
 
     @Test
@@ -125,9 +128,9 @@ class UserIdentityHandlerTest {
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
         responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
-        assertEquals(400, response.getStatusCode());
-        assertEquals(OAuth2Error.INVALID_REQUEST.getCode(), responseBody.get("error"));
-        assertEquals(OAuth2Error.INVALID_REQUEST.appendDescription(" - Authorization header is missing from token request").getDescription(), responseBody.get("error_description"));
+        assertEquals(BearerTokenError.MISSING_TOKEN.getHTTPStatusCode(), response.getStatusCode());
+        assertEquals(BearerTokenError.MISSING_TOKEN.getCode(), responseBody.get("error"));
+        assertEquals(BearerTokenError.MISSING_TOKEN.getDescription(), responseBody.get("error_description"));
     }
 
     @Test

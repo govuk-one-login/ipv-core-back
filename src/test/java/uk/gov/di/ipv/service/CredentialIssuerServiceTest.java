@@ -36,7 +36,7 @@ class CredentialIssuerServiceTest {
     private JSONObject mockJSONObject;
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         mockDataStore = mock(DataStore.class);
         mockConfigurationService = mock(ConfigurationService.class);
         mockJSONObject = mock(JSONObject.class);
@@ -54,7 +54,7 @@ class CredentialIssuerServiceTest {
         CredentialIssuerRequestDto credentialIssuerRequestDto = new CredentialIssuerRequestDto(
                 "1234",
                 "cred_issuer_id_1",
-                UUID.randomUUID().toString(),
+                TEST_IPV_SESSION_ID,
                 "http://www.example.com/redirect"
         );
         CredentialIssuerConfig credentialIssuerConfig = getStubCredentialIssuerConfig(wmRuntimeInfo);
@@ -117,7 +117,7 @@ class CredentialIssuerServiceTest {
     }
 
     @Test
-    public void expectedSuccessWhenSaveCredentials() {
+    void expectedSuccessWhenSaveCredentials() {
 
         ArgumentCaptor<UserIssuedCredentialsItem> userIssuedCredentialsItemCaptor = ArgumentCaptor.forClass(UserIssuedCredentialsItem.class);
 
@@ -137,7 +137,7 @@ class CredentialIssuerServiceTest {
     }
 
     @Test
-    public void expectedExceptionWhenSaveCredentials() {
+    void expectedExceptionWhenSaveCredentials() {
 
         CredentialIssuerRequestDto credentialIssuerRequestDto = new CredentialIssuerRequestDto(
                 "1234",
@@ -173,9 +173,9 @@ class CredentialIssuerServiceTest {
 
         JSONObject credential = credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
 
-        assertEquals(credential.get("id"), "some-resource-id");
-        assertEquals(credential.get("evidenceType"), "passport");
-        assertEquals(credential.get("evidenceID"), "passport-abc-12345");
+        assertEquals("some-resource-id", credential.get("id"));
+        assertEquals("passport", credential.get("evidenceType"));
+        assertEquals("passport-abc-12345", credential.get("evidenceID"));
 
         verify(
                 getRequestedFor(
