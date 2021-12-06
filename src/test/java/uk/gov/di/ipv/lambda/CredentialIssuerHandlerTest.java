@@ -93,8 +93,8 @@ class CredentialIssuerHandlerTest {
         ).thenReturn(accessToken);
 
         when(credentialIssuerService.getCredential(
-                eq(accessToken),
-                eq(CredentialIssuerHandler.PASSPORT_ISSUER))
+                accessToken,
+                CredentialIssuerHandler.PASSPORT_ISSUER)
         ).thenReturn(new JSONObject());
 
         CredentialIssuerHandler handler = new CredentialIssuerHandler(credentialIssuerService);

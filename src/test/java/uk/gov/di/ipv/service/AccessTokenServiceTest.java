@@ -114,4 +114,33 @@ class AccessTokenServiceTest {
         assertEquals(testIpvSessionId, capturedAccessTokenItem.getIpvSessionId());
         assertEquals(accessTokenResponse.getTokens().getBearerAccessToken().toAuthorizationHeader(), capturedAccessTokenItem.getAccessToken());
     }
+
+    @Test
+    void shouldGetSessionIdByAccessTokenWhenValidAccessTokenProvided() {
+        String testIpvSessionId = UUID.randomUUID().toString();
+        String accessToken = new BearerAccessToken().toAuthorizationHeader();
+
+        AccessTokenItem accessTokenItem = new AccessTokenItem();
+        accessTokenItem.setIpvSessionId(testIpvSessionId);
+        when(mockDataStore.getItem(accessToken)).thenReturn(accessTokenItem);
+
+        String resultIpvSessionId = accessTokenService.getIpvSessionIdByAccessToken(accessToken);
+
+        verify(mockDataStore).getItem(accessToken);
+
+        assertNotNull(resultIpvSessionId);
+        assertEquals(testIpvSessionId, resultIpvSessionId);
+    }
+
+    @Test
+    void shouldReturnNullWhenInvalidAccessTokenProvided() {
+        String accessToken = new BearerAccessToken().toAuthorizationHeader();
+
+        when(mockDataStore.getItem(accessToken)).thenReturn(null);
+
+        String resultIpvSessionId = accessTokenService.getIpvSessionIdByAccessToken(accessToken);
+
+        verify(mockDataStore).getItem(accessToken);
+        assertNull(resultIpvSessionId);
+    }
 }

@@ -13,6 +13,8 @@ import uk.gov.di.ipv.persistence.DataStore;
 import uk.gov.di.ipv.persistence.item.AccessTokenItem;
 import uk.gov.di.ipv.validation.ValidationResult;
 
+import java.util.Objects;
+
 public class AccessTokenService {
     private final DataStore<AccessTokenItem> dataStore;
     private final ConfigurationService configurationService;
@@ -37,6 +39,13 @@ public class AccessTokenService {
             return new ValidationResult<>(false, OAuth2Error.UNSUPPORTED_GRANT_TYPE);
         }
         return ValidationResult.createValidResult();
+    }
+
+    public String getIpvSessionIdByAccessToken(String accessToken) {
+        AccessTokenItem accessTokenItem = dataStore.getItem(accessToken);
+        return Objects.isNull(accessTokenItem)
+                ? null
+                : accessTokenItem.getIpvSessionId();
     }
 
     public void persistAccessToken(AccessTokenResponse tokenResponse, String ipvSessionId) {
