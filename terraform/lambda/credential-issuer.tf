@@ -14,4 +14,7 @@ module "credential-issuer" {
   allow_access_to_user_issued_credentials_table = true
   user_issued_credentials_table_policy_arn      = aws_iam_policy.policy-user-issued-credentials-table.arn
   user_issued_credentials_table_name            = aws_dynamodb_table.user-issued-credentials.name
+
+  credential_issuer_config_parameter_store_key = aws_ssm_parameter.credential-issuers-config.name
 }
+
