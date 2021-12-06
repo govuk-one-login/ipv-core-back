@@ -41,7 +41,7 @@ public class ApiGatewayResponseGenerator {
     }
 
     private static <T> String generateResponseBody(T body) throws JsonProcessingException {
-            return new ObjectMapper().writeValueAsString(body);
+        return new ObjectMapper().writeValueAsString(body);
     }
 
 }

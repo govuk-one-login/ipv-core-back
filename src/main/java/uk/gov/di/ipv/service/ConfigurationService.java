@@ -29,6 +29,10 @@ public class ConfigurationService {
 
     public String getAccessTokensTableName() { return System.getenv("ACCESS_TOKENS_TABLE_NAME"); }
 
+    public String getIpvSessionTableName() {
+        return System.getenv("IPV_SESSIONS_TABLE_NAME");
+    }
+
     public long getBearerAccessTokenTtl() {
         return Optional.of(System.getenv("BEARER_TOKEN_TTL"))
                 .map(Long::valueOf)
