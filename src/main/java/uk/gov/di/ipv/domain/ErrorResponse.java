@@ -18,13 +18,14 @@ public enum ErrorResponse {
     MISSING_IPV_SESSION_ID(1010, "Missing ipv session id header"),
     FAILED_TO_GET_CREDENTIAL_FROM_ISSUER(1011, "Failed to get credential from issuer"),
     FAILED_TO_SAVE_CREDENTIAL(1012, "Failed to save credential"),
-    FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS(1013, "Failed to parse oauth2-specific query string parameters");
+    FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS(1013, "Failed to parse oauth2-specific query string parameters"),
+    FAILED_TO_DECODE_CREDENTIAL_ISSUER_CONFIG(1014, "Failed to decode credential issuers config to credential issuers object");
 
     @JsonProperty("code")
-    private int code;
+    private final int code;
 
     @JsonProperty("message")
-    private String message;
+    private final String message;
 
     ErrorResponse(
             @JsonProperty(required = true, value = "code") int code,

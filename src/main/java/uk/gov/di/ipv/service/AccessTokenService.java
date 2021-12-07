@@ -20,7 +20,7 @@ public class AccessTokenService {
     private final ConfigurationService configurationService;
 
     public AccessTokenService() {
-        this.configurationService = ConfigurationService.getInstance();
+        this.configurationService = new ConfigurationService();
         this.dataStore = new DataStore<>(configurationService.getAccessTokensTableName(), AccessTokenItem.class);
     }
 

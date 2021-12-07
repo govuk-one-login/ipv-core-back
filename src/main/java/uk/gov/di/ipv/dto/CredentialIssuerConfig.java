@@ -5,9 +5,11 @@ import java.util.Objects;
 
 public class CredentialIssuerConfig {
 
-    private final String id;
-    private final URI tokenUrl;
-    private final URI credentialUrl;
+    private String id;
+    private URI tokenUrl;
+    private URI credentialUrl;
+
+    public CredentialIssuerConfig() {}
 
     public CredentialIssuerConfig(String id, URI tokenUrl, URI credentialUrl) {
         this.id = id;
@@ -33,6 +35,13 @@ public class CredentialIssuerConfig {
         if (o == null || getClass() != o.getClass()) return false;
         CredentialIssuerConfig that = (CredentialIssuerConfig) o;
         return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public String toString() {
+        return "CredentialIssuerConfig{" +
+                "id='" + id + '\'' +
+                '}';
     }
 
     @Override
