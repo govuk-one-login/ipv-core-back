@@ -96,6 +96,24 @@ variable "access_tokens_table_name" {
   description = "Name of the DynamoDB access-tokens table"
 }
 
+variable "allow_access_to_ipv_sessions_table" {
+  type        = bool
+  default     = false
+  description = "Should the lambda be given access to the ipv-sessions DynamoDB table"
+}
+
+variable "ipv_sessions_table_policy_arn" {
+  type        = string
+  default     = null
+  description = "ARN of the policy to allow read write to the ipv-sessions DynamoDB table"
+}
+
+variable "ipv_sessions_table_name" {
+  type        = string
+  default     = "not-set-for-this-lambda"
+  description = "Name of the DynamoDB ipv-sessions table"
+}
+
 variable "credential_issuer_config_parameter_store_key" {
   type        = string
   default     = null

@@ -42,3 +42,9 @@ resource "aws_iam_role_policy_attachment" "tokens_table_policy_to_lambda_iam_rol
   policy_arn = var.access_tokens_table_policy_arn
 }
 
+resource "aws_iam_role_policy_attachment" "ipv_sessions_table_policy_to_lambda_iam_role" {
+  count      = var.allow_access_to_ipv_sessions_table ? 1 : 0
+  role       = aws_iam_role.lambda_iam_role.name
+  policy_arn = var.ipv_sessions_table_policy_arn
+}
+

@@ -43,6 +43,19 @@ resource "aws_dynamodb_table" "access-tokens" {
   tags = local.default_tags
 }
 
+resource "aws_dynamodb_table" "ipv-sessions" {
+  name         = "${var.environment}-ipv-sessions"
+  hash_key     = "ipvSessionId"
+  billing_mode = "PAY_PER_REQUEST"
+
+  attribute {
+    name = "ipvSessionId"
+    type = "S"
+  }
+
+  tags = local.default_tags
+}
+
 resource "aws_iam_policy" "policy-user-issued-credentials-table" {
   name = "policy-user-issued-credentials-table"
 
@@ -113,6 +126,30 @@ resource "aws_iam_policy" "policy-access-tokens-table" {
         Resource = [
           aws_dynamodb_table.access-tokens.arn,
           "${aws_dynamodb_table.access-tokens.arn}/index/*"
+        ]
+      },
+    ]
+  })
+}
+
+resource "aws_iam_policy" "policy-ipv-sessions-table" {
+  name = "policy-ipv-sessions-table"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid = "IpvSessionsTable"
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Query"
+        ]
+        Effect = "Allow"
+        Resource = [
+          aws_dynamodb_table.ipv-sessions.arn,
+          "${aws_dynamodb_table.ipv-sessions.arn}/index/*"
         ]
       },
     ]
