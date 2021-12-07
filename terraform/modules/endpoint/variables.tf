@@ -114,6 +114,12 @@ variable "ipv_sessions_table_name" {
   description = "Name of the DynamoDB ipv-sessions table"
 }
 
+variable "credential_issuer_config_parameter_store_key" {
+  type        = string
+  default     = null
+  description = "Name of the credential issuer config parameter in the parameter store"
+}
+
 locals {
   default_tags = {
     Environment = var.environment

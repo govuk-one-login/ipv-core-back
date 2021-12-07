@@ -25,6 +25,7 @@ resource "aws_lambda_function" "lambda_function" {
       AUTH_CODES_TABLE_NAME = var.auth_codes_table_name
       ACCESS_TOKENS_TABLE_NAME = var.access_tokens_table_name
       IPV_SESSIONS_TABLE_NAME = var.ipv_sessions_table_name
+      CREDENTIAL_ISSUER_CONFIG_PARAMETER_STORE_KEY = var.credential_issuer_config_parameter_store_key
     }
   }
 
