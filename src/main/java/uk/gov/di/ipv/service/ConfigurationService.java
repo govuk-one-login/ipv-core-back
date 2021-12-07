@@ -4,7 +4,7 @@ import java.util.Optional;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import uk.gov.di.ipv.dto.CredentialIssuers;
-import uk.gov.di.ipv.helpers.CredentialIssuerLoader;
+import uk.gov.di.ipv.helpers.Base64YamlTransformer;
 
 public class ConfigurationService {
 
@@ -29,8 +29,12 @@ public class ConfigurationService {
     }
 
     public CredentialIssuers getCredentialIssuers() {
-        return CredentialIssuerLoader.loadCredentialIssuers(
-            ssmProvider.get(System.getenv("CREDENTIAL_ISSUER_CONFIG_PARAMETER_STORE_KEY")));
+        return ssmProvider
+                .withTransformation(Base64YamlTransformer.class)
+                .get(
+                        System.getenv("CREDENTIAL_ISSUER_CONFIG_PARAMETER_STORE_KEY"),
+                        CredentialIssuers.class
+                );
     }
 
     public String getUserIssuedCredentialTableName() {
