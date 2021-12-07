@@ -3,7 +3,7 @@ output "trigger" {
   value       = sha1(jsonencode(aws_api_gateway_integration.endpoint_integration))
 }
 
-output "iam_role_arn" {
-  description = "The ARN of the IAM role used by the lambda"
-  value       = aws_iam_role.lambda_iam_role.arn
+output "iam_role_id" {
+  description = "The ID of the IAM role used by the lambda"
+  value       = aws_iam_role.lambda_iam_role.id
 }
