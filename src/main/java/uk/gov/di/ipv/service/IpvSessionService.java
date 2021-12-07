@@ -12,7 +12,7 @@ public class IpvSessionService {
     private final ConfigurationService configurationService;
 
     public IpvSessionService() {
-        this.configurationService = ConfigurationService.getInstance();
+        this.configurationService = new ConfigurationService();
         dataStore = new DataStore<>(configurationService.getIpvSessionTableName(), IpvSessionItem.class);
     }
 
