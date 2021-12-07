@@ -34,7 +34,8 @@ public class AuthorizationHandler
     // TODO: Find a better place for this?
     {
         // Set the default synchronous HTTP client to UrlConnectionHttpClient
-        System.setProperty("software.amazon.awssdk.http.service.impl",
+        System.setProperty(
+                "software.amazon.awssdk.http.service.impl",
                 "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
     }
 
