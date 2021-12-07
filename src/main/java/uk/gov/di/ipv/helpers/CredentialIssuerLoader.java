@@ -17,6 +17,8 @@ public class CredentialIssuerLoader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CredentialIssuerLoader.class);
 
+    private CredentialIssuerLoader() {}
+
     public static CredentialIssuers loadCredentialIssuers(String credentialIssuerConfigBase64) {
         YAMLFactory yamlFactory = new YAMLFactory();
         ObjectMapper mapper = new ObjectMapper(yamlFactory);
@@ -25,7 +27,7 @@ public class CredentialIssuerLoader {
             byte[] decode = Base64.decode(credentialIssuerConfigBase64);
             YAMLParser yamlParser = yamlFactory.createParser(decode);
             credentialIssuers = mapper.readValue(yamlParser, CredentialIssuers.class);
-            LOGGER.info("Loaded Credential Issuers: {}", credentialIssuers.toString());
+            LOGGER.info("Loaded Credential Issuers: {}", credentialIssuers);
         } catch (IllegalArgumentException | IOException e) {
             throw new CredentialIssuerException(HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_DECODE_CREDENTIAL_ISSUER_CONFIG);
         }
