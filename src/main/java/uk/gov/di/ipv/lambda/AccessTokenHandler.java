@@ -32,6 +32,12 @@ public class AccessTokenHandler
     private final AccessTokenService accessTokenService;
     private final AuthorizationCodeService authorizationCodeService;
 
+    {
+        // Set the default synchronous HTTP client to UrlConnectionHttpClient
+        System.setProperty("software.amazon.awssdk.http.service.impl",
+                "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
+    }
+
     public AccessTokenHandler(
             AccessTokenService accessTokenService,
             AuthorizationCodeService authorizationCodeService) {
