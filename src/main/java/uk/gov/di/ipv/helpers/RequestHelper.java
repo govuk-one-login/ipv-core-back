@@ -21,7 +21,8 @@ public class RequestHelper {
 
     public static <T> T convertRequest(APIGatewayProxyRequestEvent request, Class<T> type) {
         Map<String, String> map = parseRequestBody(request.getBody());
-        getHeader(request.getHeaders(), IPV_SESSION_ID_HEADER).ifPresent(h -> map.put("ipv_session_id", h));
+        getHeader(request.getHeaders(), IPV_SESSION_ID_HEADER)
+                .ifPresent(h -> map.put("ipv_session_id", h));
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.convertValue(map, type);
     }
@@ -40,10 +41,11 @@ public class RequestHelper {
         if (headers == null) {
             return Optional.empty();
         }
-        var values = headers.entrySet().stream()
-                .filter(e -> headerKey.equalsIgnoreCase(e.getKey()))
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toList());
+        var values =
+                headers.entrySet().stream()
+                        .filter(e -> headerKey.equalsIgnoreCase(e.getKey()))
+                        .map(Map.Entry::getValue)
+                        .collect(Collectors.toList());
         if (values.size() == 1) {
             var value = values.get(0);
             if (StringUtils.isNotBlank(value)) {
@@ -57,10 +59,11 @@ public class RequestHelper {
         if (Objects.isNull(headers)) {
             return null;
         }
-        var values = headers.entrySet().stream()
-                .filter(e -> headerKey.equalsIgnoreCase(e.getKey()))
-                .map(Map.Entry::getValue)
-                .collect(Collectors.toList());
+        var values =
+                headers.entrySet().stream()
+                        .filter(e -> headerKey.equalsIgnoreCase(e.getKey()))
+                        .map(Map.Entry::getValue)
+                        .collect(Collectors.toList());
         if (values.size() == 1) {
             var value = values.get(0);
             if (StringUtils.isNotBlank(value)) {

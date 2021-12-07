@@ -21,16 +21,21 @@ public class AccessTokenService {
 
     public AccessTokenService() {
         this.configurationService = new ConfigurationService();
-        this.dataStore = new DataStore<>(configurationService.getAccessTokensTableName(), AccessTokenItem.class);
+        this.dataStore =
+                new DataStore<>(
+                        configurationService.getAccessTokensTableName(), AccessTokenItem.class);
     }
 
-    public AccessTokenService(DataStore<AccessTokenItem> dataStore, ConfigurationService configurationService) {
+    public AccessTokenService(
+            DataStore<AccessTokenItem> dataStore, ConfigurationService configurationService) {
         this.dataStore = dataStore;
         this.configurationService = configurationService;
     }
 
     public TokenResponse generateAccessToken(TokenRequest tokenRequest) {
-        AccessToken accessToken = new BearerAccessToken(configurationService.getBearerAccessTokenTtl(), tokenRequest.getScope());
+        AccessToken accessToken =
+                new BearerAccessToken(
+                        configurationService.getBearerAccessTokenTtl(), tokenRequest.getScope());
         return new AccessTokenResponse(new Tokens(accessToken, null));
     }
 
@@ -43,14 +48,13 @@ public class AccessTokenService {
 
     public String getIpvSessionIdByAccessToken(String accessToken) {
         AccessTokenItem accessTokenItem = dataStore.getItem(accessToken);
-        return Objects.isNull(accessTokenItem)
-                ? null
-                : accessTokenItem.getIpvSessionId();
+        return Objects.isNull(accessTokenItem) ? null : accessTokenItem.getIpvSessionId();
     }
 
     public void persistAccessToken(AccessTokenResponse tokenResponse, String ipvSessionId) {
         AccessTokenItem accessTokenItem = new AccessTokenItem();
-        accessTokenItem.setAccessToken(tokenResponse.getTokens().getBearerAccessToken().toAuthorizationHeader());
+        accessTokenItem.setAccessToken(
+                tokenResponse.getTokens().getBearerAccessToken().toAuthorizationHeader());
         accessTokenItem.setIpvSessionId(ipvSessionId);
         dataStore.create(accessTokenItem);
     }

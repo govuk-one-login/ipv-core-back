@@ -29,7 +29,9 @@ public class CredentialIssuerLoader {
             credentialIssuers = mapper.readValue(yamlParser, CredentialIssuers.class);
             LOGGER.info("Loaded Credential Issuers: {}", credentialIssuers);
         } catch (IllegalArgumentException | IOException e) {
-            throw new CredentialIssuerException(HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_DECODE_CREDENTIAL_ISSUER_CONFIG);
+            throw new CredentialIssuerException(
+                    HTTPResponse.SC_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_DECODE_CREDENTIAL_ISSUER_CONFIG);
         }
 
         return credentialIssuers;

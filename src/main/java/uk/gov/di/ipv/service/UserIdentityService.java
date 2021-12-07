@@ -13,10 +13,15 @@ public class UserIdentityService {
 
     public UserIdentityService() {
         this.configurationService = new ConfigurationService();
-        this.dataStore = new DataStore<>(configurationService.getUserIssuedCredentialTableName(), UserIssuedCredentialsItem.class);
+        this.dataStore =
+                new DataStore<>(
+                        configurationService.getUserIssuedCredentialTableName(),
+                        UserIssuedCredentialsItem.class);
     }
 
-    public UserIdentityService(ConfigurationService configurationService, DataStore<UserIssuedCredentialsItem> dataStore) {
+    public UserIdentityService(
+            ConfigurationService configurationService,
+            DataStore<UserIssuedCredentialsItem> dataStore) {
         this.configurationService = configurationService;
         this.dataStore = dataStore;
     }
@@ -24,8 +29,7 @@ public class UserIdentityService {
     public Map<String, String> getUserIssuedCredentials(String ipvSessionId) {
         List<UserIssuedCredentialsItem> credentialIssuerItem = dataStore.getItems(ipvSessionId);
 
-        return credentialIssuerItem
-                .stream()
+        return credentialIssuerItem.stream()
                 .map(ciItem -> Map.entry(ciItem.getCredentialIssuer(), ciItem.getCredential()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }

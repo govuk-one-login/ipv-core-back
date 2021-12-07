@@ -13,10 +13,13 @@ public class IpvSessionService {
 
     public IpvSessionService() {
         this.configurationService = new ConfigurationService();
-        dataStore = new DataStore<>(configurationService.getIpvSessionTableName(), IpvSessionItem.class);
+        dataStore =
+                new DataStore<>(
+                        configurationService.getIpvSessionTableName(), IpvSessionItem.class);
     }
 
-    public IpvSessionService(DataStore<IpvSessionItem> dataStore, ConfigurationService configurationService) {
+    public IpvSessionService(
+            DataStore<IpvSessionItem> dataStore, ConfigurationService configurationService) {
         this.dataStore = dataStore;
         this.configurationService = configurationService;
     }

@@ -47,6 +47,4 @@ public class UserIssuedCredentialsItem {
     public void setCredential(String credential) {
         this.credential = credential;
     }
-
 }
-

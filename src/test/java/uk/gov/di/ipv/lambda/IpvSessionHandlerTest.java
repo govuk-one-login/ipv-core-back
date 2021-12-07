@@ -22,11 +22,9 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class IpvSessionHandlerTest {
 
-    @Mock
-    private Context mockContext;
+    @Mock private Context mockContext;
 
-    @Mock
-    private IpvSessionService mockIpvSessionService;
+    @Mock private IpvSessionService mockIpvSessionService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final String testUserId = UUID.randomUUID().toString();

@@ -16,8 +16,7 @@ public class CredentialIssuerRequestDto {
             @JsonProperty(value = "authorization_code") String authorizationCode,
             @JsonProperty(value = "credential_issuer_id") String credentialIssuerId,
             @JsonProperty(value = "ipv_session_id") String ipvSessionId,
-            @JsonProperty(value = "redirect_uri") String redirectUri
-    ) {
+            @JsonProperty(value = "redirect_uri") String redirectUri) {
         this.authorizationCode = authorizationCode;
         this.credentialIssuerId = credentialIssuerId;
         this.ipvSessionId = ipvSessionId;

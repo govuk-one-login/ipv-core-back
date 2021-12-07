@@ -32,7 +32,9 @@ public class AccessTokenHandler
     private final AccessTokenService accessTokenService;
     private final AuthorizationCodeService authorizationCodeService;
 
-    public AccessTokenHandler(AccessTokenService accessTokenService, AuthorizationCodeService authorizationCodeService) {
+    public AccessTokenHandler(
+            AccessTokenService accessTokenService,
+            AuthorizationCodeService authorizationCodeService) {
         this.accessTokenService = accessTokenService;
         this.authorizationCodeService = authorizationCodeService;
     }
@@ -43,23 +45,33 @@ public class AccessTokenHandler
     }
 
     @Override
-    public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
+    public APIGatewayProxyResponseEvent handleRequest(
+            APIGatewayProxyRequestEvent input, Context context) {
         try {
             TokenRequest tokenRequest = createTokenRequest(input.getBody());
 
-            ValidationResult<ErrorObject> validationResult = accessTokenService.validateTokenRequest(tokenRequest);
+            ValidationResult<ErrorObject> validationResult =
+                    accessTokenService.validateTokenRequest(tokenRequest);
             if (!validationResult.isValid()) {
-                LOGGER.error("Invalid access token request, error description: {}", validationResult.getError().getDescription());
+                LOGGER.error(
+                        "Invalid access token request, error description: {}",
+                        validationResult.getError().getDescription());
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    getHttpStatusCodeForErrorResponse(validationResult.getError()),
-                    validationResult.getError().toJSONObject());
+                        getHttpStatusCodeForErrorResponse(validationResult.getError()),
+                        validationResult.getError().toJSONObject());
             }
 
-            String authorizationCodeFromRequest = ((AuthorizationCodeGrant)tokenRequest.getAuthorizationGrant()).getAuthorizationCode().getValue();
-            String ipvSessionId = authorizationCodeService.getIpvSessionIdByAuthorizationCode(authorizationCodeFromRequest);
+            String authorizationCodeFromRequest =
+                    ((AuthorizationCodeGrant) tokenRequest.getAuthorizationGrant())
+                            .getAuthorizationCode()
+                            .getValue();
+            String ipvSessionId =
+                    authorizationCodeService.getIpvSessionIdByAuthorizationCode(
+                            authorizationCodeFromRequest);
 
             if (StringUtils.isBlank(ipvSessionId)) {
-                LOGGER.error("Access Token could not be issued. The supplied authorization code was not found in the database.");
+                LOGGER.error(
+                        "Access Token could not be issued. The supplied authorization code was not found in the database.");
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         OAuth2Error.INVALID_GRANT.getHTTPStatusCode(),
                         OAuth2Error.INVALID_GRANT.toJSONObject());
@@ -72,11 +84,14 @@ public class AccessTokenHandler
 
             authorizationCodeService.revokeAuthorizationCode(authorizationCodeFromRequest);
 
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, accessTokenResponse.toJSONObject());
-        }
-        catch (ParseException e) {
-            LOGGER.error("Token request could not be parsed: " + e.getErrorObject().getDescription(), e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(getHttpStatusCodeForErrorResponse(e.getErrorObject()), e.getErrorObject().toJSONObject());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_OK, accessTokenResponse.toJSONObject());
+        } catch (ParseException e) {
+            LOGGER.error(
+                    "Token request could not be parsed: " + e.getErrorObject().getDescription(), e);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    getHttpStatusCodeForErrorResponse(e.getErrorObject()),
+                    e.getErrorObject().toJSONObject());
         }
     }
 
@@ -93,7 +108,7 @@ public class AccessTokenHandler
 
     private int getHttpStatusCodeForErrorResponse(ErrorObject errorObject) {
         return errorObject.getHTTPStatusCode() > 0
-            ? errorObject.getHTTPStatusCode()
-            : HttpStatus.SC_BAD_REQUEST;
+                ? errorObject.getHTTPStatusCode()
+                : HttpStatus.SC_BAD_REQUEST;
     }
 }
