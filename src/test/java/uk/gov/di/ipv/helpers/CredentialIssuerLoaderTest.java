@@ -1,17 +1,18 @@
 package uk.gov.di.ipv.helpers;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.domain.CredentialIssuerException;
 import uk.gov.di.ipv.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.dto.CredentialIssuers;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CredentialIssuerLoaderTest {
 
@@ -39,7 +40,8 @@ class CredentialIssuerLoaderTest {
     void shouldLoadCredentialIssuersFromBase64EncodedString() {
         assertEquals(
                 expectedCredentialIssuers.getCredentialIssuerConfigs(),
-                CredentialIssuerLoader.loadCredentialIssuers(CREDENTIAL_ISSUER_CONFIG_BASE64).getCredentialIssuerConfigs());
+                CredentialIssuerLoader.loadCredentialIssuers(CREDENTIAL_ISSUER_CONFIG_BASE64)
+                        .getCredentialIssuerConfigs());
     }
 
     @Test

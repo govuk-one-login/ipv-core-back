@@ -29,7 +29,6 @@ public class CredentialIssuerConfig {
         return credentialUrl;
     }
 
-
     @Override
     public String toString() {
         return "CredentialIssuerConfig{" + "id='" + id + '\'' + '}';
@@ -49,7 +48,8 @@ public class CredentialIssuerConfig {
             return false;
         }
         CredentialIssuerConfig that = (CredentialIssuerConfig) o;
-        return id.equals(that.id) && tokenUrl.equals(that.tokenUrl) && credentialUrl.equals(
-            that.credentialUrl);
+        return id.equals(that.id)
+                && tokenUrl.equals(that.tokenUrl)
+                && credentialUrl.equals(that.credentialUrl);
     }
 }
