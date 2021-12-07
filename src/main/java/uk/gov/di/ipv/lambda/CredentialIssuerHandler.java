@@ -21,11 +21,12 @@ import java.util.Collections;
 import java.util.Optional;
 
 public class CredentialIssuerHandler
-        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+    implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private final CredentialIssuerService credentialIssuerService;
+    private final ConfigurationService configurationService;
 
-    private final CredentialIssuers credentialIssuers;
+    private CredentialIssuers credentialIssuers = null;
 
     {
         // Set the default synchronous HTTP client to UrlConnectionHttpClient
@@ -35,23 +36,25 @@ public class CredentialIssuerHandler
     }
 
     public CredentialIssuerHandler(
-            CredentialIssuerService credentialIssuerService,
-            ConfigurationService configurationService) {
+        CredentialIssuerService credentialIssuerService,
+        ConfigurationService configurationService) {
         this.credentialIssuerService = credentialIssuerService;
-        this.credentialIssuers = configurationService.getCredentialIssuers();
+        this.configurationService = configurationService;
+        this.credentialIssuers = configurationService.getCredentialIssuers(credentialIssuers);
     }
 
     public CredentialIssuerHandler() {
         this.credentialIssuerService = new CredentialIssuerService();
-        this.credentialIssuers = new ConfigurationService().getCredentialIssuers();
+        this.configurationService = new ConfigurationService();
+        this.credentialIssuers = configurationService.getCredentialIssuers(credentialIssuers);
     }
 
     @Override
     public APIGatewayProxyResponseEvent handleRequest(
-            APIGatewayProxyRequestEvent input, Context context) {
+        APIGatewayProxyRequestEvent input, Context context) {
 
         CredentialIssuerRequestDto request =
-                RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
+            RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
 
         var errorResponse = validate(request);
         if (errorResponse.isPresent()) {
@@ -61,14 +64,14 @@ public class CredentialIssuerHandler
 
         try {
             BearerAccessToken accessToken =
-                    credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);
+                credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);
             JSONObject credential =
-                    credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
+                credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
             credentialIssuerService.persistUserCredentials(credential, request);
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.emptyMap());
         } catch (CredentialIssuerException e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getHttpStatusCode(), e.getErrorResponse());
+                e.getHttpStatusCode(), e.getErrorResponse());
         }
     }
 
@@ -92,9 +95,10 @@ public class CredentialIssuerHandler
     }
 
     private CredentialIssuerConfig getCredentialIssuerConfig(CredentialIssuerRequestDto request) {
-        return credentialIssuers.getCredentialIssuerConfigs().stream()
-                .filter(config -> request.getCredentialIssuerId().equals(config.getId()))
-                .findFirst()
-                .orElse(null);
+        return configurationService.getCredentialIssuers(credentialIssuers)
+            .getCredentialIssuerConfigs().stream()
+            .filter(config -> request.getCredentialIssuerId().equals(config.getId()))
+            .findFirst()
+            .orElse(null);
     }
 }

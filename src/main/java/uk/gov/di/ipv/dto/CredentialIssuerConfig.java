@@ -29,13 +29,6 @@ public class CredentialIssuerConfig {
         return credentialUrl;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        CredentialIssuerConfig that = (CredentialIssuerConfig) o;
-        return Objects.equals(id, that.id);
-    }
 
     @Override
     public String toString() {
@@ -45,5 +38,18 @@ public class CredentialIssuerConfig {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        CredentialIssuerConfig that = (CredentialIssuerConfig) o;
+        return id.equals(that.id) && tokenUrl.equals(that.tokenUrl) && credentialUrl.equals(
+            that.credentialUrl);
     }
 }

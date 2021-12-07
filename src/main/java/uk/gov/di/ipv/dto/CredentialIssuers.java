@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
@@ -8,8 +9,17 @@ public class CredentialIssuers {
 
     private final Set<CredentialIssuerConfig> credentialIssuerConfigs;
 
+    @JsonIgnore
+    private String source;
+
     public CredentialIssuers() {
         credentialIssuerConfigs = Collections.emptySet();
+    }
+
+    public CredentialIssuers(
+        Set<CredentialIssuerConfig> credentialIssuerConfigs, String source) {
+        this.credentialIssuerConfigs = credentialIssuerConfigs;
+        this.source = source;
     }
 
     public CredentialIssuers(Set<CredentialIssuerConfig> credentialIssuerConfigs) {
@@ -21,14 +31,6 @@ public class CredentialIssuers {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        CredentialIssuers that = (CredentialIssuers) o;
-        return Objects.equals(credentialIssuerConfigs, that.credentialIssuerConfigs);
-    }
-
-    @Override
     public String toString() {
         return "CredentialIssuers{" + "credentialIssuerConfigs=" + credentialIssuerConfigs + '}';
     }
@@ -36,5 +38,13 @@ public class CredentialIssuers {
     @Override
     public int hashCode() {
         return Objects.hash(credentialIssuerConfigs);
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public String getSource() {
+        return source;
     }
 }

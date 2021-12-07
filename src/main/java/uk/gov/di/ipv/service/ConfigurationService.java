@@ -29,9 +29,19 @@ public class ConfigurationService {
         return System.getenv("AUTH_CODES_TABLE_NAME");
     }
 
-    public CredentialIssuers getCredentialIssuers() {
-        return CredentialIssuerLoader.loadCredentialIssuers(
-                ssmProvider.get(System.getenv("CREDENTIAL_ISSUER_CONFIG_PARAMETER_STORE_KEY")));
+    public CredentialIssuers getCredentialIssuers(
+        CredentialIssuers credentialIssuers) {
+
+        String credentialIssuerConfigBase64 = ssmProvider.get(
+            System.getenv("CREDENTIAL_ISSUER_CONFIG_PARAMETER_STORE_KEY"));
+
+        if (credentialIssuers == null || !credentialIssuerConfigBase64.equals(credentialIssuers.getSource())) {
+            var credentialIssuersResult = CredentialIssuerLoader.loadCredentialIssuers(credentialIssuerConfigBase64);
+            credentialIssuersResult.setSource(credentialIssuerConfigBase64);
+            return credentialIssuersResult;
+        }
+
+        return credentialIssuers;
     }
 
     public String getUserIssuedCredentialTableName() {
@@ -48,7 +58,7 @@ public class ConfigurationService {
 
     public long getBearerAccessTokenTtl() {
         return Optional.of(System.getenv("BEARER_TOKEN_TTL"))
-                .map(Long::valueOf)
-                .orElse(DEFAULT_BEARER_TOKEN_TTL_IN_SECS);
+            .map(Long::valueOf)
+            .orElse(DEFAULT_BEARER_TOKEN_TTL_IN_SECS);
     }
 }
