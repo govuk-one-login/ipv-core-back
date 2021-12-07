@@ -16,7 +16,6 @@ import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.helpers.RequestHelper;
 import uk.gov.di.ipv.service.ConfigurationService;
 import uk.gov.di.ipv.service.CredentialIssuerService;
-
 import java.util.Collections;
 import java.util.Optional;
 
