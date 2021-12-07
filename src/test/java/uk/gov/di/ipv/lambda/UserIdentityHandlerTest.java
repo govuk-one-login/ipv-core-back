@@ -32,14 +32,11 @@ class UserIdentityHandlerTest {
 
     private static final String TEST_IPV_SESSION_ID = UUID.randomUUID().toString();
 
-    @Mock
-    private Context mockContext;
+    @Mock private Context mockContext;
 
-    @Mock
-    private UserIdentityService mockUserIdentityService;
+    @Mock private UserIdentityService mockUserIdentityService;
 
-    @Mock
-    private AccessTokenService mockAccessTokenService;
+    @Mock private AccessTokenService mockAccessTokenService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -63,11 +60,14 @@ class UserIdentityHandlerTest {
     void shouldReturn200OnSuccessfulUserIdentityRequest() {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken();
-        Map<String, String> headers = Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
+        Map<String, String> headers =
+                Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
         event.setHeaders(headers);
 
-        when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString())).thenReturn(TEST_IPV_SESSION_ID);
-        when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(userIssuedCredential);
+        when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString()))
+                .thenReturn(TEST_IPV_SESSION_ID);
+        when(mockUserIdentityService.getUserIssuedCredentials(any()))
+                .thenReturn(userIssuedCredential);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
 
@@ -78,11 +78,14 @@ class UserIdentityHandlerTest {
     void shouldReturnCredentialsOnSuccessfulUserInfoRequest() throws JsonProcessingException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken();
-        Map<String, String> headers = Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
+        Map<String, String> headers =
+                Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
         event.setHeaders(headers);
 
-        when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString())).thenReturn(TEST_IPV_SESSION_ID);
-        when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(userIssuedCredential);
+        when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString()))
+                .thenReturn(TEST_IPV_SESSION_ID);
+        when(mockUserIdentityService.getUserIssuedCredentials(any()))
+                .thenReturn(userIssuedCredential);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
         Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
@@ -103,7 +106,9 @@ class UserIdentityHandlerTest {
 
         assertEquals(BearerTokenError.MISSING_TOKEN.getHTTPStatusCode(), response.getStatusCode());
         assertEquals(BearerTokenError.MISSING_TOKEN.getCode(), responseBody.get("error"));
-        assertEquals(BearerTokenError.MISSING_TOKEN.getDescription(), responseBody.get("error_description"));
+        assertEquals(
+                BearerTokenError.MISSING_TOKEN.getDescription(),
+                responseBody.get("error_description"));
     }
 
     @Test
@@ -115,9 +120,12 @@ class UserIdentityHandlerTest {
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
         responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
-        assertEquals(BearerTokenError.INVALID_REQUEST.getHTTPStatusCode(), response.getStatusCode());
+        assertEquals(
+                BearerTokenError.INVALID_REQUEST.getHTTPStatusCode(), response.getStatusCode());
         assertEquals(BearerTokenError.INVALID_REQUEST.getCode(), responseBody.get("error"));
-        assertEquals(BearerTokenError.INVALID_REQUEST.getDescription(), responseBody.get("error_description"));
+        assertEquals(
+                BearerTokenError.INVALID_REQUEST.getDescription(),
+                responseBody.get("error_description"));
     }
 
     @Test
@@ -129,14 +137,17 @@ class UserIdentityHandlerTest {
 
         assertEquals(BearerTokenError.MISSING_TOKEN.getHTTPStatusCode(), response.getStatusCode());
         assertEquals(BearerTokenError.MISSING_TOKEN.getCode(), responseBody.get("error"));
-        assertEquals(BearerTokenError.MISSING_TOKEN.getDescription(), responseBody.get("error_description"));
+        assertEquals(
+                BearerTokenError.MISSING_TOKEN.getDescription(),
+                responseBody.get("error_description"));
     }
 
     @Test
     void shouldReturnErrorResponseWhenInvalidAccessTokenProvided() throws JsonProcessingException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken();
-        Map<String, String> headers = Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
+        Map<String, String> headers =
+                Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
         event.setHeaders(headers);
 
         when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString())).thenReturn(null);
@@ -146,6 +157,11 @@ class UserIdentityHandlerTest {
 
         assertEquals(403, response.getStatusCode());
         assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
-        assertEquals(OAuth2Error.ACCESS_DENIED.appendDescription(" - The supplied access token was not found in the database").getDescription(), responseBody.get("error_description"));
+        assertEquals(
+                OAuth2Error.ACCESS_DENIED
+                        .appendDescription(
+                                " - The supplied access token was not found in the database")
+                        .getDescription(),
+                responseBody.get("error_description"));
     }
 }

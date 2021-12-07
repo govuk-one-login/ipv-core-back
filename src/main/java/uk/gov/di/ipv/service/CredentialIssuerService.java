@@ -30,71 +30,78 @@ public class CredentialIssuerService {
     private final ConfigurationService configurationService;
 
     public CredentialIssuerService() {
-        this.configurationService =  new ConfigurationService();
-        this.dataStore = new DataStore<>(configurationService.getUserIssuedCredentialTableName(), UserIssuedCredentialsItem.class);
+        this.configurationService = new ConfigurationService();
+        this.dataStore =
+                new DataStore<>(
+                        configurationService.getUserIssuedCredentialTableName(),
+                        UserIssuedCredentialsItem.class);
     }
 
     // used for testing
-    public CredentialIssuerService(DataStore<UserIssuedCredentialsItem> dataStore, ConfigurationService configurationService) {
+    public CredentialIssuerService(
+            DataStore<UserIssuedCredentialsItem> dataStore,
+            ConfigurationService configurationService) {
         this.configurationService = configurationService;
         this.dataStore = dataStore;
     }
 
-    public BearerAccessToken exchangeCodeForToken(CredentialIssuerRequestDto request, CredentialIssuerConfig config) {
+    public BearerAccessToken exchangeCodeForToken(
+            CredentialIssuerRequestDto request, CredentialIssuerConfig config) {
 
         AuthorizationCode authorizationCode = new AuthorizationCode(request.getAuthorizationCode());
         try {
-            TokenRequest tokenRequest = new TokenRequest(
-                    config.getTokenUrl(),
-                    new ClientID(getClientId()),
-                    new AuthorizationCodeGrant(authorizationCode, URI.create(request.getRedirectUri()))
-            );
+            TokenRequest tokenRequest =
+                    new TokenRequest(
+                            config.getTokenUrl(),
+                            new ClientID(getClientId()),
+                            new AuthorizationCodeGrant(
+                                    authorizationCode, URI.create(request.getRedirectUri())));
 
             HTTPResponse httpResponse = tokenRequest.toHTTPRequest().send();
             TokenResponse tokenResponse = parseTokenResponse(httpResponse);
 
             if (tokenResponse instanceof TokenErrorResponse) {
                 TokenErrorResponse errorResponse = tokenResponse.toErrorResponse();
-                ErrorObject errorObject = Objects.requireNonNullElse(
-                        errorResponse.getErrorObject(),
-                        new ErrorObject("unknown", "unknown")
-                );
+                ErrorObject errorObject =
+                        Objects.requireNonNullElse(
+                                errorResponse.getErrorObject(),
+                                new ErrorObject("unknown", "unknown"));
                 LOGGER.error("{}: {}", errorObject.getCode(), errorObject.getDescription());
-                throw new CredentialIssuerException(HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST);
+                throw new CredentialIssuerException(
+                        HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST);
             }
-            return tokenResponse
-                    .toSuccessResponse()
-                    .getTokens()
-                    .getBearerAccessToken();
+            return tokenResponse.toSuccessResponse().getTokens().getBearerAccessToken();
         } catch (IOException | ParseException e) {
             LOGGER.error("Error exchanging token: {}", e.getMessage(), e);
-            throw new CredentialIssuerException(HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE);
+            throw new CredentialIssuerException(
+                    HTTPResponse.SC_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE);
         }
     }
 
     public JSONObject getCredential(BearerAccessToken accessToken, CredentialIssuerConfig config) {
-        ClientReadRequest credentialRequest = new ClientReadRequest(
-                config.getCredentialUrl(),
-                accessToken
-        );
+        ClientReadRequest credentialRequest =
+                new ClientReadRequest(config.getCredentialUrl(), accessToken);
 
         try {
             HTTPResponse response = credentialRequest.toHTTPRequest().send();
             if (!response.indicatesSuccess()) {
-                LOGGER.error("Error retrieving credential: {} - {}", response.getStatusCode(), response.getStatusMessage());
+                LOGGER.error(
+                        "Error retrieving credential: {} - {}",
+                        response.getStatusCode(),
+                        response.getStatusMessage());
                 throw new CredentialIssuerException(
                         HTTPResponse.SC_SERVER_ERROR,
-                        ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER
-                );
+                        ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
             }
 
-            return response.getContentAsJSONObject(); // In future we can use response.getContentAsJWT()
+            return response
+                    .getContentAsJSONObject(); // In future we can use response.getContentAsJWT()
         } catch (IOException | ParseException e) {
             LOGGER.error("Error retrieving credential: {}", e.getMessage(), e);
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER
-            );
+                    ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
         }
     }
 
@@ -117,9 +124,7 @@ public class CredentialIssuerService {
         } catch (UnsupportedOperationException e) {
             LOGGER.error("Error persisting user credential: {}", e.getMessage(), e);
             throw new CredentialIssuerException(
-                    HTTPResponse.SC_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_SAVE_CREDENTIAL
-            );
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
         }
     }
 }

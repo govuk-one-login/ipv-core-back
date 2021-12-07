@@ -10,11 +10,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RequestHelperTest {
 
-    Map<String, String> headers = Map.of(
-            "foo", "bar",
-            "Foo", "bar",
-            "baz", "bar"
-    );
+    Map<String, String> headers =
+            Map.of(
+                    "foo", "bar",
+                    "Foo", "bar",
+                    "baz", "bar");
 
     @ParameterizedTest(name = "with matching header: {0}")
     @ValueSource(strings = {"Baz", "baz"})

@@ -34,13 +34,14 @@ class AuthorizationHandlerTest {
         mockAuthorizationCodeService = mock(AuthorizationCodeService.class);
 
         authorizationCode = new AuthorizationCode();
-        when(mockAuthorizationCodeService.generateAuthorizationCode()).thenReturn(authorizationCode);
+        when(mockAuthorizationCodeService.generateAuthorizationCode())
+                .thenReturn(authorizationCode);
 
         handler = new AuthorizationHandler(mockAuthorizationCodeService);
     }
 
     @Test
-    void shouldReturn200OnSuccessfulOauthRequest(){
+    void shouldReturn200OnSuccessfulOauthRequest() {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, String> params = new HashMap<>();
         params.put(OAuth2RequestParams.REDIRECT_URI, "http://example.com");
@@ -74,7 +75,8 @@ class AuthorizationHandlerTest {
         Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
         Map<String, String> authCode = (Map) responseBody.get("code");
 
-        verify(mockAuthorizationCodeService).persistAuthorizationCode(authCode.get("value"), "12345");
+        verify(mockAuthorizationCodeService)
+                .persistAuthorizationCode(authCode.get("value"), "12345");
         assertEquals(authorizationCode.toString(), authCode.get("value"));
     }
 
@@ -95,8 +97,12 @@ class AuthorizationHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(), responseBody.get("message"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(),
+                responseBody.get("code"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
+                responseBody.get("message"));
     }
 
     @Test
@@ -116,8 +122,12 @@ class AuthorizationHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(), responseBody.get("message"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(),
+                responseBody.get("code"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
+                responseBody.get("message"));
     }
 
     @Test
@@ -137,8 +147,12 @@ class AuthorizationHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(), responseBody.get("message"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(),
+                responseBody.get("code"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
+                responseBody.get("message"));
     }
 
     @Test
@@ -158,8 +172,12 @@ class AuthorizationHandlerTest {
         Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(), responseBody.get("message"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(),
+                responseBody.get("code"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
+                responseBody.get("message"));
     }
 
     @Test
@@ -175,7 +193,8 @@ class AuthorizationHandlerTest {
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
         assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), responseBody.get("message"));
+        assertEquals(
+                ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -197,6 +216,7 @@ class AuthorizationHandlerTest {
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), responseBody.get("message"));
+        assertEquals(
+                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), responseBody.get("message"));
     }
 }

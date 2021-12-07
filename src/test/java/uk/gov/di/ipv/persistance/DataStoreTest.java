@@ -49,19 +49,29 @@ class DataStoreTest {
         authorizationCodeItem.setAuthCode(new AuthorizationCode().getValue());
         authorizationCodeItem.setIpvSessionId("test-session-12345");
 
-        dataStore = new DataStore<>(TEST_TABLE_NAME, AuthorizationCodeItem.class, mockDynamoDbEnhancedClient, mockConfigurationService);
+        dataStore =
+                new DataStore<>(
+                        TEST_TABLE_NAME,
+                        AuthorizationCodeItem.class,
+                        mockDynamoDbEnhancedClient,
+                        mockConfigurationService);
     }
 
     @Test
     void shouldPutItemIntoDynamoDbTable() {
         dataStore.create(authorizationCodeItem);
 
-        ArgumentCaptor<AuthorizationCodeItem> authorizationCodeItemArgumentCaptor = ArgumentCaptor.forClass(AuthorizationCodeItem.class);
+        ArgumentCaptor<AuthorizationCodeItem> authorizationCodeItemArgumentCaptor =
+                ArgumentCaptor.forClass(AuthorizationCodeItem.class);
 
         verify(mockDynamoDbEnhancedClient).table(eq(TEST_TABLE_NAME), any(TableSchema.class));
         verify(mockDynamoDbTable).putItem(authorizationCodeItemArgumentCaptor.capture());
-        assertEquals(authorizationCodeItem.getAuthCode(), authorizationCodeItemArgumentCaptor.getValue().getAuthCode());
-        assertEquals(authorizationCodeItem.getIpvSessionId(), authorizationCodeItemArgumentCaptor.getValue().getIpvSessionId());
+        assertEquals(
+                authorizationCodeItem.getAuthCode(),
+                authorizationCodeItemArgumentCaptor.getValue().getAuthCode());
+        assertEquals(
+                authorizationCodeItem.getIpvSessionId(),
+                authorizationCodeItemArgumentCaptor.getValue().getIpvSessionId());
     }
 
     @Test
@@ -105,12 +115,17 @@ class DataStoreTest {
     void shouldUpdateItemInDynamoDbTable() {
         dataStore.update(authorizationCodeItem);
 
-        ArgumentCaptor<AuthorizationCodeItem> authorizationCodeItemArgumentCaptor = ArgumentCaptor.forClass(AuthorizationCodeItem.class);
+        ArgumentCaptor<AuthorizationCodeItem> authorizationCodeItemArgumentCaptor =
+                ArgumentCaptor.forClass(AuthorizationCodeItem.class);
 
         verify(mockDynamoDbEnhancedClient).table(eq(TEST_TABLE_NAME), any(TableSchema.class));
         verify(mockDynamoDbTable).updateItem(authorizationCodeItemArgumentCaptor.capture());
-        assertEquals(authorizationCodeItem.getAuthCode(), authorizationCodeItemArgumentCaptor.getValue().getAuthCode());
-        assertEquals(authorizationCodeItem.getIpvSessionId(), authorizationCodeItemArgumentCaptor.getValue().getIpvSessionId());
+        assertEquals(
+                authorizationCodeItem.getAuthCode(),
+                authorizationCodeItemArgumentCaptor.getValue().getAuthCode());
+        assertEquals(
+                authorizationCodeItem.getIpvSessionId(),
+                authorizationCodeItemArgumentCaptor.getValue().getIpvSessionId());
     }
 
     @Test

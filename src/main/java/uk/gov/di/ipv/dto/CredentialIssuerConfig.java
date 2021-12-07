@@ -39,9 +39,7 @@ public class CredentialIssuerConfig {
 
     @Override
     public String toString() {
-        return "CredentialIssuerConfig{" +
-                "id='" + id + '\'' +
-                '}';
+        return "CredentialIssuerConfig{" + "id='" + id + '\'' + '}';
     }
 
     @Override

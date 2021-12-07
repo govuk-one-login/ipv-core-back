@@ -6,8 +6,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
-import java.util.Collections;
-import java.util.Optional;
 import net.minidev.json.JSONObject;
 import uk.gov.di.ipv.domain.CredentialIssuerException;
 import uk.gov.di.ipv.domain.ErrorResponse;
@@ -19,13 +17,19 @@ import uk.gov.di.ipv.helpers.RequestHelper;
 import uk.gov.di.ipv.service.ConfigurationService;
 import uk.gov.di.ipv.service.CredentialIssuerService;
 
-public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+import java.util.Collections;
+import java.util.Optional;
+
+public class CredentialIssuerHandler
+        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private final CredentialIssuerService credentialIssuerService;
 
     private final CredentialIssuers credentialIssuers;
 
-    public CredentialIssuerHandler(CredentialIssuerService credentialIssuerService, ConfigurationService configurationService) {
+    public CredentialIssuerHandler(
+            CredentialIssuerService credentialIssuerService,
+            ConfigurationService configurationService) {
         this.credentialIssuerService = credentialIssuerService;
         this.credentialIssuers = configurationService.getCredentialIssuers();
     }
@@ -36,9 +40,11 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
     }
 
     @Override
-    public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
+    public APIGatewayProxyResponseEvent handleRequest(
+            APIGatewayProxyRequestEvent input, Context context) {
 
-        CredentialIssuerRequestDto request = RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
+        CredentialIssuerRequestDto request =
+                RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
 
         var errorResponse = validate(request);
         if (errorResponse.isPresent()) {
@@ -47,12 +53,15 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
         CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request);
 
         try {
-            BearerAccessToken accessToken = credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);
-            JSONObject credential = credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
+            BearerAccessToken accessToken =
+                    credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);
+            JSONObject credential =
+                    credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
             credentialIssuerService.persistUserCredentials(credential, request);
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.emptyMap());
         } catch (CredentialIssuerException e) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(e.getHttpStatusCode(), e.getErrorResponse());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    e.getHttpStatusCode(), e.getErrorResponse());
         }
     }
 
@@ -81,5 +90,4 @@ public class CredentialIssuerHandler implements RequestHandler<APIGatewayProxyRe
                 .findFirst()
                 .orElse(null);
     }
-
 }

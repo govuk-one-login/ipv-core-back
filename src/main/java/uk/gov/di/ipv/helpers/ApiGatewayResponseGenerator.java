@@ -19,7 +19,8 @@ public class ApiGatewayResponseGenerator {
     private ApiGatewayResponseGenerator() {}
 
     public static <T> APIGatewayProxyResponseEvent proxyJsonResponse(int statusCode, T body) {
-        Map<String, String> responseHeaders = Map.of(HttpHeaders.CONTENT_TYPE, JSON_CONTENT_TYPE_VALUE);
+        Map<String, String> responseHeaders =
+                Map.of(HttpHeaders.CONTENT_TYPE, JSON_CONTENT_TYPE_VALUE);
 
         try {
             return proxyResponse(statusCode, generateResponseBody(body), responseHeaders);
@@ -43,5 +44,4 @@ public class ApiGatewayResponseGenerator {
     private static <T> String generateResponseBody(T body) throws JsonProcessingException {
         return new ObjectMapper().writeValueAsString(body);
     }
-
 }

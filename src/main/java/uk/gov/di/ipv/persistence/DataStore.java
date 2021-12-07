@@ -27,13 +27,12 @@ public class DataStore<T> {
         this.typeParameterClass = typeParameterClass;
         this.configurationService = new ConfigurationService();
 
-        DynamoDbClient client = configurationService.isRunningLocally()
-                ? createLocalDbClient()
-                : DynamoDbClient.create();
+        DynamoDbClient client =
+                configurationService.isRunningLocally()
+                        ? createLocalDbClient()
+                        : DynamoDbClient.create();
 
-        dynamoDbEnhancedClient = DynamoDbEnhancedClient.builder()
-                .dynamoDbClient(client)
-                .build();
+        dynamoDbEnhancedClient = DynamoDbEnhancedClient.builder().dynamoDbClient(client).build();
     }
 
     public DataStore(
@@ -52,7 +51,8 @@ public class DataStore<T> {
     }
 
     public T getItem(String partitionValue, String sortValue) {
-        return getItemByKey(Key.builder().partitionValue(partitionValue).sortValue(sortValue).build());
+        return getItemByKey(
+                Key.builder().partitionValue(partitionValue).sortValue(sortValue).build());
     }
 
     public T getItem(String partitionValue) {
@@ -60,7 +60,10 @@ public class DataStore<T> {
     }
 
     public List<T> getItems(String partitionValue) {
-        return getTable().query(QueryConditional.keyEqualTo(Key.builder().partitionValue(partitionValue).build()))
+        return getTable()
+                .query(
+                        QueryConditional.keyEqualTo(
+                                Key.builder().partitionValue(partitionValue).build()))
                 .stream()
                 .flatMap(page -> page.items().stream())
                 .collect(Collectors.toList());
@@ -94,6 +97,7 @@ public class DataStore<T> {
     }
 
     private DynamoDbTable<T> getTable() {
-        return dynamoDbEnhancedClient.table(tableName, TableSchema.fromBean(this.typeParameterClass));
+        return dynamoDbEnhancedClient.table(
+                tableName, TableSchema.fromBean(this.typeParameterClass));
     }
 }

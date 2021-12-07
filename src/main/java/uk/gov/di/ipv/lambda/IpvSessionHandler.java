@@ -10,7 +10,8 @@ import uk.gov.di.ipv.service.IpvSessionService;
 
 import java.util.Map;
 
-public class IpvSessionHandler implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+public class IpvSessionHandler
+        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private static final String IPV_SESSION_ID_KEY = "ipvSessionId";
 
@@ -25,7 +26,8 @@ public class IpvSessionHandler implements RequestHandler<APIGatewayProxyRequestE
     }
 
     @Override
-    public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
+    public APIGatewayProxyResponseEvent handleRequest(
+            APIGatewayProxyRequestEvent input, Context context) {
         String ipvSessionId = ipvSessionService.generateIpvSession();
 
         Map<String, String> response = Map.of(IPV_SESSION_ID_KEY, ipvSessionId);

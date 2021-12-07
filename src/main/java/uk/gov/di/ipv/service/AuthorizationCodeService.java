@@ -12,10 +12,13 @@ public class AuthorizationCodeService {
 
     public AuthorizationCodeService() {
         this.configurationService = new ConfigurationService();
-        this.dataStore = new DataStore<>(configurationService.getAuthCodesTableName(), AuthorizationCodeItem.class);
+        this.dataStore =
+                new DataStore<>(
+                        configurationService.getAuthCodesTableName(), AuthorizationCodeItem.class);
     }
 
-    public AuthorizationCodeService(DataStore<AuthorizationCodeItem> dataStore, ConfigurationService configurationService) {
+    public AuthorizationCodeService(
+            DataStore<AuthorizationCodeItem> dataStore, ConfigurationService configurationService) {
         this.configurationService = configurationService;
         this.dataStore = dataStore;
     }

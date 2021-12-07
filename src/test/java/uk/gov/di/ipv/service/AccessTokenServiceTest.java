@@ -51,33 +51,37 @@ class AccessTokenServiceTest {
     void shouldReturnSuccessfulTokenResponseOnSuccessfulExchange() throws Exception {
         long testTokenTtl = 2400L;
         Scope testScope = new Scope("test-scope");
-        TokenRequest tokenRequest = new TokenRequest(
-                null,
-                new ClientID("test-client-id"),
-                new AuthorizationCodeGrant(
-                        new AuthorizationCode("123456"),
-                        new URI("http://test.com")),
-                testScope
-        );
+        TokenRequest tokenRequest =
+                new TokenRequest(
+                        null,
+                        new ClientID("test-client-id"),
+                        new AuthorizationCodeGrant(
+                                new AuthorizationCode("123456"), new URI("http://test.com")),
+                        testScope);
         when(mockConfigurationService.getBearerAccessTokenTtl()).thenReturn(testTokenTtl);
 
         TokenResponse response = accessTokenService.generateAccessToken(tokenRequest);
 
         assertInstanceOf(AccessTokenResponse.class, response);
         assertNotNull(response.toSuccessResponse().getTokens().getAccessToken().getValue());
-        assertEquals(testTokenTtl, response.toSuccessResponse().getTokens().getBearerAccessToken().getLifetime());
-        assertEquals(testScope, response.toSuccessResponse().getTokens().getBearerAccessToken().getScope());
+        assertEquals(
+                testTokenTtl,
+                response.toSuccessResponse().getTokens().getBearerAccessToken().getLifetime());
+        assertEquals(
+                testScope,
+                response.toSuccessResponse().getTokens().getBearerAccessToken().getScope());
     }
 
     @Test
     void shouldReturnValidationErrorWhenInvalidGrantTypeProvided() {
-        TokenRequest tokenRequest = new TokenRequest(
-                null,
-                new ClientID("test-client-id"),
-                new RefreshTokenGrant(new RefreshToken())
-        );
+        TokenRequest tokenRequest =
+                new TokenRequest(
+                        null,
+                        new ClientID("test-client-id"),
+                        new RefreshTokenGrant(new RefreshToken()));
 
-        ValidationResult<ErrorObject> validationResult = accessTokenService.validateTokenRequest(tokenRequest);
+        ValidationResult<ErrorObject> validationResult =
+                accessTokenService.validateTokenRequest(tokenRequest);
 
         assertNotNull(validationResult);
         assertFalse(validationResult.isValid());
@@ -86,13 +90,15 @@ class AccessTokenServiceTest {
 
     @Test
     void shouldNotReturnValidationErrorWhenAValidTokenRequestIsProvided() {
-        TokenRequest tokenRequest = new TokenRequest(
-                null,
-                new ClientID("test-client-id"),
-                new AuthorizationCodeGrant(new AuthorizationCode(), URI.create("https://test.com"))
-        );
+        TokenRequest tokenRequest =
+                new TokenRequest(
+                        null,
+                        new ClientID("test-client-id"),
+                        new AuthorizationCodeGrant(
+                                new AuthorizationCode(), URI.create("https://test.com")));
 
-        ValidationResult<ErrorObject> validationResult = accessTokenService.validateTokenRequest(tokenRequest);
+        ValidationResult<ErrorObject> validationResult =
+                accessTokenService.validateTokenRequest(tokenRequest);
 
         assertNotNull(validationResult);
         assertTrue(validationResult.isValid());
@@ -103,8 +109,10 @@ class AccessTokenServiceTest {
     void shouldPersistAccessToken() {
         String testIpvSessionId = UUID.randomUUID().toString();
         AccessToken accessToken = new BearerAccessToken();
-        AccessTokenResponse accessTokenResponse = new AccessTokenResponse(new Tokens(accessToken, null));
-        ArgumentCaptor<AccessTokenItem> accessTokenItemArgCaptor = ArgumentCaptor.forClass(AccessTokenItem.class);
+        AccessTokenResponse accessTokenResponse =
+                new AccessTokenResponse(new Tokens(accessToken, null));
+        ArgumentCaptor<AccessTokenItem> accessTokenItemArgCaptor =
+                ArgumentCaptor.forClass(AccessTokenItem.class);
 
         accessTokenService.persistAccessToken(accessTokenResponse, testIpvSessionId);
 
@@ -112,7 +120,9 @@ class AccessTokenServiceTest {
         AccessTokenItem capturedAccessTokenItem = accessTokenItemArgCaptor.getValue();
         assertNotNull(capturedAccessTokenItem);
         assertEquals(testIpvSessionId, capturedAccessTokenItem.getIpvSessionId());
-        assertEquals(accessTokenResponse.getTokens().getBearerAccessToken().toAuthorizationHeader(), capturedAccessTokenItem.getAccessToken());
+        assertEquals(
+                accessTokenResponse.getTokens().getBearerAccessToken().toAuthorizationHeader(),
+                capturedAccessTokenItem.getAccessToken());
     }
 
     @Test

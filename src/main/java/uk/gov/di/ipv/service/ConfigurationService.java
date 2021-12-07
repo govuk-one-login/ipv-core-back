@@ -1,10 +1,11 @@
 package uk.gov.di.ipv.service;
 
-import java.util.Optional;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import uk.gov.di.ipv.dto.CredentialIssuers;
 import uk.gov.di.ipv.helpers.CredentialIssuerLoader;
+
+import java.util.Optional;
 
 public class ConfigurationService {
 
@@ -30,7 +31,7 @@ public class ConfigurationService {
 
     public CredentialIssuers getCredentialIssuers() {
         return CredentialIssuerLoader.loadCredentialIssuers(
-            ssmProvider.get(System.getenv("CREDENTIAL_ISSUER_CONFIG_PARAMETER_STORE_KEY")));
+                ssmProvider.get(System.getenv("CREDENTIAL_ISSUER_CONFIG_PARAMETER_STORE_KEY")));
     }
 
     public String getUserIssuedCredentialTableName() {
@@ -47,8 +48,7 @@ public class ConfigurationService {
 
     public long getBearerAccessTokenTtl() {
         return Optional.of(System.getenv("BEARER_TOKEN_TTL"))
-            .map(Long::valueOf)
-            .orElse(DEFAULT_BEARER_TOKEN_TTL_IN_SECS);
+                .map(Long::valueOf)
+                .orElse(DEFAULT_BEARER_TOKEN_TTL_IN_SECS);
     }
-
 }

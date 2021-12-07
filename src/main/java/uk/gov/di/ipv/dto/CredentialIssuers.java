@@ -30,9 +30,7 @@ public class CredentialIssuers {
 
     @Override
     public String toString() {
-        return "CredentialIssuers{" +
-                "credentialIssuerConfigs=" + credentialIssuerConfigs +
-                '}';
+        return "CredentialIssuers{" + "credentialIssuerConfigs=" + credentialIssuerConfigs + '}';
     }
 
     @Override
