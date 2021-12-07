@@ -21,12 +21,12 @@ public class IpvSessionService {
         this.configurationService = configurationService;
     }
 
-    public IpvSessionItem generateIpvSession() {
+    public String generateIpvSession() {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         dataStore.create(ipvSessionItem);
 
-        return ipvSessionItem;
+        return ipvSessionItem.getIpvSessionId();
     }
 }

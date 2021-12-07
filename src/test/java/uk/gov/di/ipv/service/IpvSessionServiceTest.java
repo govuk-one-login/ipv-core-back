@@ -9,8 +9,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.persistence.DataStore;
 import uk.gov.di.ipv.persistence.item.IpvSessionItem;
 
-import java.util.UUID;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.verify;
@@ -19,10 +17,10 @@ import static org.mockito.Mockito.verify;
 class IpvSessionServiceTest {
 
     @Mock
-    DataStore<IpvSessionItem> mockDataStore;
+    private DataStore<IpvSessionItem> mockDataStore;
 
     @Mock
-    ConfigurationService mockConfigurationService;
+    private ConfigurationService mockConfigurationService;
 
     private IpvSessionService ipvSessionService;
 
@@ -33,16 +31,13 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldCreateSessionItem() {
-        String userId = UUID.randomUUID().toString();
-
-        IpvSessionItem ipvSessionItem = ipvSessionService.generateIpvSession();
+        String ipvSessionID = ipvSessionService.generateIpvSession();
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor = ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockDataStore).create(ipvSessionItemArgumentCaptor.capture());
         assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
         assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
 
-        assertEquals(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(), ipvSessionItem.getIpvSessionId());
-        assertEquals(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime(), ipvSessionItem.getCreationDateTime());
+        assertEquals(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(), ipvSessionID);
     }
 }

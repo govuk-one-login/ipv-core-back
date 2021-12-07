@@ -5,15 +5,14 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.service.IpvSessionService;
 
-import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
@@ -41,22 +40,15 @@ class IpvSessionHandlerTest {
 
     @Test
     void shouldReturnIpvSessionIdWhenProvidedValidRequest() throws JsonProcessingException {
-        IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
-        ipvSessionItem.setCreationDateTime(Instant.now().toString());
-
-        when(mockIpvSessionService.generateIpvSession()).thenReturn(ipvSessionItem);
+        String ipvSessionId = UUID.randomUUID().toString();
+        when(mockIpvSessionService.generateIpvSession()).thenReturn(ipvSessionId);
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        String requestBody = "userId=" + testUserId;
-        event.setBody(requestBody);
-
         APIGatewayProxyResponseEvent response = ipvSessionHandler.handleRequest(event, mockContext);
 
         Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
-        assertEquals(ipvSessionItem.getCreationDateTime().toString(), responseBody.get("creationDateTime"));
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(ipvSessionId, responseBody.get("ipvSessionId"));
     }
 }
