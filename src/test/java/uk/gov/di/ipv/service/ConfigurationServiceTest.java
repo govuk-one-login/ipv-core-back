@@ -13,8 +13,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -70,6 +70,6 @@ class ConfigurationServiceTest {
         CredentialIssuers credentialIssuers1 = underTest.getCredentialIssuers(credentialIssuers);
         CredentialIssuers credentialIssuers2 = underTest.getCredentialIssuers(credentialIssuers);
 
-        assertEquals(credentialIssuers1, credentialIssuers2);
+        assertSame(credentialIssuers1, credentialIssuers2);
     }
 }
