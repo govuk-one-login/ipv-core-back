@@ -35,11 +35,8 @@ public class ConfigurationService {
                 ssmProvider.get(System.getenv("CREDENTIAL_ISSUER_CONFIG_PARAMETER_STORE_KEY"));
 
         if (credentialIssuers == null
-                || !credentialIssuerConfigBase64.equals(credentialIssuers.getSource())) {
-            var credentialIssuersResult =
-                    CredentialIssuerLoader.loadCredentialIssuers(credentialIssuerConfigBase64);
-            credentialIssuersResult.setSource(credentialIssuerConfigBase64);
-            return credentialIssuersResult;
+                || credentialIssuers.fromDifferentSource(credentialIssuerConfigBase64)) {
+            return CredentialIssuerLoader.loadCredentialIssuers(credentialIssuerConfigBase64);
         }
 
         return credentialIssuers;

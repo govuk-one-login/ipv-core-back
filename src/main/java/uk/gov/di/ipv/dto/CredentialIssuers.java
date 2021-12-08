@@ -1,7 +1,5 @@
 package uk.gov.di.ipv.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import java.util.Collections;
 import java.util.Set;
 
@@ -9,7 +7,7 @@ public class CredentialIssuers {
 
     private final Set<CredentialIssuerConfig> credentialIssuerConfigs;
 
-    @JsonIgnore private String source;
+    private String source;
 
     public CredentialIssuers() {
         credentialIssuerConfigs = Collections.emptySet();
@@ -39,5 +37,9 @@ public class CredentialIssuers {
 
     public String getSource() {
         return source;
+    }
+
+    public boolean fromDifferentSource(String credentialIssuerConfigBase64) {
+        return !this.source.equals(credentialIssuerConfigBase64);
     }
 }
