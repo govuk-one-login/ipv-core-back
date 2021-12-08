@@ -1,15 +1,19 @@
 package uk.gov.di.ipv.service;
 
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import uk.gov.di.ipv.dto.CredentialIssuers;
 import uk.gov.di.ipv.helpers.CredentialIssuerLoader;
 
+import java.net.URI;
 import java.util.Optional;
 
 public class ConfigurationService {
 
     private static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
+    private static final String LOCALHOST_URI = "http://localhost:4567";
 
     private final SSMProvider ssmProvider;
 
@@ -18,7 +22,16 @@ public class ConfigurationService {
     }
 
     public ConfigurationService() {
-        this.ssmProvider = ParamManager.getSsmProvider();
+        if (Boolean.parseBoolean(System.getenv("IS_LOCAL"))) {
+            this.ssmProvider =
+                    ParamManager.getSsmProvider(
+                            SsmClient.builder()
+                                    .endpointOverride(URI.create(LOCALHOST_URI))
+                                    .region(Region.EU_WEST_2)
+                                    .build());
+        } else {
+            this.ssmProvider = ParamManager.getSsmProvider();
+        }
     }
 
     public boolean isRunningLocally() {
