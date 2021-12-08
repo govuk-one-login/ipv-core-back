@@ -39,8 +39,9 @@ class CredentialIssuerLoaderTest {
     @Test
     void shouldLoadCredentialIssuersFromBase64EncodedString() {
         assertEquals(
-                expectedCredentialIssuers,
-                CredentialIssuerLoader.loadCredentialIssuers(CREDENTIAL_ISSUER_CONFIG_BASE64));
+                expectedCredentialIssuers.getCredentialIssuerConfigs(),
+                CredentialIssuerLoader.loadCredentialIssuers(CREDENTIAL_ISSUER_CONFIG_BASE64)
+                        .getCredentialIssuerConfigs());
     }
 
     @Test

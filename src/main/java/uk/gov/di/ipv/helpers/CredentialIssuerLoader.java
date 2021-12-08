@@ -27,6 +27,7 @@ public class CredentialIssuerLoader {
             byte[] decode = Base64.decode(credentialIssuerConfigBase64);
             YAMLParser yamlParser = yamlFactory.createParser(decode);
             credentialIssuers = mapper.readValue(yamlParser, CredentialIssuers.class);
+            credentialIssuers.setSource(credentialIssuerConfigBase64);
             LOGGER.info("Loaded Credential Issuers: {}", credentialIssuers);
         } catch (IllegalArgumentException | IOException e) {
             throw new CredentialIssuerException(

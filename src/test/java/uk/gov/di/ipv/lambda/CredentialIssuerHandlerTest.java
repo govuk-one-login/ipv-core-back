@@ -60,8 +60,8 @@ class CredentialIssuerHandlerTest {
                         "PassportIssuer",
                         new URI("http://www.example.com"),
                         new URI("http://www.example.com/credential"));
-        CredentialIssuers credentialIssuers = new CredentialIssuers(Set.of(passportIssuer));
-        when(configurationService.getCredentialIssuers()).thenReturn(credentialIssuers);
+        when(configurationService.getCredentialIssuers(any()))
+                .thenReturn(new CredentialIssuers(Set.of(passportIssuer)));
     }
 
     @Test

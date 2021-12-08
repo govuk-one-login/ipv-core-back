@@ -24,8 +24,9 @@ public class CredentialIssuerHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private final CredentialIssuerService credentialIssuerService;
+    private final ConfigurationService configurationService;
 
-    private final CredentialIssuers credentialIssuers;
+    private CredentialIssuers credentialIssuers;
 
     static {
         // Set the default synchronous HTTP client to UrlConnectionHttpClient
@@ -38,12 +39,14 @@ public class CredentialIssuerHandler
             CredentialIssuerService credentialIssuerService,
             ConfigurationService configurationService) {
         this.credentialIssuerService = credentialIssuerService;
-        this.credentialIssuers = configurationService.getCredentialIssuers();
+        this.configurationService = configurationService;
+        this.credentialIssuers = configurationService.getCredentialIssuers(credentialIssuers);
     }
 
     public CredentialIssuerHandler() {
         this.credentialIssuerService = new CredentialIssuerService();
-        this.credentialIssuers = new ConfigurationService().getCredentialIssuers();
+        this.configurationService = new ConfigurationService();
+        this.credentialIssuers = configurationService.getCredentialIssuers(credentialIssuers);
     }
 
     @Override
@@ -92,7 +95,10 @@ public class CredentialIssuerHandler
     }
 
     private CredentialIssuerConfig getCredentialIssuerConfig(CredentialIssuerRequestDto request) {
-        return credentialIssuers.getCredentialIssuerConfigs().stream()
+        return configurationService
+                .getCredentialIssuers(credentialIssuers)
+                .getCredentialIssuerConfigs()
+                .stream()
                 .filter(config -> request.getCredentialIssuerId().equals(config.getId()))
                 .findFirst()
                 .orElse(null);

@@ -42,9 +42,17 @@ public class ConfigurationService {
         return System.getenv("AUTH_CODES_TABLE_NAME");
     }
 
-    public CredentialIssuers getCredentialIssuers() {
-        return CredentialIssuerLoader.loadCredentialIssuers(
-                ssmProvider.get(System.getenv("CREDENTIAL_ISSUER_CONFIG_PARAMETER_STORE_KEY")));
+    public CredentialIssuers getCredentialIssuers(CredentialIssuers credentialIssuers) {
+
+        String credentialIssuerConfigBase64 =
+                ssmProvider.get(System.getenv("CREDENTIAL_ISSUER_CONFIG_PARAMETER_STORE_KEY"));
+
+        if (credentialIssuers == null
+                || credentialIssuers.fromDifferentSource(credentialIssuerConfigBase64)) {
+            return CredentialIssuerLoader.loadCredentialIssuers(credentialIssuerConfigBase64);
+        }
+
+        return credentialIssuers;
     }
 
     public String getUserIssuedCredentialTableName() {
