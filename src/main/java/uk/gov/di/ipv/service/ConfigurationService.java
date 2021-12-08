@@ -60,7 +60,7 @@ public class ConfigurationService {
     }
 
     public long getBearerAccessTokenTtl() {
-        return Optional.of(System.getenv("BEARER_TOKEN_TTL"))
+        return Optional.ofNullable(System.getenv("BEARER_TOKEN_TTL"))
                 .map(Long::valueOf)
                 .orElse(DEFAULT_BEARER_TOKEN_TTL_IN_SECS);
     }
