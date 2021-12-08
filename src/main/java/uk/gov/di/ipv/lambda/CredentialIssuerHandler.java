@@ -26,7 +26,7 @@ public class CredentialIssuerHandler
     private final CredentialIssuerService credentialIssuerService;
     private final ConfigurationService configurationService;
 
-    private CredentialIssuers credentialIssuers = null;
+    private CredentialIssuers credentialIssuers;
 
     {
         // Set the default synchronous HTTP client to UrlConnectionHttpClient
