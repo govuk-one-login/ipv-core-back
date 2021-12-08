@@ -27,7 +27,7 @@ public class UserIdentityHandler
     private final UserIdentityService userIdentityService;
     private final AccessTokenService accessTokenService;
 
-    {
+    static {
         // Set the default synchronous HTTP client to UrlConnectionHttpClient
         System.setProperty(
                 "software.amazon.awssdk.http.service.impl",

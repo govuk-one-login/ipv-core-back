@@ -32,7 +32,7 @@ public class AccessTokenHandler
     private final AccessTokenService accessTokenService;
     private final AuthorizationCodeService authorizationCodeService;
 
-    {
+    static {
         // Set the default synchronous HTTP client to UrlConnectionHttpClient
         System.setProperty(
                 "software.amazon.awssdk.http.service.impl",
