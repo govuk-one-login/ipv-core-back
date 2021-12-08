@@ -17,7 +17,7 @@ public class IpvSessionHandler
 
     private final IpvSessionService ipvSessionService;
 
-    {
+    static {
         // Set the default synchronous HTTP client to UrlConnectionHttpClient
         System.setProperty(
                 "software.amazon.awssdk.http.service.impl",

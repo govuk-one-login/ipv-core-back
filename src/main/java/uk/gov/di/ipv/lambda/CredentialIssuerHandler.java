@@ -27,7 +27,7 @@ public class CredentialIssuerHandler
 
     private final CredentialIssuers credentialIssuers;
 
-    {
+    static {
         // Set the default synchronous HTTP client to UrlConnectionHttpClient
         System.setProperty(
                 "software.amazon.awssdk.http.service.impl",
