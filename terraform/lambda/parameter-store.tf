@@ -7,7 +7,7 @@ resource "aws_ssm_parameter" "credential-issuers-config" {
 
 resource "aws_iam_role_policy" "get-credential-issuers-config" {
   name = "get-credential-issuers-config"
-  role = module.credential-issuer.iam_role_arn
+  role = module.credential-issuer.iam_role_id
 
   policy = jsonencode({
     Version = "2012-10-17"
