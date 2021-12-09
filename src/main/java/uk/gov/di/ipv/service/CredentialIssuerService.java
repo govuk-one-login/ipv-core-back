@@ -9,6 +9,7 @@ import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
 import net.minidev.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.gov.di.ipv.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.domain.CredentialIssuerException;
 import uk.gov.di.ipv.domain.ErrorResponse;
 import uk.gov.di.ipv.dto.CredentialIssuerConfig;
@@ -29,6 +30,7 @@ public class CredentialIssuerService {
     private final DataStore<UserIssuedCredentialsItem> dataStore;
     private final ConfigurationService configurationService;
 
+    @ExcludeFromGeneratedCoverageReport
     public CredentialIssuerService() {
         this.configurationService = new ConfigurationService();
         this.dataStore =

@@ -7,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import net.minidev.json.JSONObject;
+import uk.gov.di.ipv.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.domain.CredentialIssuerException;
 import uk.gov.di.ipv.domain.ErrorResponse;
 import uk.gov.di.ipv.dto.CredentialIssuerConfig;
@@ -43,6 +44,7 @@ public class CredentialIssuerHandler
         this.credentialIssuers = configurationService.getCredentialIssuers(credentialIssuers);
     }
 
+    @ExcludeFromGeneratedCoverageReport
     public CredentialIssuerHandler() {
         this.credentialIssuerService = new CredentialIssuerService();
         this.configurationService = new ConfigurationService();

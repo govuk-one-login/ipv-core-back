@@ -7,6 +7,7 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import uk.gov.di.ipv.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.service.ConfigurationService;
 
 import java.net.URI;
@@ -22,6 +23,7 @@ public class DataStore<T> {
     private final String tableName;
     private final Class<T> typeParameterClass;
 
+    @ExcludeFromGeneratedCoverageReport
     public DataStore(String tableName, Class<T> typeParameterClass) {
         this.tableName = tableName;
         this.typeParameterClass = typeParameterClass;
