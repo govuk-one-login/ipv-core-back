@@ -8,19 +8,29 @@ import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import uk.gov.di.ipv.domain.ErrorResponse;
 import uk.gov.di.ipv.service.AuthorizationCodeService;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.service.ConfigurationService.IS_LOCAL;
 
+@ExtendWith(SystemStubsExtension.class)
 class AuthorizationHandlerTest {
+
+    @SystemStub private EnvironmentVariables environmentVariables;
+
     private static final Map<String, String> TEST_EVENT_HEADERS = Map.of("ipv-session-id", "12345");
 
     private final Context context = mock(Context.class);
@@ -38,6 +48,12 @@ class AuthorizationHandlerTest {
                 .thenReturn(authorizationCode);
 
         handler = new AuthorizationHandler(mockAuthorizationCodeService);
+    }
+
+    @Test
+    void noArgsConstructor() {
+        environmentVariables.set(IS_LOCAL, "true");
+        assertDoesNotThrow(() -> new AuthorizationHandler());
     }
 
     @Test

@@ -22,6 +22,9 @@ import uk.gov.di.ipv.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.dto.CredentialIssuers;
 import uk.gov.di.ipv.service.ConfigurationService;
 import uk.gov.di.ipv.service.CredentialIssuerService;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -38,7 +41,10 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@ExtendWith(SystemStubsExtension.class)
 class CredentialIssuerHandlerTest {
+
+    @SystemStub private EnvironmentVariables environmentVariables;
 
     @Mock private Context context;
 

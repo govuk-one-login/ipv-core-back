@@ -16,25 +16,31 @@ import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import uk.gov.di.ipv.persistence.DataStore;
 import uk.gov.di.ipv.persistence.item.AccessTokenItem;
 import uk.gov.di.ipv.validation.ValidationResult;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
+import uk.org.webcompere.systemstubs.properties.SystemProperties;
 
 import java.net.URI;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.service.ConfigurationService.IS_LOCAL;
 
+@ExtendWith(SystemStubsExtension.class)
 class AccessTokenServiceTest {
+
+    @SystemStub private EnvironmentVariables environmentVariables;
+
+    @SystemStub private SystemProperties systemProperties;
 
     private DataStore<AccessTokenItem> mockDataStore;
     private ConfigurationService mockConfigurationService;
@@ -45,6 +51,16 @@ class AccessTokenServiceTest {
         this.mockConfigurationService = mock(ConfigurationService.class);
         this.mockDataStore = mock(DataStore.class);
         this.accessTokenService = new AccessTokenService(mockDataStore, mockConfigurationService);
+    }
+
+    @Test
+    void noArgsConstructor() {
+        environmentVariables.set(IS_LOCAL, "true");
+        systemProperties.set(
+                "software.amazon.awssdk.http.service.impl",
+                "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
+
+        assertDoesNotThrow(() -> new AccessTokenService());
     }
 
     @Test

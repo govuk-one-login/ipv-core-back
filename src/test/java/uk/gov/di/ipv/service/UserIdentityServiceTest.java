@@ -7,17 +7,28 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.persistence.DataStore;
 import uk.gov.di.ipv.persistence.item.UserIssuedCredentialsItem;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
+import uk.org.webcompere.systemstubs.properties.SystemProperties;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.service.ConfigurationService.IS_LOCAL;
 
+@ExtendWith(SystemStubsExtension.class)
 @ExtendWith(MockitoExtension.class)
 class UserIdentityServiceTest {
+
+    @SystemStub private EnvironmentVariables environmentVariables;
+
+    @SystemStub private SystemProperties systemProperties;
 
     @Mock private ConfigurationService mockConfigurationService;
 
@@ -28,6 +39,16 @@ class UserIdentityServiceTest {
     @BeforeEach
     void setUp() {
         userIdentityService = new UserIdentityService(mockConfigurationService, mockDataStore);
+    }
+
+    @Test
+    void noArgsConstructor() {
+        environmentVariables.set(IS_LOCAL, "true");
+        systemProperties.set(
+                "software.amazon.awssdk.http.service.impl",
+                "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
+
+        assertDoesNotThrow(() -> new UserIdentityService());
     }
 
     @Test

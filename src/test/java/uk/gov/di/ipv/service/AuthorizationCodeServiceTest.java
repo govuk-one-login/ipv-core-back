@@ -3,18 +3,27 @@ package uk.gov.di.ipv.service;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import uk.gov.di.ipv.persistence.DataStore;
 import uk.gov.di.ipv.persistence.item.AuthorizationCodeItem;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
+import uk.org.webcompere.systemstubs.properties.SystemProperties;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.service.ConfigurationService.IS_LOCAL;
 
+@ExtendWith(SystemStubsExtension.class)
 class AuthorizationCodeServiceTest {
+
+    @SystemStub private EnvironmentVariables environmentVariables;
+
+    @SystemStub private SystemProperties systemProperties;
 
     private DataStore<AuthorizationCodeItem> mockDataStore;
     private ConfigurationService mockConfigurationService;
@@ -29,6 +38,16 @@ class AuthorizationCodeServiceTest {
 
         authorizationCodeService =
                 new AuthorizationCodeService(mockDataStore, mockConfigurationService);
+    }
+
+    @Test
+    void noArgsConstructor() {
+        environmentVariables.set(IS_LOCAL, "true");
+        systemProperties.set(
+                "software.amazon.awssdk.http.service.impl",
+                "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
+
+        assertDoesNotThrow(() -> new AuthorizationCodeService());
     }
 
     @Test

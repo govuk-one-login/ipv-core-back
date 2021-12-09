@@ -3,6 +3,7 @@ package uk.gov.di.ipv.persistance;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -13,19 +14,29 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import uk.gov.di.ipv.persistence.DataStore;
 import uk.gov.di.ipv.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.service.ConfigurationService;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
+import uk.org.webcompere.systemstubs.properties.SystemProperties;
 
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.service.ConfigurationService.IS_LOCAL;
 
+@ExtendWith(SystemStubsExtension.class)
 class DataStoreTest {
+
+    @SystemStub private EnvironmentVariables environmentVariables;
+
+    @SystemStub private SystemProperties systemProperties;
+
     private static final String TEST_TABLE_NAME = "test-auth-code-table";
 
     private DynamoDbEnhancedClient mockDynamoDbEnhancedClient;
@@ -55,6 +66,15 @@ class DataStoreTest {
                         AuthorizationCodeItem.class,
                         mockDynamoDbEnhancedClient,
                         mockConfigurationService);
+    }
+
+    @Test
+    void handlerConstructor() {
+        environmentVariables.set(IS_LOCAL, "true");
+        systemProperties.set(
+                "software.amazon.awssdk.http.service.impl",
+                "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
+        assertDoesNotThrow(() -> new DataStore<>("tableName", AuthorizationCodeItem.class));
     }
 
     @Test

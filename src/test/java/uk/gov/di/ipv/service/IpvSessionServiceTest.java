@@ -8,13 +8,22 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.persistence.DataStore;
 import uk.gov.di.ipv.persistence.item.IpvSessionItem;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
+import uk.org.webcompere.systemstubs.properties.SystemProperties;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
+import static uk.gov.di.ipv.service.ConfigurationService.IS_LOCAL;
 
+@ExtendWith(SystemStubsExtension.class)
 @ExtendWith(MockitoExtension.class)
 class IpvSessionServiceTest {
+
+    @SystemStub private EnvironmentVariables environmentVariables;
+
+    @SystemStub private SystemProperties systemProperties;
 
     @Mock private DataStore<IpvSessionItem> mockDataStore;
 
@@ -25,6 +34,16 @@ class IpvSessionServiceTest {
     @BeforeEach
     void setUp() {
         ipvSessionService = new IpvSessionService(mockDataStore, mockConfigurationService);
+    }
+
+    @Test
+    void noArgsConstructor() {
+        environmentVariables.set(IS_LOCAL, "true");
+        systemProperties.set(
+                "software.amazon.awssdk.http.service.impl",
+                "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
+
+        assertDoesNotThrow(() -> new IpvSessionService());
     }
 
     @Test

@@ -16,19 +16,27 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.service.AccessTokenService;
 import uk.gov.di.ipv.service.UserIdentityService;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.service.ConfigurationService.IS_LOCAL;
 
 @ExtendWith(MockitoExtension.class)
+@ExtendWith(SystemStubsExtension.class)
 class UserIdentityHandlerTest {
+
+    @SystemStub private EnvironmentVariables environmentVariables;
 
     private static final String TEST_IPV_SESSION_ID = UUID.randomUUID().toString();
 
@@ -54,6 +62,12 @@ class UserIdentityHandlerTest {
         userIssuedCredential.put("foo", "bar");
 
         userInfoHandler = new UserIdentityHandler(mockUserIdentityService, mockAccessTokenService);
+    }
+
+    @Test
+    void noArgsConstructor() {
+        environmentVariables.set(IS_LOCAL, "true");
+        assertDoesNotThrow(() -> new UserIdentityHandler());
     }
 
     @Test

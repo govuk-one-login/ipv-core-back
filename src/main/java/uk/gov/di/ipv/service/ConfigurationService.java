@@ -12,10 +12,18 @@ import java.util.Optional;
 
 public class ConfigurationService {
 
+    public static final String ACCESS_TOKENS_TABLE_NAME = "ACCESS_TOKENS_TABLE_NAME";
+    public static final String AUTH_CODES_TABLE_NAME = "AUTH_CODES_TABLE_NAME";
+    public static final String IPV_SESSIONS_TABLE_NAME = "IPV_SESSIONS_TABLE_NAME";
+    public static final String USER_ISSUED_CREDENTIALS_TABLE_NAME =
+            "USER_ISSUED_CREDENTIALS_TABLE_NAME";
+    public static final String BEARER_TOKEN_TTL = "BEARER_TOKEN_TTL";
+    public static final String CREDENTIAL_ISSUER_CONFIG_PARAMETER_STORE_KEY =
+            "CREDENTIAL_ISSUER_CONFIG_PARAMETER_STORE_KEY";
+    public static final String IS_LOCAL = "IS_LOCAL";
     public static final int LOCALHOST_PORT = 4567;
+    public static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
     private static final String LOCALHOST_URI = "http://localhost:" + LOCALHOST_PORT;
-    private static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
-    private static final String IS_LOCAL = "IS_LOCAL";
 
     private final SSMProvider ssmProvider;
 
@@ -45,13 +53,13 @@ public class ConfigurationService {
     }
 
     public String getAuthCodesTableName() {
-        return System.getenv("AUTH_CODES_TABLE_NAME");
+        return System.getenv(AUTH_CODES_TABLE_NAME);
     }
 
     public CredentialIssuers getCredentialIssuers(CredentialIssuers credentialIssuers) {
 
         String credentialIssuerConfigBase64 =
-                ssmProvider.get(System.getenv("CREDENTIAL_ISSUER_CONFIG_PARAMETER_STORE_KEY"));
+                ssmProvider.get(System.getenv(CREDENTIAL_ISSUER_CONFIG_PARAMETER_STORE_KEY));
 
         if (credentialIssuers == null
                 || credentialIssuers.fromDifferentSource(credentialIssuerConfigBase64)) {
@@ -62,19 +70,19 @@ public class ConfigurationService {
     }
 
     public String getUserIssuedCredentialTableName() {
-        return System.getenv("USER_ISSUED_CREDENTIALS_TABLE_NAME");
+        return System.getenv(USER_ISSUED_CREDENTIALS_TABLE_NAME);
     }
 
     public String getAccessTokensTableName() {
-        return System.getenv("ACCESS_TOKENS_TABLE_NAME");
+        return System.getenv(ACCESS_TOKENS_TABLE_NAME);
     }
 
     public String getIpvSessionTableName() {
-        return System.getenv("IPV_SESSIONS_TABLE_NAME");
+        return System.getenv(IPV_SESSIONS_TABLE_NAME);
     }
 
     public long getBearerAccessTokenTtl() {
-        return Optional.ofNullable(System.getenv("BEARER_TOKEN_TTL"))
+        return Optional.ofNullable(System.getenv(BEARER_TOKEN_TTL))
                 .map(Long::valueOf)
                 .orElse(DEFAULT_BEARER_TOKEN_TTL_IN_SECS);
     }

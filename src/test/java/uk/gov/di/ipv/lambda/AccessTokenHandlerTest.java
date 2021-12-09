@@ -10,7 +10,6 @@ import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GrantType;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
-import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
@@ -19,19 +18,28 @@ import com.nimbusds.oauth2.sdk.token.Tokens;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import uk.gov.di.ipv.service.AccessTokenService;
 import uk.gov.di.ipv.service.AuthorizationCodeService;
 import uk.gov.di.ipv.validation.ValidationResult;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.util.Map;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.service.ConfigurationService.IS_LOCAL;
 
+@ExtendWith(SystemStubsExtension.class)
 class AccessTokenHandlerTest {
+    @SystemStub private EnvironmentVariables environmentVariables;
+
     private static final String TEST_IPV_SESSION_ID = UUID.randomUUID().toString();
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -55,6 +63,12 @@ class AccessTokenHandlerTest {
         context = mock(Context.class);
 
         handler = new AccessTokenHandler(mockAccessTokenService, mockAuthorizationCodeService);
+    }
+
+    @Test
+    void noArgsConstructor() {
+        environmentVariables.set(IS_LOCAL, "true");
+        assertDoesNotThrow(() -> new AccessTokenHandler());
     }
 
     @Test
@@ -98,19 +112,33 @@ class AccessTokenHandlerTest {
 
     @Test
     void shouldReturn400WhenInvalidGrantTypeProvided() throws Exception {
-        ErrorObject tokenErrorObject =
-                new ErrorObject("F-001", "Something failed during exchange of code to token");
-        tokenResponse = new TokenErrorResponse(tokenErrorObject);
-        when(mockAccessTokenService.generateAccessToken(any())).thenReturn(tokenResponse);
-        when(mockAuthorizationCodeService.getIpvSessionIdByAuthorizationCode("12345"))
-                .thenReturn(TEST_IPV_SESSION_ID);
-
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         String tokenRequestBody =
                 "code=12345&redirect_uri=http://test.com&grant_type="
                         + GrantType.IMPLICIT.getValue()
                         + "&client_id=test_client_id";
 
+        event.setBody(tokenRequestBody);
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+
+        ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(OAuth2Error.UNSUPPORTED_GRANT_TYPE.getCode(), errorResponse.getCode());
+        assertEquals(
+                OAuth2Error.UNSUPPORTED_GRANT_TYPE.getDescription(),
+                errorResponse.getDescription());
+    }
+
+    @Test
+    void shouldReturn400IfAccessTokenServiceDeemsRequestInvalid() throws ParseException {
+        when(mockAccessTokenService.validateTokenRequest(any()))
+                .thenReturn(new ValidationResult<>(false, OAuth2Error.UNSUPPORTED_GRANT_TYPE));
+
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        String tokenRequestBody =
+                "code=12345&redirect_uri=http://test.com&grant_type=authorization_code&client_id=test_client_id";
         event.setBody(tokenRequestBody);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
