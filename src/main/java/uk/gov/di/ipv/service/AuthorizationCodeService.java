@@ -16,7 +16,9 @@ public class AuthorizationCodeService {
         this.configurationService = new ConfigurationService();
         this.dataStore =
                 new DataStore<>(
-                        configurationService.getAuthCodesTableName(), AuthorizationCodeItem.class);
+                        configurationService.getAuthCodesTableName(),
+                        AuthorizationCodeItem.class,
+                        DataStore.getClient());
     }
 
     public AuthorizationCodeService(

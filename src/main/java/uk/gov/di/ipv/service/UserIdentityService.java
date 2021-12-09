@@ -18,7 +18,8 @@ public class UserIdentityService {
         this.dataStore =
                 new DataStore<>(
                         configurationService.getUserIssuedCredentialTableName(),
-                        UserIssuedCredentialsItem.class);
+                        UserIssuedCredentialsItem.class,
+                        DataStore.getClient());
     }
 
     public UserIdentityService(

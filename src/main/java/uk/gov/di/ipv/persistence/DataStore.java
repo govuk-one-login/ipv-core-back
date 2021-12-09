@@ -7,7 +7,6 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import uk.gov.di.ipv.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.service.ConfigurationService;
 
 import java.net.URI;
@@ -19,33 +18,25 @@ public class DataStore<T> {
     private static final String LOCALHOST_URI = "http://localhost:4567";
 
     private final DynamoDbEnhancedClient dynamoDbEnhancedClient;
-    private final ConfigurationService configurationService;
     private final String tableName;
     private final Class<T> typeParameterClass;
-
-    @ExcludeFromGeneratedCoverageReport
-    public DataStore(String tableName, Class<T> typeParameterClass) {
-        this.tableName = tableName;
-        this.typeParameterClass = typeParameterClass;
-        this.configurationService = new ConfigurationService();
-
-        DynamoDbClient client =
-                configurationService.isRunningLocally()
-                        ? createLocalDbClient()
-                        : DynamoDbClient.create();
-
-        dynamoDbEnhancedClient = DynamoDbEnhancedClient.builder().dynamoDbClient(client).build();
-    }
 
     public DataStore(
             String tableName,
             Class<T> typeParameterClass,
-            DynamoDbEnhancedClient dynamoDbEnhancedClient,
-            ConfigurationService configurationService) {
+            DynamoDbEnhancedClient dynamoDbEnhancedClient) {
         this.tableName = tableName;
         this.typeParameterClass = typeParameterClass;
         this.dynamoDbEnhancedClient = dynamoDbEnhancedClient;
-        this.configurationService = configurationService;
+    }
+
+    public static DynamoDbEnhancedClient getClient() {
+        DynamoDbClient client =
+                new ConfigurationService().isRunningLocally()
+                        ? createLocalDbClient()
+                        : DynamoDbClient.create();
+
+        return DynamoDbEnhancedClient.builder().dynamoDbClient(client).build();
     }
 
     public void create(T item) {
@@ -83,7 +74,7 @@ public class DataStore<T> {
         return delete(Key.builder().partitionValue(partitionValue).build());
     }
 
-    private DynamoDbClient createLocalDbClient() {
+    private static DynamoDbClient createLocalDbClient() {
         return DynamoDbClient.builder()
                 .endpointOverride(URI.create(LOCALHOST_URI))
                 .region(Region.EU_WEST_2)

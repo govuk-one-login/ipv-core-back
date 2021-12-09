@@ -17,7 +17,9 @@ public class IpvSessionService {
         this.configurationService = new ConfigurationService();
         dataStore =
                 new DataStore<>(
-                        configurationService.getIpvSessionTableName(), IpvSessionItem.class);
+                        configurationService.getIpvSessionTableName(),
+                        IpvSessionItem.class,
+                        DataStore.getClient());
     }
 
     public IpvSessionService(

@@ -36,7 +36,8 @@ public class CredentialIssuerService {
         this.dataStore =
                 new DataStore<>(
                         configurationService.getUserIssuedCredentialTableName(),
-                        UserIssuedCredentialsItem.class);
+                        UserIssuedCredentialsItem.class,
+                        DataStore.getClient());
     }
 
     // used for testing

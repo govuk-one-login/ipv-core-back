@@ -25,7 +25,9 @@ public class AccessTokenService {
         this.configurationService = new ConfigurationService();
         this.dataStore =
                 new DataStore<>(
-                        configurationService.getAccessTokensTableName(), AccessTokenItem.class);
+                        configurationService.getAccessTokensTableName(),
+                        AccessTokenItem.class,
+                        DataStore.getClient());
     }
 
     public AccessTokenService(
