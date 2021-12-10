@@ -9,6 +9,7 @@ import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
+import uk.gov.di.ipv.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.persistence.DataStore;
 import uk.gov.di.ipv.persistence.item.AccessTokenItem;
 import uk.gov.di.ipv.validation.ValidationResult;
@@ -19,11 +20,14 @@ public class AccessTokenService {
     private final DataStore<AccessTokenItem> dataStore;
     private final ConfigurationService configurationService;
 
+    @ExcludeFromGeneratedCoverageReport
     public AccessTokenService() {
         this.configurationService = new ConfigurationService();
         this.dataStore =
                 new DataStore<>(
-                        configurationService.getAccessTokensTableName(), AccessTokenItem.class);
+                        configurationService.getAccessTokensTableName(),
+                        AccessTokenItem.class,
+                        DataStore.getClient());
     }
 
     public AccessTokenService(

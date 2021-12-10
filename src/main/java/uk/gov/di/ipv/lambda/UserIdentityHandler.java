@@ -11,6 +11,7 @@ import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.gov.di.ipv.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.helpers.RequestHelper;
 import uk.gov.di.ipv.service.AccessTokenService;
@@ -40,6 +41,7 @@ public class UserIdentityHandler
         this.accessTokenService = accessTokenService;
     }
 
+    @ExcludeFromGeneratedCoverageReport
     public UserIdentityHandler() {
         this.userIdentityService = new UserIdentityService();
         this.accessTokenService = new AccessTokenService();

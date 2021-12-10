@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.service;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
+import uk.gov.di.ipv.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.persistence.DataStore;
 import uk.gov.di.ipv.persistence.item.AuthorizationCodeItem;
 
@@ -10,11 +11,14 @@ public class AuthorizationCodeService {
     private final DataStore<AuthorizationCodeItem> dataStore;
     private final ConfigurationService configurationService;
 
+    @ExcludeFromGeneratedCoverageReport
     public AuthorizationCodeService() {
         this.configurationService = new ConfigurationService();
         this.dataStore =
                 new DataStore<>(
-                        configurationService.getAuthCodesTableName(), AuthorizationCodeItem.class);
+                        configurationService.getAuthCodesTableName(),
+                        AuthorizationCodeItem.class,
+                        DataStore.getClient());
     }
 
     public AuthorizationCodeService(

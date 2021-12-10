@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.service;
 
+import uk.gov.di.ipv.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.persistence.DataStore;
 import uk.gov.di.ipv.persistence.item.IpvSessionItem;
 
@@ -11,11 +12,14 @@ public class IpvSessionService {
     private final DataStore<IpvSessionItem> dataStore;
     private final ConfigurationService configurationService;
 
+    @ExcludeFromGeneratedCoverageReport
     public IpvSessionService() {
         this.configurationService = new ConfigurationService();
         dataStore =
                 new DataStore<>(
-                        configurationService.getIpvSessionTableName(), IpvSessionItem.class);
+                        configurationService.getIpvSessionTableName(),
+                        IpvSessionItem.class,
+                        DataStore.getClient());
     }
 
     public IpvSessionService(

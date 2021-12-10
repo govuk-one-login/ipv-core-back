@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.service;
 
+import uk.gov.di.ipv.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.persistence.DataStore;
 import uk.gov.di.ipv.persistence.item.UserIssuedCredentialsItem;
 
@@ -11,12 +12,14 @@ public class UserIdentityService {
     private final ConfigurationService configurationService;
     private final DataStore<UserIssuedCredentialsItem> dataStore;
 
+    @ExcludeFromGeneratedCoverageReport
     public UserIdentityService() {
         this.configurationService = new ConfigurationService();
         this.dataStore =
                 new DataStore<>(
                         configurationService.getUserIssuedCredentialTableName(),
-                        UserIssuedCredentialsItem.class);
+                        UserIssuedCredentialsItem.class,
+                        DataStore.getClient());
     }
 
     public UserIdentityService(

@@ -10,7 +10,6 @@ import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GrantType;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
-import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
@@ -98,19 +97,33 @@ class AccessTokenHandlerTest {
 
     @Test
     void shouldReturn400WhenInvalidGrantTypeProvided() throws Exception {
-        ErrorObject tokenErrorObject =
-                new ErrorObject("F-001", "Something failed during exchange of code to token");
-        tokenResponse = new TokenErrorResponse(tokenErrorObject);
-        when(mockAccessTokenService.generateAccessToken(any())).thenReturn(tokenResponse);
-        when(mockAuthorizationCodeService.getIpvSessionIdByAuthorizationCode("12345"))
-                .thenReturn(TEST_IPV_SESSION_ID);
-
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         String tokenRequestBody =
                 "code=12345&redirect_uri=http://test.com&grant_type="
                         + GrantType.IMPLICIT.getValue()
                         + "&client_id=test_client_id";
 
+        event.setBody(tokenRequestBody);
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+
+        ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(OAuth2Error.UNSUPPORTED_GRANT_TYPE.getCode(), errorResponse.getCode());
+        assertEquals(
+                OAuth2Error.UNSUPPORTED_GRANT_TYPE.getDescription(),
+                errorResponse.getDescription());
+    }
+
+    @Test
+    void shouldReturn400IfAccessTokenServiceDeemsRequestInvalid() throws ParseException {
+        when(mockAccessTokenService.validateTokenRequest(any()))
+                .thenReturn(new ValidationResult<>(false, OAuth2Error.UNSUPPORTED_GRANT_TYPE));
+
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        String tokenRequestBody =
+                "code=12345&redirect_uri=http://test.com&grant_type=authorization_code&client_id=test_client_id";
         event.setBody(tokenRequestBody);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
