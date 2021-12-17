@@ -11,11 +11,7 @@ module "token" {
   function_name          = "${var.environment}-token"
   role_name              = "${var.environment}-token-role"
 
-  allow_access_to_auth_codes_table = true
-  auth_codes_table_policy_arn      = aws_iam_policy.policy-auth-codes-table.arn
-  auth_codes_table_name            = aws_dynamodb_table.auth-codes.name
-
-  allow_access_to_access_tokens_table = true
-  access_tokens_table_policy_arn      = aws_iam_policy.policy-access-tokens-table.arn
-  access_tokens_table_name            = aws_dynamodb_table.access-tokens.name
+  additional_policies      = [aws_iam_policy.policy-auth-codes-table.arn, aws_iam_policy.policy-access-tokens-table.arn]
+  auth_codes_table_name    = aws_dynamodb_table.auth-codes.name
+  access_tokens_table_name = aws_dynamodb_table.access-tokens.name
 }

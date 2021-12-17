@@ -11,7 +11,6 @@ module "authorize" {
   function_name          = "${var.environment}-authorize"
   role_name              = "${var.environment}-authorize-role"
 
-  allow_access_to_auth_codes_table = true
-  auth_codes_table_policy_arn      = aws_iam_policy.policy-auth-codes-table.arn
-  auth_codes_table_name            = aws_dynamodb_table.auth-codes.name
+  additional_policies   = [aws_iam_policy.policy-auth-codes-table.arn]
+  auth_codes_table_name = aws_dynamodb_table.auth-codes.name
 }

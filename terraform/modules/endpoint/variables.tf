@@ -42,16 +42,9 @@ variable "role_name" {
   description = "Lambda iam role name"
 }
 
-variable "allow_access_to_user_issued_credentials_table" {
-  type        = bool
-  default     = false
-  description = "Should the lambda be given access to the user-credentials DynamoDB table"
-}
-
-variable "user_issued_credentials_table_policy_arn" {
-  type        = string
-  default     = null
-  description = "ARN of the policy to allow read write to the user-credentials DynamoDB table"
+variable "additional_policies" {
+  type = list(string)
+  description = "List of ARNs of IAM policies to attach to the lambda's execution role"
 }
 
 variable "user_issued_credentials_table_name" {
@@ -60,52 +53,16 @@ variable "user_issued_credentials_table_name" {
   description = "Name of the DynamoDB user-credentials table"
 }
 
-variable "allow_access_to_auth_codes_table" {
-  type        = bool
-  default     = false
-  description = "Should the lambda be given access to the auth-codes DynamoDB table"
-}
-
-variable "auth_codes_table_policy_arn" {
-  type        = string
-  default     = null
-  description = "ARN of the policy to allow read write to the auth-codes DynamoDB table"
-}
-
 variable "auth_codes_table_name" {
   type        = string
   default     = "not-set-for-this-lambda"
   description = "Name of the DynamoDB auth-codes table"
 }
 
-variable "allow_access_to_access_tokens_table" {
-  type        = bool
-  default     = false
-  description = "Should the lambda be given access to the access-tokens DynamoDB table"
-}
-
-variable "access_tokens_table_policy_arn" {
-  type        = string
-  default     = null
-  description = "ARN of the policy to allow read write to the access-tokens DynamoDB table"
-}
-
 variable "access_tokens_table_name" {
   type        = string
   default     = "not-set-for-this-lambda"
   description = "Name of the DynamoDB access-tokens table"
-}
-
-variable "allow_access_to_ipv_sessions_table" {
-  type        = bool
-  default     = false
-  description = "Should the lambda be given access to the ipv-sessions DynamoDB table"
-}
-
-variable "ipv_sessions_table_policy_arn" {
-  type        = string
-  default     = null
-  description = "ARN of the policy to allow read write to the ipv-sessions DynamoDB table"
 }
 
 variable "ipv_sessions_table_name" {
