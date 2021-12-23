@@ -6,20 +6,19 @@ resource "aws_ssm_parameter" "credential-issuers-config" {
 }
 
 resource "aws_iam_role_policy" "get-credential-issuers-config" {
-  name = "get-credential-issuers-config"
-  role = module.credential-issuer.iam_role_id
+  name   = "get-credential-issuers-config"
+  role   = module.credential-issuer.iam_role_id
+  policy = data.aws_iam_policy_document.get_credential_issuers_config.json
+}
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid = "GetCredentialIssuersConfig"
-        Action = [
-          "ssm:GetParameter"
-        ]
-        Effect   = "Allow"
-        Resource = aws_ssm_parameter.credential-issuers-config.arn
-      }
+data "aws_iam_policy_document" "get_credential_issuers_config" {
+  statement {
+    sid     = "GetCredentialIssuersConfig"
+    effect  = "Allow"
+    actions = ["ssm:GetParameter"]
+
+    resources = [
+      aws_ssm_parameter.credential-issuers-config.arn
     ]
-  })
+  }
 }

@@ -57,101 +57,97 @@ resource "aws_dynamodb_table" "ipv-sessions" {
 }
 
 resource "aws_iam_policy" "policy-user-issued-credentials-table" {
-  name = "policy-user-issued-credentials-table"
+  name   = "policy-user-issued-credentials-table"
+  policy = data.aws_iam_policy_document.policy_user_issued_credentials_table_policy.json
+}
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid = "PolicyUserIssuedCredentialsTable"
-        Action = [
-          "dynamodb:PutItem",
-          "dynamodb:UpdateItem",
-          "dynamodb:BatchWriteItem",
-          "dynamodb:GetItem",
-          "dynamodb:BatchGetItem",
-          "dynamodb:Scan",
-          "dynamodb:Query",
-          "dynamodb:ConditionCheckItem"
-        ]
-        Effect = "Allow"
-        Resource = [
-          aws_dynamodb_table.user-issued-credentials.arn,
-          "${aws_dynamodb_table.user-issued-credentials.arn}/index/*"
-        ]
-      },
+data "aws_iam_policy_document" "policy_user_issued_credentials_table_policy" {
+  statement {
+    sid     = "PolicyUserIssuedCredentialsTable"
+    effect  = "Allow"
+    actions = [
+      "dynamodb:PutItem",
+      "dynamodb:UpdateItem",
+      "dynamodb:BatchWriteItem",
+      "dynamodb:GetItem",
+      "dynamodb:BatchGetItem",
+      "dynamodb:Scan",
+      "dynamodb:Query",
+      "dynamodb:ConditionCheckItem"
     ]
-  })
+
+    resources = [
+      aws_dynamodb_table.user-issued-credentials.arn,
+      "${aws_dynamodb_table.user-issued-credentials.arn}/index/*"
+    ]
+  }
 }
 
 resource "aws_iam_policy" "policy-auth-codes-table" {
-  name = "policy-auth-codes-table"
+  name   = "policy-auth-codes-table"
+  policy = data.aws_iam_policy_document.policy_auth_codes_table_policy.json
+}
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid = "PolicyAuthCodesTable"
-        Action = [
-          "dynamodb:PutItem",
-          "dynamodb:GetItem",
-          "dynamodb:DeleteItem",
-          "dynamodb:Query"
-        ]
-        Effect = "Allow"
-        Resource = [
-          aws_dynamodb_table.auth-codes.arn,
-          "${aws_dynamodb_table.auth-codes.arn}/index/*"
-        ]
-      },
+data "aws_iam_policy_document" "policy_auth_codes_table_policy" {
+  statement {
+    sid     = "PolicyAuthCodesTable"
+    effect  = "Allow"
+    actions = [
+      "dynamodb:PutItem",
+      "dynamodb:GetItem",
+      "dynamodb:DeleteItem",
+      "dynamodb:Query"
     ]
-  })
+
+    resources = [
+      aws_dynamodb_table.auth-codes.arn,
+      "${aws_dynamodb_table.auth-codes.arn}/index/*"
+    ]
+  }
 }
 
 resource "aws_iam_policy" "policy-access-tokens-table" {
-  name = "policy-access-tokens-table"
+  name   = "policy-access-tokens-table"
+  policy = data.aws_iam_policy_document.access_tokens_table_policy.json
+}
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid = "AccessTokensTable"
-        Action = [
-          "dynamodb:PutItem",
-          "dynamodb:GetItem",
-          "dynamodb:DeleteItem",
-          "dynamodb:Query"
-        ]
-        Effect = "Allow"
-        Resource = [
-          aws_dynamodb_table.access-tokens.arn,
-          "${aws_dynamodb_table.access-tokens.arn}/index/*"
-        ]
-      },
+data "aws_iam_policy_document" "access_tokens_table_policy" {
+  statement {
+    sid     = "AccessTokensTable"
+    effect  = "Allow"
+    actions = [
+      "dynamodb:PutItem",
+      "dynamodb:GetItem",
+      "dynamodb:DeleteItem",
+      "dynamodb:Query"
     ]
-  })
+
+    resources = [
+      aws_dynamodb_table.access-tokens.arn,
+      "${aws_dynamodb_table.access-tokens.arn}/index/*"
+    ]
+  }
 }
 
 resource "aws_iam_policy" "policy-ipv-sessions-table" {
-  name = "policy-ipv-sessions-table"
+  name   = "policy-ipv-sessions-table"
+  policy = data.aws_iam_policy_document.ipv_sessions_table_policy.json
+}
 
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Sid = "IpvSessionsTable"
-        Action = [
-          "dynamodb:PutItem",
-          "dynamodb:GetItem",
-          "dynamodb:DeleteItem",
-          "dynamodb:Query"
-        ]
-        Effect = "Allow"
-        Resource = [
-          aws_dynamodb_table.ipv-sessions.arn,
-          "${aws_dynamodb_table.ipv-sessions.arn}/index/*"
-        ]
-      },
+data "aws_iam_policy_document" "ipv_sessions_table_policy" {
+  statement {
+    sid     = "IpvSessionsTable"
+    effect  = "Allow"
+    actions = [
+      "dynamodb:PutItem",
+      "dynamodb:GetItem",
+      "dynamodb:DeleteItem",
+      "dynamodb:Query"
     ]
-  })
+
+    resources = [
+      aws_dynamodb_table.ipv-sessions.arn,
+      "${aws_dynamodb_table.ipv-sessions.arn}/index/*"
+    ]
+  }
 }
