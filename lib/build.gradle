@@ -2,7 +2,6 @@ plugins {
     // Apply the java-library plugin for API and implementation separation.
     id 'java-library'
 	id "idea"
-	id "org.sonarqube" version "3.3"
 	id "jacoco"
 	id "com.diffplug.spotless" version "6.0.4"
 }
@@ -64,13 +63,13 @@ jacocoTestReport {
 	}
 }
 
-sonarqube {
-	properties {
-		property "sonar.projectKey", "alphagov_di-ipv-core-back"
-		property "sonar.organization", "alphagov"
-		property "sonar.host.url", "https://sonarcloud.io"
-	}
-}
+// sonarqube {
+// 	properties {
+// 		property "sonar.projectKey", "alphagov_di-ipv-core-back"
+// 		property "sonar.organization", "alphagov"
+// 		property "sonar.host.url", "https://sonarcloud.io"
+// 	}
+// }
 
 spotless {
 	java {

@@ -2,7 +2,6 @@ plugins {
 	id "java"
 	id "application"
 	id "idea"
-	id "org.sonarqube" version "3.3"
 	id "jacoco"
 	id "com.diffplug.spotless" version "6.0.4"
 }
@@ -59,14 +58,6 @@ jacocoTestReport {
 	dependsOn test
 	reports {
 		xml.enabled true
-	}
-}
-
-sonarqube {
-	properties {
-		property "sonar.projectKey", "alphagov_di-ipv-core-back"
-		property "sonar.organization", "alphagov"
-		property "sonar.host.url", "https://sonarcloud.io"
 	}
 }
 

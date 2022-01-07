@@ -2,7 +2,6 @@ plugins {
 	id "java"
 	id "application"
 	id "idea"
-	id "org.sonarqube" version "3.3"
 	id "jacoco"
 	id "com.diffplug.spotless" version "6.0.4"
 }
@@ -26,9 +25,6 @@ dependencies {
 			"com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.0",
 			"software.amazon.lambda:powertools-parameters:1.8.0",
 			project(":lib")
-
-
-
 
 	compileOnly 'org.projectlombok:lombok:1.18.22'
 	annotationProcessor 'org.projectlombok:lombok:1.18.22'
@@ -65,13 +61,13 @@ jacocoTestReport {
 	}
 }
 
-sonarqube {
-	properties {
-		property "sonar.projectKey", "alphagov_di-ipv-core-back"
-		property "sonar.organization", "alphagov"
-		property "sonar.host.url", "https://sonarcloud.io"
-	}
-}
+// sonarqube {
+// 	properties {
+// 		property "sonar.projectKey", "alphagov_di-ipv-core-back"
+// 		property "sonar.organization", "alphagov"
+// 		property "sonar.host.url", "https://sonarcloud.io"
+// 	}
+// }
 
 spotless {
 	java {
