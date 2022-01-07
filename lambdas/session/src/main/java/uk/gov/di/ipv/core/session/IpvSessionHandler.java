@@ -5,8 +5,8 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import org.apache.http.HttpStatus;
-import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
-import uk.gov.di.ipv.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.util.Map;
 

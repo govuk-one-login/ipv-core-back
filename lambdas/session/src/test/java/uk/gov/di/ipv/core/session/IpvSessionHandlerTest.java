@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.util.Map;
 import java.util.UUID;

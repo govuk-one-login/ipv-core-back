@@ -8,8 +8,8 @@ import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uk.gov.di.ipv.domain.ErrorResponse;
-import uk.gov.di.ipv.service.AuthorizationCodeService;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
 
 import java.util.Collections;
 import java.util.HashMap;

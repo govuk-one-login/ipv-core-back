@@ -18,9 +18,9 @@ import com.nimbusds.oauth2.sdk.token.Tokens;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uk.gov.di.ipv.service.AccessTokenService;
-import uk.gov.di.ipv.service.AuthorizationCodeService;
-import uk.gov.di.ipv.validation.ValidationResult;
+import uk.gov.di.ipv.core.library.service.AccessTokenService;
+import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
+import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.util.Map;
 import java.util.UUID;

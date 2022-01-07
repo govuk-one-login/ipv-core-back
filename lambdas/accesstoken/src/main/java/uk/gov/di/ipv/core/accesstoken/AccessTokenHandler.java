@@ -17,11 +17,11 @@ import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.gov.di.ipv.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
-import uk.gov.di.ipv.service.AccessTokenService;
-import uk.gov.di.ipv.service.AuthorizationCodeService;
-import uk.gov.di.ipv.validation.ValidationResult;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.service.AccessTokenService;
+import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
+import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.net.URI;
 

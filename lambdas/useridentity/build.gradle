@@ -7,12 +7,8 @@ plugins {
 	id "com.diffplug.spotless" version "6.0.4"
 }
 
-version = '0.1.0'
-group = 'uk.gov.di.ipv.lambdas'
-
 repositories {
-    // Use Maven Central for resolving dependencies.
-    mavenCentral()
+	mavenCentral()
 }
 
 dependencies {
@@ -77,17 +73,17 @@ sonarqube {
 	}
 }
 
-// spotless {
-// 	java {
-// 		target "src/**/*.java"
-// 		googleJavaFormat("1.13.0").aosp()
-// 		importOrder "", "javax", "java", "\\#"
-// 		endWithNewline()
-// 	}
-// 	groovyGradle {
-// 		target '**/*.gradle'
-// 		greclipse()
-// 		trimTrailingWhitespace()
-// 		endWithNewline()
-// 	}
-// }
+spotless {
+	java {
+		target "src/**/*.java"
+		// googleJavaFormat("1.13.0").aosp()
+		importOrder "", "javax", "java", "\\#"
+		endWithNewline()
+	}
+	groovyGradle {
+		target '**/*.gradle'
+		greclipse()
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
+}

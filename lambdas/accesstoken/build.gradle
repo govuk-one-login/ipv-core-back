@@ -8,7 +8,6 @@ plugins {
 }
 
 repositories {
-	mavenLocal()
 	mavenCentral()
 }
 
@@ -71,17 +70,17 @@ sonarqube {
 	}
 }
 
-// spotless {
-// 	java {
-// 		target "src/**/*.java"
-// 		googleJavaFormat("1.13.0").aosp()
-// 		importOrder "", "javax", "java", "\\#"
-// 		endWithNewline()
-// 	}
-// 	groovyGradle {
-// 		target '**/*.gradle'
-// 		greclipse()
-// 		trimTrailingWhitespace()
-// 		endWithNewline()
-// 	}
-// }
+spotless {
+	java {
+		target "src/**/*.java"
+		// googleJavaFormat("1.13.0").aosp()
+		importOrder "", "javax", "java", "\\#"
+		endWithNewline()
+	}
+	groovyGradle {
+		target '**/*.gradle'
+		greclipse()
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
+}

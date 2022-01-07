@@ -7,16 +7,16 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import net.minidev.json.JSONObject;
-import uk.gov.di.ipv.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.domain.CredentialIssuerException;
-import uk.gov.di.ipv.domain.ErrorResponse;
-import uk.gov.di.ipv.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.dto.CredentialIssuerRequestDto;
-import uk.gov.di.ipv.dto.CredentialIssuers;
-import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
-import uk.gov.di.ipv.helpers.RequestHelper;
-import uk.gov.di.ipv.service.ConfigurationService;
-import uk.gov.di.ipv.service.CredentialIssuerService;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuers;
+import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
 
 import java.util.Collections;
 import java.util.Optional;

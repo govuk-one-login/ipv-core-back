@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.service.AccessTokenService;
-import uk.gov.di.ipv.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.service.AccessTokenService;
+import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.util.Collections;
 import java.util.HashMap;

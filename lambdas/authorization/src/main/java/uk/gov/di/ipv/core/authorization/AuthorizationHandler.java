@@ -11,12 +11,12 @@ import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.gov.di.ipv.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.domain.ErrorResponse;
-import uk.gov.di.ipv.helpers.ApiGatewayResponseGenerator;
-import uk.gov.di.ipv.helpers.RequestHelper;
-import uk.gov.di.ipv.service.AuthorizationCodeService;
-import uk.gov.di.ipv.validation.ValidationResult;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
+import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.util.Collections;
 import java.util.List;
