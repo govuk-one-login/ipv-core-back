@@ -1,0 +1,93 @@
+plugins {
+	id "java"
+	id "application"
+	id "idea"
+	id "org.sonarqube" version "3.3"
+	id "jacoco"
+	id "com.diffplug.spotless" version "6.0.4"
+}
+
+version = '0.1.0'
+group = 'uk.gov.di.ipv.lambdas'
+
+repositories {
+    // Use Maven Central for resolving dependencies.
+    mavenCentral()
+}
+
+dependencies {
+
+	implementation "com.amazonaws:aws-lambda-java-core:1.2.1",
+			"com.amazonaws:aws-lambda-java-events:3.11.0",
+			"com.amazonaws:aws-java-sdk-dynamodb:1.12.122",
+			"com.nimbusds:oauth2-oidc-sdk:9.3.1",
+			"com.fasterxml.jackson.core:jackson-core:2.13.0",
+			"com.fasterxml.jackson.core:jackson-databind:2.13.0",
+			"com.fasterxml.jackson.core:jackson-annotations:2.13.0",
+			"org.apache.httpcomponents:httpclient:4.5.13",
+			"org.slf4j:slf4j-simple:1.7.32",
+			"software.amazon.awssdk:dynamodb-enhanced:2.17.89",
+			"com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.0",
+			"software.amazon.lambda:powertools-parameters:1.8.0",
+			project(":lib")
+
+
+
+
+	compileOnly 'org.projectlombok:lombok:1.18.22'
+	annotationProcessor 'org.projectlombok:lombok:1.18.22'
+
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2',
+			"org.mockito:mockito-core:4.1.0",
+			"org.mockito:mockito-junit-jupiter:4.1.0",
+			"com.github.tomakehurst:wiremock-jre8:2.31.0",
+			"uk.org.webcompere:system-stubs-jupiter:1.1.0"
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_11
+	targetCompatibility = JavaVersion.VERSION_11
+}
+
+task buildZip(type: Zip) {
+	from compileJava
+	from processResources
+	into("lib") {
+		from configurations.runtimeClasspath
+	}
+}
+
+test {
+	useJUnitPlatform ()
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.enabled true
+	}
+}
+
+sonarqube {
+	properties {
+		property "sonar.projectKey", "alphagov_di-ipv-core-back"
+		property "sonar.organization", "alphagov"
+		property "sonar.host.url", "https://sonarcloud.io"
+	}
+}
+
+// spotless {
+// 	java {
+// 		target "src/**/*.java"
+// 		googleJavaFormat("1.13.0").aosp()
+// 		importOrder "", "javax", "java", "\\#"
+// 		endWithNewline()
+// 	}
+// 	groovyGradle {
+// 		target '**/*.gradle'
+// 		greclipse()
+// 		trimTrailingWhitespace()
+// 		endWithNewline()
+// 	}
+// }

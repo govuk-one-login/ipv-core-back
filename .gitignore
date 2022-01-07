@@ -27,3 +27,7 @@ hs_err_pid*
 .gradle
 .DS_Store
 /build
+.vscode
+
+# Ignore Gradle build output directory
+build
