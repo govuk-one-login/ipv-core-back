@@ -7,7 +7,7 @@ module "user-identity" {
   root_resource_id       = aws_api_gateway_rest_api.ipv_internal.root_resource_id
   http_method            = "GET"
   path_part              = "user-identity"
-  handler                = "uk.gov.di.ipv.lambda.UserIdentityHandler::handleRequest"
+  handler                = "uk.gov.di.ipv.core.useridentity.UserIdentityHandler::handleRequest"
   function_name          = "${var.environment}-user-identity"
   role_name              = "${var.environment}-user-identity-role"
 
