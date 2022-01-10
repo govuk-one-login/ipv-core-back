@@ -7,7 +7,7 @@ module "ipv-session" {
   root_resource_id       = aws_api_gateway_rest_api.ipv_internal.root_resource_id
   http_method            = "POST"
   path_part              = "ipv-session"
-  handler                = "uk.gov.di.ipv.lambda.IpvSessionHandler::handleRequest"
+  handler                = "uk.gov.di.ipv.core.session.IpvSessionHandler::handleRequest"
   function_name          = "${var.environment}-create-ipv-session"
   role_name              = "${var.environment}-ipv-session-role"
 

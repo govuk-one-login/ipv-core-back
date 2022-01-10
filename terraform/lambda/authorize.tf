@@ -7,7 +7,7 @@ module "authorize" {
   root_resource_id       = aws_api_gateway_rest_api.ipv_internal.root_resource_id
   http_method            = "GET"
   path_part              = "authorize"
-  handler                = "uk.gov.di.ipv.lambda.AuthorizationHandler::handleRequest"
+  handler                = "uk.gov.di.ipv.core.authorization.AuthorizationHandler::handleRequest"
   function_name          = "${var.environment}-authorize"
   role_name              = "${var.environment}-authorize-role"
 
