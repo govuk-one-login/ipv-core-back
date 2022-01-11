@@ -1,0 +1,107 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  ipv-core-back
+
+Globals:
+  Function:
+    Timeout: 20
+
+Resources:
+
+  IPVAccessTokenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: IPVAccessTokenFunction
+      Handler: uk.gov.di.ipv.core.accesstoken.AccessTokenHandler::handleRequest
+      Runtime: java11
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref AccessTokensTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref AuthCodesTable
+      Architectures:
+        - x86_64
+      MemorySize: 512
+
+  IPVAuthorizationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: IPVAuthorizationFunction
+      Handler: uk.gov.di.ipv.core.authorization.AuthorizationHandler::handleRequest
+      Runtime: java11
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref AuthCodesTable
+      Architectures:
+        - x86_64
+      MemorySize: 512
+
+  IPVSessionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: IPVSessionFunction
+      Handler: uk.gov.di.ipv.core.session.IpvSessionHandler::handleRequest
+      Runtime: java11
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+      Architectures:
+        - x86_64
+      MemorySize: 512
+
+  IPVCredentialIssuerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: IPVCredentialIssuerFunction
+      Handler: uk.gov.di.ipv.core.credentialissuer.CredentialIssuerHandler::handleRequest
+      Runtime: java11
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsTable
+      Architectures:
+        - x86_64
+      MemorySize: 512
+
+  IPVUserIdentityFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: IPVUserIdentityFunction
+      Handler: uk.gov.di.ipv.core.useridentity.UserIdentityHandler::handleRequest
+      Runtime: java11
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref AuthCodesTable
+      Architectures:
+        - x86_64
+      MemorySize: 512
+
+  UserIssuedCredentialsTable:
+    Type: AWS::Serverless::SimpleTable
+
+  AuthCodesTable:
+    Type: AWS::Serverless::SimpleTable
+
+  AccessTokensTable:
+    Type: AWS::Serverless::SimpleTable
+
+  SessionsTable:
+    Type: AWS::Serverless::SimpleTable
+
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  HelloWorldApi:
+    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
+  HelloWorldFunction:
+    Description: "Hello World Lambda Function ARN"
+    Value: !GetAtt HelloWorldFunction.Arn
+  HelloWorldFunctionIamRole:
+    Description: "Implicit IAM Role created for Hello World function"
+    Value: !GetAtt HelloWorldFunctionRole.Arn
+
