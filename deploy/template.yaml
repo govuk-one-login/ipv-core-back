@@ -18,7 +18,8 @@ Resources:
     Properties:
       Name: IPV Core API Gateway
       StageName: !Sub ${Environment}
-
+      Auth:
+        ApiKeyRequired: true
 
   IPVAccessTokenFunction:
     Type: AWS::Serverless::Function
@@ -27,6 +28,8 @@ Resources:
       CodeUri: IPVAccessTokenFunction
       Handler: uk.gov.di.ipv.core.accesstoken.AccessTokenHandler::handleRequest
       Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/accesstoken
       Architectures:
         - x86_64
       MemorySize: 512
@@ -51,6 +54,8 @@ Resources:
       CodeUri: IPVAuthorizationFunction
       Handler: uk.gov.di.ipv.core.authorization.AuthorizationHandler::handleRequest
       Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/authorization
       Architectures:
         - x86_64
       MemorySize: 512
@@ -73,6 +78,8 @@ Resources:
       CodeUri: IPVSessionFunction
       Handler: uk.gov.di.ipv.core.session.IpvSessionHandler::handleRequest
       Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/session
       Architectures:
         - x86_64
       MemorySize: 512
@@ -95,6 +102,8 @@ Resources:
       CodeUri: IPVCredentialIssuerFunction
       Handler: uk.gov.di.ipv.core.credentialissuer.CredentialIssuerHandler::handleRequest
       Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/credentialissuer
       Architectures:
         - x86_64
       MemorySize: 512
@@ -117,6 +126,8 @@ Resources:
       CodeUri: IPVUserIdentityFunction
       Handler: uk.gov.di.ipv.core.useridentity.UserIdentityHandler::handleRequest
       Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/useridentity
       Architectures:
         - x86_64
       MemorySize: 512
@@ -161,17 +172,4 @@ Resources:
     Properties:
       TableName: !Sub "sessions-${Environment}"
 
-Outputs:
-  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
-  # Find out more about other implicit resources you can reference within SAM
-  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
-  HelloWorldApi:
-    Description: "API Gateway endpoint URL for Prod stage for Hello World function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/"
-  HelloWorldFunction:
-    Description: "Hello World Lambda Function ARN"
-    Value: !GetAtt HelloWorldFunction.Arn
-  HelloWorldFunctionIamRole:
-    Description: "Implicit IAM Role created for Hello World function"
-    Value: !GetAtt HelloWorldFunctionRole.Arn
 
