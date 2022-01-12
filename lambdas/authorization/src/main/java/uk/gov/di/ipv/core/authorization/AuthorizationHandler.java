@@ -7,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.id.Identifier;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
@@ -101,7 +102,8 @@ public class AuthorizationHandler
             return new ValidationResult<>(false, ErrorResponse.MISSING_QUERY_PARAMETERS);
         }
 
-        if (!requestHeaders.containsKey(IPV_SESSION_ID_HEADER_KEY)) {
+        String ipvSessionId = RequestHelper.getHeaderByKey(requestHeaders, IPV_SESSION_ID_HEADER_KEY);
+        if (StringUtils.isBlank(ipvSessionId)) {
             return new ValidationResult<>(false, ErrorResponse.MISSING_IPV_SESSION_ID);
         }
         return ValidationResult.createValidResult();
