@@ -16,6 +16,8 @@ Resources:
   IPVCoreAPI:
     Type: AWS::Serverless::Api
     Properties:
+      Name: IPV Core API Gateway
+      StageName: !Sub ${Environment}
 
 
   IPVAccessTokenFunction:
@@ -33,6 +35,14 @@ Resources:
             TableName: !Ref AccessTokensTable
         - DynamoDBReadPolicy:
             TableName: !Ref AuthCodesTable
+      Events:
+        IPVCoreAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreAPI
+            Path: /token
+            Method: POST
 
   IPVAuthorizationFunction:
     Type: AWS::Serverless::Function
@@ -47,7 +57,14 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref AuthCodesTable
-
+      Events:
+        IPVCoreAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreAPI
+            Path: /authorize
+            Method: POST
 
   IPVSessionFunction:
     Type: AWS::Serverless::Function
@@ -62,7 +79,14 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
-
+      Events:
+        IPVCoreAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreAPI
+            Path: /ipv-session
+            Method: POST
 
   IPVCredentialIssuerFunction:
     Type: AWS::Serverless::Function
@@ -77,7 +101,14 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsTable
-
+      Events:
+        IPVCoreAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreAPI
+            Path: /request-evidence
+            Method: POST
 
   IPVUserIdentityFunction:
     Type: AWS::Serverless::Function
@@ -94,7 +125,14 @@ Resources:
             TableName: !Ref UserIssuedCredentialsTable
         - DynamoDBReadPolicy:
             TableName: !Ref AuthCodesTable
-
+      Events:
+        IPVCoreAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreAPI
+            Path: /user-identity
+            Method: GET
 
   CredentialIssuerConfig:
     Type: AWS::SSM::Parameter
