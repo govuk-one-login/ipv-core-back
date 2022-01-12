@@ -7,89 +7,121 @@ Globals:
   Function:
     Timeout: 20
 
+Parameters:
+  Environment:
+    Type: String
+
 Resources:
+
+  IPVCoreAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+
 
   IPVAccessTokenFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub "ipv-access-token-${Environment}"
       CodeUri: IPVAccessTokenFunction
       Handler: uk.gov.di.ipv.core.accesstoken.AccessTokenHandler::handleRequest
       Runtime: java11
+      Architectures:
+        - x86_64
+      MemorySize: 512
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref AccessTokensTable
         - DynamoDBReadPolicy:
             TableName: !Ref AuthCodesTable
-      Architectures:
-        - x86_64
-      MemorySize: 512
 
   IPVAuthorizationFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub "ipv-authorization-${Environment}"
       CodeUri: IPVAuthorizationFunction
       Handler: uk.gov.di.ipv.core.authorization.AuthorizationHandler::handleRequest
       Runtime: java11
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref AuthCodesTable
       Architectures:
         - x86_64
       MemorySize: 512
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref AuthCodesTable
+
 
   IPVSessionFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub "ipv-session-${Environment}"
       CodeUri: IPVSessionFunction
       Handler: uk.gov.di.ipv.core.session.IpvSessionHandler::handleRequest
       Runtime: java11
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionsTable
       Architectures:
         - x86_64
       MemorySize: 512
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+
 
   IPVCredentialIssuerFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub "ipv-credential-issuer-${Environment}"
       CodeUri: IPVCredentialIssuerFunction
       Handler: uk.gov.di.ipv.core.credentialissuer.CredentialIssuerHandler::handleRequest
       Runtime: java11
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref UserIssuedCredentialsTable
       Architectures:
         - x86_64
       MemorySize: 512
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsTable
+
 
   IPVUserIdentityFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: !Sub "ipv-user-identity-${Environment}"
       CodeUri: IPVUserIdentityFunction
       Handler: uk.gov.di.ipv.core.useridentity.UserIdentityHandler::handleRequest
       Runtime: java11
+      Architectures:
+        - x86_64
+      MemorySize: 512
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsTable
         - DynamoDBReadPolicy:
             TableName: !Ref AuthCodesTable
-      Architectures:
-        - x86_64
-      MemorySize: 512
+
+
+  CredentialIssuerConfig:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "/${Environment}/credential-issuers-config"
+      Type: "String"
+      Value: "FakeValue"
 
   UserIssuedCredentialsTable:
     Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: !Sub "user-issued-credentials-${Environment}"
 
   AuthCodesTable:
     Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: !Sub "auth-codes-${Environment}"
 
   AccessTokensTable:
     Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: !Sub "access-tokens-${Environment}"
 
   SessionsTable:
     Type: AWS::Serverless::SimpleTable
-
+    Properties:
+      TableName: !Sub "sessions-${Environment}"
 
 Outputs:
   # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
