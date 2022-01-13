@@ -18,14 +18,11 @@ Resources:
     Properties:
       Name: IPV Core API Gateway
       StageName: !Sub ${Environment}
-      Auth:
-        ApiKeyRequired: true
 
   IPVAccessTokenFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "ipv-access-token-${Environment}"
-      CodeUri: IPVAccessTokenFunction
       Handler: uk.gov.di.ipv.core.accesstoken.AccessTokenHandler::handleRequest
       Runtime: java11
       PackageType: Zip
@@ -33,6 +30,10 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Environment:
+        Variables:
+          AUTH_CODES_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AuthCodesTable.Arn]]
+          ACCESS_TOKENS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AccessTokensTable.Arn]]
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref AccessTokensTable
@@ -42,8 +43,7 @@ Resources:
         IPVCoreAPI:
           Type: Api
           Properties:
-            RestApiId:
-              Ref: IPVCoreAPI
+            RestApiId: !Ref IPVCoreAPI
             Path: /token
             Method: POST
 
@@ -59,6 +59,9 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Environment:
+        Variables:
+          AUTH_CODES_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AuthCodesTable.Arn]]
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref AuthCodesTable
@@ -83,6 +86,9 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Environment:
+        Variables:
+          IPV_SESSIONS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt SessionsTable.Arn]]
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
@@ -107,6 +113,10 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Environment:
+        Variables:
+          CREDENTIAL_ISSUER_CONFIG_PARAMETER_STORE_KEY: "/Development/credential-issuers-config"
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsTable
@@ -131,6 +141,10 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Environment:
+        Variables:
+          AUTH_CODES_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AuthCodesTable.Arn]]
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsTable
@@ -150,26 +164,56 @@ Resources:
     Properties:
       Name: !Sub "/${Environment}/credential-issuers-config"
       Type: "String"
-      Value: "FakeValue"
+      Value: "TestValue"
 
   UserIssuedCredentialsTable:
-    Type: AWS::Serverless::SimpleTable
+    Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub "user-issued-credentials-${Environment}"
+      BillingMode: "PAY_PER_REQUEST"
+      AttributeDefinitions:
+        - AttributeName: "ipvSessionId"
+          AttributeType: "S"
+        - AttributeName: "credentialIssuer"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "ipvSessionId"
+          KeyType: "HASH"
+        - AttributeName: "credentialIssuer"
+          KeyType: "RANGE"
 
   AuthCodesTable:
-    Type: AWS::Serverless::SimpleTable
+    Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub "auth-codes-${Environment}"
+      BillingMode: "PAY_PER_REQUEST"
+      AttributeDefinitions:
+        - AttributeName: "authCode"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "authCode"
+          KeyType: "HASH"
 
   AccessTokensTable:
-    Type: AWS::Serverless::SimpleTable
+    Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub "access-tokens-${Environment}"
+      BillingMode: "PAY_PER_REQUEST"
+      AttributeDefinitions:
+        - AttributeName: "accessToken"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "accessToken"
+          KeyType: "HASH"
 
   SessionsTable:
-    Type: AWS::Serverless::SimpleTable
+    Type: AWS::DynamoDB::Table
     Properties:
       TableName: !Sub "sessions-${Environment}"
-
-
+      BillingMode: "PAY_PER_REQUEST"
+      AttributeDefinitions:
+        - AttributeName: "ipvSessionId"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "ipvSessionId"
+          KeyType: "HASH"
