@@ -6,5 +6,6 @@ include "lib",
         "lambdas:authorization",
         "lambdas:credentialissuer",
         "lambdas:session",
-        "lambdas:useridentity"
+        "lambdas:useridentity",
+        "lambdas:credentialissuerconfig"
 
