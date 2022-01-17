@@ -1,5 +1,5 @@
 resource "aws_ssm_parameter" "token_url" {
-  for_each  = var.issuers
+  for_each  = toset(var.issuers)
   name      = "/${var.environment}/IPV/Core/CredentialIssuers/${each.value.id}/tokenUrl"
   type      = var.type
   value     = each.value.token_url
@@ -7,7 +7,7 @@ resource "aws_ssm_parameter" "token_url" {
 }
 
 resource "aws_ssm_parameter" "credential_url" {
-  for_each  = var.issuers
+  for_each  = toset(var.issuers)
   name      = "/${var.environment}/IPV/Core/CredentialIssuers/${each.value.id}/credentialUrl"
   type      = var.type
   value     = each.value.credential_url
