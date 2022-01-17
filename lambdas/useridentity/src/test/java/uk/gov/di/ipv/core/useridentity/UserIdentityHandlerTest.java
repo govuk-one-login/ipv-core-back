@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
@@ -88,7 +89,7 @@ class UserIdentityHandlerTest {
                 .thenReturn(userIssuedCredential);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(userIssuedCredential.get("id"), responseBody.get("id"));
         assertEquals(userIssuedCredential.get("type"), responseBody.get("type"));
@@ -102,7 +103,7 @@ class UserIdentityHandlerTest {
         event.setHeaders(headers);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
-        responseBody = objectMapper.readValue(response.getBody(), Map.class);
+        responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(BearerTokenError.MISSING_TOKEN.getHTTPStatusCode(), response.getStatusCode());
         assertEquals(BearerTokenError.MISSING_TOKEN.getCode(), responseBody.get("error"));
@@ -118,7 +119,7 @@ class UserIdentityHandlerTest {
         event.setHeaders(headers);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
-        responseBody = objectMapper.readValue(response.getBody(), Map.class);
+        responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(
                 BearerTokenError.INVALID_REQUEST.getHTTPStatusCode(), response.getStatusCode());
@@ -133,7 +134,7 @@ class UserIdentityHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
-        responseBody = objectMapper.readValue(response.getBody(), Map.class);
+        responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(BearerTokenError.MISSING_TOKEN.getHTTPStatusCode(), response.getStatusCode());
         assertEquals(BearerTokenError.MISSING_TOKEN.getCode(), responseBody.get("error"));
@@ -153,7 +154,7 @@ class UserIdentityHandlerTest {
         when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString())).thenReturn(null);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(403, response.getStatusCode());
         assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));

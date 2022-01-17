@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.authorization;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import org.apache.http.HttpStatus;
@@ -72,8 +73,8 @@ class AuthorizationHandlerTest {
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
         ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
-        Map<String, String> authCode = (Map) responseBody.get("code");
+        Map<String, Map<String, String>> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        Map<String, String> authCode = responseBody.get("code");
 
         verify(mockAuthorizationCodeService)
                 .persistAuthorizationCode(authCode.get("value"), "12345");

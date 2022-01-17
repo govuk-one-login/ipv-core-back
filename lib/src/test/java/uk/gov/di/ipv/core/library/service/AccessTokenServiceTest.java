@@ -16,7 +16,10 @@ import com.nimbusds.oauth2.sdk.token.RefreshToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.AccessTokenItem;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
@@ -30,20 +33,19 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class AccessTokenServiceTest {
 
-    private DataStore<AccessTokenItem> mockDataStore;
-    private ConfigurationService mockConfigurationService;
+    @Mock private DataStore<AccessTokenItem> mockDataStore;
+    @Mock private ConfigurationService mockConfigurationService;
+
     private AccessTokenService accessTokenService;
 
     @BeforeEach
     void setUp() {
-        this.mockConfigurationService = mock(ConfigurationService.class);
-        this.mockDataStore = mock(DataStore.class);
         this.accessTokenService = new AccessTokenService(mockDataStore, mockConfigurationService);
     }
 
