@@ -1,6 +1,6 @@
 variable "issuers" {
   description = "Map of credential issuers configuration to store in Parameter Store"
-  type        = list(map(string))
+  type        = list(map(any))
 }
 
 variable "environment" {
