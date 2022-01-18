@@ -127,8 +127,7 @@ class CredentialIssuerHandlerTest {
         when(credentialIssuerService.getCredential(accessToken, passportIssuer))
                 .thenReturn(new JSONObject());
 
-        when(configurationService.getCredentialIssuer("PassportIssuer"))
-                .thenReturn(passportIssuer);
+        when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
 
         CredentialIssuerHandler handler =
                 new CredentialIssuerHandler(credentialIssuerService, configurationService);
@@ -171,8 +170,7 @@ class CredentialIssuerHandlerTest {
                         new CredentialIssuerException(
                                 HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST));
 
-        when(configurationService.getCredentialIssuer("PassportIssuer"))
-                .thenReturn(passportIssuer);
+        when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
         Integer statusCode = response.getStatusCode();
@@ -193,8 +191,7 @@ class CredentialIssuerHandlerTest {
                                 HTTPResponse.SC_SERVER_ERROR,
                                 ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER));
 
-        when(configurationService.getCredentialIssuer("PassportIssuer"))
-                .thenReturn(passportIssuer);
+        when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
 
         CredentialIssuerHandler handler =
                 new CredentialIssuerHandler(credentialIssuerService, configurationService);

@@ -31,11 +31,15 @@ public class CredentialIssuerConfig {
 
     @Override
     public String toString() {
-        return "CredentialIssuerConfig{" +
-                "id='" + id + '\'' +
-                ", tokenUrl=" + tokenUrl +
-                ", credentialUrl=" + credentialUrl +
-                '}';
+        return "CredentialIssuerConfig{"
+                + "id='"
+                + id
+                + '\''
+                + ", tokenUrl="
+                + tokenUrl
+                + ", credentialUrl="
+                + credentialUrl
+                + '}';
     }
 
     @Override

@@ -72,25 +72,37 @@ public class ConfigurationService {
     }
 
     public CredentialIssuerConfig getCredentialIssuer(String credentialIssuerId) {
-        Map<String, String> result = ssmProvider.getMultiple(String.format("/%s/ipv/core/credentialIssuers/%s", System.getenv("ENVIRONMENT"), credentialIssuerId));
-        CredentialIssuerConfig credentialIssuerConfig = new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
+        Map<String, String> result =
+                ssmProvider.getMultiple(
+                        String.format(
+                                "/%s/ipv/core/credentialIssuers/%s",
+                                System.getenv("ENVIRONMENT"), credentialIssuerId));
+        CredentialIssuerConfig credentialIssuerConfig =
+                new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
         credentialIssuerConfig.setId(credentialIssuerId);
         return credentialIssuerConfig;
     }
 
     public Set<CredentialIssuerConfig> getCredentialIssuers() {
-        Map<String, String> result = ssmProvider.recursive().getMultiple(String.format("/%s/ipv/core/credentialIssuers", System.getenv("ENVIRONMENT")));
+        Map<String, String> result =
+                ssmProvider
+                        .recursive()
+                        .getMultiple(
+                                String.format(
+                                        "/%s/ipv/core/credentialIssuers",
+                                        System.getenv("ENVIRONMENT")));
 
         Map<String, CredentialIssuerConfig> credentialIssuers = new HashMap<>();
-        result.forEach((key, value) -> {
-            Optional<String> credentialIssuerId = Arrays.stream(key.split("/")).findFirst();
-            credentialIssuerId.ifPresent(id -> {
-                if (!credentialIssuers.containsKey(id)) {
-                    credentialIssuers.put(id, getCredentialIssuer(id));
-                }
-            });
-
-        });
+        result.forEach(
+                (key, value) -> {
+                    Optional<String> credentialIssuerId = Arrays.stream(key.split("/")).findFirst();
+                    credentialIssuerId.ifPresent(
+                            id -> {
+                                if (!credentialIssuers.containsKey(id)) {
+                                    credentialIssuers.put(id, getCredentialIssuer(id));
+                                }
+                            });
+                });
         return new HashSet<>(credentialIssuers.values());
     }
 }

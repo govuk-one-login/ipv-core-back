@@ -5,47 +5,27 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 public class CredentialIssuerConfigHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
+    private final ConfigurationService configurationService;
+
+    static {
+        System.setProperty(
+                "software.amazon.awssdk.http.service.impl",
+                "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
+    }
+
+    public CredentialIssuerConfigHandler() {
+        configurationService = new ConfigurationService();
+    }
+
     @Override
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        List<Map<String, String>> criList = new ArrayList<>();
-
-        Map<String, String> passportStubCri = new HashMap<>();
-        passportStubCri.put("id", "passportIssuer");
-        passportStubCri.put("name", "Passport (Stub)");
-        passportStubCri.put(
-                "authorizeUrl",
-                "https://di-ipv-credential-issuer-stub.london.cloudapps.digital/authorize");
-        passportStubCri.put(
-                "tokenUrl", "https://di-ipv-credential-issuer-stub.london.cloudapps.digital/token");
-        passportStubCri.put(
-                "credentialUrl",
-                "https://di-ipv-credential-issuer-stub.london.cloudapps.digital/credential");
-        passportStubCri.put("ipvClientId", "IPV-Core");
-        criList.add(passportStubCri);
-
-        Map<String, String> passportDcsCri = new HashMap<>();
-        passportDcsCri.put("id", "dcsPassportIssuer");
-        passportDcsCri.put("name", "DCS Passport CRI");
-        passportDcsCri.put(
-                "authorizeUrl",
-                "https://di-ipv-cri-uk-passport-front.london.cloudapps.digital/oauth2/authorize");
-        passportDcsCri.put(
-                "tokenUrl", "https://psgeggxp8j.execute-api.eu-west-2.amazonaws.com/dev/token");
-        passportDcsCri.put(
-                "credentialUrl",
-                "https://psgeggxp8j.execute-api.eu-west-2.amazonaws.com/dev/credential");
-        passportDcsCri.put("ipvClientId", "IPV-Core");
-        criList.add(passportDcsCri);
-        return ApiGatewayResponseGenerator.proxyJsonResponse(200, criList);
+        return ApiGatewayResponseGenerator.proxyJsonResponse(
+                200, configurationService.getCredentialIssuers());
     }
 }

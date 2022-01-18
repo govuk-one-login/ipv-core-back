@@ -82,12 +82,16 @@ class ConfigurationServiceTest {
     void shouldGetCredentialIssuerFromParameterStore() {
         environmentVariables.set("ENVIRONMENT", "dev");
 
-        Map<String, String> credentialIssuerParameters = Map.of("tokenUrl", TEST_TOKEN_URL, "credentialUrl", TEST_CREDENTIAL_URL);
-        when(ssmProvider.getMultiple("/dev/ipv/core/credentialIssuers/passportCri")).thenReturn(credentialIssuerParameters);
+        Map<String, String> credentialIssuerParameters =
+                Map.of("tokenUrl", TEST_TOKEN_URL, "credentialUrl", TEST_CREDENTIAL_URL);
+        when(ssmProvider.getMultiple("/dev/ipv/core/credentialIssuers/passportCri"))
+                .thenReturn(credentialIssuerParameters);
 
         CredentialIssuerConfig result = configurationService.getCredentialIssuer("passportCri");
 
-        CredentialIssuerConfig expected = new CredentialIssuerConfig("passportCri", URI.create(TEST_TOKEN_URL), URI.create(TEST_CREDENTIAL_URL));
+        CredentialIssuerConfig expected =
+                new CredentialIssuerConfig(
+                        "passportCri", URI.create(TEST_TOKEN_URL), URI.create(TEST_CREDENTIAL_URL));
 
         assertEquals(expected.getTokenUrl(), result.getTokenUrl());
         assertEquals(expected.getCredentialUrl(), result.getCredentialUrl());
@@ -100,16 +104,20 @@ class ConfigurationServiceTest {
         HashMap<String, String> response = new HashMap<>();
         response.put("dcsPassportIssuer/tokenUrl", "http://credential-issuer-stub:8084/token");
         response.put("passportIssuer/tokenUrl", "http://credential-issuer-stub:8084/token");
-        response.put("passportIssuer/credentialUrl", "http://credential-issuer-stub:8084/credential");
-        response.put("dcsPassportIssuer/credentialUrl", "http://credential-issuer-stub:8084/credential");
+        response.put(
+                "passportIssuer/credentialUrl", "http://credential-issuer-stub:8084/credential");
+        response.put(
+                "dcsPassportIssuer/credentialUrl", "http://credential-issuer-stub:8084/credential");
 
         when(ssmProvider.recursive()).thenReturn(ssmProvider2);
         when(ssmProvider2.getMultiple("/dev/ipv/core/credentialIssuers")).thenReturn(response);
 
-        Map<String, String> credentialIssuerParameters = Map.of("tokenUrl", TEST_TOKEN_URL, "credentialUrl", TEST_CREDENTIAL_URL);
-        when(ssmProvider.getMultiple("/dev/ipv/core/credentialIssuers/dcsPassportIssuer")).thenReturn(credentialIssuerParameters);
-        when(ssmProvider.getMultiple("/dev/ipv/core/credentialIssuers/passportIssuer")).thenReturn(credentialIssuerParameters);
-
+        Map<String, String> credentialIssuerParameters =
+                Map.of("tokenUrl", TEST_TOKEN_URL, "credentialUrl", TEST_CREDENTIAL_URL);
+        when(ssmProvider.getMultiple("/dev/ipv/core/credentialIssuers/dcsPassportIssuer"))
+                .thenReturn(credentialIssuerParameters);
+        when(ssmProvider.getMultiple("/dev/ipv/core/credentialIssuers/passportIssuer"))
+                .thenReturn(credentialIssuerParameters);
 
         Set<CredentialIssuerConfig> result = configurationService.getCredentialIssuers();
 
