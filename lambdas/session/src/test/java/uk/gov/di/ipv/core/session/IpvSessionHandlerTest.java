@@ -45,7 +45,8 @@ class IpvSessionHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         APIGatewayProxyResponseEvent response = ipvSessionHandler.handleRequest(event, mockContext);
 
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
         assertEquals(ipvSessionId, responseBody.get("ipvSessionId"));

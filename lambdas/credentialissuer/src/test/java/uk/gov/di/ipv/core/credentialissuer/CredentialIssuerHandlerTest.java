@@ -19,14 +19,12 @@ import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuers;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -60,8 +58,6 @@ class CredentialIssuerHandlerTest {
                         "PassportIssuer",
                         new URI("http://www.example.com"),
                         new URI("http://www.example.com/credential"));
-        when(configurationService.getCredentialIssuers(any()))
-                .thenReturn(new CredentialIssuers(Set.of(passportIssuer)));
     }
 
     @Test
@@ -131,6 +127,8 @@ class CredentialIssuerHandlerTest {
         when(credentialIssuerService.getCredential(accessToken, passportIssuer))
                 .thenReturn(new JSONObject());
 
+        when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
+
         CredentialIssuerHandler handler =
                 new CredentialIssuerHandler(credentialIssuerService, configurationService);
         APIGatewayProxyRequestEvent input =
@@ -172,6 +170,8 @@ class CredentialIssuerHandlerTest {
                         new CredentialIssuerException(
                                 HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST));
 
+        when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
+
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
         Integer statusCode = response.getStatusCode();
         Map responseBody = getResponseBodyAsMap(response);
@@ -190,6 +190,8 @@ class CredentialIssuerHandlerTest {
                         new CredentialIssuerException(
                                 HTTPResponse.SC_SERVER_ERROR,
                                 ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER));
+
+        when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
 
         CredentialIssuerHandler handler =
                 new CredentialIssuerHandler(credentialIssuerService, configurationService);

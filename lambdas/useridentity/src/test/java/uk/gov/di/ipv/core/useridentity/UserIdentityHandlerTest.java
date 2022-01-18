@@ -89,7 +89,8 @@ class UserIdentityHandlerTest {
                 .thenReturn(userIssuedCredential);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(userIssuedCredential.get("id"), responseBody.get("id"));
         assertEquals(userIssuedCredential.get("type"), responseBody.get("type"));
@@ -154,7 +155,8 @@ class UserIdentityHandlerTest {
         when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString())).thenReturn(null);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(403, response.getStatusCode());
         assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
