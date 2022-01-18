@@ -3,7 +3,7 @@ plugins {
     id 'java-library'
 	id "idea"
 	id "jacoco"
-	id "com.diffplug.spotless" version "6.0.4"
+	id "com.diffplug.spotless" version "6.1.0"
 }
 
 
@@ -59,7 +59,7 @@ test {
 jacocoTestReport {
 	dependsOn test
 	reports {
-		xml.enabled true
+		xml.required
 	}
 }
 
@@ -71,3 +71,4 @@ spotless {
 		endWithNewline()
 	}
 }
+

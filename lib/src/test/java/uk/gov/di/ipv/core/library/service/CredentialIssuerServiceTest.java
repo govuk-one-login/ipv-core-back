@@ -7,10 +7,12 @@ import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import net.minidev.json.JSONObject;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -21,31 +23,42 @@ import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 import java.net.URI;
 import java.util.UUID;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+
 
 @WireMockTest
+@ExtendWith(MockitoExtension.class)
 class CredentialIssuerServiceTest {
 
     private static final String TEST_IPV_SESSION_ID = UUID.randomUUID().toString();
 
-    private DataStore<UserIssuedCredentialsItem> mockDataStore;
-    private ConfigurationService mockConfigurationService;
+    @Mock private DataStore<UserIssuedCredentialsItem> mockDataStore;
+    @Mock private ConfigurationService mockConfigurationService;
+    @Mock private JSONObject mockJSONObject;
+
     private CredentialIssuerService credentialIssuerService;
-    private JSONObject mockJSONObject;
 
     @BeforeEach
     void setUp() {
-        mockDataStore = mock(DataStore.class);
-        mockConfigurationService = mock(ConfigurationService.class);
-        mockJSONObject = mock(JSONObject.class);
         credentialIssuerService =
                 new CredentialIssuerService(mockDataStore, mockConfigurationService);
     }
 
     @Test
-    void test_valid_token_response(WireMockRuntimeInfo wmRuntimeInfo) {
+    void validTokenResponse(WireMockRuntimeInfo wmRuntimeInfo) {
 
         stubFor(
                 post("/token")
@@ -74,7 +87,7 @@ class CredentialIssuerServiceTest {
     }
 
     @Test
-    void test_token_error_response(WireMockRuntimeInfo wmRuntimeInfo) {
+    void tokenErrorResponse(WireMockRuntimeInfo wmRuntimeInfo) {
 
         var errorJson =
                 "{ \"error\": \"invalid_request\", \"error_description\": \"Request was missing the 'redirect_uri' parameter.\", \"error_uri\": \"See the full API docs at https://authorization-server.com/docs/access_token\"}";
@@ -176,7 +189,7 @@ class CredentialIssuerServiceTest {
         doThrow(new UnsupportedOperationException()).when(mockDataStore).create(any());
 
         CredentialIssuerException thrown =
-                Assertions.assertThrows(
+                assertThrows(
                         CredentialIssuerException.class,
                         () -> {
                             credentialIssuerService.persistUserCredentials(
@@ -201,7 +214,7 @@ class CredentialIssuerServiceTest {
 
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
-        ;
+
         BearerAccessToken accessToken = new BearerAccessToken();
 
         JSONObject credential =

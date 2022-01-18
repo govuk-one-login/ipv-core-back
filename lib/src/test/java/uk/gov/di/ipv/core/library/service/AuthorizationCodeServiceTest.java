@@ -3,32 +3,30 @@ package uk.gov.di.ipv.core.library.service;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class AuthorizationCodeServiceTest {
 
-    private DataStore<AuthorizationCodeItem> mockDataStore;
-    private ConfigurationService mockConfigurationService;
+    @Mock private DataStore<AuthorizationCodeItem> mockDataStore;
+    @Mock private ConfigurationService mockConfigurationService;
 
     private AuthorizationCodeService authorizationCodeService;
 
     @BeforeEach
     void setUp() {
-        mockDataStore = mock(DataStore.class);
-        mockConfigurationService = mock(ConfigurationService.class);
-        when(mockConfigurationService.getAuthCodesTableName()).thenReturn("test-auth-code-table");
-
-        authorizationCodeService =
-                new AuthorizationCodeService(mockDataStore, mockConfigurationService);
+        authorizationCodeService = new AuthorizationCodeService(mockDataStore, mockConfigurationService);
     }
 
     @Test
