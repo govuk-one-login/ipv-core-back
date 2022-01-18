@@ -20,7 +20,7 @@ public class CredentialIssuerConfigHandler
         List<Map<String, String>> criList = new ArrayList<>();
 
         Map<String, String> passportStubCri = new HashMap<>();
-        passportStubCri.put("id", "PassportIssuer");
+        passportStubCri.put("id", "passportIssuer");
         passportStubCri.put("name", "Passport (Stub)");
         passportStubCri.put(
                 "authorizeUrl",
@@ -34,7 +34,7 @@ public class CredentialIssuerConfigHandler
         criList.add(passportStubCri);
 
         Map<String, String> passportDcsCri = new HashMap<>();
-        passportDcsCri.put("id", "DcsPassportIssuer");
+        passportDcsCri.put("id", "dcsPassportIssuer");
         passportDcsCri.put("name", "DCS Passport CRI");
         passportDcsCri.put(
                 "authorizeUrl",
