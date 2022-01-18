@@ -18,6 +18,10 @@ public class CredentialIssuerConfigHandler
                 "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
     }
 
+    public CredentialIssuerConfigHandler(ConfigurationService configurationService) {
+        this.configurationService = configurationService;
+    }
+
     public CredentialIssuerConfigHandler() {
         configurationService = new ConfigurationService();
     }
