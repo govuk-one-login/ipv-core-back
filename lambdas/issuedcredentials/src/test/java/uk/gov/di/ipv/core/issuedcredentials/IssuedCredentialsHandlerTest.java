@@ -28,7 +28,7 @@ public class IssuedCredentialsHandlerTest {
     void shouldReturn200OnSuccessfulRequest() {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         String ipvSessionId = "a-session-id";
-        event.setBody(ipvSessionId);
+        event.setHeaders(Map.of(IssuedCredentialsHandler.IPV_SESSION_ID_HEADER_KEY, ipvSessionId));
 
         Map<String, String> userIssuedCredentials =
                 Map.of(
@@ -51,6 +51,7 @@ public class IssuedCredentialsHandlerTest {
     @Test
     void shouldReturn400IfNoSessionId() {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        event.setHeaders(Map.of());
         IssuedCredentialsHandler issuedCredentialsHandler =
                 new IssuedCredentialsHandler(mockUserIdentityService);
 
@@ -63,7 +64,7 @@ public class IssuedCredentialsHandlerTest {
     @Test
     void shouldReturn400IfSessionIdIsEmptyString() {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        event.setBody("");
+        event.setHeaders(Map.of(IssuedCredentialsHandler.IPV_SESSION_ID_HEADER_KEY, ""));
         IssuedCredentialsHandler issuedCredentialsHandler =
                 new IssuedCredentialsHandler(mockUserIdentityService);
 

@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.util.Collections;
@@ -21,6 +22,8 @@ public class IssuedCredentialsHandler
     private static final Integer OK = 200;
     private static final Integer BAD_REQUEST = 400;
 
+    public static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
+
     private final UserIdentityService userIdentityService;
 
     public IssuedCredentialsHandler(UserIdentityService userIdentityService) {
@@ -35,7 +38,8 @@ public class IssuedCredentialsHandler
     @Override
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        String ipvSessionId = input.getBody();
+        var ipvSessionId =
+                RequestHelper.getHeaderByKey(input.getHeaders(), IPV_SESSION_ID_HEADER_KEY);
 
         if (ipvSessionId == null || ipvSessionId.isEmpty()) {
             LOGGER.log(WARNING, "User credentials could not be retrieved. No session ID received.");
