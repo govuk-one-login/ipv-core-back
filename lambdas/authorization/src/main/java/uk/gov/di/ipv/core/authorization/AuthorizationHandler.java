@@ -102,7 +102,8 @@ public class AuthorizationHandler
             return new ValidationResult<>(false, ErrorResponse.MISSING_QUERY_PARAMETERS);
         }
 
-        String ipvSessionId = RequestHelper.getHeaderByKey(requestHeaders, IPV_SESSION_ID_HEADER_KEY);
+        String ipvSessionId =
+                RequestHelper.getHeaderByKey(requestHeaders, IPV_SESSION_ID_HEADER_KEY);
         if (StringUtils.isBlank(ipvSessionId)) {
             return new ValidationResult<>(false, ErrorResponse.MISSING_IPV_SESSION_ID);
         }

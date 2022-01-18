@@ -73,7 +73,8 @@ class AuthorizationHandlerTest {
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
         ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, Map<String, String>> responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        Map<String, Map<String, String>> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
         Map<String, String> authCode = responseBody.get("code");
 
         verify(mockAuthorizationCodeService)
