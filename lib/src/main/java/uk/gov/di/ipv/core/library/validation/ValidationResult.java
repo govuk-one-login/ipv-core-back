@@ -8,10 +8,10 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class ValidationResult<T> {
-    private final boolean valid;
-    private final T error;
+  private final boolean valid;
+  private final T error;
 
-    public static <U> ValidationResult<U> createValidResult() {
-        return new ValidationResult<>(true, null);
-    }
+  public static <U> ValidationResult<U> createValidResult() {
+    return new ValidationResult<>(true, null);
+  }
 }

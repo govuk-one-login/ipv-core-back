@@ -20,65 +20,62 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import java.util.Map;
 
 public class UserIdentityHandler
-        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+    implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserIdentityHandler.class);
-    private static final String AUTHORIZATION_HEADER_KEY = "Authorization";
+  private static final Logger LOGGER = LoggerFactory.getLogger(UserIdentityHandler.class);
+  private static final String AUTHORIZATION_HEADER_KEY = "Authorization";
 
-    private final UserIdentityService userIdentityService;
-    private final AccessTokenService accessTokenService;
+  private final UserIdentityService userIdentityService;
+  private final AccessTokenService accessTokenService;
 
-    static {
-        // Set the default synchronous HTTP client to UrlConnectionHttpClient
-        System.setProperty(
-                "software.amazon.awssdk.http.service.impl",
-                "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
+  static {
+    // Set the default synchronous HTTP client to UrlConnectionHttpClient
+    System.setProperty(
+        "software.amazon.awssdk.http.service.impl",
+        "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
+  }
+
+  public UserIdentityHandler(
+      UserIdentityService userIdentityService, AccessTokenService accessTokenService) {
+    this.userIdentityService = userIdentityService;
+    this.accessTokenService = accessTokenService;
+  }
+
+  @ExcludeFromGeneratedCoverageReport
+  public UserIdentityHandler() {
+    this.userIdentityService = new UserIdentityService();
+    this.accessTokenService = new AccessTokenService();
+  }
+
+  @Override
+  public APIGatewayProxyResponseEvent handleRequest(
+      APIGatewayProxyRequestEvent input, Context context) {
+    try {
+      String accessTokenString =
+          RequestHelper.getHeaderByKey(input.getHeaders(), AUTHORIZATION_HEADER_KEY);
+
+      // Performs validation on header value and throws a ParseException if invalid
+      AccessToken.parse(accessTokenString);
+
+      String ipvSessionId = accessTokenService.getIpvSessionIdByAccessToken(accessTokenString);
+
+      if (StringUtils.isBlank(ipvSessionId)) {
+        LOGGER.error(
+            "User credential could not be retrieved. The supplied access token was not found in the database.");
+        return ApiGatewayResponseGenerator.proxyJsonResponse(
+            OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(),
+            OAuth2Error.ACCESS_DENIED
+                .appendDescription(" - The supplied access token was not found in the database")
+                .toJSONObject());
+      }
+
+      Map<String, String> credentials = userIdentityService.getUserIssuedCredentials(ipvSessionId);
+
+      return ApiGatewayResponseGenerator.proxyJsonResponse(HTTPResponse.SC_OK, credentials);
+    } catch (ParseException e) {
+      LOGGER.error("Failed to parse access token");
+      return ApiGatewayResponseGenerator.proxyJsonResponse(
+          e.getErrorObject().getHTTPStatusCode(), e.getErrorObject().toJSONObject());
     }
-
-    public UserIdentityHandler(
-            UserIdentityService userIdentityService, AccessTokenService accessTokenService) {
-        this.userIdentityService = userIdentityService;
-        this.accessTokenService = accessTokenService;
-    }
-
-    @ExcludeFromGeneratedCoverageReport
-    public UserIdentityHandler() {
-        this.userIdentityService = new UserIdentityService();
-        this.accessTokenService = new AccessTokenService();
-    }
-
-    @Override
-    public APIGatewayProxyResponseEvent handleRequest(
-            APIGatewayProxyRequestEvent input, Context context) {
-        try {
-            String accessTokenString =
-                    RequestHelper.getHeaderByKey(input.getHeaders(), AUTHORIZATION_HEADER_KEY);
-
-            // Performs validation on header value and throws a ParseException if invalid
-            AccessToken.parse(accessTokenString);
-
-            String ipvSessionId =
-                    accessTokenService.getIpvSessionIdByAccessToken(accessTokenString);
-
-            if (StringUtils.isBlank(ipvSessionId)) {
-                LOGGER.error(
-                        "User credential could not be retrieved. The supplied access token was not found in the database.");
-                return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(),
-                        OAuth2Error.ACCESS_DENIED
-                                .appendDescription(
-                                        " - The supplied access token was not found in the database")
-                                .toJSONObject());
-            }
-
-            Map<String, String> credentials =
-                    userIdentityService.getUserIssuedCredentials(ipvSessionId);
-
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HTTPResponse.SC_OK, credentials);
-        } catch (ParseException e) {
-            LOGGER.error("Failed to parse access token");
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getErrorObject().getHTTPStatusCode(), e.getErrorObject().toJSONObject());
-        }
-    }
+  }
 }

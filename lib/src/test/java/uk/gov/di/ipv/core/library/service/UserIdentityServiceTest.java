@@ -19,51 +19,42 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UserIdentityServiceTest {
 
-    @Mock private ConfigurationService mockConfigurationService;
+  @Mock private ConfigurationService mockConfigurationService;
 
-    @Mock private DataStore<UserIssuedCredentialsItem> mockDataStore;
+  @Mock private DataStore<UserIssuedCredentialsItem> mockDataStore;
 
-    private UserIdentityService userIdentityService;
+  private UserIdentityService userIdentityService;
 
-    @BeforeEach
-    void setUp() {
-        userIdentityService = new UserIdentityService(mockConfigurationService, mockDataStore);
-    }
+  @BeforeEach
+  void setUp() {
+    userIdentityService = new UserIdentityService(mockConfigurationService, mockDataStore);
+  }
 
-    @Test
-    void shouldReturnCredentialsFromDataStore() {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
-                List.of(
-                        createUserIssuedCredentialsItem(
-                                "ipv-session-id-1",
-                                "PassportIssuer",
-                                "Test credential 1",
-                                LocalDateTime.now()),
-                        createUserIssuedCredentialsItem(
-                                "ipv-session-id-1",
-                                "FraudIssuer",
-                                "Test credential 2",
-                                LocalDateTime.now()));
+  @Test
+  void shouldReturnCredentialsFromDataStore() {
+    List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List.of(
+            createUserIssuedCredentialsItem(
+                "ipv-session-id-1", "PassportIssuer", "Test credential 1", LocalDateTime.now()),
+            createUserIssuedCredentialsItem(
+                "ipv-session-id-1", "FraudIssuer", "Test credential 2", LocalDateTime.now()));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+    when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
-        Map<String, String> credentials =
-                userIdentityService.getUserIssuedCredentials("ipv-session-id-1");
+    Map<String, String> credentials =
+        userIdentityService.getUserIssuedCredentials("ipv-session-id-1");
 
-        assertEquals("Test credential 1", credentials.get("PassportIssuer"));
-        assertEquals("Test credential 2", credentials.get("FraudIssuer"));
-    }
+    assertEquals("Test credential 1", credentials.get("PassportIssuer"));
+    assertEquals("Test credential 2", credentials.get("FraudIssuer"));
+  }
 
-    private UserIssuedCredentialsItem createUserIssuedCredentialsItem(
-            String ipvSessionId,
-            String credentialIssuer,
-            String credential,
-            LocalDateTime dateCreated) {
-        UserIssuedCredentialsItem userIssuedCredentialsItem = new UserIssuedCredentialsItem();
-        userIssuedCredentialsItem.setIpvSessionId(ipvSessionId);
-        userIssuedCredentialsItem.setCredentialIssuer(credentialIssuer);
-        userIssuedCredentialsItem.setCredential(credential);
-        userIssuedCredentialsItem.setDateCreated(dateCreated);
-        return userIssuedCredentialsItem;
-    }
+  private UserIssuedCredentialsItem createUserIssuedCredentialsItem(
+      String ipvSessionId, String credentialIssuer, String credential, LocalDateTime dateCreated) {
+    UserIssuedCredentialsItem userIssuedCredentialsItem = new UserIssuedCredentialsItem();
+    userIssuedCredentialsItem.setIpvSessionId(ipvSessionId);
+    userIssuedCredentialsItem.setCredentialIssuer(credentialIssuer);
+    userIssuedCredentialsItem.setCredential(credential);
+    userIssuedCredentialsItem.setDateCreated(dateCreated);
+    return userIssuedCredentialsItem;
+  }
 }

@@ -9,31 +9,30 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class UserIdentityService {
-    private final ConfigurationService configurationService;
-    private final DataStore<UserIssuedCredentialsItem> dataStore;
+  private final ConfigurationService configurationService;
+  private final DataStore<UserIssuedCredentialsItem> dataStore;
 
-    @ExcludeFromGeneratedCoverageReport
-    public UserIdentityService() {
-        this.configurationService = new ConfigurationService();
-        this.dataStore =
-                new DataStore<>(
-                        configurationService.getUserIssuedCredentialTableName(),
-                        UserIssuedCredentialsItem.class,
-                        DataStore.getClient());
-    }
+  @ExcludeFromGeneratedCoverageReport
+  public UserIdentityService() {
+    this.configurationService = new ConfigurationService();
+    this.dataStore =
+        new DataStore<>(
+            configurationService.getUserIssuedCredentialTableName(),
+            UserIssuedCredentialsItem.class,
+            DataStore.getClient());
+  }
 
-    public UserIdentityService(
-            ConfigurationService configurationService,
-            DataStore<UserIssuedCredentialsItem> dataStore) {
-        this.configurationService = configurationService;
-        this.dataStore = dataStore;
-    }
+  public UserIdentityService(
+      ConfigurationService configurationService, DataStore<UserIssuedCredentialsItem> dataStore) {
+    this.configurationService = configurationService;
+    this.dataStore = dataStore;
+  }
 
-    public Map<String, String> getUserIssuedCredentials(String ipvSessionId) {
-        List<UserIssuedCredentialsItem> credentialIssuerItem = dataStore.getItems(ipvSessionId);
+  public Map<String, String> getUserIssuedCredentials(String ipvSessionId) {
+    List<UserIssuedCredentialsItem> credentialIssuerItem = dataStore.getItems(ipvSessionId);
 
-        return credentialIssuerItem.stream()
-                .map(ciItem -> Map.entry(ciItem.getCredentialIssuer(), ciItem.getCredential()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
+    return credentialIssuerItem.stream()
+        .map(ciItem -> Map.entry(ciItem.getCredentialIssuer(), ciItem.getCredential()))
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+  }
 }

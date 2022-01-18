@@ -16,27 +16,27 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class IpvSessionServiceTest {
 
-    @Mock private DataStore<IpvSessionItem> mockDataStore;
+  @Mock private DataStore<IpvSessionItem> mockDataStore;
 
-    @Mock private ConfigurationService mockConfigurationService;
+  @Mock private ConfigurationService mockConfigurationService;
 
-    private IpvSessionService ipvSessionService;
+  private IpvSessionService ipvSessionService;
 
-    @BeforeEach
-    void setUp() {
-        ipvSessionService = new IpvSessionService(mockDataStore, mockConfigurationService);
-    }
+  @BeforeEach
+  void setUp() {
+    ipvSessionService = new IpvSessionService(mockDataStore, mockConfigurationService);
+  }
 
-    @Test
-    void shouldCreateSessionItem() {
-        String ipvSessionID = ipvSessionService.generateIpvSession();
+  @Test
+  void shouldCreateSessionItem() {
+    String ipvSessionID = ipvSessionService.generateIpvSession();
 
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-        verify(mockDataStore).create(ipvSessionItemArgumentCaptor.capture());
-        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
-        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
+    ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+        ArgumentCaptor.forClass(IpvSessionItem.class);
+    verify(mockDataStore).create(ipvSessionItemArgumentCaptor.capture());
+    assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
+    assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
 
-        assertEquals(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(), ipvSessionID);
-    }
+    assertEquals(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(), ipvSessionID);
+  }
 }

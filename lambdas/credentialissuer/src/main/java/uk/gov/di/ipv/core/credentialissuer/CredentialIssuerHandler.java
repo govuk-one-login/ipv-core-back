@@ -21,77 +21,76 @@ import java.util.Collections;
 import java.util.Optional;
 
 public class CredentialIssuerHandler
-        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+    implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
-    private final CredentialIssuerService credentialIssuerService;
-    private final ConfigurationService configurationService;
+  private final CredentialIssuerService credentialIssuerService;
+  private final ConfigurationService configurationService;
 
-    static {
-        // Set the default synchronous HTTP client to UrlConnectionHttpClient
-        System.setProperty(
-                "software.amazon.awssdk.http.service.impl",
-                "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
+  static {
+    // Set the default synchronous HTTP client to UrlConnectionHttpClient
+    System.setProperty(
+        "software.amazon.awssdk.http.service.impl",
+        "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
+  }
+
+  public CredentialIssuerHandler(
+      CredentialIssuerService credentialIssuerService, ConfigurationService configurationService) {
+    this.credentialIssuerService = credentialIssuerService;
+    this.configurationService = configurationService;
+  }
+
+  @ExcludeFromGeneratedCoverageReport
+  public CredentialIssuerHandler() {
+    this.credentialIssuerService = new CredentialIssuerService();
+    this.configurationService = new ConfigurationService();
+  }
+
+  @Override
+  public APIGatewayProxyResponseEvent handleRequest(
+      APIGatewayProxyRequestEvent input, Context context) {
+
+    CredentialIssuerRequestDto request =
+        RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
+
+    var errorResponse = validate(request);
+    if (errorResponse.isPresent()) {
+      return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
+    }
+    CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request);
+
+    try {
+      BearerAccessToken accessToken =
+          credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);
+      JSONObject credential =
+          credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
+      credentialIssuerService.persistUserCredentials(credential, request);
+      return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.emptyMap());
+    } catch (CredentialIssuerException e) {
+      return ApiGatewayResponseGenerator.proxyJsonResponse(
+          e.getHttpStatusCode(), e.getErrorResponse());
+    }
+  }
+
+  private Optional<ErrorResponse> validate(CredentialIssuerRequestDto request) {
+    if (StringUtils.isBlank(request.getAuthorizationCode())) {
+      return Optional.of(ErrorResponse.MISSING_AUTHORIZATION_CODE);
     }
 
-    public CredentialIssuerHandler(
-            CredentialIssuerService credentialIssuerService,
-            ConfigurationService configurationService) {
-        this.credentialIssuerService = credentialIssuerService;
-        this.configurationService = configurationService;
+    if (StringUtils.isBlank(request.getCredentialIssuerId())) {
+      return Optional.of(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
     }
 
-    @ExcludeFromGeneratedCoverageReport
-    public CredentialIssuerHandler() {
-        this.credentialIssuerService = new CredentialIssuerService();
-        this.configurationService = new ConfigurationService();
+    if (StringUtils.isBlank(request.getIpvSessionId())) {
+      return Optional.of(ErrorResponse.MISSING_IPV_SESSION_ID);
     }
 
-    @Override
-    public APIGatewayProxyResponseEvent handleRequest(
-            APIGatewayProxyRequestEvent input, Context context) {
-
-        CredentialIssuerRequestDto request =
-                RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
-
-        var errorResponse = validate(request);
-        if (errorResponse.isPresent()) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
-        }
-        CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request);
-
-        try {
-            BearerAccessToken accessToken =
-                    credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);
-            JSONObject credential =
-                    credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
-            credentialIssuerService.persistUserCredentials(credential, request);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.emptyMap());
-        } catch (CredentialIssuerException e) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getHttpStatusCode(), e.getErrorResponse());
-        }
+    if (getCredentialIssuerConfig(request) == null) {
+      return Optional.of(ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
     }
+    return Optional.empty();
+  }
 
-    private Optional<ErrorResponse> validate(CredentialIssuerRequestDto request) {
-        if (StringUtils.isBlank(request.getAuthorizationCode())) {
-            return Optional.of(ErrorResponse.MISSING_AUTHORIZATION_CODE);
-        }
-
-        if (StringUtils.isBlank(request.getCredentialIssuerId())) {
-            return Optional.of(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
-        }
-
-        if (StringUtils.isBlank(request.getIpvSessionId())) {
-            return Optional.of(ErrorResponse.MISSING_IPV_SESSION_ID);
-        }
-
-        if (getCredentialIssuerConfig(request) == null) {
-            return Optional.of(ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
-        }
-        return Optional.empty();
-    }
-
-    private CredentialIssuerConfig getCredentialIssuerConfig(CredentialIssuerRequestDto request) {
-        return configurationService.getCredentialIssuer(request.getCredentialIssuerId());
-    }
+  private CredentialIssuerConfig getCredentialIssuerConfig(CredentialIssuerRequestDto request) {
+    return configurationService.getCredentialIssuer(request.getCredentialIssuerId());
+  }
 }

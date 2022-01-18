@@ -5,23 +5,23 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 
 @DynamoDbBean
 public class AccessTokenItem {
-    private String accessToken;
-    private String ipvSessionId;
+  private String accessToken;
+  private String ipvSessionId;
 
-    @DynamoDbPartitionKey
-    public String getAccessToken() {
-        return accessToken;
-    }
+  @DynamoDbPartitionKey
+  public String getAccessToken() {
+    return accessToken;
+  }
 
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
-    }
+  public void setAccessToken(String accessToken) {
+    this.accessToken = accessToken;
+  }
 
-    public String getIpvSessionId() {
-        return ipvSessionId;
-    }
+  public String getIpvSessionId() {
+    return ipvSessionId;
+  }
 
-    public void setIpvSessionId(String ipvSessionId) {
-        this.ipvSessionId = ipvSessionId;
-    }
+  public void setIpvSessionId(String ipvSessionId) {
+    this.ipvSessionId = ipvSessionId;
+  }
 }

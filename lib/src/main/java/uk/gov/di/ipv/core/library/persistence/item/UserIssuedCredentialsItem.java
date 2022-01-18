@@ -9,42 +9,42 @@ import java.time.LocalDateTime;
 @DynamoDbBean
 public class UserIssuedCredentialsItem {
 
-    private String ipvSessionId;
-    private String credentialIssuer;
-    private String credential;
-    private LocalDateTime dateCreated;
+  private String ipvSessionId;
+  private String credentialIssuer;
+  private String credential;
+  private LocalDateTime dateCreated;
 
-    @DynamoDbPartitionKey
-    public String getIpvSessionId() {
-        return ipvSessionId;
-    }
+  @DynamoDbPartitionKey
+  public String getIpvSessionId() {
+    return ipvSessionId;
+  }
 
-    public void setIpvSessionId(String ipvSessionId) {
-        this.ipvSessionId = ipvSessionId;
-    }
+  public void setIpvSessionId(String ipvSessionId) {
+    this.ipvSessionId = ipvSessionId;
+  }
 
-    @DynamoDbSortKey
-    public String getCredentialIssuer() {
-        return credentialIssuer;
-    }
+  @DynamoDbSortKey
+  public String getCredentialIssuer() {
+    return credentialIssuer;
+  }
 
-    public void setCredentialIssuer(String credentialIssuer) {
-        this.credentialIssuer = credentialIssuer;
-    }
+  public void setCredentialIssuer(String credentialIssuer) {
+    this.credentialIssuer = credentialIssuer;
+  }
 
-    public LocalDateTime getDateCreated() {
-        return dateCreated;
-    }
+  public LocalDateTime getDateCreated() {
+    return dateCreated;
+  }
 
-    public void setDateCreated(LocalDateTime dateCreated) {
-        this.dateCreated = dateCreated;
-    }
+  public void setDateCreated(LocalDateTime dateCreated) {
+    this.dateCreated = dateCreated;
+  }
 
-    public String getCredential() {
-        return credential;
-    }
+  public String getCredential() {
+    return credential;
+  }
 
-    public void setCredential(String credential) {
-        this.credential = credential;
-    }
+  public void setCredential(String credential) {
+    this.credential = credential;
+  }
 }

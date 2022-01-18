@@ -6,23 +6,23 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 @DynamoDbBean
 public class AuthorizationCodeItem {
 
-    private String authCode;
-    private String ipvSessionId;
+  private String authCode;
+  private String ipvSessionId;
 
-    @DynamoDbPartitionKey
-    public String getAuthCode() {
-        return authCode;
-    }
+  @DynamoDbPartitionKey
+  public String getAuthCode() {
+    return authCode;
+  }
 
-    public void setAuthCode(String authCode) {
-        this.authCode = authCode;
-    }
+  public void setAuthCode(String authCode) {
+    this.authCode = authCode;
+  }
 
-    public String getIpvSessionId() {
-        return ipvSessionId;
-    }
+  public String getIpvSessionId() {
+    return ipvSessionId;
+  }
 
-    public void setIpvSessionId(String ipvSessionId) {
-        this.ipvSessionId = ipvSessionId;
-    }
+  public void setIpvSessionId(String ipvSessionId) {
+    this.ipvSessionId = ipvSessionId;
+  }
 }

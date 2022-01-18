@@ -42,250 +42,222 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class CredentialIssuerServiceTest {
 
-    private static final String TEST_IPV_SESSION_ID = UUID.randomUUID().toString();
+  private static final String TEST_IPV_SESSION_ID = UUID.randomUUID().toString();
 
-    @Mock private DataStore<UserIssuedCredentialsItem> mockDataStore;
-    @Mock private ConfigurationService mockConfigurationService;
-    @Mock private JSONObject mockJSONObject;
+  @Mock private DataStore<UserIssuedCredentialsItem> mockDataStore;
+  @Mock private ConfigurationService mockConfigurationService;
+  @Mock private JSONObject mockJSONObject;
 
-    private CredentialIssuerService credentialIssuerService;
+  private CredentialIssuerService credentialIssuerService;
 
-    @BeforeEach
-    void setUp() {
-        credentialIssuerService =
-                new CredentialIssuerService(mockDataStore, mockConfigurationService);
-    }
+  @BeforeEach
+  void setUp() {
+    credentialIssuerService = new CredentialIssuerService(mockDataStore, mockConfigurationService);
+  }
 
-    @Test
-    void validTokenResponse(WireMockRuntimeInfo wmRuntimeInfo) {
+  @Test
+  void validTokenResponse(WireMockRuntimeInfo wmRuntimeInfo) {
 
-        stubFor(
-                post("/token")
-                        .willReturn(
-                                aResponse()
-                                        .withHeader("Content-Type", "application/json")
-                                        .withBody(
-                                                "{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n")));
+    stubFor(
+        post("/token")
+            .willReturn(
+                aResponse()
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(
+                        "{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n")));
 
-        CredentialIssuerRequestDto credentialIssuerRequestDto =
-                new CredentialIssuerRequestDto(
-                        "1234",
-                        "cred_issuer_id_1",
-                        TEST_IPV_SESSION_ID,
-                        "http://www.example.com/redirect");
-        CredentialIssuerConfig credentialIssuerConfig =
-                getStubCredentialIssuerConfig(wmRuntimeInfo);
+    CredentialIssuerRequestDto credentialIssuerRequestDto =
+        new CredentialIssuerRequestDto(
+            "1234", "cred_issuer_id_1", TEST_IPV_SESSION_ID, "http://www.example.com/redirect");
+    CredentialIssuerConfig credentialIssuerConfig = getStubCredentialIssuerConfig(wmRuntimeInfo);
 
-        AccessToken accessToken =
-                credentialIssuerService.exchangeCodeForToken(
-                        credentialIssuerRequestDto, credentialIssuerConfig);
-        AccessTokenType type = accessToken.getType();
-        assertEquals("Bearer", type.toString());
-        assertEquals(3600, accessToken.getLifetime());
-        assertEquals("d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4", accessToken.getValue());
-    }
+    AccessToken accessToken =
+        credentialIssuerService.exchangeCodeForToken(
+            credentialIssuerRequestDto, credentialIssuerConfig);
+    AccessTokenType type = accessToken.getType();
+    assertEquals("Bearer", type.toString());
+    assertEquals(3600, accessToken.getLifetime());
+    assertEquals("d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4", accessToken.getValue());
+  }
 
-    @Test
-    void tokenErrorResponse(WireMockRuntimeInfo wmRuntimeInfo) {
+  @Test
+  void tokenErrorResponse(WireMockRuntimeInfo wmRuntimeInfo) {
 
-        var errorJson =
-                "{ \"error\": \"invalid_request\", \"error_description\": \"Request was missing the 'redirect_uri' parameter.\", \"error_uri\": \"See the full API docs at https://authorization-server.com/docs/access_token\"}";
-        stubFor(
-                post("/token")
-                        .willReturn(
-                                aResponse()
-                                        .withStatus(400)
-                                        .withHeader("Content-Type", "application/json")
-                                        .withBody(errorJson)));
+    var errorJson =
+        "{ \"error\": \"invalid_request\", \"error_description\": \"Request was missing the 'redirect_uri' parameter.\", \"error_uri\": \"See the full API docs at https://authorization-server.com/docs/access_token\"}";
+    stubFor(
+        post("/token")
+            .willReturn(
+                aResponse()
+                    .withStatus(400)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(errorJson)));
 
-        CredentialIssuerRequestDto credentialIssuerRequestDto =
-                new CredentialIssuerRequestDto(
-                        "1234",
-                        "cred_issuer_id_1",
-                        TEST_IPV_SESSION_ID,
-                        "http://www.example.com/redirect");
-        CredentialIssuerConfig credentialIssuerConfig =
-                getStubCredentialIssuerConfig(wmRuntimeInfo);
+    CredentialIssuerRequestDto credentialIssuerRequestDto =
+        new CredentialIssuerRequestDto(
+            "1234", "cred_issuer_id_1", TEST_IPV_SESSION_ID, "http://www.example.com/redirect");
+    CredentialIssuerConfig credentialIssuerConfig = getStubCredentialIssuerConfig(wmRuntimeInfo);
 
-        CredentialIssuerException exception =
-                assertThrows(
-                        CredentialIssuerException.class,
-                        () -> {
-                            credentialIssuerService.exchangeCodeForToken(
-                                    credentialIssuerRequestDto, credentialIssuerConfig);
-                        });
+    CredentialIssuerException exception =
+        assertThrows(
+            CredentialIssuerException.class,
+            () -> {
+              credentialIssuerService.exchangeCodeForToken(
+                  credentialIssuerRequestDto, credentialIssuerConfig);
+            });
 
-        assertEquals(HTTPResponse.SC_BAD_REQUEST, exception.getHttpStatusCode());
-        assertEquals(ErrorResponse.INVALID_TOKEN_REQUEST, exception.getErrorResponse());
-    }
+    assertEquals(HTTPResponse.SC_BAD_REQUEST, exception.getHttpStatusCode());
+    assertEquals(ErrorResponse.INVALID_TOKEN_REQUEST, exception.getErrorResponse());
+  }
 
-    @Test
-    void invalidHeaderThrowsCredentialIssuerException(WireMockRuntimeInfo wmRuntimeInfo) {
+  @Test
+  void invalidHeaderThrowsCredentialIssuerException(WireMockRuntimeInfo wmRuntimeInfo) {
 
-        stubFor(
-                post("/token")
-                        .willReturn(
-                                aResponse()
-                                        .withHeader("Content-Type", "application/xml")
-                                        .withBody(
-                                                "{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n")));
+    stubFor(
+        post("/token")
+            .willReturn(
+                aResponse()
+                    .withHeader("Content-Type", "application/xml")
+                    .withBody(
+                        "{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n")));
 
-        CredentialIssuerRequestDto credentialIssuerRequestDto =
-                new CredentialIssuerRequestDto(
-                        "1234",
-                        "cred_issuer_id_1",
-                        TEST_IPV_SESSION_ID,
-                        "http://www.example.com/redirect");
-        CredentialIssuerConfig credentialIssuerConfig =
-                getStubCredentialIssuerConfig(wmRuntimeInfo);
-        CredentialIssuerException exception =
-                assertThrows(
-                        CredentialIssuerException.class,
-                        () -> {
-                            credentialIssuerService.exchangeCodeForToken(
-                                    credentialIssuerRequestDto, credentialIssuerConfig);
-                        });
+    CredentialIssuerRequestDto credentialIssuerRequestDto =
+        new CredentialIssuerRequestDto(
+            "1234", "cred_issuer_id_1", TEST_IPV_SESSION_ID, "http://www.example.com/redirect");
+    CredentialIssuerConfig credentialIssuerConfig = getStubCredentialIssuerConfig(wmRuntimeInfo);
+    CredentialIssuerException exception =
+        assertThrows(
+            CredentialIssuerException.class,
+            () -> {
+              credentialIssuerService.exchangeCodeForToken(
+                  credentialIssuerRequestDto, credentialIssuerConfig);
+            });
 
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE, exception.getErrorResponse());
-    }
+    assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
+    assertEquals(ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE, exception.getErrorResponse());
+  }
 
-    @Test
-    void expectedSuccessWhenSaveCredentials() {
+  @Test
+  void expectedSuccessWhenSaveCredentials() {
 
-        ArgumentCaptor<UserIssuedCredentialsItem> userIssuedCredentialsItemCaptor =
-                ArgumentCaptor.forClass(UserIssuedCredentialsItem.class);
+    ArgumentCaptor<UserIssuedCredentialsItem> userIssuedCredentialsItemCaptor =
+        ArgumentCaptor.forClass(UserIssuedCredentialsItem.class);
 
-        CredentialIssuerRequestDto credentialIssuerRequestDto =
-                new CredentialIssuerRequestDto(
-                        "1234",
-                        "cred_issuer_id_1",
-                        TEST_IPV_SESSION_ID,
-                        "http://www.example.com/redirect");
+    CredentialIssuerRequestDto credentialIssuerRequestDto =
+        new CredentialIssuerRequestDto(
+            "1234", "cred_issuer_id_1", TEST_IPV_SESSION_ID, "http://www.example.com/redirect");
 
-        credentialIssuerService.persistUserCredentials(mockJSONObject, credentialIssuerRequestDto);
-        verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture());
-        verify(mockJSONObject).toJSONString();
-        assertEquals(
-                credentialIssuerRequestDto.getIpvSessionId(),
-                userIssuedCredentialsItemCaptor.getValue().getIpvSessionId());
-        assertEquals(
-                credentialIssuerRequestDto.getCredentialIssuerId(),
-                userIssuedCredentialsItemCaptor.getValue().getCredentialIssuer());
-    }
+    credentialIssuerService.persistUserCredentials(mockJSONObject, credentialIssuerRequestDto);
+    verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture());
+    verify(mockJSONObject).toJSONString();
+    assertEquals(
+        credentialIssuerRequestDto.getIpvSessionId(),
+        userIssuedCredentialsItemCaptor.getValue().getIpvSessionId());
+    assertEquals(
+        credentialIssuerRequestDto.getCredentialIssuerId(),
+        userIssuedCredentialsItemCaptor.getValue().getCredentialIssuer());
+  }
 
-    @Test
-    void expectedExceptionWhenSaveCredentials() {
+  @Test
+  void expectedExceptionWhenSaveCredentials() {
 
-        CredentialIssuerRequestDto credentialIssuerRequestDto =
-                new CredentialIssuerRequestDto(
-                        "1234",
-                        "cred_issuer_id_1",
-                        TEST_IPV_SESSION_ID,
-                        "http://www.example.com/redirect");
+    CredentialIssuerRequestDto credentialIssuerRequestDto =
+        new CredentialIssuerRequestDto(
+            "1234", "cred_issuer_id_1", TEST_IPV_SESSION_ID, "http://www.example.com/redirect");
 
-        doThrow(new UnsupportedOperationException()).when(mockDataStore).create(any());
+    doThrow(new UnsupportedOperationException()).when(mockDataStore).create(any());
 
-        CredentialIssuerException thrown =
-                assertThrows(
-                        CredentialIssuerException.class,
-                        () -> {
-                            credentialIssuerService.persistUserCredentials(
-                                    mockJSONObject, credentialIssuerRequestDto);
-                        });
+    CredentialIssuerException thrown =
+        assertThrows(
+            CredentialIssuerException.class,
+            () -> {
+              credentialIssuerService.persistUserCredentials(
+                  mockJSONObject, credentialIssuerRequestDto);
+            });
 
-        assertNotNull(thrown);
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_SAVE_CREDENTIAL, thrown.getErrorResponse());
-    }
+    assertNotNull(thrown);
+    assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
+    assertEquals(ErrorResponse.FAILED_TO_SAVE_CREDENTIAL, thrown.getErrorResponse());
+  }
 
-    @Test
-    void getCredentialCorrectlyCallsACredentialIssuer(WireMockRuntimeInfo wmRuntimeInfo) {
-        stubFor(
-                get("/credential")
-                        .willReturn(
-                                aResponse()
-                                        .withHeader(
-                                                "Content-Type", "application/json;charset=UTF-8")
-                                        .withBody(
-                                                "{\"id\": \"some-resource-id\", \"evidenceType\": \"passport\", \"evidenceID\": \"passport-abc-12345\"}")));
+  @Test
+  void getCredentialCorrectlyCallsACredentialIssuer(WireMockRuntimeInfo wmRuntimeInfo) {
+    stubFor(
+        get("/credential")
+            .willReturn(
+                aResponse()
+                    .withHeader("Content-Type", "application/json;charset=UTF-8")
+                    .withBody(
+                        "{\"id\": \"some-resource-id\", \"evidenceType\": \"passport\", \"evidenceID\": \"passport-abc-12345\"}")));
 
-        CredentialIssuerConfig credentialIssuerConfig =
-                getStubCredentialIssuerConfig(wmRuntimeInfo);
+    CredentialIssuerConfig credentialIssuerConfig = getStubCredentialIssuerConfig(wmRuntimeInfo);
 
-        BearerAccessToken accessToken = new BearerAccessToken();
+    BearerAccessToken accessToken = new BearerAccessToken();
 
-        JSONObject credential =
-                credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
+    JSONObject credential =
+        credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
 
-        assertEquals("some-resource-id", credential.get("id"));
-        assertEquals("passport", credential.get("evidenceType"));
-        assertEquals("passport-abc-12345", credential.get("evidenceID"));
+    assertEquals("some-resource-id", credential.get("id"));
+    assertEquals("passport", credential.get("evidenceType"));
+    assertEquals("passport-abc-12345", credential.get("evidenceID"));
 
-        verify(
-                getRequestedFor(urlEqualTo("/credential"))
-                        .withHeader("Authorization", equalTo("Bearer " + accessToken.getValue())));
-    }
+    verify(
+        getRequestedFor(urlEqualTo("/credential"))
+            .withHeader("Authorization", equalTo("Bearer " + accessToken.getValue())));
+  }
 
-    @Test
-    void getCredentialThrowsIfResponseIsNotOk(WireMockRuntimeInfo wmRuntimeInfo) {
-        stubFor(
-                get("/credential")
-                        .willReturn(
-                                aResponse()
-                                        .withStatus(500)
-                                        .withHeader("Content-Type", "text/plain")
-                                        .withBody("Something bad happened...")));
+  @Test
+  void getCredentialThrowsIfResponseIsNotOk(WireMockRuntimeInfo wmRuntimeInfo) {
+    stubFor(
+        get("/credential")
+            .willReturn(
+                aResponse()
+                    .withStatus(500)
+                    .withHeader("Content-Type", "text/plain")
+                    .withBody("Something bad happened...")));
 
-        CredentialIssuerConfig credentialIssuerConfig =
-                getStubCredentialIssuerConfig(wmRuntimeInfo);
-        ;
-        BearerAccessToken accessToken = new BearerAccessToken();
+    CredentialIssuerConfig credentialIssuerConfig = getStubCredentialIssuerConfig(wmRuntimeInfo);
+    ;
+    BearerAccessToken accessToken = new BearerAccessToken();
 
-        CredentialIssuerException thrown =
-                assertThrows(
-                        CredentialIssuerException.class,
-                        () -> {
-                            credentialIssuerService.getCredential(
-                                    accessToken, credentialIssuerConfig);
-                        });
+    CredentialIssuerException thrown =
+        assertThrows(
+            CredentialIssuerException.class,
+            () -> {
+              credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
+            });
 
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
-    }
+    assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
+    assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
+  }
 
-    @Test
-    void getCredentialThrowsIfNotValidJsonInResponse(WireMockRuntimeInfo wmRuntimeInfo) {
-        stubFor(
-                get("/credential")
-                        .willReturn(
-                                aResponse()
-                                        .withHeader(
-                                                "Content-Type", "application/json;charset=UTF-8")
-                                        .withBody("What on earth is this?")));
+  @Test
+  void getCredentialThrowsIfNotValidJsonInResponse(WireMockRuntimeInfo wmRuntimeInfo) {
+    stubFor(
+        get("/credential")
+            .willReturn(
+                aResponse()
+                    .withHeader("Content-Type", "application/json;charset=UTF-8")
+                    .withBody("What on earth is this?")));
 
-        CredentialIssuerConfig credentialIssuerConfig =
-                getStubCredentialIssuerConfig(wmRuntimeInfo);
-        BearerAccessToken accessToken = new BearerAccessToken();
+    CredentialIssuerConfig credentialIssuerConfig = getStubCredentialIssuerConfig(wmRuntimeInfo);
+    BearerAccessToken accessToken = new BearerAccessToken();
 
-        CredentialIssuerException thrown =
-                assertThrows(
-                        CredentialIssuerException.class,
-                        () -> {
-                            credentialIssuerService.getCredential(
-                                    accessToken, credentialIssuerConfig);
-                        });
+    CredentialIssuerException thrown =
+        assertThrows(
+            CredentialIssuerException.class,
+            () -> {
+              credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
+            });
 
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
-    }
+    assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
+    assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
+  }
 
-    private CredentialIssuerConfig getStubCredentialIssuerConfig(
-            WireMockRuntimeInfo wmRuntimeInfo) {
-        return new CredentialIssuerConfig(
-                "StubPassport",
-                URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/token"),
-                URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/credential"));
-    }
+  private CredentialIssuerConfig getStubCredentialIssuerConfig(WireMockRuntimeInfo wmRuntimeInfo) {
+    return new CredentialIssuerConfig(
+        "StubPassport",
+        URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/token"),
+        URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/credential"));
+  }
 }

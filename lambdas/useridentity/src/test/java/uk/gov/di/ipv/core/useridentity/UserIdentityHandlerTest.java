@@ -31,140 +31,133 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UserIdentityHandlerTest {
 
-    private static final String TEST_IPV_SESSION_ID = UUID.randomUUID().toString();
+  private static final String TEST_IPV_SESSION_ID = UUID.randomUUID().toString();
 
-    @Mock private Context mockContext;
+  @Mock private Context mockContext;
 
-    @Mock private UserIdentityService mockUserIdentityService;
+  @Mock private UserIdentityService mockUserIdentityService;
 
-    @Mock private AccessTokenService mockAccessTokenService;
+  @Mock private AccessTokenService mockAccessTokenService;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private UserIdentityHandler userInfoHandler;
-    private Map<String, String> userIssuedCredential;
-    private Map<String, String> responseBody;
+  private UserIdentityHandler userInfoHandler;
+  private Map<String, String> userIssuedCredential;
+  private Map<String, String> responseBody;
 
-    @BeforeEach
-    void setUp() {
-        userIssuedCredential = new HashMap<>();
-        responseBody = new HashMap<>();
+  @BeforeEach
+  void setUp() {
+    userIssuedCredential = new HashMap<>();
+    responseBody = new HashMap<>();
 
-        userIssuedCredential.put("id", "12345");
-        userIssuedCredential.put("type", "Test credential");
-        userIssuedCredential.put("foo", "bar");
+    userIssuedCredential.put("id", "12345");
+    userIssuedCredential.put("type", "Test credential");
+    userIssuedCredential.put("foo", "bar");
 
-        userInfoHandler = new UserIdentityHandler(mockUserIdentityService, mockAccessTokenService);
-    }
+    userInfoHandler = new UserIdentityHandler(mockUserIdentityService, mockAccessTokenService);
+  }
 
-    @Test
-    void shouldReturn200OnSuccessfulUserIdentityRequest() {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        AccessToken accessToken = new BearerAccessToken();
-        Map<String, String> headers =
-                Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
-        event.setHeaders(headers);
+  @Test
+  void shouldReturn200OnSuccessfulUserIdentityRequest() {
+    APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+    AccessToken accessToken = new BearerAccessToken();
+    Map<String, String> headers =
+        Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
+    event.setHeaders(headers);
 
-        when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString()))
-                .thenReturn(TEST_IPV_SESSION_ID);
-        when(mockUserIdentityService.getUserIssuedCredentials(any()))
-                .thenReturn(userIssuedCredential);
+    when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString()))
+        .thenReturn(TEST_IPV_SESSION_ID);
+    when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(userIssuedCredential);
 
-        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+    APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
 
-        assertEquals(200, response.getStatusCode());
-    }
+    assertEquals(200, response.getStatusCode());
+  }
 
-    @Test
-    void shouldReturnCredentialsOnSuccessfulUserInfoRequest() throws JsonProcessingException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        AccessToken accessToken = new BearerAccessToken();
-        Map<String, String> headers =
-                Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
-        event.setHeaders(headers);
+  @Test
+  void shouldReturnCredentialsOnSuccessfulUserInfoRequest() throws JsonProcessingException {
+    APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+    AccessToken accessToken = new BearerAccessToken();
+    Map<String, String> headers =
+        Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
+    event.setHeaders(headers);
 
-        when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString()))
-                .thenReturn(TEST_IPV_SESSION_ID);
-        when(mockUserIdentityService.getUserIssuedCredentials(any()))
-                .thenReturn(userIssuedCredential);
+    when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString()))
+        .thenReturn(TEST_IPV_SESSION_ID);
+    when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(userIssuedCredential);
 
-        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
-        Map<String, Object> responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+    APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+    Map<String, Object> responseBody =
+        objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(userIssuedCredential.get("id"), responseBody.get("id"));
-        assertEquals(userIssuedCredential.get("type"), responseBody.get("type"));
-        assertEquals(userIssuedCredential.get("foo"), responseBody.get("foo"));
-    }
+    assertEquals(userIssuedCredential.get("id"), responseBody.get("id"));
+    assertEquals(userIssuedCredential.get("type"), responseBody.get("type"));
+    assertEquals(userIssuedCredential.get("foo"), responseBody.get("foo"));
+  }
 
-    @Test
-    void shouldReturnErrorResponseWhenTokenIsNull() throws JsonProcessingException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        Map<String, String> headers = Collections.singletonMap("Authorization", null);
-        event.setHeaders(headers);
+  @Test
+  void shouldReturnErrorResponseWhenTokenIsNull() throws JsonProcessingException {
+    APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+    Map<String, String> headers = Collections.singletonMap("Authorization", null);
+    event.setHeaders(headers);
 
-        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
-        responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+    APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+    responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(BearerTokenError.MISSING_TOKEN.getHTTPStatusCode(), response.getStatusCode());
-        assertEquals(BearerTokenError.MISSING_TOKEN.getCode(), responseBody.get("error"));
-        assertEquals(
-                BearerTokenError.MISSING_TOKEN.getDescription(),
-                responseBody.get("error_description"));
-    }
+    assertEquals(BearerTokenError.MISSING_TOKEN.getHTTPStatusCode(), response.getStatusCode());
+    assertEquals(BearerTokenError.MISSING_TOKEN.getCode(), responseBody.get("error"));
+    assertEquals(
+        BearerTokenError.MISSING_TOKEN.getDescription(), responseBody.get("error_description"));
+  }
 
-    @Test
-    void shouldReturnErrorResponseWhenTokenIsMissingBearerPrefix() throws JsonProcessingException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        Map<String, String> headers = Collections.singletonMap("Authorization", "11111111");
-        event.setHeaders(headers);
+  @Test
+  void shouldReturnErrorResponseWhenTokenIsMissingBearerPrefix() throws JsonProcessingException {
+    APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+    Map<String, String> headers = Collections.singletonMap("Authorization", "11111111");
+    event.setHeaders(headers);
 
-        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
-        responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+    APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+    responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(
-                BearerTokenError.INVALID_REQUEST.getHTTPStatusCode(), response.getStatusCode());
-        assertEquals(BearerTokenError.INVALID_REQUEST.getCode(), responseBody.get("error"));
-        assertEquals(
-                BearerTokenError.INVALID_REQUEST.getDescription(),
-                responseBody.get("error_description"));
-    }
+    assertEquals(BearerTokenError.INVALID_REQUEST.getHTTPStatusCode(), response.getStatusCode());
+    assertEquals(BearerTokenError.INVALID_REQUEST.getCode(), responseBody.get("error"));
+    assertEquals(
+        BearerTokenError.INVALID_REQUEST.getDescription(), responseBody.get("error_description"));
+  }
 
-    @Test
-    void shouldReturnErrorResponseWhenTokenIsMissing() throws JsonProcessingException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+  @Test
+  void shouldReturnErrorResponseWhenTokenIsMissing() throws JsonProcessingException {
+    APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
-        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
-        responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+    APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+    responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(BearerTokenError.MISSING_TOKEN.getHTTPStatusCode(), response.getStatusCode());
-        assertEquals(BearerTokenError.MISSING_TOKEN.getCode(), responseBody.get("error"));
-        assertEquals(
-                BearerTokenError.MISSING_TOKEN.getDescription(),
-                responseBody.get("error_description"));
-    }
+    assertEquals(BearerTokenError.MISSING_TOKEN.getHTTPStatusCode(), response.getStatusCode());
+    assertEquals(BearerTokenError.MISSING_TOKEN.getCode(), responseBody.get("error"));
+    assertEquals(
+        BearerTokenError.MISSING_TOKEN.getDescription(), responseBody.get("error_description"));
+  }
 
-    @Test
-    void shouldReturnErrorResponseWhenInvalidAccessTokenProvided() throws JsonProcessingException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        AccessToken accessToken = new BearerAccessToken();
-        Map<String, String> headers =
-                Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
-        event.setHeaders(headers);
+  @Test
+  void shouldReturnErrorResponseWhenInvalidAccessTokenProvided() throws JsonProcessingException {
+    APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+    AccessToken accessToken = new BearerAccessToken();
+    Map<String, String> headers =
+        Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
+    event.setHeaders(headers);
 
-        when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString())).thenReturn(null);
+    when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString())).thenReturn(null);
 
-        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
-        Map<String, Object> responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+    APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+    Map<String, Object> responseBody =
+        objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(403, response.getStatusCode());
-        assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
-        assertEquals(
-                OAuth2Error.ACCESS_DENIED
-                        .appendDescription(
-                                " - The supplied access token was not found in the database")
-                        .getDescription(),
-                responseBody.get("error_description"));
-    }
+    assertEquals(403, response.getStatusCode());
+    assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
+    assertEquals(
+        OAuth2Error.ACCESS_DENIED
+            .appendDescription(" - The supplied access token was not found in the database")
+            .getDescription(),
+        responseBody.get("error_description"));
+  }
 }

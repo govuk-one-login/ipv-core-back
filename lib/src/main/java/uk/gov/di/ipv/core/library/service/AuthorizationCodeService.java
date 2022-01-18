@@ -8,45 +8,43 @@ import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import java.util.Objects;
 
 public class AuthorizationCodeService {
-    private final DataStore<AuthorizationCodeItem> dataStore;
-    private final ConfigurationService configurationService;
+  private final DataStore<AuthorizationCodeItem> dataStore;
+  private final ConfigurationService configurationService;
 
-    @ExcludeFromGeneratedCoverageReport
-    public AuthorizationCodeService() {
-        this.configurationService = new ConfigurationService();
-        this.dataStore =
-                new DataStore<>(
-                        configurationService.getAuthCodesTableName(),
-                        AuthorizationCodeItem.class,
-                        DataStore.getClient());
-    }
+  @ExcludeFromGeneratedCoverageReport
+  public AuthorizationCodeService() {
+    this.configurationService = new ConfigurationService();
+    this.dataStore =
+        new DataStore<>(
+            configurationService.getAuthCodesTableName(),
+            AuthorizationCodeItem.class,
+            DataStore.getClient());
+  }
 
-    public AuthorizationCodeService(
-            DataStore<AuthorizationCodeItem> dataStore, ConfigurationService configurationService) {
-        this.configurationService = configurationService;
-        this.dataStore = dataStore;
-    }
+  public AuthorizationCodeService(
+      DataStore<AuthorizationCodeItem> dataStore, ConfigurationService configurationService) {
+    this.configurationService = configurationService;
+    this.dataStore = dataStore;
+  }
 
-    public AuthorizationCode generateAuthorizationCode() {
-        return new AuthorizationCode();
-    }
+  public AuthorizationCode generateAuthorizationCode() {
+    return new AuthorizationCode();
+  }
 
-    public String getIpvSessionIdByAuthorizationCode(String authorizationCode) {
-        AuthorizationCodeItem authorizationCodeItem = dataStore.getItem(authorizationCode);
-        return Objects.isNull(authorizationCodeItem)
-                ? null
-                : authorizationCodeItem.getIpvSessionId();
-    }
+  public String getIpvSessionIdByAuthorizationCode(String authorizationCode) {
+    AuthorizationCodeItem authorizationCodeItem = dataStore.getItem(authorizationCode);
+    return Objects.isNull(authorizationCodeItem) ? null : authorizationCodeItem.getIpvSessionId();
+  }
 
-    public void persistAuthorizationCode(String authorizationCode, String ipvSessionId) {
-        AuthorizationCodeItem authorizationCodeItem = new AuthorizationCodeItem();
-        authorizationCodeItem.setAuthCode(authorizationCode);
-        authorizationCodeItem.setIpvSessionId(ipvSessionId);
+  public void persistAuthorizationCode(String authorizationCode, String ipvSessionId) {
+    AuthorizationCodeItem authorizationCodeItem = new AuthorizationCodeItem();
+    authorizationCodeItem.setAuthCode(authorizationCode);
+    authorizationCodeItem.setIpvSessionId(ipvSessionId);
 
-        dataStore.create(authorizationCodeItem);
-    }
+    dataStore.create(authorizationCodeItem);
+  }
 
-    public void revokeAuthorizationCode(String authorizationCode) {
-        dataStore.delete(authorizationCode);
-    }
+  public void revokeAuthorizationCode(String authorizationCode) {
+    dataStore.delete(authorizationCode);
+  }
 }

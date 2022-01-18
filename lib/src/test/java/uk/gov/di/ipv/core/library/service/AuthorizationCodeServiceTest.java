@@ -19,75 +19,73 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AuthorizationCodeServiceTest {
 
-    @Mock private DataStore<AuthorizationCodeItem> mockDataStore;
-    @Mock private ConfigurationService mockConfigurationService;
+  @Mock private DataStore<AuthorizationCodeItem> mockDataStore;
+  @Mock private ConfigurationService mockConfigurationService;
 
-    private AuthorizationCodeService authorizationCodeService;
+  private AuthorizationCodeService authorizationCodeService;
 
-    @BeforeEach
-    void setUp() {
-        authorizationCodeService =
-                new AuthorizationCodeService(mockDataStore, mockConfigurationService);
-    }
+  @BeforeEach
+  void setUp() {
+    authorizationCodeService =
+        new AuthorizationCodeService(mockDataStore, mockConfigurationService);
+  }
 
-    @Test
-    void shouldReturnAnAuthorisationCode() {
-        AuthorizationCode result = authorizationCodeService.generateAuthorizationCode();
+  @Test
+  void shouldReturnAnAuthorisationCode() {
+    AuthorizationCode result = authorizationCodeService.generateAuthorizationCode();
 
-        assertNotNull(result);
-    }
+    assertNotNull(result);
+  }
 
-    @Test
-    void shouldCreateAuthorizationCodeInDataStore() {
-        AuthorizationCode testCode = new AuthorizationCode();
-        String ipvSessionId = "session-12345";
-        authorizationCodeService.persistAuthorizationCode(testCode.getValue(), ipvSessionId);
+  @Test
+  void shouldCreateAuthorizationCodeInDataStore() {
+    AuthorizationCode testCode = new AuthorizationCode();
+    String ipvSessionId = "session-12345";
+    authorizationCodeService.persistAuthorizationCode(testCode.getValue(), ipvSessionId);
 
-        ArgumentCaptor<AuthorizationCodeItem> authorizationCodeItemArgumentCaptor =
-                ArgumentCaptor.forClass(AuthorizationCodeItem.class);
-        verify(mockDataStore).create(authorizationCodeItemArgumentCaptor.capture());
-        assertEquals(
-                ipvSessionId, authorizationCodeItemArgumentCaptor.getValue().getIpvSessionId());
-        assertEquals(
-                testCode.getValue(), authorizationCodeItemArgumentCaptor.getValue().getAuthCode());
-    }
+    ArgumentCaptor<AuthorizationCodeItem> authorizationCodeItemArgumentCaptor =
+        ArgumentCaptor.forClass(AuthorizationCodeItem.class);
+    verify(mockDataStore).create(authorizationCodeItemArgumentCaptor.capture());
+    assertEquals(ipvSessionId, authorizationCodeItemArgumentCaptor.getValue().getIpvSessionId());
+    assertEquals(testCode.getValue(), authorizationCodeItemArgumentCaptor.getValue().getAuthCode());
+  }
 
-    @Test
-    void shouldGetSessionIdByAuthCodeWhenValidAuthCodeProvided() {
-        AuthorizationCode testCode = new AuthorizationCode();
-        String ipvSessionId = "session-12345";
+  @Test
+  void shouldGetSessionIdByAuthCodeWhenValidAuthCodeProvided() {
+    AuthorizationCode testCode = new AuthorizationCode();
+    String ipvSessionId = "session-12345";
 
-        AuthorizationCodeItem testItem = new AuthorizationCodeItem();
-        testItem.setIpvSessionId(ipvSessionId);
+    AuthorizationCodeItem testItem = new AuthorizationCodeItem();
+    testItem.setIpvSessionId(ipvSessionId);
 
-        when(mockDataStore.getItem(testCode.getValue())).thenReturn(testItem);
+    when(mockDataStore.getItem(testCode.getValue())).thenReturn(testItem);
 
-        String resultIpvSessionid =
-                authorizationCodeService.getIpvSessionIdByAuthorizationCode(testCode.getValue());
+    String resultIpvSessionid =
+        authorizationCodeService.getIpvSessionIdByAuthorizationCode(testCode.getValue());
 
-        verify(mockDataStore).getItem(testCode.getValue());
-        assertEquals(ipvSessionId, resultIpvSessionid);
-    }
+    verify(mockDataStore).getItem(testCode.getValue());
+    assertEquals(ipvSessionId, resultIpvSessionid);
+  }
 
-    @Test
-    void shouldReturnNullWhenInvalidAuthCodeProvided() {
-        AuthorizationCode testCode = new AuthorizationCode();
+  @Test
+  void shouldReturnNullWhenInvalidAuthCodeProvided() {
+    AuthorizationCode testCode = new AuthorizationCode();
 
-        when(mockDataStore.getItem(testCode.getValue())).thenReturn(null);
+    when(mockDataStore.getItem(testCode.getValue())).thenReturn(null);
 
-        String resultIpvSessionid =
-                authorizationCodeService.getIpvSessionIdByAuthorizationCode(testCode.getValue());
+    String resultIpvSessionid =
+        authorizationCodeService.getIpvSessionIdByAuthorizationCode(testCode.getValue());
 
-        verify(mockDataStore).getItem(testCode.getValue());
-        assertNull(resultIpvSessionid);
-    }
+    verify(mockDataStore).getItem(testCode.getValue());
+    assertNull(resultIpvSessionid);
+  }
 
-    @Test
-    void shouldCallDeleteWithAuthCode() {
-        AuthorizationCode testCode = new AuthorizationCode();
+  @Test
+  void shouldCallDeleteWithAuthCode() {
+    AuthorizationCode testCode = new AuthorizationCode();
 
-        authorizationCodeService.revokeAuthorizationCode(testCode.getValue());
+    authorizationCodeService.revokeAuthorizationCode(testCode.getValue());
 
-        verify(mockDataStore).delete(testCode.getValue());
-    }
+    verify(mockDataStore).delete(testCode.getValue());
+  }
 }

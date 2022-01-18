@@ -29,141 +29,126 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class DataStoreTest {
-    private static final String TEST_TABLE_NAME = "test-auth-code-table";
+  private static final String TEST_TABLE_NAME = "test-auth-code-table";
 
-    @Mock private DynamoDbEnhancedClient mockDynamoDbEnhancedClient;
-    @Mock private DynamoDbTable<AuthorizationCodeItem> mockDynamoDbTable;
-    @Mock private PageIterable<AuthorizationCodeItem> mockPageIterable;
+  @Mock private DynamoDbEnhancedClient mockDynamoDbEnhancedClient;
+  @Mock private DynamoDbTable<AuthorizationCodeItem> mockDynamoDbTable;
+  @Mock private PageIterable<AuthorizationCodeItem> mockPageIterable;
 
-    private AuthorizationCodeItem authorizationCodeItem;
-    private DataStore<AuthorizationCodeItem> dataStore;
+  private AuthorizationCodeItem authorizationCodeItem;
+  private DataStore<AuthorizationCodeItem> dataStore;
 
-    @BeforeEach
-    void setUp() {
-        when(mockDynamoDbEnhancedClient.table(
-                        anyString(), ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any()))
-                .thenReturn(mockDynamoDbTable);
+  @BeforeEach
+  void setUp() {
+    when(mockDynamoDbEnhancedClient.table(
+            anyString(), ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any()))
+        .thenReturn(mockDynamoDbTable);
 
-        authorizationCodeItem = new AuthorizationCodeItem();
-        authorizationCodeItem.setAuthCode(new AuthorizationCode().getValue());
-        authorizationCodeItem.setIpvSessionId("test-session-12345");
+    authorizationCodeItem = new AuthorizationCodeItem();
+    authorizationCodeItem.setAuthCode(new AuthorizationCode().getValue());
+    authorizationCodeItem.setIpvSessionId("test-session-12345");
 
-        dataStore =
-                new DataStore<>(
-                        TEST_TABLE_NAME, AuthorizationCodeItem.class, mockDynamoDbEnhancedClient);
-    }
+    dataStore =
+        new DataStore<>(TEST_TABLE_NAME, AuthorizationCodeItem.class, mockDynamoDbEnhancedClient);
+  }
 
-    @Test
-    void shouldPutItemIntoDynamoDbTable() {
-        dataStore.create(authorizationCodeItem);
+  @Test
+  void shouldPutItemIntoDynamoDbTable() {
+    dataStore.create(authorizationCodeItem);
 
-        ArgumentCaptor<AuthorizationCodeItem> authorizationCodeItemArgumentCaptor =
-                ArgumentCaptor.forClass(AuthorizationCodeItem.class);
+    ArgumentCaptor<AuthorizationCodeItem> authorizationCodeItemArgumentCaptor =
+        ArgumentCaptor.forClass(AuthorizationCodeItem.class);
 
-        verify(mockDynamoDbEnhancedClient)
-                .table(
-                        eq(TEST_TABLE_NAME),
-                        ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
-        verify(mockDynamoDbTable).putItem(authorizationCodeItemArgumentCaptor.capture());
-        assertEquals(
-                authorizationCodeItem.getAuthCode(),
-                authorizationCodeItemArgumentCaptor.getValue().getAuthCode());
-        assertEquals(
-                authorizationCodeItem.getIpvSessionId(),
-                authorizationCodeItemArgumentCaptor.getValue().getIpvSessionId());
-    }
+    verify(mockDynamoDbEnhancedClient)
+        .table(eq(TEST_TABLE_NAME), ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
+    verify(mockDynamoDbTable).putItem(authorizationCodeItemArgumentCaptor.capture());
+    assertEquals(
+        authorizationCodeItem.getAuthCode(),
+        authorizationCodeItemArgumentCaptor.getValue().getAuthCode());
+    assertEquals(
+        authorizationCodeItem.getIpvSessionId(),
+        authorizationCodeItemArgumentCaptor.getValue().getIpvSessionId());
+  }
 
-    @Test
-    void shouldGetItemFromDynamoDbTableViaPartitionKeyAndSortKey() {
-        dataStore.getItem("partition-key-12345", "sort-key-12345");
+  @Test
+  void shouldGetItemFromDynamoDbTableViaPartitionKeyAndSortKey() {
+    dataStore.getItem("partition-key-12345", "sort-key-12345");
 
-        ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
+    ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
 
-        verify(mockDynamoDbEnhancedClient)
-                .table(
-                        eq(TEST_TABLE_NAME),
-                        ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
-        verify(mockDynamoDbTable).getItem(keyCaptor.capture());
-        assertEquals("partition-key-12345", keyCaptor.getValue().partitionKeyValue().s());
-        assertEquals("sort-key-12345", keyCaptor.getValue().sortKeyValue().get().s());
-    }
+    verify(mockDynamoDbEnhancedClient)
+        .table(eq(TEST_TABLE_NAME), ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
+    verify(mockDynamoDbTable).getItem(keyCaptor.capture());
+    assertEquals("partition-key-12345", keyCaptor.getValue().partitionKeyValue().s());
+    assertEquals("sort-key-12345", keyCaptor.getValue().sortKeyValue().get().s());
+  }
 
-    @Test
-    void shouldGetItemFromDynamoDbTableViaPartitionKey() {
-        dataStore.getItem("partition-key-12345");
+  @Test
+  void shouldGetItemFromDynamoDbTableViaPartitionKey() {
+    dataStore.getItem("partition-key-12345");
 
-        ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
+    ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
 
-        verify(mockDynamoDbEnhancedClient)
-                .table(
-                        eq(TEST_TABLE_NAME),
-                        ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
-        verify(mockDynamoDbTable).getItem(keyCaptor.capture());
-        assertEquals("partition-key-12345", keyCaptor.getValue().partitionKeyValue().s());
-        assertTrue(keyCaptor.getValue().sortKeyValue().isEmpty());
-    }
+    verify(mockDynamoDbEnhancedClient)
+        .table(eq(TEST_TABLE_NAME), ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
+    verify(mockDynamoDbTable).getItem(keyCaptor.capture());
+    assertEquals("partition-key-12345", keyCaptor.getValue().partitionKeyValue().s());
+    assertTrue(keyCaptor.getValue().sortKeyValue().isEmpty());
+  }
 
-    @Test
-    void shouldGetItemsFromDynamoDbTableViaPartitionKeyQueryRequest() {
-        when(mockDynamoDbTable.query(any(QueryConditional.class))).thenReturn(mockPageIterable);
-        when(mockPageIterable.stream()).thenReturn(Stream.empty());
+  @Test
+  void shouldGetItemsFromDynamoDbTableViaPartitionKeyQueryRequest() {
+    when(mockDynamoDbTable.query(any(QueryConditional.class))).thenReturn(mockPageIterable);
+    when(mockPageIterable.stream()).thenReturn(Stream.empty());
 
-        dataStore.getItems("partition-key-12345");
+    dataStore.getItems("partition-key-12345");
 
-        verify(mockDynamoDbEnhancedClient)
-                .table(
-                        eq(TEST_TABLE_NAME),
-                        ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
-        verify(mockDynamoDbTable).query(any(QueryConditional.class));
-    }
+    verify(mockDynamoDbEnhancedClient)
+        .table(eq(TEST_TABLE_NAME), ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
+    verify(mockDynamoDbTable).query(any(QueryConditional.class));
+  }
 
-    @Test
-    void shouldUpdateItemInDynamoDbTable() {
-        dataStore.update(authorizationCodeItem);
+  @Test
+  void shouldUpdateItemInDynamoDbTable() {
+    dataStore.update(authorizationCodeItem);
 
-        ArgumentCaptor<AuthorizationCodeItem> authorizationCodeItemArgumentCaptor =
-                ArgumentCaptor.forClass(AuthorizationCodeItem.class);
+    ArgumentCaptor<AuthorizationCodeItem> authorizationCodeItemArgumentCaptor =
+        ArgumentCaptor.forClass(AuthorizationCodeItem.class);
 
-        verify(mockDynamoDbEnhancedClient)
-                .table(
-                        eq(TEST_TABLE_NAME),
-                        ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
-        verify(mockDynamoDbTable).updateItem(authorizationCodeItemArgumentCaptor.capture());
-        assertEquals(
-                authorizationCodeItem.getAuthCode(),
-                authorizationCodeItemArgumentCaptor.getValue().getAuthCode());
-        assertEquals(
-                authorizationCodeItem.getIpvSessionId(),
-                authorizationCodeItemArgumentCaptor.getValue().getIpvSessionId());
-    }
+    verify(mockDynamoDbEnhancedClient)
+        .table(eq(TEST_TABLE_NAME), ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
+    verify(mockDynamoDbTable).updateItem(authorizationCodeItemArgumentCaptor.capture());
+    assertEquals(
+        authorizationCodeItem.getAuthCode(),
+        authorizationCodeItemArgumentCaptor.getValue().getAuthCode());
+    assertEquals(
+        authorizationCodeItem.getIpvSessionId(),
+        authorizationCodeItemArgumentCaptor.getValue().getIpvSessionId());
+  }
 
-    @Test
-    void shouldDeleteItemFromDynamoDbTableViaPartitionKeyAndSortKey() {
-        dataStore.delete("partition-key-12345", "sort-key-12345");
+  @Test
+  void shouldDeleteItemFromDynamoDbTableViaPartitionKeyAndSortKey() {
+    dataStore.delete("partition-key-12345", "sort-key-12345");
 
-        ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
+    ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
 
-        verify(mockDynamoDbEnhancedClient)
-                .table(
-                        eq(TEST_TABLE_NAME),
-                        ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
-        verify(mockDynamoDbTable).deleteItem(keyCaptor.capture());
-        assertEquals("partition-key-12345", keyCaptor.getValue().partitionKeyValue().s());
-        assertEquals("sort-key-12345", keyCaptor.getValue().sortKeyValue().get().s());
-    }
+    verify(mockDynamoDbEnhancedClient)
+        .table(eq(TEST_TABLE_NAME), ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
+    verify(mockDynamoDbTable).deleteItem(keyCaptor.capture());
+    assertEquals("partition-key-12345", keyCaptor.getValue().partitionKeyValue().s());
+    assertEquals("sort-key-12345", keyCaptor.getValue().sortKeyValue().get().s());
+  }
 
-    @Test
-    void shouldDeleteItemFromDynamoDbTableViaPartitionKey() {
-        dataStore.delete("partition-key-12345");
+  @Test
+  void shouldDeleteItemFromDynamoDbTableViaPartitionKey() {
+    dataStore.delete("partition-key-12345");
 
-        ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
+    ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
 
-        verify(mockDynamoDbEnhancedClient)
-                .table(
-                        eq(TEST_TABLE_NAME),
-                        ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
-        verify(mockDynamoDbTable).deleteItem(keyCaptor.capture());
-        assertEquals("partition-key-12345", keyCaptor.getValue().partitionKeyValue().s());
-        assertTrue(keyCaptor.getValue().sortKeyValue().isEmpty());
-    }
+    verify(mockDynamoDbEnhancedClient)
+        .table(eq(TEST_TABLE_NAME), ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
+    verify(mockDynamoDbTable).deleteItem(keyCaptor.capture());
+    assertEquals("partition-key-12345", keyCaptor.getValue().partitionKeyValue().s());
+    assertTrue(keyCaptor.getValue().sortKeyValue().isEmpty());
+  }
 }

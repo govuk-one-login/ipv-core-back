@@ -22,203 +22,199 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AuthorizationHandlerTest {
-    private static final Map<String, String> TEST_EVENT_HEADERS = Map.of("ipv-session-id", "12345");
+  private static final Map<String, String> TEST_EVENT_HEADERS = Map.of("ipv-session-id", "12345");
 
-    private final Context context = mock(Context.class);
-    private AuthorizationCodeService mockAuthorizationCodeService;
+  private final Context context = mock(Context.class);
+  private AuthorizationCodeService mockAuthorizationCodeService;
 
-    private AuthorizationHandler handler;
-    private AuthorizationCode authorizationCode;
+  private AuthorizationHandler handler;
+  private AuthorizationCode authorizationCode;
 
-    @BeforeEach
-    void setUp() {
-        mockAuthorizationCodeService = mock(AuthorizationCodeService.class);
+  @BeforeEach
+  void setUp() {
+    mockAuthorizationCodeService = mock(AuthorizationCodeService.class);
 
-        authorizationCode = new AuthorizationCode();
-        when(mockAuthorizationCodeService.generateAuthorizationCode())
-                .thenReturn(authorizationCode);
+    authorizationCode = new AuthorizationCode();
+    when(mockAuthorizationCodeService.generateAuthorizationCode()).thenReturn(authorizationCode);
 
-        handler = new AuthorizationHandler(mockAuthorizationCodeService);
-    }
+    handler = new AuthorizationHandler(mockAuthorizationCodeService);
+  }
 
-    @Test
-    void shouldReturn200OnSuccessfulOauthRequest() {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        Map<String, String> params = new HashMap<>();
-        params.put(OAuth2RequestParams.REDIRECT_URI, "http://example.com");
-        params.put(OAuth2RequestParams.CLIENT_ID, "12345");
-        params.put(OAuth2RequestParams.RESPONSE_TYPE, "code");
-        params.put(OAuth2RequestParams.SCOPE, "openid");
-        event.setQueryStringParameters(params);
+  @Test
+  void shouldReturn200OnSuccessfulOauthRequest() {
+    APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+    Map<String, String> params = new HashMap<>();
+    params.put(OAuth2RequestParams.REDIRECT_URI, "http://example.com");
+    params.put(OAuth2RequestParams.CLIENT_ID, "12345");
+    params.put(OAuth2RequestParams.RESPONSE_TYPE, "code");
+    params.put(OAuth2RequestParams.SCOPE, "openid");
+    event.setQueryStringParameters(params);
 
-        event.setHeaders(TEST_EVENT_HEADERS);
+    event.setHeaders(TEST_EVENT_HEADERS);
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+    APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-    }
+    assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+  }
 
-    @Test
-    void shouldReturnAuthResponseOnSuccessfulOauthRequest() throws Exception {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        Map<String, String> params = new HashMap<>();
-        params.put(OAuth2RequestParams.REDIRECT_URI, "http://example.com");
-        params.put(OAuth2RequestParams.CLIENT_ID, "12345");
-        params.put(OAuth2RequestParams.RESPONSE_TYPE, "code");
-        params.put(OAuth2RequestParams.SCOPE, "openid");
-        event.setQueryStringParameters(params);
+  @Test
+  void shouldReturnAuthResponseOnSuccessfulOauthRequest() throws Exception {
+    APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+    Map<String, String> params = new HashMap<>();
+    params.put(OAuth2RequestParams.REDIRECT_URI, "http://example.com");
+    params.put(OAuth2RequestParams.CLIENT_ID, "12345");
+    params.put(OAuth2RequestParams.RESPONSE_TYPE, "code");
+    params.put(OAuth2RequestParams.SCOPE, "openid");
+    event.setQueryStringParameters(params);
 
-        event.setHeaders(TEST_EVENT_HEADERS);
+    event.setHeaders(TEST_EVENT_HEADERS);
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+    APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, Map<String, String>> responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-        Map<String, String> authCode = responseBody.get("code");
+    ObjectMapper objectMapper = new ObjectMapper();
+    Map<String, Map<String, String>> responseBody =
+        objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+    Map<String, String> authCode = responseBody.get("code");
 
-        verify(mockAuthorizationCodeService)
-                .persistAuthorizationCode(authCode.get("value"), "12345");
-        assertEquals(authorizationCode.toString(), authCode.get("value"));
-    }
+    verify(mockAuthorizationCodeService).persistAuthorizationCode(authCode.get("value"), "12345");
+    assertEquals(authorizationCode.toString(), authCode.get("value"));
+  }
 
-    @Test
-    void shouldReturn400OnMissingRedirectUriParam() throws Exception {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        Map<String, String> params = new HashMap<>();
-        params.put(OAuth2RequestParams.CLIENT_ID, "12345");
-        params.put(OAuth2RequestParams.RESPONSE_TYPE, "code");
-        params.put(OAuth2RequestParams.SCOPE, "openid");
-        event.setQueryStringParameters(params);
+  @Test
+  void shouldReturn400OnMissingRedirectUriParam() throws Exception {
+    APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+    Map<String, String> params = new HashMap<>();
+    params.put(OAuth2RequestParams.CLIENT_ID, "12345");
+    params.put(OAuth2RequestParams.RESPONSE_TYPE, "code");
+    params.put(OAuth2RequestParams.SCOPE, "openid");
+    event.setQueryStringParameters(params);
 
-        event.setHeaders(TEST_EVENT_HEADERS);
+    event.setHeaders(TEST_EVENT_HEADERS);
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+    APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
+    ObjectMapper objectMapper = new ObjectMapper();
+    Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(),
-                responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
-                responseBody.get("message"));
-    }
+    assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+    assertEquals(
+        ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(),
+        responseBody.get("code"));
+    assertEquals(
+        ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
+        responseBody.get("message"));
+  }
 
-    @Test
-    void shouldReturn400OnMissingClientIdParam() throws Exception {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        Map<String, String> params = new HashMap<>();
-        params.put(OAuth2RequestParams.REDIRECT_URI, "http://example.com");
-        params.put(OAuth2RequestParams.RESPONSE_TYPE, "code");
-        params.put(OAuth2RequestParams.SCOPE, "openid");
-        event.setQueryStringParameters(params);
+  @Test
+  void shouldReturn400OnMissingClientIdParam() throws Exception {
+    APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+    Map<String, String> params = new HashMap<>();
+    params.put(OAuth2RequestParams.REDIRECT_URI, "http://example.com");
+    params.put(OAuth2RequestParams.RESPONSE_TYPE, "code");
+    params.put(OAuth2RequestParams.SCOPE, "openid");
+    event.setQueryStringParameters(params);
 
-        event.setHeaders(TEST_EVENT_HEADERS);
+    event.setHeaders(TEST_EVENT_HEADERS);
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+    APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
+    ObjectMapper objectMapper = new ObjectMapper();
+    Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(),
-                responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
-                responseBody.get("message"));
-    }
+    assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+    assertEquals(
+        ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(),
+        responseBody.get("code"));
+    assertEquals(
+        ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
+        responseBody.get("message"));
+  }
 
-    @Test
-    void shouldReturn400OnMissingResponseTypeParam() throws Exception {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        Map<String, String> params = new HashMap<>();
-        params.put(OAuth2RequestParams.REDIRECT_URI, "http://example.com");
-        params.put(OAuth2RequestParams.CLIENT_ID, "12345");
-        params.put(OAuth2RequestParams.SCOPE, "openid");
-        event.setQueryStringParameters(params);
+  @Test
+  void shouldReturn400OnMissingResponseTypeParam() throws Exception {
+    APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+    Map<String, String> params = new HashMap<>();
+    params.put(OAuth2RequestParams.REDIRECT_URI, "http://example.com");
+    params.put(OAuth2RequestParams.CLIENT_ID, "12345");
+    params.put(OAuth2RequestParams.SCOPE, "openid");
+    event.setQueryStringParameters(params);
 
-        event.setHeaders(TEST_EVENT_HEADERS);
+    event.setHeaders(TEST_EVENT_HEADERS);
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+    APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
+    ObjectMapper objectMapper = new ObjectMapper();
+    Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(),
-                responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
-                responseBody.get("message"));
-    }
+    assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+    assertEquals(
+        ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(),
+        responseBody.get("code"));
+    assertEquals(
+        ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
+        responseBody.get("message"));
+  }
 
-    @Test
-    void shouldReturn400OnMissingScopeParam() throws Exception {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        Map<String, String> params = new HashMap<>();
-        params.put(OAuth2RequestParams.REDIRECT_URI, "http://example.com");
-        params.put(OAuth2RequestParams.CLIENT_ID, "12345");
-        params.put(OAuth2RequestParams.RESPONSE_TYPE, "code");
-        event.setQueryStringParameters(params);
+  @Test
+  void shouldReturn400OnMissingScopeParam() throws Exception {
+    APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+    Map<String, String> params = new HashMap<>();
+    params.put(OAuth2RequestParams.REDIRECT_URI, "http://example.com");
+    params.put(OAuth2RequestParams.CLIENT_ID, "12345");
+    params.put(OAuth2RequestParams.RESPONSE_TYPE, "code");
+    event.setQueryStringParameters(params);
 
-        event.setHeaders(TEST_EVENT_HEADERS);
+    event.setHeaders(TEST_EVENT_HEADERS);
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+    APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
+    ObjectMapper objectMapper = new ObjectMapper();
+    Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(),
-                responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
-                responseBody.get("message"));
-    }
+    assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+    assertEquals(
+        ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(),
+        responseBody.get("code"));
+    assertEquals(
+        ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
+        responseBody.get("message"));
+  }
 
-    @Test
-    void shouldReturn400OnMissingQueryParameters() throws Exception {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+  @Test
+  void shouldReturn400OnMissingQueryParameters() throws Exception {
+    APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
-        event.setHeaders(TEST_EVENT_HEADERS);
+    event.setHeaders(TEST_EVENT_HEADERS);
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+    APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
+    ObjectMapper objectMapper = new ObjectMapper();
+    Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getCode(), responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), responseBody.get("message"));
-    }
+    assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+    assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getCode(), responseBody.get("code"));
+    assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), responseBody.get("message"));
+  }
 
-    @Test
-    void shouldReturn400OnMissingSessionIdHeader() throws Exception {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        Map<String, String> params = new HashMap<>();
-        params.put(OAuth2RequestParams.REDIRECT_URI, "http://example.com");
-        params.put(OAuth2RequestParams.CLIENT_ID, "12345");
-        params.put(OAuth2RequestParams.RESPONSE_TYPE, "code");
-        params.put(OAuth2RequestParams.SCOPE, "openid");
-        event.setQueryStringParameters(params);
+  @Test
+  void shouldReturn400OnMissingSessionIdHeader() throws Exception {
+    APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+    Map<String, String> params = new HashMap<>();
+    params.put(OAuth2RequestParams.REDIRECT_URI, "http://example.com");
+    params.put(OAuth2RequestParams.CLIENT_ID, "12345");
+    params.put(OAuth2RequestParams.RESPONSE_TYPE, "code");
+    params.put(OAuth2RequestParams.SCOPE, "openid");
+    event.setQueryStringParameters(params);
 
-        event.setHeaders(Collections.emptyMap());
+    event.setHeaders(Collections.emptyMap());
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+    APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
+    ObjectMapper objectMapper = new ObjectMapper();
+    Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), responseBody.get("message"));
-    }
+    assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+    assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), responseBody.get("code"));
+    assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), responseBody.get("message"));
+  }
 }
