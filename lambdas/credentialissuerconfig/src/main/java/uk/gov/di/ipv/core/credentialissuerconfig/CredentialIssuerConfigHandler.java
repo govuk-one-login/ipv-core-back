@@ -14,5 +14,4 @@ public class CredentialIssuerConfigHandler
             APIGatewayProxyRequestEvent input, Context context) {
         return ApiGatewayResponseGenerator.proxyJsonResponse(200, "Hello World");
     }
-
 }

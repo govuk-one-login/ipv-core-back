@@ -40,7 +40,8 @@ class DataStoreTest {
 
     @BeforeEach
     void setUp() {
-        when(mockDynamoDbEnhancedClient.table(anyString(), ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any()))
+        when(mockDynamoDbEnhancedClient.table(
+                        anyString(), ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any()))
                 .thenReturn(mockDynamoDbTable);
 
         authorizationCodeItem = new AuthorizationCodeItem();
@@ -59,7 +60,10 @@ class DataStoreTest {
         ArgumentCaptor<AuthorizationCodeItem> authorizationCodeItemArgumentCaptor =
                 ArgumentCaptor.forClass(AuthorizationCodeItem.class);
 
-        verify(mockDynamoDbEnhancedClient).table(eq(TEST_TABLE_NAME), ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
+        verify(mockDynamoDbEnhancedClient)
+                .table(
+                        eq(TEST_TABLE_NAME),
+                        ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
         verify(mockDynamoDbTable).putItem(authorizationCodeItemArgumentCaptor.capture());
         assertEquals(
                 authorizationCodeItem.getAuthCode(),
@@ -75,7 +79,10 @@ class DataStoreTest {
 
         ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
 
-        verify(mockDynamoDbEnhancedClient).table(eq(TEST_TABLE_NAME), ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
+        verify(mockDynamoDbEnhancedClient)
+                .table(
+                        eq(TEST_TABLE_NAME),
+                        ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
         verify(mockDynamoDbTable).getItem(keyCaptor.capture());
         assertEquals("partition-key-12345", keyCaptor.getValue().partitionKeyValue().s());
         assertEquals("sort-key-12345", keyCaptor.getValue().sortKeyValue().get().s());
@@ -87,7 +94,10 @@ class DataStoreTest {
 
         ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
 
-        verify(mockDynamoDbEnhancedClient).table(eq(TEST_TABLE_NAME), ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
+        verify(mockDynamoDbEnhancedClient)
+                .table(
+                        eq(TEST_TABLE_NAME),
+                        ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
         verify(mockDynamoDbTable).getItem(keyCaptor.capture());
         assertEquals("partition-key-12345", keyCaptor.getValue().partitionKeyValue().s());
         assertTrue(keyCaptor.getValue().sortKeyValue().isEmpty());
@@ -100,7 +110,10 @@ class DataStoreTest {
 
         dataStore.getItems("partition-key-12345");
 
-        verify(mockDynamoDbEnhancedClient).table(eq(TEST_TABLE_NAME), ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
+        verify(mockDynamoDbEnhancedClient)
+                .table(
+                        eq(TEST_TABLE_NAME),
+                        ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
         verify(mockDynamoDbTable).query(any(QueryConditional.class));
     }
 
@@ -111,7 +124,10 @@ class DataStoreTest {
         ArgumentCaptor<AuthorizationCodeItem> authorizationCodeItemArgumentCaptor =
                 ArgumentCaptor.forClass(AuthorizationCodeItem.class);
 
-        verify(mockDynamoDbEnhancedClient).table(eq(TEST_TABLE_NAME), ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
+        verify(mockDynamoDbEnhancedClient)
+                .table(
+                        eq(TEST_TABLE_NAME),
+                        ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
         verify(mockDynamoDbTable).updateItem(authorizationCodeItemArgumentCaptor.capture());
         assertEquals(
                 authorizationCodeItem.getAuthCode(),
@@ -127,7 +143,10 @@ class DataStoreTest {
 
         ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
 
-        verify(mockDynamoDbEnhancedClient).table(eq(TEST_TABLE_NAME), ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
+        verify(mockDynamoDbEnhancedClient)
+                .table(
+                        eq(TEST_TABLE_NAME),
+                        ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
         verify(mockDynamoDbTable).deleteItem(keyCaptor.capture());
         assertEquals("partition-key-12345", keyCaptor.getValue().partitionKeyValue().s());
         assertEquals("sort-key-12345", keyCaptor.getValue().sortKeyValue().get().s());
@@ -139,7 +158,10 @@ class DataStoreTest {
 
         ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
 
-        verify(mockDynamoDbEnhancedClient).table(eq(TEST_TABLE_NAME), ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
+        verify(mockDynamoDbEnhancedClient)
+                .table(
+                        eq(TEST_TABLE_NAME),
+                        ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
         verify(mockDynamoDbTable).deleteItem(keyCaptor.capture());
         assertEquals("partition-key-12345", keyCaptor.getValue().partitionKeyValue().s());
         assertTrue(keyCaptor.getValue().sortKeyValue().isEmpty());
