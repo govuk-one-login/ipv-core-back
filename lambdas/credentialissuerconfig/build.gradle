@@ -3,7 +3,6 @@ plugins {
 	id "application"
 	id "idea"
 	id "jacoco"
-	id "com.diffplug.spotless" version "6.1.0"
 }
 
 repositories {
@@ -40,20 +39,5 @@ jacocoTestReport {
 	dependsOn test
 	reports {
 		xml.required
-	}
-}
-
-spotless {
-	java {
-		target "src/**/*.java"
-		// googleJavaFormat("1.13.0").aosp()
-		importOrder "", "javax", "java", "\\#"
-		endWithNewline()
-	}
-	groovyGradle {
-		target '**/*.gradle'
-		greclipse()
-		trimTrailingWhitespace()
-		endWithNewline()
 	}
 }

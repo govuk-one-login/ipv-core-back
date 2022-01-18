@@ -3,7 +3,6 @@ plugins {
     id 'java-library'
 	id "idea"
 	id "jacoco"
-	id "com.diffplug.spotless" version "6.1.0"
 }
 
 
@@ -62,13 +61,3 @@ jacocoTestReport {
 		xml.required
 	}
 }
-
-spotless {
-	java {
-		target "lib/**/*.java"
-		googleJavaFormat("1.13.0").aosp()
-		importOrder "", "javax", "java", "\\#"
-		endWithNewline()
-	}
-}
-
