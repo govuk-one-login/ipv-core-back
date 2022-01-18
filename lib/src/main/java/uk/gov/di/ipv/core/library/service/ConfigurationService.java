@@ -1,13 +1,14 @@
 package uk.gov.di.ipv.core.library.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuers;
-import uk.gov.di.ipv.core.library.helpers.CredentialIssuerLoader;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 
 import java.net.URI;
+import java.util.Map;
 import java.util.Optional;
 
 public class ConfigurationService {
@@ -48,19 +49,6 @@ public class ConfigurationService {
         return System.getenv("AUTH_CODES_TABLE_NAME");
     }
 
-    public CredentialIssuers getCredentialIssuers(CredentialIssuers credentialIssuers) {
-
-        String credentialIssuerConfigBase64 =
-                ssmProvider.get(System.getenv("CREDENTIAL_ISSUER_CONFIG_PARAMETER_STORE_KEY"));
-
-        if (credentialIssuers == null
-                || credentialIssuers.fromDifferentSource(credentialIssuerConfigBase64)) {
-            return CredentialIssuerLoader.loadCredentialIssuers(credentialIssuerConfigBase64);
-        }
-
-        return credentialIssuers;
-    }
-
     public String getUserIssuedCredentialTableName() {
         return System.getenv("USER_ISSUED_CREDENTIALS_TABLE_NAME");
     }
@@ -77,5 +65,14 @@ public class ConfigurationService {
         return Optional.ofNullable(System.getenv("BEARER_TOKEN_TTL"))
                 .map(Long::valueOf)
                 .orElse(DEFAULT_BEARER_TOKEN_TTL_IN_SECS);
+    }
+
+    public CredentialIssuerConfig getCredentialIssuer(String credentialIssuerId) {
+        Map<String, String> result =
+                ssmProvider.getMultiple(
+                        String.format(
+                                "/%s/IPV/Core/CredentialIssuers/%s",
+                                System.getenv("ENVIRONMENT"), credentialIssuerId));
+        return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
     }
 }

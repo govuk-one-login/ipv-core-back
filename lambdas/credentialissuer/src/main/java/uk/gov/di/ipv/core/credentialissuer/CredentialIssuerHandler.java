@@ -12,7 +12,6 @@ import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuers;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -27,8 +26,6 @@ public class CredentialIssuerHandler
     private final CredentialIssuerService credentialIssuerService;
     private final ConfigurationService configurationService;
 
-    private CredentialIssuers credentialIssuers;
-
     static {
         // Set the default synchronous HTTP client to UrlConnectionHttpClient
         System.setProperty(
@@ -41,14 +38,12 @@ public class CredentialIssuerHandler
             ConfigurationService configurationService) {
         this.credentialIssuerService = credentialIssuerService;
         this.configurationService = configurationService;
-        this.credentialIssuers = configurationService.getCredentialIssuers(credentialIssuers);
     }
 
     @ExcludeFromGeneratedCoverageReport
     public CredentialIssuerHandler() {
         this.credentialIssuerService = new CredentialIssuerService();
         this.configurationService = new ConfigurationService();
-        this.credentialIssuers = configurationService.getCredentialIssuers(credentialIssuers);
     }
 
     @Override
@@ -97,12 +92,6 @@ public class CredentialIssuerHandler
     }
 
     private CredentialIssuerConfig getCredentialIssuerConfig(CredentialIssuerRequestDto request) {
-        return configurationService
-                .getCredentialIssuers(credentialIssuers)
-                .getCredentialIssuerConfigs()
-                .stream()
-                .filter(config -> request.getCredentialIssuerId().equals(config.getId()))
-                .findFirst()
-                .orElse(null);
+        return configurationService.getCredentialIssuer(request.getCredentialIssuerId());
     }
 }
