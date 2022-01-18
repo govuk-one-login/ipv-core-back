@@ -31,7 +31,11 @@ public class CredentialIssuerConfig {
 
     @Override
     public String toString() {
-        return "CredentialIssuerConfig{" + "id='" + id + '\'' + '}';
+        return "CredentialIssuerConfig{" +
+                "id='" + id + '\'' +
+                ", tokenUrl=" + tokenUrl +
+                ", credentialUrl=" + credentialUrl +
+                '}';
     }
 
     @Override
@@ -51,5 +55,9 @@ public class CredentialIssuerConfig {
         return id.equals(that.id)
                 && tokenUrl.equals(that.tokenUrl)
                 && credentialUrl.equals(that.credentialUrl);
+    }
+
+    public void setId(String credentialIssuerId) {
+        this.id = credentialIssuerId;
     }
 }
