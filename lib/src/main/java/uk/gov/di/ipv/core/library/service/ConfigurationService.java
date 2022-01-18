@@ -68,11 +68,7 @@ public class ConfigurationService {
     }
 
     public CredentialIssuerConfig getCredentialIssuer(String credentialIssuerId) {
-        Map<String, String> result =
-                ssmProvider.getMultiple(
-                        String.format(
-                                "/%s/IPV/Core/CredentialIssuers/%s",
-                                System.getenv("ENVIRONMENT"), credentialIssuerId));
+        Map<String, String> result = ssmProvider.getMultiple(String.format("/%s/IPV/Core/CredentialIssuers/%s", System.getenv("ENVIRONMENT"), credentialIssuerId));
         return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
     }
 }

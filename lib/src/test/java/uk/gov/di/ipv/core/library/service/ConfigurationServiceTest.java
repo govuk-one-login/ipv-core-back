@@ -77,16 +77,12 @@ class ConfigurationServiceTest {
     void shouldGetCredentialIssuerFromParameterStore() {
         environmentVariables.set("ENVIRONMENT", "dev");
 
-        Map<String, String> credentialIssuerParameters =
-                Map.of("tokenUrl", TEST_TOKEN_URL, "credentialUrl", TEST_CREDENTIAL_URL);
-        when(ssmProvider.getMultiple("/dev/IPV/Core/CredentialIssuers/PassportCRI"))
-                .thenReturn(credentialIssuerParameters);
+        Map<String, String> credentialIssuerParameters = Map.of("tokenUrl", TEST_TOKEN_URL, "credentialUrl", TEST_CREDENTIAL_URL);
+        when(ssmProvider.getMultiple("/dev/IPV/Core/CredentialIssuers/PassportCRI")).thenReturn(credentialIssuerParameters);
 
         CredentialIssuerConfig result = configurationService.getCredentialIssuer("PassportCRI");
 
-        CredentialIssuerConfig expected =
-                new CredentialIssuerConfig(
-                        "PassportCRI", URI.create(TEST_TOKEN_URL), URI.create(TEST_CREDENTIAL_URL));
+        CredentialIssuerConfig expected = new CredentialIssuerConfig("PassportCRI", URI.create(TEST_TOKEN_URL), URI.create(TEST_CREDENTIAL_URL));
 
         assertEquals(expected.getTokenUrl(), result.getTokenUrl());
         assertEquals(expected.getCredentialUrl(), result.getCredentialUrl());
