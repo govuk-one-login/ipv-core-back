@@ -58,6 +58,6 @@ test {
 jacocoTestReport {
 	dependsOn test
 	reports {
-		xml.required
+		xml.required.set(true)
 	}
 }
