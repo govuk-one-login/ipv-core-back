@@ -56,8 +56,10 @@ class CredentialIssuerHandlerTest {
         passportIssuer =
                 new CredentialIssuerConfig(
                         "PassportIssuer",
+                        "any",
                         new URI("http://www.example.com"),
-                        new URI("http://www.example.com/credential"));
+                        new URI("http://www.example.com/credential"),
+                        new URI("http://www.example.com/authorize"));
     }
 
     @Test

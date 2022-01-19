@@ -285,7 +285,9 @@ class CredentialIssuerServiceTest {
             WireMockRuntimeInfo wmRuntimeInfo) {
         return new CredentialIssuerConfig(
                 "StubPassport",
+                "any",
                 URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/token"),
-                URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/credential"));
+                URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/credential"),
+                URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/authorizeUrl"));
     }
 }
