@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.credentialissuerconfig.CredentialIssuerConfigHandler;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.net.URI;
@@ -43,7 +44,8 @@ class CredentialIssuerConfigHandlerTest {
     @Mock ConfigurationService configurationService;
 
     @Test
-    void shouldReceive200ResponseCodeAndListOfCredentialIssuers() throws JsonProcessingException {
+    void shouldReceive200ResponseCodeAndListOfCredentialIssuers()
+            throws JsonProcessingException, ParseCredentialIssuerConfigException {
         when(configurationService.getCredentialIssuers()).thenReturn(credentialIssuerConfigList);
 
         CredentialIssuerConfigHandler underTest =

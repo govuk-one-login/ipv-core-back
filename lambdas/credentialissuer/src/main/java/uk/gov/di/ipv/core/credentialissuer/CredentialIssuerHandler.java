@@ -59,8 +59,6 @@ public class CredentialIssuerHandler
         }
         CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request);
 
-        configurationService.getCredentialIssuers();
-
         try {
             BearerAccessToken accessToken =
                     credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);

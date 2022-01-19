@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
@@ -21,6 +22,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getAllServeEvents;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
@@ -28,6 +30,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 @WireMockTest(httpPort = ConfigurationService.LOCALHOST_PORT)
@@ -102,17 +105,18 @@ class ConfigurationServiceTest {
     }
 
     @Test
-    void shouldGetAllCredentialIssuersFromParameterStore() {
+    void shouldGetAllCredentialIssuersFromParameterStore()
+            throws ParseCredentialIssuerConfigException {
 
         environmentVariables.set("ENVIRONMENT", "dev");
         HashMap<String, String> response = new HashMap<>();
         response.put("passportCri/tokenUrl", "passportTokenUrl");
         response.put("passportCri/authorizeUrl", "passportAuthUrl");
-        response.put("passportCri/id", "passportAuthid");
+        response.put("passportCri/id", "passportCri");
         response.put("passportCri/name", "passportIssuer");
         response.put("stubCri/tokenUrl", "stubTokenUrl");
         response.put("stubCri/authorizeUrl", "stubAuthUrl");
-        response.put("stubCri/id", "stubAuthId");
+        response.put("stubCri/id", "stubCri");
         response.put("stubCri/name", "stubIssuer");
 
         when(ssmProvider.recursive()).thenReturn(ssmProvider2);
@@ -120,10 +124,45 @@ class ConfigurationServiceTest {
         List<CredentialIssuerConfig> result = configurationService.getCredentialIssuers();
 
         assertEquals(2, result.size());
+
+        Optional<CredentialIssuerConfig> passportIssuerConfig =
+                result.stream().filter(config -> config.getId() == "passportCri").findFirst();
+        assertTrue(passportIssuerConfig.isPresent());
+        assertEquals("passportTokenUrl", passportIssuerConfig.get().getTokenUrl().toString());
+        assertEquals("passportAuthUrl", passportIssuerConfig.get().getAuthorizeUrl().toString());
+        assertEquals("passportCri", passportIssuerConfig.get().getId());
+
+        Optional<CredentialIssuerConfig> stubIssuerConfig =
+                result.stream().filter(config -> config.getId() == "stubCri").findFirst();
+        assertTrue(stubIssuerConfig.isPresent());
+        assertEquals("stubTokenUrl", stubIssuerConfig.get().getTokenUrl().toString());
+        assertEquals("stubAuthUrl", stubIssuerConfig.get().getAuthorizeUrl().toString());
+        assertEquals("stubCri", stubIssuerConfig.get().getId());
     }
 
     @Test
-    void shouldGetAllCredentialIssuersFromParameterStoreNewAndIgnoreInexistingFields() {
+    void shouldThrowExceptionWhenCriConfigIsIncorrect() {
+        environmentVariables.set("ENVIRONMENT", "dev");
+        HashMap<String, String> response = new HashMap<>();
+        response.put("incorrectPathName", "passportTokenUrl");
+        response.put("passportCri/authorizeUrl", "passportAuthUrl");
+        response.put("passportCri/id", "passportCri");
+        response.put("passportCri/name", "passportIssuer");
+
+        when(ssmProvider.recursive()).thenReturn(ssmProvider2);
+        when(ssmProvider2.getMultiple("/dev/ipv/core/credentialIssuers")).thenReturn(response);
+        ParseCredentialIssuerConfigException exception =
+                assertThrows(
+                        ParseCredentialIssuerConfigException.class,
+                        () -> configurationService.getCredentialIssuers());
+        assertEquals(
+                "The credential issuer id cannot be parsed from the parameter path incorrectPathName",
+                exception.getMessage());
+    }
+
+    @Test
+    void shouldGetAllCredentialIssuersFromParameterStoreNewAndIgnoreInexistingFields()
+            throws ParseCredentialIssuerConfigException {
 
         environmentVariables.set("ENVIRONMENT", "dev");
         HashMap<String, String> response = new HashMap<>();

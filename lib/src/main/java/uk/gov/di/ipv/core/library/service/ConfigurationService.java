@@ -1,15 +1,20 @@
 package uk.gov.di.ipv.core.library.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 
 import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -20,7 +25,10 @@ public class ConfigurationService {
     private static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
     private static final String IS_LOCAL = "IS_LOCAL";
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationService.class);
+
     private final SSMProvider ssmProvider;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ConfigurationService(SSMProvider ssmProvider) {
         this.ssmProvider = ssmProvider;
@@ -81,7 +89,8 @@ public class ConfigurationService {
         return credentialIssuerConfig;
     }
 
-    public List<CredentialIssuerConfig> getCredentialIssuers() {
+    public List<CredentialIssuerConfig> getCredentialIssuers()
+            throws ParseCredentialIssuerConfigException {
         Map<String, String> params =
                 ssmProvider
                         .recursive()
@@ -89,22 +98,55 @@ public class ConfigurationService {
                                 String.format(
                                         "/%s/ipv/core/credentialIssuers",
                                         System.getenv("ENVIRONMENT")));
-        List<CredentialIssuerConfig> cris =
-                params.entrySet().stream()
-                        .collect(
-                                Collectors.groupingBy(
-                                        entry -> entry.getKey().split("/")[0],
-                                        Collectors.toMap(
-                                                entry -> entry.getKey().split("/")[1],
-                                                Map.Entry::getValue)))
-                        .values()
-                        .stream()
+
+        Map<String, Map<String, Object>> map = new HashMap<>();
+        for (Entry<String, String> stringStringEntry : params.entrySet()) {
+            if (map.computeIfAbsent(getCriIdFromParameter(stringStringEntry), k -> new HashMap<>())
+                            .put(
+                                    getAttributeNameFromParameter(stringStringEntry),
+                                    stringStringEntry.getValue())
+                    != null) {
+                throw new IllegalStateException("Duplicate key");
+            }
+        }
+
+        List<CredentialIssuerConfig> credentialIssuersConfig =
+                map.values().stream()
                         .map(
                                 config ->
-                                        new ObjectMapper()
-                                                .convertValue(config, CredentialIssuerConfig.class))
+                                        objectMapper.convertValue(
+                                                config, CredentialIssuerConfig.class))
                         .collect(Collectors.toList());
 
-        return cris;
+        return credentialIssuersConfig;
+    }
+
+    private String getAttributeNameFromParameter(Entry<String, String> parameter)
+            throws ParseCredentialIssuerConfigException {
+        String[] splitKey = parameter.getKey().split("/");
+        if (splitKey.length < 2) {
+            String errorMessage =
+                    String.format(
+                            "The attribute name cannot be parsed from the parameter path %s",
+                            parameter.getKey());
+            LOGGER.error(String.format(errorMessage));
+            throw new ParseCredentialIssuerConfigException(errorMessage);
+        }
+        return splitKey[1];
+    }
+
+    private String getCriIdFromParameter(Entry<String, String> parameter)
+            throws ParseCredentialIssuerConfigException {
+        String[] splitKey = parameter.getKey().split("/");
+
+        if (splitKey.length < 2) {
+            String errorMessage =
+                    String.format(
+                            "The credential issuer id cannot be parsed from the parameter path %s",
+                            parameter.getKey());
+            LOGGER.error(String.format(errorMessage));
+            throw new ParseCredentialIssuerConfigException(errorMessage);
+        }
+        return splitKey[0];
     }
 }

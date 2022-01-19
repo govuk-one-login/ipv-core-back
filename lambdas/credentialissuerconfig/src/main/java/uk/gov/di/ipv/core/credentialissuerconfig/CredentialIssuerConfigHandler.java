@@ -4,7 +4,10 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
@@ -14,6 +17,8 @@ public class CredentialIssuerConfigHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private final ConfigurationService configurationService;
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(CredentialIssuerConfigHandler.class);
 
     static {
         System.setProperty(
@@ -33,8 +38,14 @@ public class CredentialIssuerConfigHandler
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
 
-        List<CredentialIssuerConfig> config = configurationService.getCredentialIssuers();
-
-        return ApiGatewayResponseGenerator.proxyJsonResponse(200, config);
+        try {
+            List<CredentialIssuerConfig> config = configurationService.getCredentialIssuers();
+            return ApiGatewayResponseGenerator.proxyJsonResponse(200, config);
+        } catch (ParseCredentialIssuerConfigException e) {
+            String errorMessage =
+                    String.format("Failed to load credential issuer config: %s", e.getMessage());
+            LOGGER.error(errorMessage);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(500, errorMessage);
+        }
     }
 }
