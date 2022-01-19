@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -45,7 +46,8 @@ public class CredentialIssuerConfigHandler
             String errorMessage =
                     String.format("Failed to load credential issuer config: %s", e.getMessage());
             LOGGER.error(errorMessage);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(500, errorMessage);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    500, ErrorResponse.FAILED_TO_PARSE_CREDENTIAL_ISSUER_CONFIG);
         }
     }
 }

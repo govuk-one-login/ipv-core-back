@@ -11,12 +11,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.credentialissuerconfig.CredentialIssuerConfigHandler;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,6 +41,7 @@ class CredentialIssuerConfigHandlerTest {
                             URI.create("test2TokenUrl"),
                             URI.create("test2credentialUrl"),
                             URI.create("tesstAuthorizeUrl")));
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock Context context;
 
@@ -54,12 +57,36 @@ class CredentialIssuerConfigHandlerTest {
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
 
-        ObjectMapper objectMapper = new ObjectMapper();
         CredentialIssuerConfig[] responseBody =
                 objectMapper.readValue(response.getBody(), CredentialIssuerConfig[].class);
 
         assertEquals(2, responseBody.length);
         assertArrayEquals(credentialIssuerConfigList.toArray(), responseBody);
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+    }
+
+    @Test
+    void shouldReceive500ResponseCodeIfUnableToGetCredentialIssuers()
+            throws JsonProcessingException, ParseCredentialIssuerConfigException {
+        when(configurationService.getCredentialIssuers())
+                .thenThrow(new ParseCredentialIssuerConfigException("Something went wrong"));
+
+        CredentialIssuerConfigHandler underTest =
+                new CredentialIssuerConfigHandler(configurationService);
+        APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
+
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+
+        Map<String, String> responseBody = objectMapper.readValue(response.getBody(), Map.class);
+
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_CREDENTIAL_ISSUER_CONFIG.getCode(),
+                responseBody.get("code"));
+
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_CREDENTIAL_ISSUER_CONFIG.getMessage(),
+                responseBody.get("message"));
+
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, response.getStatusCode());
     }
 }

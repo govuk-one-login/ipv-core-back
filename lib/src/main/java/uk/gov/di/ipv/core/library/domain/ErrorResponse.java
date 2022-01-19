@@ -21,8 +21,8 @@ public enum ErrorResponse {
     FAILED_TO_SAVE_CREDENTIAL(1012, "Failed to save credential"),
     FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS(
             1013, "Failed to parse oauth2-specific query string parameters"),
-    FAILED_TO_DECODE_CREDENTIAL_ISSUER_CONFIG(
-            1014, "Failed to decode credential issuers config to credential issuers object");
+    FAILED_TO_PARSE_CREDENTIAL_ISSUER_CONFIG(
+            1014, "Failed to parse credential issuers config to credential issuers object");
 
     @JsonProperty("code")
     private final int code;
