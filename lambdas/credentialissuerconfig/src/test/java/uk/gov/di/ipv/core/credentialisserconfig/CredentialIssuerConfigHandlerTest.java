@@ -77,7 +77,7 @@ class CredentialIssuerConfigHandlerTest {
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = objectMapper.readValue(response.getBody(), Map.class);
+        Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
 
         assertEquals(
                 ErrorResponse.FAILED_TO_PARSE_CREDENTIAL_ISSUER_CONFIG.getCode(),

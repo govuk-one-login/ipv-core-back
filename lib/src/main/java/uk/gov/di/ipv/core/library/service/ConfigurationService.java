@@ -108,43 +108,37 @@ public class ConfigurationService {
             }
         }
 
-        List<CredentialIssuerConfig> credentialIssuersConfig =
-                map.values().stream()
-                        .map(
-                                config ->
-                                        objectMapper.convertValue(
-                                                config, CredentialIssuerConfig.class))
-                        .collect(Collectors.toList());
-
-        return credentialIssuersConfig;
+        return map.values().stream()
+                .map(config -> objectMapper.convertValue(config, CredentialIssuerConfig.class))
+                .collect(Collectors.toList());
     }
 
     private String getAttributeNameFromParameter(Entry<String, String> parameter)
             throws ParseCredentialIssuerConfigException {
-        String[] splitKey = parameter.getKey().split("/");
-        if (splitKey.length < 2) {
-            String errorMessage =
-                    String.format(
-                            "The attribute name cannot be parsed from the parameter path %s",
-                            parameter.getKey());
-            LOGGER.error(String.format(errorMessage));
-            throw new ParseCredentialIssuerConfigException(errorMessage);
-        }
+        String[] splitKey =
+                getSplitKey(
+                        parameter,
+                        "The attribute name cannot be parsed from the parameter path %s");
         return splitKey[1];
     }
 
     private String getCriIdFromParameter(Entry<String, String> parameter)
             throws ParseCredentialIssuerConfigException {
-        String[] splitKey = parameter.getKey().split("/");
+        String[] splitKey =
+                getSplitKey(
+                        parameter,
+                        "The credential issuer id cannot be parsed from the parameter path %s");
+        return splitKey[0];
+    }
 
+    private String[] getSplitKey(Entry<String, String> parameter, String message)
+            throws ParseCredentialIssuerConfigException {
+        String[] splitKey = parameter.getKey().split("/");
         if (splitKey.length < 2) {
-            String errorMessage =
-                    String.format(
-                            "The credential issuer id cannot be parsed from the parameter path %s",
-                            parameter.getKey());
-            LOGGER.error(String.format(errorMessage));
+            String errorMessage = String.format(message, parameter.getKey());
+            LOGGER.error(errorMessage);
             throw new ParseCredentialIssuerConfigException(errorMessage);
         }
-        return splitKey[0];
+        return splitKey;
     }
 }

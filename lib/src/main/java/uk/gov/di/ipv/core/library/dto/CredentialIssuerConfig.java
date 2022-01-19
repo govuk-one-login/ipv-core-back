@@ -46,24 +46,6 @@ public class CredentialIssuerConfig {
     }
 
     @Override
-    public String toString() {
-        return "CredentialIssuerConfig{"
-                + "id='"
-                + id
-                + '\''
-                + ", name='"
-                + name
-                + '\''
-                + ", tokenUrl="
-                + tokenUrl
-                + ", credentialUrl="
-                + credentialUrl
-                + ", authorizeUrl="
-                + authorizeUrl
-                + '}';
-    }
-
-    @Override
     public int hashCode() {
         return Objects.hash(id);
     }
