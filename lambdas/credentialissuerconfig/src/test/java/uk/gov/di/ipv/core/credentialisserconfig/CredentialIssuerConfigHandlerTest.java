@@ -23,17 +23,6 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class CredentialIssuerConfigHandlerTest {
 
-    /*private final Set<CredentialIssuerConfig> credentialIssuerConfigs =
-    Set.of(
-            new CredentialIssuerConfig(
-                    "test1", "Any" ,URI.create("test1TokenUrl"), URI.create("test1credentialUrl"), URI.create("tesstAuthorizeUrl")),
-            new CredentialIssuerConfig(
-                    "test2",
-                    "Any",
-                    URI.create("test2TokenUrl"),
-                    URI.create("test2credentialUrl"),
-                    URI.create("tesstAuthorizeUrl")));*/
-
     private final List<CredentialIssuerConfig> credentialIssuerConfigList =
             List.of(
                     new CredentialIssuerConfig(
@@ -53,24 +42,6 @@ class CredentialIssuerConfigHandlerTest {
 
     @Mock ConfigurationService configurationService;
 
-    /* @Test
-        void shouldReceive200ResponseCodeAndListOfCredentialIssuers() throws JsonProcessingException {
-            when(configurationService.getCredentialIssuers()).thenReturn(credentialIssuerConfigs);
-
-            CredentialIssuerConfigHandler underTest =
-                    new CredentialIssuerConfigHandler(configurationService);
-            APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
-            APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            CredentialIssuerConfig[] responseBody =
-                    objectMapper.readValue(response.getBody(), CredentialIssuerConfig[].class);
-
-            assertEquals(2, responseBody.length);
-            assertArrayEquals(credentialIssuerConfigs.toArray(), responseBody);
-            assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
-        }
-    */
     @Test
     void shouldReceive200ResponseCodeAndListOfCredentialIssuers() throws JsonProcessingException {
         when(configurationService.getCredentialIssuers()).thenReturn(credentialIssuerConfigList);
