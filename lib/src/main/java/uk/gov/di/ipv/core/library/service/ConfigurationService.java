@@ -83,10 +83,7 @@ public class ConfigurationService {
                         String.format(
                                 "/%s/ipv/core/credentialIssuers/%s",
                                 System.getenv("ENVIRONMENT"), credentialIssuerId));
-        CredentialIssuerConfig credentialIssuerConfig =
-                new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
-        credentialIssuerConfig.setId(credentialIssuerId);
-        return credentialIssuerConfig;
+        return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
     }
 
     public List<CredentialIssuerConfig> getCredentialIssuers()
@@ -100,13 +97,14 @@ public class ConfigurationService {
                                         System.getenv("ENVIRONMENT")));
 
         Map<String, Map<String, Object>> map = new HashMap<>();
-        for (Entry<String, String> stringStringEntry : params.entrySet()) {
-            if (map.computeIfAbsent(getCriIdFromParameter(stringStringEntry), k -> new HashMap<>())
-                            .put(
-                                    getAttributeNameFromParameter(stringStringEntry),
-                                    stringStringEntry.getValue())
+        for (Entry<String, String> entry : params.entrySet()) {
+            if (map.computeIfAbsent(getCriIdFromParameter(entry), k -> new HashMap<>())
+                            .put(getAttributeNameFromParameter(entry), entry.getValue())
                     != null) {
-                throw new IllegalStateException("Duplicate key");
+                throw new ParseCredentialIssuerConfigException(
+                        String.format(
+                                "Duplicate parameter in Parameter Store: %s",
+                                getAttributeNameFromParameter(entry)));
             }
         }
 

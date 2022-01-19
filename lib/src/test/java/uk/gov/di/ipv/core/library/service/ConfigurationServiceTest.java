@@ -22,6 +22,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getAllServeEvents;
@@ -161,12 +162,14 @@ class ConfigurationServiceTest {
     }
 
     @Test
-    void shouldGetAllCredentialIssuersFromParameterStoreNewAndIgnoreInexistingFields()
+    void shouldGetAllCredentialIssuersFromParameterStoreNewAndIgnoreInExistingFields()
             throws ParseCredentialIssuerConfigException {
 
         environmentVariables.set("ENVIRONMENT", "dev");
         HashMap<String, String> response = new HashMap<>();
+        response.put("passportCri/id", "passportCri");
         response.put("passportCri/tokenUrl", "passportTokenUrl");
+        response.put("stubCri/id", "stubCri");
         response.put("stubCri/tokenUrl", "stubTokenUrl");
         // This will be ignored - not in pojo
         response.put("stubCri/ipclientid", "stubIpClient");
@@ -175,6 +178,18 @@ class ConfigurationServiceTest {
         when(ssmProvider2.getMultiple("/dev/ipv/core/credentialIssuers")).thenReturn(response);
         List<CredentialIssuerConfig> result = configurationService.getCredentialIssuers();
 
-        assertEquals(2, result.size());
+        Optional<CredentialIssuerConfig> passportIssuerConfig =
+                result.stream()
+                        .filter(config -> Objects.equals(config.getId(), "passportCri"))
+                        .findFirst();
+        assertTrue(passportIssuerConfig.isPresent());
+        assertEquals("passportTokenUrl", passportIssuerConfig.get().getTokenUrl().toString());
+
+        Optional<CredentialIssuerConfig> stubIssuerConfig =
+                result.stream()
+                        .filter(config -> Objects.equals(config.getId(), "stubCri"))
+                        .findFirst();
+        assertTrue(stubIssuerConfig.isPresent());
+        assertEquals("stubTokenUrl", stubIssuerConfig.get().getTokenUrl().toString());
     }
 }

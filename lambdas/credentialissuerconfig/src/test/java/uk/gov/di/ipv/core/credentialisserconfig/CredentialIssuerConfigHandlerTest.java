@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import java.net.URI;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
@@ -58,7 +59,7 @@ class CredentialIssuerConfigHandlerTest {
                 objectMapper.readValue(response.getBody(), CredentialIssuerConfig[].class);
 
         assertEquals(2, responseBody.length);
-        // assertArrayEquals(credentialIssuerConfigs.toArray(), responseBody);
+        assertArrayEquals(credentialIssuerConfigList.toArray(), responseBody);
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
     }
 }
