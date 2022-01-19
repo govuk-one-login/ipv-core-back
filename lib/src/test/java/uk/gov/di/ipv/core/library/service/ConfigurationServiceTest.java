@@ -19,8 +19,8 @@ import uk.org.webcompere.systemstubs.properties.SystemProperties;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getAllServeEvents;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
@@ -91,7 +91,11 @@ class ConfigurationServiceTest {
 
         CredentialIssuerConfig expected =
                 new CredentialIssuerConfig(
-                        "passportCri", URI.create(TEST_TOKEN_URL), URI.create(TEST_CREDENTIAL_URL));
+                        "passportCri",
+                        "",
+                        URI.create(TEST_TOKEN_URL),
+                        URI.create(TEST_CREDENTIAL_URL),
+                        URI.create(TEST_CREDENTIAL_URL));
 
         assertEquals(expected.getTokenUrl(), result.getTokenUrl());
         assertEquals(expected.getCredentialUrl(), result.getCredentialUrl());
@@ -99,27 +103,38 @@ class ConfigurationServiceTest {
 
     @Test
     void shouldGetAllCredentialIssuersFromParameterStore() {
-        environmentVariables.set("ENVIRONMENT", "dev");
 
+        environmentVariables.set("ENVIRONMENT", "dev");
         HashMap<String, String> response = new HashMap<>();
-        response.put("dcsPassportIssuer/tokenUrl", "http://credential-issuer-stub:8084/token");
-        response.put("passportIssuer/tokenUrl", "http://credential-issuer-stub:8084/token");
-        response.put(
-                "passportIssuer/credentialUrl", "http://credential-issuer-stub:8084/credential");
-        response.put(
-                "dcsPassportIssuer/credentialUrl", "http://credential-issuer-stub:8084/credential");
+        response.put("passportCri/tokenUrl", "passportTokenUrl");
+        response.put("passportCri/authorizeUrl", "passportAuthUrl");
+        response.put("passportCri/id", "passportAuthid");
+        response.put("passportCri/name", "passportIssuer");
+        response.put("stubCri/tokenUrl", "stubTokenUrl");
+        response.put("stubCri/authorizeUrl", "stubAuthUrl");
+        response.put("stubCri/id", "stubAuthId");
+        response.put("stubCri/name", "stubIssuer");
 
         when(ssmProvider.recursive()).thenReturn(ssmProvider2);
         when(ssmProvider2.getMultiple("/dev/ipv/core/credentialIssuers")).thenReturn(response);
+        List<CredentialIssuerConfig> result = configurationService.getCredentialIssuers();
 
-        Map<String, String> credentialIssuerParameters =
-                Map.of("tokenUrl", TEST_TOKEN_URL, "credentialUrl", TEST_CREDENTIAL_URL);
-        when(ssmProvider.getMultiple("/dev/ipv/core/credentialIssuers/dcsPassportIssuer"))
-                .thenReturn(credentialIssuerParameters);
-        when(ssmProvider.getMultiple("/dev/ipv/core/credentialIssuers/passportIssuer"))
-                .thenReturn(credentialIssuerParameters);
+        assertEquals(2, result.size());
+    }
 
-        Set<CredentialIssuerConfig> result = configurationService.getCredentialIssuers();
+    @Test
+    void shouldGetAllCredentialIssuersFromParameterStoreNewAndIgnoreInexistingFields() {
+
+        environmentVariables.set("ENVIRONMENT", "dev");
+        HashMap<String, String> response = new HashMap<>();
+        response.put("passportCri/tokenUrl", "passportTokenUrl");
+        response.put("stubCri/tokenUrl", "stubTokenUrl");
+        // This will be ignored - not in pojo
+        response.put("stubCri/ipclientid", "stubIpClient");
+
+        when(ssmProvider.recursive()).thenReturn(ssmProvider2);
+        when(ssmProvider2.getMultiple("/dev/ipv/core/credentialIssuers")).thenReturn(response);
+        List<CredentialIssuerConfig> result = configurationService.getCredentialIssuers();
 
         assertEquals(2, result.size());
     }

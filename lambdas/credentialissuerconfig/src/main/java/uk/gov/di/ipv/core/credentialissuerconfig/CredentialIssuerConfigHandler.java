@@ -4,8 +4,11 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
+
+import java.util.List;
 
 public class CredentialIssuerConfigHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -29,7 +32,9 @@ public class CredentialIssuerConfigHandler
     @Override
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        return ApiGatewayResponseGenerator.proxyJsonResponse(
-                200, configurationService.getCredentialIssuers());
+
+        List<CredentialIssuerConfig> config = configurationService.getCredentialIssuers();
+
+        return ApiGatewayResponseGenerator.proxyJsonResponse(200, config);
     }
 }

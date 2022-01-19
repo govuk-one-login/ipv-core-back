@@ -8,12 +8,10 @@ import software.amazon.lambda.powertools.parameters.SSMProvider;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 
 import java.net.URI;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ConfigurationService {
 
@@ -83,26 +81,30 @@ public class ConfigurationService {
         return credentialIssuerConfig;
     }
 
-    public Set<CredentialIssuerConfig> getCredentialIssuers() {
-        Map<String, String> result =
+    public List<CredentialIssuerConfig> getCredentialIssuers() {
+        Map<String, String> params =
                 ssmProvider
                         .recursive()
                         .getMultiple(
                                 String.format(
                                         "/%s/ipv/core/credentialIssuers",
                                         System.getenv("ENVIRONMENT")));
+        List<CredentialIssuerConfig> cris =
+                params.entrySet().stream()
+                        .collect(
+                                Collectors.groupingBy(
+                                        entry -> entry.getKey().split("/")[0],
+                                        Collectors.toMap(
+                                                entry -> entry.getKey().split("/")[1],
+                                                Map.Entry::getValue)))
+                        .values()
+                        .stream()
+                        .map(
+                                config ->
+                                        new ObjectMapper()
+                                                .convertValue(config, CredentialIssuerConfig.class))
+                        .collect(Collectors.toList());
 
-        Map<String, CredentialIssuerConfig> credentialIssuers = new HashMap<>();
-        result.forEach(
-                (key, value) -> {
-                    Optional<String> credentialIssuerId = Arrays.stream(key.split("/")).findFirst();
-                    credentialIssuerId.ifPresent(
-                            id -> {
-                                if (!credentialIssuers.containsKey(id)) {
-                                    credentialIssuers.put(id, getCredentialIssuer(id));
-                                }
-                            });
-                });
-        return new HashSet<>(credentialIssuers.values());
+        return cris;
     }
 }
