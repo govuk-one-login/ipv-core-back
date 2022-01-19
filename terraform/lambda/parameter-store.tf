@@ -15,7 +15,8 @@ resource "aws_iam_role_policy" "get-credential-issuers-config" {
       {
         Sid = "GetCredentialIssuersConfig"
         Action = [
-          "ssm:GetParameter"
+          "ssm:GetParameter",
+          "ssm:GetParametersByPath"
         ]
         Effect   = "Allow"
         Resource = aws_ssm_parameter.credential-issuers-config.arn
