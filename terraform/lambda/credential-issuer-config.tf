@@ -11,4 +11,5 @@ module "credential-issuer-config" {
   function_name          = "${var.environment}-credential-issuer-config"
   role_name              = "${var.environment}-credential-issuer-config-role"
 
+  credential_issuers_iam_policy_arn = var.credential_issuers_iam_policy_arn
 }

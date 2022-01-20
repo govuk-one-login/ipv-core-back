@@ -48,12 +48,8 @@ resource "aws_iam_role_policy_attachment" "ipv_sessions_table_policy_to_lambda_i
   policy_arn = var.ipv_sessions_table_policy_arn
 }
 
-data "aws_iam_policy" "credential_issuers_config" {
-  name = "${var.environment}-get-credential-issuers-config"
-}
-
 resource "aws_iam_role_policy_attachment" "credential_issuers_config" {
   count      = var.allow_access_to_credential_issuers_config ? 1 : 0
   role       = aws_iam_role.lambda_iam_role.name
-  policy_arn = data.aws_iam_policy.credential_issuers_config.arn
+  policy_arn = var.credential_issuers_iam_policy_arn
 }
