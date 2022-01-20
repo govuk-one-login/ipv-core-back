@@ -32,8 +32,8 @@ data "aws_iam_policy_document" "credential_issuers_config" {
     ]
 
     resources = [
-      aws_ssm_parameter.token_url.*.arn,
-      aws_ssm_parameter.credential_url.*.arn
+      aws_ssm_parameter.token_url[*].arn,
+      aws_ssm_parameter.credential_url[*].arn
     ]
   }
 }
