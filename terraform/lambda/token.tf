@@ -18,4 +18,5 @@ module "token" {
   allow_access_to_access_tokens_table = true
   access_tokens_table_policy_arn      = aws_iam_policy.policy-access-tokens-table.arn
   access_tokens_table_name            = aws_dynamodb_table.access-tokens.name
+  credential_issuers_iam_policy_arn   = var.credential_issuers_iam_policy_arn
 }

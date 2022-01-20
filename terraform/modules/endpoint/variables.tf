@@ -126,6 +126,10 @@ variable "allow_access_to_credential_issuers_config" {
   description = "Allow access to parameter store configuration"
 }
 
+variable "credential_issuers_iam_policy_arn" {
+  description = "Credential Issuer Config IAM Policy ARN"
+}
+
 locals {
   default_tags = {
     Environment = var.environment

@@ -49,7 +49,7 @@ resource "aws_iam_role_policy_attachment" "ipv_sessions_table_policy_to_lambda_i
 }
 
 data "aws_iam_policy" "credential_issuers_config" {
-  name = "${var.environment}-get-credential-issuers-config"
+  arn = var.credential_issuers_iam_policy_arn
 }
 
 resource "aws_iam_role_policy_attachment" "credential_issuers_config" {

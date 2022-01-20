@@ -19,6 +19,7 @@ variable "type" {
   type        = string
 }
 
-variable "credential_issuer_iam_role" {
-  description = "IAM Role ID for credential issuer lambda"
+
+output "credential_issuers_iam_policy_arn" {
+  name = aws_iam_policy.credential_issuers_config.arn
 }

@@ -1,5 +1,5 @@
 resource "aws_ssm_parameter" "id" {
-  for_each  = {for c in var.issuers : c.id => c}
+  for_each  = { for c in var.issuers : c.id => c }
   name      = "/${var.environment}/ipv/core/credentialIssuers/${each.value.id}/id"
   type      = var.type
   value     = each.value.id
@@ -7,7 +7,7 @@ resource "aws_ssm_parameter" "id" {
 }
 
 resource "aws_ssm_parameter" "name" {
-  for_each  = {for c in var.issuers : c.id => c}
+  for_each  = { for c in var.issuers : c.id => c }
   name      = "/${var.environment}/ipv/core/credentialIssuers/${each.value.id}/name"
   type      = var.type
   value     = each.value.name
@@ -15,7 +15,7 @@ resource "aws_ssm_parameter" "name" {
 }
 
 resource "aws_ssm_parameter" "authorize_url" {
-  for_each  = {for c in var.issuers : c.id => c}
+  for_each  = { for c in var.issuers : c.id => c }
   name      = "/${var.environment}/ipv/core/credentialIssuers/${each.value.id}/authorizeUrl"
   type      = var.type
   value     = each.value.authorizeUrl
@@ -23,7 +23,7 @@ resource "aws_ssm_parameter" "authorize_url" {
 }
 
 resource "aws_ssm_parameter" "token_url" {
-  for_each  = {for c in var.issuers : c.id => c}
+  for_each  = { for c in var.issuers : c.id => c }
   name      = "/${var.environment}/ipv/core/credentialIssuers/${each.value.id}/tokenUrl"
   type      = var.type
   value     = each.value.tokenUrl
@@ -31,7 +31,7 @@ resource "aws_ssm_parameter" "token_url" {
 }
 
 resource "aws_ssm_parameter" "credential_url" {
-  for_each  = {for c in var.issuers : c.id => c}
+  for_each  = { for c in var.issuers : c.id => c }
   name      = "/${var.environment}/ipv/core/credentialIssuers/${each.value.id}/credentialUrl"
   type      = var.type
   value     = each.value.credentialUrl
@@ -40,8 +40,8 @@ resource "aws_ssm_parameter" "credential_url" {
 
 // Tempory until we move to SAM
 resource "aws_iam_policy" "credential_issuers_config" {
-  name       = "${var.environment}-get-credential-issuers-config"
-  policy     = data.aws_iam_policy_document.credential_issuers_config.json
+  name   = "${var.environment}-get-credential-issuers-config"
+  policy = data.aws_iam_policy_document.credential_issuers_config.json
 }
 
 data "aws_region" "current" {}
