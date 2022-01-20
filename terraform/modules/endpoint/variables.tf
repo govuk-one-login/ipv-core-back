@@ -120,6 +120,12 @@ variable "credential_issuer_config_parameter_store_key" {
   description = "Name of the credential issuer config parameter in the parameter store"
 }
 
+variable "allow_access_to_credential_issuers_config" {
+  type        = bool
+  default     = true
+  description = "Allow access to parameter store configuration"
+}
+
 locals {
   default_tags = {
     Environment = var.environment

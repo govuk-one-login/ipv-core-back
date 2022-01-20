@@ -1,3 +1,11 @@
+resource "aws_ssm_parameter" "id" {
+  for_each  = {for c in var.issuers : c.id => c}
+  name      = "/${var.environment}/ipv/core/credentialIssuers/${each.value.id}/id"
+  type      = var.type
+  value     = each.value.id
+  overwrite = var.overwrite
+}
+
 resource "aws_ssm_parameter" "name" {
   for_each  = {for c in var.issuers : c.id => c}
   name      = "/${var.environment}/ipv/core/credentialIssuers/${each.value.id}/name"
@@ -31,9 +39,8 @@ resource "aws_ssm_parameter" "credential_url" {
 }
 
 // Tempory until we move to SAM
-resource "aws_iam_role_policy" "credential_issuers_config" {
-  name_prefix = "${var.environment}-get-credential-issuers-config-"
-  role       = var.credential_issuer_iam_role
+resource "aws_iam_policy" "credential_issuers_config" {
+  name       = "${var.environment}-get-credential-issuers-config"
   policy     = data.aws_iam_policy_document.credential_issuers_config.json
 }
 
@@ -52,6 +59,7 @@ data "aws_iam_policy_document" "credential_issuers_config" {
 
     resources = [
       "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.environment}/ipv/core/credentialIssuers/*"
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.environment}/ipv/core/credentialIssuers"
     ]
   }
 }
