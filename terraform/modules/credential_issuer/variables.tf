@@ -21,5 +21,5 @@ variable "type" {
 
 
 output "credential_issuers_iam_policy_arn" {
-  name = aws_iam_policy.credential_issuers_config.arn
+  value = aws_iam_policy.credential_issuers_config.arn
 }
