@@ -21,6 +21,9 @@ resource "aws_iam_role_policy" "credential_issuers_config" {
   policy     = data.aws_iam_policy_document.credential_issuers_config.json
 }
 
+data "aws_region" "current" {}
+data "aws_caller_identity" "current" {}
+
 data "aws_iam_policy_document" "credential_issuers_config" {
   statement {
     sid    = "AllowLambdaParameterStore"
@@ -32,8 +35,7 @@ data "aws_iam_policy_document" "credential_issuers_config" {
     ]
 
     resources = [
-      aws_ssm_parameter.token_url[*].arn,
-      aws_ssm_parameter.credential_url[*].arn
+      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/${var.environment}/ipv/core/credentialIssuers/*"
     ]
   }
 }
