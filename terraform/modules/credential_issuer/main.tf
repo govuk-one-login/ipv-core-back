@@ -13,3 +13,27 @@ resource "aws_ssm_parameter" "credential_url" {
   value     = each.value.credentialUrl
   overwrite = var.overwrite
 }
+
+// Tempory until we move to SAM
+resource "aws_iam_role_policy" "credential_issuers_config" {
+  name_prefix = "${var.environment}-get-credential-issuers-config-"
+  role       = var.credential_issuer_iam_role
+  policy     = data.aws_iam_policy_document.credential_issuers_config.json
+}
+
+data "aws_iam_policy_document" "credential_issuers_config" {
+  statement {
+    sid    = "AllowLambdaParameterStore"
+    effect = "Allow"
+
+    actions = [
+      "ssm:GetParameter",
+      "ssm:GetParametersByPath"
+    ]
+
+    resources = [
+      aws_ssm_parameter.token_url.*.arn,
+      aws_ssm_parameter.credential_url.*.arn
+    ]
+  }
+}

@@ -18,3 +18,7 @@ variable "type" {
   default     = "String"
   type        = string
 }
+
+variable "credential_issuer_iam_role" {
+  description = "IAM Role ID for credential issuer lambda"
+}
