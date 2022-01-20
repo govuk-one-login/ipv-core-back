@@ -1,3 +1,19 @@
+resource "aws_ssm_parameter" "name" {
+  for_each  = {for c in var.issuers : c.id => c}
+  name      = "/${var.environment}/ipv/core/credentialIssuers/${each.value.id}/name"
+  type      = var.type
+  value     = each.value.name
+  overwrite = var.overwrite
+}
+
+resource "aws_ssm_parameter" "authorize_url" {
+  for_each  = {for c in var.issuers : c.id => c}
+  name      = "/${var.environment}/ipv/core/credentialIssuers/${each.value.id}/authorizeUrl"
+  type      = var.type
+  value     = each.value.authorizeUrl
+  overwrite = var.overwrite
+}
+
 resource "aws_ssm_parameter" "token_url" {
   for_each  = {for c in var.issuers : c.id => c}
   name      = "/${var.environment}/ipv/core/credentialIssuers/${each.value.id}/tokenUrl"
