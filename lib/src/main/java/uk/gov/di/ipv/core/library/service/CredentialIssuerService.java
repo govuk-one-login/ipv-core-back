@@ -31,13 +31,14 @@ public class CredentialIssuerService {
     private final ConfigurationService configurationService;
 
     @ExcludeFromGeneratedCoverageReport
-    public CredentialIssuerService() {
-        this.configurationService = new ConfigurationService();
+    public CredentialIssuerService(ConfigurationService configurationService) {
+        this.configurationService = configurationService;
         this.dataStore =
                 new DataStore<>(
-                        configurationService.getUserIssuedCredentialTableName(),
+                        this.configurationService.getUserIssuedCredentialTableName(),
                         UserIssuedCredentialsItem.class,
-                        DataStore.getClient());
+                        DataStore.getClient(),
+                        configurationService);
     }
 
     // used for testing

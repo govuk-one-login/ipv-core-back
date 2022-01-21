@@ -13,13 +13,14 @@ public class IpvSessionService {
     private final ConfigurationService configurationService;
 
     @ExcludeFromGeneratedCoverageReport
-    public IpvSessionService() {
-        this.configurationService = new ConfigurationService();
+    public IpvSessionService(ConfigurationService configurationService) {
+        this.configurationService = configurationService;
         dataStore =
                 new DataStore<>(
-                        configurationService.getIpvSessionTableName(),
+                        this.configurationService.getIpvSessionTableName(),
                         IpvSessionItem.class,
-                        DataStore.getClient());
+                        DataStore.getClient(),
+                        configurationService);
     }
 
     public IpvSessionService(

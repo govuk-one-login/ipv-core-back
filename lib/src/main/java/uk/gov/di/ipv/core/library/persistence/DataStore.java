@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 public class DataStore<T> {
 
     private static final String LOCALHOST_URI = "http://localhost:4567";
+    private static ConfigurationService configurationService;
 
     private final DynamoDbEnhancedClient dynamoDbEnhancedClient;
     private final String tableName;
@@ -24,15 +25,17 @@ public class DataStore<T> {
     public DataStore(
             String tableName,
             Class<T> typeParameterClass,
-            DynamoDbEnhancedClient dynamoDbEnhancedClient) {
+            DynamoDbEnhancedClient dynamoDbEnhancedClient,
+            ConfigurationService configurationService) {
         this.tableName = tableName;
         this.typeParameterClass = typeParameterClass;
         this.dynamoDbEnhancedClient = dynamoDbEnhancedClient;
+        DataStore.configurationService = configurationService;
     }
 
     public static DynamoDbEnhancedClient getClient() {
         DynamoDbClient client =
-                new ConfigurationService().isRunningLocally()
+                configurationService.isRunningLocally()
                         ? createLocalDbClient()
                         : DynamoDbClient.create();
 

@@ -11,6 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
+import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,12 +34,12 @@ class AuthorizationHandlerTest {
     @BeforeEach
     void setUp() {
         mockAuthorizationCodeService = mock(AuthorizationCodeService.class);
+        ConfigurationService mockConfigurationService = mock(ConfigurationService.class);
 
         authorizationCode = new AuthorizationCode();
         when(mockAuthorizationCodeService.generateAuthorizationCode())
                 .thenReturn(authorizationCode);
-
-        handler = new AuthorizationHandler(mockAuthorizationCodeService);
+        handler = new AuthorizationHandler(mockAuthorizationCodeService, mockConfigurationService);
     }
 
     @Test

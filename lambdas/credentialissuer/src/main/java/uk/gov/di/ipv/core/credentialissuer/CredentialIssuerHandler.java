@@ -42,8 +42,8 @@ public class CredentialIssuerHandler
 
     @ExcludeFromGeneratedCoverageReport
     public CredentialIssuerHandler() {
-        this.credentialIssuerService = new CredentialIssuerService();
         this.configurationService = new ConfigurationService();
+        this.credentialIssuerService = new CredentialIssuerService(configurationService);
     }
 
     @Override

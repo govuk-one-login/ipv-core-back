@@ -16,6 +16,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
+import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.util.stream.Stream;
 
@@ -34,6 +35,7 @@ class DataStoreTest {
     @Mock private DynamoDbEnhancedClient mockDynamoDbEnhancedClient;
     @Mock private DynamoDbTable<AuthorizationCodeItem> mockDynamoDbTable;
     @Mock private PageIterable<AuthorizationCodeItem> mockPageIterable;
+    @Mock private ConfigurationService mockConfigurationService;
 
     private AuthorizationCodeItem authorizationCodeItem;
     private DataStore<AuthorizationCodeItem> dataStore;
@@ -50,7 +52,10 @@ class DataStoreTest {
 
         dataStore =
                 new DataStore<>(
-                        TEST_TABLE_NAME, AuthorizationCodeItem.class, mockDynamoDbEnhancedClient);
+                        TEST_TABLE_NAME,
+                        AuthorizationCodeItem.class,
+                        mockDynamoDbEnhancedClient,
+                        mockConfigurationService);
     }
 
     @Test

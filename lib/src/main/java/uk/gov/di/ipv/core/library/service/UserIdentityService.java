@@ -13,13 +13,14 @@ public class UserIdentityService {
     private final DataStore<UserIssuedCredentialsItem> dataStore;
 
     @ExcludeFromGeneratedCoverageReport
-    public UserIdentityService() {
-        this.configurationService = new ConfigurationService();
+    public UserIdentityService(ConfigurationService configurationService) {
+        this.configurationService = configurationService;
         this.dataStore =
                 new DataStore<>(
-                        configurationService.getUserIssuedCredentialTableName(),
+                        this.configurationService.getUserIssuedCredentialTableName(),
                         UserIssuedCredentialsItem.class,
-                        DataStore.getClient());
+                        DataStore.getClient(),
+                        configurationService);
     }
 
     public UserIdentityService(

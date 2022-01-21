@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.util.Map;
@@ -21,6 +22,7 @@ public class IssuedCredentialsHandlerTest {
 
     @Mock private Context mockContext;
     @Mock private UserIdentityService mockUserIdentityService;
+    @Mock private ConfigurationService mockConfigurationService;
 
     private final Gson gson = new Gson();
 
@@ -38,7 +40,7 @@ public class IssuedCredentialsHandlerTest {
         when(mockUserIdentityService.getUserIssuedCredentials(ipvSessionId))
                 .thenReturn(userIssuedCredentials);
         IssuedCredentialsHandler issuedCredentialsHandler =
-                new IssuedCredentialsHandler(mockUserIdentityService);
+                new IssuedCredentialsHandler(mockUserIdentityService, mockConfigurationService);
 
         APIGatewayProxyResponseEvent response =
                 issuedCredentialsHandler.handleRequest(event, mockContext);
@@ -53,7 +55,7 @@ public class IssuedCredentialsHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setHeaders(Map.of());
         IssuedCredentialsHandler issuedCredentialsHandler =
-                new IssuedCredentialsHandler(mockUserIdentityService);
+                new IssuedCredentialsHandler(mockUserIdentityService, mockConfigurationService);
 
         APIGatewayProxyResponseEvent response =
                 issuedCredentialsHandler.handleRequest(event, mockContext);
@@ -66,7 +68,7 @@ public class IssuedCredentialsHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setHeaders(Map.of(IssuedCredentialsHandler.IPV_SESSION_ID_HEADER_KEY, ""));
         IssuedCredentialsHandler issuedCredentialsHandler =
-                new IssuedCredentialsHandler(mockUserIdentityService);
+                new IssuedCredentialsHandler(mockUserIdentityService, mockConfigurationService);
 
         APIGatewayProxyResponseEvent response =
                 issuedCredentialsHandler.handleRequest(event, mockContext);

@@ -12,13 +12,14 @@ public class AuthorizationCodeService {
     private final ConfigurationService configurationService;
 
     @ExcludeFromGeneratedCoverageReport
-    public AuthorizationCodeService() {
-        this.configurationService = new ConfigurationService();
+    public AuthorizationCodeService(ConfigurationService configurationService) {
+        this.configurationService = configurationService;
         this.dataStore =
                 new DataStore<>(
-                        configurationService.getAuthCodesTableName(),
+                        this.configurationService.getAuthCodesTableName(),
                         AuthorizationCodeItem.class,
-                        DataStore.getClient());
+                        DataStore.getClient(),
+                        configurationService);
     }
 
     public AuthorizationCodeService(

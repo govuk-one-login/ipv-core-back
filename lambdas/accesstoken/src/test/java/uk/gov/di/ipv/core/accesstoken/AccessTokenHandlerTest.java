@@ -21,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
 import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
+import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.util.Map;
@@ -51,10 +52,15 @@ class AccessTokenHandlerTest {
         when(mockAccessTokenService.generateAccessToken(any())).thenReturn(tokenResponse);
 
         mockAuthorizationCodeService = mock(AuthorizationCodeService.class);
+        ConfigurationService mockConfigurationService = mock(ConfigurationService.class);
 
         context = mock(Context.class);
 
-        handler = new AccessTokenHandler(mockAccessTokenService, mockAuthorizationCodeService);
+        handler =
+                new AccessTokenHandler(
+                        mockAccessTokenService,
+                        mockAuthorizationCodeService,
+                        mockConfigurationService);
     }
 
     @Test
