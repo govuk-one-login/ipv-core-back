@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
+import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.util.Collections;
@@ -39,6 +40,8 @@ class UserIdentityHandlerTest {
 
     @Mock private AccessTokenService mockAccessTokenService;
 
+    @Mock private ConfigurationService mockConfigurationService;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private UserIdentityHandler userInfoHandler;
@@ -54,7 +57,9 @@ class UserIdentityHandlerTest {
         userIssuedCredential.put("type", "Test credential");
         userIssuedCredential.put("foo", "bar");
 
-        userInfoHandler = new UserIdentityHandler(mockUserIdentityService, mockAccessTokenService);
+        userInfoHandler =
+                new UserIdentityHandler(
+                        mockUserIdentityService, mockAccessTokenService, mockConfigurationService);
     }
 
     @Test

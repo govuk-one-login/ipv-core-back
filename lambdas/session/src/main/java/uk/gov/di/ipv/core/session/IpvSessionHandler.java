@@ -5,7 +5,9 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import org.apache.http.HttpStatus;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.util.Map;
@@ -14,6 +16,8 @@ public class IpvSessionHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private static final String IPV_SESSION_ID_KEY = "ipvSessionId";
+
+    private final ConfigurationService configurationService;
 
     private final IpvSessionService ipvSessionService;
 
@@ -24,12 +28,16 @@ public class IpvSessionHandler
                 "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
     }
 
+    @ExcludeFromGeneratedCoverageReport
     public IpvSessionHandler() {
-        this.ipvSessionService = new IpvSessionService();
+        this.configurationService = new ConfigurationService();
+        this.ipvSessionService = new IpvSessionService(configurationService);
     }
 
-    public IpvSessionHandler(IpvSessionService ipvSessionService) {
+    public IpvSessionHandler(
+            IpvSessionService ipvSessionService, ConfigurationService configurationService) {
         this.ipvSessionService = ipvSessionService;
+        this.configurationService = configurationService;
     }
 
     @Override

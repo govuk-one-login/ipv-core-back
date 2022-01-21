@@ -21,13 +21,14 @@ public class AccessTokenService {
     private final ConfigurationService configurationService;
 
     @ExcludeFromGeneratedCoverageReport
-    public AccessTokenService() {
-        this.configurationService = new ConfigurationService();
+    public AccessTokenService(ConfigurationService configurationService) {
+        this.configurationService = configurationService;
         this.dataStore =
                 new DataStore<>(
-                        configurationService.getAccessTokensTableName(),
+                        this.configurationService.getAccessTokensTableName(),
                         AccessTokenItem.class,
-                        DataStore.getClient());
+                        DataStore.getClient(),
+                        this.configurationService.isRunningLocally());
     }
 
     public AccessTokenService(

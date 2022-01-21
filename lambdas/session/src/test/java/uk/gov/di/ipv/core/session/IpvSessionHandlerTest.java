@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.util.Map;
@@ -26,6 +27,7 @@ class IpvSessionHandlerTest {
     @Mock private Context mockContext;
 
     @Mock private IpvSessionService mockIpvSessionService;
+    @Mock private ConfigurationService mockConfigurationService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final String testUserId = UUID.randomUUID().toString();
@@ -34,7 +36,7 @@ class IpvSessionHandlerTest {
 
     @BeforeEach
     void setUp() {
-        ipvSessionHandler = new IpvSessionHandler(mockIpvSessionService);
+        ipvSessionHandler = new IpvSessionHandler(mockIpvSessionService, mockConfigurationService);
     }
 
     @Test

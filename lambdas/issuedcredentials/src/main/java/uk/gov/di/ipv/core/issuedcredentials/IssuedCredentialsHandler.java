@@ -7,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.util.Collections;
@@ -33,13 +34,18 @@ public class IssuedCredentialsHandler
                 "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
     }
 
-    public IssuedCredentialsHandler(UserIdentityService userIdentityService) {
+    private final ConfigurationService configurationService;
+
+    public IssuedCredentialsHandler(
+            UserIdentityService userIdentityService, ConfigurationService configurationService) {
         this.userIdentityService = userIdentityService;
+        this.configurationService = configurationService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public IssuedCredentialsHandler() {
-        this.userIdentityService = new UserIdentityService();
+        this.configurationService = new ConfigurationService();
+        this.userIdentityService = new UserIdentityService(configurationService);
     }
 
     @Override

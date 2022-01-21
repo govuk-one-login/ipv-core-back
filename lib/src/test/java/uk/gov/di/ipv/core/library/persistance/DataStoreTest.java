@@ -50,7 +50,10 @@ class DataStoreTest {
 
         dataStore =
                 new DataStore<>(
-                        TEST_TABLE_NAME, AuthorizationCodeItem.class, mockDynamoDbEnhancedClient);
+                        TEST_TABLE_NAME,
+                        AuthorizationCodeItem.class,
+                        mockDynamoDbEnhancedClient,
+                        false);
     }
 
     @Test

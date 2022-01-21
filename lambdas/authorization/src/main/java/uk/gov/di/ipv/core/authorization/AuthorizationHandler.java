@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
+import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.util.Collections;
@@ -41,13 +42,19 @@ public class AuthorizationHandler
                 "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
     }
 
+    private final ConfigurationService configurationService;
+
     @ExcludeFromGeneratedCoverageReport
     public AuthorizationHandler() {
-        this.authorizationCodeService = new AuthorizationCodeService();
+        this.configurationService = new ConfigurationService();
+        this.authorizationCodeService = new AuthorizationCodeService(configurationService);
     }
 
-    public AuthorizationHandler(AuthorizationCodeService authorizationCodeService) {
+    public AuthorizationHandler(
+            AuthorizationCodeService authorizationCodeService,
+            ConfigurationService configurationService) {
         this.authorizationCodeService = authorizationCodeService;
+        this.configurationService = configurationService;
     }
 
     @Override

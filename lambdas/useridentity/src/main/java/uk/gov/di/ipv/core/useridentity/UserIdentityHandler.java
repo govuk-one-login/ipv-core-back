@@ -15,6 +15,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
+import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.util.Map;
@@ -35,16 +36,22 @@ public class UserIdentityHandler
                 "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
     }
 
+    private final ConfigurationService configurationService;
+
     public UserIdentityHandler(
-            UserIdentityService userIdentityService, AccessTokenService accessTokenService) {
+            UserIdentityService userIdentityService,
+            AccessTokenService accessTokenService,
+            ConfigurationService configurationService) {
         this.userIdentityService = userIdentityService;
         this.accessTokenService = accessTokenService;
+        this.configurationService = configurationService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public UserIdentityHandler() {
-        this.userIdentityService = new UserIdentityService();
-        this.accessTokenService = new AccessTokenService();
+        this.configurationService = new ConfigurationService();
+        this.userIdentityService = new UserIdentityService(configurationService);
+        this.accessTokenService = new AccessTokenService(configurationService);
     }
 
     @Override
