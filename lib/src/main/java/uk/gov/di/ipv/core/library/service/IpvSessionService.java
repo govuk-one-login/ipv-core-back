@@ -20,7 +20,7 @@ public class IpvSessionService {
                         this.configurationService.getIpvSessionTableName(),
                         IpvSessionItem.class,
                         DataStore.getClient(),
-                        configurationService);
+                        this.configurationService.isRunningLocally());
     }
 
     public IpvSessionService(

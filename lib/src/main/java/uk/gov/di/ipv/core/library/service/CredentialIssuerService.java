@@ -38,7 +38,7 @@ public class CredentialIssuerService {
                         this.configurationService.getUserIssuedCredentialTableName(),
                         UserIssuedCredentialsItem.class,
                         DataStore.getClient(),
-                        configurationService);
+                        this.configurationService.isRunningLocally());
     }
 
     // used for testing

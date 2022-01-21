@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import org.apache.http.HttpStatus;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -27,6 +28,7 @@ public class IpvSessionHandler
                 "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
     }
 
+    @ExcludeFromGeneratedCoverageReport
     public IpvSessionHandler() {
         this.configurationService = new ConfigurationService();
         this.ipvSessionService = new IpvSessionService(configurationService);

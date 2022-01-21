@@ -7,7 +7,6 @@ import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.net.URI;
 import java.util.List;
@@ -16,7 +15,7 @@ import java.util.stream.Collectors;
 public class DataStore<T> {
 
     private static final String LOCALHOST_URI = "http://localhost:4567";
-    private static ConfigurationService configurationService;
+    private static boolean isRunningLocally;
 
     private final DynamoDbEnhancedClient dynamoDbEnhancedClient;
     private final String tableName;
@@ -26,18 +25,15 @@ public class DataStore<T> {
             String tableName,
             Class<T> typeParameterClass,
             DynamoDbEnhancedClient dynamoDbEnhancedClient,
-            ConfigurationService configurationService) {
+            boolean isRunningLocally) {
         this.tableName = tableName;
         this.typeParameterClass = typeParameterClass;
         this.dynamoDbEnhancedClient = dynamoDbEnhancedClient;
-        DataStore.configurationService = configurationService;
+        DataStore.isRunningLocally = isRunningLocally;
     }
 
     public static DynamoDbEnhancedClient getClient() {
-        DynamoDbClient client =
-                configurationService.isRunningLocally()
-                        ? createLocalDbClient()
-                        : DynamoDbClient.create();
+        DynamoDbClient client = isRunningLocally ? createLocalDbClient() : DynamoDbClient.create();
 
         return DynamoDbEnhancedClient.builder().dynamoDbClient(client).build();
     }

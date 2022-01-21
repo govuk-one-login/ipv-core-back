@@ -28,7 +28,7 @@ public class AccessTokenService {
                         this.configurationService.getAccessTokensTableName(),
                         AccessTokenItem.class,
                         DataStore.getClient(),
-                        configurationService);
+                        this.configurationService.isRunningLocally());
     }
 
     public AccessTokenService(

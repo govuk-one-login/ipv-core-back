@@ -20,7 +20,7 @@ public class UserIdentityService {
                         this.configurationService.getUserIssuedCredentialTableName(),
                         UserIssuedCredentialsItem.class,
                         DataStore.getClient(),
-                        configurationService);
+                        this.configurationService.isRunningLocally());
     }
 
     public UserIdentityService(
