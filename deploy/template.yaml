@@ -1,0 +1,234 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  ipv-core-back
+
+Globals:
+  Function:
+    Timeout: 20
+
+Parameters:
+  Environment:
+    Type: String
+
+Resources:
+
+  IPVCoreAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: IPV Core API Gateway
+      StageName: !Sub ${Environment}
+
+  IPVAccessTokenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ipv-access-token-${Environment}"
+      Handler: uk.gov.di.ipv.core.accesstoken.AccessTokenHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/accesstoken
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Environment:
+        Variables:
+          AUTH_CODES_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AuthCodesTable.Arn]]
+          ACCESS_TOKENS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AccessTokensTable.Arn]]
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AccessTokensTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AuthCodesTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer
+      Events:
+        IPVCoreAPI:
+          Type: Api
+          Properties:
+            RestApiId: !Ref IPVCoreAPI
+            Path: /token
+            Method: POST
+
+  IPVAuthorizationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ipv-authorization-${Environment}"
+      Handler: uk.gov.di.ipv.core.authorization.AuthorizationHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/authorization
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Environment:
+        Variables:
+          AUTH_CODES_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AuthCodesTable.Arn]]
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref AuthCodesTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref AuthCodesTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer
+      Events:
+        IPVCoreAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreAPI
+            Path: /authorize
+            Method: GET
+
+  IPVSessionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ipv-session-${Environment}"
+      Handler: uk.gov.di.ipv.core.session.IpvSessionHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/session
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Environment:
+        Variables:
+          IPV_SESSIONS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt SessionsTable.Arn]]
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer
+      Events:
+        IPVCoreAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreAPI
+            Path: /ipv-session
+            Method: POST
+
+  IPVCredentialIssuerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ipv-credential-issuer-${Environment}"
+      Handler: uk.gov.di.ipv.core.credentialissuer.CredentialIssuerHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/credentialissuer
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Environment:
+        Variables:
+          CREDENTIAL_ISSUER_CONFIG_PARAMETER_STORE_KEY: !Sub "/${Environment}/credential-issuers-config"
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserIssuedCredentialsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer
+      Events:
+        IPVCoreAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreAPI
+            Path: /request-evidence
+            Method: POST
+
+  IPVUserIdentityFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ipv-user-identity-${Environment}"
+      Handler: uk.gov.di.ipv.core.useridentity.UserIdentityHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/useridentity
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Environment:
+        Variables:
+          ACCESS_TOKENS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AccessTokensTable.Arn]]
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref UserIssuedCredentialsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AccessTokensTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer
+      Events:
+        IPVCoreAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreAPI
+            Path: /user-identity
+            Method: GET
+
+  UserIssuedCredentialsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "user-issued-credentials-${Environment}"
+      BillingMode: "PAY_PER_REQUEST"
+      AttributeDefinitions:
+        - AttributeName: "ipvSessionId"
+          AttributeType: "S"
+        - AttributeName: "credentialIssuer"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "ipvSessionId"
+          KeyType: "HASH"
+        - AttributeName: "credentialIssuer"
+          KeyType: "RANGE"
+
+  AuthCodesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "auth-codes-${Environment}"
+      BillingMode: "PAY_PER_REQUEST"
+      AttributeDefinitions:
+        - AttributeName: "authCode"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "authCode"
+          KeyType: "HASH"
+
+  AccessTokensTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "access-tokens-${Environment}"
+      BillingMode: "PAY_PER_REQUEST"
+      AttributeDefinitions:
+        - AttributeName: "accessToken"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "accessToken"
+          KeyType: "HASH"
+
+  SessionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "sessions-${Environment}"
+      BillingMode: "PAY_PER_REQUEST"
+      AttributeDefinitions:
+        - AttributeName: "ipvSessionId"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "ipvSessionId"
+          KeyType: "HASH"
