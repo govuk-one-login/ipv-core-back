@@ -21,13 +21,6 @@ public class IpvSessionHandler
 
     private final IpvSessionService ipvSessionService;
 
-    static {
-        // Set the default synchronous HTTP client to UrlConnectionHttpClient
-        System.setProperty(
-                "software.amazon.awssdk.http.service.impl",
-                "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
-    }
-
     @ExcludeFromGeneratedCoverageReport
     public IpvSessionHandler() {
         this.configurationService = new ConfigurationService();

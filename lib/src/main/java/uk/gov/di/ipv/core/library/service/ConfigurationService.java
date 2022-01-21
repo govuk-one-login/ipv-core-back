@@ -30,6 +30,13 @@ public class ConfigurationService {
     private final SSMProvider ssmProvider;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    static {
+        // Set the default synchronous HTTP client to UrlConnectionHttpClient
+        System.setProperty(
+                "software.amazon.awssdk.http.service.impl",
+                "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
+    }
+
     public ConfigurationService(SSMProvider ssmProvider) {
         this.ssmProvider = ssmProvider;
     }

@@ -34,14 +34,6 @@ public class AuthorizationHandler
 
     private final AuthorizationCodeService authorizationCodeService;
 
-    // TODO: Find a better place for this?
-    static {
-        // Set the default synchronous HTTP client to UrlConnectionHttpClient
-        System.setProperty(
-                "software.amazon.awssdk.http.service.impl",
-                "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
-    }
-
     private final ConfigurationService configurationService;
 
     @ExcludeFromGeneratedCoverageReport
