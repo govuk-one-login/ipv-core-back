@@ -181,6 +181,64 @@ Resources:
             Path: /user-identity
             Method: GET
 
+  IPVCredentialIssuerConfig:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "credential-issuer-config-${Environment}"
+      Handler: uk.gov.di.ipv.core.credentialissuerconfig.CredentialIssuerConfigHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/credentialissuerconfig
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer
+      Events:
+        IPVCoreAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreAPI
+            Path: /request-config
+            Method: GET
+
+
+  IPVIssuedCredentials:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "issued-credentials-${Environment}"
+      Handler: uk.gov.di.ipv.core.issuedcredentials.IssuedCredentialsHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/issuedcredentials
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Environment:
+        Variables:
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref UserIssuedCredentialsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer
+      Events:
+        IPVCoreAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreAPI
+            Path: /issued-credentials
+            Method: GET
+
   UserIssuedCredentialsTable:
     Type: AWS::DynamoDB::Table
     Properties:
