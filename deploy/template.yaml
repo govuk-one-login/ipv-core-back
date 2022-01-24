@@ -40,9 +40,8 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref AuthCodesTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuers/*
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuers
       Events:
         IPVCoreAPI:
           Type: Api
@@ -71,9 +70,9 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref AuthCodesTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer/*
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuers/*
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuers
       Events:
         IPVCoreAPI:
           Type: Api
@@ -103,9 +102,9 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer/*
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuers/*
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuers
       Events:
         IPVCoreAPI:
           Type: Api
@@ -134,9 +133,9 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref UserIssuedCredentialsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer/*
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuers/*
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuers
       Events:
         IPVCoreAPI:
           Type: Api
@@ -169,9 +168,9 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref AccessTokensTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer/*
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuers/*
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuers
       Events:
         IPVCoreAPI:
           Type: Api
@@ -194,9 +193,9 @@ Resources:
       MemorySize: 512
       Policies:
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer/*
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuers/*
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuers
       Events:
         IPVCoreAPI:
           Type: Api
@@ -205,7 +204,6 @@ Resources:
               Ref: IPVCoreAPI
             Path: /request-config
             Method: GET
-
 
   IPVIssuedCredentials:
     Type: AWS::Serverless::Function
@@ -227,9 +225,9 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref UserIssuedCredentialsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer/*
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuers/*
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuer
+            ParameterName: !Sub ${Environment}/ipv/core/credentialIssuers
       Events:
         IPVCoreAPI:
           Type: Api
