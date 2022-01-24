@@ -33,7 +33,7 @@ public class DataStore<T> {
         DataStore.isRunningLocally = isRunningLocally;
     }
 
-    public static DynamoDbEnhancedClient getClient() {
+    public static DynamoDbEnhancedClient getClient(boolean isRunningLocally) {
         DynamoDbClient client =
                 isRunningLocally
                         ? createLocalDbClient()

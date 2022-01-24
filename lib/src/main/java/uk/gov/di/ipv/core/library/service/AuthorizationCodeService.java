@@ -14,12 +14,13 @@ public class AuthorizationCodeService {
     @ExcludeFromGeneratedCoverageReport
     public AuthorizationCodeService(ConfigurationService configurationService) {
         this.configurationService = configurationService;
+        boolean isRunningLocally = this.configurationService.isRunningLocally();
         this.dataStore =
                 new DataStore<>(
                         this.configurationService.getAuthCodesTableName(),
                         AuthorizationCodeItem.class,
-                        DataStore.getClient(),
-                        this.configurationService.isRunningLocally());
+                        DataStore.getClient(isRunningLocally),
+                        isRunningLocally);
     }
 
     public AuthorizationCodeService(

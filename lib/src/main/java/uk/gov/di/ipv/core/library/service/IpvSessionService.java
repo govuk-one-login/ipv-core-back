@@ -15,12 +15,13 @@ public class IpvSessionService {
     @ExcludeFromGeneratedCoverageReport
     public IpvSessionService(ConfigurationService configurationService) {
         this.configurationService = configurationService;
+        boolean isRunningLocally = this.configurationService.isRunningLocally();
         dataStore =
                 new DataStore<>(
                         this.configurationService.getIpvSessionTableName(),
                         IpvSessionItem.class,
-                        DataStore.getClient(),
-                        this.configurationService.isRunningLocally());
+                        DataStore.getClient(isRunningLocally),
+                        isRunningLocally);
     }
 
     public IpvSessionService(
