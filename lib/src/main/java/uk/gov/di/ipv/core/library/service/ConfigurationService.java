@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.lambda.powertools.parameters.ParamManager;
@@ -30,13 +31,6 @@ public class ConfigurationService {
     private final SSMProvider ssmProvider;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    static {
-        // Set the default synchronous HTTP client to UrlConnectionHttpClient
-        System.setProperty(
-                "software.amazon.awssdk.http.service.impl",
-                "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
-    }
-
     public ConfigurationService(SSMProvider ssmProvider) {
         this.ssmProvider = ssmProvider;
     }
@@ -47,10 +41,15 @@ public class ConfigurationService {
                     ParamManager.getSsmProvider(
                             SsmClient.builder()
                                     .endpointOverride(URI.create(LOCALHOST_URI))
+                                    .httpClient(UrlConnectionHttpClient.create())
                                     .region(Region.EU_WEST_2)
                                     .build());
         } else {
-            this.ssmProvider = ParamManager.getSsmProvider();
+            this.ssmProvider =
+                    ParamManager.getSsmProvider(
+                            SsmClient.builder()
+                                    .httpClient(UrlConnectionHttpClient.create())
+                                    .build());
         }
     }
 

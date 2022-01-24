@@ -5,6 +5,7 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
+import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
@@ -33,7 +34,12 @@ public class DataStore<T> {
     }
 
     public static DynamoDbEnhancedClient getClient() {
-        DynamoDbClient client = isRunningLocally ? createLocalDbClient() : DynamoDbClient.create();
+        DynamoDbClient client =
+                isRunningLocally
+                        ? createLocalDbClient()
+                        : DynamoDbClient.builder()
+                                .httpClient(UrlConnectionHttpClient.create())
+                                .build();
 
         return DynamoDbEnhancedClient.builder().dynamoDbClient(client).build();
     }
@@ -76,6 +82,7 @@ public class DataStore<T> {
     private static DynamoDbClient createLocalDbClient() {
         return DynamoDbClient.builder()
                 .endpointOverride(URI.create(LOCALHOST_URI))
+                .httpClient(UrlConnectionHttpClient.create())
                 .region(Region.EU_WEST_2)
                 .build();
     }
