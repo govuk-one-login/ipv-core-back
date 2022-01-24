@@ -33,12 +33,13 @@ public class CredentialIssuerService {
     @ExcludeFromGeneratedCoverageReport
     public CredentialIssuerService(ConfigurationService configurationService) {
         this.configurationService = configurationService;
+        boolean isRunningLocally = this.configurationService.isRunningLocally();
         this.dataStore =
                 new DataStore<>(
                         this.configurationService.getUserIssuedCredentialTableName(),
                         UserIssuedCredentialsItem.class,
-                        DataStore.getClient(),
-                        this.configurationService.isRunningLocally());
+                        DataStore.getClient(isRunningLocally),
+                        isRunningLocally);
     }
 
     // used for testing
