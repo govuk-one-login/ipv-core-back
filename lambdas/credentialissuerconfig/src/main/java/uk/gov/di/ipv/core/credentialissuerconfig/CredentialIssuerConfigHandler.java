@@ -21,12 +21,6 @@ public class CredentialIssuerConfigHandler
     private static final Logger LOGGER =
             LoggerFactory.getLogger(CredentialIssuerConfigHandler.class);
 
-    static {
-        System.setProperty(
-                "software.amazon.awssdk.http.service.impl",
-                "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
-    }
-
     public CredentialIssuerConfigHandler(ConfigurationService configurationService) {
         this.configurationService = configurationService;
     }
