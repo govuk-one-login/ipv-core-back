@@ -240,7 +240,7 @@ class CredentialIssuerServiceTest {
 
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
-        ;
+
         BearerAccessToken accessToken = new BearerAccessToken();
 
         CredentialIssuerException thrown =

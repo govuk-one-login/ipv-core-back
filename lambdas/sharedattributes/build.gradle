@@ -13,11 +13,14 @@ dependencies {
 
 	implementation "com.amazonaws:aws-lambda-java-core:1.2.1",
 			"com.amazonaws:aws-lambda-java-events:3.11.0",
+			'com.fasterxml.jackson.core:jackson-databind:2.13.1',
 			"org.slf4j:slf4j-simple:1.7.32",
 			project(":lib")
 
 	testImplementation 'com.google.code.gson:gson:2.8.9',
 			'org.junit.jupiter:junit-jupiter:5.8.2',
+			'com.fasterxml.jackson.core:jackson-core:2.13.1',
+			'com.fasterxml.jackson.core:jackson-annotations:2.13.1',
 			'org.mockito:mockito-junit-jupiter:4.2.0'
 }
 
