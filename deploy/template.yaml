@@ -191,6 +191,9 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/ipv/core/credentialIssuers/*
