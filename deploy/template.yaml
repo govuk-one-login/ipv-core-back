@@ -41,6 +41,7 @@ Resources:
             TableName: !Ref AuthCodesTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/ipv/core/credentialIssuers/*
+        - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/ipv/core/credentialIssuers
       Events:
         IPVCoreAPI:
