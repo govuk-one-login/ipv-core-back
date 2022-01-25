@@ -41,6 +41,7 @@ Resources:
             TableName: !Ref AuthCodesTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/ipv/core/credentialIssuers/*
+        - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/ipv/core/credentialIssuers
       Events:
         IPVCoreAPI:
@@ -191,6 +192,9 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/ipv/core/credentialIssuers/*
