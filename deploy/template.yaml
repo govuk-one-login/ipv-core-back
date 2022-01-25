@@ -32,6 +32,7 @@ Resources:
       MemorySize: 512
       Environment:
         Variables:
+          ENVIRONMENT: !Sub "${Environment}"
           AUTH_CODES_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AuthCodesTable.Arn]]
           ACCESS_TOKENS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AccessTokensTable.Arn]]
       Policies:
@@ -64,6 +65,7 @@ Resources:
       MemorySize: 512
       Environment:
         Variables:
+          ENVIRONMENT: !Sub "${Environment}"
           AUTH_CODES_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AuthCodesTable.Arn]]
       Policies:
         - DynamoDBWritePolicy:
@@ -96,6 +98,7 @@ Resources:
       MemorySize: 512
       Environment:
         Variables:
+          ENVIRONMENT: !Sub "${Environment}"
           IPV_SESSIONS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt SessionsTable.Arn]]
       Policies:
         - DynamoDBReadPolicy:
@@ -128,6 +131,7 @@ Resources:
       MemorySize: 512
       Environment:
         Variables:
+          ENVIRONMENT: !Sub "${Environment}"
           CREDENTIAL_ISSUER_CONFIG_PARAMETER_STORE_KEY: !Sub "/${Environment}/credential-issuers-config"
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
       Policies:
@@ -159,6 +163,7 @@ Resources:
       MemorySize: 512
       Environment:
         Variables:
+          ENVIRONMENT: !Sub "${Environment}"
           ACCESS_TOKENS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AccessTokensTable.Arn]]
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
       Policies:
@@ -222,6 +227,7 @@ Resources:
       MemorySize: 512
       Environment:
         Variables:
+          ENVIRONMENT: !Sub "${Environment}"
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
       Policies:
         - DynamoDBReadPolicy:
