@@ -7,4 +7,5 @@ include "lib",
 		"lambdas:credentialissuerconfig",
 		"lambdas:issuedcredentials",
 		"lambdas:session",
-		"lambdas:useridentity"
+		"lambdas:useridentity",
+		"lambdas:sharedattributes"

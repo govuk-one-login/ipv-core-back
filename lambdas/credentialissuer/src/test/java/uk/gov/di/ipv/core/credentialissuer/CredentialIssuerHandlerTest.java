@@ -216,8 +216,7 @@ class CredentialIssuerHandlerTest {
     private Map getResponseBodyAsMap(APIGatewayProxyResponseEvent response)
             throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
-        Map responseBody = objectMapper.readValue(response.getBody(), Map.class);
-        return responseBody;
+        return objectMapper.readValue(response.getBody(), Map.class);
     }
 
     private APIGatewayProxyRequestEvent createRequestEvent(

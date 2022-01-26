@@ -19,6 +19,32 @@ Resources:
       Name: IPV Core API Gateway
       StageName: !Sub ${Environment}
 
+  IPVSharedAttributesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ipv-shared-attributes-${Environment}"
+      Handler: uk.gov.di.ipv.core.sharedattributes.SharedAttributesHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/sharedattributes
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsTable
+      Events:
+        IPVCoreAPI:
+          Type: Api
+          Properties:
+            RestApiId: !Ref IPVCoreAPI
+            Path: /shareattributes
+            Method: GET
+
   IPVAccessTokenFunction:
     Type: AWS::Serverless::Function
     Properties:
