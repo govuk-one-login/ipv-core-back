@@ -4,11 +4,11 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 
 import java.util.Map;
 
-public class HttpResponseException extends Throwable {
+public class HttpResponseExceptionWithErrorBody extends Throwable {
     private final int responseCode;
     private final ErrorResponse errorResponse;
 
-    public HttpResponseException(int responseCode, ErrorResponse errorResponse) {
+    public HttpResponseExceptionWithErrorBody(int responseCode, ErrorResponse errorResponse) {
         this.responseCode = responseCode;
         this.errorResponse = errorResponse;
     }

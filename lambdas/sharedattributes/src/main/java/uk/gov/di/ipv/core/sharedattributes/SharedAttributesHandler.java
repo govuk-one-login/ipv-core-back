@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.SharedAttributes;
 import uk.gov.di.ipv.core.library.domain.SharedAttributesResponse;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseException;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -48,14 +48,14 @@ public class SharedAttributesHandler
             SharedAttributesResponse sharedAttributesResponse = getSharedAttributes(ipvSessionId);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(OK, sharedAttributesResponse);
-        } catch (HttpResponseException e) {
+        } catch (HttpResponseExceptionWithErrorBody e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getResponseCode(), e.getErrorBody());
         }
     }
 
     private SharedAttributesResponse getSharedAttributes(String ipvSessionId)
-            throws HttpResponseException {
+            throws HttpResponseExceptionWithErrorBody {
         Map<String, String> credentials =
                 userIdentityService.getUserIssuedCredentials(ipvSessionId);
 
@@ -65,17 +65,20 @@ public class SharedAttributesHandler
                 sharedAttributes.add(mapper.readValue(credential, SharedAttributes.class));
             } catch (JsonProcessingException e) {
                 LOGGER.error("Failed to get Shared Attributes: {}", e.getMessage());
-                throw new HttpResponseException(500, ErrorResponse.FAILED_TO_GET_SHARED_ATTRIBUTES);
+                throw new HttpResponseExceptionWithErrorBody(
+                        500, ErrorResponse.FAILED_TO_GET_SHARED_ATTRIBUTES);
             }
         }
         return SharedAttributesResponse.from(sharedAttributes);
     }
 
-    private String getIpvSessionId(Map<String, String> headers) throws HttpResponseException {
+    private String getIpvSessionId(Map<String, String> headers)
+            throws HttpResponseExceptionWithErrorBody {
         String ipvSessionId = RequestHelper.getHeaderByKey(headers, IPV_SESSION_ID_HEADER_KEY);
         if (ipvSessionId == null) {
             LOGGER.error("{} not present in header", IPV_SESSION_ID_HEADER_KEY);
-            throw new HttpResponseException(BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
+            throw new HttpResponseExceptionWithErrorBody(
+                    BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
         }
         return ipvSessionId;
     }
