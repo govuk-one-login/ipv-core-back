@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.SharedAttributes;
 import uk.gov.di.ipv.core.library.domain.SharedAttributesResponse;
@@ -36,6 +37,7 @@ public class SharedAttributesHandler
         this.userIdentityService = userIdentityService;
     }
 
+    @ExcludeFromGeneratedCoverageReport
     public SharedAttributesHandler() {
         this.userIdentityService = new UserIdentityService(new ConfigurationService());
     }

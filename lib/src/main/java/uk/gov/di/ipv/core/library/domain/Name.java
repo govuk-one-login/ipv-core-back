@@ -1,7 +1,10 @@
 package uk.gov.di.ipv.core.library.domain;
 
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+
 import java.util.List;
 
+@ExcludeFromGeneratedCoverageReport
 public class Name {
 
     private final List<String> givenNames;

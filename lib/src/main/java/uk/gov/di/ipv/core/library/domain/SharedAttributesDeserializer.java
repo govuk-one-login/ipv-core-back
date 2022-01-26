@@ -6,11 +6,13 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@ExcludeFromGeneratedCoverageReport
 public class SharedAttributesDeserializer extends StdDeserializer<SharedAttributes> {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
