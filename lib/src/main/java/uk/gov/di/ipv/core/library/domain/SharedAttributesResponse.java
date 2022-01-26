@@ -30,10 +30,10 @@ public class SharedAttributesResponse {
         Set<Map<String, String>> addressHistory = new HashSet<>();
         sharedAttributes.forEach(
                 sharedAttribute -> {
-                    sharedAttribute.getName().map(names::add);
-                    sharedAttribute.getDateOfBirth().map(dateOfBirths::add);
-                    sharedAttribute.getAddress().map(addresses::add);
-                    sharedAttribute.getAddressHistory().map(addressHistory::addAll);
+                    sharedAttribute.getName().ifPresent(names::add);
+                    sharedAttribute.getDateOfBirth().ifPresent(dateOfBirths::add);
+                    sharedAttribute.getAddress().ifPresent(addresses::add);
+                    sharedAttribute.getAddressHistory().ifPresent(addressHistory::addAll);
                 });
 
         return new SharedAttributesResponse(names, dateOfBirths, addresses, addressHistory);
