@@ -54,13 +54,9 @@ public class IssuedCredentialsHandler
         }
 
         Map<String, String> credentials =
-                userIdentityService.getUserIssuedCredentials(ipvSessionId);
+                userIdentityService.getUserIssuedDebugCredentials(ipvSessionId);
 
-        // This is here to allow us to test the functionality with core-front in the short term.
-        // When ready, we can switch to returning the credentials retrieved above.
-        Map<String, String> stubCredentials = getStubCredentials();
-
-        return ApiGatewayResponseGenerator.proxyJsonResponse(OK, stubCredentials);
+        return ApiGatewayResponseGenerator.proxyJsonResponse(OK, credentials);
     }
 
     public static Map<String, String> getStubCredentials() {

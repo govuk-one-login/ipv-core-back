@@ -15,7 +15,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.issuedcredentials.IssuedCredentialsHandler.getStubCredentials;
 
 @ExtendWith(MockitoExtension.class)
 public class IssuedCredentialsHandlerTest {
@@ -37,7 +36,7 @@ public class IssuedCredentialsHandlerTest {
                         "criOne", "credential issued by criOne",
                         "criTwo", "credential issued by criTwo",
                         "criThree", "credential issued by criThree");
-        when(mockUserIdentityService.getUserIssuedCredentials(ipvSessionId))
+        when(mockUserIdentityService.getUserIssuedDebugCredentials(ipvSessionId))
                 .thenReturn(userIssuedCredentials);
         IssuedCredentialsHandler issuedCredentialsHandler =
                 new IssuedCredentialsHandler(mockUserIdentityService, mockConfigurationService);
@@ -46,8 +45,7 @@ public class IssuedCredentialsHandlerTest {
                 issuedCredentialsHandler.handleRequest(event, mockContext);
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(gson.toJson(getStubCredentials()), response.getBody());
-        //        assertEquals(gson.toJson(userIssuedCredentials), response.getBody());
+        assertEquals(gson.toJson(userIssuedCredentials), response.getBody());
     }
 
     @Test
