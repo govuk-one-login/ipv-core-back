@@ -127,12 +127,15 @@ class SharedAttributesHandlerTest {
     }
 
     @Test
-    void shouldReturnBadRequestIfSessionIdIsNotInTheHeader() {
+    void shouldReturnBadRequestIfSessionIdIsNotInTheHeader() throws JsonProcessingException {
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         input.setHeaders(Map.of("not-ipv-session-header", "dummy-value"));
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
         assertEquals(400, response.getStatusCode());
-        assertEquals("ipv-session-id not present in header", response.getBody());
+
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
+        assertEquals(1010, responseBody.get("code"));
+        assertEquals("Missing ipv session id header", responseBody.get("message"));
     }
 }

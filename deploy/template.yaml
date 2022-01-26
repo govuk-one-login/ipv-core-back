@@ -35,7 +35,7 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
       Policies:
-        - DynamoDBCrudPolicy:
+        - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsTable
       Events:
         IPVCoreAPI:

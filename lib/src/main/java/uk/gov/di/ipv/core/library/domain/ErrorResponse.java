@@ -22,7 +22,8 @@ public enum ErrorResponse {
     FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS(
             1013, "Failed to parse oauth2-specific query string parameters"),
     FAILED_TO_PARSE_CREDENTIAL_ISSUER_CONFIG(
-            1014, "Failed to parse credential issuers config to credential issuers object");
+            1014, "Failed to parse credential issuers config to credential issuers object"),
+    FAILED_TO_GET_SHARED_ATTRIBUTES(1015, "Failed to get Shared Attributes");
 
     @JsonProperty("code")
     private final int code;
