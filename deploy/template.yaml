@@ -42,7 +42,7 @@ Resources:
           Type: Api
           Properties:
             RestApiId: !Ref IPVCoreAPI
-            Path: /shareattributes
+            Path: /shared-attributes
             Method: GET
 
   IPVAccessTokenFunction:
