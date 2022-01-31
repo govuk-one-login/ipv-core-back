@@ -1,10 +1,17 @@
 package uk.gov.di.ipv.core.library.helpers;
 
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
+import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.SharedAttributes;
 import uk.gov.di.ipv.core.library.domain.SharedAttributesResponse;
@@ -26,10 +33,14 @@ import java.text.ParseException;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class JwtHelperTest {
 
     public static final String BASE64_SIGNING_KEY =
@@ -37,11 +48,17 @@ class JwtHelperTest {
 
     private static final String BASE64_CERT = "MIIDZzCCAk+gAwIBAgIBATANBgkqhkiG9w0BAQsFADB3MQswCQYDVQQGEwJVSzEXMBUGA1UECBMOR3JlYXRlciBMb25kb24xDzANBgNVBAcTBkxvbmRvbjEXMBUGA1UEChMOQ2FiaW5ldCBPZmZpY2UxDDAKBgNVBAsTA0dEUzEXMBUGA1UEAxMOTXkgY29tbW9uIG5hbWUwHhcNMjIwMTMxMTExNDM3WhcNMjMwMTMxMTExNDM3WjB3MQswCQYDVQQGEwJVSzEXMBUGA1UECBMOR3JlYXRlciBMb25kb24xDzANBgNVBAcTBkxvbmRvbjEXMBUGA1UEChMOQ2FiaW5ldCBPZmZpY2UxDDAKBgNVBAsTA0dEUzEXMBUGA1UEAxMOTXkgY29tbW9uIG5hbWUwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDCRZHUZZOG6W9hrxx/qo8hl9c6rd/0HCed7Vd2DidJ2yRTjbMZ0q8S9OdxTO2H0Wrrt1r4k6RqRKDImdcRqsJKM8iamcS8kYnQHUdHaqnwcFkDtM29A/57V0by2H/fUJss5MqLCE6hBKnrNc/WrI5VCx2LNEe833yDM1fYDjh0CKJK8e0bXMRCTn1sl2wmmBucRaXIZa2msey6SpgxG7REuVsc+Y804yuZAOaTyFP485D8QMVjwl/KRGVich7XYaxTZI3N4KGpS0K9Ui0U+FwuCxsDDdABQ1B2acINZ1ookghLp3EsnpvUJlHw+rPvvqOd18D64TQIDm67O4jK+c4zAgMBAAEwDQYJKoZIhvcNAQELBQADggEBADVrL7p+L5Y38LSMkIJF+fNTXN2xb0cFwn6fHLiD1Jpvq2LoMU18P1lBT4ZFsPFM8OPk58m6Nid8GVJpp+Pz/8a7Uhx3PfpB2uKzmpwBktBu5xpdE+DS/omxnlY91vAnCJaA3NdBYaDGavbs3J0rCR5DpH56hXikmtR3IzGYgrX3TJJghl6vWXZsW/J9nG5+W62SOX9hQUzj3rkXYKfcugODRAsBSC72zOgOU8+7MyDJkX9ndS6UOA5owUDonv75rVEDHNV/vcKrIrs43gmmcQ+PnxU7RwbCsUAN/si4emkR8zAdCQVvi0VFh9woikHOZvlXwm/GGINiLDi8E3kxL10=";
 
+    @Mock
+    private JWSSigner mockSigner;
+
     @Test
     void shouldCreateValidSignedJWT()
             throws JOSEException,
             ParseException, CertificateException {
-        String keyId = "3efe7d7f-5a08-4ea3-90c3-11b24ec3b375";
+        Base64URL signature = Base64URL.from("TEGWSkTIhCUUTik-C54XFoy7UkcH4EDVIZka2fPDUk_dzCqF4COacbWvOrd1WRrB34uzwE1ebZFLTkfXiFw1mJj7DMYnQS5DBxSIyTql0X3Qn6o8R50scMunErzfyiAkVfYT03jrY30fawZy5yYcDnOo_LOCmajQOTMQOwi5XTMfd3Jt7sALSNxjrpDTk35BLN4TaITsaSr1omzK3b6FbOENuQN83RJm32-u66T_f7Qxsqch-OJtg2XHZBTflT3VtOF07v8DPi6SUAxo0ECbiKckN3MuZg6swH2d2vIMG7fVdkHEqyUNYARwbMBqPM722qlY4daSDtvvcuFK6yGv4g==");
+
+        when(mockSigner.sign(any(JWSHeader.class), any(byte[].class))).thenReturn(signature);
+        when(mockSigner.supportedJWSAlgorithms()).thenReturn(Set.of(JWSAlgorithm.RS256));
 
         String dateOfBirth = "1969-20-07";
         String familyName = "Holmes";
@@ -55,7 +72,7 @@ class JwtHelperTest {
                 SharedAttributesResponse.from(List.of(sharedAttributes));
 
         SignedJWT signedJWT =
-                JwtHelper.createSignedJwtFromObject(sharedAttributesResponse, keyId);
+                JwtHelper.createSignedJwtFromObject(sharedAttributesResponse, mockSigner);
         JWTClaimsSet generatedClaims = signedJWT.getJWTClaimsSet();
 
         assertTrue(
@@ -72,23 +89,6 @@ class JwtHelperTest {
                 ((List<String>) names.get(0).get("givenNames")).get(0));
     }
 
-    private RSAPrivateKey getSigningPrivateKey()
-            throws InvalidKeySpecException, NoSuchAlgorithmException {
-        return (RSAPrivateKey)
-                KeyFactory.getInstance("RSA")
-                        .generatePrivate(
-                                new PKCS8EncodedKeySpec(
-                                        Base64.getDecoder().decode(BASE64_SIGNING_KEY)));
-    }
-
-    private PublicKey getSigningPublicKey(RSAPrivateKey signingPrivateKey)
-            throws NoSuchAlgorithmException, InvalidKeySpecException {
-        RSAPrivateCrtKey rsaPrivateCrtKey = (RSAPrivateCrtKey) signingPrivateKey;
-        RSAPublicKeySpec keySpec =
-                new RSAPublicKeySpec(
-                        rsaPrivateCrtKey.getModulus(), rsaPrivateCrtKey.getPublicExponent());
-        return KeyFactory.getInstance("RSA").generatePublic(keySpec);
-    }
 
     private Certificate getCertificate(String base64certificate) throws CertificateException {
         byte[] binaryCertificate = Base64.getDecoder().decode(base64certificate);
