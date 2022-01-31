@@ -147,4 +147,11 @@ public class ConfigurationService {
         }
         return splitKey;
     }
+
+    public String getShareAttributesSigningKeyId() {
+        return ssmProvider.get(
+                String.format(
+                        "/%s/ipv/core/shared-attributes-signing-key-id",
+                        System.getenv("ENVIRONMENT")));
+    }
 }

@@ -26,8 +26,7 @@ class KmsSignerTest {
 
     public static final String KEY_ID = "test";
 
-    @Mock
-    private AWSKMS kmsClient;
+    @Mock private AWSKMS kmsClient;
     @Mock private SignResult signResult;
 
     @Test
@@ -40,12 +39,8 @@ class KmsSignerTest {
 
         JSONObject jsonPayload = new JSONObject(Map.of("test", "test"));
 
-        JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256)
-                .build();
-        JWSObject jwsObject =
-                new JWSObject(
-                        jwsHeader,
-                        new Payload(jsonPayload));
+        JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256).build();
+        JWSObject jwsObject = new JWSObject(jwsHeader, new Payload(jsonPayload));
 
         jwsObject.sign(kmsSigner);
 

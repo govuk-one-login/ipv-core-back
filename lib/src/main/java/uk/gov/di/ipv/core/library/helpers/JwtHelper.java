@@ -15,7 +15,7 @@ public class JwtHelper {
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    static <T> SignedJWT createSignedJwtFromObject(T claimInput, JWSSigner signer)
+    public static <T> SignedJWT createSignedJwtFromObject(T claimInput, JWSSigner signer)
             throws JOSEException {
         JWSHeader jwsHeader = generateHeader();
         JWTClaimsSet claimsSet = generateClaims(claimInput);
