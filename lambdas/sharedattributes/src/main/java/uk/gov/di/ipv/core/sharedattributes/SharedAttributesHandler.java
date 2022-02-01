@@ -6,6 +6,9 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jwt.SignedJWT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -14,6 +17,8 @@ import uk.gov.di.ipv.core.library.domain.SharedAttributes;
 import uk.gov.di.ipv.core.library.domain.SharedAttributesResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.JwtHelper;
+import uk.gov.di.ipv.core.library.helpers.KmsSigner;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -32,14 +37,25 @@ public class SharedAttributesHandler
     public static final int OK = 200;
     private final UserIdentityService userIdentityService;
     private final ObjectMapper mapper = new ObjectMapper();
+    private final JWSSigner signer;
 
-    public SharedAttributesHandler(UserIdentityService userIdentityService) {
+    public SharedAttributesHandler(UserIdentityService userIdentityService, JWSSigner signer) {
         this.userIdentityService = userIdentityService;
+        this.signer = signer;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public SharedAttributesHandler() {
-        this.userIdentityService = new UserIdentityService(new ConfigurationService());
+        ConfigurationService configurationService = new ConfigurationService();
+        this.userIdentityService = new UserIdentityService(configurationService);
+        this.signer =
+                new KmsSigner(
+                        configurationService
+                                .getShareAttributesSigningKeyId()
+                                .orElseThrow(
+                                        () ->
+                                                new IllegalArgumentException(
+                                                        "The shared attributes signing key id is not set in parameter store")));
     }
 
     @Override
@@ -48,8 +64,9 @@ public class SharedAttributesHandler
         try {
             String ipvSessionId = getIpvSessionId(input.getHeaders());
             SharedAttributesResponse sharedAttributesResponse = getSharedAttributes(ipvSessionId);
+            SignedJWT signedJWT = signSharedAttributesResponse(sharedAttributesResponse);
 
-            return ApiGatewayResponseGenerator.proxyJsonResponse(OK, sharedAttributesResponse);
+            return ApiGatewayResponseGenerator.proxyJoseResponse(OK, signedJWT.serialize());
         } catch (HttpResponseExceptionWithErrorBody e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getResponseCode(), e.getErrorBody());
@@ -72,6 +89,18 @@ public class SharedAttributesHandler
             }
         }
         return SharedAttributesResponse.from(sharedAttributes);
+    }
+
+    private SignedJWT signSharedAttributesResponse(
+            SharedAttributesResponse sharedAttributesResponse)
+            throws HttpResponseExceptionWithErrorBody {
+        try {
+            return JwtHelper.createSignedJwtFromObject(sharedAttributesResponse, signer);
+        } catch (JOSEException e) {
+            LOGGER.error("Failed to sign Shared Attributes: {}", e.getMessage());
+            throw new HttpResponseExceptionWithErrorBody(
+                    500, ErrorResponse.FAILED_TO_SIGN_SHARED_ATTRIBUTES);
+        }
     }
 
     private String getIpvSessionId(Map<String, String> headers)

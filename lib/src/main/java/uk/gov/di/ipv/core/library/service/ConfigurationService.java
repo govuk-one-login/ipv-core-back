@@ -147,4 +147,9 @@ public class ConfigurationService {
         }
         return splitKey;
     }
+
+    public Optional<String> getShareAttributesSigningKeyId() {
+        return Optional.ofNullable(
+                ssmProvider.get(System.getenv("SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM")));
+    }
 }
