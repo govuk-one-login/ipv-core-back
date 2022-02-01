@@ -19,6 +19,10 @@ variable "type" {
   type        = string
 }
 
+variable "shared_attributes_signing_cert" {
+  type = string
+  description = "Certificate used to verify shared attribute JWT signatures"
+}
 
 output "credential_issuers_iam_policy_arn" {
   value = aws_iam_policy.credential_issuers_config.arn

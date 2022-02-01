@@ -37,6 +37,10 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/ipv/core/sharedAttributes/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/ipv/core/sharedAttributes
       Events:
         IPVCoreAPI:
           Type: Api
