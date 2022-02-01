@@ -34,7 +34,7 @@ Resources:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
-          SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/ipv/core/shared-attributes-signing-key-id"
+          SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/ipv/core/sharedAttributes/signingKeyId"
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsTable
