@@ -37,18 +37,18 @@ public class SharedAttributesHandler
     public static final int OK = 200;
     private final UserIdentityService userIdentityService;
     private final ObjectMapper mapper = new ObjectMapper();
-    private final JWSSigner kmsSigner;
+    private final JWSSigner signer;
 
     public SharedAttributesHandler(UserIdentityService userIdentityService, JWSSigner signer) {
         this.userIdentityService = userIdentityService;
-        this.kmsSigner = signer;
+        this.signer = signer;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public SharedAttributesHandler() {
         ConfigurationService configurationService = new ConfigurationService();
         this.userIdentityService = new UserIdentityService(configurationService);
-        this.kmsSigner =
+        this.signer =
                 new KmsSigner(
                         configurationService
                                 .getShareAttributesSigningKeyId()
@@ -95,7 +95,7 @@ public class SharedAttributesHandler
             SharedAttributesResponse sharedAttributesResponse)
             throws HttpResponseExceptionWithErrorBody {
         try {
-            return JwtHelper.createSignedJwtFromObject(sharedAttributesResponse, kmsSigner);
+            return JwtHelper.createSignedJwtFromObject(sharedAttributesResponse, signer);
         } catch (JOSEException e) {
             LOGGER.error("Failed to sign Shared Attributes: {}", e.getMessage());
             throw new HttpResponseExceptionWithErrorBody(
