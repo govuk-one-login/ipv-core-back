@@ -15,6 +15,8 @@ public class JwtHelper {
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
+    private JwtHelper() {}
+
     public static <T> SignedJWT createSignedJwtFromObject(T claimInput, JWSSigner signer)
             throws JOSEException {
         JWSHeader jwsHeader = generateHeader();
@@ -24,7 +26,7 @@ public class JwtHelper {
         return signedJWT;
     }
 
-    private static <T> JWSHeader generateHeader() {
+    private static JWSHeader generateHeader() {
         return new JWSHeader.Builder(JWSAlgorithm.RS256).type(JOSEObjectType.JWT).build();
     }
 

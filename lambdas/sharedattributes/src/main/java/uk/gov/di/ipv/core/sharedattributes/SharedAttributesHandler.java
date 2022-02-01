@@ -39,16 +39,23 @@ public class SharedAttributesHandler
     private final ObjectMapper mapper = new ObjectMapper();
     private final JWSSigner kmsSigner;
 
-    public SharedAttributesHandler(UserIdentityService userIdentityService, JWSSigner kmsSigner) {
+    public SharedAttributesHandler(UserIdentityService userIdentityService, JWSSigner signer) {
         this.userIdentityService = userIdentityService;
-        this.kmsSigner = kmsSigner;
+        this.kmsSigner = signer;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public SharedAttributesHandler() {
         ConfigurationService configurationService = new ConfigurationService();
         this.userIdentityService = new UserIdentityService(configurationService);
-        this.kmsSigner = new KmsSigner(configurationService.getShareAttributesSigningKeyId());
+        this.kmsSigner =
+                new KmsSigner(
+                        configurationService
+                                .getShareAttributesSigningKeyId()
+                                .orElseThrow(
+                                        () ->
+                                                new IllegalArgumentException(
+                                                        "The shared attributes signing key id is not set in parameter store")));
     }
 
     @Override

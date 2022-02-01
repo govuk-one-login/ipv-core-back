@@ -148,10 +148,8 @@ public class ConfigurationService {
         return splitKey;
     }
 
-    public String getShareAttributesSigningKeyId() {
-        return ssmProvider.get(
-                String.format(
-                        "/%s/ipv/core/shared-attributes-signing-key-id",
-                        System.getenv("ENVIRONMENT")));
+    public Optional<String> getShareAttributesSigningKeyId() {
+        return Optional.ofNullable(
+                ssmProvider.get(System.getenv("SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM")));
     }
 }
