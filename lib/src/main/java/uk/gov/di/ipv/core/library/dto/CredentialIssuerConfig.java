@@ -1,11 +1,13 @@
 package uk.gov.di.ipv.core.library.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.net.URI;
 import java.util.Objects;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@ExcludeFromGeneratedCoverageReport
 public class CredentialIssuerConfig {
 
     private String id;
