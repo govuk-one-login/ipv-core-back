@@ -13,16 +13,23 @@ public class CredentialIssuerConfig {
     private URI tokenUrl;
     private URI credentialUrl;
     private URI authorizeUrl;
+    private String ipvClientId;
 
     public CredentialIssuerConfig() {}
 
     public CredentialIssuerConfig(
-            String id, String name, URI tokenUrl, URI credentialUrl, URI authorizeUrl) {
+            String id,
+            String name,
+            URI tokenUrl,
+            URI credentialUrl,
+            URI authorizeUrl,
+            String ipvClientId) {
         this.id = id;
         this.name = name;
         this.tokenUrl = tokenUrl;
         this.credentialUrl = credentialUrl;
         this.authorizeUrl = authorizeUrl;
+        this.ipvClientId = ipvClientId;
     }
 
     public String getId() {
@@ -43,6 +50,10 @@ public class CredentialIssuerConfig {
 
     public URI getAuthorizeUrl() {
         return authorizeUrl;
+    }
+
+    public String getIpvClientId() {
+        return ipvClientId;
     }
 
     @Override

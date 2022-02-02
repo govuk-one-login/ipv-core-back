@@ -38,6 +38,14 @@ resource "aws_ssm_parameter" "credential_url" {
   overwrite = var.overwrite
 }
 
+resource "aws_ssm_parameter" "ipvClientId" {
+  for_each  = { for c in var.issuers : c.id => c }
+  name      = "/${var.environment}/ipv/core/credentialIssuers/${each.value.id}/ipvClientId"
+  type      = var.type
+  value     = each.value.ipvClientId
+  overwrite = var.overwrite
+}
+
 // Tempory until we move to SAM
 resource "aws_iam_policy" "credential_issuers_config" {
   name   = "${var.environment}-get-credential-issuers-config"
