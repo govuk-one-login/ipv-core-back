@@ -44,15 +44,29 @@ public class SharedAttributesDeserializer extends StdDeserializer<SharedAttribut
             for (JsonNode name : names.get("givenNames")) {
                 givenNames.add(name.asText());
             }
-            sharedAttributesBuilder.setName(new Name(givenNames, names.get("familyName").asText()));
+            JsonNode familyName = names.get("familyName");
+            if (familyName != null) {
+                sharedAttributesBuilder.setName(new Name(givenNames, familyName.asText()));
+            }
         }
 
-        sharedAttributesBuilder.setDateOfBirth(attributes.get("dateOfBirth").asText());
-        sharedAttributesBuilder.setAddress(
-                objectMapper.convertValue(attributes.get("address"), new TypeReference<>() {}));
-        sharedAttributesBuilder.setAddressHistory(
-                objectMapper.convertValue(
-                        attributes.get("addressHistory"), new TypeReference<>() {}));
+        JsonNode dateOfBirth = attributes.get("dateOfBirth");
+        if (dateOfBirth != null) {
+            sharedAttributesBuilder.setDateOfBirth(dateOfBirth.asText());
+        }
+
+        JsonNode address = attributes.get("address");
+        if (address != null) {
+            sharedAttributesBuilder.setAddress(
+                    objectMapper.convertValue(address, new TypeReference<>() {}));
+        }
+
+        JsonNode addressHistory = attributes.get("addressHistory");
+        if (addressHistory != null) {
+            sharedAttributesBuilder.setAddressHistory(
+                    objectMapper.convertValue(addressHistory, new TypeReference<>() {}));
+        }
+
         return sharedAttributesBuilder.build();
     }
 }
