@@ -84,11 +84,12 @@ class ConfigurationServiceTest {
 
     @Test
     void shouldGetCredentialIssuerFromParameterStore() {
-        environmentVariables.set("ENVIRONMENT", "dev");
+        environmentVariables.set(
+                "CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "/dev/core/credentialIssuers/");
 
         Map<String, String> credentialIssuerParameters =
                 Map.of("tokenUrl", TEST_TOKEN_URL, "credentialUrl", TEST_CREDENTIAL_URL);
-        when(ssmProvider.getMultiple("/dev/ipv/core/credentialIssuers/passportCri"))
+        when(ssmProvider.getMultiple("/dev/core/credentialIssuers/passportCri"))
                 .thenReturn(credentialIssuerParameters);
 
         CredentialIssuerConfig result = configurationService.getCredentialIssuer("passportCri");
@@ -110,7 +111,8 @@ class ConfigurationServiceTest {
     void shouldGetAllCredentialIssuersFromParameterStore()
             throws ParseCredentialIssuerConfigException {
 
-        environmentVariables.set("ENVIRONMENT", "dev");
+        environmentVariables.set(
+                "CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "/dev/core/credentialIssuers/");
         HashMap<String, String> response = new HashMap<>();
         response.put("passportCri/tokenUrl", "passportTokenUrl");
         response.put("passportCri/authorizeUrl", "passportAuthUrl");
@@ -122,7 +124,7 @@ class ConfigurationServiceTest {
         response.put("stubCri/name", "stubIssuer");
 
         when(ssmProvider.recursive()).thenReturn(ssmProvider2);
-        when(ssmProvider2.getMultiple("/dev/ipv/core/credentialIssuers")).thenReturn(response);
+        when(ssmProvider2.getMultiple("/dev/core/credentialIssuers/")).thenReturn(response);
         List<CredentialIssuerConfig> result = configurationService.getCredentialIssuers();
 
         assertEquals(2, result.size());
@@ -144,7 +146,8 @@ class ConfigurationServiceTest {
 
     @Test
     void shouldThrowExceptionWhenCriConfigIsIncorrect() {
-        environmentVariables.set("ENVIRONMENT", "dev");
+        environmentVariables.set(
+                "CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "/dev/core/credentialIssuers/");
         HashMap<String, String> response = new HashMap<>();
         response.put("incorrectPathName", "passportTokenUrl");
         response.put("passportCri/authorizeUrl", "passportAuthUrl");
@@ -152,7 +155,7 @@ class ConfigurationServiceTest {
         response.put("passportCri/name", "passportIssuer");
 
         when(ssmProvider.recursive()).thenReturn(ssmProvider2);
-        when(ssmProvider2.getMultiple("/dev/ipv/core/credentialIssuers")).thenReturn(response);
+        when(ssmProvider2.getMultiple("/dev/core/credentialIssuers/")).thenReturn(response);
         ParseCredentialIssuerConfigException exception =
                 assertThrows(
                         ParseCredentialIssuerConfigException.class,
@@ -166,7 +169,8 @@ class ConfigurationServiceTest {
     void shouldGetAllCredentialIssuersFromParameterStoreNewAndIgnoreInExistingFields()
             throws ParseCredentialIssuerConfigException {
 
-        environmentVariables.set("ENVIRONMENT", "dev");
+        environmentVariables.set(
+                "CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "/dev/core/credentialIssuers/");
         HashMap<String, String> response = new HashMap<>();
         response.put("passportCri/id", "passportCri");
         response.put("passportCri/tokenUrl", "passportTokenUrl");
@@ -176,7 +180,7 @@ class ConfigurationServiceTest {
         response.put("stubCri/ipclientid", "stubIpClient");
 
         when(ssmProvider.recursive()).thenReturn(ssmProvider2);
-        when(ssmProvider2.getMultiple("/dev/ipv/core/credentialIssuers")).thenReturn(response);
+        when(ssmProvider2.getMultiple("/dev/core/credentialIssuers/")).thenReturn(response);
         List<CredentialIssuerConfig> result = configurationService.getCredentialIssuers();
 
         Optional<CredentialIssuerConfig> passportIssuerConfig =
