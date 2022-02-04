@@ -48,8 +48,10 @@ class SharedAttributesHandlerTest {
             Map.of(
                     "attributes",
                     Map.of(
-                            "names",
-                            Map.of("givenNames", List.of("John", "H"), "familyName", "Watson"),
+                            "givenNames",
+                            List.of("John", "H"),
+                            "familyName",
+                            "Watson",
                             "dateOfBirth",
                             "2021-03-01",
                             "address",
@@ -69,8 +71,10 @@ class SharedAttributesHandlerTest {
             Map.of(
                     "attributes",
                     Map.of(
-                            "names",
-                            Map.of("givenNames", List.of("Sherlock"), "familyName", "Holmes"),
+                            "givenNames",
+                            List.of("Sherlock"),
+                            "familyName",
+                            "Holmes",
                             "dateOfBirth",
                             "1991-03-01",
                             "address",

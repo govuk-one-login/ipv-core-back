@@ -38,16 +38,22 @@ public class SharedAttributesDeserializer extends StdDeserializer<SharedAttribut
             return SharedAttributes.empty();
         }
 
-        JsonNode names = attributes.get("names");
-        if (names != null) {
-            List<String> givenNames = new ArrayList<>();
-            for (JsonNode name : names.get("givenNames")) {
+        List<String> givenNames = new ArrayList<>();
+        JsonNode givenNamesNode = attributes.get("givenNames");
+        if (givenNamesNode != null) {
+            for (JsonNode name : givenNamesNode) {
                 givenNames.add(name.asText());
             }
-            JsonNode familyName = names.get("familyName");
-            if (familyName != null) {
-                sharedAttributesBuilder.setName(new Name(givenNames, familyName.asText()));
-            }
+        }
+
+        JsonNode familyNameNode = attributes.get("familyName");
+        String familName = null;
+        if (familyNameNode != null) {
+            familName = familyNameNode.asText();
+        }
+
+        if (!givenNames.isEmpty() || familName != null) {
+            sharedAttributesBuilder.setName(new Name(givenNames, familName));
         }
 
         JsonNode dateOfBirth = attributes.get("dateOfBirth");
