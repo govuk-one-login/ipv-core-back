@@ -148,7 +148,7 @@ Resources:
       MemorySize: 512
       Environment:
         Variables:
-          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "${Environment}/core/credentialIssuers/"
+          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers/"
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
       Policies:
         - DynamoDBCrudPolicy:
@@ -211,7 +211,7 @@ Resources:
       MemorySize: 512
       Environment:
         Variables:
-          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "${Environment}/core/credentialIssuers/"
+          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers/"
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
