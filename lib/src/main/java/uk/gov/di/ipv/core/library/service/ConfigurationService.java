@@ -86,9 +86,8 @@ public class ConfigurationService {
     public CredentialIssuerConfig getCredentialIssuer(String credentialIssuerId) {
         Map<String, String> result =
                 ssmProvider.getMultiple(
-                        String.format(
-                                "/%s/ipv/core/credentialIssuers/%s",
-                                System.getenv("ENVIRONMENT"), credentialIssuerId));
+                        System.getenv("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX")
+                                + credentialIssuerId);
         return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
     }
 
@@ -97,10 +96,7 @@ public class ConfigurationService {
         Map<String, String> params =
                 ssmProvider
                         .recursive()
-                        .getMultiple(
-                                String.format(
-                                        "/%s/ipv/core/credentialIssuers",
-                                        System.getenv("ENVIRONMENT")));
+                        .getMultiple(System.getenv("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX"));
 
         Map<String, Map<String, Object>> map = new HashMap<>();
         for (Entry<String, String> entry : params.entrySet()) {
