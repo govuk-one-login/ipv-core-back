@@ -85,7 +85,7 @@ class ConfigurationServiceTest {
     @Test
     void shouldGetCredentialIssuerFromParameterStore() {
         environmentVariables.set(
-                "CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "/dev/core/credentialIssuers/");
+                "CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "/dev/core/credentialIssuers");
 
         Map<String, String> credentialIssuerParameters =
                 Map.of("tokenUrl", TEST_TOKEN_URL, "credentialUrl", TEST_CREDENTIAL_URL);
