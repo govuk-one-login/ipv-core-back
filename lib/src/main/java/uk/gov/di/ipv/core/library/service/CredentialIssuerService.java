@@ -71,7 +71,13 @@ public class CredentialIssuerService {
                         Objects.requireNonNullElse(
                                 errorResponse.getErrorObject(),
                                 new ErrorObject("unknown", "unknown"));
-                LOGGER.error("{}: {}", errorObject.getCode(), errorObject.getDescription());
+                LOGGER.error(
+                        "Failed to exchange token with credential issuer with ID '{}' at '{}'. Code: '{}', Description: {}, HttpStatus code: {}",
+                        config.getId(),
+                        config.getTokenUrl(),
+                        errorObject.getCode(),
+                        errorObject.getDescription(),
+                        errorObject.getHTTPStatusCode());
                 throw new CredentialIssuerException(
                         HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST);
             }
