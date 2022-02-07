@@ -86,8 +86,10 @@ public class ConfigurationService {
     public CredentialIssuerConfig getCredentialIssuer(String credentialIssuerId) {
         Map<String, String> result =
                 ssmProvider.getMultiple(
-                        System.getenv("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX")
-                                + credentialIssuerId);
+                        String.format(
+                                "%s/%s",
+                                System.getenv("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX"),
+                                credentialIssuerId));
         return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
     }
 
