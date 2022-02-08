@@ -64,11 +64,6 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           AUTH_CODES_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AuthCodesTable.Arn]]
           ACCESS_TOKENS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AccessTokensTable.Arn]]
-          ORCHESTRATOR_ID: !Sub "/${Environment}/clients/orchestrator-stub/id"
-          ORCHESTRATOR_ISSUER: !Sub "/${Environment}/clients/orchestrator-stub/issuer"
-          ORCHESTRATOR_CERTIFICATE_FOR_CORE_TO_VERIFY: !Sub "/${Environment}/clients/orchestrator-stub/publicCertificateForCoreToVerify"
-          ORCHESTRATOR_VALID_CALLBACK_URL: !Sub "/${Environment}/clients/orchestrator-stub/validCallBackUrls"
-          ORCHESTRATOR_AUTHENTICATION_METHOD: !Sub "/${Environment}/clients/orchestrator-stub/authenticationMethod"
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref AccessTokensTable
