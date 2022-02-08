@@ -70,7 +70,7 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref AuthCodesTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/clients/*
+            ParameterName: !Sub ${Environment}/core/clients/*
       Events:
         IPVCoreAPI:
           Type: Api
@@ -100,7 +100,7 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref AuthCodesTable
         - SSMParameterReadPolicy:
-              ParameterName: !Sub ${Environment}/self/audienceForClients
+              ParameterName: !Sub ${Environment}/core/self/audienceForClients
       Events:
         IPVCoreAPI:
           Type: Api
