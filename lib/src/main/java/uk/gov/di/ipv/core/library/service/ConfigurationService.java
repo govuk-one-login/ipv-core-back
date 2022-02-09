@@ -12,6 +12,7 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ public class ConfigurationService {
     private static final String LOCALHOST_URI = "http://localhost:" + LOCALHOST_PORT;
     private static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
     private static final String IS_LOCAL = "IS_LOCAL";
+    private static final String CLIENT_REDIRECT_URL_SEPARATOR = ",";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationService.class);
 
@@ -146,8 +148,27 @@ public class ConfigurationService {
         return splitKey;
     }
 
-    public Optional<String> getShareAttributesSigningKeyId() {
+    public Optional<String> getSharedAttributesSigningKeyId() {
         return Optional.ofNullable(
                 ssmProvider.get(System.getenv("SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM")));
+    }
+
+    public List<String> getClientRedirectUrls(String clientId) {
+        Optional<String> redirectUrlStrings =
+                Optional.ofNullable(
+                        ssmProvider.get(
+                                String.format(
+                                        "/%s/core/clients/%s/validRedirectUrls",
+                                        System.getenv("ENVIRONMENT"), clientId)));
+
+        return Arrays.asList(
+                redirectUrlStrings
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                String.format(
+                                                        "Client redirect URLs are not set in parameter store for client ID '%s'",
+                                                        clientId)))
+                        .split(CLIENT_REDIRECT_URL_SEPARATOR));
     }
 }

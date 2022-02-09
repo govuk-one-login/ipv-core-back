@@ -100,7 +100,7 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref AuthCodesTable
         - SSMParameterReadPolicy:
-              ParameterName: !Sub ${Environment}/core/self/audienceForClients
+              ParameterName: !Sub ${Environment}/core/*
       Events:
         IPVCoreAPI:
           Type: Api

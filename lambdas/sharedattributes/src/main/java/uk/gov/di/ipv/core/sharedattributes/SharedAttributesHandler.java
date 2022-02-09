@@ -51,7 +51,7 @@ public class SharedAttributesHandler
         this.signer =
                 new KmsSigner(
                         configurationService
-                                .getShareAttributesSigningKeyId()
+                                .getSharedAttributesSigningKeyId()
                                 .orElseThrow(
                                         () ->
                                                 new IllegalArgumentException(
