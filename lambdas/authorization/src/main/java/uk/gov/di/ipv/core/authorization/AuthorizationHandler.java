@@ -5,9 +5,14 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
+import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.id.Identifier;
+import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import org.apache.http.HttpStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
@@ -22,6 +27,7 @@ import java.util.stream.Collectors;
 public class AuthorizationHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(AuthorizationHandler.class);
     private static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
 
     private final AuthorizationCodeService authorizationCodeService;
@@ -56,13 +62,25 @@ public class AuthorizationHandler
                     HttpStatus.SC_BAD_REQUEST, validationResult.getError());
         }
 
+        AuthenticationRequest authenticationRequest;
+        try {
+            authenticationRequest = AuthenticationRequest.parse(queryStringParameters);
+        } catch (ParseException e) {
+            LOGGER.error("Authentication request could not be parsed", e);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_BAD_REQUEST,
+                    ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS);
+        }
+
         AuthorizationCode authorizationCode = authorizationCodeService.generateAuthorizationCode();
 
         String ipvSessionId =
                 RequestHelper.getHeaderByKey(input.getHeaders(), IPV_SESSION_ID_HEADER_KEY);
 
         authorizationCodeService.persistAuthorizationCode(
-                authorizationCode.getValue(), ipvSessionId);
+                authorizationCode.getValue(),
+                ipvSessionId,
+                authenticationRequest.getRedirectionURI().toString());
 
         Map<String, Identifier> payload = Map.of("code", authorizationCode);
 

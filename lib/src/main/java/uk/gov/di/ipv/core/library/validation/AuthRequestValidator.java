@@ -1,7 +1,5 @@
 package uk.gov.di.ipv.core.library.validation;
 
-import com.nimbusds.oauth2.sdk.ParseException;
-import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,11 +37,6 @@ public class AuthRequestValidator {
             return new ValidationResult<>(false, ErrorResponse.MISSING_IPV_SESSION_ID);
         }
 
-        if (unableToParseQueryStrings(queryStringParameters)) {
-            return new ValidationResult<>(
-                    false, ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS);
-        }
-
         var errorResult = validateRedirectUrl(queryStringParameters);
         if (errorResult.isPresent()) {
             return new ValidationResult<>(false, errorResult.get());
@@ -61,22 +54,15 @@ public class AuthRequestValidator {
                 RequestHelper.getHeaderByKey(requestHeaders, IPV_SESSION_ID_HEADER_KEY));
     }
 
-    private boolean unableToParseQueryStrings(Map<String, List<String>> queryStringParameters) {
-        try {
-            AuthenticationRequest.parse(queryStringParameters);
-            LOGGER.info("Successfully parsed authentication request");
-            return false;
-        } catch (ParseException e) {
-            LOGGER.error("Authentication request could not be parsed", e);
-            return true;
-        }
-    }
-
     private Optional<ErrorResponse> validateRedirectUrl(
             Map<String, List<String>> queryStringParameters) {
         try {
-            String redirectUrl = getOnlyValueOrThrow(queryStringParameters.get(REDIRECT_URI_PARAM));
-            String clientId = getOnlyValueOrThrow(queryStringParameters.get(CLIENT_ID_PARAM));
+            String redirectUrl =
+                    getOnlyValueOrThrow(
+                            queryStringParameters.getOrDefault(REDIRECT_URI_PARAM, List.of()));
+            String clientId =
+                    getOnlyValueOrThrow(
+                            queryStringParameters.getOrDefault(CLIENT_ID_PARAM, List.of()));
             List<String> clientRedirectUrls = configurationService.getClientRedirectUrls(clientId);
 
             if (!clientRedirectUrls.contains(redirectUrl)) {
@@ -93,7 +79,7 @@ public class AuthRequestValidator {
     private String getOnlyValueOrThrow(List<String> container) {
         if (container.size() != 1) {
             throw new IllegalArgumentException(
-                    String.format("Container must have exactly one element: %s", container));
+                    String.format("Parameter must have exactly one value: %s", container));
         }
         return container.get(0);
     }

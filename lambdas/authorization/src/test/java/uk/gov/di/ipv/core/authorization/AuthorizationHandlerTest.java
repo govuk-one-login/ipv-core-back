@@ -20,6 +20,7 @@ import uk.gov.di.ipv.core.library.validation.AuthRequestValidator;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -32,6 +33,13 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AuthorizationHandlerTest {
     private static final Map<String, String> TEST_EVENT_HEADERS = Map.of("ipv-session-id", "12345");
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final Map<String, String> VALID_QUERY_PARAMS =
+            Map.of(
+                    OAuth2RequestParams.REDIRECT_URI, "http://example.com",
+                    OAuth2RequestParams.CLIENT_ID, "12345",
+                    OAuth2RequestParams.RESPONSE_TYPE, "code",
+                    OAuth2RequestParams.SCOPE, "openid");
 
     @Mock private Context context;
     @Mock private AuthorizationCodeService mockAuthorizationCodeService;
@@ -40,8 +48,6 @@ class AuthorizationHandlerTest {
 
     private AuthorizationHandler handler;
     private AuthorizationCode authorizationCode;
-
-    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
@@ -61,13 +67,7 @@ class AuthorizationHandlerTest {
                 .thenReturn(ValidationResult.createValidResult());
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        Map<String, String> params = new HashMap<>();
-        params.put(OAuth2RequestParams.REDIRECT_URI, "http://example.com");
-        params.put(OAuth2RequestParams.CLIENT_ID, "12345");
-        params.put(OAuth2RequestParams.RESPONSE_TYPE, "code");
-        params.put(OAuth2RequestParams.SCOPE, "openid");
-        event.setQueryStringParameters(params);
-
+        event.setQueryStringParameters(VALID_QUERY_PARAMS);
         event.setHeaders(TEST_EVENT_HEADERS);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
@@ -79,7 +79,7 @@ class AuthorizationHandlerTest {
         Map<String, String> authCode = responseBody.get("code");
 
         verify(mockAuthorizationCodeService)
-                .persistAuthorizationCode(authCode.get("value"), "12345");
+                .persistAuthorizationCode(authCode.get("value"), "12345", "http://example.com");
         assertEquals(authorizationCode.toString(), authCode.get("value"));
     }
 
@@ -105,6 +105,42 @@ class AuthorizationHandlerTest {
                 ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), responseBody.get("message"));
 
         verify(mockAuthorizationCodeService, never())
-                .persistAuthorizationCode(anyString(), anyString());
+                .persistAuthorizationCode(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void shouldReturn400IfCanNotParseAuthRequestFromQueryStringParams()
+            throws JsonProcessingException {
+        when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
+                .thenReturn(ValidationResult.createValidResult());
+
+        List<String> paramsToRemove =
+                List.of(
+                        OAuth2RequestParams.REDIRECT_URI,
+                        OAuth2RequestParams.CLIENT_ID,
+                        OAuth2RequestParams.RESPONSE_TYPE,
+                        OAuth2RequestParams.SCOPE);
+        for (String param : paramsToRemove) {
+            Map<String, String> unparseableParams = new HashMap<>(VALID_QUERY_PARAMS);
+            unparseableParams.remove(param);
+
+            APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+            event.setQueryStringParameters(unparseableParams);
+            event.setHeaders(TEST_EVENT_HEADERS);
+
+            APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+
+            Map<String, Object> responseBody =
+                    objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+            assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+            assertEquals(
+                    ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(),
+                    responseBody.get("code"));
+            assertEquals(
+                    ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
+                    responseBody.get("message"));
+            verify(mockAuthorizationCodeService, never())
+                    .persistAuthorizationCode(anyString(), anyString(), anyString());
+        }
     }
 }

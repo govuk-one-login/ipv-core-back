@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class AuthRequestValidationTest {
+class AuthRequestValidatorTest {
 
     @Mock private ConfigurationService mockConfigurationService;
 
@@ -112,9 +112,8 @@ class AuthRequestValidationTest {
     }
 
     @Test
-    void validateRequestReturnsErrorIfMissingParams() {
-        var paramsToTest =
-                List.of(REDIRECT_URI_PARAM, CLIENT_ID_PARAM, RESPONSE_TYPE_PARAM, SCOPE_PARAM);
+    void validateRequestReturnsErrorIfMissingParamsForValidatingRedirectUrl() {
+        var paramsToTest = List.of(REDIRECT_URI_PARAM, CLIENT_ID_PARAM);
         for (String paramToTest : paramsToTest) {
             var invalidQueryStringParams = new HashMap<>(VALID_QUERY_STRING_PARAMS);
             invalidQueryStringParams.remove(paramToTest);
@@ -124,11 +123,33 @@ class AuthRequestValidationTest {
 
             assertFalse(validationResult.isValid());
             assertEquals(
-                    ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(),
+                    ErrorResponse.INVALID_REQUEST_PARAM.getCode(),
                     validationResult.getError().getCode());
             assertEquals(
-                    ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
+                    ErrorResponse.INVALID_REQUEST_PARAM.getMessage(),
                     validationResult.getError().getMessage());
         }
+    }
+
+    @Test
+    void validateRequestReturnsErrorIfRedirectUrlNotRegistered() {
+        List<String> registeredRedirectUrls =
+                List.of(
+                        "https://wrong.example.com",
+                        "https://nope.example.com",
+                        "https://whoops.example.com");
+        when(mockConfigurationService.getClientRedirectUrls("12345"))
+                .thenReturn(registeredRedirectUrls);
+
+        var validationResult =
+                validator.validateRequest(VALID_QUERY_STRING_PARAMS, REQUEST_HEADERS);
+
+        assertFalse(validationResult.isValid());
+        assertEquals(
+                ErrorResponse.INVALID_REDIRECT_URL.getCode(),
+                validationResult.getError().getCode());
+        assertEquals(
+                ErrorResponse.INVALID_REDIRECT_URL.getMessage(),
+                validationResult.getError().getMessage());
     }
 }
