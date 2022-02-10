@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.accesstoken;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.common.contenttype.ContentType;
@@ -35,6 +36,7 @@ import static org.mockito.Mockito.when;
 
 class AccessTokenHandlerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final AuthorizationCodeItem authorizationCodeItem = new AuthorizationCodeItem();
     private Context context;
     private AccessTokenService mockAccessTokenService;
     private AuthorizationCodeService mockAuthorizationCodeService;
@@ -60,6 +62,10 @@ class AccessTokenHandlerTest {
                         mockAccessTokenService,
                         mockAuthorizationCodeService,
                         mockConfigurationService);
+
+        authorizationCodeItem.setRedirectUrl("https://callback.example.com");
+        authorizationCodeItem.setAuthCode("random_auth_code");
+        authorizationCodeItem.setIpvSessionId("12345");
     }
 
     @Test
@@ -174,10 +180,7 @@ class AccessTokenHandlerTest {
     @Test
     void shouldReturn400WhenRedirectUrlInAuthGrantDoesNotMatchThatSuppliedToAuthEndpoint()
             throws ParseException {
-        AuthorizationCodeItem authorizationCodeItem = new AuthorizationCodeItem();
         authorizationCodeItem.setRedirectUrl("https://different.example.com");
-        authorizationCodeItem.setAuthCode("random_auth_code");
-        authorizationCodeItem.setIpvSessionId("12345");
 
         when(mockAccessTokenService.validateTokenRequest(any()))
                 .thenReturn(ValidationResult.createValidResult());
@@ -196,6 +199,70 @@ class AccessTokenHandlerTest {
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
         assertEquals(OAuth2Error.INVALID_REQUEST.getCode(), errorResponse.getCode());
         assertEquals(OAuth2Error.INVALID_REQUEST.getDescription(), errorResponse.getDescription());
+    }
+
+    @Test
+    void shouldReturn400WhenRedirectUrlNotIncludedInRequest() throws ParseException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        String tokenRequestBody =
+                "code=12345&grant_type=authorization_code&client_id=test_client_id";
+        event.setBody(tokenRequestBody);
+
+        when(mockAuthorizationCodeService.getAuthorizationCodeItem("12345"))
+                .thenReturn(Optional.of(authorizationCodeItem));
+        when(mockAccessTokenService.validateTokenRequest(any()))
+                .thenReturn(ValidationResult.createValidResult());
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+
+        ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(OAuth2Error.INVALID_REQUEST.getCode(), errorResponse.getCode());
+        assertEquals(OAuth2Error.INVALID_REQUEST.getDescription(), errorResponse.getDescription());
+    }
+
+    @Test
+    void shouldReturn400WhenRedirectUrlNotIncludedInAuthCodeItemFromDb() throws ParseException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        String tokenRequestBody =
+                "code=12345&redirect_uri=http://test.com&grant_type=authorization_code&client_id=test_client_id";
+        event.setBody(tokenRequestBody);
+
+        authorizationCodeItem.setRedirectUrl(null);
+
+        when(mockAuthorizationCodeService.getAuthorizationCodeItem("12345"))
+                .thenReturn(Optional.of(authorizationCodeItem));
+        when(mockAccessTokenService.validateTokenRequest(any()))
+                .thenReturn(ValidationResult.createValidResult());
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+
+        ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(OAuth2Error.INVALID_REQUEST.getCode(), errorResponse.getCode());
+        assertEquals(OAuth2Error.INVALID_REQUEST.getDescription(), errorResponse.getDescription());
+    }
+
+    @Test
+    void shouldReturn200WhenRedirectUrlNotIncludedInAuthCodeItemFromDbOrTokenRequest()
+            throws ParseException, JsonProcessingException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        String tokenRequestBody =
+                "code=12345&grant_type=authorization_code&client_id=test_client_id";
+        event.setBody(tokenRequestBody);
+
+        authorizationCodeItem.setRedirectUrl(null);
+
+        when(mockAuthorizationCodeService.getAuthorizationCodeItem("12345"))
+                .thenReturn(Optional.of(authorizationCodeItem));
+        when(mockAccessTokenService.validateTokenRequest(any()))
+                .thenReturn(ValidationResult.createValidResult());
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+
+        assertEquals(200, response.getStatusCode());
     }
 
     private ErrorObject createErrorObjectFromResponse(String responseBody) throws ParseException {

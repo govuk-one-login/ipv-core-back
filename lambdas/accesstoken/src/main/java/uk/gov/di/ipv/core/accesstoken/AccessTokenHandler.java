@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.net.URI;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 public class AccessTokenHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -131,8 +132,20 @@ public class AccessTokenHandler
     private boolean redirectUrlsDoNotMatch(
             AuthorizationCodeItem authorizationCodeItem,
             AuthorizationCodeGrant authorizationGrant) {
-        return !authorizationCodeItem
-                .getRedirectUrl()
-                .equals(authorizationGrant.getRedirectionURI().toString());
+
+        if (Objects.isNull(authorizationCodeItem.getRedirectUrl())
+                && Objects.isNull(authorizationGrant.getRedirectionURI())) {
+            return false;
+        }
+
+        if (Objects.isNull(authorizationCodeItem.getRedirectUrl())
+                || Objects.isNull(authorizationGrant.getRedirectionURI())) {
+            return true;
+        }
+
+        return !authorizationGrant
+                .getRedirectionURI()
+                .toString()
+                .equals(authorizationCodeItem.getRedirectUrl());
     }
 }
