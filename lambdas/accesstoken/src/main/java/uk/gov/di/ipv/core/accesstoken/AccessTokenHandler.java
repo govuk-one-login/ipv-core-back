@@ -11,20 +11,21 @@ import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.TokenRequest;
-import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
-import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
 import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.net.URI;
+import java.util.NoSuchElementException;
+import java.util.Objects;
 
 public class AccessTokenHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -68,28 +69,31 @@ public class AccessTokenHandler
                         validationResult.getError().toJSONObject());
             }
 
-            String authorizationCodeFromRequest =
-                    ((AuthorizationCodeGrant) tokenRequest.getAuthorizationGrant())
-                            .getAuthorizationCode()
-                            .getValue();
-            String ipvSessionId =
-                    authorizationCodeService.getIpvSessionIdByAuthorizationCode(
-                            authorizationCodeFromRequest);
+            AuthorizationCodeGrant authorizationGrant =
+                    (AuthorizationCodeGrant) tokenRequest.getAuthorizationGrant();
 
-            if (StringUtils.isBlank(ipvSessionId)) {
+            AuthorizationCodeItem authorizationCodeItem =
+                    authorizationCodeService
+                            .getAuthorizationCodeItem(
+                                    authorizationGrant.getAuthorizationCode().getValue())
+                            .orElseThrow();
+
+            if (redirectUrlsDoNotMatch(authorizationCodeItem, authorizationGrant)) {
                 LOGGER.error(
-                        "Access Token could not be issued. The supplied authorization code was not found in the database.");
+                        "Redirect URL in token request does not match that received in auth code request. Session ID: {}",
+                        authorizationCodeItem.getIpvSessionId());
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        OAuth2Error.INVALID_GRANT.getHTTPStatusCode(),
-                        OAuth2Error.INVALID_GRANT.toJSONObject());
+                        OAuth2Error.INVALID_REQUEST.getHTTPStatusCode(),
+                        OAuth2Error.INVALID_REQUEST.toJSONObject());
             }
 
-            TokenResponse tokenResponse = accessTokenService.generateAccessToken(tokenRequest);
-            AccessTokenResponse accessTokenResponse = tokenResponse.toSuccessResponse();
+            AccessTokenResponse accessTokenResponse =
+                    accessTokenService.generateAccessToken(tokenRequest).toSuccessResponse();
 
-            accessTokenService.persistAccessToken(accessTokenResponse, ipvSessionId);
+            accessTokenService.persistAccessToken(
+                    accessTokenResponse, authorizationCodeItem.getIpvSessionId());
 
-            authorizationCodeService.revokeAuthorizationCode(authorizationCodeFromRequest);
+            authorizationCodeService.revokeAuthorizationCode(authorizationCodeItem.getAuthCode());
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, accessTokenResponse.toJSONObject());
@@ -99,6 +103,12 @@ public class AccessTokenHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     getHttpStatusCodeForErrorResponse(e.getErrorObject()),
                     e.getErrorObject().toJSONObject());
+        } catch (NoSuchElementException e) {
+            LOGGER.error(
+                    "Access Token could not be issued. The supplied authorization code was not found in the database.");
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    OAuth2Error.INVALID_GRANT.getHTTPStatusCode(),
+                    OAuth2Error.INVALID_GRANT.toJSONObject());
         }
     }
 
@@ -117,5 +127,25 @@ public class AccessTokenHandler
         return errorObject.getHTTPStatusCode() > 0
                 ? errorObject.getHTTPStatusCode()
                 : HttpStatus.SC_BAD_REQUEST;
+    }
+
+    private boolean redirectUrlsDoNotMatch(
+            AuthorizationCodeItem authorizationCodeItem,
+            AuthorizationCodeGrant authorizationGrant) {
+
+        if (Objects.isNull(authorizationCodeItem.getRedirectUrl())
+                && Objects.isNull(authorizationGrant.getRedirectionURI())) {
+            return false;
+        }
+
+        if (Objects.isNull(authorizationCodeItem.getRedirectUrl())
+                || Objects.isNull(authorizationGrant.getRedirectionURI())) {
+            return true;
+        }
+
+        return !authorizationGrant
+                .getRedirectionURI()
+                .toString()
+                .equals(authorizationCodeItem.getRedirectUrl());
     }
 }

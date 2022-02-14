@@ -10,9 +10,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -41,7 +43,9 @@ class AuthorizationCodeServiceTest {
     void shouldCreateAuthorizationCodeInDataStore() {
         AuthorizationCode testCode = new AuthorizationCode();
         String ipvSessionId = "session-12345";
-        authorizationCodeService.persistAuthorizationCode(testCode.getValue(), ipvSessionId);
+        String redirectUrl = "https://example.com/callback";
+        authorizationCodeService.persistAuthorizationCode(
+                testCode.getValue(), ipvSessionId, redirectUrl);
 
         ArgumentCaptor<AuthorizationCodeItem> authorizationCodeItemArgumentCaptor =
                 ArgumentCaptor.forClass(AuthorizationCodeItem.class);
@@ -50,6 +54,7 @@ class AuthorizationCodeServiceTest {
                 ipvSessionId, authorizationCodeItemArgumentCaptor.getValue().getIpvSessionId());
         assertEquals(
                 testCode.getValue(), authorizationCodeItemArgumentCaptor.getValue().getAuthCode());
+        assertEquals(redirectUrl, authorizationCodeItemArgumentCaptor.getValue().getRedirectUrl());
     }
 
     @Test
@@ -62,24 +67,24 @@ class AuthorizationCodeServiceTest {
 
         when(mockDataStore.getItem(testCode.getValue())).thenReturn(testItem);
 
-        String resultIpvSessionid =
-                authorizationCodeService.getIpvSessionIdByAuthorizationCode(testCode.getValue());
+        AuthorizationCodeItem authorizationCodeItem =
+                authorizationCodeService.getAuthorizationCodeItem(testCode.getValue()).get();
 
         verify(mockDataStore).getItem(testCode.getValue());
-        assertEquals(ipvSessionId, resultIpvSessionid);
+        assertEquals(ipvSessionId, authorizationCodeItem.getIpvSessionId());
     }
 
     @Test
-    void shouldReturnNullWhenInvalidAuthCodeProvided() {
+    void shouldReturnEmptyOptionalWhenInvalidAuthCodeProvided() {
         AuthorizationCode testCode = new AuthorizationCode();
 
         when(mockDataStore.getItem(testCode.getValue())).thenReturn(null);
 
-        String resultIpvSessionid =
-                authorizationCodeService.getIpvSessionIdByAuthorizationCode(testCode.getValue());
+        Optional<AuthorizationCodeItem> authorizationCodeItem =
+                authorizationCodeService.getAuthorizationCodeItem(testCode.getValue());
 
         verify(mockDataStore).getItem(testCode.getValue());
-        assertNull(resultIpvSessionid);
+        assertTrue(authorizationCodeItem.isEmpty());
     }
 
     @Test
