@@ -197,4 +197,40 @@ class ConfigurationServiceTest {
         assertTrue(stubIssuerConfig.isPresent());
         assertEquals("stubTokenUrl", stubIssuerConfig.get().getTokenUrl().toString());
     }
+
+    @Test
+    void shouldReturnListOfClientRedirectUrls() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/clients/aClientId/validRedirectUrls"))
+                .thenReturn(
+                        "one.example.com/callback,two.example.com/callback,three.example.com/callback");
+
+        var fetchedClientRedirectUrls = configurationService.getClientRedirectUrls("aClientId");
+
+        var expectedRedirectUrls =
+                List.of(
+                        "one.example.com/callback",
+                        "two.example.com/callback",
+                        "three.example.com/callback");
+        assertEquals(expectedRedirectUrls, fetchedClientRedirectUrls);
+    }
+
+    @Test
+    void shouldThrowIfNoRedirectUrlsFound() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/clients/aClientId/validRedirectUrls")).thenReturn(null);
+
+        IllegalArgumentException exception =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> {
+                            configurationService.getClientRedirectUrls("aClientId");
+                        });
+
+        assertTrue(
+                exception
+                        .getMessage()
+                        .contains(
+                                "Client redirect URLs are not set in parameter store for client ID 'aClientId'"));
+    }
 }

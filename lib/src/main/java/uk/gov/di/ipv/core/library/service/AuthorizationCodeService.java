@@ -5,7 +5,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 
-import java.util.Objects;
+import java.util.Optional;
 
 public class AuthorizationCodeService {
     private final DataStore<AuthorizationCodeItem> dataStore;
@@ -33,17 +33,17 @@ public class AuthorizationCodeService {
         return new AuthorizationCode();
     }
 
-    public String getIpvSessionIdByAuthorizationCode(String authorizationCode) {
+    public Optional<AuthorizationCodeItem> getAuthorizationCodeItem(String authorizationCode) {
         AuthorizationCodeItem authorizationCodeItem = dataStore.getItem(authorizationCode);
-        return Objects.isNull(authorizationCodeItem)
-                ? null
-                : authorizationCodeItem.getIpvSessionId();
+        return Optional.ofNullable(authorizationCodeItem);
     }
 
-    public void persistAuthorizationCode(String authorizationCode, String ipvSessionId) {
+    public void persistAuthorizationCode(
+            String authorizationCode, String ipvSessionId, String redirectUrl) {
         AuthorizationCodeItem authorizationCodeItem = new AuthorizationCodeItem();
         authorizationCodeItem.setAuthCode(authorizationCode);
         authorizationCodeItem.setIpvSessionId(ipvSessionId);
+        authorizationCodeItem.setRedirectUrl(redirectUrl);
 
         dataStore.create(authorizationCodeItem);
     }
