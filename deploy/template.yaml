@@ -310,3 +310,8 @@ Resources:
       KeySchema:
         - AttributeName: "ipvSessionId"
           KeyType: "HASH"
+
+Outputs:
+  IPVCoreAPIGatewayID:
+    Value: !Ref IPVCoreAPI
+    Description: Core Back API Gateway ID
