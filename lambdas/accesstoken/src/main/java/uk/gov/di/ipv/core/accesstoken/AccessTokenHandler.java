@@ -55,6 +55,7 @@ public class AccessTokenHandler
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
         try {
+
             TokenRequest tokenRequest = createTokenRequest(input.getBody());
 
             ValidationResult<ErrorObject> validationResult =
@@ -66,6 +67,15 @@ public class AccessTokenHandler
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         getHttpStatusCodeForErrorResponse(validationResult.getError()),
                         validationResult.getError().toJSONObject());
+            }
+
+            ValidationResult<ErrorObject> extractJwt =
+                    accessTokenService.extractJwt(input.getBody());
+            if (!extractJwt.isValid()) {
+                LOGGER.error("Unable to  extract JWT string ");
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        getHttpStatusCodeForErrorResponse(extractJwt.getError()),
+                        extractJwt.getError().toJSONObject());
             }
 
             String authorizationCodeFromRequest =
