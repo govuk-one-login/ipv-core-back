@@ -25,7 +25,7 @@ class TokenRequestValidatorTest {
                 "code=12345&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0IiwiYXVkIjoiYWRtaW4iLCJpc3MiOiJtYXNvbi5tZXRhbXVnLm5ldCIsImV4cCI6MTU3NDUxMjc2NSwiaWF0IjoxNTY2NzM2NzY1LCJqdGkiOiJmN2JmZTMzZi03YmY3LTRlYjQtOGU1OS05OTE3OTliNWViOGEifQ==.EVcCaSqrSNVs3cWdLt-qkoqUk7rPHEOsDHS8yejwxMw&redirect_uri=http://test.com&grant_type=authorization_code&client_id=test_client_id";
 
         ValidationResult<ErrorObject> extractJwt = validator.validateExtractedJwt(tokenRequestBody);
-        assertEquals( true,extractJwt.isValid());
+        assertEquals(true, extractJwt.isValid());
     }
 
     @Test
@@ -34,8 +34,8 @@ class TokenRequestValidatorTest {
                 "code=12345&client_assertion=&redirect_uri=http://test.com&grant_type=authorization_code&client_id=test_client_id";
 
         ValidationResult<ErrorObject> extractJwt = validator.validateExtractedJwt(tokenRequestBody);
-        assertEquals( true,!extractJwt.isValid());
-        assertEquals( OAuth2Error.INVALID_CLIENT_CODE,extractJwt.getError().getCode());
+        assertEquals(true, !extractJwt.isValid());
+        assertEquals(OAuth2Error.INVALID_CLIENT_CODE, extractJwt.getError().getCode());
     }
 
     @Test
@@ -45,6 +45,6 @@ class TokenRequestValidatorTest {
 
         ValidationResult<ErrorObject> extractJwt = validator.validateExtractedJwt(tokenRequestBody);
         assertEquals(!extractJwt.isValid(), true);
-        assertEquals( OAuth2Error.INVALID_CLIENT_CODE,extractJwt.getError().getCode());
+        assertEquals(OAuth2Error.INVALID_CLIENT_CODE, extractJwt.getError().getCode());
     }
 }
