@@ -158,6 +158,11 @@ public class ConfigurationService {
         return ssmProvider.get(System.getenv("SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM"));
     }
 
+    public String getAudienceForClients() {
+        return ssmProvider.get(
+                String.format("/%s/core/self/audienceForClients", System.getenv("ENVIRONMENT")));
+    }
+
     public List<String> getClientRedirectUrls(String clientId) {
         String redirectUrlStrings =
                 ssmProvider.get(
@@ -173,6 +178,13 @@ public class ConfigurationService {
                 String.format(
                         "/%s/core/clients/%s/publicCertificateForCoreToVerify",
                         System.getenv(ENVIRONMENT), clientId));
+    }
+
+    public String getClientAuthenticationMethod(String clientId) {
+        return getParameterFromStore(
+                String.format(
+                        "/%s/core/clients/%s/authenticationMethod",
+                        System.getenv("ENVIRONMENT"), clientId));
     }
 
     public String getClientIssuer(String clientId) {

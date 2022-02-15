@@ -16,6 +16,7 @@ import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.exceptions.ClientAuthenticationException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
@@ -54,7 +55,7 @@ public class AccessTokenHandler
         this.configurationService = new ConfigurationService();
         this.accessTokenService = new AccessTokenService(configurationService);
         this.authorizationCodeService = new AuthorizationCodeService(configurationService);
-        this.tokenRequestValidator = new TokenRequestValidator();
+        this.tokenRequestValidator = new TokenRequestValidator(configurationService);
     }
 
     @Override
@@ -74,14 +75,7 @@ public class AccessTokenHandler
                         validationResult.getError().toJSONObject());
             }
 
-            ValidationResult<ErrorObject> extractJwt =
-                    tokenRequestValidator.validateExtractedJwt(input.getBody());
-            if (!extractJwt.isValid()) {
-                LOGGER.error("Unable to  extract JWT string ");
-                return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        getHttpStatusCodeForErrorResponse(extractJwt.getError()),
-                        extractJwt.getError().toJSONObject());
-            }
+            tokenRequestValidator.authenticateClient(input.getBody(), input.getPathParameters());
 
             AuthorizationCodeGrant authorizationGrant =
                     (AuthorizationCodeGrant) tokenRequest.getAuthorizationGrant();
@@ -120,6 +114,11 @@ public class AccessTokenHandler
         } catch (NoSuchElementException e) {
             LOGGER.error(
                     "Access Token could not be issued. The supplied authorization code was not found in the database.");
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    OAuth2Error.INVALID_GRANT.getHTTPStatusCode(),
+                    OAuth2Error.INVALID_GRANT.toJSONObject());
+        } catch (ClientAuthenticationException e) {
+            LOGGER.error("Client authentication failed: ", e);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     OAuth2Error.INVALID_GRANT.getHTTPStatusCode(),
                     OAuth2Error.INVALID_GRANT.toJSONObject());
