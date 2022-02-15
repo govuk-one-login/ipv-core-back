@@ -92,7 +92,7 @@ class AccessTokenHandlerTest {
                 .thenReturn(Optional.of(authorizationCodeItem));
         when(mockAccessTokenService.validateTokenRequest(any()))
                 .thenReturn(ValidationResult.createValidResult());
-        when(mockAuthRequestValidator.extractJwt(any()))
+        when(mockAuthRequestValidator.validateExtractedJwt(any()))
                 .thenReturn(ValidationResult.createValidResult());
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
@@ -176,7 +176,7 @@ class AccessTokenHandlerTest {
 
         when(mockAccessTokenService.validateTokenRequest(any()))
                 .thenReturn(ValidationResult.createValidResult());
-        when(mockAuthRequestValidator.extractJwt(any()))
+        when(mockAuthRequestValidator.validateExtractedJwt(any()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockAuthorizationCodeService.getAuthorizationCodeItem("12345"))
                 .thenReturn(Optional.empty());
@@ -210,7 +210,8 @@ class AccessTokenHandlerTest {
         when(mockAccessTokenService.validateTokenRequest(any()))
                 .thenReturn(ValidationResult.createValidResult());
 
-        when(mockAuthRequestValidator.extractJwt(any())).thenReturn(validationResultError);
+        when(mockAuthRequestValidator.validateExtractedJwt(any()))
+                .thenReturn(validationResultError);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
@@ -235,7 +236,8 @@ class AccessTokenHandlerTest {
         when(mockAccessTokenService.validateTokenRequest(any()))
                 .thenReturn(ValidationResult.createValidResult());
 
-        when(mockAuthRequestValidator.extractJwt(any())).thenReturn(validationResultError);
+        when(mockAuthRequestValidator.validateExtractedJwt(any()))
+                .thenReturn(validationResultError);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());

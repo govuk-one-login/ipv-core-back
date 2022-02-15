@@ -75,7 +75,7 @@ public class AccessTokenHandler
             }
 
             ValidationResult<ErrorObject> extractJwt =
-                    authRequestValidator.extractJwt(input.getBody());
+                    authRequestValidator.validateExtractedJwt(input.getBody());
             if (!extractJwt.isValid()) {
                 LOGGER.error("Unable to  extract JWT string ");
                 return ApiGatewayResponseGenerator.proxyJsonResponse(

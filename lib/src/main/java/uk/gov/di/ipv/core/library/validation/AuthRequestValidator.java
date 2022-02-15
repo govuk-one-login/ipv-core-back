@@ -81,7 +81,7 @@ public class AuthRequestValidator {
         }
     }
 
-    public ValidationResult<ErrorObject> extractJwt(String requestBody) {
+    public ValidationResult<ErrorObject> validateExtractedJwt(String requestBody) {
 
         Map<String, String> stringMap = RequestHelper.parseRequestBody(requestBody);
 
