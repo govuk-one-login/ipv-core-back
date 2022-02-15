@@ -177,16 +177,39 @@ public class ConfigurationService {
                         .split(CLIENT_REDIRECT_URL_SEPARATOR));
     }
 
-    public Certificate getClientCertificateForAuth(String clientId) throws CertificateException {
+    public Certificate getClientCertificate(String clientId) throws CertificateException {
         return getCertificateFromStore(
                 String.format(
                         "/%s/core/clients/%s/publicCertificateForCoreToVerify",
                         System.getenv("ENVIRONMENT"), clientId));
     }
 
-    private Certificate getCertificateFromStore(String parameteraName) throws CertificateException {
-        byte[] binaryCertificate =
-                Base64.getDecoder().decode(getParameterFromStore(parameteraName));
+    public String getClientIssuer(String clientId) {
+        return getParameterFromStore(
+                String.format(
+                        "/%s/core/clients/%s/issuer", System.getenv("ENVIRONMENT"), clientId));
+    }
+
+    public String getClientAudience(String clientId) {
+        return getParameterFromStore(
+                String.format(
+                        "/%s/core/clients/%s/audience", System.getenv("ENVIRONMENT"), clientId));
+    }
+
+    public String getClientSubject(String clientId) {
+        return getParameterFromStore(
+                String.format(
+                        "/%s/core/clients/%s/subject", System.getenv("ENVIRONMENT"), clientId));
+    }
+
+    public String getClientTokenTtl(String clientId) {
+        return getParameterFromStore(
+                String.format(
+                        "/%s/core/clients/%s/tokenTtl", System.getenv("ENVIRONMENT"), clientId));
+    }
+
+    private Certificate getCertificateFromStore(String parameterName) throws CertificateException {
+        byte[] binaryCertificate = Base64.getDecoder().decode(getParameterFromStore(parameterName));
         CertificateFactory factory = CertificateFactory.getInstance("X.509");
         return factory.generateCertificate(new ByteArrayInputStream(binaryCertificate));
     }

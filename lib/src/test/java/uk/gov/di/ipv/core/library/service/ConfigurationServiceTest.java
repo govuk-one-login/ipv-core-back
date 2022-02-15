@@ -240,13 +240,45 @@ class ConfigurationServiceTest {
     }
 
     @Test
-    void shouldReturnValidCertificateForAuth() throws CertificateException {
+    void shouldReturnValidClientCertificateForAuth() throws CertificateException {
         environmentVariables.set("ENVIRONMENT", "test");
         when(ssmProvider.get("/test/core/clients/aClientId/publicCertificateForCoreToVerify"))
                 .thenReturn(TEST_CERT);
 
-        X509Certificate underTest =
-                (X509Certificate) configurationService.getClientCertificateForAuth("aClientId");
-        assertEquals("C=GB,CN=cri-uk-passport-back", underTest.getIssuerX500Principal().getName());
+        X509Certificate result =
+                (X509Certificate) configurationService.getClientCertificate("aClientId");
+        assertEquals("C=GB,CN=cri-uk-passport-back", result.getIssuerX500Principal().getName());
+    }
+
+    @Test
+    void shouldReturnClientIssuer() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        String clientIssuer = "aClientIssuer";
+        when(ssmProvider.get("/test/core/clients/aClientId/issuer")).thenReturn(clientIssuer);
+        assertEquals(clientIssuer, configurationService.getClientIssuer("aClientId"));
+    }
+
+    @Test
+    void shouldReturnClientAudience() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        String clientIssuer = "aClientAudience";
+        when(ssmProvider.get("/test/core/clients/aClientId/audience")).thenReturn(clientIssuer);
+        assertEquals(clientIssuer, configurationService.getClientAudience("aClientId"));
+    }
+
+    @Test
+    void shouldReturnClientSubject() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        String clientIssuer = "aClientSubject";
+        when(ssmProvider.get("/test/core/clients/aClientId/subject")).thenReturn(clientIssuer);
+        assertEquals(clientIssuer, configurationService.getClientSubject("aClientId"));
+    }
+
+    @Test
+    void shouldReturnClientTokenTtl() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        String clientIssuer = "aClientTokenTtl";
+        when(ssmProvider.get("/test/core/clients/aClientId/tokenTtl")).thenReturn(clientIssuer);
+        assertEquals(clientIssuer, configurationService.getClientTokenTtl("aClientId"));
     }
 }
