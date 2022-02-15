@@ -11,8 +11,13 @@ import software.amazon.lambda.powertools.parameters.SSMProvider;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 
+import java.io.ByteArrayInputStream;
 import java.net.URI;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -170,5 +175,23 @@ public class ConfigurationService {
                                                         "Client redirect URLs are not set in parameter store for client ID '%s'",
                                                         clientId)))
                         .split(CLIENT_REDIRECT_URL_SEPARATOR));
+    }
+
+    public Certificate getClientCertificateForAuth(String clientId) throws CertificateException {
+        return getCertificateFromStore(
+                String.format(
+                        "/%s/core/clients/%s/publicCertificateForCoreToVerify",
+                        System.getenv("ENVIRONMENT"), clientId));
+    }
+
+    private Certificate getCertificateFromStore(String parameteraName) throws CertificateException {
+        byte[] binaryCertificate =
+                Base64.getDecoder().decode(getParameterFromStore(parameteraName));
+        CertificateFactory factory = CertificateFactory.getInstance("X.509");
+        return factory.generateCertificate(new ByteArrayInputStream(binaryCertificate));
+    }
+
+    private String getParameterFromStore(String parameterName) {
+        return ssmProvider.get(parameterName);
     }
 }

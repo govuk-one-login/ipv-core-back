@@ -18,7 +18,8 @@ import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 import uk.org.webcompere.systemstubs.properties.SystemProperties;
 
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +42,8 @@ class ConfigurationServiceTest {
 
     public static final String TEST_TOKEN_URL = "testTokenUrl";
     public static final String TEST_CREDENTIAL_URL = "testCredentialUrl";
+    public static final String TEST_CERT =
+            "MIIC/TCCAeWgAwIBAgIBATANBgkqhkiG9w0BAQsFADAsMR0wGwYDVQQDDBRjcmktdWstcGFzc3BvcnQtYmFjazELMAkGA1UEBhMCR0IwHhcNMjExMjE3MTEwNTM5WhcNMjIxMjE3MTEwNTM5WjAsMR0wGwYDVQQDDBRjcmktdWstcGFzc3BvcnQtYmFjazELMAkGA1UEBhMCR0IwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDYIxWKwYNoz2MIDvYb2ip4nhCOGUccufIqwSHXl5FBOoOxOZh1rV57sWhdKO/hyZYbF5YUYTwzV4rW7DgLkfx0sN/p5igk74BZRSXvV/s+XCkVC5c0NDhNGh6WK5rc8Qbm0Ad5vEO1JpQih5y2mPGCwfLBqcY8AC7fwZinP/4YoMTCtEk5ueA0HwZLHXOEMWl/QCkj7WlSBL4i6ozk4So3RFL4awYP6nvhY7OLAcad7g/ZW0dXvztPOJnT9rwi1p6BNoD/Zk6jMJHhbvKyGsluUy7PYVGYCQ36Uuzby2Jq8cG5qNS+CBjy0/d/RmrClKd7gcnLY/J5NOC+YSynoHXRAgMBAAGjKjAoMA4GA1UdDwEB/wQEAwIFoDAWBgNVHSUBAf8EDDAKBggrBgEFBQcDBDANBgkqhkiG9w0BAQsFAAOCAQEAvHT2AGTymh02A9HWrnGm6PEXx2Ye3NXV9eJNU1z6J298mS2kYq0Z4D0hj9i8+IoCQRbWOxLTAWBNt/CmH7jWltE4uqoAwTZD6mDgkC2eo5dY+RcuydsvJNfTcvUOyi47KKGGEcddfLti4NuX51BQIY5vSBfqZXt8+y28WuWqBMh6eny2wJtxNHo20wQei5g7w19lqwJu2F+l/ykX9K5DHjhXqZUJ77YWmY8sy/WROLjOoZZRy6YuzV8S/+c/nsPzqDAkD4rpWwASjsEDaTcH22xpGq5XUAf1hwwNsuiyXKGUHCxafYYS781LR8pLg6DpEAgcn8tBbq6MoiEGVeOp7Q==";
 
     @SystemStub private EnvironmentVariables environmentVariables;
 
@@ -53,7 +56,7 @@ class ConfigurationServiceTest {
     private ConfigurationService configurationService;
 
     @BeforeEach
-    void setUp() throws URISyntaxException {
+    void setUp() {
         configurationService = new ConfigurationService(ssmProvider);
     }
 
@@ -130,14 +133,18 @@ class ConfigurationServiceTest {
         assertEquals(2, result.size());
 
         Optional<CredentialIssuerConfig> passportIssuerConfig =
-                result.stream().filter(config -> config.getId() == "passportCri").findFirst();
+                result.stream()
+                        .filter(config -> Objects.equals(config.getId(), "passportCri"))
+                        .findFirst();
         assertTrue(passportIssuerConfig.isPresent());
         assertEquals("passportTokenUrl", passportIssuerConfig.get().getTokenUrl().toString());
         assertEquals("passportAuthUrl", passportIssuerConfig.get().getAuthorizeUrl().toString());
         assertEquals("passportCri", passportIssuerConfig.get().getId());
 
         Optional<CredentialIssuerConfig> stubIssuerConfig =
-                result.stream().filter(config -> config.getId() == "stubCri").findFirst();
+                result.stream()
+                        .filter(config -> Objects.equals(config.getId(), "stubCri"))
+                        .findFirst();
         assertTrue(stubIssuerConfig.isPresent());
         assertEquals("stubTokenUrl", stubIssuerConfig.get().getTokenUrl().toString());
         assertEquals("stubAuthUrl", stubIssuerConfig.get().getAuthorizeUrl().toString());
@@ -223,14 +230,23 @@ class ConfigurationServiceTest {
         IllegalArgumentException exception =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> {
-                            configurationService.getClientRedirectUrls("aClientId");
-                        });
+                        () -> configurationService.getClientRedirectUrls("aClientId"));
 
         assertTrue(
                 exception
                         .getMessage()
                         .contains(
                                 "Client redirect URLs are not set in parameter store for client ID 'aClientId'"));
+    }
+
+    @Test
+    void shouldReturnValidCertificateForAuth() throws CertificateException {
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/clients/aClientId/publicCertificateForCoreToVerify"))
+                .thenReturn(TEST_CERT);
+
+        X509Certificate underTest =
+                (X509Certificate) configurationService.getClientCertificateForAuth("aClientId");
+        assertEquals("C=GB,CN=cri-uk-passport-back", underTest.getIssuerX500Principal().getName());
     }
 }
