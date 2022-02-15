@@ -47,6 +47,9 @@ Resources:
             RestApiId: !Ref IPVCoreAPI
             Path: /shared-attributes
             Method: GET
+      Tags:
+        Name: ipv-shared-attributes
+        Environment: !Ref Environment
 
   IPVAccessTokenFunction:
     Type: AWS::Serverless::Function
@@ -78,6 +81,9 @@ Resources:
             RestApiId: !Ref IPVCoreAPI
             Path: /token
             Method: POST
+      Tags:
+        Name: ipv-access-token
+        Environment: !Ref Environment
 
   IPVAuthorizationFunction:
     Type: AWS::Serverless::Function
@@ -109,6 +115,9 @@ Resources:
               Ref: IPVCoreAPI
             Path: /authorize
             Method: GET
+      Tags:
+        Name: ipv-authorization
+        Environment: !Ref Environment
 
   IPVSessionFunction:
     Type: AWS::Serverless::Function
@@ -138,6 +147,9 @@ Resources:
               Ref: IPVCoreAPI
             Path: /ipv-session
             Method: POST
+      Tags:
+        Name: ipv-session
+        Environment: !Ref Environment
 
   IPVCredentialIssuerFunction:
     Type: AWS::Serverless::Function
@@ -169,6 +181,9 @@ Resources:
               Ref: IPVCoreAPI
             Path: /request-evidence
             Method: POST
+      Tags:
+        Name: ipv-credential-issuer
+        Environment: !Ref Environment
 
   IPVUserIdentityFunction:
     Type: AWS::Serverless::Function
@@ -201,6 +216,9 @@ Resources:
               Ref: IPVCoreAPI
             Path: /user-identity
             Method: GET
+      Tags:
+        Name: ipv-user-identity
+        Environment: !Ref Environment
 
   IPVCredentialIssuerConfig:
     Type: AWS::Serverless::Function
@@ -229,6 +247,9 @@ Resources:
               Ref: IPVCoreAPI
             Path: /request-config
             Method: GET
+      Tags:
+        Name: credential-issuer-config
+        Environment: !Ref Environment
 
   IPVIssuedCredentials:
     Type: AWS::Serverless::Function
@@ -258,6 +279,9 @@ Resources:
               Ref: IPVCoreAPI
             Path: /issued-credentials
             Method: GET
+      Tags:
+        Name: issued-credentials
+        Environment: !Ref Environment
 
   UserIssuedCredentialsTable:
     Type: AWS::DynamoDB::Table
@@ -274,6 +298,11 @@ Resources:
           KeyType: "HASH"
         - AttributeName: "credentialIssuer"
           KeyType: "RANGE"
+      Tags:
+        - Key: Name
+          Value: user-issued-credentials
+        - Key: Environment
+          Value: !Ref Environment
 
   AuthCodesTable:
     Type: AWS::DynamoDB::Table
@@ -286,6 +315,11 @@ Resources:
       KeySchema:
         - AttributeName: "authCode"
           KeyType: "HASH"
+      Tags:
+        - Key: Name
+          Value: auth-codes
+        - Key: Environment
+          Value: !Ref Environment
 
   AccessTokensTable:
     Type: AWS::DynamoDB::Table
@@ -298,6 +332,11 @@ Resources:
       KeySchema:
         - AttributeName: "accessToken"
           KeyType: "HASH"
+      Tags:
+        - Key: Name
+          Value: access-tokens
+        - Key: Environment
+          Value: !Ref Environment
 
   SessionsTable:
     Type: AWS::DynamoDB::Table
@@ -310,3 +349,8 @@ Resources:
       KeySchema:
         - AttributeName: "ipvSessionId"
           KeyType: "HASH"
+      Tags:
+        - Key: Name
+          Value: sessions
+        - Key: Environment
+          Value: !Ref Environment
