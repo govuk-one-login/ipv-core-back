@@ -9,8 +9,6 @@ import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.AccessTokenItem;
@@ -21,8 +19,6 @@ import java.util.Objects;
 public class AccessTokenService {
     private final DataStore<AccessTokenItem> dataStore;
     private final ConfigurationService configurationService;
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(AccessTokenService.class);
 
     @ExcludeFromGeneratedCoverageReport
     public AccessTokenService(ConfigurationService configurationService) {
