@@ -68,23 +68,4 @@ public class AccessTokenService {
         accessTokenItem.setIpvSessionId(ipvSessionId);
         dataStore.create(accessTokenItem);
     }
-
-    /*public ValidationResult<ErrorObject> extractJwt(String requestBody) {
-
-        Map<String, String> stringMap = RequestHelper.parseRequestBody(requestBody);
-
-        try {
-            SignedJWT clientJwt = SignedJWT.parse(String.valueOf(stringMap.get("client_assertion")));
-
-            JWTClaimsSet claimsSet = clientJwt.getJWTClaimsSet();
-
-            if (claimsSet != null) {
-                return ValidationResult.createValidResult();
-            }
-        } catch (ParseException e) {
-            LOGGER.error("Unable to parse Claims set {} ", e.getMessage());
-            return new ValidationResult<>(false, OAuth2Error.INVALID_CLIENT);
-        }
-        return ValidationResult.createValidResult();
-    }*/
 }

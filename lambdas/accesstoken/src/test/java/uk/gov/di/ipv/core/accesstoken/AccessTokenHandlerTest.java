@@ -23,7 +23,7 @@ import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
 import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
-import uk.gov.di.ipv.core.library.validation.AuthRequestValidator;
+import uk.gov.di.ipv.core.library.validation.TokenRequestValidator;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.util.Map;
@@ -43,7 +43,7 @@ class AccessTokenHandlerTest {
     private Context context;
     private AccessTokenService mockAccessTokenService;
     private AuthorizationCodeService mockAuthorizationCodeService;
-    private AuthRequestValidator mockAuthRequestValidator;
+    private TokenRequestValidator mockTokenRequestValidator;
 
     private AccessTokenHandler handler;
     private TokenResponse tokenResponse;
@@ -59,7 +59,7 @@ class AccessTokenHandlerTest {
         mockAuthorizationCodeService = mock(AuthorizationCodeService.class);
         ConfigurationService mockConfigurationService = mock(ConfigurationService.class);
 
-        mockAuthRequestValidator = mock(AuthRequestValidator.class);
+        mockTokenRequestValidator = mock(TokenRequestValidator.class);
 
         context = mock(Context.class);
 
@@ -68,7 +68,7 @@ class AccessTokenHandlerTest {
                         mockAccessTokenService,
                         mockAuthorizationCodeService,
                         mockConfigurationService,
-                        mockAuthRequestValidator);
+                        mockTokenRequestValidator);
 
         authorizationCodeItem.setRedirectUrl("https://callback.example.com");
         authorizationCodeItem.setAuthCode("random_auth_code");
@@ -92,7 +92,7 @@ class AccessTokenHandlerTest {
                 .thenReturn(Optional.of(authorizationCodeItem));
         when(mockAccessTokenService.validateTokenRequest(any()))
                 .thenReturn(ValidationResult.createValidResult());
-        when(mockAuthRequestValidator.validateExtractedJwt(any()))
+        when(mockTokenRequestValidator.validateExtractedJwt(any()))
                 .thenReturn(ValidationResult.createValidResult());
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
@@ -176,7 +176,7 @@ class AccessTokenHandlerTest {
 
         when(mockAccessTokenService.validateTokenRequest(any()))
                 .thenReturn(ValidationResult.createValidResult());
-        when(mockAuthRequestValidator.validateExtractedJwt(any()))
+        when(mockTokenRequestValidator.validateExtractedJwt(any()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockAuthorizationCodeService.getAuthorizationCodeItem("12345"))
                 .thenReturn(Optional.empty());
@@ -210,7 +210,7 @@ class AccessTokenHandlerTest {
         when(mockAccessTokenService.validateTokenRequest(any()))
                 .thenReturn(ValidationResult.createValidResult());
 
-        when(mockAuthRequestValidator.validateExtractedJwt(any()))
+        when(mockTokenRequestValidator.validateExtractedJwt(any()))
                 .thenReturn(validationResultError);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
@@ -236,7 +236,7 @@ class AccessTokenHandlerTest {
         when(mockAccessTokenService.validateTokenRequest(any()))
                 .thenReturn(ValidationResult.createValidResult());
 
-        when(mockAuthRequestValidator.validateExtractedJwt(any()))
+        when(mockTokenRequestValidator.validateExtractedJwt(any()))
                 .thenReturn(validationResultError);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);

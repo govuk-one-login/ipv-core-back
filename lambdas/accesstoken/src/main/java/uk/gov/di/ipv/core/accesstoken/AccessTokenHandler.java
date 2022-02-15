@@ -21,7 +21,7 @@ import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
 import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
-import uk.gov.di.ipv.core.library.validation.AuthRequestValidator;
+import uk.gov.di.ipv.core.library.validation.TokenRequestValidator;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.net.URI;
@@ -36,17 +36,17 @@ public class AccessTokenHandler
     private final AccessTokenService accessTokenService;
     private final AuthorizationCodeService authorizationCodeService;
     private final ConfigurationService configurationService;
-    private final AuthRequestValidator authRequestValidator;
+    private final TokenRequestValidator tokenRequestValidator;
 
     public AccessTokenHandler(
             AccessTokenService accessTokenService,
             AuthorizationCodeService authorizationCodeService,
             ConfigurationService configurationService,
-            AuthRequestValidator authRequestValidator) {
+            TokenRequestValidator tokenRequestValidator) {
         this.accessTokenService = accessTokenService;
         this.authorizationCodeService = authorizationCodeService;
         this.configurationService = configurationService;
-        this.authRequestValidator = authRequestValidator;
+        this.tokenRequestValidator = tokenRequestValidator;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -54,7 +54,7 @@ public class AccessTokenHandler
         this.configurationService = new ConfigurationService();
         this.accessTokenService = new AccessTokenService(configurationService);
         this.authorizationCodeService = new AuthorizationCodeService(configurationService);
-        this.authRequestValidator = new AuthRequestValidator(configurationService);
+        this.tokenRequestValidator = new TokenRequestValidator();
     }
 
     @Override
@@ -75,7 +75,7 @@ public class AccessTokenHandler
             }
 
             ValidationResult<ErrorObject> extractJwt =
-                    authRequestValidator.validateExtractedJwt(input.getBody());
+                    tokenRequestValidator.validateExtractedJwt(input.getBody());
             if (!extractJwt.isValid()) {
                 LOGGER.error("Unable to  extract JWT string ");
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
