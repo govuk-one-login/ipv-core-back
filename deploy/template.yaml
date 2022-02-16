@@ -310,3 +310,10 @@ Resources:
       KeySchema:
         - AttributeName: "ipvSessionId"
           KeyType: "HASH"
+
+Outputs:
+  IPVCoreAPIGatewayID:
+    Description: Core Back API Gateway ID
+    Export:
+      Name: !Sub "${AWS::StackName}-IPVCoreAPIGatewayID"
+    Value: !Ref IPVCoreAPI
