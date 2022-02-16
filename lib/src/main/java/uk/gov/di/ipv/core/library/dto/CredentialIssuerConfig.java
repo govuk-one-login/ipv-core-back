@@ -16,6 +16,7 @@ public class CredentialIssuerConfig {
     private URI credentialUrl;
     private URI authorizeUrl;
     private String ipvClientId;
+    private String ipvClientJwtTtl;
 
     public CredentialIssuerConfig() {}
 
@@ -25,13 +26,15 @@ public class CredentialIssuerConfig {
             URI tokenUrl,
             URI credentialUrl,
             URI authorizeUrl,
-            String ipvClientId) {
+            String ipvClientId,
+            String ipvClientJwtTtl) {
         this.id = id;
         this.name = name;
         this.tokenUrl = tokenUrl;
         this.credentialUrl = credentialUrl;
         this.authorizeUrl = authorizeUrl;
         this.ipvClientId = ipvClientId;
+        this.ipvClientJwtTtl = ipvClientJwtTtl;
     }
 
     public String getId() {
@@ -56,6 +59,10 @@ public class CredentialIssuerConfig {
 
     public String getIpvClientId() {
         return ipvClientId;
+    }
+
+    public String getIpvClientJwtTtl() {
+        return ipvClientJwtTtl;
     }
 
     @Override

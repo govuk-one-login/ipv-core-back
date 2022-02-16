@@ -35,14 +35,16 @@ class CredentialIssuerConfigHandlerTest {
                             URI.create("test1TokenUrl"),
                             URI.create("test1credentialUrl"),
                             URI.create("tesstAuthorizeUrl"),
-                            "ipv-core"),
+                            "ipv-core",
+                            "900"),
                     new CredentialIssuerConfig(
                             "test2",
                             "Any",
                             URI.create("test2TokenUrl"),
                             URI.create("test2credentialUrl"),
                             URI.create("tesstAuthorizeUrl"),
-                            "ipv-core"));
+                            "ipv-core",
+                            "900"));
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock Context context;

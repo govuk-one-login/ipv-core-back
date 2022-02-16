@@ -289,6 +289,7 @@ class CredentialIssuerServiceTest {
                 URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/token"),
                 URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/credential"),
                 URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/authorizeUrl"),
-                "ipv-core");
+                "ipv-core",
+                "900");
     }
 }

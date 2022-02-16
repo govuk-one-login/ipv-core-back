@@ -60,7 +60,8 @@ class CredentialIssuerHandlerTest {
                         new URI("http://www.example.com"),
                         new URI("http://www.example.com/credential"),
                         new URI("http://www.example.com/authorize"),
-                        "ipv-core");
+                        "ipv-core",
+                        "900");
     }
 
     @Test
