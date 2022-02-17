@@ -1,25 +1,38 @@
 package uk.gov.di.ipv.core.library.service;
 
-import com.nimbusds.oauth2.sdk.*;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.AuthorizationCode;
+import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
+import com.nimbusds.oauth2.sdk.ErrorObject;
+import com.nimbusds.oauth2.sdk.ParseException;
+import com.nimbusds.oauth2.sdk.TokenErrorResponse;
+import com.nimbusds.oauth2.sdk.TokenRequest;
+import com.nimbusds.oauth2.sdk.TokenResponse;
+import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
+import com.nimbusds.oauth2.sdk.auth.PrivateKeyJWT;
 import com.nimbusds.oauth2.sdk.client.ClientReadRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
 import net.minidev.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.ClientAuthClaims;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
+import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 
 import java.io.IOException;
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -29,10 +42,12 @@ public class CredentialIssuerService {
 
     private final DataStore<UserIssuedCredentialsItem> dataStore;
     private final ConfigurationService configurationService;
+    private final JWSSigner signer;
 
     @ExcludeFromGeneratedCoverageReport
-    public CredentialIssuerService(ConfigurationService configurationService) {
+    public CredentialIssuerService(ConfigurationService configurationService, JWSSigner signer) {
         this.configurationService = configurationService;
+        this.signer = signer;
         boolean isRunningLocally = this.configurationService.isRunningLocally();
         this.dataStore =
                 new DataStore<>(
@@ -45,8 +60,10 @@ public class CredentialIssuerService {
     // used for testing
     public CredentialIssuerService(
             DataStore<UserIssuedCredentialsItem> dataStore,
-            ConfigurationService configurationService) {
+            ConfigurationService configurationService,
+            JWSSigner signer) {
         this.configurationService = configurationService;
+        this.signer = signer;
         this.dataStore = dataStore;
     }
 
@@ -55,10 +72,24 @@ public class CredentialIssuerService {
 
         AuthorizationCode authorizationCode = new AuthorizationCode(request.getAuthorizationCode());
         try {
+            OffsetDateTime dateTime = OffsetDateTime.now();
+            ClientAuthClaims clientAuthClaims =
+                    new ClientAuthClaims(
+                            config.getIpvClientId(),
+                            config.getIpvClientId(),
+                            config.getTokenUrl().toString(),
+                            dateTime.plusSeconds(
+                                            Long.parseLong(configurationService.getIpvTokenTtl()))
+                                    .toEpochSecond());
+            SignedJWT signedClientJwt =
+                    JwtHelper.createSignedJwtFromObject(clientAuthClaims, signer);
+
+            ClientAuthentication clientAuthentication = new PrivateKeyJWT(signedClientJwt);
+
             TokenRequest tokenRequest =
                     new TokenRequest(
                             config.getTokenUrl(),
-                            new ClientID(getClientId()),
+                            clientAuthentication,
                             new AuthorizationCodeGrant(
                                     authorizationCode, URI.create(request.getRedirectUri())));
 
@@ -82,7 +113,7 @@ public class CredentialIssuerService {
                         HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST);
             }
             return tokenResponse.toSuccessResponse().getTokens().getBearerAccessToken();
-        } catch (IOException | ParseException e) {
+        } catch (IOException | ParseException | JOSEException e) {
             LOGGER.error("Error exchanging token: {}", e.getMessage(), e);
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR,

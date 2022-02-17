@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import net.minidev.json.JSONObject;
@@ -13,6 +14,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.KmsSigner;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
@@ -36,7 +38,16 @@ public class CredentialIssuerHandler
     @ExcludeFromGeneratedCoverageReport
     public CredentialIssuerHandler() {
         this.configurationService = new ConfigurationService();
-        this.credentialIssuerService = new CredentialIssuerService(configurationService);
+        JWSSigner signer =
+                new KmsSigner(
+                        configurationService
+                                .getSharedAttributesSigningKeyId()
+                                .orElseThrow(
+                                        () ->
+                                                new IllegalArgumentException(
+                                                        "The shared attributes signing key id is not set in parameter store")));
+
+        this.credentialIssuerService = new CredentialIssuerService(configurationService, signer);
     }
 
     @Override

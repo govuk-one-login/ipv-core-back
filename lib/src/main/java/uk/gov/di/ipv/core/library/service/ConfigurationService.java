@@ -208,6 +208,11 @@ public class ConfigurationService {
                         "/%s/core/clients/%s/tokenTtl", System.getenv("ENVIRONMENT"), clientId));
     }
 
+    public String getIpvTokenTtl() {
+        return getParameterFromStore(
+                String.format("/%s/core/self/jwtTtlSeconds", System.getenv("ENVIRONMENT")));
+    }
+
     private Certificate getCertificateFromStore(String parameterName) throws CertificateException {
         byte[] binaryCertificate = Base64.getDecoder().decode(getParameterFromStore(parameterName));
         CertificateFactory factory = CertificateFactory.getInstance("X.509");
