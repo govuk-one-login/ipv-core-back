@@ -10,7 +10,7 @@ capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev\""
 
 [dev-tomw.deploy.parameters]
-stack_name = "tom-core-back-stack"
+stack_name = "ipv-core-back-dev-tomw"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "tom-core-back-stack"
 region = "eu-west-2"
@@ -18,7 +18,7 @@ capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-tomw\""
 
 [dev-danh.deploy.parameters]
-stack_name = "danh-core-back-stack"
+stack_name = "ipv-core-back-dev-danh"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "danh-core-back-stack"
 region = "eu-west-2"
@@ -26,7 +26,7 @@ capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-danh\""
 
 [dev-danw.deploy.parameters]
-stack_name = "danw-core-back-stack"
+stack_name = "ipv-core-back-dev-danw"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "danw-core-back-stack"
 region = "eu-west-2"
@@ -34,7 +34,7 @@ capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-danw\""
 
 [dev-danp.deploy.parameters]
-stack_name = "danp-core-back-stack"
+stack_name = "ipv-core-back-dev-danp"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "danp-core-back-stack"
 region = "eu-west-2"
@@ -42,7 +42,7 @@ capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-danp\""
 
 [dev-chris.deploy.parameters]
-stack_name = "chris-core-back-stack"
+stack_name = "ipv-core-back-dev-chris"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "chris-core-back-stack"
 region = "eu-west-2"
@@ -50,7 +50,7 @@ capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-chris\""
 
 [dev-amrit.deploy.parameters]
-stack_name = "amrit-core-back-stack"
+stack_name = "ipv-core-back-dev-amrit"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "amrit-core-back-stack"
 region = "eu-west-2"
@@ -58,7 +58,7 @@ capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-amrit\""
 
 [dev-lai.deploy.parameters]
-stack_name = "lai-core-back-stack"
+stack_name = "ipv-core-back-dev-lai"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "lai-core-back-stack"
 region = "eu-west-2"
@@ -66,7 +66,7 @@ capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-lai\""
 
 [dev-sunil.deploy.parameters]
-stack_name = "sunil-core-back-stack"
+stack_name = "ipv-core-back-dev-sunil"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "sunil-core-back-stack"
 region = "eu-west-2"
@@ -74,7 +74,7 @@ capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-sunil\""
 
 [dev-kerr.deploy.parameters]
-stack_name = "kerr-core-back-stack"
+stack_name = "ipv-core-back-dev-kerr"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "kerr-core-back-stack"
 region = "eu-west-2"
