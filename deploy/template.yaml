@@ -162,6 +162,8 @@ Resources:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/sharedAttributesJwtSigningKeyId
       Events:
         IPVCoreAPI:
           Type: Api
