@@ -27,7 +27,6 @@ public class TokenRequestValidator {
     private static final String JWT = "jwt";
 
     private final ConfigurationService configurationService;
-
     private final ClientAuthenticationVerifier<Object> verifier;
 
     private String clientId;
