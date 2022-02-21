@@ -48,14 +48,7 @@ public class SharedAttributesHandler
     public SharedAttributesHandler() {
         ConfigurationService configurationService = new ConfigurationService();
         this.userIdentityService = new UserIdentityService(configurationService);
-        this.signer =
-                new KmsSigner(
-                        configurationService
-                                .getSharedAttributesSigningKeyId()
-                                .orElseThrow(
-                                        () ->
-                                                new IllegalArgumentException(
-                                                        "The shared attributes signing key id is not set in parameter store")));
+        this.signer = new KmsSigner(configurationService.getSharedAttributesSigningKeyId());
     }
 
     @Override

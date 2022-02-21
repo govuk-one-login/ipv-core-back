@@ -223,23 +223,6 @@ class ConfigurationServiceTest {
     }
 
     @Test
-    void shouldThrowIfNoRedirectUrlsFound() {
-        environmentVariables.set("ENVIRONMENT", "test");
-        when(ssmProvider.get("/test/core/clients/aClientId/validRedirectUrls")).thenReturn(null);
-
-        IllegalArgumentException exception =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> configurationService.getClientRedirectUrls("aClientId"));
-
-        assertTrue(
-                exception
-                        .getMessage()
-                        .contains(
-                                "Client redirect URLs are not set in parameter store for client ID 'aClientId'"));
-    }
-
-    @Test
     void shouldReturnValidClientCertificateForAuth() throws CertificateException {
         environmentVariables.set("ENVIRONMENT", "test");
         when(ssmProvider.get("/test/core/clients/aClientId/publicCertificateForCoreToVerify"))

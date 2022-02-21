@@ -34,6 +34,7 @@ public class ConfigurationService {
     private static final String CLIENT_REDIRECT_URL_SEPARATOR = ",";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationService.class);
+    public static final String ENVIRONMENT = "ENVIRONMENT";
 
     private final SSMProvider ssmProvider;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -153,64 +154,52 @@ public class ConfigurationService {
         return splitKey;
     }
 
-    public Optional<String> getSharedAttributesSigningKeyId() {
-        return Optional.ofNullable(
-                ssmProvider.get(System.getenv("SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM")));
+    public String getSharedAttributesSigningKeyId() {
+        return ssmProvider.get(System.getenv("SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM"));
     }
 
     public List<String> getClientRedirectUrls(String clientId) {
-        Optional<String> redirectUrlStrings =
-                Optional.ofNullable(
-                        ssmProvider.get(
-                                String.format(
-                                        "/%s/core/clients/%s/validRedirectUrls",
-                                        System.getenv("ENVIRONMENT"), clientId)));
+        String redirectUrlStrings =
+                ssmProvider.get(
+                        String.format(
+                                "/%s/core/clients/%s/validRedirectUrls",
+                                System.getenv(ENVIRONMENT), clientId));
 
-        return Arrays.asList(
-                redirectUrlStrings
-                        .orElseThrow(
-                                () ->
-                                        new IllegalArgumentException(
-                                                String.format(
-                                                        "Client redirect URLs are not set in parameter store for client ID '%s'",
-                                                        clientId)))
-                        .split(CLIENT_REDIRECT_URL_SEPARATOR));
+        return Arrays.asList(redirectUrlStrings.split(CLIENT_REDIRECT_URL_SEPARATOR));
     }
 
     public Certificate getClientCertificate(String clientId) throws CertificateException {
         return getCertificateFromStore(
                 String.format(
                         "/%s/core/clients/%s/publicCertificateForCoreToVerify",
-                        System.getenv("ENVIRONMENT"), clientId));
+                        System.getenv(ENVIRONMENT), clientId));
     }
 
     public String getClientIssuer(String clientId) {
         return getParameterFromStore(
-                String.format(
-                        "/%s/core/clients/%s/issuer", System.getenv("ENVIRONMENT"), clientId));
+                String.format("/%s/core/clients/%s/issuer", System.getenv(ENVIRONMENT), clientId));
     }
 
     public String getClientAudience(String clientId) {
         return getParameterFromStore(
                 String.format(
-                        "/%s/core/clients/%s/audience", System.getenv("ENVIRONMENT"), clientId));
+                        "/%s/core/clients/%s/audience", System.getenv(ENVIRONMENT), clientId));
     }
 
     public String getClientSubject(String clientId) {
         return getParameterFromStore(
-                String.format(
-                        "/%s/core/clients/%s/subject", System.getenv("ENVIRONMENT"), clientId));
+                String.format("/%s/core/clients/%s/subject", System.getenv(ENVIRONMENT), clientId));
     }
 
     public String getClientTokenTtl(String clientId) {
         return getParameterFromStore(
                 String.format(
-                        "/%s/core/clients/%s/tokenTtl", System.getenv("ENVIRONMENT"), clientId));
+                        "/%s/core/clients/%s/tokenTtl", System.getenv(ENVIRONMENT), clientId));
     }
 
     public String getIpvTokenTtl() {
         return getParameterFromStore(
-                String.format("/%s/core/self/jwtTtlSeconds", System.getenv("ENVIRONMENT")));
+                String.format("/%s/core/self/jwtTtlSeconds", System.getenv(ENVIRONMENT)));
     }
 
     private Certificate getCertificateFromStore(String parameterName) throws CertificateException {
