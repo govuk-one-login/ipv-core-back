@@ -132,33 +132,6 @@ class TokenRequestValidatorTest {
     }
 
     @Test
-    void shouldThrowIfClientIdParseFromJwtDoesNotMatchConfig()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(mockConfigurationService.getClientAuthenticationMethod("THIS_BECOMES_THE_CLIENT_ID"))
-                .thenReturn(null);
-        var wrongIssuerAndSubjectClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
-        wrongIssuerAndSubjectClaimsSetValues.put(
-                JWTClaimNames.ISSUER, "THIS_BECOMES_THE_CLIENT_ID");
-        wrongIssuerAndSubjectClaimsSetValues.put(
-                JWTClaimNames.SUBJECT, "THIS_BECOMES_THE_CLIENT_ID");
-        var wrongIssuerAndSubjectQueryParams =
-                getValidQueryParams(generateClientAssertion(wrongIssuerAndSubjectClaimsSetValues));
-
-        ClientAuthenticationException exception =
-                assertThrows(
-                        ClientAuthenticationException.class,
-                        () -> {
-                            validator.authenticateClient(
-                                    queryMapToString(wrongIssuerAndSubjectQueryParams),
-                                    wrongIssuerAndSubjectQueryParams);
-                        });
-
-        assertEquals(
-                "Config for client ID 'THIS_BECOMES_THE_CLIENT_ID' not found",
-                exception.getMessage());
-    }
-
-    @Test
     void shouldThrowIfWrongAudience()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(mockConfigurationService.getClientAuthenticationMethod(anyString())).thenReturn("jwt");
@@ -233,24 +206,6 @@ class TokenRequestValidatorTest {
                         .getMessage()
                         .contains(
                                 "The client JWT expiry date has surpassed the maximum allowed ttl value"));
-    }
-
-    @Test
-    void shouldThrowIfClientIdFromRequestParamDoesNotMatchConfig() {
-        String invalidClientId = "invalid-client";
-        when(mockConfigurationService.getClientAuthenticationMethod(invalidClientId))
-                .thenReturn(null);
-        var unknownClientIdParams = getValidQueryParamsWithoutClientAuth(invalidClientId);
-
-        ClientAuthenticationException exception =
-                assertThrows(
-                        ClientAuthenticationException.class,
-                        () -> {
-                            validator.authenticateClient(
-                                    queryMapToString(unknownClientIdParams), unknownClientIdParams);
-                        });
-
-        assertEquals("Config for client ID 'invalid-client' not found", exception.getMessage());
     }
 
     @Test

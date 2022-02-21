@@ -12,7 +12,6 @@ import com.nimbusds.oauth2.sdk.GrantType;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.TokenResponse;
-import com.nimbusds.oauth2.sdk.auth.verifier.ClientAuthenticationVerifier;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
@@ -20,7 +19,6 @@ import com.nimbusds.oauth2.sdk.token.Tokens;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.ClientAuthenticationException;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
@@ -31,7 +29,6 @@ import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -40,15 +37,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class AccessTokenHandlerTest {
-    private static final String TEST_IPV_SESSION_ID = UUID.randomUUID().toString();
-
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final AuthorizationCodeItem authorizationCodeItem = new AuthorizationCodeItem();
     private Context context;
     private AccessTokenService mockAccessTokenService;
     private AuthorizationCodeService mockAuthorizationCodeService;
     private TokenRequestValidator mockTokenRequestValidator;
-    private ClientAuthenticationVerifier<Object> verifier;
 
     private AccessTokenHandler handler;
     private TokenResponse tokenResponse;
@@ -205,9 +199,6 @@ class AccessTokenHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setBody(tokenRequestBody);
 
-        ValidationResult<ErrorResponse> validationResultError =
-                new ValidationResult<>(false, ErrorResponse.INVALID_REQUEST_PARAM);
-
         when(mockAccessTokenService.validateTokenRequest(any()))
                 .thenReturn(ValidationResult.createValidResult());
 
@@ -229,9 +220,6 @@ class AccessTokenHandlerTest {
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setBody(tokenRequestBody);
-
-        ValidationResult<ErrorResponse> validationResultError =
-                new ValidationResult<>(false, ErrorResponse.INVALID_REQUEST_PARAM);
 
         when(mockAccessTokenService.validateTokenRequest(any()))
                 .thenReturn(ValidationResult.createValidResult());
