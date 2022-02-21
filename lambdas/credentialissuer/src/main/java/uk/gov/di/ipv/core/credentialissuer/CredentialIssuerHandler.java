@@ -38,14 +38,7 @@ public class CredentialIssuerHandler
     @ExcludeFromGeneratedCoverageReport
     public CredentialIssuerHandler() {
         this.configurationService = new ConfigurationService();
-        JWSSigner signer =
-                new KmsSigner(
-                        configurationService
-                                .getSharedAttributesSigningKeyId()
-                                .orElseThrow(
-                                        () ->
-                                                new IllegalArgumentException(
-                                                        "The shared attributes signing key id is not set in parameter store")));
+        JWSSigner signer = new KmsSigner(configurationService.getSharedAttributesSigningKeyId());
 
         this.credentialIssuerService = new CredentialIssuerService(configurationService, signer);
     }

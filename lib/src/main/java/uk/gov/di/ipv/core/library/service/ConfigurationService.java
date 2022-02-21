@@ -153,28 +153,18 @@ public class ConfigurationService {
         return splitKey;
     }
 
-    public Optional<String> getSharedAttributesSigningKeyId() {
-        return Optional.ofNullable(
-                ssmProvider.get(System.getenv("SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM")));
+    public String getSharedAttributesSigningKeyId() {
+        return ssmProvider.get(System.getenv("SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM"));
     }
 
     public List<String> getClientRedirectUrls(String clientId) {
-        Optional<String> redirectUrlStrings =
-                Optional.ofNullable(
-                        ssmProvider.get(
-                                String.format(
-                                        "/%s/core/clients/%s/validRedirectUrls",
-                                        System.getenv("ENVIRONMENT"), clientId)));
+        String redirectUrlStrings =
+                ssmProvider.get(
+                        String.format(
+                                "/%s/core/clients/%s/validRedirectUrls",
+                                System.getenv("ENVIRONMENT"), clientId));
 
-        return Arrays.asList(
-                redirectUrlStrings
-                        .orElseThrow(
-                                () ->
-                                        new IllegalArgumentException(
-                                                String.format(
-                                                        "Client redirect URLs are not set in parameter store for client ID '%s'",
-                                                        clientId)))
-                        .split(CLIENT_REDIRECT_URL_SEPARATOR));
+        return Arrays.asList(redirectUrlStrings.split(CLIENT_REDIRECT_URL_SEPARATOR));
     }
 
     public Certificate getClientCertificate(String clientId) throws CertificateException {
