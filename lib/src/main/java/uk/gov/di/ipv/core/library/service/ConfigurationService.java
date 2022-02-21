@@ -158,6 +158,11 @@ public class ConfigurationService {
         return ssmProvider.get(System.getenv("SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM"));
     }
 
+    public String getAudienceForClients() {
+        return ssmProvider.get(
+                String.format("/%s/core/self/audienceForClients", System.getenv(ENVIRONMENT)));
+    }
+
     public List<String> getClientRedirectUrls(String clientId) {
         String redirectUrlStrings =
                 ssmProvider.get(
@@ -175,40 +180,43 @@ public class ConfigurationService {
                         System.getenv(ENVIRONMENT), clientId));
     }
 
+    public String getClientAuthenticationMethod(String clientId) {
+        return ssmProvider.get(
+                String.format(
+                        "/%s/core/clients/%s/authenticationMethod",
+                        System.getenv(ENVIRONMENT), clientId));
+    }
+
     public String getClientIssuer(String clientId) {
-        return getParameterFromStore(
+        return ssmProvider.get(
                 String.format("/%s/core/clients/%s/issuer", System.getenv(ENVIRONMENT), clientId));
     }
 
     public String getClientAudience(String clientId) {
-        return getParameterFromStore(
+        return ssmProvider.get(
                 String.format(
                         "/%s/core/clients/%s/audience", System.getenv(ENVIRONMENT), clientId));
     }
 
     public String getClientSubject(String clientId) {
-        return getParameterFromStore(
+        return ssmProvider.get(
                 String.format("/%s/core/clients/%s/subject", System.getenv(ENVIRONMENT), clientId));
     }
 
     public String getClientTokenTtl(String clientId) {
-        return getParameterFromStore(
+        return ssmProvider.get(
                 String.format(
                         "/%s/core/clients/%s/tokenTtl", System.getenv(ENVIRONMENT), clientId));
     }
 
     public String getIpvTokenTtl() {
-        return getParameterFromStore(
+        return ssmProvider.get(
                 String.format("/%s/core/self/jwtTtlSeconds", System.getenv(ENVIRONMENT)));
     }
 
     private Certificate getCertificateFromStore(String parameterName) throws CertificateException {
-        byte[] binaryCertificate = Base64.getDecoder().decode(getParameterFromStore(parameterName));
+        byte[] binaryCertificate = Base64.getDecoder().decode(ssmProvider.get(parameterName));
         CertificateFactory factory = CertificateFactory.getInstance("X.509");
         return factory.generateCertificate(new ByteArrayInputStream(binaryCertificate));
-    }
-
-    private String getParameterFromStore(String parameterName) {
-        return ssmProvider.get(parameterName);
     }
 }

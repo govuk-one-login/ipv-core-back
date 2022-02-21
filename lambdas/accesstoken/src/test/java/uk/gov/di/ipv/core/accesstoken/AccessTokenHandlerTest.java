@@ -19,6 +19,7 @@ import com.nimbusds.oauth2.sdk.token.Tokens;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import uk.gov.di.ipv.core.library.exceptions.ClientAuthenticationException;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
 import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
@@ -28,16 +29,14 @@ import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class AccessTokenHandlerTest {
-    private static final String TEST_IPV_SESSION_ID = UUID.randomUUID().toString();
-
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final AuthorizationCodeItem authorizationCodeItem = new AuthorizationCodeItem();
     private Context context;
@@ -91,8 +90,6 @@ class AccessTokenHandlerTest {
         when(mockAuthorizationCodeService.getAuthorizationCodeItem("12345"))
                 .thenReturn(Optional.of(authorizationCodeItem));
         when(mockAccessTokenService.validateTokenRequest(any()))
-                .thenReturn(ValidationResult.createValidResult());
-        when(mockTokenRequestValidator.validateExtractedJwt(any()))
                 .thenReturn(ValidationResult.createValidResult());
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
@@ -176,8 +173,6 @@ class AccessTokenHandlerTest {
 
         when(mockAccessTokenService.validateTokenRequest(any()))
                 .thenReturn(ValidationResult.createValidResult());
-        when(mockTokenRequestValidator.validateExtractedJwt(any()))
-                .thenReturn(ValidationResult.createValidResult());
         when(mockAuthorizationCodeService.getAuthorizationCodeItem("12345"))
                 .thenReturn(Optional.empty());
 
@@ -204,22 +199,18 @@ class AccessTokenHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setBody(tokenRequestBody);
 
-        ValidationResult validationResultError =
-                new ValidationResult<>(false, OAuth2Error.UNSUPPORTED_GRANT_TYPE);
-
         when(mockAccessTokenService.validateTokenRequest(any()))
                 .thenReturn(ValidationResult.createValidResult());
 
-        when(mockTokenRequestValidator.validateExtractedJwt(any()))
-                .thenReturn(validationResultError);
+        doThrow(new ClientAuthenticationException("error"))
+                .when(mockTokenRequestValidator)
+                .authenticateClient(any(), any());
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(OAuth2Error.UNSUPPORTED_GRANT_TYPE.getCode(), errorResponse.getCode());
-        assertEquals(
-                OAuth2Error.UNSUPPORTED_GRANT_TYPE.getDescription(),
-                errorResponse.getDescription());
+        assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorResponse.getCode());
+        assertEquals(OAuth2Error.INVALID_GRANT.getDescription(), errorResponse.getDescription());
     }
 
     @Test
@@ -230,22 +221,18 @@ class AccessTokenHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setBody(tokenRequestBody);
 
-        ValidationResult validationResultError =
-                new ValidationResult<>(false, OAuth2Error.INVALID_REQUEST_OBJECT);
-
         when(mockAccessTokenService.validateTokenRequest(any()))
                 .thenReturn(ValidationResult.createValidResult());
 
-        when(mockTokenRequestValidator.validateExtractedJwt(any()))
-                .thenReturn(validationResultError);
+        doThrow(new ClientAuthenticationException("error"))
+                .when(mockTokenRequestValidator)
+                .authenticateClient(any(), any());
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
-        assertEquals(HTTPResponse.SC_FOUND, response.getStatusCode());
-        assertEquals(OAuth2Error.INVALID_REQUEST_OBJECT.getCode(), errorResponse.getCode());
-        assertEquals(
-                OAuth2Error.INVALID_REQUEST_OBJECT.getDescription(),
-                errorResponse.getDescription());
+        assertEquals(HTTPResponse.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorResponse.getCode());
+        assertEquals(OAuth2Error.INVALID_GRANT.getDescription(), errorResponse.getDescription());
     }
 
     private ErrorObject createErrorObjectFromResponse(String responseBody) throws ParseException {

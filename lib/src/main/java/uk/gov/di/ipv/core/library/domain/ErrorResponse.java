@@ -26,7 +26,13 @@ public enum ErrorResponse {
     FAILED_TO_GET_SHARED_ATTRIBUTES(1015, "Failed to get Shared Attributes"),
     FAILED_TO_SIGN_SHARED_ATTRIBUTES(1016, "Failed to sign Shared Attributes"),
     INVALID_REDIRECT_URL(1017, "Provided redirect URL is not in those configured for client"),
-    INVALID_REQUEST_PARAM(1018, "Invalid request param");
+    INVALID_REQUEST_PARAM(1018, "Invalid request param"),
+    INVALID_JWT_ISSUER_PARAM(1019, "Invalid value for the issuer of the client JWT provided"),
+    INVALID_JWT_SUBJECT_PARAM(1019, "Invalid value for the subject of the client JWT provided"),
+    INVALID_JWT_AUDIENCE_PARAM(1019, "Invalid value for the audience of the client JWT provided"),
+    CLIENT_JWT_EXPIRED(1020, "The provided client JWT has expired"),
+    MAX_CLIENT_JWT_TTL_TIME_SURPASSED(
+            1021, "The client JWT expiry date has surpassed the maximum allowed ttl value");
 
     @JsonProperty("code")
     private final int code;
