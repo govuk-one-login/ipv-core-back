@@ -39,33 +39,10 @@ public class TokenRequestValidator {
 
     public void authenticateClient(String requestBody, Map<String, String> queryParams)
             throws ClientAuthenticationException {
-        if (!queryParams.containsKey(CLIENT_ASSERTION_PARAM)) {
-            authenticateClientWithoutJwt(queryParams);
-        } else {
+        if (queryParams.containsKey(CLIENT_ASSERTION_PARAM)) {
             authenticateClientWithJwt(requestBody);
-        }
-    }
-
-    private void authenticateClientWithoutJwt(Map<String, String> queryParams)
-            throws ClientAuthenticationException {
-        if (!queryParams.containsKey(CLIENT_ID_PARAM)) {
-            LOGGER.error(
-                    "Missing either client_assertion or client_id values in request. Failed to establish client_id value.");
-            throw new ClientAuthenticationException(
-                    "Unknown client, no client_id value or client_assertion jwt found in request");
         } else {
-            clientId = queryParams.get(CLIENT_ID_PARAM);
-
-            String clientAuthenticationMethod =
-                    configurationService.getClientAuthenticationMethod(clientId);
-
-            if (clientAuthenticationMethod.equals(JWT)) {
-                LOGGER.error("Missing client_assertion jwt for configured client {}", clientId);
-                throw new ClientAuthenticationException(
-                        String.format(
-                                "Missing client_assertion jwt for configured client '%s'",
-                                clientId));
-            }
+            authenticateClientWithoutJwt(queryParams);
         }
     }
 
@@ -89,6 +66,29 @@ public class TokenRequestValidator {
         } catch (ParseException | InvalidClientException | JOSEException e) {
             LOGGER.error("Validation of client_assertion jwt failed");
             throw new ClientAuthenticationException(e);
+        }
+    }
+
+    private void authenticateClientWithoutJwt(Map<String, String> queryParams)
+            throws ClientAuthenticationException {
+        if (queryParams.containsKey(CLIENT_ID_PARAM)) {
+            clientId = queryParams.get(CLIENT_ID_PARAM);
+
+            String clientAuthenticationMethod =
+                    configurationService.getClientAuthenticationMethod(clientId);
+
+            if (clientAuthenticationMethod.equals(JWT)) {
+                LOGGER.error("Missing client_assertion jwt for configured client {}", clientId);
+                throw new ClientAuthenticationException(
+                        String.format(
+                                "Missing client_assertion jwt for configured client '%s'",
+                                clientId));
+            }
+        } else {
+            LOGGER.error(
+                    "Missing either client_assertion or client_id values in request. Failed to establish client_id value.");
+            throw new ClientAuthenticationException(
+                    "Unknown client, no client_id value or client_assertion jwt found in request");
         }
     }
 
