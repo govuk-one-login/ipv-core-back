@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RequestHelperTest {
 
-    Map<String, String> headers =
+    private final Map<String, String> headers =
             Map.of(
                     "foo", "bar",
                     "Foo", "bar",

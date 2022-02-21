@@ -24,11 +24,11 @@ import static com.nimbusds.jose.JWSAlgorithm.RS256;
 
 public class KmsSigner implements JWSSigner {
 
-    private AWSKMS kmsClient;
+    private final AWSKMS kmsClient;
 
     private static final Base64.Encoder b64UrlEncoder = Base64.getUrlEncoder();
     private final JCAContext jcaContext = new JCAContext();
-    private String keyId;
+    private final String keyId;
 
     @ExcludeFromGeneratedCoverageReport
     public KmsSigner(String keyId) {
