@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -42,6 +43,7 @@ public class IssuedCredentialsHandler
     }
 
     @Override
+    @Tracing
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
         var ipvSessionId =
@@ -59,6 +61,7 @@ public class IssuedCredentialsHandler
         return ApiGatewayResponseGenerator.proxyJsonResponse(OK, credentials);
     }
 
+    @Tracing
     public static Map<String, String> getStubCredentials() {
         return Map.of(
                 "passportIssuer",

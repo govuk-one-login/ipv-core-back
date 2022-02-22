@@ -11,6 +11,7 @@ import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -51,6 +52,7 @@ public class AuthorizationHandler
     }
 
     @Override
+    @Tracing
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
         Map<String, List<String>> queryStringParameters = getQueryStringParametersAsMap(input);
@@ -87,6 +89,7 @@ public class AuthorizationHandler
         return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, payload);
     }
 
+    @Tracing
     private Map<String, List<String>> getQueryStringParametersAsMap(
             APIGatewayProxyRequestEvent input) {
         if (input.getQueryStringParameters() != null) {

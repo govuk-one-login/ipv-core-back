@@ -8,6 +8,7 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import net.minidev.json.JSONObject;
+import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -44,6 +45,7 @@ public class CredentialIssuerHandler
     }
 
     @Override
+    @Tracing
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
 
@@ -69,6 +71,7 @@ public class CredentialIssuerHandler
         }
     }
 
+    @Tracing
     private Optional<ErrorResponse> validate(CredentialIssuerRequestDto request) {
         if (StringUtils.isBlank(request.getAuthorizationCode())) {
             return Optional.of(ErrorResponse.MISSING_AUTHORIZATION_CODE);

@@ -30,9 +30,11 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Tracing: Active
       Environment:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub shared-attributes-${Environment}
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
           SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/sharedAttributesJwtSigningKeyId"
       Policies:
@@ -59,9 +61,11 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Tracing: Active
       Environment:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub access-token-${Environment}
           AUTH_CODES_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AuthCodesTable.Arn]]
           ACCESS_TOKENS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AccessTokensTable.Arn]]
       Policies:
@@ -90,9 +94,11 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Tracing: Active
       Environment:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub authorization-${Environment}
           AUTH_CODES_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AuthCodesTable.Arn]]
       Policies:
         - DynamoDBWritePolicy:
@@ -121,9 +127,11 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Tracing: Active
       Environment:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub session-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt SessionsTable.Arn]]
       Policies:
         - DynamoDBReadPolicy:
@@ -150,12 +158,14 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Tracing: Active
       Environment:
         Variables:
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
           SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/sharedAttributesJwtSigningKeyId"
           ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-${Environment}
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UserIssuedCredentialsTable
@@ -187,9 +197,11 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Tracing: Active
       Environment:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub user-identity-${Environment}
           ACCESS_TOKENS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AccessTokensTable.Arn]]
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
       Policies:
@@ -219,8 +231,11 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Tracing: Active
       Environment:
         Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-config-${Environment}
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
       Policies:
         - SSMParameterReadPolicy:
@@ -247,9 +262,11 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Tracing: Active
       Environment:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub issued-credentials-${Environment}
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
       Policies:
         - DynamoDBReadPolicy:

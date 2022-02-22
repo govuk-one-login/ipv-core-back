@@ -3,6 +3,7 @@ plugins {
 	id "application"
 	id "idea"
 	id "jacoco"
+	id 'io.freefair.aspectj.post-compile-weaving' version '6.3.0'
 }
 
 repositories {
@@ -15,6 +16,7 @@ dependencies {
 			"com.amazonaws:aws-lambda-java-events:3.11.0",
 			"com.amazonaws:aws-java-sdk-dynamodb:1.12.122",
 			"com.nimbusds:oauth2-oidc-sdk:9.3.1",
+
 			"com.fasterxml.jackson.core:jackson-core:2.13.0",
 			"com.fasterxml.jackson.core:jackson-databind:2.13.0",
 			"com.fasterxml.jackson.core:jackson-annotations:2.13.0",
@@ -25,8 +27,7 @@ dependencies {
 			"software.amazon.lambda:powertools-parameters:1.8.0",
 			project(":lib")
 
-
-
+	aspect 'software.amazon.lambda:powertools-tracing:1.11.0'
 
 	compileOnly 'org.projectlombok:lombok:1.18.22'
 	annotationProcessor 'org.projectlombok:lombok:1.18.22'
@@ -53,6 +54,8 @@ task buildZip(type: Zip) {
 }
 
 test {
+	// Configures environment variable to avoid initialization of AWS X-Ray segments for each tests
+	environment "LAMBDA_TASK_ROOT", "handler"
 	useJUnitPlatform ()
 	finalizedBy jacocoTestReport
 }
