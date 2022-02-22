@@ -7,7 +7,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "ipv-core-back-development"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev\""
+parameter_overrides = "Environment=\"development\""
 
 [dev-tomw.deploy.parameters]
 stack_name = "ipv-core-back-dev-tomw"
