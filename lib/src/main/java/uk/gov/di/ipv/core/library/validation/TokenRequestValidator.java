@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.core.library.domain.ConfigurationServicePublicKeySelector;
 import uk.gov.di.ipv.core.library.exceptions.ClientAuthenticationException;
+import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.time.OffsetDateTime;
@@ -36,8 +37,8 @@ public class TokenRequestValidator {
         this.verifier = getClientAuthVerifier(configurationService);
     }
 
-    public void authenticateClient(String requestBody, Map<String, String> queryParams)
-            throws ClientAuthenticationException {
+    public void authenticateClient(String requestBody) throws ClientAuthenticationException {
+        Map<String, String> queryParams = RequestHelper.parseRequestBody(requestBody);
         if (queryParams.containsKey(CLIENT_ASSERTION_PARAM)) {
             authenticateClientWithJwt(requestBody);
         } else {
