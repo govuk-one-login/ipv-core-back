@@ -1,0 +1,31 @@
+openapi: 3.0.3
+info:
+  title: IPV Core External
+  description: The external api presented by IPV Core Back for use by non IPV Core services
+  version: 1.0.0
+servers:
+  - url: 'https://example.com'
+paths:
+  /token:
+    post:
+      description: Exchange an authorization code for an access token
+      responses:
+        200:
+          description: The access token
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /user-identity:
+    get:
+      description: Returns a list of Verifiable Credentials representig the users identity
+      responses:
+        200:
+          description: The list of Verifiable Credentials
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object

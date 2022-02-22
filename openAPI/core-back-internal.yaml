@@ -1,0 +1,140 @@
+openapi: 3.0.3
+info:
+  title: IPV Core Internal
+  description: The internal api presented by IPV Core Back for use by IPV Core Front
+  version: 1.0.0
+servers:
+  - url: 'https://example.com'
+paths:
+  /config/cri:
+    get:
+      description: Returns details of all Credential Issuers (CRIs) configured for use with IPV Core
+      responses:
+        200:
+          description: A list of cri configurations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /config/cri/{criId}:
+    get:
+      description: Returns details of the specified Credential Issuer configured for use with IPV Core
+      responses:
+        200:
+          description: The cri configuration
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /event/cri/start:
+    post:
+      description: Called when a user is being redirected to a CRI
+      responses:
+        200:
+          description: Details needed to start the cri journey?
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/eventResponse"
+
+  /event/cri/return:
+    post:
+      description: Called when a user returns from a CRI
+      responses:
+        200:
+          description: OK?
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/eventResponse"
+
+  /event/cri/error:
+    post:
+      description: Called when a user returns from a CRI with an error
+      responses:
+        200:
+          description: ??
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/eventResponse"
+
+  /event/session/start:
+    post:
+      description: Called when the user first arrives at IPV Core at the start of the authorization code flow
+      responses:
+        200:
+          description: IPV Session ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/eventResponse"
+
+  /event/session/end:
+    post:
+      description: Called when the user has completed their user journey in IPV Core
+      responses:
+        200:
+          description: Authorization Code and details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/eventResponse"
+
+  /event/journey/{journeyId}:
+    post:
+      description: Called when the user selects a journey event.
+      responses:
+        200:
+          description:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/eventResponse"
+
+components:
+  schemas:
+    eventResponse:
+      type: object
+      properties:
+        page:
+          type: string
+          description: pageId of page to be displayed
+        redirect:
+          type: object
+          description: one of three types of redirect; event, cri, or client
+          properties:
+            event:
+              type: string
+              description: eventId of an event to redirect to.
+            cri:
+              type: object
+              description: redirect to a cri (credential issuer)
+              required: [ "id", "authorizeUrl", "request" ]
+              properties:
+                id:
+                  type: string
+                authorizeUrl:
+                  type: string
+                request:
+                  type: string
+            client:
+              type: object
+              description: redirect to the oauth client, ending the session.
+              required: [ "callbackUrl", "authcode" ]
+              properties:
+                callbackUrl:
+                  type: string
+                authcode:
+                  type: string
+          oneOf:
+            - required: [ "client" ]
+            - required: [ "cri" ]
+            - required: [ "event" ]
+      oneOf:
+        - required: [ "page" ]
+        - required: [ "redirect" ]
