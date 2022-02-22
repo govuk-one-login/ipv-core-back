@@ -30,6 +30,7 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Tracing: Active
       Environment:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
@@ -59,6 +60,7 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Tracing: Active
       Environment:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
@@ -90,6 +92,7 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Tracing: Active
       Environment:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
@@ -121,6 +124,7 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Tracing: Active
       Environment:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
@@ -150,6 +154,7 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Tracing: Active
       Environment:
         Variables:
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
@@ -187,6 +192,7 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Tracing: Active
       Environment:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
@@ -219,6 +225,7 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Tracing: Active
       Environment:
         Variables:
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
@@ -247,6 +254,7 @@ Resources:
       Architectures:
         - x86_64
       MemorySize: 512
+      Tracing: Active
       Environment:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
