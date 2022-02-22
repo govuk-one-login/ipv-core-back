@@ -75,6 +75,8 @@ Resources:
             TableName: !Ref AuthCodesTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/clients/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/audienceForClients
       Events:
         IPVCoreAPI:
           Type: Api
