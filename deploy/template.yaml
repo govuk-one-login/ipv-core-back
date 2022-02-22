@@ -16,7 +16,7 @@ Resources:
   IPVCoreAPI:
     Type: AWS::Serverless::Api
     Properties:
-      Name: IPV Core API Gateway
+      Name: !Sub IPV Core API Gateway ${Environment}
       StageName: !Sub ${Environment}
 
   IPVSharedAttributesFunction:
