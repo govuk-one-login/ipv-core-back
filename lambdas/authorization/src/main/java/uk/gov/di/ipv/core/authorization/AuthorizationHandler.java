@@ -51,6 +51,7 @@ public class AuthorizationHandler
     }
 
     @Override
+    @Tracing
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
         Map<String, List<String>> queryStringParameters = getQueryStringParametersAsMap(input);
@@ -87,6 +88,7 @@ public class AuthorizationHandler
         return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, payload);
     }
 
+    @Tracing
     private Map<String, List<String>> getQueryStringParametersAsMap(
             APIGatewayProxyRequestEvent input) {
         if (input.getQueryStringParameters() != null) {

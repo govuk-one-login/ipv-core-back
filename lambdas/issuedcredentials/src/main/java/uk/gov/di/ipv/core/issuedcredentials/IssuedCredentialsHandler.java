@@ -42,6 +42,7 @@ public class IssuedCredentialsHandler
     }
 
     @Override
+    @Tracing
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
         var ipvSessionId =
@@ -59,6 +60,7 @@ public class IssuedCredentialsHandler
         return ApiGatewayResponseGenerator.proxyJsonResponse(OK, credentials);
     }
 
+    @Tracing
     public static Map<String, String> getStubCredentials() {
         return Map.of(
                 "passportIssuer",

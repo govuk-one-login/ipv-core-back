@@ -59,6 +59,7 @@ public class AccessTokenHandler
     }
 
     @Override
+    @Tracing
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
         try {
@@ -125,6 +126,7 @@ public class AccessTokenHandler
         }
     }
 
+    @Tracing
     private TokenRequest createTokenRequest(String requestBody) throws ParseException {
         // The URI is not needed/consumed in the resultant TokenRequest
         // therefore any value can be passed here to ensure the parse method
@@ -136,12 +138,14 @@ public class AccessTokenHandler
         return TokenRequest.parse(request);
     }
 
+    @Tracing
     private int getHttpStatusCodeForErrorResponse(ErrorObject errorObject) {
         return errorObject.getHTTPStatusCode() > 0
                 ? errorObject.getHTTPStatusCode()
                 : HttpStatus.SC_BAD_REQUEST;
     }
 
+    @Tracing
     private boolean redirectUrlsDoNotMatch(
             AuthorizationCodeItem authorizationCodeItem,
             AuthorizationCodeGrant authorizationGrant) {

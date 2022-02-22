@@ -34,6 +34,7 @@ public class IpvSessionHandler
     }
 
     @Override
+    @Tracing
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
         String ipvSessionId = ipvSessionService.generateIpvSession();

@@ -52,6 +52,7 @@ public class SharedAttributesHandler
     }
 
     @Override
+    @Tracing
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
         try {
@@ -66,6 +67,7 @@ public class SharedAttributesHandler
         }
     }
 
+    @Tracing
     private SharedAttributesResponse getSharedAttributes(String ipvSessionId)
             throws HttpResponseExceptionWithErrorBody {
         Map<String, String> credentials =
@@ -84,6 +86,7 @@ public class SharedAttributesHandler
         return SharedAttributesResponse.from(sharedAttributes);
     }
 
+    @Tracing
     private SignedJWT signSharedAttributesResponse(
             SharedAttributesResponse sharedAttributesResponse)
             throws HttpResponseExceptionWithErrorBody {

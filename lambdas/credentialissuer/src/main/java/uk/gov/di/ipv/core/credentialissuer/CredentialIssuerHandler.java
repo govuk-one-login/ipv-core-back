@@ -44,6 +44,7 @@ public class CredentialIssuerHandler
     }
 
     @Override
+    @Tracing
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
 
@@ -69,6 +70,7 @@ public class CredentialIssuerHandler
         }
     }
 
+    @Tracing
     private Optional<ErrorResponse> validate(CredentialIssuerRequestDto request) {
         if (StringUtils.isBlank(request.getAuthorizationCode())) {
             return Optional.of(ErrorResponse.MISSING_AUTHORIZATION_CODE);
