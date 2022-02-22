@@ -77,8 +77,7 @@ class TokenRequestValidatorTest {
                 getValidQueryParams(generateClientAssertion(getValidClaimsSetValues()));
         assertDoesNotThrow(
                 () -> {
-                    validator.authenticateClient(
-                            queryMapToString(validQueryParams), validQueryParams);
+                    validator.authenticateClient(queryMapToString(validQueryParams));
                 });
     }
 
@@ -100,8 +99,7 @@ class TokenRequestValidatorTest {
                         ClientAuthenticationException.class,
                         () -> {
                             validator.authenticateClient(
-                                    queryMapToString(invalidSignatureQueryParams),
-                                    invalidSignatureQueryParams);
+                                    queryMapToString(invalidSignatureQueryParams));
                         });
 
         assertTrue(exception.getMessage().contains("InvalidClientException: Bad JWT signature"));
@@ -121,8 +119,7 @@ class TokenRequestValidatorTest {
                         ClientAuthenticationException.class,
                         () -> {
                             validator.authenticateClient(
-                                    queryMapToString(differentIssuerAndSubjectQueryParams),
-                                    differentIssuerAndSubjectQueryParams);
+                                    queryMapToString(differentIssuerAndSubjectQueryParams));
                         });
 
         assertTrue(
@@ -147,8 +144,7 @@ class TokenRequestValidatorTest {
                         ClientAuthenticationException.class,
                         () -> {
                             validator.authenticateClient(
-                                    queryMapToString(wrongAudienceQueryParams),
-                                    wrongAudienceQueryParams);
+                                    queryMapToString(wrongAudienceQueryParams));
                         });
 
         assertTrue(
@@ -173,8 +169,7 @@ class TokenRequestValidatorTest {
                 assertThrows(
                         ClientAuthenticationException.class,
                         () -> {
-                            validator.authenticateClient(
-                                    queryMapToString(expiredQueryParams), expiredQueryParams);
+                            validator.authenticateClient(queryMapToString(expiredQueryParams));
                         });
 
         assertTrue(exception.getMessage().contains("Expired JWT"));
@@ -199,8 +194,7 @@ class TokenRequestValidatorTest {
                 assertThrows(
                         ClientAuthenticationException.class,
                         () -> {
-                            validator.authenticateClient(
-                                    queryMapToString(expiredQueryParams), expiredQueryParams);
+                            validator.authenticateClient(queryMapToString(expiredQueryParams));
                         });
         assertTrue(
                 exception
@@ -216,7 +210,7 @@ class TokenRequestValidatorTest {
 
         assertDoesNotThrow(
                 () -> {
-                    validator.authenticateClient(queryMapToString(params), params);
+                    validator.authenticateClient(queryMapToString(params));
                 });
     }
 
@@ -229,8 +223,7 @@ class TokenRequestValidatorTest {
 
         assertDoesNotThrow(
                 () -> {
-                    validator.authenticateClient(
-                            queryMapToString(validQueryParams), validQueryParams);
+                    validator.authenticateClient(queryMapToString(validQueryParams));
                 });
     }
 
@@ -246,8 +239,7 @@ class TokenRequestValidatorTest {
                         ClientAuthenticationException.class,
                         () -> {
                             validator.authenticateClient(
-                                    queryMapToString(missingClientAssertionParams),
-                                    missingClientAssertionParams);
+                                    queryMapToString(missingClientAssertionParams));
                         });
 
         assertEquals(
@@ -263,8 +255,7 @@ class TokenRequestValidatorTest {
                 assertThrows(
                         ClientAuthenticationException.class,
                         () -> {
-                            validator.authenticateClient(
-                                    queryMapToString(missingClientIdParams), missingClientIdParams);
+                            validator.authenticateClient(queryMapToString(missingClientIdParams));
                         });
 
         assertEquals(
