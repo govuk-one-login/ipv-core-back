@@ -258,10 +258,10 @@ class ConfigurationServiceTest {
     }
 
     @Test
-    void shouldReturnClientTokenTtl() {
+    void shouldReturnMaxAllowedAuthClientTtl() {
         environmentVariables.set("ENVIRONMENT", "test");
         String clientIssuer = "aClientTokenTtl";
-        when(ssmProvider.get("/test/core/clients/aClientId/tokenTtl")).thenReturn(clientIssuer);
-        assertEquals(clientIssuer, configurationService.getClientTokenTtl("aClientId"));
+        when(ssmProvider.get("/test/core/self/maxAllowedAuthClientTtl")).thenReturn(clientIssuer);
+        assertEquals(clientIssuer, configurationService.getMaxAllowedAuthClientTtl());
     }
 }

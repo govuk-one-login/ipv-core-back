@@ -71,7 +71,7 @@ class TokenRequestValidatorTest {
         when(mockConfigurationService.getClientCertificate(anyString()))
                 .thenReturn(getCertificate(BASE64_CERT));
         when(mockConfigurationService.getClientAuthenticationMethod(anyString())).thenReturn("jwt");
-        when(mockConfigurationService.getClientTokenTtl(anyString())).thenReturn("2400");
+        when(mockConfigurationService.getMaxAllowedAuthClientTtl()).thenReturn("2400");
 
         var validQueryParams =
                 getValidQueryParams(generateClientAssertion(getValidClaimsSetValues()));
@@ -182,7 +182,7 @@ class TokenRequestValidatorTest {
         when(mockConfigurationService.getClientCertificate(anyString()))
                 .thenReturn(getCertificate(BASE64_CERT));
         when(mockConfigurationService.getClientAuthenticationMethod(anyString())).thenReturn("jwt");
-        when(mockConfigurationService.getClientTokenTtl(anyString())).thenReturn("2400");
+        when(mockConfigurationService.getMaxAllowedAuthClientTtl()).thenReturn("2400");
         var expiredClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
         expiredClaimsSetValues.put(
                 JWTClaimNames.EXPIRATION_TIME,

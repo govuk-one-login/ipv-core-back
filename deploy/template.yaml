@@ -77,6 +77,8 @@ Resources:
             ParameterName: !Sub ${Environment}/core/clients/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/audienceForClients
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/maxAllowedAuthClientTtl
       Events:
         IPVCoreAPI:
           Type: Api

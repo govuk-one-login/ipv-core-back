@@ -203,10 +203,9 @@ public class ConfigurationService {
                 String.format("/%s/core/clients/%s/subject", System.getenv(ENVIRONMENT), clientId));
     }
 
-    public String getClientTokenTtl(String clientId) {
+    public String getMaxAllowedAuthClientTtl() {
         return ssmProvider.get(
-                String.format(
-                        "/%s/core/clients/%s/tokenTtl", System.getenv(ENVIRONMENT), clientId));
+                String.format("/%s/core/self/maxAllowedAuthClientTtl", System.getenv(ENVIRONMENT)));
     }
 
     public String getIpvTokenTtl() {
