@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
@@ -122,6 +123,35 @@ public class ConfigurationService {
 
         return map.values().stream()
                 .map(config -> objectMapper.convertValue(config, CredentialIssuerConfig.class))
+                .collect(Collectors.toList());
+    }
+
+    public List<CredentialIssuerConfig> getCredentialIssuersGson()
+            throws ParseCredentialIssuerConfigException {
+        Map<String, String> params =
+                ssmProvider
+                        .recursive()
+                        .getMultiple(System.getenv("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX"));
+
+        Map<String, Map<String, Object>> map = new HashMap<>();
+        for (Entry<String, String> entry : params.entrySet()) {
+            if (map.computeIfAbsent(getCriIdFromParameter(entry), k -> new HashMap<>())
+                            .put(getAttributeNameFromParameter(entry), entry.getValue())
+                    != null) {
+                throw new ParseCredentialIssuerConfigException(
+                        String.format(
+                                "Duplicate parameter in Parameter Store: %s",
+                                getAttributeNameFromParameter(entry)));
+            }
+        }
+
+        return map.values().stream()
+                .map(
+                        config ->
+                                new Gson()
+                                        .fromJson(
+                                                String.valueOf(config),
+                                                CredentialIssuerConfig.class))
                 .collect(Collectors.toList());
     }
 
