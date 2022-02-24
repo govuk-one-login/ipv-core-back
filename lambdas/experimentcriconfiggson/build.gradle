@@ -1,0 +1,55 @@
+plugins {
+	id "java"
+	id "application"
+	id "idea"
+	id "jacoco"
+	id 'io.freefair.aspectj.post-compile-weaving' version '6.3.0'
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+
+	implementation "com.amazonaws:aws-lambda-java-core:1.2.1",
+			"com.amazonaws:aws-lambda-java-events:3.11.0",
+			'org.slf4j:slf4j-simple:1.7.36',
+			'software.amazon.lambda:powertools-parameters:1.9.0'
+
+	aspect 'software.amazon.lambda:powertools-tracing:1.11.0'
+
+
+	testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2',
+			'org.mockito:mockito-core:4.3.1',
+			'org.mockito:mockito-junit-jupiter:4.3.1',
+			'com.nimbusds:oauth2-oidc-sdk:9.25'
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_11
+	targetCompatibility = JavaVersion.VERSION_11
+}
+
+task buildZip(type: Zip) {
+	from compileJava
+	from processResources
+	destinationDirectory = file("$rootDir/dist")
+	into("lib") {
+		from configurations.runtimeClasspath
+	}
+}
+
+test {
+	// Configures environment variable to avoid initialization of AWS X-Ray segments for each tests
+	environment "LAMBDA_TASK_ROOT", "handler"
+	useJUnitPlatform ()
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required.set(true)
+	}
+}

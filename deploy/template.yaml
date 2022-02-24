@@ -286,6 +286,37 @@ Resources:
             Path: /experiment-request-config
             Method: GET
 
+  IPVExperimentCRIConfigGson:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "experiment-cri-config-gson-${Environment}"
+      Handler: uk.gov.di.ipv.core.experimentcriconfiggson.ExperimentCRIConfigHandlerGson::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/experimentcriconfiggson
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Tracing: Active
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub experiment-cri-config-${Environment}
+          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/credentialIssuers
+      Events:
+        IPVCoreAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreAPI
+            Path: /experiment-request-config-gson
+            Method: GET
+
   IPVIssuedCredentials:
     Type: AWS::Serverless::Function
     Properties:

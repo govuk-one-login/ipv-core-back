@@ -16,6 +16,7 @@ import java.net.URI;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
@@ -32,6 +33,8 @@ public class ConfigurationService {
     private static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
     private static final String IS_LOCAL = "IS_LOCAL";
     private static final String CLIENT_REDIRECT_URL_SEPARATOR = ",";
+    private static final String CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX =
+            "CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationService.class);
     public static final String ENVIRONMENT = "ENVIRONMENT";
@@ -96,7 +99,7 @@ public class ConfigurationService {
                 ssmProvider.getMultiple(
                         String.format(
                                 "%s/%s",
-                                System.getenv("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX"),
+                                System.getenv(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
                                 credentialIssuerId));
         return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
     }
@@ -106,7 +109,7 @@ public class ConfigurationService {
         Map<String, String> params =
                 ssmProvider
                         .recursive()
-                        .getMultiple(System.getenv("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX"));
+                        .getMultiple(System.getenv(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX));
 
         Map<String, Map<String, Object>> map = new HashMap<>();
         for (Entry<String, String> entry : params.entrySet()) {
@@ -123,6 +126,49 @@ public class ConfigurationService {
         return map.values().stream()
                 .map(config -> objectMapper.convertValue(config, CredentialIssuerConfig.class))
                 .collect(Collectors.toList());
+    }
+
+    public List<CredentialIssuerConfig> getCredentialIssuersGson()
+            throws ParseCredentialIssuerConfigException {
+        Map<String, String> params =
+                ssmProvider
+                        .recursive()
+                        .getMultiple(System.getenv(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX));
+
+        Map<String, Map<String, Object>> map = new HashMap<>();
+        for (Entry<String, String> entry : params.entrySet()) {
+            if (map.computeIfAbsent(getCriIdFromParameter(entry), k -> new HashMap<>())
+                            .put(getAttributeNameFromParameter(entry), entry.getValue())
+                    != null) {
+                throw new ParseCredentialIssuerConfigException(
+                        String.format(
+                                "Duplicate parameter in Parameter Store: %s",
+                                getAttributeNameFromParameter(entry)));
+            }
+        }
+        List<CredentialIssuerConfig> configList = new ArrayList<>();
+
+        map.forEach(
+                (k, v) -> {
+                    CredentialIssuerConfig credentialIssuerConfig =
+                            new CredentialIssuerConfig(
+                                    k,
+                                    v.get("name").toString(),
+                                    v.get("tokenUrl") == null
+                                            ? URI.create("")
+                                            : URI.create(v.get("tokenUrl").toString()),
+                                    v.get("credentialUrl") == null
+                                            ? URI.create("")
+                                            : URI.create(v.get("credentialUrl").toString()),
+                                    v.get("authorizeUrl") == null
+                                            ? URI.create("")
+                                            : URI.create(v.get("authorizeUrl").toString()),
+                                    v.get("ipvClientId").toString());
+
+                    configList.add(credentialIssuerConfig);
+                });
+
+        return configList;
     }
 
     private String getAttributeNameFromParameter(Entry<String, String> parameter)

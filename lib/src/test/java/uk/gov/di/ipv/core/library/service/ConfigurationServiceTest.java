@@ -152,6 +152,56 @@ class ConfigurationServiceTest {
     }
 
     @Test
+    void shouldGetAllCredentialIssuersFromParameterStoreGson()
+            throws ParseCredentialIssuerConfigException {
+        environmentVariables.set(
+                "CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "/dev/core/credentialIssuers");
+        HashMap<String, String> response = new HashMap<>();
+        response.put("passportCri/tokenUrl", "https://gds.test/token");
+        response.put("passportCri/authorizeUrl", "https://gds.gov.uk/passport");
+        response.put("passportCri/credentialUrl", "https://gds.gov.uk/passport");
+        response.put("passportCri/id", "passportCri");
+        response.put("passportCri/name", "passportIssuer");
+        response.put("passportCri/ipvClientId", "ip-code");
+
+        response.put("stubCri/tokenUrl", "https://gds.test/stubTokenUrl");
+        response.put("stubCri/authorizeUrl", "https://gds.test/stubAuthUrl");
+        response.put("stubCri/credentialUrl", "https://gds.gov.uk/passport");
+        response.put("stubCri/id", "stubCri");
+        response.put("stubCri/name", "stubIssuer");
+        response.put("stubCri/ipvClientId", "ip-code");
+
+        when(ssmProvider.recursive()).thenReturn(ssmProvider2);
+        when(ssmProvider2.getMultiple("/dev/core/credentialIssuers")).thenReturn(response);
+
+        List<CredentialIssuerConfig> result = configurationService.getCredentialIssuersGson();
+        assertEquals(2, result.size());
+
+        Optional<CredentialIssuerConfig> passportIssuerConfig =
+                result.stream()
+                        .filter(config -> Objects.equals(config.getId(), "passportCri"))
+                        .findFirst();
+        assertTrue(passportIssuerConfig.isPresent());
+        assertEquals("https://gds.test/token", passportIssuerConfig.get().getTokenUrl().toString());
+        assertEquals(
+                "https://gds.gov.uk/passport",
+                passportIssuerConfig.get().getAuthorizeUrl().toString());
+        assertEquals("passportCri", passportIssuerConfig.get().getId());
+
+        Optional<CredentialIssuerConfig> stubIssuerConfig =
+                result.stream()
+                        .filter(config -> Objects.equals(config.getId(), "stubCri"))
+                        .findFirst();
+        assertTrue(stubIssuerConfig.isPresent());
+        assertEquals(
+                "https://gds.test/stubTokenUrl", stubIssuerConfig.get().getTokenUrl().toString());
+        assertEquals(
+                "https://gds.test/stubAuthUrl",
+                stubIssuerConfig.get().getAuthorizeUrl().toString());
+        assertEquals("stubCri", stubIssuerConfig.get().getId());
+    }
+
+    @Test
     void shouldThrowExceptionWhenCriConfigIsIncorrect() {
         environmentVariables.set(
                 "CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "/dev/core/credentialIssuers/");
