@@ -2,7 +2,9 @@ package uk.gov.di.ipv.core.experimentcriconfig.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import uk.gov.di.ipv.core.experimentcriconfig.annotations.ExcludeFromGeneratedCoverageReport;
 
+@ExcludeFromGeneratedCoverageReport
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum ErrorResponse {
     FAILED_TO_PARSE_CREDENTIAL_ISSUER_CONFIG(

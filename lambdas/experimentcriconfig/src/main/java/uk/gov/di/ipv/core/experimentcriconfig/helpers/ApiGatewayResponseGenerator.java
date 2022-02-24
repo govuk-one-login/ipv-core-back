@@ -6,10 +6,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.gov.di.ipv.core.experimentcriconfig.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.util.Collections;
 import java.util.Map;
 
+@ExcludeFromGeneratedCoverageReport
 public class ApiGatewayResponseGenerator {
 
     private static final String JSON_CONTENT_TYPE_VALUE = "application/json";
