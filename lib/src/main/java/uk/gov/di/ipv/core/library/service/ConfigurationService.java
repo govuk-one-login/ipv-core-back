@@ -33,6 +33,8 @@ public class ConfigurationService {
     private static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
     private static final String IS_LOCAL = "IS_LOCAL";
     private static final String CLIENT_REDIRECT_URL_SEPARATOR = ",";
+    private static final String CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX =
+            "CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationService.class);
     public static final String ENVIRONMENT = "ENVIRONMENT";
@@ -97,7 +99,7 @@ public class ConfigurationService {
                 ssmProvider.getMultiple(
                         String.format(
                                 "%s/%s",
-                                System.getenv("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX"),
+                                System.getenv(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
                                 credentialIssuerId));
         return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
     }
@@ -107,7 +109,7 @@ public class ConfigurationService {
         Map<String, String> params =
                 ssmProvider
                         .recursive()
-                        .getMultiple(System.getenv("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX"));
+                        .getMultiple(System.getenv(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX));
 
         Map<String, Map<String, Object>> map = new HashMap<>();
         for (Entry<String, String> entry : params.entrySet()) {
@@ -131,7 +133,7 @@ public class ConfigurationService {
         Map<String, String> params =
                 ssmProvider
                         .recursive()
-                        .getMultiple(System.getenv("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX"));
+                        .getMultiple(System.getenv(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX));
 
         Map<String, Map<String, Object>> map = new HashMap<>();
         for (Entry<String, String> entry : params.entrySet()) {

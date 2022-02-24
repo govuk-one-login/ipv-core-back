@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.experimentcriconfig.helpers;
+package uk.gov.di.ipv.core.experimentcriconfiggson.helpers;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.gov.di.ipv.core.experimentcriconfig.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.experimentcriconfiggson.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.util.Collections;
 import java.util.Map;

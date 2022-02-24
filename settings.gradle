@@ -10,3 +10,5 @@ include "lib",
 		"lambdas:session",
 		"lambdas:useridentity",
 		"lambdas:sharedattributes"
+include 'lambdas:experimentcriconfiggson'
+findProject(':lambdas:experimentcriconfiggson')?.name = 'experimentcriconfiggson'

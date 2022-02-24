@@ -1,8 +1,8 @@
-package uk.gov.di.ipv.core.experimentcriconfig.domain;
+package uk.gov.di.ipv.core.experimentcriconfiggson.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import uk.gov.di.ipv.core.experimentcriconfig.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.experimentcriconfiggson.annotations.ExcludeFromGeneratedCoverageReport;
 
 @ExcludeFromGeneratedCoverageReport
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
