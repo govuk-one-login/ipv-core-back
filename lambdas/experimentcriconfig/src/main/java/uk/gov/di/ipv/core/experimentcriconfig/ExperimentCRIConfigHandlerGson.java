@@ -38,7 +38,8 @@ public class ExperimentCRIConfigHandlerGson
     private final SSMProvider ssmProvider;
     private final Gson gson = new Gson();
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentCRIConfigHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentCRIConfigHandlerGson.class);
+
 
     public ExperimentCRIConfigHandlerGson() {
         if (isRunningLocally()) {
