@@ -289,7 +289,7 @@ Resources:
   IPVExperimentCRIConfigGson:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "experiment-cri-config-${Environment}"
+      FunctionName: !Sub "experiment-cri-config-gson-${Environment}"
       Handler: uk.gov.di.ipv.core.experimentcriconfig.ExperimentCRIConfigHandlerGson::handleRequest
       Runtime: java11
       PackageType: Zip
