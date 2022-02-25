@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.experimentcriconfig;
+package uk.gov.di.ipv.core.experimentcriconfiggson;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -13,11 +13,11 @@ import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.tracing.Tracing;
-import uk.gov.di.ipv.core.experimentcriconfig.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.experimentcriconfig.domain.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.experimentcriconfig.domain.ErrorResponse;
-import uk.gov.di.ipv.core.experimentcriconfig.exceptions.ParseCredentialIssuerConfigException;
-import uk.gov.di.ipv.core.experimentcriconfig.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.experimentcriconfiggson.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.experimentcriconfiggson.domain.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.experimentcriconfiggson.domain.ErrorResponse;
+import uk.gov.di.ipv.core.experimentcriconfiggson.exceptions.ParseCredentialIssuerConfigException;
+import uk.gov.di.ipv.core.experimentcriconfiggson.helpers.ApiGatewayResponseGenerator;
 
 import java.net.URI;
 import java.util.HashMap;
