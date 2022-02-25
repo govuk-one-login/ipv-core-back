@@ -42,6 +42,13 @@ Resources:
             TableName: !Ref UserIssuedCredentialsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/sharedAttributesJwtSigningKeyId
+        - Statement:
+          - Sid: kmsSigningKeyPermission
+            Effect: Allow
+            Action:
+              - 'kms:sign'
+            Resource:
+              - "arn:aws:kms:eu-west-2:130355686670:key/3efe7d7f-5a08-4ea3-90c3-11b24ec3b375"
       Events:
         IPVCoreAPI:
           Type: Api
@@ -181,6 +188,13 @@ Resources:
             ParameterName: !Sub ${Environment}/core/self/sharedAttributesJwtSigningKeyId
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/jwtTtlSeconds
+        - Statement:
+          - Sid: kmsSigningKeyPermission
+            Effect: Allow
+            Action:
+              - 'kms:sign'
+            Resource:
+              - "arn:aws:kms:eu-west-2:130355686670:key/3efe7d7f-5a08-4ea3-90c3-11b24ec3b375"
       Events:
         IPVCoreAPI:
           Type: Api
