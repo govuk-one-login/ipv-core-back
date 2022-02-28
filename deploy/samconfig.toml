@@ -41,13 +41,13 @@ region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-danp\""
 
-[dev-chris.deploy.parameters]
-stack_name = "ipv-core-back-dev-chris"
+[dev-chrisw.deploy.parameters]
+stack_name = "ipv-core-back-dev-chrisw"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
-s3_prefix = "chris-core-back-stack"
+s3_prefix = "chrisw-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-chris\""
+parameter_overrides = "Environment=\"dev-chrisw\""
 
 [dev-amrit.deploy.parameters]
 stack_name = "ipv-core-back-dev-amrit"
