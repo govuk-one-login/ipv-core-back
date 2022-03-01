@@ -39,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.sharedattributes.SharedAttributesHandler.VC_HTTP_API_CLAIM;
 
 @ExtendWith(MockitoExtension.class)
 class SharedAttributesHandlerTest {
@@ -116,12 +117,16 @@ class SharedAttributesHandlerTest {
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
 
         SignedJWT signedJWT = SignedJWT.parse(response.getBody());
-        JsonNode body = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
+        JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(2, (body.get("names")).size());
+        assertEquals(4, claimsSet.get(VC_HTTP_API_CLAIM).size());
+        JsonNode vcAttributes = claimsSet.get(VC_HTTP_API_CLAIM);
 
-        body.get("names")
+        assertEquals(2, (vcAttributes.get("names")).size());
+
+        vcAttributes
+                .get("names")
                 .forEach(
                         (name) -> {
                             if (name.get("familyName").asText().equals("Holmes")) {
@@ -137,10 +142,10 @@ class SharedAttributesHandlerTest {
                             }
                         });
 
-        assertEquals("2021-03-01", body.get("dateOfBirths").get(0).asText());
-        assertTrue(body.get("addresses").toPrettyString().contains("123 Street"));
-        assertEquals(2, body.get("addresses").size());
-        assertEquals(2, body.get("addressHistory").size());
+        assertEquals("2021-03-01", vcAttributes.get("dateOfBirths").get(0).asText());
+        assertTrue(vcAttributes.get("addresses").toPrettyString().contains("123 Street"));
+        assertEquals(2, vcAttributes.get("addresses").size());
+        assertEquals(2, vcAttributes.get("addressHistory").size());
 
         RSASSAVerifier rsaVerifier =
                 new RSASSAVerifier((RSAPublicKey) getCertificate().getPublicKey());
@@ -174,13 +179,15 @@ class SharedAttributesHandlerTest {
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
 
         SignedJWT signedJWT = SignedJWT.parse(response.getBody());
-        JsonNode body = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
+        JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(0, (body.get("names")).size());
-        assertEquals(0, body.get("dateOfBirths").size());
-        assertEquals(0, body.get("addresses").size());
-        assertEquals(0, body.get("addressHistory").size());
+        assertEquals(4, claimsSet.get(VC_HTTP_API_CLAIM).size());
+        JsonNode vcAttributes = claimsSet.get(VC_HTTP_API_CLAIM);
+        assertEquals(0, vcAttributes.get("names").size());
+        assertEquals(0, vcAttributes.get("dateOfBirths").size());
+        assertEquals(0, vcAttributes.get("addresses").size());
+        assertEquals(0, vcAttributes.get("addressHistory").size());
 
         RSASSAVerifier rsaVerifier =
                 new RSASSAVerifier((RSAPublicKey) getCertificate().getPublicKey());
