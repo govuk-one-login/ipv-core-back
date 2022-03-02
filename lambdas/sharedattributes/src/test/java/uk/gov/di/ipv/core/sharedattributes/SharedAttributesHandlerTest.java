@@ -39,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.sharedattributes.SharedAttributesHandler.CLAIMS_CLAIM;
 import static uk.gov.di.ipv.core.sharedattributes.SharedAttributesHandler.VC_HTTP_API_CLAIM;
 
 @ExtendWith(MockitoExtension.class)
@@ -120,8 +121,10 @@ class SharedAttributesHandlerTest {
         JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(4, claimsSet.get(VC_HTTP_API_CLAIM).size());
-        JsonNode vcAttributes = claimsSet.get(VC_HTTP_API_CLAIM);
+        assertEquals(1, claimsSet.get(CLAIMS_CLAIM).size());
+        JsonNode claims = claimsSet.get(CLAIMS_CLAIM);
+        assertEquals(4, claims.get(VC_HTTP_API_CLAIM).size());
+        JsonNode vcAttributes = claims.get(VC_HTTP_API_CLAIM);
 
         assertEquals(2, (vcAttributes.get("names")).size());
 
@@ -182,8 +185,10 @@ class SharedAttributesHandlerTest {
         JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(4, claimsSet.get(VC_HTTP_API_CLAIM).size());
-        JsonNode vcAttributes = claimsSet.get(VC_HTTP_API_CLAIM);
+        assertEquals(1, claimsSet.get(CLAIMS_CLAIM).size());
+        JsonNode claims = claimsSet.get(CLAIMS_CLAIM);
+        assertEquals(4, claims.get(VC_HTTP_API_CLAIM).size());
+        JsonNode vcAttributes = claims.get(VC_HTTP_API_CLAIM);
         assertEquals(0, vcAttributes.get("names").size());
         assertEquals(0, vcAttributes.get("dateOfBirths").size());
         assertEquals(0, vcAttributes.get("addresses").size());
