@@ -1,3 +1,9 @@
+pluginManagement {
+	repositories {
+		mavenCentral()
+		gradlePluginPortal()
+	}
+}
 rootProject.name = 'di-ipv-core-back'
 include "lib",
 		"lambdas",

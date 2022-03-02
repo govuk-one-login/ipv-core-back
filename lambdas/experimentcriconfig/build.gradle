@@ -4,10 +4,12 @@ plugins {
 	id "idea"
 	id "jacoco"
 	id 'io.freefair.aspectj.post-compile-weaving' version '6.3.0'
+	id 'org.graalvm.buildtools.native' version '0.9.4'
 }
 
 repositories {
 	mavenCentral()
+	gradlePluginPortal()
 }
 
 dependencies {
@@ -32,6 +34,13 @@ java {
 	targetCompatibility = JavaVersion.VERSION_11
 }
 
+jar {
+	manifest {
+		attributes("Implementation-Title": project.name,
+		"Main-Class": "uk.gov.di.ipv.core.experimentcriconfig.ExperimentCRIConfigHandler")
+	}
+}
+
 task buildZip(type: Zip) {
 	from compileJava
 	from processResources
@@ -53,4 +62,11 @@ jacocoTestReport {
 	reports {
 		xml.required.set(true)
 	}
+}
+
+nativeBuild {
+	imageName = "experimentcriconfig"
+	mainClass = "ExperimentCRIConfigHandler"
+	verbose = true
+	fallback = false
 }
