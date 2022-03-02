@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.library.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
@@ -17,6 +16,7 @@ import java.net.URI;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
@@ -146,15 +146,29 @@ public class ConfigurationService {
                                 getAttributeNameFromParameter(entry)));
             }
         }
+        List<CredentialIssuerConfig> configList = new ArrayList<>();
 
-        return map.values().stream()
-                .map(
-                        config ->
-                                new Gson()
-                                        .fromJson(
-                                                String.valueOf(config),
-                                                CredentialIssuerConfig.class))
-                .collect(Collectors.toList());
+        map.forEach(
+                (k, v) -> {
+                    CredentialIssuerConfig credentialIssuerConfig =
+                            new CredentialIssuerConfig(
+                                    k,
+                                    v.get("name").toString(),
+                                    v.get("tokenUrl") == null
+                                            ? URI.create("")
+                                            : URI.create(v.get("tokenUrl").toString()),
+                                    v.get("credentialUrl") == null
+                                            ? URI.create("")
+                                            : URI.create(v.get("credentialUrl").toString()),
+                                    v.get("authorizeUrl") == null
+                                            ? URI.create("")
+                                            : URI.create(v.get("authorizeUrl").toString()),
+                                    v.get("ipvClientId").toString());
+
+                    configList.add(credentialIssuerConfig);
+                });
+
+        return configList;
     }
 
     private String getAttributeNameFromParameter(Entry<String, String> parameter)

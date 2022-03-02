@@ -4,7 +4,6 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
@@ -20,10 +19,10 @@ import uk.gov.di.ipv.core.experimentcriconfiggson.exceptions.ParseCredentialIssu
 import uk.gov.di.ipv.core.experimentcriconfiggson.helpers.ApiGatewayResponseGenerator;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @ExcludeFromGeneratedCoverageReport
 public class ExperimentCRIConfigHandlerGson
@@ -36,7 +35,6 @@ public class ExperimentCRIConfigHandlerGson
             "CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX";
 
     private final SSMProvider ssmProvider;
-    private final Gson gson = new Gson();
 
     private static final Logger LOGGER =
             LoggerFactory.getLogger(ExperimentCRIConfigHandlerGson.class);
@@ -101,9 +99,23 @@ public class ExperimentCRIConfigHandlerGson
             }
         }
 
-        return map.values().stream()
-                .map(config -> gson.fromJson(String.valueOf(config), CredentialIssuerConfig.class))
-                .collect(Collectors.toList());
+        List<CredentialIssuerConfig> configList = new ArrayList<>();
+
+        map.forEach(
+                (k, v) -> {
+                    CredentialIssuerConfig credentialIssuerConfig =
+                            new CredentialIssuerConfig(
+                                    k,
+                                    v.get("name").toString(),
+                                    URI.create(v.get("tokenUrl").toString()),
+                                    URI.create(v.get("credentialUrl").toString()),
+                                    URI.create(v.get("authorizeUrl").toString()),
+                                    v.get("ipvClientId").toString());
+
+                    configList.add(credentialIssuerConfig);
+                });
+
+        return configList;
     }
 
     @Tracing
