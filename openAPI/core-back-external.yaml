@@ -1,31 +1,42 @@
 openapi: 3.0.3
 info:
-  title: IPV Core External
-  description: The external api presented by IPV Core Back for use by non IPV Core services
-  version: 1.0.0
-servers:
-  - url: 'https://example.com'
+  title: "IPV Core External"
+  description: "The external api presented by IPV Core Back for use by non IPV Core services"
+  version: "1.0.0"
 paths:
   /token:
     post:
-      description: Exchange an authorization code for an access token
+      description: "Exchange an authorization code for an access token"
       responses:
         200:
-          description: The access token
+          description: "The access token"
           content:
             application/json:
               schema:
-                type: object
+                type: "object"
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVAccessTokenFunction.Arn}/invocations
+        passthroughBehavior: "when_no_match"
+
 
   /user-identity:
     get:
-      description: Returns a list of Verifiable Credentials representig the users identity
+      description: "Returns a list of Verifiable Credentials representig the users identity"
       responses:
         200:
-          description: The list of Verifiable Credentials
+          description: "The list of Verifiable Credentials"
           content:
             application/json:
               schema:
-                type: array
+                type: "array"
                 items:
-                  type: object
+                  type: "object"
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        httpMethod: "GET"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVUserIdentityFunction.Arn}/invocations
+        passthroughBehavior: "when_no_match"

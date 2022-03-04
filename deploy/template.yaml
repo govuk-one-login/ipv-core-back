@@ -13,11 +13,22 @@ Parameters:
 
 Resources:
 
-  IPVCoreAPI:
+  IPVCoreInternalAPI:
     Type: AWS::Serverless::Api
     Properties:
-      Name: !Sub IPV Core API Gateway ${Environment}
+      Name: !Sub IPV Core Internal API Gateway ${Environment}
       StageName: !Sub ${Environment}
+
+  IPVCoreExternalAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub IPV Core External API Gateway ${Environment}
+      StageName: !Sub ${Environment}
+      DefinitionBody:
+        'Fn::Transform':
+          Name: "AWS::Include"
+          Parameters:
+            Location: "../openAPI/core-back-external.yaml"
 
   IPVSharedAttributesFunction:
     Type: AWS::Serverless::Function
@@ -50,10 +61,10 @@ Resources:
             Resource:
               - "arn:aws:kms:eu-west-2:130355686670:key/3efe7d7f-5a08-4ea3-90c3-11b24ec3b375"
       Events:
-        IPVCoreAPI:
+        IPVCoreInternalAPI:
           Type: Api
           Properties:
-            RestApiId: !Ref IPVCoreAPI
+            RestApiId: !Ref IPVCoreInternalAPI
             Path: /shared-attributes
             Method: GET
 
@@ -87,10 +98,10 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/maxAllowedAuthClientTtl
       Events:
-        IPVCoreAPI:
+        IPVCoreExternalAPI:
           Type: Api
           Properties:
-            RestApiId: !Ref IPVCoreAPI
+            RestApiId: !Ref IPVCoreExternalAPI
             Path: /token
             Method: POST
 
@@ -119,11 +130,11 @@ Resources:
         - SSMParameterReadPolicy:
               ParameterName: !Sub ${Environment}/core/*
       Events:
-        IPVCoreAPI:
+        IPVCoreInternalAPI:
           Type: Api
           Properties:
             RestApiId:
-              Ref: IPVCoreAPI
+              Ref: IPVCoreInternalAPI
             Path: /authorize
             Method: GET
 
@@ -150,11 +161,11 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
       Events:
-        IPVCoreAPI:
+        IPVCoreInternalAPI:
           Type: Api
           Properties:
             RestApiId:
-              Ref: IPVCoreAPI
+              Ref: IPVCoreInternalAPI
             Path: /ipv-session
             Method: POST
 
@@ -196,11 +207,11 @@ Resources:
             Resource:
               - "arn:aws:kms:eu-west-2:130355686670:key/3efe7d7f-5a08-4ea3-90c3-11b24ec3b375"
       Events:
-        IPVCoreAPI:
+        IPVCoreInternalAPI:
           Type: Api
           Properties:
             RestApiId:
-              Ref: IPVCoreAPI
+              Ref: IPVCoreInternalAPI
             Path: /request-evidence
             Method: POST
 
@@ -230,11 +241,11 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref AccessTokensTable
       Events:
-        IPVCoreAPI:
+        IPVCoreExternalAPI:
           Type: Api
           Properties:
             RestApiId:
-              Ref: IPVCoreAPI
+              Ref: IPVCoreExternalAPI
             Path: /user-identity
             Method: GET
 
@@ -261,11 +272,11 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers
       Events:
-        IPVCoreAPI:
+        IPVCoreInternalAPI:
           Type: Api
           Properties:
             RestApiId:
-              Ref: IPVCoreAPI
+              Ref: IPVCoreInternalAPI
             Path: /request-config
             Method: GET
 
@@ -292,11 +303,11 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref UserIssuedCredentialsTable
       Events:
-        IPVCoreAPI:
+        IPVCoreInternalAPI:
           Type: Api
           Properties:
             RestApiId:
-              Ref: IPVCoreAPI
+              Ref: IPVCoreInternalAPI
             Path: /issued-credentials
             Method: GET
 
@@ -353,8 +364,13 @@ Resources:
           KeyType: "HASH"
 
 Outputs:
-  IPVCoreAPIGatewayID:
-    Description: Core Back API Gateway ID
+  IPVCoreInternalAPIGatewayID:
+    Description: Core Back Internal API Gateway ID
     Export:
-      Name: !Sub "${AWS::StackName}-IPVCoreAPIGatewayID"
-    Value: !Ref IPVCoreAPI
+      Name: !Sub "${AWS::StackName}-IPVCoreInternalAPIGatewayID"
+    Value: !Ref IPVCoreInternalAPI
+  IPVCoreExternalAPIGatewayID:
+    Description: Core Back External API Gateway ID
+    Export:
+      Name: !Sub "${AWS::StackName}-IPVCoreExternalAPIGatewayID"
+    Value: !Ref IPVCoreExternalAPI
