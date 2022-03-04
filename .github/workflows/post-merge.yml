@@ -24,12 +24,12 @@ jobs:
           distribution: 'adopt'
           cache: gradle
 
-      - name: Cache Gradle packages
-        uses: actions/cache@v1
-        with:
-          path: ~/.gradle/caches
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-          restore-keys: ${{ runner.os }}-gradle
+      # - name: Cache Gradle packages
+      #   uses: actions/cache@v1
+      #   with:
+      #     path: ~/.gradle/caches
+      #     key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
+      #     restore-keys: ${{ runner.os }}-gradle
 
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
