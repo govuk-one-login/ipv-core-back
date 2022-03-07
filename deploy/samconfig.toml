@@ -49,21 +49,21 @@ region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-chrisw\""
 
-[dev-amrit.deploy.parameters]
-stack_name = "ipv-core-back-dev-amrit"
+[dev-amrits.deploy.parameters]
+stack_name = "ipv-core-back-dev-amrits"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
-s3_prefix = "amrit-core-back-stack"
+s3_prefix = "amrits-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-amrit\""
+parameter_overrides = "Environment=\"dev-amrits\""
 
-[dev-lai.deploy.parameters]
-stack_name = "ipv-core-back-dev-lai"
+[dev-lait.deploy.parameters]
+stack_name = "ipv-core-back-dev-lait"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
-s3_prefix = "lai-core-back-stack"
+s3_prefix = "lait-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-lai\""
+parameter_overrides = "Environment=\"dev-lait\""
 
 [dev-sunild.deploy.parameters]
 stack_name = "ipv-core-back-dev-sunild"
@@ -73,11 +73,11 @@ region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-sunild\""
 
-[dev-kerr.deploy.parameters]
-stack_name = "ipv-core-back-dev-kerr"
+[dev-kerrr.deploy.parameters]
+stack_name = "ipv-core-back-dev-kerrr"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
-s3_prefix = "kerr-core-back-stack"
+s3_prefix = "kerrr-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-kerr\""
+parameter_overrides = "Environment=\"dev-kerrr\""
 
