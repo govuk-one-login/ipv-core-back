@@ -30,7 +30,7 @@ paths:
               schema:
                 type: object
 
-  /event/cri/start:
+  /journey/cri/start/{criId}:
     post:
       description: Called when a user is being redirected to a CRI
       responses:
@@ -39,9 +39,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/eventResponse"
+                $ref: "#/components/schemas/journeyResponse"
 
-  /event/cri/return:
+  /journey/cri/return:
     post:
       description: Called when a user returns from a CRI
       responses:
@@ -50,9 +50,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/eventResponse"
+                $ref: "#/components/schemas/journeyResponse"
 
-  /event/cri/error:
+  /journey/cri/error:
     post:
       description: Called when a user returns from a CRI with an error
       responses:
@@ -61,9 +61,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/eventResponse"
+                $ref: "#/components/schemas/journeyResponse"
 
-  /event/session/start:
+  /session/start:
     post:
       description: Called when the user first arrives at IPV Core at the start of the authorization code flow
       responses:
@@ -72,9 +72,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/eventResponse"
+                $ref: "#/components/schemas/journeyResponse"
 
-  /event/session/end:
+  /journey/session/end:
     post:
       description: Called when the user has completed their user journey in IPV Core
       responses:
@@ -83,9 +83,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/eventResponse"
+                $ref: "#/components/schemas/journeyResponse"
 
-  /event/journey/{journeyId}:
+  /journey/{journeyStep}:
     post:
       description: Called when the user selects a journey event.
       responses:
@@ -94,47 +94,49 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/eventResponse"
+                $ref: "#/components/schemas/journeyResponse"
 
 components:
   schemas:
-    eventResponse:
+    sessionInitInfo:
+      type: object
+      properties:
+        clientId:
+          type: string
+          description: clientId of the client initiating the session OAuth flow.
+
+
+    journeyResponse:
       type: object
       properties:
         page:
           type: string
           description: pageId of page to be displayed
-        redirect:
+        journey:
+          type: string
+          description: journeyId of an journey to take
+        cri:
           type: object
-          description: one of three types of redirect; event, cri, or client
+          description: redirect to a cri (credential issuer)
+          required: [ "id", "authorizeUrl", "request" ]
           properties:
-            event:
+            id:
               type: string
-              description: eventId of an event to redirect to.
-            cri:
-              type: object
-              description: redirect to a cri (credential issuer)
-              required: [ "id", "authorizeUrl", "request" ]
-              properties:
-                id:
-                  type: string
-                authorizeUrl:
-                  type: string
-                request:
-                  type: string
-            client:
-              type: object
-              description: redirect to the oauth client, ending the session.
-              required: [ "callbackUrl", "authcode" ]
-              properties:
-                callbackUrl:
-                  type: string
-                authcode:
-                  type: string
-          oneOf:
-            - required: [ "client" ]
-            - required: [ "cri" ]
-            - required: [ "event" ]
+            authorizeUrl:
+              type: string
+            request:
+              type: string
+        client:
+          type: object
+          description: redirect to the oauth client, ending the session.
+          required: [ "callbackUrl", "authcode" ]
+          properties:
+            callbackUrl:
+              type: string
+            authcode:
+              type: string
       oneOf:
         - required: [ "page" ]
-        - required: [ "redirect" ]
+        - required: [ "client" ]
+        - required: [ "cri" ]
+        - required: [ "journey" ]
