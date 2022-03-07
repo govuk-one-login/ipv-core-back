@@ -56,7 +56,7 @@ jobs:
 
       - name: SAM build and test
         working-directory: ./deploy
-        run: sam build --use-container
+        run: sam build
 
       - name: Upload lambdas to S3
         working-directory: ./deploy
