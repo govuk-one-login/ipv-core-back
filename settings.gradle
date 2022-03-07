@@ -8,4 +8,5 @@ include "lib",
 		"lambdas:issuedcredentials",
 		"lambdas:session",
 		"lambdas:useridentity",
-		"lambdas:sharedattributes"
+		"lambdas:sharedattributes",
+		"lambdas:journeyengine"
