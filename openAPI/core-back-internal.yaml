@@ -17,7 +17,7 @@ paths:
                 items:
                   type: object
       x-amazon-apigateway-integration:
-        httpMethod: "GET"
+        httpMethod: "POST"
         uri:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCredentialIssuerConfig.Arn}/invocations
         passthroughBehavior: "when_no_match"
@@ -33,7 +33,7 @@ paths:
               schema:
                 type: "object"
       x-amazon-apigateway-integration:
-        httpMethod: "GET"
+        httpMethod: "POST"
         uri:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVAuthorizationFunction.Arn}/invocations
         passthroughBehavior: "when_no_match"
@@ -49,7 +49,7 @@ paths:
               schema:
                 type: "object"
       x-amazon-apigateway-integration:
-        httpMethod: "GET"
+        httpMethod: "POST"
         uri:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVIssuedCredentials.Arn}/invocations
         passthroughBehavior: "when_no_match"
@@ -99,7 +99,7 @@ paths:
       x-amazon-apigateway-integration:
         httpMethod: "GET"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVSessionFunction.Arn}/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVSharedAttributesFunction.Arn}/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
   /event/journey/{journeyId}:
