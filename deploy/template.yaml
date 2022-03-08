@@ -18,6 +18,11 @@ Resources:
     Properties:
       Name: !Sub IPV Core Internal API Gateway ${Environment}
       StageName: !Sub ${Environment}
+      DefinitionBody:
+        'Fn::Transform':
+          Name: "AWS::Include"
+          Parameters:
+            Location: "../openAPI/core-back-internal.yaml"
 
   IPVCoreExternalAPI:
     Type: AWS::Serverless::Api
@@ -310,6 +315,30 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /issued-credentials
             Method: GET
+
+  IPVJourneyEngineFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "journey-engine-${Environment}"
+      Handler: uk.gov.di.ipv.core.journeyengine.JourneyEngineHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/journeyengine
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Tracing: Active
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+      Events:
+        IPVCoreInternalAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreInternalAPI
+            Path: /event/journey/{journeyId}
+            Method: POST
 
   UserIssuedCredentialsTable:
     Type: AWS::DynamoDB::Table

@@ -1,4 +1,4 @@
-openapi: "3.0.3"
+openapi: 3.0.3
 info:
   title: "IPV Core Internal"
   description: "The internal api presented by IPV Core Back for use by IPV Core Front"
@@ -102,3 +102,60 @@ paths:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVSessionFunction.Arn}/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
+  /event/journey/{journeyId}:
+    post:
+      description: Called when the user selects a journey event.
+      responses:
+        200:
+          description: "Returns either a redirect journey eventResponse or a page eventResponse "
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/eventResponse"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVJourneyEngineFunction.Arn}/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
+
+components:
+  schemas:
+    eventResponse:
+      type: object
+      properties:
+        page:
+          type: string
+          description: pageId of page to be displayed
+        redirect:
+          type: object
+          description: one of three types of redirect; event, cri, or client
+          properties:
+            journey:
+              type: string
+              description: path of an journey event to redirect to.
+            cri:
+              type: object
+              description: redirect to a cri (credential issuer)
+              required: [ "id", "authorizeUrl" ]
+              properties:
+                id:
+                  type: string
+                authorizeUrl:
+                  type: string
+            client:
+              type: object
+              description: redirect to the oauth client, ending the session.
+              required: [ "callbackUrl", "authcode" ]
+              properties:
+                callbackUrl:
+                  type: string
+                authcode:
+                  type: string
+          oneOf:
+            - required: [ "client" ]
+            - required: [ "cri" ]
+            - required: [ "journey" ]
+      oneOf:
+        - required: [ "page" ]
+        - required: [ "redirect" ]
