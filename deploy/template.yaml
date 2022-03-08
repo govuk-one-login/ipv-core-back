@@ -13,6 +13,12 @@ Parameters:
 
 Resources:
 
+  IPVCoreAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub IPV Core API Gateway ${Environment}
+      StageName: !Sub ${Environment}
+
   IPVCoreInternalAPI:
     Type: AWS::Serverless::Api
     Properties:
@@ -397,7 +403,7 @@ Outputs:
     Description: Core Back API Gateway ID
     Export:
       Name: !Sub "${AWS::StackName}-IPVCoreAPIGatewayID"
-    Value: !Ref IPVCoreInternalAPI
+    Value: !Ref IPVCoreAPI
   IPVCoreInternalAPIGatewayID:
     Description: Core Back Internal API Gateway ID
     Export:
