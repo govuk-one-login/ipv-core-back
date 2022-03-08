@@ -395,6 +395,7 @@ Resources:
 Outputs:
   IPVCoreAPIGatewayID:
     Description: Core Back API Gateway ID
+    Export:
       Name: !Sub "${AWS::StackName}-IPVCoreAPIGatewayID"
     Value: !Ref IPVCoreInternalAPI
   IPVCoreInternalAPIGatewayID:
