@@ -1,0 +1,104 @@
+openapi: "3.0.3"
+info:
+  title: "IPV Core Internal"
+  description: "The internal api presented by IPV Core Back for use by IPV Core Front"
+  version: "1.0.0"
+paths:
+  /request-config:
+    get:
+      description: "Returns details of all Credential Issuers (CRIs) configured for use with IPV Core"
+      responses:
+        200:
+          description: "A list of cri configurations"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  type: object
+      x-amazon-apigateway-integration:
+        httpMethod: "GET"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCredentialIssuerConfig.Arn}/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
+  /authorize:
+    get:
+      description: "Request an authorization code"
+      responses:
+        200:
+          description: "The authorization code"
+          content:
+            application/json:
+              schema:
+                type: "object"
+      x-amazon-apigateway-integration:
+        httpMethod: "GET"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVAuthorizationFunction.Arn}/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
+  /issued-credentials:
+    get:
+      description: "Debug endpoint - only used by core-front debug page to get a list of current retrieved crdentials for users journey"
+      responses:
+        200:
+          description: "Map of retrieved cri credentials"
+          content:
+            application/json:
+              schema:
+                type: "object"
+      x-amazon-apigateway-integration:
+        httpMethod: "GET"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVIssuedCredentials.Arn}/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
+  /ipv-session:
+    post:
+      description: "Creates a new ipv core-back session"
+      responses:
+        200:
+          description: "The ipv sessionId"
+          content:
+            application/json:
+              schema:
+                type: "object"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVSessionFunction.Arn}/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
+  /request-evidence:
+    post:
+      description: "Requests the credential from a cri by exchanging the auth code for an access token and then using that access token to retrieve the credential"
+      responses:
+        200:
+          description: "Nothing returned here"
+          content:
+            application/jose:
+              schema:
+                type: "object"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCredentialIssuerFunction.Arn}/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
+  /shared-attributes:
+    get:
+      description: "Request the current shared attributes that have been gathered"
+      responses:
+        200:
+          description: "The shared attribute JWT"
+          content:
+            application/jwt:
+              schema:
+                type: "string"
+      x-amazon-apigateway-integration:
+        httpMethod: "GET"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVSessionFunction.Arn}/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
