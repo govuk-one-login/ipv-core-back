@@ -118,6 +118,22 @@ paths:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVJourneyEngineFunction.Arn}/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
+  /node/event/journey/{journeyId}:
+    post:
+      description: Called when the user selects a journey event.
+      responses:
+        200:
+          description: "Returns either a redirect journey eventResponse or a page eventResponse "
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/eventResponse"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVNodeJourneyEngineFunction.Arn}/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
 
 components:
   schemas:

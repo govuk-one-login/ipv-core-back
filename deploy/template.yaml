@@ -340,6 +340,36 @@ Resources:
             Path: /event/journey/{journeyId}
             Method: POST
 
+  IPVNodeJourneyEngineFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "node-journey-engine-${Environment}"
+      Handler: handler.journeyEngineHandler.handler
+      Runtime: nodejs12.x
+      PackageType: Zip
+      CodeUri: ../lambdas/journeyenginenode
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Tracing: Active
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          IPV_SESSIONS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt SessionsTable.Arn]]
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        IPVCoreInternalAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreInternalAPI
+            Path: /node/event/journey/{journeyId}
+            Method: POST
+
   UserIssuedCredentialsTable:
     Type: AWS::DynamoDB::Table
     Properties:

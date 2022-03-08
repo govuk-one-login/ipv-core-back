@@ -1,0 +1,5 @@
+const IPV_SESSIONS_TABLE_NAME = process.env.IPV_SESSIONS_TABLE_NAME ? process.env.IPV_SESSIONS_TABLE_NAME : "DEFAULT_VALUE";
+
+module.exports = {
+    IPV_SESSIONS_TABLE_NAME
+}
