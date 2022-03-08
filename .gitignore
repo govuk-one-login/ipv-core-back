@@ -32,3 +32,6 @@ dist
 
 # Ignore Gradle build output directory
 build
+
+# Ignore AWS SAM folder
+*/**/.aws-sam

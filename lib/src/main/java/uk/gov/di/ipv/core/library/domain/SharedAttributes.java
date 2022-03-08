@@ -1,82 +1,68 @@
 package uk.gov.di.ipv.core.library.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonPropertyOrder({"name", "birthDate", "address"})
 @JsonDeserialize(using = SharedAttributesDeserializer.class)
 public class SharedAttributes {
-    private Name name;
-    private String dateOfBirth;
-    private Map<String, String> address;
-    private List<Map<String, String>> addressHistory;
+
+    private Set<Name> name;
+    private Set<BirthDate> birthDate;
+    private Set<Address> address;
 
     private SharedAttributes() {}
 
-    public SharedAttributes(
-            Name name,
-            String dateOfBirth,
-            Map<String, String> address,
-            List<Map<String, String>> addressHistory) {
+    public SharedAttributes(Set<Name> name, Set<BirthDate> birthDate, Set<Address> address) {
         this.name = name;
-        this.dateOfBirth = dateOfBirth;
+        this.birthDate = birthDate;
         this.address = address;
-        this.addressHistory = addressHistory;
     }
 
     public static SharedAttributes empty() {
         return new SharedAttributes();
     }
 
-    public Optional<Name> getName() {
+    public Optional<Set<Name>> getName() {
         return Optional.ofNullable(name);
     }
 
-    public Optional<String> getDateOfBirth() {
-        return Optional.ofNullable(dateOfBirth);
+    public Optional<Set<BirthDate>> getBirthDate() {
+        return Optional.ofNullable(birthDate);
     }
 
-    public Optional<Map<String, String>> getAddress() {
+    public Optional<Set<Address>> getAddress() {
         return Optional.ofNullable(address);
     }
 
-    public Optional<List<Map<String, String>>> getAddressHistory() {
-        return Optional.ofNullable(addressHistory);
-    }
-
+    @JsonPropertyOrder({"name", "birthDate", "address"})
     public static class Builder {
+        private Set<Name> name;
+        private Set<BirthDate> birthDate;
+        private Set<Address> address;
 
-        private Name name;
-        private String dateOfBirth;
-        private Map<String, String> address;
-        private List<Map<String, String>> addressHistory;
-
-        public Builder setName(Name name) {
-            this.name = name;
+        public Builder setBirthDate(Set<BirthDate> birthDate) {
+            this.birthDate = birthDate;
             return this;
         }
 
-        public Builder setDateOfBirth(String dateOfBirth) {
-            this.dateOfBirth = dateOfBirth;
-            return this;
-        }
-
-        public Builder setAddress(Map<String, String> address) {
+        public Builder setAddress(Set<Address> address) {
             this.address = address;
             return this;
         }
 
-        public Builder setAddressHistory(List<Map<String, String>> addressHistory) {
-            this.addressHistory = addressHistory;
+        public Builder setName(Set<Name> name) {
+            this.name = name;
             return this;
         }
 
         public SharedAttributes build() {
-            return new SharedAttributes(name, dateOfBirth, address, addressHistory);
+            return new SharedAttributes(name, birthDate, address);
         }
     }
 }

@@ -2,40 +2,71 @@ package uk.gov.di.ipv.core.library.domain;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SharedAttributesTest {
+    /*
+    Set<Name> nameList = new HashSet<>();
+            List<NameParts> namePartsList = new ArrayList<>();
+
+            for (JsonNode jo : nameNode) {
+                JsonNode nameParts = jo.get("nameParts");
+                if (nameParts != null) {
+                    nameParts.forEach(namePart -> namePartsList.add(objectMapper.convertValue(namePart, NameParts.class)));
+                }
+            }
+
+            Name names = new Name(namePartsList);
+            nameList.add(names);
+            sharedAttributesBuilder.setName(nameList);
+     */
 
     @Test
     void shouldBuildSharedAttributes() {
-        Name name = new Name(List.of("Dan"), "Watson");
-        Map<String, String> address = Map.of("line1", "test");
-        List<Map<String, String>> addressHistory = List.of(address);
-        String dateOfBirth = "2022-01-26";
+        List<NameParts> namePartsList =
+                Arrays.asList(new NameParts("Paul", "GivenName", "2020-03-03", "2021-04-04"));
+        Set<Name> nameSet = new HashSet<>();
+        Name names = new Name(namePartsList);
+        nameSet.add(names);
+
+        Set<Address> addressSet = new HashSet<>();
+        Address address =
+                new Address(
+                        "PostalAddress",
+                        "Lebsack Inc",
+                        "758 Huel Neck",
+                        "Hagenesstad",
+                        "Illinois",
+                        "38421-3292",
+                        "Tonga");
+        addressSet.add(address);
+
+        Set<BirthDate> birthDaySet = new HashSet<>();
+        BirthDate birthDate = new BirthDate("2020-02-03");
+        birthDaySet.add(birthDate);
 
         SharedAttributes response =
                 new SharedAttributes.Builder()
-                        .setName(name)
-                        .setAddress(address)
-                        .setAddressHistory(addressHistory)
-                        .setDateOfBirth(dateOfBirth)
+                        .setName(nameSet)
+                        .setAddress(addressSet)
+                        .setBirthDate(birthDaySet)
                         .build();
 
-        assertEquals(name, response.getName().get());
-        assertEquals(address, response.getAddress().get());
-        assertEquals(addressHistory, response.getAddressHistory().get());
-        assertEquals(dateOfBirth, response.getDateOfBirth().get());
+        assertEquals(nameSet, response.getName().get());
+        assertEquals(addressSet, response.getAddress().get());
+        assertEquals(birthDaySet, response.getBirthDate().get());
     }
 
     @Test
     void shouldReturnEmptySharedAttributes() {
         assertEquals(Optional.empty(), SharedAttributes.empty().getName());
         assertEquals(Optional.empty(), SharedAttributes.empty().getAddress());
-        assertEquals(Optional.empty(), SharedAttributes.empty().getAddressHistory());
-        assertEquals(Optional.empty(), SharedAttributes.empty().getDateOfBirth());
+        assertEquals(Optional.empty(), SharedAttributes.empty().getBirthDate());
     }
 }
