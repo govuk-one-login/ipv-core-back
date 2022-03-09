@@ -1,5 +1,9 @@
 version = 0.1
 
+[default.build.parameters]
+beta_features = true
+[default.sync.parameters]
+beta_features = true
 
 [dev.deploy.parameters]
 stack_name = "ipv-core-back-development"
