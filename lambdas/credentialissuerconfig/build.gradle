@@ -4,6 +4,7 @@ plugins {
 	id "idea"
 	id "jacoco"
 	id 'io.freefair.aspectj.post-compile-weaving' version '6.3.0'
+	id 'org.graalvm.buildtools.native' version '0.9.4'
 }
 
 repositories {
@@ -53,4 +54,16 @@ jacocoTestReport {
 	reports {
 		xml.required.set(true)
 	}
+}
+
+nativeBuild {
+	imageName = "credentialissuerconfig"
+	mainClass = "uk.gov.di.ipv.core.credentialissuerconfig.CredentialIssuerConfigHandler"
+	verbose = true
+	fallback = true
+	buildArgs("--initialize-at-build-time=org.slf4j, org.junit.platform.launcher")
+}
+
+nativeTest {
+	buildArgs("--initialize-at-build-time=org.slf4j,org.junit.platform.launcher")
 }
