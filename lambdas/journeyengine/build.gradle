@@ -12,12 +12,14 @@ repositories {
 
 dependencies {
 	implementation "com.amazonaws:aws-lambda-java-core:1.2.1",
-			"com.amazonaws:aws-lambda-java-events:3.11.0"
+			"com.amazonaws:aws-lambda-java-events:3.11.0",
+			project(":lib")
 
 	aspect "software.amazon.lambda:powertools-tracing:1.11.0"
 
 	testImplementation "org.junit.jupiter:junit-jupiter:5.8.2",
-			"org.mockito:mockito-core:4.1.0"
+			"org.mockito:mockito-core:4.1.0",
+			"org.mockito:mockito-junit-jupiter:4.1.0"
 }
 
 java {

@@ -32,7 +32,11 @@ public enum ErrorResponse {
     INVALID_JWT_AUDIENCE_PARAM(1019, "Invalid value for the audience of the client JWT provided"),
     CLIENT_JWT_EXPIRED(1020, "The provided client JWT has expired"),
     MAX_CLIENT_JWT_TTL_TIME_SURPASSED(
-            1021, "The client JWT expiry date has surpassed the maximum allowed ttl value");
+            1021, "The client JWT expiry date has surpassed the maximum allowed ttl value"),
+    INVALID_SESSION_ID(
+            1022,
+            "Invalid ipv-session-id has been provided, could not record of that requested session"),
+    FAILED_JOURNEY_ENGINE_STEP(1023, "Failed to execute journey engine step");
 
     @JsonProperty("code")
     private final int code;
