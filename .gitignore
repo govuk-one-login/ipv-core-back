@@ -29,6 +29,7 @@ hs_err_pid*
 /build
 .vscode
 dist
+**/built/
 **/node_modules/
 
 # Ignore Gradle build output directory

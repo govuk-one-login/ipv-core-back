@@ -1,9 +1,11 @@
+import {AttributeMap} from "aws-sdk/clients/dynamodb";
+
 const AWS = require('aws-sdk');
 AWS.config.update({region: "eu-west-2"});
 
 const dynamoDocClient = new AWS.DynamoDB.DocumentClient();
 
-async function getItem(tableName, primaryKey, value) {
+export const getItem = async (tableName: string, primaryKey: string, value: string): Promise<AttributeMap> => {
     const params = {
         TableName: tableName,
         Key: {
@@ -12,13 +14,13 @@ async function getItem(tableName, primaryKey, value) {
     }
 
     try {
-        return await dynamoDocClient.get(params).promise();
+        return (await dynamoDocClient.get(params).promise());
     } catch (err) {
         return err;
     }
 }
 
-async function updateItem(tableName, item) {
+export const updateItem = async (tableName: string, item: ISessionItem): Promise<void> => {
     const params = {
         TableName: tableName,
         Item: item
@@ -29,9 +31,4 @@ async function updateItem(tableName, item) {
     } catch (err) {
         return err;
     }
-}
-
-module.exports = {
-    getItem,
-    updateItem
 }

@@ -344,10 +344,10 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: !Sub "node-journey-engine-${Environment}"
-      Handler: handler.journeyEngineHandler.handler
+      Handler: index.handler
       Runtime: nodejs12.x
       PackageType: Zip
-      CodeUri: ../lambdas/journeyenginenode
+      CodeUri: ../lambdas/journeyenginenode/built
       Architectures:
         - x86_64
       MemorySize: 512
