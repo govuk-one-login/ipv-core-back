@@ -6,9 +6,9 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
 import com.amazonaws.services.dynamodbv2.document.KeyAttribute;
 import com.amazonaws.services.dynamodbv2.document.Table;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -32,7 +32,7 @@ public class DataStoreIpvSessionIT {
 
     private static final String IPV_SESSION_ID = "ipvSessionId";
     private static final String USER_STATE = "userState";
-    private static final String creationDateTime = "creationDateTime";
+    private static final String CREATION_DATE_TIME = "creationDateTime";
     private static final List<String> createdItemIds = new ArrayList<>();
 
     private static DataStore<IpvSessionItem> ipvSessionItemDataStore;
@@ -48,7 +48,10 @@ public class DataStoreIpvSessionIT {
 
         ipvSessionItemDataStore =
                 new DataStore<>(
-                        ipvSessionsTableName, IpvSessionItem.class, DataStore.getClient(false), false);
+                        ipvSessionsTableName,
+                        IpvSessionItem.class,
+                        DataStore.getClient(false),
+                        false);
 
         AmazonDynamoDB independentClient =
                 AmazonDynamoDBClient.builder().withRegion("eu-west-2").build();
@@ -81,21 +84,48 @@ public class DataStoreIpvSessionIT {
         Item savedPassportCheck =
                 tableTestHarness.getItem(IPV_SESSION_ID, ipvSessionItem.getIpvSessionId());
 
-        assertEquals(ipvSessionItem.getIpvSessionId(), savedPassportCheck.get("test"));
-
-//        String attributesJson =
-//                OBJECT_MAPPER.writeValueAsString(savedPassportCheck.get(ATTRIBUTES_PARAM));
-//        PassportAttributes savedPassportAttributes =
-//                OBJECT_MAPPER.readValue(attributesJson, PassportAttributes.class);
-//        assertEquals(
-//                passportCheckDao.getAttributes().toString(), savedPassportAttributes.toString());
-//
-//        String gpg45ScoreJson =
-//                OBJECT_MAPPER.writeValueAsString(savedPassportCheck.get(GPG45_SCORE_PARAM));
-//        PassportGpg45Score savedPassportGpg45Score =
-//                OBJECT_MAPPER.readValue(gpg45ScoreJson, PassportGpg45Score.class);
-//        assertEquals(
-//                passportCheckDao.getGpg45Score().toString(), savedPassportGpg45Score.toString());
+        assertEquals(ipvSessionItem.getIpvSessionId(), savedPassportCheck.get(IPV_SESSION_ID));
+        assertEquals(ipvSessionItem.getUserState(), savedPassportCheck.get(USER_STATE));
+        assertEquals(
+                ipvSessionItem.getCreationDateTime(), savedPassportCheck.get(CREATION_DATE_TIME));
     }
 
+    @Test
+    void shouldReadIpvSessionFromTable() throws JsonProcessingException {
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setUserState(UserStates.INITIAL_IPV_JOURNEY.toString());
+        ipvSessionItem.setCreationDateTime(new Date().toString());
+
+        Item item = Item.fromJSON(OBJECT_MAPPER.writeValueAsString(ipvSessionItem));
+        tableTestHarness.putItem(item);
+
+        IpvSessionItem result = ipvSessionItemDataStore.getItem(ipvSessionItem.getIpvSessionId());
+
+        assertEquals(ipvSessionItem.getIpvSessionId(), result.getIpvSessionId());
+        assertEquals(ipvSessionItem.getUserState(), result.getUserState());
+        assertEquals(ipvSessionItem.getCreationDateTime(), result.getCreationDateTime());
+    }
+
+    @Test
+    void shouldUpdateIpvSessionInTable() throws JsonProcessingException {
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setUserState(UserStates.INITIAL_IPV_JOURNEY.toString());
+        ipvSessionItem.setCreationDateTime(new Date().toString());
+
+        Item item = Item.fromJSON(OBJECT_MAPPER.writeValueAsString(ipvSessionItem));
+        tableTestHarness.putItem(item);
+
+        IpvSessionItem updatedIpvSessionItem = new IpvSessionItem();
+        updatedIpvSessionItem.setIpvSessionId(ipvSessionItem.getIpvSessionId());
+        updatedIpvSessionItem.setCreationDateTime(ipvSessionItem.getCreationDateTime());
+        updatedIpvSessionItem.setUserState(UserStates.DEBUG_PAGE.toString());
+
+        IpvSessionItem result = ipvSessionItemDataStore.update(updatedIpvSessionItem);
+
+        assertEquals(updatedIpvSessionItem.getIpvSessionId(), result.getIpvSessionId());
+        assertEquals(updatedIpvSessionItem.getUserState(), result.getUserState());
+        assertEquals(updatedIpvSessionItem.getCreationDateTime(), result.getCreationDateTime());
+    }
 }
