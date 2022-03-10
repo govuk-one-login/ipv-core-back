@@ -35,310 +35,310 @@ Resources:
           Parameters:
             Location: "../openAPI/core-back-external.yaml"
 
-#  IPVSharedAttributesFunction:
-#    Type: AWS::Serverless::Function
-#    Properties:
-#      FunctionName: !Sub "ipv-shared-attributes-${Environment}"
-#      Handler: uk.gov.di.ipv.core.sharedattributes.SharedAttributesHandler::handleRequest
-#      Runtime: java11
-#      PackageType: Zip
-#      CodeUri: ../lambdas/sharedattributes
-#      Architectures:
-#        - x86_64
-#      MemorySize: 512
-#      Tracing: Active
-#      Environment:
-#        Variables:
-#          ENVIRONMENT: !Sub "${Environment}"
-#          POWERTOOLS_SERVICE_NAME: !Sub shared-attributes-${Environment}
-#          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
-#          SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/sharedAttributesJwtSigningKeyId"
-#      Policies:
-#        - DynamoDBReadPolicy:
-#            TableName: !Ref UserIssuedCredentialsTable
-#        - SSMParameterReadPolicy:
-#            ParameterName: !Sub ${Environment}/core/self/sharedAttributesJwtSigningKeyId
-#        - Statement:
-#          - Sid: kmsSigningKeyPermission
-#            Effect: Allow
-#            Action:
-#              - 'kms:sign'
-#            Resource:
-#              - "arn:aws:kms:eu-west-2:130355686670:key/3efe7d7f-5a08-4ea3-90c3-11b24ec3b375"
-#      Events:
-#        IPVCoreInternalAPI:
-#          Type: Api
-#          Properties:
-#            RestApiId: !Ref IPVCoreInternalAPI
-#            Path: /shared-attributes
-#            Method: GET
-#
-#  IPVAccessTokenFunction:
-#    Type: AWS::Serverless::Function
-#    Properties:
-#      FunctionName: !Sub "ipv-access-token-${Environment}"
-#      Handler: uk.gov.di.ipv.core.accesstoken.AccessTokenHandler::handleRequest
-#      Runtime: java11
-#      PackageType: Zip
-#      CodeUri: ../lambdas/accesstoken
-#      Architectures:
-#        - x86_64
-#      MemorySize: 512
-#      Tracing: Active
-#      Environment:
-#        Variables:
-#          ENVIRONMENT: !Sub "${Environment}"
-#          POWERTOOLS_SERVICE_NAME: !Sub access-token-${Environment}
-#          AUTH_CODES_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AuthCodesTable.Arn]]
-#          ACCESS_TOKENS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AccessTokensTable.Arn]]
-#      Policies:
-#        - DynamoDBCrudPolicy:
-#            TableName: !Ref AccessTokensTable
-#        - DynamoDBCrudPolicy:
-#            TableName: !Ref AuthCodesTable
-#        - SSMParameterReadPolicy:
-#            ParameterName: !Sub ${Environment}/core/clients/*
-#        - SSMParameterReadPolicy:
-#            ParameterName: !Sub ${Environment}/core/self/audienceForClients
-#        - SSMParameterReadPolicy:
-#            ParameterName: !Sub ${Environment}/core/self/maxAllowedAuthClientTtl
-#      Events:
-#        IPVCoreExternalAPI:
-#          Type: Api
-#          Properties:
-#            RestApiId: !Ref IPVCoreExternalAPI
-#            Path: /token
-#            Method: POST
-#
-#  IPVAuthorizationFunction:
-#    Type: AWS::Serverless::Function
-#    Properties:
-#      FunctionName: !Sub "ipv-authorization-${Environment}"
-#      Handler: uk.gov.di.ipv.core.authorization.AuthorizationHandler::handleRequest
-#      Runtime: java11
-#      PackageType: Zip
-#      CodeUri: ../lambdas/authorization
-#      Architectures:
-#        - x86_64
-#      MemorySize: 512
-#      Tracing: Active
-#      Environment:
-#        Variables:
-#          ENVIRONMENT: !Sub "${Environment}"
-#          POWERTOOLS_SERVICE_NAME: !Sub authorization-${Environment}
-#          AUTH_CODES_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AuthCodesTable.Arn]]
-#      Policies:
-#        - DynamoDBWritePolicy:
-#            TableName: !Ref AuthCodesTable
-#        - DynamoDBReadPolicy:
-#            TableName: !Ref AuthCodesTable
-#        - SSMParameterReadPolicy:
-#              ParameterName: !Sub ${Environment}/core/*
-#      Events:
-#        IPVCoreInternalAPI:
-#          Type: Api
-#          Properties:
-#            RestApiId:
-#              Ref: IPVCoreInternalAPI
-#            Path: /authorize
-#            Method: GET
-#
-#  IPVSessionFunction:
-#    Type: AWS::Serverless::Function
-#    Properties:
-#      FunctionName: !Sub "ipv-session-${Environment}"
-#      Handler: uk.gov.di.ipv.core.session.IpvSessionHandler::handleRequest
-#      Runtime: java11
-#      PackageType: Zip
-#      CodeUri: ../lambdas/session
-#      Architectures:
-#        - x86_64
-#      MemorySize: 512
-#      Tracing: Active
-#      Environment:
-#        Variables:
-#          ENVIRONMENT: !Sub "${Environment}"
-#          POWERTOOLS_SERVICE_NAME: !Sub session-${Environment}
-#          IPV_SESSIONS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt SessionsTable.Arn]]
-#      Policies:
-#        - DynamoDBReadPolicy:
-#            TableName: !Ref SessionsTable
-#        - DynamoDBWritePolicy:
-#            TableName: !Ref SessionsTable
-#      Events:
-#        IPVCoreInternalAPI:
-#          Type: Api
-#          Properties:
-#            RestApiId:
-#              Ref: IPVCoreInternalAPI
-#            Path: /ipv-session
-#            Method: POST
-#
-#  IPVCredentialIssuerFunction:
-#    Type: AWS::Serverless::Function
-#    Properties:
-#      FunctionName: !Sub "ipv-credential-issuer-${Environment}"
-#      Handler: uk.gov.di.ipv.core.credentialissuer.CredentialIssuerHandler::handleRequest
-#      Runtime: java11
-#      PackageType: Zip
-#      CodeUri: ../lambdas/credentialissuer
-#      Architectures:
-#        - x86_64
-#      MemorySize: 512
-#      Tracing: Active
-#      Environment:
-#        Variables:
-#          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
-#          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
-#          SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/sharedAttributesJwtSigningKeyId"
-#          ENVIRONMENT: !Sub "${Environment}"
-#          POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-${Environment}
-#      Policies:
-#        - DynamoDBCrudPolicy:
-#            TableName: !Ref UserIssuedCredentialsTable
-#        - SSMParameterReadPolicy:
-#            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
-#        - SSMParameterReadPolicy:
-#            ParameterName: !Sub ${Environment}/core/credentialIssuers
-#        - SSMParameterReadPolicy:
-#            ParameterName: !Sub ${Environment}/core/self/sharedAttributesJwtSigningKeyId
-#        - SSMParameterReadPolicy:
-#            ParameterName: !Sub ${Environment}/core/self/jwtTtlSeconds
-#        - Statement:
-#          - Sid: kmsSigningKeyPermission
-#            Effect: Allow
-#            Action:
-#              - 'kms:sign'
-#            Resource:
-#              - "arn:aws:kms:eu-west-2:130355686670:key/3efe7d7f-5a08-4ea3-90c3-11b24ec3b375"
-#      Events:
-#        IPVCoreInternalAPI:
-#          Type: Api
-#          Properties:
-#            RestApiId:
-#              Ref: IPVCoreInternalAPI
-#            Path: /request-evidence
-#            Method: POST
-#
-#  IPVUserIdentityFunction:
-#    Type: AWS::Serverless::Function
-#    Properties:
-#      FunctionName: !Sub "ipv-user-identity-${Environment}"
-#      Handler: uk.gov.di.ipv.core.useridentity.UserIdentityHandler::handleRequest
-#      Runtime: java11
-#      PackageType: Zip
-#      CodeUri: ../lambdas/useridentity
-#      Architectures:
-#        - x86_64
-#      MemorySize: 512
-#      Tracing: Active
-#      Environment:
-#        Variables:
-#          ENVIRONMENT: !Sub "${Environment}"
-#          POWERTOOLS_SERVICE_NAME: !Sub user-identity-${Environment}
-#          ACCESS_TOKENS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AccessTokensTable.Arn]]
-#          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
-#      Policies:
-#        - DynamoDBReadPolicy:
-#            TableName: !Ref UserIssuedCredentialsTable
-#        - DynamoDBWritePolicy:
-#            TableName: !Ref UserIssuedCredentialsTable
-#        - DynamoDBCrudPolicy:
-#            TableName: !Ref AccessTokensTable
-#      Events:
-#        IPVCoreExternalAPI:
-#          Type: Api
-#          Properties:
-#            RestApiId:
-#              Ref: IPVCoreExternalAPI
-#            Path: /user-identity
-#            Method: GET
-#
-#  IPVCredentialIssuerConfig:
-#    Type: AWS::Serverless::Function
-#    Properties:
-#      FunctionName: !Sub "credential-issuer-config-${Environment}"
-#      Handler: uk.gov.di.ipv.core.credentialissuerconfig.CredentialIssuerConfigHandler::handleRequest
-#      Runtime: java11
-#      PackageType: Zip
-#      CodeUri: ../lambdas/credentialissuerconfig
-#      Architectures:
-#        - x86_64
-#      MemorySize: 512
-#      Tracing: Active
-#      Environment:
-#        Variables:
-#          ENVIRONMENT: !Sub "${Environment}"
-#          POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-config-${Environment}
-#          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
-#      Policies:
-#        - SSMParameterReadPolicy:
-#            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
-#        - SSMParameterReadPolicy:
-#            ParameterName: !Sub ${Environment}/core/credentialIssuers
-#      Events:
-#        IPVCoreInternalAPI:
-#          Type: Api
-#          Properties:
-#            RestApiId:
-#              Ref: IPVCoreInternalAPI
-#            Path: /request-config
-#            Method: GET
-#
-#  IPVIssuedCredentials:
-#    Type: AWS::Serverless::Function
-#    Properties:
-#      FunctionName: !Sub "issued-credentials-${Environment}"
-#      Handler: uk.gov.di.ipv.core.issuedcredentials.IssuedCredentialsHandler::handleRequest
-#      Runtime: java11
-#      PackageType: Zip
-#      CodeUri: ../lambdas/issuedcredentials
-#      Architectures:
-#        - x86_64
-#      MemorySize: 512
-#      Tracing: Active
-#      Environment:
-#        Variables:
-#          ENVIRONMENT: !Sub "${Environment}"
-#          POWERTOOLS_SERVICE_NAME: !Sub issued-credentials-${Environment}
-#          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
-#      Policies:
-#        - DynamoDBReadPolicy:
-#            TableName: !Ref UserIssuedCredentialsTable
-#        - DynamoDBWritePolicy:
-#            TableName: !Ref UserIssuedCredentialsTable
-#      Events:
-#        IPVCoreInternalAPI:
-#          Type: Api
-#          Properties:
-#            RestApiId:
-#              Ref: IPVCoreInternalAPI
-#            Path: /issued-credentials
-#            Method: GET
-#
-#  IPVJourneyEngineFunction:
-#    Type: AWS::Serverless::Function
-#    Properties:
-#      FunctionName: !Sub "journey-engine-${Environment}"
-#      Handler: uk.gov.di.ipv.core.journeyengine.JourneyEngineHandler::handleRequest
-#      Runtime: java11
-#      PackageType: Zip
-#      CodeUri: ../lambdas/journeyengine
-#      Architectures:
-#        - x86_64
-#      MemorySize: 512
-#      Tracing: Active
-#      Environment:
-#        Variables:
-#          ENVIRONMENT: !Sub "${Environment}"
-#      Events:
-#        IPVCoreInternalAPI:
-#          Type: Api
-#          Properties:
-#            RestApiId:
-#              Ref: IPVCoreInternalAPI
-#            Path: /event/journey/{journeyId}
-#            Method: POST
+  IPVSharedAttributesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ipv-shared-attributes-${Environment}"
+      Handler: uk.gov.di.ipv.core.sharedattributes.SharedAttributesHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/sharedattributes
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Tracing: Active
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub shared-attributes-${Environment}
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
+          SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/sharedAttributesJwtSigningKeyId"
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/sharedAttributesJwtSigningKeyId
+        - Statement:
+          - Sid: kmsSigningKeyPermission
+            Effect: Allow
+            Action:
+              - 'kms:sign'
+            Resource:
+              - "arn:aws:kms:eu-west-2:130355686670:key/3efe7d7f-5a08-4ea3-90c3-11b24ec3b375"
+      Events:
+        IPVCoreInternalAPI:
+          Type: Api
+          Properties:
+            RestApiId: !Ref IPVCoreInternalAPI
+            Path: /shared-attributes
+            Method: GET
+
+  IPVAccessTokenFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ipv-access-token-${Environment}"
+      Handler: uk.gov.di.ipv.core.accesstoken.AccessTokenHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/accesstoken
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Tracing: Active
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub access-token-${Environment}
+          AUTH_CODES_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AuthCodesTable.Arn]]
+          ACCESS_TOKENS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AccessTokensTable.Arn]]
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AccessTokensTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AuthCodesTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/clients/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/audienceForClients
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/maxAllowedAuthClientTtl
+      Events:
+        IPVCoreExternalAPI:
+          Type: Api
+          Properties:
+            RestApiId: !Ref IPVCoreExternalAPI
+            Path: /token
+            Method: POST
+
+  IPVAuthorizationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ipv-authorization-${Environment}"
+      Handler: uk.gov.di.ipv.core.authorization.AuthorizationHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/authorization
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Tracing: Active
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub authorization-${Environment}
+          AUTH_CODES_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AuthCodesTable.Arn]]
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref AuthCodesTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref AuthCodesTable
+        - SSMParameterReadPolicy:
+              ParameterName: !Sub ${Environment}/core/*
+      Events:
+        IPVCoreInternalAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreInternalAPI
+            Path: /authorize
+            Method: GET
+
+  IPVSessionFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ipv-session-${Environment}"
+      Handler: uk.gov.di.ipv.core.session.IpvSessionHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/session
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Tracing: Active
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub session-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt SessionsTable.Arn]]
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        IPVCoreInternalAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreInternalAPI
+            Path: /ipv-session
+            Method: POST
+
+  IPVCredentialIssuerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ipv-credential-issuer-${Environment}"
+      Handler: uk.gov.di.ipv.core.credentialissuer.CredentialIssuerHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/credentialissuer
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Tracing: Active
+      Environment:
+        Variables:
+          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
+          SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/sharedAttributesJwtSigningKeyId"
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-${Environment}
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserIssuedCredentialsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/credentialIssuers
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/sharedAttributesJwtSigningKeyId
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/jwtTtlSeconds
+        - Statement:
+          - Sid: kmsSigningKeyPermission
+            Effect: Allow
+            Action:
+              - 'kms:sign'
+            Resource:
+              - "arn:aws:kms:eu-west-2:130355686670:key/3efe7d7f-5a08-4ea3-90c3-11b24ec3b375"
+      Events:
+        IPVCoreInternalAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreInternalAPI
+            Path: /request-evidence
+            Method: POST
+
+  IPVUserIdentityFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ipv-user-identity-${Environment}"
+      Handler: uk.gov.di.ipv.core.useridentity.UserIdentityHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/useridentity
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Tracing: Active
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub user-identity-${Environment}
+          ACCESS_TOKENS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AccessTokensTable.Arn]]
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref UserIssuedCredentialsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AccessTokensTable
+      Events:
+        IPVCoreExternalAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreExternalAPI
+            Path: /user-identity
+            Method: GET
+
+  IPVCredentialIssuerConfig:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "credential-issuer-config-${Environment}"
+      Handler: uk.gov.di.ipv.core.credentialissuerconfig.CredentialIssuerConfigHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/credentialissuerconfig
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Tracing: Active
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-config-${Environment}
+          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/credentialIssuers
+      Events:
+        IPVCoreInternalAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreInternalAPI
+            Path: /request-config
+            Method: GET
+
+  IPVIssuedCredentials:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "issued-credentials-${Environment}"
+      Handler: uk.gov.di.ipv.core.issuedcredentials.IssuedCredentialsHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/issuedcredentials
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Tracing: Active
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub issued-credentials-${Environment}
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref UserIssuedCredentialsTable
+      Events:
+        IPVCoreInternalAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreInternalAPI
+            Path: /issued-credentials
+            Method: GET
+
+  IPVJourneyEngineFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "journey-engine-${Environment}"
+      Handler: uk.gov.di.ipv.core.journeyengine.JourneyEngineHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/journeyengine
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Tracing: Active
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+      Events:
+        IPVCoreInternalAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreInternalAPI
+            Path: /event/journey/{journeyId}
+            Method: POST
 
   IPVNodeJourneyEngineFunction:
     Type: AWS::Serverless::Function
