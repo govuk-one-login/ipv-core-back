@@ -220,6 +220,37 @@ Resources:
             Path: /journey/cri/return
             Method: POST
 
+  IPVCredentialIssuerStartFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ipv-journey-cri-start-${Environment}"
+      Handler: uk.gov.di.ipv.core.credentialissuer.JourneyCriStartHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/credentialissuer
+      Architectures:
+        - x86_64
+      MemorySize: 3008
+      Tracing: Active
+      Environment:
+        Variables:
+          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-${Environment}
+      Policies:
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/credentialIssuers
+      Events:
+        IPVCoreInternalAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreInternalAPI
+            Path: /journey/cri/start/{criId}
+            Method: POST
+
   IPVUserIdentityFunction:
     Type: AWS::Serverless::Function
     Properties:
