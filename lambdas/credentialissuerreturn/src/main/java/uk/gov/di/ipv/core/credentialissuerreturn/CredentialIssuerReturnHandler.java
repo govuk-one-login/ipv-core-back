@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.credentialissuer;
+package uk.gov.di.ipv.core.credentialissuerreturn;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -23,13 +23,13 @@ import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
 import java.util.Collections;
 import java.util.Optional;
 
-public class CredentialIssuerHandler
+public class CredentialIssuerReturnHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private final CredentialIssuerService credentialIssuerService;
     private final ConfigurationService configurationService;
 
-    public CredentialIssuerHandler(
+    public CredentialIssuerReturnHandler(
             CredentialIssuerService credentialIssuerService,
             ConfigurationService configurationService) {
         this.credentialIssuerService = credentialIssuerService;
@@ -37,7 +37,7 @@ public class CredentialIssuerHandler
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public CredentialIssuerHandler() {
+    public CredentialIssuerReturnHandler() {
         this.configurationService = new ConfigurationService();
         JWSSigner signer = new KmsSigner(configurationService.getSharedAttributesSigningKeyId());
 

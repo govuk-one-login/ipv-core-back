@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.credentialissuer;
+package uk.gov.di.ipv.core.credentialissuerreturn;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -36,7 +36,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class CredentialIssuerHandlerTest {
+class CredentialIssuerReturnHandlerTest {
 
     @Mock private Context context;
 
@@ -70,7 +70,7 @@ class CredentialIssuerHandlerTest {
                 createRequestEvent(
                         Map.of("credential_issuer_id", "foo"), Map.of("ipv-session-id", sessionId));
         APIGatewayProxyResponseEvent response =
-                new CredentialIssuerHandler(credentialIssuerService, configurationService)
+                new CredentialIssuerReturnHandler(credentialIssuerService, configurationService)
                         .handleRequest(input, context);
         assert400Response(response, ErrorResponse.MISSING_AUTHORIZATION_CODE);
     }
@@ -82,7 +82,7 @@ class CredentialIssuerHandlerTest {
                         Map.of("authorization_code", "foo"), Map.of("ipv-session-id", sessionId));
 
         APIGatewayProxyResponseEvent response =
-                new CredentialIssuerHandler(credentialIssuerService, configurationService)
+                new CredentialIssuerReturnHandler(credentialIssuerService, configurationService)
                         .handleRequest(input, context);
         assert400Response(response, ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
     }
@@ -99,7 +99,7 @@ class CredentialIssuerHandlerTest {
                                 "an invalid id"),
                         Map.of("ipv-session-id", sessionId));
         APIGatewayProxyResponseEvent response =
-                new CredentialIssuerHandler(credentialIssuerService, configurationService)
+                new CredentialIssuerReturnHandler(credentialIssuerService, configurationService)
                         .handleRequest(input, context);
         assert400Response(response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
     }
@@ -115,7 +115,7 @@ class CredentialIssuerHandlerTest {
                                 passportIssuerId),
                         Map.of());
         APIGatewayProxyResponseEvent response =
-                new CredentialIssuerHandler(credentialIssuerService, configurationService)
+                new CredentialIssuerReturnHandler(credentialIssuerService, configurationService)
                         .handleRequest(input, context);
         assert400Response(response, ErrorResponse.MISSING_IPV_SESSION_ID);
     }
@@ -132,8 +132,8 @@ class CredentialIssuerHandlerTest {
 
         when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
 
-        CredentialIssuerHandler handler =
-                new CredentialIssuerHandler(credentialIssuerService, configurationService);
+        CredentialIssuerReturnHandler handler =
+                new CredentialIssuerReturnHandler(credentialIssuerService, configurationService);
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
                         Map.of(
@@ -157,8 +157,8 @@ class CredentialIssuerHandlerTest {
     @Test
     void shouldReceive400ResponseCodeIfCredentialIssuerServiceThrowsException()
             throws JsonProcessingException {
-        CredentialIssuerHandler handler =
-                new CredentialIssuerHandler(credentialIssuerService, configurationService);
+        CredentialIssuerReturnHandler handler =
+                new CredentialIssuerReturnHandler(credentialIssuerService, configurationService);
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
                         Map.of(
@@ -196,8 +196,8 @@ class CredentialIssuerHandlerTest {
 
         when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
 
-        CredentialIssuerHandler handler =
-                new CredentialIssuerHandler(credentialIssuerService, configurationService);
+        CredentialIssuerReturnHandler handler =
+                new CredentialIssuerReturnHandler(credentialIssuerService, configurationService);
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
                         Map.of(
