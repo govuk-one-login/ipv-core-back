@@ -102,7 +102,7 @@ paths:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVSharedAttributesFunction.Arn}/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
-  /event/journey/{journeyId}:
+  /journey/{journeyStep}:
     post:
       description: Called when the user selects a journey event.
       responses:
@@ -111,7 +111,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/eventResponse"
+                $ref: "#/components/schemas/journeyResponse"
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
@@ -121,41 +121,37 @@ paths:
 
 components:
   schemas:
-    eventResponse:
+    journeyResponse:
       type: object
       properties:
         page:
           type: string
           description: pageId of page to be displayed
-        redirect:
+        journey:
+          type: string
+          description: journeyId of an journey to take
+        cri:
           type: object
-          description: one of three types of redirect; event, cri, or client
+          description: redirect to a cri (credential issuer)
+          required: [ "id", "authorizeUrl", "request" ]
           properties:
-            journey:
+            id:
               type: string
-              description: path of an journey event to redirect to.
-            cri:
-              type: object
-              description: redirect to a cri (credential issuer)
-              required: [ "id", "authorizeUrl" ]
-              properties:
-                id:
-                  type: string
-                authorizeUrl:
-                  type: string
-            client:
-              type: object
-              description: redirect to the oauth client, ending the session.
-              required: [ "callbackUrl", "authcode" ]
-              properties:
-                callbackUrl:
-                  type: string
-                authcode:
-                  type: string
-          oneOf:
-            - required: [ "client" ]
-            - required: [ "cri" ]
-            - required: [ "journey" ]
+            authorizeUrl:
+              type: string
+            request:
+              type: string
+        client:
+          type: object
+          description: redirect to the oauth client, ending the session.
+          required: [ "callbackUrl", "authcode" ]
+          properties:
+            callbackUrl:
+              type: string
+            authcode:
+              type: string
       oneOf:
         - required: [ "page" ]
-        - required: [ "redirect" ]
+        - required: [ "client" ]
+        - required: [ "cri" ]
+        - required: [ "journey" ]

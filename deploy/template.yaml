@@ -331,13 +331,22 @@ Resources:
       Environment:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub session-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
+          IPV_JOURNEY_CRI_START_URI: "/journey/cri/start/"
+          IPV_JOURNEY_SESSION_END_URI: "/journey/session/end"
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionsTable
       Events:
         IPVCoreInternalAPI:
           Type: Api
           Properties:
             RestApiId:
               Ref: IPVCoreInternalAPI
-            Path: /event/journey/{journeyId}
+            Path: /journey/{journeyStep}
             Method: POST
 
   UserIssuedCredentialsTable:
