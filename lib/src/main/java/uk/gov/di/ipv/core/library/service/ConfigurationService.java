@@ -85,6 +85,14 @@ public class ConfigurationService {
         return System.getenv("IPV_SESSIONS_TABLE_NAME");
     }
 
+    public String getIpvJourneyCriStartUri() {
+        return System.getenv("IPV_JOURNEY_CRI_START_URI");
+    }
+
+    public String getIpvJourneySessionEnd() {
+        return System.getenv("IPV_JOURNEY_SESSION_END_URI");
+    }
+
     public long getBearerAccessTokenTtl() {
         return Optional.ofNullable(System.getenv("BEARER_TOKEN_TTL"))
                 .map(Long::valueOf)

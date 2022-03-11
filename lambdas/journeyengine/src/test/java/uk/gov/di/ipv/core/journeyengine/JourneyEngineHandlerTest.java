@@ -190,6 +190,8 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(new Date().toString());
         ipvSessionItem.setUserState(UserStates.TRANSITION_PAGE_1.value);
 
+        when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
+        when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
@@ -222,6 +224,8 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(new Date().toString());
         ipvSessionItem.setUserState(UserStates.CRI_UK_PASSPORT.value);
 
+        when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
+        when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
@@ -253,6 +257,8 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(new Date().toString());
         ipvSessionItem.setUserState(UserStates.CRI_ADDRESS.value);
 
+        when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
+        when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
@@ -316,6 +322,8 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(new Date().toString());
         ipvSessionItem.setUserState(UserStates.TRANSITION_PAGE_2.value);
 
+        when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
+        when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
@@ -347,6 +355,8 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(new Date().toString());
         ipvSessionItem.setUserState(UserStates.CRI_FRAUD.value);
 
+        when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
+        when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
@@ -380,6 +390,8 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(new Date().toString());
         ipvSessionItem.setUserState(UserStates.CRI_ACTIVITY_HISTORY.value);
 
+        when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
+        when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
