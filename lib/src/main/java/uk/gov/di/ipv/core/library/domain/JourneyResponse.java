@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.journeyengine.domain;
+package uk.gov.di.ipv.core.library.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
