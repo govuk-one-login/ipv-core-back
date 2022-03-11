@@ -6,6 +6,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 @DynamoDbBean
 public class IpvSessionItem {
     private String ipvSessionId;
+    private String userState;
     private String creationDateTime;
 
     @DynamoDbPartitionKey
@@ -15,6 +16,14 @@ public class IpvSessionItem {
 
     public void setIpvSessionId(String ipvSessionId) {
         this.ipvSessionId = ipvSessionId;
+    }
+
+    public String getUserState() {
+        return userState;
+    }
+
+    public void setUserState(String userState) {
+        this.userState = userState;
     }
 
     public String getCreationDateTime() {

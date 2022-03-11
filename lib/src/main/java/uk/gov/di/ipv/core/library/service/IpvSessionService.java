@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.service;
 
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.UserStates;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 
@@ -30,12 +31,21 @@ public class IpvSessionService {
         this.configurationService = configurationService;
     }
 
+    public IpvSessionItem getIpvSession(String ipvSessionId) {
+        return dataStore.getItem(ipvSessionId);
+    }
+
     public String generateIpvSession() {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setUserState(UserStates.INITIAL_IPV_JOURNEY.toString());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         dataStore.create(ipvSessionItem);
 
         return ipvSessionItem.getIpvSessionId();
+    }
+
+    public void updateIpvSession(IpvSessionItem updatedIpvSessionItem) {
+        dataStore.update(updatedIpvSessionItem);
     }
 }
