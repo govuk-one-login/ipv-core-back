@@ -64,6 +64,36 @@ class CredentialIssuerReturnHandlerTest {
     }
 
     @Test
+    void shouldReceive200AndJourneyResponseOnSuccessfulRequest() throws JsonProcessingException {
+        CredentialIssuerReturnHandler handler =
+                new CredentialIssuerReturnHandler(credentialIssuerService, configurationService);
+        APIGatewayProxyRequestEvent input =
+                createRequestEvent(
+                        Map.of(
+                                "authorization_code",
+                                "foo",
+                                "credential_issuer_id",
+                                passportIssuerId),
+                        Map.of("ipv-session-id", sessionId));
+
+        JSONObject testCredential = new JSONObject();
+        testCredential.appendField("foo", "bar");
+
+        when(credentialIssuerService.exchangeCodeForToken(requestDto.capture(), eq(passportIssuer)))
+                .thenReturn(new BearerAccessToken());
+
+        when(credentialIssuerService.getCredential(any(), any())).thenReturn(testCredential);
+
+        when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
+        Integer statusCode = response.getStatusCode();
+        Map responseBody = getResponseBodyAsMap(response);
+        assertEquals(HTTPResponse.SC_OK, statusCode);
+        assertEquals("/journey/next", responseBody.get("journey"));
+    }
+
+    @Test
     void shouldReceive400ResponseCodeIfAuthorizationCodeNotPresent()
             throws JsonProcessingException {
         APIGatewayProxyRequestEvent input =
