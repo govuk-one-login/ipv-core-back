@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.credentialissuer;
+package uk.gov.di.ipv.core.credentialissuerreturn;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -12,6 +12,7 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -20,16 +21,17 @@ import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
 
-import java.util.Collections;
 import java.util.Optional;
 
-public class CredentialIssuerHandler
+public class CredentialIssuerReturnHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+
+    private static final String NEXT_JOURNEY_STEP_URI = "/journey/next";
 
     private final CredentialIssuerService credentialIssuerService;
     private final ConfigurationService configurationService;
 
-    public CredentialIssuerHandler(
+    public CredentialIssuerReturnHandler(
             CredentialIssuerService credentialIssuerService,
             ConfigurationService configurationService) {
         this.credentialIssuerService = credentialIssuerService;
@@ -37,7 +39,7 @@ public class CredentialIssuerHandler
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public CredentialIssuerHandler() {
+    public CredentialIssuerReturnHandler() {
         this.configurationService = new ConfigurationService();
         JWSSigner signer = new KmsSigner(configurationService.getSharedAttributesSigningKeyId());
 
@@ -64,7 +66,9 @@ public class CredentialIssuerHandler
             JSONObject credential =
                     credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
             credentialIssuerService.persistUserCredentials(credential, request);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(200, Collections.emptyMap());
+
+            JourneyResponse journeyResponse = new JourneyResponse(NEXT_JOURNEY_STEP_URI);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(200, journeyResponse);
         } catch (CredentialIssuerException e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getHttpStatusCode(), e.getErrorResponse());

@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.journeyengine.domain;
 
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 
 @ExcludeFromGeneratedCoverageReport
 public class JourneyEngineResult {

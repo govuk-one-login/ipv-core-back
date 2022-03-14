@@ -174,14 +174,14 @@ Resources:
             Path: /ipv-session
             Method: POST
 
-  IPVCredentialIssuerFunction:
+  IPVCriReturnFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "ipv-credential-issuer-${Environment}"
-      Handler: uk.gov.di.ipv.core.credentialissuer.CredentialIssuerHandler::handleRequest
+      FunctionName: !Sub "ipv-credential-issuer-return-${Environment}"
+      Handler: uk.gov.di.ipv.core.credentialissuerreturn.CredentialIssuerReturnHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/credentialissuer
+      CodeUri: ../lambdas/credentialissuerreturn
       Architectures:
         - x86_64
       MemorySize: 512
@@ -217,7 +217,7 @@ Resources:
           Properties:
             RestApiId:
               Ref: IPVCoreInternalAPI
-            Path: /request-evidence
+            Path: /journey/cri/return
             Method: POST
 
   IPVUserIdentityFunction:
