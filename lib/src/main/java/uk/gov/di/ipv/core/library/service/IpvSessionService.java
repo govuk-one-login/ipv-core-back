@@ -38,7 +38,7 @@ public class IpvSessionService {
     public String generateIpvSession() {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
-        ipvSessionItem.setUserState(UserStates.INITIAL_IPV_JOURNEY.value);
+        ipvSessionItem.setUserState(UserStates.INITIAL_IPV_JOURNEY.toString());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         dataStore.create(ipvSessionItem);
 

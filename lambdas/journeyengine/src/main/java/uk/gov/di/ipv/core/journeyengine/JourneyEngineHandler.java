@@ -107,68 +107,70 @@ public class JourneyEngineHandler
         String journeyEndUri = configurationService.getIpvJourneySessionEnd();
 
         String currentUserState = ipvSessionItem.getUserState();
-        UserStates currentUserStateValue = UserStates.fromValue(currentUserState);
 
-        JourneyEngineResult.Builder builder = new JourneyEngineResult.Builder();
+        try {
+            UserStates currentUserStateValue = UserStates.valueOf(currentUserState);
 
-        if (currentUserStateValue == null) {
+            JourneyEngineResult.Builder builder = new JourneyEngineResult.Builder();
+
+            if (!VALID_JOURNEY_STEPS.contains(journeyStep)) {
+                LOGGER.warn("Unknown journey step: {}", journeyStep);
+                throw new JourneyEngineException(
+                        "Invalid journey step provided, failed to execute journey engine step.");
+            }
+
+            switch (currentUserStateValue) {
+                case INITIAL_IPV_JOURNEY:
+                    updateUserState(TRANSITION_PAGE_1, ipvSessionItem);
+                    builder.setPageResponse(new PageResponse(TRANSITION_PAGE_1.value));
+                    break;
+                case TRANSITION_PAGE_1:
+                    updateUserState(CRI_UK_PASSPORT, ipvSessionItem);
+                    builder.setJourneyResponse(
+                            new JourneyResponse(criStartUri + UK_PASSPORT_CRI_ID));
+                    break;
+                case CRI_UK_PASSPORT:
+                    updateUserState(CRI_ADDRESS, ipvSessionItem);
+                    builder.setJourneyResponse(new JourneyResponse(criStartUri + ADDRESS_CRI_ID));
+                    break;
+                case CRI_ADDRESS:
+                    updateUserState(CRI_KBV, ipvSessionItem);
+                    builder.setJourneyResponse(new JourneyResponse(criStartUri + KBV_CRI_ID));
+                    break;
+                case CRI_KBV:
+                    updateUserState(TRANSITION_PAGE_2, ipvSessionItem);
+                    builder.setPageResponse(new PageResponse(TRANSITION_PAGE_2.value));
+                    break;
+                case TRANSITION_PAGE_2:
+                    updateUserState(CRI_FRAUD, ipvSessionItem);
+                    builder.setJourneyResponse(new JourneyResponse(criStartUri + FRAUD_CRI_ID));
+                    break;
+                case CRI_FRAUD:
+                    updateUserState(CRI_ACTIVITY_HISTORY, ipvSessionItem);
+                    builder.setJourneyResponse(
+                            new JourneyResponse(criStartUri + ACTIVITY_HISTORY_CRI_ID));
+                    break;
+                case CRI_ACTIVITY_HISTORY:
+                    builder.setJourneyResponse(new JourneyResponse(journeyEndUri));
+                    break;
+                case DEBUG_PAGE:
+                    builder.setPageResponse(new PageResponse(DEBUG_PAGE.value));
+                    break;
+            }
+
+            return builder.build();
+        } catch (IllegalArgumentException e) {
             LOGGER.warn("Unknown user state: {}", currentUserState);
             throw new JourneyEngineException(
                     "Unknown user state, failed to execute journey engine step.");
         }
-
-        if (!VALID_JOURNEY_STEPS.contains(journeyStep)) {
-            LOGGER.warn("Unknown journey step: {}", journeyStep);
-            throw new JourneyEngineException(
-                    "Invalid journey step provided, failed to execute journey engine step.");
-        }
-
-        switch (currentUserStateValue) {
-            case INITIAL_IPV_JOURNEY:
-                updateUserState(TRANSITION_PAGE_1, ipvSessionItem);
-                builder.setPageResponse(new PageResponse(TRANSITION_PAGE_1.value));
-                break;
-            case TRANSITION_PAGE_1:
-                updateUserState(CRI_UK_PASSPORT, ipvSessionItem);
-                builder.setJourneyResponse(new JourneyResponse(criStartUri + UK_PASSPORT_CRI_ID));
-                break;
-            case CRI_UK_PASSPORT:
-                updateUserState(CRI_ADDRESS, ipvSessionItem);
-                builder.setJourneyResponse(new JourneyResponse(criStartUri + ADDRESS_CRI_ID));
-                break;
-            case CRI_ADDRESS:
-                updateUserState(CRI_KBV, ipvSessionItem);
-                builder.setJourneyResponse(new JourneyResponse(criStartUri + KBV_CRI_ID));
-                break;
-            case CRI_KBV:
-                updateUserState(TRANSITION_PAGE_2, ipvSessionItem);
-                builder.setPageResponse(new PageResponse(TRANSITION_PAGE_2.value));
-                break;
-            case TRANSITION_PAGE_2:
-                updateUserState(CRI_FRAUD, ipvSessionItem);
-                builder.setJourneyResponse(new JourneyResponse(criStartUri + FRAUD_CRI_ID));
-                break;
-            case CRI_FRAUD:
-                updateUserState(CRI_ACTIVITY_HISTORY, ipvSessionItem);
-                builder.setJourneyResponse(
-                        new JourneyResponse(criStartUri + ACTIVITY_HISTORY_CRI_ID));
-                break;
-            case CRI_ACTIVITY_HISTORY:
-                builder.setJourneyResponse(new JourneyResponse(journeyEndUri));
-                break;
-            case DEBUG_PAGE:
-                builder.setPageResponse(new PageResponse(DEBUG_PAGE.value));
-                break;
-        }
-
-        return builder.build();
     }
 
     private void updateUserState(UserStates updatedStateValue, IpvSessionItem previosSessionItem) {
         IpvSessionItem updatedIpvSessionItem = new IpvSessionItem();
         updatedIpvSessionItem.setIpvSessionId(previosSessionItem.getIpvSessionId());
         updatedIpvSessionItem.setCreationDateTime(previosSessionItem.getCreationDateTime());
-        updatedIpvSessionItem.setUserState(updatedStateValue.value);
+        updatedIpvSessionItem.setUserState(updatedStateValue.toString());
 
         ipvSessionService.updateIpvSession(updatedIpvSessionItem);
     }
