@@ -54,34 +54,6 @@ class SharedAttributesHandlerTest {
                                     "nameParts",
                                     List.of(
                                             Map.of("value", "Alice", "type", "GivenName"),
-                                            Map.of(
-                                                    "value",
-                                                    "Doe",
-                                                    "validFrom",
-                                                    "2020-03-01",
-                                                    "type",
-                                                    "FamilyName")))),
-                    "birthDate",
-                    List.of(Map.of("value", "2020-01-03")),
-                    "address",
-                    List.of(
-                            Map.of(
-                                    "type", "PostalAddress",
-                                    "organizationName", "Software Ltd",
-                                    "streetAddress", "35 Idsworth Road",
-                                    "addressLocality", "Sheffield",
-                                    "addressRegion", "Illinois",
-                                    "postalCode", "S5 6UN",
-                                    "addressCountry", "UK")));
-
-    Map<String, Object> CREDENTIAL_INPUT_2 =
-            Map.of(
-                    "name",
-                    List.of(
-                            Map.of(
-                                    "nameParts",
-                                    List.of(
-                                            Map.of("value", "Alice", "type", "GivenName"),
                                             Map.of("value", "Jane", "type", "GivenName"),
                                             Map.of("value", "Laura", "type", "GivenName"),
                                             Map.of(
@@ -114,6 +86,34 @@ class SharedAttributesHandlerTest {
                                     "type", "PostalAddress",
                                     "postalCode", "M34 1AA")));
 
+    Map<String, Object> CREDENTIAL_INPUT_2 =
+            Map.of(
+                    "name",
+                    List.of(
+                            Map.of(
+                                    "nameParts",
+                                    List.of(
+                                            Map.of("value", "Alice", "type", "GivenName"),
+                                            Map.of(
+                                                    "value",
+                                                    "Doe",
+                                                    "validFrom",
+                                                    "2020-03-01",
+                                                    "type",
+                                                    "FamilyName")))),
+                    "birthDate",
+                    List.of(Map.of("value", "2020-01-03")),
+                    "address",
+                    List.of(
+                            Map.of(
+                                    "type", "PostalAddress",
+                                    "organizationName", "Software Ltd",
+                                    "streetAddress", "35 Idsworth Road",
+                                    "addressLocality", "Sheffield",
+                                    "addressRegion", "Illinois",
+                                    "postalCode", "S5 6UN",
+                                    "addressCountry", "UK")));
+
     public static final Map<String, Object> CREDENTIAL_INPUT_3 =
             Map.of("name", Map.of("testProperty", "test value"));
 
@@ -141,10 +141,10 @@ class SharedAttributesHandlerTest {
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
                 .thenReturn(
                         Map.of(
-                                "CredentialIssuer",
-                                objectMapper.writeValueAsString(CREDENTIAL_INPUT_2),
                                 "CredentialIssuer1",
-                                objectMapper.writeValueAsString(CREDENTIAL_INPUT_1)));
+                                objectMapper.writeValueAsString(CREDENTIAL_INPUT_1),
+                                "CredentialIssuer2",
+                                objectMapper.writeValueAsString(CREDENTIAL_INPUT_2)));
 
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
@@ -180,7 +180,6 @@ class SharedAttributesHandlerTest {
         RSASSAVerifier rsaVerifier =
                 new RSASSAVerifier((RSAPublicKey) getCertificate().getPublicKey());
         assertTrue(signedJWT.verify(rsaVerifier));
-        System.out.println();
     }
 
     @Test
@@ -244,9 +243,9 @@ class SharedAttributesHandlerTest {
                 .thenReturn(
                         Map.of(
                                 "CredentialIssuer1",
-                                objectMapper.writeValueAsString(CREDENTIAL_INPUT_2),
+                                objectMapper.writeValueAsString(CREDENTIAL_INPUT_1),
                                 "CredentialIssuer2",
-                                objectMapper.writeValueAsString(CREDENTIAL_INPUT_1)));
+                                objectMapper.writeValueAsString(CREDENTIAL_INPUT_2)));
 
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID));

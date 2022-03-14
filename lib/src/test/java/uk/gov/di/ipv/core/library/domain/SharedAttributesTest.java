@@ -11,21 +11,6 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SharedAttributesTest {
-    /*
-    Set<Name> nameList = new HashSet<>();
-            List<NameParts> namePartsList = new ArrayList<>();
-
-            for (JsonNode jo : nameNode) {
-                JsonNode nameParts = jo.get("nameParts");
-                if (nameParts != null) {
-                    nameParts.forEach(namePart -> namePartsList.add(objectMapper.convertValue(namePart, NameParts.class)));
-                }
-            }
-
-            Name names = new Name(namePartsList);
-            nameList.add(names);
-            sharedAttributesBuilder.setName(nameList);
-     */
 
     @Test
     void shouldBuildSharedAttributes() {

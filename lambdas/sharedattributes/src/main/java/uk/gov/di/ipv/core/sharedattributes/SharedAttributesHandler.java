@@ -77,17 +77,17 @@ public class SharedAttributesHandler
         Map<String, String> credentials =
                 userIdentityService.getUserIssuedCredentials(ipvSessionId);
 
-        List<SharedAttributes> sharedAttributesNew = new ArrayList<>();
+        List<SharedAttributes> sharedAttributes = new ArrayList<>();
         for (String credential : credentials.values()) {
             try {
-                sharedAttributesNew.add(mapper.readValue(credential, SharedAttributes.class));
+                sharedAttributes.add(mapper.readValue(credential, SharedAttributes.class));
             } catch (JsonProcessingException e) {
                 LOGGER.error("Failed to get Shared Attributes: {}", e.getMessage());
                 throw new HttpResponseExceptionWithErrorBody(
                         500, ErrorResponse.FAILED_TO_GET_SHARED_ATTRIBUTES);
             }
         }
-        return SharedAttributesResponse.from(sharedAttributesNew);
+        return SharedAttributesResponse.from(sharedAttributes);
     }
 
     @Tracing
