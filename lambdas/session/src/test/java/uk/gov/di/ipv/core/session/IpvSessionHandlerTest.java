@@ -32,7 +32,6 @@ class IpvSessionHandlerTest {
     @Mock private ConfigurationService mockConfigurationService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final String testUserId = UUID.randomUUID().toString();
 
     private IpvSessionHandler ipvSessionHandler;
 

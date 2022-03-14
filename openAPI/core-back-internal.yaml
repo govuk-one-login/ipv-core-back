@@ -70,12 +70,12 @@ paths:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVSessionFunction.Arn}/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
-  /request-evidence:
+  /journey/cri/return:
     post:
-      description: "Requests the credential from a cri by exchanging the auth code for an access token and then using that access token to retrieve the credential"
+      description: "Called when a user returns from a CRI and will be responsible for completing the OAuth Requests with the cri and retrieveing the verifiable credential"
       responses:
         200:
-          description: "Nothing returned here"
+          description: "Returns a redirect journeyResponse of '/journey/next'"
           content:
             application/jose:
               schema:
@@ -83,23 +83,7 @@ paths:
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCredentialIssuerFunction.Arn}/invocations
-        passthroughBehavior: "when_no_match"
-        type: "aws_proxy"
-  /shared-attributes:
-    get:
-      description: "Request the current shared attributes that have been gathered"
-      responses:
-        200:
-          description: "The shared attribute JWT"
-          content:
-            application/jwt:
-              schema:
-                type: "string"
-      x-amazon-apigateway-integration:
-        httpMethod: "POST"
-        uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVSharedAttributesFunction.Arn}/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCriReturnFunction.Arn}/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
   /journey/{journeyStep}:
@@ -116,6 +100,22 @@ paths:
         httpMethod: "POST"
         uri:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVJourneyEngineFunction.Arn}/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
+  /shared-attributes:
+    get:
+      description: "Request the current shared attributes that have been gathered"
+      responses:
+        200:
+          description: "The shared attribute JWT"
+          content:
+            application/jwt:
+              schema:
+                type: "string"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVSharedAttributesFunction.Arn}/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
 
