@@ -62,8 +62,7 @@ class JwtHelperTest {
 
         assertTrue(
                 signedJWT.verify(
-                        new RSASSAVerifier(
-                                (RSAPublicKey) getCertificate(BASE64_CERT).getPublicKey())));
+                        new RSASSAVerifier((RSAPublicKey) getCertificate().getPublicKey())));
 
         assertEquals(List.of(dateOfBirth), generatedClaims.getClaim("dateOfBirths"));
         List<Map<String, Object>> names =
@@ -74,8 +73,8 @@ class JwtHelperTest {
                 ((List<String>) names.get(0).get("givenNames")).get(0));
     }
 
-    private Certificate getCertificate(String base64certificate) throws CertificateException {
-        byte[] binaryCertificate = Base64.getDecoder().decode(base64certificate);
+    private Certificate getCertificate() throws CertificateException {
+        byte[] binaryCertificate = Base64.getDecoder().decode(BASE64_CERT);
         CertificateFactory factory = CertificateFactory.getInstance("X.509");
         return factory.generateCertificate(new ByteArrayInputStream(binaryCertificate));
     }

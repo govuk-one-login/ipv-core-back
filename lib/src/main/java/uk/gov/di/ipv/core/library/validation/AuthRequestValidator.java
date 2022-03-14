@@ -38,11 +38,9 @@ public class AuthRequestValidator {
         }
 
         var errorResult = validateRedirectUrl(queryStringParameters);
-        if (errorResult.isPresent()) {
-            return new ValidationResult<>(false, errorResult.get());
-        }
-
-        return ValidationResult.createValidResult();
+        return errorResult
+                .map(errorResponse -> new ValidationResult<>(false, errorResponse))
+                .orElseGet(ValidationResult::createValidResult);
     }
 
     private boolean queryStringParamsMissing(Map<String, List<String>> queryStringParameters) {

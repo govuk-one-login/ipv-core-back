@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
-import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
@@ -71,7 +70,7 @@ class CredentialIssuerServiceTest {
     }
 
     @Test
-    void validTokenResponse(WireMockRuntimeInfo wmRuntimeInfo) throws JOSEException {
+    void validTokenResponse(WireMockRuntimeInfo wmRuntimeInfo) {
         when(mockConfigurationService.getIpvTokenTtl()).thenReturn("900");
         stubFor(
                 post("/token")
@@ -100,7 +99,7 @@ class CredentialIssuerServiceTest {
     }
 
     @Test
-    void tokenErrorResponse(WireMockRuntimeInfo wmRuntimeInfo) throws JOSEException {
+    void tokenErrorResponse(WireMockRuntimeInfo wmRuntimeInfo) {
         when(mockConfigurationService.getIpvTokenTtl()).thenReturn("900");
         var errorJson =
                 "{ \"error\": \"invalid_request\", \"error_description\": \"Request was missing the 'redirect_uri' parameter.\", \"error_uri\": \"See the full API docs at https://authorization-server.com/docs/access_token\"}";
@@ -124,10 +123,9 @@ class CredentialIssuerServiceTest {
         CredentialIssuerException exception =
                 assertThrows(
                         CredentialIssuerException.class,
-                        () -> {
-                            credentialIssuerService.exchangeCodeForToken(
-                                    credentialIssuerRequestDto, credentialIssuerConfig);
-                        });
+                        () ->
+                                credentialIssuerService.exchangeCodeForToken(
+                                        credentialIssuerRequestDto, credentialIssuerConfig));
 
         assertEquals(HTTPResponse.SC_BAD_REQUEST, exception.getHttpStatusCode());
         assertEquals(ErrorResponse.INVALID_TOKEN_REQUEST, exception.getErrorResponse());
@@ -155,10 +153,9 @@ class CredentialIssuerServiceTest {
         CredentialIssuerException exception =
                 assertThrows(
                         CredentialIssuerException.class,
-                        () -> {
-                            credentialIssuerService.exchangeCodeForToken(
-                                    credentialIssuerRequestDto, credentialIssuerConfig);
-                        });
+                        () ->
+                                credentialIssuerService.exchangeCodeForToken(
+                                        credentialIssuerRequestDto, credentialIssuerConfig));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
         assertEquals(
@@ -203,10 +200,9 @@ class CredentialIssuerServiceTest {
         CredentialIssuerException thrown =
                 assertThrows(
                         CredentialIssuerException.class,
-                        () -> {
-                            credentialIssuerService.persistUserCredentials(
-                                    mockJSONObject, credentialIssuerRequestDto);
-                        });
+                        () ->
+                                credentialIssuerService.persistUserCredentials(
+                                        mockJSONObject, credentialIssuerRequestDto));
 
         assertNotNull(thrown);
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
@@ -259,10 +255,9 @@ class CredentialIssuerServiceTest {
         CredentialIssuerException thrown =
                 assertThrows(
                         CredentialIssuerException.class,
-                        () -> {
-                            credentialIssuerService.getCredential(
-                                    accessToken, credentialIssuerConfig);
-                        });
+                        () ->
+                                credentialIssuerService.getCredential(
+                                        accessToken, credentialIssuerConfig));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
@@ -285,10 +280,9 @@ class CredentialIssuerServiceTest {
         CredentialIssuerException thrown =
                 assertThrows(
                         CredentialIssuerException.class,
-                        () -> {
-                            credentialIssuerService.getCredential(
-                                    accessToken, credentialIssuerConfig);
-                        });
+                        () ->
+                                credentialIssuerService.getCredential(
+                                        accessToken, credentialIssuerConfig));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());

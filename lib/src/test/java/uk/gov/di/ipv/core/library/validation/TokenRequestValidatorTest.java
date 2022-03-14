@@ -18,7 +18,6 @@ import uk.gov.di.ipv.core.library.exceptions.ClientAuthenticationException;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.io.ByteArrayInputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
@@ -69,22 +68,19 @@ class TokenRequestValidatorTest {
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
                     CertificateException {
         when(mockConfigurationService.getClientCertificate(anyString()))
-                .thenReturn(getCertificate(BASE64_CERT));
+                .thenReturn(getCertificate());
         when(mockConfigurationService.getClientAuthenticationMethod(anyString())).thenReturn("jwt");
         when(mockConfigurationService.getMaxAllowedAuthClientTtl()).thenReturn("2400");
 
         var validQueryParams =
                 getValidQueryParams(generateClientAssertion(getValidClaimsSetValues()));
-        assertDoesNotThrow(
-                () -> {
-                    validator.authenticateClient(queryMapToString(validQueryParams));
-                });
+        assertDoesNotThrow(() -> validator.authenticateClient(queryMapToString(validQueryParams)));
     }
 
     @Test
     void shouldThrowIfInvalidSignature() throws Exception {
         when(mockConfigurationService.getClientCertificate(anyString()))
-                .thenReturn(getCertificate(BASE64_CERT));
+                .thenReturn(getCertificate());
         when(mockConfigurationService.getClientAuthenticationMethod(anyString())).thenReturn("jwt");
 
         var invalidSignatureQueryParams =
@@ -97,10 +93,9 @@ class TokenRequestValidatorTest {
         ClientAuthenticationException exception =
                 assertThrows(
                         ClientAuthenticationException.class,
-                        () -> {
-                            validator.authenticateClient(
-                                    queryMapToString(invalidSignatureQueryParams));
-                        });
+                        () ->
+                                validator.authenticateClient(
+                                        queryMapToString(invalidSignatureQueryParams)));
 
         assertTrue(exception.getMessage().contains("InvalidClientException: Bad JWT signature"));
     }
@@ -117,10 +112,9 @@ class TokenRequestValidatorTest {
         ClientAuthenticationException exception =
                 assertThrows(
                         ClientAuthenticationException.class,
-                        () -> {
-                            validator.authenticateClient(
-                                    queryMapToString(differentIssuerAndSubjectQueryParams));
-                        });
+                        () ->
+                                validator.authenticateClient(
+                                        queryMapToString(differentIssuerAndSubjectQueryParams)));
 
         assertTrue(
                 exception
@@ -142,10 +136,9 @@ class TokenRequestValidatorTest {
         ClientAuthenticationException exception =
                 assertThrows(
                         ClientAuthenticationException.class,
-                        () -> {
-                            validator.authenticateClient(
-                                    queryMapToString(wrongAudienceQueryParams));
-                        });
+                        () ->
+                                validator.authenticateClient(
+                                        queryMapToString(wrongAudienceQueryParams)));
 
         assertTrue(
                 exception
@@ -168,9 +161,7 @@ class TokenRequestValidatorTest {
         ClientAuthenticationException exception =
                 assertThrows(
                         ClientAuthenticationException.class,
-                        () -> {
-                            validator.authenticateClient(queryMapToString(expiredQueryParams));
-                        });
+                        () -> validator.authenticateClient(queryMapToString(expiredQueryParams)));
 
         assertTrue(exception.getMessage().contains("Expired JWT"));
     }
@@ -180,7 +171,7 @@ class TokenRequestValidatorTest {
             throws InvalidKeySpecException, NoSuchAlgorithmException, JOSEException,
                     CertificateException {
         when(mockConfigurationService.getClientCertificate(anyString()))
-                .thenReturn(getCertificate(BASE64_CERT));
+                .thenReturn(getCertificate());
         when(mockConfigurationService.getClientAuthenticationMethod(anyString())).thenReturn("jwt");
         when(mockConfigurationService.getMaxAllowedAuthClientTtl()).thenReturn("2400");
         var expiredClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
@@ -193,9 +184,7 @@ class TokenRequestValidatorTest {
         ClientAuthenticationException exception =
                 assertThrows(
                         ClientAuthenticationException.class,
-                        () -> {
-                            validator.authenticateClient(queryMapToString(expiredQueryParams));
-                        });
+                        () -> validator.authenticateClient(queryMapToString(expiredQueryParams)));
         assertTrue(
                 exception
                         .getMessage()
@@ -208,10 +197,7 @@ class TokenRequestValidatorTest {
         when(mockConfigurationService.getClientAuthenticationMethod(clientId)).thenReturn("none");
         var params = getValidQueryParamsWithoutClientAuth(clientId);
 
-        assertDoesNotThrow(
-                () -> {
-                    validator.authenticateClient(queryMapToString(params));
-                });
+        assertDoesNotThrow(() -> validator.authenticateClient(queryMapToString(params)));
     }
 
     @Test
@@ -221,10 +207,7 @@ class TokenRequestValidatorTest {
         var validQueryParams =
                 getValidQueryParams(generateClientAssertion(getValidClaimsSetValues()));
 
-        assertDoesNotThrow(
-                () -> {
-                    validator.authenticateClient(queryMapToString(validQueryParams));
-                });
+        assertDoesNotThrow(() -> validator.authenticateClient(queryMapToString(validQueryParams)));
     }
 
     @Test
@@ -237,10 +220,9 @@ class TokenRequestValidatorTest {
         ClientAuthenticationException exception =
                 assertThrows(
                         ClientAuthenticationException.class,
-                        () -> {
-                            validator.authenticateClient(
-                                    queryMapToString(missingClientAssertionParams));
-                        });
+                        () ->
+                                validator.authenticateClient(
+                                        queryMapToString(missingClientAssertionParams)));
 
         assertEquals(
                 "Missing client_assertion jwt for configured client 'invalid-client'",
@@ -254,9 +236,9 @@ class TokenRequestValidatorTest {
         ClientAuthenticationException exception =
                 assertThrows(
                         ClientAuthenticationException.class,
-                        () -> {
-                            validator.authenticateClient(queryMapToString(missingClientIdParams));
-                        });
+                        () ->
+                                validator.authenticateClient(
+                                        queryMapToString(missingClientIdParams)));
 
         assertEquals(
                 "Unknown client, no client_id value or client_assertion jwt found in request",
@@ -271,8 +253,8 @@ class TokenRequestValidatorTest {
                                         java.util.Base64.getDecoder().decode(BASE64_PRIVATE_KEY)));
     }
 
-    private Certificate getCertificate(String base64certificate) throws CertificateException {
-        byte[] binaryCertificate = Base64.getDecoder().decode(base64certificate);
+    private Certificate getCertificate() throws CertificateException {
+        byte[] binaryCertificate = Base64.getDecoder().decode(BASE64_CERT);
         CertificateFactory factory = CertificateFactory.getInstance("X.509");
         return factory.generateCertificate(new ByteArrayInputStream(binaryCertificate));
     }
@@ -305,8 +287,7 @@ class TokenRequestValidatorTest {
                 "redirect_uri", "https://test-client.example.com/callback");
     }
 
-    private String queryMapToString(Map<String, String> queryParams)
-            throws UnsupportedEncodingException {
+    private String queryMapToString(Map<String, String> queryParams) {
         StringBuilder sb = new StringBuilder();
 
         for (Map.Entry<String, String> param : queryParams.entrySet()) {
