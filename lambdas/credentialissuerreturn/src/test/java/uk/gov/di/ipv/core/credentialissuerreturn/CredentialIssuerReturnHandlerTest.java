@@ -42,14 +42,14 @@ class CredentialIssuerReturnHandlerTest {
 
     @Captor private ArgumentCaptor<CredentialIssuerRequestDto> requestDto;
 
-    @Mock CredentialIssuerService credentialIssuerService;
+    @Mock private CredentialIssuerService credentialIssuerService;
 
-    @Mock ConfigurationService configurationService;
+    @Mock private ConfigurationService configurationService;
 
-    String authorization_code = "bar";
-    String sessionId = UUID.randomUUID().toString();
-    String passportIssuerId = "PassportIssuer";
-    CredentialIssuerConfig passportIssuer;
+    private final String authorization_code = "bar";
+    private final String sessionId = UUID.randomUUID().toString();
+    private final String passportIssuerId = "PassportIssuer";
+    private CredentialIssuerConfig passportIssuer;
 
     @BeforeEach
     void setUp() throws URISyntaxException {

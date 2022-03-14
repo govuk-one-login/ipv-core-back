@@ -402,11 +402,6 @@ Resources:
           KeyType: "HASH"
 
 Outputs:
-  IPVCoreAPIGatewayID:
-    Description: Core Back API Gateway ID
-    Export:
-      Name: !Sub "${AWS::StackName}-IPVCoreAPIGatewayID"
-    Value: !Ref IPVCoreInternalAPI
   IPVCoreInternalAPIGatewayID:
     Description: Core Back Internal API Gateway ID
     Export:
