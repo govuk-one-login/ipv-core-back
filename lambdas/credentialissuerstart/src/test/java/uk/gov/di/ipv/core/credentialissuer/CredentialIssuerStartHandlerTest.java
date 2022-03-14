@@ -26,30 +26,36 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class JourneyCriStartHandlerTest {
+class CredentialIssuerStartHandlerTest {
+
+    public static final String CRI_ID = "PassportIssuer";
+    public static final String CRI_NAME = "any";
+    public static final String CRI_TOKEN_URL = "http://www.example.com";
+    public static final String CRI_CREDENTIAL_URL = "http://www.example.com/credential";
+    public static final String CRI_AUTHORIZE_URL = "http://www.example.com/authorize";
+    public static final String IPV_CLIENT_ID = "ipv-core";
+    private static final String SESSION_ID = UUID.randomUUID().toString();
+    private static final String AUTHORIZATION_CODE = "bar";
 
     @Mock private Context context;
 
     @Mock ConfigurationService configurationService;
 
-    private final String authorization_code = "bar";
-    private final String sessionId = UUID.randomUUID().toString();
-    private final String passportIssuerId = "PassportIssuer";
-    private CredentialIssuerConfig passportIssuer;
+    private CredentialIssuerConfig credentialIssuerConfig;
 
-    private JourneyCriStartHandler underTest;
+    private CredentialIssuerStartHandler underTest;
 
     @BeforeEach
     void setUp() throws URISyntaxException {
-        underTest = new JourneyCriStartHandler(configurationService);
-        passportIssuer =
+        underTest = new CredentialIssuerStartHandler(configurationService);
+        credentialIssuerConfig =
                 new CredentialIssuerConfig(
-                        "PassportIssuer",
-                        "any",
-                        new URI("http://www.example.com"),
-                        new URI("http://www.example.com/credential"),
-                        new URI("http://www.example.com/authorize"),
-                        "ipv-core");
+                        CRI_ID,
+                        CRI_NAME,
+                        new URI(CRI_TOKEN_URL),
+                        new URI(CRI_CREDENTIAL_URL),
+                        new URI(CRI_AUTHORIZE_URL),
+                        IPV_CLIENT_ID);
     }
 
     @Test
@@ -57,10 +63,9 @@ class JourneyCriStartHandlerTest {
             throws JsonProcessingException {
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
-                        Map.of("credential_issuer_id", "foo"), Map.of("ipv-session-id", sessionId));
-        APIGatewayProxyResponseEvent response =
-                underTest
-                        .handleRequest(input, context);
+                        Map.of("credential_issuer_id", "foo"),
+                        Map.of("ipv-session-id", SESSION_ID));
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
         assert400Response(response, ErrorResponse.MISSING_AUTHORIZATION_CODE);
     }
 
@@ -68,11 +73,9 @@ class JourneyCriStartHandlerTest {
     void shouldReceive400ResponseCodeIfCredentialIssuerNotPresent() throws JsonProcessingException {
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
-                        Map.of("authorization_code", "foo"), Map.of("ipv-session-id", sessionId));
+                        Map.of("authorization_code", "foo"), Map.of("ipv-session-id", SESSION_ID));
 
-        APIGatewayProxyResponseEvent response =
-                underTest
-                        .handleRequest(input, context);
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
         assert400Response(response, ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
     }
 
@@ -86,10 +89,8 @@ class JourneyCriStartHandlerTest {
                                 "foo",
                                 "credential_issuer_id",
                                 "an invalid id"),
-                        Map.of("ipv-session-id", sessionId));
-        APIGatewayProxyResponseEvent response =
-                underTest
-                        .handleRequest(input, context);
+                        Map.of("ipv-session-id", SESSION_ID));
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
         assert400Response(response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
     }
 
@@ -97,34 +98,32 @@ class JourneyCriStartHandlerTest {
     void shouldReceive400ResponseCodeIfSessionIdNotPresent() throws JsonProcessingException {
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
-                        Map.of(
-                                "authorization_code",
-                                "foo",
-                                "credential_issuer_id",
-                                passportIssuerId),
+                        Map.of("authorization_code", "foo", "credential_issuer_id", CRI_ID),
                         Map.of());
-        APIGatewayProxyResponseEvent response =
-                underTest
-                        .handleRequest(input, context);
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
         assert400Response(response, ErrorResponse.MISSING_IPV_SESSION_ID);
     }
 
     @Test
-    void shouldReceive200ResponseCodeIfAllRequestParametersValid() {
-        when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
+    void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponse()
+            throws JsonProcessingException {
+        when(configurationService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
 
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
                         Map.of(
                                 "authorization_code",
-                                authorization_code,
+                                AUTHORIZATION_CODE,
                                 "credential_issuer_id",
-                                passportIssuerId),
-                        Map.of("ipv-session-id", sessionId));
+                                CRI_ID),
+                        Map.of("ipv-session-id", SESSION_ID));
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
 
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        Map responseBody = getResponseBodyAsMap(response);
 
+        assertEquals(CRI_ID, responseBody.get("id"));
+        assertEquals(CRI_AUTHORIZE_URL, responseBody.get("authorizeUrl"));
+        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
         verifyNoInteractions(context);
     }
 

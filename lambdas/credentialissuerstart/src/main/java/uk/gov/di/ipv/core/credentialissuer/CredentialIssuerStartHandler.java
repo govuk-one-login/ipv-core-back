@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import software.amazon.lambda.powertools.tracing.Tracing;
+import uk.gov.di.ipv.core.credentialissuer.domain.CriResponse;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -16,17 +17,16 @@ import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.util.Optional;
 
-public class JourneyCriStartHandler
+public class CredentialIssuerStartHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private final ConfigurationService configurationService;
 
-    public JourneyCriStartHandler(
-            ConfigurationService configurationService) {
+    public CredentialIssuerStartHandler(ConfigurationService configurationService) {
         this.configurationService = configurationService;
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public JourneyCriStartHandler() {
+    public CredentialIssuerStartHandler() {
         this.configurationService = new ConfigurationService();
     }
 
@@ -45,7 +45,13 @@ public class JourneyCriStartHandler
 
         CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request);
 
-        return ApiGatewayResponseGenerator.proxyJsonResponse(200, credentialIssuerConfig);
+        CriResponse criResponse =
+                new CriResponse(
+                        credentialIssuerConfig.getId(),
+                        credentialIssuerConfig.getAuthorizeUrl().toString(),
+                        request.getRedirectUri());
+
+        return ApiGatewayResponseGenerator.proxyJsonResponse(200, criResponse);
     }
 
     @Tracing
