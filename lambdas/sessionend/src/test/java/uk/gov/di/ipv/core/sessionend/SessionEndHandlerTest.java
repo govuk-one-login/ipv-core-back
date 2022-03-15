@@ -14,14 +14,20 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.AuthRequestValidator;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
+import uk.gov.di.ipv.core.sessionend.domain.ClientResponse;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyMap;
@@ -43,6 +49,7 @@ class SessionEndHandlerTest {
 
     @Mock private Context context;
     @Mock private AuthorizationCodeService mockAuthorizationCodeService;
+    @Mock private IpvSessionService mockSessionService;
     @Mock private ConfigurationService mockConfigurationService;
     @Mock private AuthRequestValidator mockAuthRequestValidator;
 
@@ -55,6 +62,7 @@ class SessionEndHandlerTest {
         handler =
                 new SessionEndHandler(
                         mockAuthorizationCodeService,
+                        mockSessionService,
                         mockConfigurationService,
                         mockAuthRequestValidator);
     }
@@ -65,6 +73,7 @@ class SessionEndHandlerTest {
                 .thenReturn(authorizationCode);
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
+        when(mockSessionService.getIpvSession(anyString())).thenReturn(generateIpvSessionItem());
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setQueryStringParameters(VALID_QUERY_PARAMS);
@@ -74,19 +83,21 @@ class SessionEndHandlerTest {
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
 
-        Map<String, Map<String, String>> responseBody =
+        ClientResponse responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-        Map<String, String> authCode = responseBody.get("code");
 
         verify(mockAuthorizationCodeService)
-                .persistAuthorizationCode(authCode.get("value"), "12345", "http://example.com");
-        assertEquals(authorizationCode.toString(), authCode.get("value"));
+                .persistAuthorizationCode(
+                        responseBody.getAuthCode(), "12345", responseBody.getRedirectUrl());
+        assertEquals(authorizationCode.toString(), responseBody.getAuthCode());
+        assertEquals("https://example.com", responseBody.getRedirectUrl());
     }
 
     @Test
     void shouldReturn400IfRequestFailsValidation() throws JsonProcessingException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(new ValidationResult<>(false, ErrorResponse.MISSING_QUERY_PARAMETERS));
+        when(mockSessionService.getIpvSession(anyString())).thenReturn(generateIpvSessionItem());
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setQueryStringParameters(new HashMap<>());
@@ -113,6 +124,7 @@ class SessionEndHandlerTest {
             throws JsonProcessingException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
+        when(mockSessionService.getIpvSession(anyString())).thenReturn(generateIpvSessionItem());
 
         List<String> paramsToRemove =
                 List.of(
@@ -121,11 +133,23 @@ class SessionEndHandlerTest {
                         OAuth2RequestParams.RESPONSE_TYPE,
                         OAuth2RequestParams.SCOPE);
         for (String param : paramsToRemove) {
-            Map<String, String> unparseableParams = new HashMap<>(VALID_QUERY_PARAMS);
-            unparseableParams.remove(param);
+            IpvSessionItem item = generateIpvSessionItem();
+            ClientSessionDetailsDto clientSessionDetailsDto =
+                    generateValidClientSessionDetailsDto();
+            if (param.equals(OAuth2RequestParams.REDIRECT_URI)) {
+                clientSessionDetailsDto.setRedirectUri(null);
+            } else if (param.equals(OAuth2RequestParams.CLIENT_ID)) {
+                clientSessionDetailsDto.setClientId(null);
+            } else if (param.equals(OAuth2RequestParams.RESPONSE_TYPE)) {
+                clientSessionDetailsDto.setResponseType(null);
+            } else if (param.equals(OAuth2RequestParams.SCOPE)) {
+                clientSessionDetailsDto.setScope(null);
+            }
+            item.setClientSessionDetails(clientSessionDetailsDto);
+
+            when(mockSessionService.getIpvSession(anyString())).thenReturn(item);
 
             APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-            event.setQueryStringParameters(unparseableParams);
             event.setHeaders(TEST_EVENT_HEADERS);
 
             APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
@@ -142,5 +166,24 @@ class SessionEndHandlerTest {
             verify(mockAuthorizationCodeService, never())
                     .persistAuthorizationCode(anyString(), anyString(), anyString());
         }
+    }
+
+    private IpvSessionItem generateIpvSessionItem() {
+        IpvSessionItem item = new IpvSessionItem();
+        item.setIpvSessionId(UUID.randomUUID().toString());
+        item.setUserState("test-state");
+        item.setCreationDateTime(new Date().toString());
+
+        ClientSessionDetailsDto clientSessionDetailsDto =
+                new ClientSessionDetailsDto(
+                        "code", "test-client-id", "https://example.com", "openid", "test-state");
+        item.setClientSessionDetails(clientSessionDetailsDto);
+
+        return item;
+    }
+
+    private ClientSessionDetailsDto generateValidClientSessionDetailsDto() {
+        return new ClientSessionDetailsDto(
+                "code", "test-client-id", "https://example.com", "openid", "test-state");
     }
 }
