@@ -2,6 +2,10 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.crypto.ECDSAVerifier;
+import com.nimbusds.jwt.JWTClaimNames;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.PlainJWT;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
@@ -12,11 +16,10 @@ import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.auth.ClientAuthentication;
 import com.nimbusds.oauth2.sdk.auth.PrivateKeyJWT;
-import com.nimbusds.oauth2.sdk.client.ClientReadRequest;
+import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
-import net.minidev.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -34,7 +37,6 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Objects;
-import java.util.Optional;
 
 public class CredentialIssuerService {
 
@@ -121,12 +123,24 @@ public class CredentialIssuerService {
         }
     }
 
-    public JSONObject getCredential(BearerAccessToken accessToken, CredentialIssuerConfig config) {
-        ClientReadRequest credentialRequest =
-                new ClientReadRequest(config.getCredentialUrl(), accessToken);
+    public String getVerifiableCredential(
+            BearerAccessToken accessToken, CredentialIssuerConfig config, String subject) {
+        String requestJWT =
+                new PlainJWT(
+                                new JWTClaimsSet.Builder()
+                                        .claim(
+                                                JWTClaimNames.SUBJECT,
+                                                String.format("urn:uuid:%s", subject))
+                                        .build())
+                        .serialize();
+
+        HTTPRequest credentialRequest =
+                new HTTPRequest(HTTPRequest.Method.POST, config.getCredentialUrl());
+        credentialRequest.setAuthorization(accessToken.toAuthorizationHeader());
+        credentialRequest.setQuery(requestJWT);
 
         try {
-            HTTPResponse response = credentialRequest.toHTTPRequest().send();
+            HTTPResponse response = credentialRequest.send();
             if (!response.indicatesSuccess()) {
                 LOGGER.error(
                         "Error retrieving credential: {} - {}",
@@ -137,29 +151,42 @@ public class CredentialIssuerService {
                         ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
             }
 
-            return response
-                    .getContentAsJSONObject(); // In future we can use response.getContentAsJWT()
+            SignedJWT verifiableCredential = (SignedJWT) response.getContentAsJWT();
+            if (!verifiableCredential.verify(new ECDSAVerifier(config.getVcVerifyingPublicJwk()))) {
+                LOGGER.error("Verifiable credential signature is not valid");
+                throw new CredentialIssuerException(
+                        HTTPResponse.SC_SERVER_ERROR,
+                        ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
+            }
+
+            return verifiableCredential.serialize();
+
         } catch (IOException | ParseException e) {
-            LOGGER.error("Error retrieving credential: {}", e.getMessage(), e);
+            LOGGER.error("Error retrieving credential: {}", e.getMessage());
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
+        } catch (JOSEException e) {
+            LOGGER.error("Error creating signature verifier from public key: {}", e.getMessage());
+            throw new CredentialIssuerException(
+                    HTTPResponse.SC_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
+        } catch (java.text.ParseException e) {
+            LOGGER.error("Error parsing credential issuer public JWK: {}", e.getMessage());
+            throw new CredentialIssuerException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_JWK);
         }
-    }
-
-    private String getClientId() {
-        return Optional.ofNullable(System.getenv("IPV_CLIENT_ID")).orElse("DI IPV CLIENT");
     }
 
     private TokenResponse parseTokenResponse(HTTPResponse httpResponse) throws ParseException {
         return OIDCTokenResponseParser.parse(httpResponse);
     }
 
-    public void persistUserCredentials(JSONObject credential, CredentialIssuerRequestDto request) {
+    public void persistUserCredentials(String credential, CredentialIssuerRequestDto request) {
         UserIssuedCredentialsItem userIssuedCredentials = new UserIssuedCredentialsItem();
         userIssuedCredentials.setIpvSessionId(request.getIpvSessionId());
         userIssuedCredentials.setCredentialIssuer(request.getCredentialIssuerId());
-        userIssuedCredentials.setCredential(credential.toJSONString());
+        userIssuedCredentials.setCredential(credential);
         userIssuedCredentials.setDateCreated(LocalDateTime.now());
         try {
             dataStore.create(userIssuedCredentials);

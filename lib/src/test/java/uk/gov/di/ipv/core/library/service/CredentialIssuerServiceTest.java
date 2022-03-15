@@ -7,7 +7,6 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import net.minidev.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,9 +31,8 @@ import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
@@ -45,6 +43,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC;
 
 @WireMockTest
 @ExtendWith(MockitoExtension.class)
@@ -57,7 +57,6 @@ class CredentialIssuerServiceTest {
 
     @Mock private DataStore<UserIssuedCredentialsItem> mockDataStore;
     @Mock private ConfigurationService mockConfigurationService;
-    @Mock private JSONObject mockJSONObject;
 
     private CredentialIssuerService credentialIssuerService;
 
@@ -174,15 +173,18 @@ class CredentialIssuerServiceTest {
                         TEST_IPV_SESSION_ID,
                         "http://www.example.com/redirect");
 
-        credentialIssuerService.persistUserCredentials(mockJSONObject, credentialIssuerRequestDto);
+        credentialIssuerService.persistUserCredentials(SIGNED_VC, credentialIssuerRequestDto);
         verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture());
-        verify(mockJSONObject).toJSONString();
         assertEquals(
                 credentialIssuerRequestDto.getIpvSessionId(),
                 userIssuedCredentialsItemCaptor.getValue().getIpvSessionId());
         assertEquals(
                 credentialIssuerRequestDto.getCredentialIssuerId(),
                 userIssuedCredentialsItemCaptor.getValue().getCredentialIssuer());
+        assertEquals(
+                credentialIssuerRequestDto.getCredentialIssuerId(),
+                userIssuedCredentialsItemCaptor.getValue().getCredentialIssuer());
+        assertEquals(SIGNED_VC, userIssuedCredentialsItemCaptor.getValue().getCredential());
     }
 
     @Test
@@ -202,7 +204,7 @@ class CredentialIssuerServiceTest {
                         CredentialIssuerException.class,
                         () ->
                                 credentialIssuerService.persistUserCredentials(
-                                        mockJSONObject, credentialIssuerRequestDto));
+                                        SIGNED_VC, credentialIssuerRequestDto));
 
         assertNotNull(thrown);
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
@@ -210,37 +212,34 @@ class CredentialIssuerServiceTest {
     }
 
     @Test
-    void getCredentialCorrectlyCallsACredentialIssuer(WireMockRuntimeInfo wmRuntimeInfo) {
+    void getVerifiableCredentialCorrectlyCallsACredentialIssuer(WireMockRuntimeInfo wmRuntimeInfo) {
         stubFor(
-                get("/credential")
+                post("/credentials/issue")
                         .willReturn(
                                 aResponse()
-                                        .withHeader(
-                                                "Content-Type", "application/json;charset=UTF-8")
-                                        .withBody(
-                                                "{\"id\": \"some-resource-id\", \"evidenceType\": \"passport\", \"evidenceID\": \"passport-abc-12345\"}")));
+                                        .withHeader("Content-Type", "application/jwt;charset=UTF-8")
+                                        .withBody(SIGNED_VC)));
 
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
 
         BearerAccessToken accessToken = new BearerAccessToken();
 
-        JSONObject credential =
-                credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
+        String credential =
+                credentialIssuerService.getVerifiableCredential(
+                        accessToken, credentialIssuerConfig, "subject");
 
-        assertEquals("some-resource-id", credential.get("id"));
-        assertEquals("passport", credential.get("evidenceType"));
-        assertEquals("passport-abc-12345", credential.get("evidenceID"));
+        assertEquals(SIGNED_VC, credential);
 
         verify(
-                getRequestedFor(urlEqualTo("/credential"))
+                postRequestedFor(urlEqualTo("/credentials/issue"))
                         .withHeader("Authorization", equalTo("Bearer " + accessToken.getValue())));
     }
 
     @Test
-    void getCredentialThrowsIfResponseIsNotOk(WireMockRuntimeInfo wmRuntimeInfo) {
+    void getVerifiableCredentialThrowsIfResponseIsNotOk(WireMockRuntimeInfo wmRuntimeInfo) {
         stubFor(
-                get("/credential")
+                post("/credentials/issue")
                         .willReturn(
                                 aResponse()
                                         .withStatus(500)
@@ -256,22 +255,21 @@ class CredentialIssuerServiceTest {
                 assertThrows(
                         CredentialIssuerException.class,
                         () ->
-                                credentialIssuerService.getCredential(
-                                        accessToken, credentialIssuerConfig));
+                                credentialIssuerService.getVerifiableCredential(
+                                        accessToken, credentialIssuerConfig, "subject"));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
     }
 
     @Test
-    void getCredentialThrowsIfNotValidJsonInResponse(WireMockRuntimeInfo wmRuntimeInfo) {
+    void getVerifiableCredentialThrowsIfNotValidSignature(WireMockRuntimeInfo wmRuntimeInfo) {
         stubFor(
-                get("/credential")
+                post("/credentials/issue")
                         .willReturn(
                                 aResponse()
-                                        .withHeader(
-                                                "Content-Type", "application/json;charset=UTF-8")
-                                        .withBody("What on earth is this?")));
+                                        .withHeader("Content-Type", "application/jwt;charset=UTF-8")
+                                        .withBody(SIGNED_VC + "THISWILLBREAKTHESIGNATURE")));
 
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
@@ -281,11 +279,12 @@ class CredentialIssuerServiceTest {
                 assertThrows(
                         CredentialIssuerException.class,
                         () ->
-                                credentialIssuerService.getCredential(
-                                        accessToken, credentialIssuerConfig));
+                                credentialIssuerService.getVerifiableCredential(
+                                        accessToken, credentialIssuerConfig, "subject"));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
+        assertEquals(
+                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL, thrown.getErrorResponse());
     }
 
     private CredentialIssuerConfig getStubCredentialIssuerConfig(
@@ -294,9 +293,11 @@ class CredentialIssuerServiceTest {
                 "StubPassport",
                 "any",
                 URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/token"),
-                URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/credential"),
+                URI.create(
+                        "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/credentials/issue"),
                 URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/authorizeUrl"),
-                "ipv-core");
+                "ipv-core",
+                EC_PUBLIC_JWK);
     }
 
     private RSAPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {

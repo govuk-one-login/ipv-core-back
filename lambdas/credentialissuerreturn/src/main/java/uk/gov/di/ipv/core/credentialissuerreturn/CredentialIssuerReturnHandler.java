@@ -7,7 +7,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
-import net.minidev.json.JSONObject;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
@@ -63,9 +62,10 @@ public class CredentialIssuerReturnHandler
         try {
             BearerAccessToken accessToken =
                     credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);
-            JSONObject credential =
-                    credentialIssuerService.getCredential(accessToken, credentialIssuerConfig);
-            credentialIssuerService.persistUserCredentials(credential, request);
+            String verifiableCredential =
+                    credentialIssuerService.getVerifiableCredential(
+                            accessToken, credentialIssuerConfig, request.getIpvSessionId());
+            credentialIssuerService.persistUserCredentials(verifiableCredential, request);
 
             JourneyResponse journeyResponse = new JourneyResponse(NEXT_JOURNEY_STEP_URI);
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, journeyResponse);

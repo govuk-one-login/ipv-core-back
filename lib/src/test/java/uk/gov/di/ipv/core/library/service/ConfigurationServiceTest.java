@@ -104,7 +104,8 @@ class ConfigurationServiceTest {
                         URI.create(TEST_TOKEN_URL),
                         URI.create(TEST_CREDENTIAL_URL),
                         URI.create(TEST_CREDENTIAL_URL),
-                        "ipv-core");
+                        "ipv-core",
+                        "{}");
 
         assertEquals(expected.getTokenUrl(), result.getTokenUrl());
         assertEquals(expected.getCredentialUrl(), result.getCredentialUrl());
