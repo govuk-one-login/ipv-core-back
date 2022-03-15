@@ -72,10 +72,10 @@ paths:
         type: "aws_proxy"
   /journey/session/end:
     post:
-      description: "Request an authorization code"
+      description: "Called when the user has completed their user journey in IPV Core"
       responses:
         200:
-          description: "The authorization code"
+          description: "Authorization Code and details"
           content:
             application/json:
               schema:
