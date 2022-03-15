@@ -10,15 +10,17 @@ import uk.gov.di.ipv.core.credentialissuer.domain.CriResponse;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
-import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
+import java.util.Map;
 import java.util.Optional;
 
 public class CredentialIssuerStartHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+
+    public static final String CRI_ID = "criId";
+
     private final ConfigurationService configurationService;
 
     public CredentialIssuerStartHandler(ConfigurationService configurationService) {
@@ -35,46 +37,39 @@ public class CredentialIssuerStartHandler
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
 
-        CredentialIssuerRequestDto request =
-                RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
+        Map<String, String> pathParameters = input.getPathParameters();
 
-        var errorResponse = validate(request);
+        var errorResponse = validate(pathParameters);
         if (errorResponse.isPresent()) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
         }
 
-        CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request);
+        CredentialIssuerConfig credentialIssuerConfig =
+                getCredentialIssuerConfig(pathParameters.get(CRI_ID));
+
+        if (credentialIssuerConfig == null) {
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    400, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
+        }
 
         CriResponse criResponse =
                 new CriResponse(
                         credentialIssuerConfig.getId(),
-                        credentialIssuerConfig.getAuthorizeUrl().toString(),
-                        request.getRedirectUri());
+                        credentialIssuerConfig.getIpvClientId(),
+                        credentialIssuerConfig.getAuthorizeUrl().toString());
 
         return ApiGatewayResponseGenerator.proxyJsonResponse(200, criResponse);
     }
 
     @Tracing
-    private Optional<ErrorResponse> validate(CredentialIssuerRequestDto request) {
-        if (StringUtils.isBlank(request.getAuthorizationCode())) {
-            return Optional.of(ErrorResponse.MISSING_AUTHORIZATION_CODE);
-        }
-
-        if (StringUtils.isBlank(request.getCredentialIssuerId())) {
+    private Optional<ErrorResponse> validate(Map<String, String> pathParameters) {
+        if (pathParameters == null || StringUtils.isBlank(pathParameters.get(CRI_ID))) {
             return Optional.of(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
-        }
-
-        if (StringUtils.isBlank(request.getIpvSessionId())) {
-            return Optional.of(ErrorResponse.MISSING_IPV_SESSION_ID);
-        }
-
-        if (getCredentialIssuerConfig(request) == null) {
-            return Optional.of(ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
         }
         return Optional.empty();
     }
 
-    private CredentialIssuerConfig getCredentialIssuerConfig(CredentialIssuerRequestDto request) {
-        return configurationService.getCredentialIssuer(request.getCredentialIssuerId());
+    private CredentialIssuerConfig getCredentialIssuerConfig(String criId) {
+        return configurationService.getCredentialIssuer(criId);
     }
 }

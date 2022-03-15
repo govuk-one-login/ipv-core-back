@@ -6,18 +6,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class CriResponse {
     @JsonProperty private final String id;
 
-    @JsonProperty private final String authorizeUrl;
+    @JsonProperty private final String ipvClientId;
 
-    @JsonProperty private final String request;
+    @JsonProperty private final String authorizeUrl;
 
     @JsonCreator
     public CriResponse(
             @JsonProperty(value = "id", required = true) String id,
-            @JsonProperty(value = "authorizeUrl", required = true) String authorizeUrl,
-            @JsonProperty(value = "request", required = true) String request) {
+            @JsonProperty(value = "ipvClientId", required = true) String ipvClientId,
+            @JsonProperty(value = "authorizeUrl", required = true) String authorizeUrl) {
         this.id = id;
+        this.ipvClientId = ipvClientId;
         this.authorizeUrl = authorizeUrl;
-        this.request = request;
     }
 
     public String getId() {
@@ -28,7 +28,7 @@ public class CriResponse {
         return authorizeUrl;
     }
 
-    public String getRequest() {
-        return request;
+    public String getIpvClientId() {
+        return ipvClientId;
     }
 }

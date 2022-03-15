@@ -223,11 +223,11 @@ Resources:
   IPVCredentialIssuerStartFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "ipv-journey-cri-start-${Environment}"
-      Handler: uk.gov.di.ipv.core.credentialissuer.JourneyCriStartHandler::handleRequest
+      FunctionName: !Sub "ipv-credential-issuer-start-${Environment}"
+      Handler: uk.gov.di.ipv.core.credentialissuer.CredentialIssuerStartHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/credentialissuer
+      CodeUri: ../lambdas/credentialissuerstart
       Architectures:
         - x86_64
       MemorySize: 3008
@@ -236,7 +236,7 @@ Resources:
         Variables:
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-start-${Environment}
       Policies:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
