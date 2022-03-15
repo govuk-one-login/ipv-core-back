@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.library.domain;
 
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,7 +9,9 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @ExcludeFromGeneratedCoverageReport
 public class SharedAttributesDeserializer extends StdDeserializer<SharedAttributes> {
@@ -28,43 +29,49 @@ public class SharedAttributesDeserializer extends StdDeserializer<SharedAttribut
     @Override
     public SharedAttributes deserialize(JsonParser jsonParser, DeserializationContext ctxt)
             throws IOException {
-
         SharedAttributes.Builder sharedAttributesBuilder = new SharedAttributes.Builder();
 
         JsonNode node = jsonParser.getCodec().readTree(jsonParser);
-
-        JsonNode attributes = node.get("attributes");
-        if (attributes == null) {
+        if (node.isEmpty()) {
             return SharedAttributes.empty();
         }
 
-        JsonNode names = attributes.get("names");
-        if (names != null) {
-            List<String> givenNames = new ArrayList<>();
-            for (JsonNode name : names.get("givenNames")) {
-                givenNames.add(name.asText());
+        JsonNode nameNode = node.get("name");
+        if (nameNode != null) {
+            Set<Name> nameList = new HashSet<>();
+            List<NameParts> namePartsList = new ArrayList<>();
+
+            for (JsonNode jo : nameNode) {
+                JsonNode nameParts = jo.get("nameParts");
+                if (nameParts != null) {
+                    nameParts.forEach(
+                            namePart ->
+                                    namePartsList.add(
+                                            objectMapper.convertValue(namePart, NameParts.class)));
+                }
             }
-            JsonNode familyName = names.get("familyName");
-            if (familyName != null) {
-                sharedAttributesBuilder.setName(new Name(givenNames, familyName.asText()));
-            }
+
+            Name names = new Name(namePartsList);
+            nameList.add(names);
+            sharedAttributesBuilder.setName(nameList);
         }
 
-        JsonNode dateOfBirth = attributes.get("dateOfBirth");
+        JsonNode dateOfBirth = node.get("birthDate");
         if (dateOfBirth != null) {
-            sharedAttributesBuilder.setDateOfBirth(dateOfBirth.asText());
+            Set<BirthDate> dateList = new HashSet<>();
+            for (JsonNode jo : dateOfBirth) {
+                dateList.add(objectMapper.convertValue(jo, BirthDate.class));
+            }
+            sharedAttributesBuilder.setBirthDate(dateList);
         }
 
-        JsonNode address = attributes.get("address");
+        JsonNode address = node.get("address");
         if (address != null) {
-            sharedAttributesBuilder.setAddress(
-                    objectMapper.convertValue(address, new TypeReference<>() {}));
-        }
-
-        JsonNode addressHistory = attributes.get("addressHistory");
-        if (addressHistory != null) {
-            sharedAttributesBuilder.setAddressHistory(
-                    objectMapper.convertValue(addressHistory, new TypeReference<>() {}));
+            Set<Address> addressList = new HashSet<>();
+            for (JsonNode jo : address) {
+                addressList.add(objectMapper.convertValue(jo, Address.class));
+            }
+            sharedAttributesBuilder.setAddress(addressList);
         }
 
         return sharedAttributesBuilder.build();
