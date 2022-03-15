@@ -3,7 +3,7 @@ name: Test, Build, Package & Ship Core Back
 on:
   push:
     branches:
-      - PYI-742-GitHub-Actions-Build
+      - main
 
 jobs:
   deploy:
@@ -23,13 +23,6 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
           cache: gradle
-
-      # - name: Cache Gradle packages
-      #   uses: actions/cache@v1
-      #   with:
-      #     path: ~/.gradle/caches
-      #     key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
-      #     restore-keys: ${{ runner.os }}-gradle
 
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
