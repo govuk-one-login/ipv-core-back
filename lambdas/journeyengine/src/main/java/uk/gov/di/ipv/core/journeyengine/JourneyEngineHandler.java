@@ -66,6 +66,12 @@ public class JourneyEngineHandler
     @Tracing
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
+
+        if (input.getPathParameters().isEmpty()) {
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_JOURNEY_STEP_URL_PATH_PARAM);
+        }
+
         String journeyStep = input.getPathParameters().get(JOURNEY_STEP_PARAM);
 
         var ipvSessionId =
