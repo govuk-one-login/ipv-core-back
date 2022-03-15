@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.helpers.KmsSigner;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -30,6 +31,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
@@ -146,6 +148,8 @@ class SharedAttributesHandlerTest {
                                 "CredentialIssuer2",
                                 objectMapper.writeValueAsString(CREDENTIAL_INPUT_2)));
 
+        List<Address> addressList = new ArrayList<>();
+
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
 
@@ -161,18 +165,24 @@ class SharedAttributesHandlerTest {
         JsonNode vcAttributes = claims.get(VC_HTTP_API_CLAIM);
 
         JsonNode address = vcAttributes.get("address");
-        if (address != null) {
-            for (JsonNode jo : address) {
-                if (jo.get("streetAddress") != null) {
-                    if (jo.get("streetAddress").asText().equals("758 Huel Neck")) {
-                        assertEquals("758 Huel Neck", jo.get("streetAddress").asText());
-                    }
-                    if (jo.get("postalCode").asText().equals("S5 6UN")) {
-                        assertEquals("S5 6UN", jo.get("postalCode").asText());
-                    }
-                }
-            }
+        for (JsonNode jo : address) {
+            addressList.add(objectMapper.convertValue(jo, Address.class));
         }
+
+        Address streetAddress =
+                addressList.stream()
+                        .filter(x -> "35 Idsworth Road".equals(x.getStreetAddress()))
+                        .findAny()
+                        .orElse(null);
+        Address postCode =
+                addressList.stream()
+                        .filter(x -> "38421-3292".equals(x.getPostalCode()))
+                        .findAny()
+                        .orElse(null);
+
+        assertEquals(true, !streetAddress.getStreetAddress().isEmpty());
+        assertEquals(true, !postCode.getPostalCode().isEmpty());
+
         assertEquals(2, (vcAttributes.get("name")).size());
         assertEquals(3, (vcAttributes.get("address")).size());
         assertEquals(3, (vcAttributes.get("birthDate")).size());

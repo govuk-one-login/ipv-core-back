@@ -40,7 +40,6 @@ public class SharedAttributes {
         return Optional.ofNullable(address);
     }
 
-    @JsonPropertyOrder({"name", "birthDate", "address"})
     public static class Builder {
         private Set<Name> name;
         private Set<BirthDate> birthDate;
