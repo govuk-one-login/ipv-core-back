@@ -115,7 +115,7 @@ paths:
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVJourneyEngineFunction.Arn}/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVSharedAttributesFunction.Arn}/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
   /journey/cri/start/{criId}:
@@ -123,7 +123,7 @@ paths:
       description: Called when the frontend begins the CRI journey.
       responses:
         200:
-          description: "Returns the id, authorizationUrl and request for a CRI."
+          description: "Returns the id, ipvClientId and authorizationUrl for a CRI."
           content:
             application/json:
               schema:
