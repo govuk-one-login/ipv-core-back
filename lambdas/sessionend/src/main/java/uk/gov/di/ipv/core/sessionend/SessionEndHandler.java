@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.authorization;
+package uk.gov.di.ipv.core.sessionend;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -25,10 +25,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class AuthorizationHandler
+public class SessionEndHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AuthorizationHandler.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SessionEndHandler.class);
     private static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
 
     private final AuthorizationCodeService authorizationCodeService;
@@ -36,13 +36,13 @@ public class AuthorizationHandler
     private final AuthRequestValidator authRequestValidator;
 
     @ExcludeFromGeneratedCoverageReport
-    public AuthorizationHandler() {
+    public SessionEndHandler() {
         this.configurationService = new ConfigurationService();
         this.authorizationCodeService = new AuthorizationCodeService(configurationService);
         this.authRequestValidator = new AuthRequestValidator(configurationService);
     }
 
-    public AuthorizationHandler(
+    public SessionEndHandler(
             AuthorizationCodeService authorizationCodeService,
             ConfigurationService configurationService,
             AuthRequestValidator authRequestValidator) {

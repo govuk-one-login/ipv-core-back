@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.authorization;
+package uk.gov.di.ipv.core.sessionend;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -31,7 +31,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class AuthorizationHandlerTest {
+class SessionEndHandlerTest {
     private static final Map<String, String> TEST_EVENT_HEADERS = Map.of("ipv-session-id", "12345");
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Map<String, String> VALID_QUERY_PARAMS =
@@ -46,14 +46,14 @@ class AuthorizationHandlerTest {
     @Mock private ConfigurationService mockConfigurationService;
     @Mock private AuthRequestValidator mockAuthRequestValidator;
 
-    private AuthorizationHandler handler;
+    private SessionEndHandler handler;
     private AuthorizationCode authorizationCode;
 
     @BeforeEach
     void setUp() {
         authorizationCode = new AuthorizationCode();
         handler =
-                new AuthorizationHandler(
+                new SessionEndHandler(
                         mockAuthorizationCodeService,
                         mockConfigurationService,
                         mockAuthRequestValidator);

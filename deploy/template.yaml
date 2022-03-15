@@ -110,14 +110,14 @@ Resources:
             Path: /token
             Method: POST
 
-  IPVAuthorizationFunction:
+  IPVSessionEndFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "ipv-authorization-${Environment}"
-      Handler: uk.gov.di.ipv.core.authorization.AuthorizationHandler::handleRequest
+      FunctionName: !Sub "ipv-session-end-${Environment}"
+      Handler: uk.gov.di.ipv.core.sessionend.SessionEndHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/authorization
+      CodeUri: ../lambdas/sessionend
       Architectures:
         - x86_64
       MemorySize: 512
@@ -125,7 +125,7 @@ Resources:
       Environment:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub authorization-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub session-end-${Environment}
           AUTH_CODES_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AuthCodesTable.Arn]]
       Policies:
         - DynamoDBWritePolicy:
@@ -140,8 +140,8 @@ Resources:
           Properties:
             RestApiId:
               Ref: IPVCoreInternalAPI
-            Path: /authorize
-            Method: GET
+            Path: /journey/session/end
+            Method: POST
 
   IPVSessionFunction:
     Type: AWS::Serverless::Function
@@ -192,7 +192,7 @@ Resources:
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
           SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/sharedAttributesJwtSigningKeyId"
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub cri-return-${Environment}
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UserIssuedCredentialsTable
