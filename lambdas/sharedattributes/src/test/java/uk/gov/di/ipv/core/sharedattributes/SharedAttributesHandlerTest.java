@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.sharedattributes.SharedAttributesHandler.CLAIMS_CLAIM;
@@ -180,8 +181,8 @@ class SharedAttributesHandlerTest {
                         .findAny()
                         .orElse(null);
 
-        assertEquals(true, !streetAddress.getStreetAddress().isEmpty());
-        assertEquals(true, !postCode.getPostalCode().isEmpty());
+        assertFalse(streetAddress.getStreetAddress().isEmpty());
+        assertFalse(postCode.getPostalCode().isEmpty());
 
         assertEquals(2, (vcAttributes.get("name")).size());
         assertEquals(3, (vcAttributes.get("address")).size());
