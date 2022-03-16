@@ -143,14 +143,14 @@ Resources:
             Path: /authorize
             Method: GET
 
-  IPVSessionFunction:
+  IPVSessionStartFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "ipv-session-${Environment}"
-      Handler: uk.gov.di.ipv.core.session.IpvSessionHandler::handleRequest
+      FunctionName: !Sub "ipv-session-start-${Environment}"
+      Handler: uk.gov.di.ipv.core.session.IpvSessionStartHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/session
+      CodeUri: ../lambdas/sessionstart
       Architectures:
         - x86_64
       MemorySize: 512
@@ -158,7 +158,7 @@ Resources:
       Environment:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub session-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub session-start-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt SessionsTable.Arn]]
       Policies:
         - DynamoDBReadPolicy:
@@ -171,7 +171,7 @@ Resources:
           Properties:
             RestApiId:
               Ref: IPVCoreInternalAPI
-            Path: /ipv-session
+            Path: /session/start
             Method: POST
 
   IPVCriReturnFunction:

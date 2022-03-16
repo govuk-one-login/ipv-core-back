@@ -13,7 +13,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.util.Map;
 
-public class IpvSessionHandler
+public class IpvSessionStartHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private static final String IPV_SESSION_ID_KEY = "ipvSessionId";
@@ -23,12 +23,12 @@ public class IpvSessionHandler
     private final IpvSessionService ipvSessionService;
 
     @ExcludeFromGeneratedCoverageReport
-    public IpvSessionHandler() {
+    public IpvSessionStartHandler() {
         this.configurationService = new ConfigurationService();
         this.ipvSessionService = new IpvSessionService(configurationService);
     }
 
-    public IpvSessionHandler(
+    public IpvSessionStartHandler(
             IpvSessionService ipvSessionService, ConfigurationService configurationService) {
         this.ipvSessionService = ipvSessionService;
         this.configurationService = configurationService;
