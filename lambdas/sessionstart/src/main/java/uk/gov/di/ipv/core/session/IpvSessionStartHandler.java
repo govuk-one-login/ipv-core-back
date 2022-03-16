@@ -21,10 +21,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-public class IpvSessionHandler
+public class IpvSessionStartHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(IpvSessionHandler.class.getName());
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(IpvSessionStartHandler.class.getName());
     private static final String IPV_SESSION_ID_KEY = "ipvSessionId";
     private static final String RESPONSE_TYPE_PARAM = "response_type";
     private static final String CLIENT_ID_PARAM = "client_id";
@@ -37,12 +38,12 @@ public class IpvSessionHandler
     private final IpvSessionService ipvSessionService;
 
     @ExcludeFromGeneratedCoverageReport
-    public IpvSessionHandler() {
+    public IpvSessionStartHandler() {
         this.configurationService = new ConfigurationService();
         this.ipvSessionService = new IpvSessionService(configurationService);
     }
 
-    public IpvSessionHandler(
+    public IpvSessionStartHandler(
             IpvSessionService ipvSessionService, ConfigurationService configurationService) {
         this.ipvSessionService = ipvSessionService;
         this.configurationService = configurationService;

@@ -7,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.utils.StringUtils;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.journeyengine.domain.JourneyEngineResult;
 import uk.gov.di.ipv.core.journeyengine.domain.PageResponse;
@@ -22,6 +23,8 @@ import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_ACTIVITY_HISTORY;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_ADDRESS;
@@ -66,6 +69,14 @@ public class JourneyEngineHandler
     @Tracing
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
+
+        Map<String, String> pathParameters = input.getPathParameters();
+
+        var errorResponse = validate(pathParameters);
+        if (errorResponse.isPresent()) {
+            return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
+        }
+
         String journeyStep = input.getPathParameters().get(JOURNEY_STEP_PARAM);
 
         var ipvSessionId =
@@ -174,5 +185,14 @@ public class JourneyEngineHandler
         updatedIpvSessionItem.setUserState(updatedStateValue.toString());
 
         ipvSessionService.updateIpvSession(updatedIpvSessionItem);
+    }
+
+    @Tracing
+    private Optional<ErrorResponse> validate(Map<String, String> pathParameters) {
+        if (pathParameters.isEmpty()
+                || StringUtils.isBlank(pathParameters.get(JOURNEY_STEP_PARAM))) {
+            return Optional.of(ErrorResponse.MISSING_JOURNEY_STEP_URL_PATH_PARAM);
+        }
+        return Optional.empty();
     }
 }

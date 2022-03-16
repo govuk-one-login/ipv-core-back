@@ -20,6 +20,7 @@ import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,13 +38,53 @@ class JourneyEngineHandlerTest {
     @Mock private ConfigurationService mockConfigurationService;
 
     private JourneyEngineHandler journeyEngineHandler;
-
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
         journeyEngineHandler =
                 new JourneyEngineHandler(mockIpvSessionService, mockConfigurationService);
+    }
+
+    @Test
+    void shouldReturn400OnMissingParams() throws IOException {
+
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        event.setPathParameters(Collections.emptyMap());
+
+        APIGatewayProxyResponseEvent response =
+                journeyEngineHandler.handleRequest(event, mockContext);
+
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        assertEquals(400, response.getStatusCode());
+        assertEquals(
+                ErrorResponse.MISSING_JOURNEY_STEP_URL_PATH_PARAM.getCode(),
+                responseBody.get("code"));
+        assertEquals(
+                ErrorResponse.MISSING_JOURNEY_STEP_URL_PATH_PARAM.getMessage(),
+                responseBody.get("message"));
+    }
+
+    @Test
+    void shouldReturn400OnMissingJourneyStepParam() throws IOException {
+
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        event.setPathParameters(Collections.emptyMap());
+        event.setPathParameters(Map.of("InvalidStep", "any"));
+
+        APIGatewayProxyResponseEvent response =
+                journeyEngineHandler.handleRequest(event, mockContext);
+
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        assertEquals(400, response.getStatusCode());
+        assertEquals(
+                ErrorResponse.MISSING_JOURNEY_STEP_URL_PATH_PARAM.getCode(),
+                responseBody.get("code"));
+        assertEquals(
+                ErrorResponse.MISSING_JOURNEY_STEP_URL_PATH_PARAM.getMessage(),
+                responseBody.get("message"));
     }
 
     @Test

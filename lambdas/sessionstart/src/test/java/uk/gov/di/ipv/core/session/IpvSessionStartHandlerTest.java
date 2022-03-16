@@ -24,7 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class IpvSessionHandlerTest {
+class IpvSessionStartHandlerTest {
 
     @Mock private Context mockContext;
 
@@ -33,11 +33,12 @@ class IpvSessionHandlerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private IpvSessionHandler ipvSessionHandler;
+    private IpvSessionStartHandler ipvSessionStartHandler;
 
     @BeforeEach
     void setUp() {
-        ipvSessionHandler = new IpvSessionHandler(mockIpvSessionService, mockConfigurationService);
+        ipvSessionStartHandler =
+                new IpvSessionStartHandler(mockIpvSessionService, mockConfigurationService);
     }
 
     @Test
@@ -55,7 +56,8 @@ class IpvSessionHandlerTest {
                         "state", "test-state");
         event.setQueryStringParameters(queryStringParameters);
 
-        APIGatewayProxyResponseEvent response = ipvSessionHandler.handleRequest(event, mockContext);
+        APIGatewayProxyResponseEvent response =
+                ipvSessionStartHandler.handleRequest(event, mockContext);
 
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
@@ -68,7 +70,8 @@ class IpvSessionHandlerTest {
     void shouldReturn400IfMissingQueryStringParameters() throws JsonProcessingException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
-        APIGatewayProxyResponseEvent response = ipvSessionHandler.handleRequest(event, mockContext);
+        APIGatewayProxyResponseEvent response =
+                ipvSessionStartHandler.handleRequest(event, mockContext);
 
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
@@ -91,7 +94,8 @@ class IpvSessionHandlerTest {
                         "state", "test-state");
         event.setQueryStringParameters(queryStringParameters);
 
-        APIGatewayProxyResponseEvent response = ipvSessionHandler.handleRequest(event, mockContext);
+        APIGatewayProxyResponseEvent response =
+                ipvSessionStartHandler.handleRequest(event, mockContext);
 
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
@@ -114,7 +118,8 @@ class IpvSessionHandlerTest {
                         "state", "test-state");
         event.setQueryStringParameters(queryStringParameters);
 
-        APIGatewayProxyResponseEvent response = ipvSessionHandler.handleRequest(event, mockContext);
+        APIGatewayProxyResponseEvent response =
+                ipvSessionStartHandler.handleRequest(event, mockContext);
 
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
@@ -137,7 +142,8 @@ class IpvSessionHandlerTest {
                         "state", "test-state");
         event.setQueryStringParameters(queryStringParameters);
 
-        APIGatewayProxyResponseEvent response = ipvSessionHandler.handleRequest(event, mockContext);
+        APIGatewayProxyResponseEvent response =
+                ipvSessionStartHandler.handleRequest(event, mockContext);
 
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
@@ -160,7 +166,8 @@ class IpvSessionHandlerTest {
                         "state", "test-state");
         event.setQueryStringParameters(queryStringParameters);
 
-        APIGatewayProxyResponseEvent response = ipvSessionHandler.handleRequest(event, mockContext);
+        APIGatewayProxyResponseEvent response =
+                ipvSessionStartHandler.handleRequest(event, mockContext);
 
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
@@ -183,7 +190,8 @@ class IpvSessionHandlerTest {
                         "scope", "test-scope");
         event.setQueryStringParameters(queryStringParameters);
 
-        APIGatewayProxyResponseEvent response = ipvSessionHandler.handleRequest(event, mockContext);
+        APIGatewayProxyResponseEvent response =
+                ipvSessionStartHandler.handleRequest(event, mockContext);
 
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
