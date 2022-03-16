@@ -9,7 +9,9 @@ public enum UserStates {
     CRI_ACTIVITY_HISTORY("cri-activityHistory"),
     CRI_ADDRESS("cri-Address"),
     CRI_FRAUD("cri-fraud"),
-    CRI_KBV("cri-kbv");
+    CRI_KBV("cri-kbv"),
+    CRI_ERROR("cri-error"),
+    IPV_ERROR_PAGE("page-ipv-error");
 
     public final String value;
 
