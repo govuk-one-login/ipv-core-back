@@ -38,7 +38,6 @@ class JourneyEngineHandlerTest {
     @Mock private ConfigurationService mockConfigurationService;
 
     private JourneyEngineHandler journeyEngineHandler;
-
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
@@ -48,10 +47,31 @@ class JourneyEngineHandlerTest {
     }
 
     @Test
-    void shouldReturn400OnMissingJourneyStepUrl() throws IOException {
+    void shouldReturn400OnMissingParams() throws IOException {
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setPathParameters(Collections.emptyMap());
+
+        APIGatewayProxyResponseEvent response =
+                journeyEngineHandler.handleRequest(event, mockContext);
+
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        assertEquals(400, response.getStatusCode());
+        assertEquals(
+                ErrorResponse.MISSING_JOURNEY_STEP_URL_PATH_PARAM.getCode(),
+                responseBody.get("code"));
+        assertEquals(
+                ErrorResponse.MISSING_JOURNEY_STEP_URL_PATH_PARAM.getMessage(),
+                responseBody.get("message"));
+    }
+
+    @Test
+    void shouldReturn400OnMissingJourneyStepParam() throws IOException {
+
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        event.setPathParameters(Collections.emptyMap());
+        event.setPathParameters(Map.of("InvalidStep", "any"));
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
