@@ -54,7 +54,7 @@ paths:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVIssuedCredentials.Arn}/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
-  /ipv-session:
+  /session/start:
     post:
       description: "Creates a new ipv core-back session"
       responses:
@@ -67,7 +67,7 @@ paths:
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVSessionFunction.Arn}/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVSessionStartFunction.Arn}/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
   /journey/cri/return:

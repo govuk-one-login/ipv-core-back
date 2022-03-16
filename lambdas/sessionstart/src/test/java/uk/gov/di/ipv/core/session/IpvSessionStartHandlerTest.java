@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class IpvSessionHandlerTest {
+class IpvSessionStartHandlerTest {
 
     @Mock private Context mockContext;
 
@@ -31,11 +31,12 @@ class IpvSessionHandlerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private IpvSessionHandler ipvSessionHandler;
+    private IpvSessionStartHandler ipvSessionStartHandler;
 
     @BeforeEach
     void setUp() {
-        ipvSessionHandler = new IpvSessionHandler(mockIpvSessionService, mockConfigurationService);
+        ipvSessionStartHandler =
+                new IpvSessionStartHandler(mockIpvSessionService, mockConfigurationService);
     }
 
     @Test
@@ -44,7 +45,8 @@ class IpvSessionHandlerTest {
         when(mockIpvSessionService.generateIpvSession()).thenReturn(ipvSessionId);
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        APIGatewayProxyResponseEvent response = ipvSessionHandler.handleRequest(event, mockContext);
+        APIGatewayProxyResponseEvent response =
+                ipvSessionStartHandler.handleRequest(event, mockContext);
 
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
