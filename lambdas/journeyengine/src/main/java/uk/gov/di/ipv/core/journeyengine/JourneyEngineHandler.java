@@ -28,7 +28,6 @@ import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_ACTIVITY_HISTORY;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_ADDRESS;
-import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_ERROR;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_KBV;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_UK_PASSPORT;
