@@ -60,15 +60,4 @@ public class IssuedCredentialsHandler
 
         return ApiGatewayResponseGenerator.proxyJsonResponse(OK, credentials);
     }
-
-    @Tracing
-    public static Map<String, String> getStubCredentials() {
-        return Map.of(
-                "passportIssuer",
-                        "{\"attributes\":{\"names\":{\"givenNames\":[\"Mary\"],\"familyName\":\"Watson\"},\"passportNo\":\"824159121\",\"passportExpiryDate\":\"2030-01-01\",\"dateOfBirth\":\"2021-03-01\"},\"gpg45Score\":{\"evidence\":{\"strength\":5,\"validity\":3}}}",
-                "fraudIssuer",
-                        "{\"attributes\":{\"names\":{\"givenNames\":[\"Mary\"],\"familyName\":\"Watson\"},\"someFraudAttribute\":\"notsurewhatthatmightbe\"},\"gpg45Score\":{\"fraud\":0}}",
-                "addressIssuer",
-                        "{\"attributes\":{\"address\":{\"postcode\":\"SW1A1AA\",\"houseNumber\":10}}}");
-    }
 }

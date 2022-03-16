@@ -29,7 +29,9 @@ public enum ErrorResponse {
             1021,
             "Invalid ipv-session-id has been provided, could not record of that requested session"),
     FAILED_JOURNEY_ENGINE_STEP(1022, "Failed to execute journey engine step"),
-    MISSING_JOURNEY_STEP_URL_PATH_PARAM(1023, "Missing journeyStep url path parameter in request");
+    MISSING_JOURNEY_STEP_URL_PATH_PARAM(1023, "Missing journeyStep url path parameter in request"),
+    FAILED_TO_PARSE_ISSUED_CREDENTIALS(1024, "Failed to parse issued credentials"),
+    CREDENTIAL_SUBJECT_MISSING(1025, "Credential subject missing from verified credential");
 
     @JsonProperty("code")
     private final int code;
