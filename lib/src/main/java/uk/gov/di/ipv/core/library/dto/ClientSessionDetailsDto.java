@@ -8,21 +8,20 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 @ExcludeFromGeneratedCoverageReport
 @DynamoDbBean
 public class ClientSessionDetailsDto {
-    @JsonProperty String responseType;
-    @JsonProperty String clientId;
-    @JsonProperty String redirectUri;
-    @JsonProperty String scope;
-    @JsonProperty String state;
+    String responseType;
+    String clientId;
+    String redirectUri;
+    String scope;
+    String state;
 
     public ClientSessionDetailsDto() {}
 
-    @JsonCreator
     public ClientSessionDetailsDto(
-            @JsonProperty(value = "responseType", required = true) String responseType,
-            @JsonProperty(value = "clientId", required = true) String clientId,
-            @JsonProperty(value = "redirectUri", required = true) String redirectUri,
-            @JsonProperty(value = "scope", required = true) String scope,
-            @JsonProperty(value = "state", required = true) String state) {
+            String responseType,
+            String clientId,
+            String redirectUri,
+            String scope,
+            String state) {
         this.responseType = responseType;
         this.clientId = clientId;
         this.redirectUri = redirectUri;
