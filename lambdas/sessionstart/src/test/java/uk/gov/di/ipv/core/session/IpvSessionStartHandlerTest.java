@@ -13,6 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
@@ -47,14 +48,14 @@ class IpvSessionStartHandlerTest {
         when(mockIpvSessionService.generateIpvSession(any())).thenReturn(ipvSessionId);
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        Map<String, String> queryStringParameters =
-                Map.of(
-                        "response_type", "test-response-type",
-                        "client_id", "test-client",
-                        "redirect_uri", "https://example.com",
-                        "scope", "test-scope",
-                        "state", "test-state");
-        event.setQueryStringParameters(queryStringParameters);
+        ClientSessionDetailsDto clientSessionDetailsDto =
+                new ClientSessionDetailsDto(
+                        "test-response-type",
+                        "test-client",
+                        "https://example.com",
+                        "test-scope",
+                        "test-state");
+        event.setBody(objectMapper.writeValueAsString(clientSessionDetailsDto));
 
         APIGatewayProxyResponseEvent response =
                 ipvSessionStartHandler.handleRequest(event, mockContext);
@@ -67,7 +68,7 @@ class IpvSessionStartHandlerTest {
     }
 
     @Test
-    void shouldReturn400IfMissingQueryStringParameters() throws JsonProcessingException {
+    void shouldReturn400IfMissingBody() throws JsonProcessingException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         APIGatewayProxyResponseEvent response =
@@ -77,22 +78,16 @@ class IpvSessionStartHandlerTest {
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
         assertEquals(
-                ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), responseBody.get("message"));
+                ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
     }
 
     @Test
-    void shouldReturn400IfMissingResponseTypeParameter() throws JsonProcessingException {
+    void shouldReturn400IfInvalidBody() throws JsonProcessingException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
-        Map<String, String> queryStringParameters =
-                Map.of(
-                        "client_id", "test-client",
-                        "redirect_uri", "https://example.com",
-                        "scope", "test-scope",
-                        "state", "test-state");
-        event.setQueryStringParameters(queryStringParameters);
+        event.setBody("invalid-body");
 
         APIGatewayProxyResponseEvent response =
                 ipvSessionStartHandler.handleRequest(event, mockContext);
@@ -101,104 +96,8 @@ class IpvSessionStartHandlerTest {
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
         assertEquals(
-                ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), responseBody.get("message"));
-    }
-
-    @Test
-    void shouldReturn400IfMissingClientIdParameter() throws JsonProcessingException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> queryStringParameters =
-                Map.of(
-                        "responseType", "test-response-type",
-                        "redirect_uri", "https://example.com",
-                        "scope", "test-scope",
-                        "state", "test-state");
-        event.setQueryStringParameters(queryStringParameters);
-
-        APIGatewayProxyResponseEvent response =
-                ipvSessionStartHandler.handleRequest(event, mockContext);
-
-        Map<String, Object> responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getCode(), responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), responseBody.get("message"));
-    }
-
-    @Test
-    void shouldReturn400IfMissingRedirectUriParameter() throws JsonProcessingException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> queryStringParameters =
-                Map.of(
-                        "responseType", "test-response-type",
-                        "client_id", "test-client",
-                        "scope", "test-scope",
-                        "state", "test-state");
-        event.setQueryStringParameters(queryStringParameters);
-
-        APIGatewayProxyResponseEvent response =
-                ipvSessionStartHandler.handleRequest(event, mockContext);
-
-        Map<String, Object> responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getCode(), responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), responseBody.get("message"));
-    }
-
-    @Test
-    void shouldReturn400IfMissingScopeParameter() throws JsonProcessingException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> queryStringParameters =
-                Map.of(
-                        "responseType", "test-response-type",
-                        "client_id", "test-client",
-                        "redirect_uri", "https://example.com",
-                        "state", "test-state");
-        event.setQueryStringParameters(queryStringParameters);
-
-        APIGatewayProxyResponseEvent response =
-                ipvSessionStartHandler.handleRequest(event, mockContext);
-
-        Map<String, Object> responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getCode(), responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), responseBody.get("message"));
-    }
-
-    @Test
-    void shouldReturn400IfMissingStateParameter() throws JsonProcessingException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> queryStringParameters =
-                Map.of(
-                        "responseType", "test-response-type",
-                        "client_id", "test-client",
-                        "redirect_uri", "https://example.com",
-                        "scope", "test-scope");
-        event.setQueryStringParameters(queryStringParameters);
-
-        APIGatewayProxyResponseEvent response =
-                ipvSessionStartHandler.handleRequest(event, mockContext);
-
-        Map<String, Object> responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getCode(), responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), responseBody.get("message"));
+                ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
     }
 }
