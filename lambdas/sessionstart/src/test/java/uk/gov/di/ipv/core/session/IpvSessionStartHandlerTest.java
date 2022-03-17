@@ -28,7 +28,6 @@ import static org.mockito.Mockito.when;
 class IpvSessionStartHandlerTest {
 
     @Mock private Context mockContext;
-
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ConfigurationService mockConfigurationService;
 
@@ -88,6 +87,123 @@ class IpvSessionStartHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         event.setBody("invalid-body");
+
+        APIGatewayProxyResponseEvent response =
+                ipvSessionStartHandler.handleRequest(event, mockContext);
+
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
+        assertEquals(
+                ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
+    }
+
+    @Test
+    void shouldReturn400IfMissingResponseTypeParameter() throws JsonProcessingException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+
+        ClientSessionDetailsDto clientSessionDetailsDto =
+                new ClientSessionDetailsDto(
+                        null, "test-client", "https://example.com", "test-scope", "test-state");
+        event.setBody(objectMapper.writeValueAsString(clientSessionDetailsDto));
+
+        APIGatewayProxyResponseEvent response =
+                ipvSessionStartHandler.handleRequest(event, mockContext);
+
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
+        assertEquals(
+                ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
+    }
+
+    @Test
+    void shouldReturn400IfMissingClientIdParameter() throws JsonProcessingException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+
+        ClientSessionDetailsDto clientSessionDetailsDto =
+                new ClientSessionDetailsDto(
+                        "test-response-type",
+                        null,
+                        "https://example.com",
+                        "test-scope",
+                        "test-state");
+        event.setBody(objectMapper.writeValueAsString(clientSessionDetailsDto));
+
+        APIGatewayProxyResponseEvent response =
+                ipvSessionStartHandler.handleRequest(event, mockContext);
+
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
+        assertEquals(
+                ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
+    }
+
+    @Test
+    void shouldReturn400IfMissingRedirectUriParameter() throws JsonProcessingException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+
+        ClientSessionDetailsDto clientSessionDetailsDto =
+                new ClientSessionDetailsDto(
+                        "test-response-type", "test-client", null, "test-scope", "test-state");
+        event.setBody(objectMapper.writeValueAsString(clientSessionDetailsDto));
+
+        APIGatewayProxyResponseEvent response =
+                ipvSessionStartHandler.handleRequest(event, mockContext);
+
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
+        assertEquals(
+                ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
+    }
+
+    @Test
+    void shouldReturn400IfMissingScopeParameter() throws JsonProcessingException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+
+        ClientSessionDetailsDto clientSessionDetailsDto =
+                new ClientSessionDetailsDto(
+                        "test-response-type",
+                        "test-client",
+                        "https://example.com",
+                        null,
+                        "test-state");
+        event.setBody(objectMapper.writeValueAsString(clientSessionDetailsDto));
+
+        APIGatewayProxyResponseEvent response =
+                ipvSessionStartHandler.handleRequest(event, mockContext);
+
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
+        assertEquals(
+                ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
+    }
+
+    @Test
+    void shouldReturn400IfMissingStateParameter() throws JsonProcessingException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+
+        ClientSessionDetailsDto clientSessionDetailsDto =
+                new ClientSessionDetailsDto(
+                        "test-response-type",
+                        "test-client",
+                        "https://example.com",
+                        "test-scope",
+                        null);
+        event.setBody(objectMapper.writeValueAsString(clientSessionDetailsDto));
 
         APIGatewayProxyResponseEvent response =
                 ipvSessionStartHandler.handleRequest(event, mockContext);

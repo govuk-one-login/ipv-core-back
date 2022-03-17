@@ -1,7 +1,5 @@
 package uk.gov.di.ipv.core.library.dto;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
@@ -17,11 +15,7 @@ public class ClientSessionDetailsDto {
     public ClientSessionDetailsDto() {}
 
     public ClientSessionDetailsDto(
-            String responseType,
-            String clientId,
-            String redirectUri,
-            String scope,
-            String state) {
+            String responseType, String clientId, String redirectUri, String scope, String state) {
         this.responseType = responseType;
         this.clientId = clientId;
         this.redirectUri = redirectUri;

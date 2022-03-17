@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,7 @@ import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.util.Map;
+import java.util.Optional;
 
 public class IpvSessionStartHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -51,6 +53,15 @@ public class IpvSessionStartHandler
             ClientSessionDetailsDto clientSessionDetails =
                     objectMapper.readValue(input.getBody(), ClientSessionDetailsDto.class);
 
+            Optional<ErrorResponse> error = validateClientSessionDetails(clientSessionDetails);
+
+            if (error.isPresent()) {
+                LOGGER.error(
+                        "Failed to parse the request body into a ClientSessionDetailsDto object");
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        HttpStatus.SC_BAD_REQUEST, error.get());
+            }
+
             String ipvSessionId = ipvSessionService.generateIpvSession(clientSessionDetails);
 
             Map<String, String> response = Map.of(IPV_SESSION_ID_KEY, ipvSessionId);
@@ -62,5 +73,39 @@ public class IpvSessionStartHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
         }
+    }
+
+    private Optional<ErrorResponse> validateClientSessionDetails(
+            ClientSessionDetailsDto clientSessionDetailsDto) {
+        boolean isInvalid = false;
+        if (StringUtils.isBlank(clientSessionDetailsDto.getResponseType())) {
+            LOGGER.warn("Missing response_type query parameter");
+            isInvalid = true;
+        }
+
+        if (StringUtils.isBlank(clientSessionDetailsDto.getClientId())) {
+            LOGGER.warn("Missing client_id query parameter");
+            isInvalid = true;
+        }
+
+        if (StringUtils.isBlank(clientSessionDetailsDto.getRedirectUri())) {
+            LOGGER.warn("Missing redirect_uri query parameter");
+            isInvalid = true;
+        }
+
+        if (StringUtils.isBlank(clientSessionDetailsDto.getScope())) {
+            LOGGER.warn("Missing scope query parameter");
+            isInvalid = true;
+        }
+
+        if (StringUtils.isBlank(clientSessionDetailsDto.getState())) {
+            LOGGER.warn("Missing state query parameter");
+            isInvalid = true;
+        }
+
+        if (isInvalid) {
+            return Optional.of(ErrorResponse.INVALID_SESSION_REQUEST);
+        }
+        return Optional.empty();
     }
 }
