@@ -64,7 +64,7 @@ Resources:
             Action:
               - 'kms:sign'
             Resource:
-              - "arn:aws:kms:eu-west-2:130355686670:key/3efe7d7f-5a08-4ea3-90c3-11b24ec3b375"
+              - !ImportValue SigningKeyArn
       Events:
         IPVCoreInternalAPI:
           Type: Api
