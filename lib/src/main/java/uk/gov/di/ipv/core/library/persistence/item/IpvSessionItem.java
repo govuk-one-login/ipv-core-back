@@ -2,12 +2,14 @@ package uk.gov.di.ipv.core.library.persistence.item;
 
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 
 @DynamoDbBean
 public class IpvSessionItem {
     private String ipvSessionId;
     private String userState;
     private String creationDateTime;
+    private ClientSessionDetailsDto clientSessionDetails;
 
     @DynamoDbPartitionKey
     public String getIpvSessionId() {
@@ -32,5 +34,13 @@ public class IpvSessionItem {
 
     public void setCreationDateTime(String creationDateTime) {
         this.creationDateTime = creationDateTime;
+    }
+
+    public ClientSessionDetailsDto getClientSessionDetails() {
+        return clientSessionDetails;
+    }
+
+    public void setClientSessionDetails(ClientSessionDetailsDto clientSessionDetails) {
+        this.clientSessionDetails = clientSessionDetails;
     }
 }
