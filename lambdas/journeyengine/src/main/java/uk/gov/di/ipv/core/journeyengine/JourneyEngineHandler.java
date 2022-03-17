@@ -185,7 +185,6 @@ public class JourneyEngineHandler
         IpvSessionItem updatedIpvSessionItem = new IpvSessionItem();
         updatedIpvSessionItem.setIpvSessionId(previosSessionItem.getIpvSessionId());
         updatedIpvSessionItem.setCreationDateTime(previosSessionItem.getCreationDateTime());
-        updatedIpvSessionItem.setClientSessionDetails(previosSessionItem.getClientSessionDetails());
         updatedIpvSessionItem.setUserState(updatedStateValue.toString());
 
         ipvSessionService.updateIpvSession(updatedIpvSessionItem);

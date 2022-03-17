@@ -7,7 +7,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.UserStates;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 
@@ -56,14 +55,7 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldCreateSessionItem() {
-        String ipvSessionID =
-                ipvSessionService.generateIpvSession(
-                        new ClientSessionDetailsDto(
-                                "jwt",
-                                "test-client",
-                                "http://example.come",
-                                "test-scope",
-                                "test-state"));
+        String ipvSessionID = ipvSessionService.generateIpvSession();
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
