@@ -79,7 +79,7 @@ paths:
           content:
             application/json:
               schema:
-                type: "object"
+                $ref: "#/components/schemas/journeyResponse"
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
@@ -101,7 +101,7 @@ paths:
         uri:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVSessionEndFunction.Arn}/invocations
         passthroughBehavior: "when_no_match"
-          type: "aws_proxy"
+        type: "aws_proxy"
   /journey/{journeyStep}:
     post:
       description: Called when the user selects a journey event.

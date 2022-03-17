@@ -13,4 +13,3 @@ include "lib",
 		"lambdas:credentialissuerstart",
 		"lambdas:credentialissuererror",
 		"integration-test"
-
