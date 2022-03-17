@@ -37,7 +37,8 @@ public enum ErrorResponse {
             1022,
             "Invalid ipv-session-id has been provided, could not record of that requested session"),
     FAILED_JOURNEY_ENGINE_STEP(1023, "Failed to execute journey engine step"),
-    MISSING_JOURNEY_STEP_URL_PATH_PARAM(1024, "Missing journeyStep url path parameter in request");
+    MISSING_JOURNEY_STEP_URL_PATH_PARAM(1024, "Missing journeyStep url path parameter in request"),
+    INVALID_SESSION_REQUEST(1025, "Failed to parse the session start request");
 
     @JsonProperty("code")
     private final int code;
