@@ -6,13 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum ErrorResponse {
     MISSING_QUERY_PARAMETERS(1000, "Missing query parameters for auth request"),
-    MISSING_REDIRECT_URI(1001, "Redirect URI is missing from auth request"),
-    FAILED_TO_PARSE_TOKEN_REQUEST(1002, "Failed to parse token request"),
     MISSING_AUTHORIZATION_CODE(1003, "Missing authorization code"),
     FAILED_TO_EXCHANGE_AUTHORIZATION_CODE(
             1004, "Failed to exchange the authorization code for an access token"),
-    MISSING_ACCESS_TOKEN(1005, "Missing access token from user info request"),
-    FAILED_TO_PARSE_ACCESS_TOKEN(1006, "Failed to parse access token"),
     MISSING_CREDENTIAL_ISSUER_ID(1007, "Missing credential issuer id"),
     INVALID_CREDENTIAL_ISSUER_ID(1008, "Invalid credential issuer id"),
     INVALID_TOKEN_REQUEST(1009, "Invalid token request"),
@@ -27,17 +23,15 @@ public enum ErrorResponse {
     FAILED_TO_SIGN_SHARED_ATTRIBUTES(1016, "Failed to sign Shared Attributes"),
     INVALID_REDIRECT_URL(1017, "Provided redirect URL is not in those configured for client"),
     INVALID_REQUEST_PARAM(1018, "Invalid request param"),
-    INVALID_JWT_ISSUER_PARAM(1019, "Invalid value for the issuer of the client JWT provided"),
-    INVALID_JWT_SUBJECT_PARAM(1019, "Invalid value for the subject of the client JWT provided"),
-    INVALID_JWT_AUDIENCE_PARAM(1019, "Invalid value for the audience of the client JWT provided"),
-    CLIENT_JWT_EXPIRED(1020, "The provided client JWT has expired"),
-    MAX_CLIENT_JWT_TTL_TIME_SURPASSED(
-            1021, "The client JWT expiry date has surpassed the maximum allowed ttl value"),
+    FAILED_TO_PARSE_JWK(1019, "Failed to parse JWK"),
+    FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL(1020, "Failed to validate verifiable credential"),
     INVALID_SESSION_ID(
-            1022,
+            1021,
             "Invalid ipv-session-id has been provided, could not record of that requested session"),
-    FAILED_JOURNEY_ENGINE_STEP(1023, "Failed to execute journey engine step"),
-    MISSING_JOURNEY_STEP_URL_PATH_PARAM(1024, "Missing journeyStep url path parameter in request");
+    FAILED_JOURNEY_ENGINE_STEP(1022, "Failed to execute journey engine step"),
+    MISSING_JOURNEY_STEP_URL_PATH_PARAM(1023, "Missing journeyStep url path parameter in request"),
+    FAILED_TO_PARSE_ISSUED_CREDENTIALS(1024, "Failed to parse issued credentials"),
+    CREDENTIAL_SUBJECT_MISSING(1025, "Credential subject missing from verified credential");
 
     @JsonProperty("code")
     private final int code;

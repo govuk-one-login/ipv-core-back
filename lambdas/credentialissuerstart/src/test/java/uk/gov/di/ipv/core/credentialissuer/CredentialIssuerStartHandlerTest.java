@@ -53,7 +53,8 @@ class CredentialIssuerStartHandlerTest {
                         new URI(CRI_TOKEN_URL),
                         new URI(CRI_CREDENTIAL_URL),
                         new URI(CRI_AUTHORIZE_URL),
-                        IPV_CLIENT_ID);
+                        IPV_CLIENT_ID,
+                        "{}");
     }
 
     @Test

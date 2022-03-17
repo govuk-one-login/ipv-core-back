@@ -6,7 +6,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.crypto.RSASSASigner;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jwt.SignedJWT;
@@ -30,7 +29,6 @@ import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -41,6 +39,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
+import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
+import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.vcClaim;
 import static uk.gov.di.ipv.core.sharedattributes.SharedAttributesHandler.CLAIMS_CLAIM;
 import static uk.gov.di.ipv.core.sharedattributes.SharedAttributesHandler.VC_HTTP_API_CLAIM;
 
@@ -49,7 +50,7 @@ class SharedAttributesHandlerTest {
 
     public static final String SESSION_ID = "the-session-id";
 
-    Map<String, Object> CREDENTIAL_INPUT_1 =
+    Map<String, Object> CREDENTIAL_ATTRIBUTES_1 =
             Map.of(
                     "name",
                     List.of(
@@ -89,7 +90,7 @@ class SharedAttributesHandlerTest {
                                     "type", "PostalAddress",
                                     "postalCode", "M34 1AA")));
 
-    Map<String, Object> CREDENTIAL_INPUT_2 =
+    Map<String, Object> CREDENTIAL_ATTRIBUTES_2 =
             Map.of(
                     "name",
                     List.of(
@@ -117,7 +118,7 @@ class SharedAttributesHandlerTest {
                                     "postalCode", "S5 6UN",
                                     "addressCountry", "UK")));
 
-    public static final Map<String, Object> CREDENTIAL_INPUT_3 =
+    public static final Map<String, Object> CREDENTIAL_ATTRIBUTES_3 =
             Map.of("name", Map.of("testProperty", "test value"));
 
     private static final String BASE64_PRIVATE_KEY =
@@ -139,15 +140,14 @@ class SharedAttributesHandlerTest {
     }
 
     @Test
-    void shouldExtractSessionIdFromHeaderAndReturnSharedAttributesAndStatusOK()
-            throws JsonProcessingException, ParseException, CertificateException, JOSEException {
+    void shouldExtractSessionIdFromHeaderAndReturnSharedAttributesAndStatusOK() throws Exception {
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
                 .thenReturn(
                         Map.of(
                                 "CredentialIssuer1",
-                                objectMapper.writeValueAsString(CREDENTIAL_INPUT_1),
+                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_1)),
                                 "CredentialIssuer2",
-                                objectMapper.writeValueAsString(CREDENTIAL_INPUT_2)));
+                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_2))));
 
         List<Address> addressList = new ArrayList<>();
 
@@ -194,7 +194,7 @@ class SharedAttributesHandlerTest {
     }
 
     @Test
-    void shouldReturnOKIfZeroCredentialExists() {
+    void shouldReturnOKIfZeroCredentialExists() throws Exception {
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
                 .thenReturn(Collections.emptyMap());
 
@@ -206,13 +206,12 @@ class SharedAttributesHandlerTest {
     }
 
     @Test
-    void shouldReturnOKIfCredentialExistsWithoutAnySharedAttributeFields()
-            throws JsonProcessingException, ParseException, JOSEException, CertificateException {
+    void shouldReturnOKIfCredentialExistsWithoutAnySharedAttributeFields() throws Exception {
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
                 .thenReturn(
                         Map.of(
                                 "CredentialIssuer3",
-                                objectMapper.writeValueAsString(CREDENTIAL_INPUT_3)));
+                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_3))));
 
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
@@ -249,14 +248,14 @@ class SharedAttributesHandlerTest {
     }
 
     @Test
-    void shouldReturn500WhenUnableToSignSharedAttributes() throws JsonProcessingException {
+    void shouldReturn500WhenUnableToSignSharedAttributes() throws Exception {
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
                 .thenReturn(
                         Map.of(
                                 "CredentialIssuer1",
-                                objectMapper.writeValueAsString(CREDENTIAL_INPUT_1),
+                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_1)),
                                 "CredentialIssuer2",
-                                objectMapper.writeValueAsString(CREDENTIAL_INPUT_2)));
+                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_2))));
 
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
@@ -275,9 +274,9 @@ class SharedAttributesHandlerTest {
     }
 
     @Test
-    void shouldReturn500WhenUnableToMapToSharedAttribute() throws JsonProcessingException {
+    void shouldReturn500WhenUnableToParseCredentials() throws Exception {
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
-                .thenReturn(Map.of("CredentialIssuer1", "{----"));
+                .thenReturn(Map.of("CredentialIssuer1", "Not a verifiable credential"));
 
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
@@ -287,10 +286,31 @@ class SharedAttributesHandlerTest {
 
         Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
         assertEquals(
-                ErrorResponse.FAILED_TO_GET_SHARED_ATTRIBUTES.getCode(), responseBody.get("code"));
+                ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getCode(),
+                responseBody.get("code"));
         assertEquals(
-                ErrorResponse.FAILED_TO_GET_SHARED_ATTRIBUTES.getMessage(),
+                ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(),
                 responseBody.get("message"));
+    }
+
+    @Test
+    void shouldReturn500IfCredentialSubjectMissingFromIssuedCredential() throws Exception {
+        Map<String, Object> vcClaim = vcClaim(Map.of());
+        vcClaim.remove(VC_CREDENTIAL_SUBJECT);
+
+        when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
+                .thenReturn(Map.of("CredentialIssuer1", generateVerifiableCredential(vcClaim)));
+
+        APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
+        input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
+
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        assertEquals(500, response.getStatusCode());
+
+        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
+        assertEquals(ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getCode(), responseBody.get("code"));
+        assertEquals(
+                ErrorResponse.CREDENTIAL_SUBJECT_MISSING.getMessage(), responseBody.get("message"));
     }
 
     private Certificate getCertificate() throws CertificateException {

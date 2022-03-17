@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSSigner;
@@ -24,9 +25,13 @@ import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 
 public class SharedAttributesHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -80,11 +85,25 @@ public class SharedAttributesHandler
         List<SharedAttributes> sharedAttributes = new ArrayList<>();
         for (String credential : credentials.values()) {
             try {
-                sharedAttributes.add(mapper.readValue(credential, SharedAttributes.class));
+                JsonNode credentialSubject =
+                        mapper.readTree(SignedJWT.parse(credential).getPayload().toString())
+                                .path(VC_CLAIM)
+                                .path(VC_CREDENTIAL_SUBJECT);
+                if (credentialSubject.isMissingNode()) {
+                    LOGGER.error("Credential subject missing from verified credential");
+                    throw new HttpResponseExceptionWithErrorBody(
+                            500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
+                }
+                sharedAttributes.add(
+                        mapper.readValue(credentialSubject.toString(), SharedAttributes.class));
             } catch (JsonProcessingException e) {
                 LOGGER.error("Failed to get Shared Attributes: {}", e.getMessage());
                 throw new HttpResponseExceptionWithErrorBody(
                         500, ErrorResponse.FAILED_TO_GET_SHARED_ATTRIBUTES);
+            } catch (ParseException e) {
+                LOGGER.error("Failed to parse issued credentials: {}", e.getMessage());
+                throw new HttpResponseExceptionWithErrorBody(
+                        500, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
             }
         }
         return SharedAttributesResponse.from(sharedAttributes);

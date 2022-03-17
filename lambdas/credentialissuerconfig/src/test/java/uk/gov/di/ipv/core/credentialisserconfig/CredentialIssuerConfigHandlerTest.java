@@ -23,6 +23,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 
 @ExtendWith(MockitoExtension.class)
 class CredentialIssuerConfigHandlerTest {
@@ -35,14 +36,17 @@ class CredentialIssuerConfigHandlerTest {
                             URI.create("test1TokenUrl"),
                             URI.create("test1credentialUrl"),
                             URI.create("test1AuthorizeUrl"),
-                            "ipv-core"),
+                            "ipv-core",
+                            EC_PUBLIC_JWK),
                     new CredentialIssuerConfig(
                             "test2",
                             "Any",
                             URI.create("test2TokenUrl"),
                             URI.create("test2credentialUrl"),
                             URI.create("test2AuthorizeUrl"),
-                            "ipv-core"));
+                            "ipv-core",
+                            EC_PUBLIC_JWK));
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock Context context;

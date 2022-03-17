@@ -32,15 +32,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CredentialIssuerReturnHandlerTest {
 
+    private static final String TEST_VERIFIABLE_CREDENTIAL = "A.VERIFIABLE.CREDENTIAL";
+
     @Mock private Context context;
 
     @Captor private ArgumentCaptor<CredentialIssuerRequestDto> requestDto;
+
+    @Captor private ArgumentCaptor<String> verifiableCredentialCaptor;
 
     @Mock private CredentialIssuerService credentialIssuerService;
 
@@ -60,7 +65,8 @@ class CredentialIssuerReturnHandlerTest {
                         new URI("http://www.example.com"),
                         new URI("http://www.example.com/credential"),
                         new URI("http://www.example.com/authorize"),
-                        "ipv-core");
+                        "ipv-core",
+                        "{}");
     }
 
     @Test
@@ -82,7 +88,8 @@ class CredentialIssuerReturnHandlerTest {
         when(credentialIssuerService.exchangeCodeForToken(requestDto.capture(), eq(passportIssuer)))
                 .thenReturn(new BearerAccessToken());
 
-        when(credentialIssuerService.getCredential(any(), any())).thenReturn(testCredential);
+        when(credentialIssuerService.getVerifiableCredential(any(), any(), any()))
+                .thenReturn(TEST_VERIFIABLE_CREDENTIAL);
 
         when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
 
@@ -157,8 +164,9 @@ class CredentialIssuerReturnHandlerTest {
         when(credentialIssuerService.exchangeCodeForToken(requestDto.capture(), eq(passportIssuer)))
                 .thenReturn(accessToken);
 
-        when(credentialIssuerService.getCredential(accessToken, passportIssuer))
-                .thenReturn(new JSONObject());
+        when(credentialIssuerService.getVerifiableCredential(
+                        accessToken, passportIssuer, sessionId))
+                .thenReturn(TEST_VERIFIABLE_CREDENTIAL);
 
         when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
 
@@ -178,6 +186,10 @@ class CredentialIssuerReturnHandlerTest {
         assertEquals(sessionId, value.getIpvSessionId());
         assertEquals(passportIssuerId, value.getCredentialIssuerId());
         assertEquals(authorization_code, value.getAuthorizationCode());
+
+        verify(credentialIssuerService)
+                .persistUserCredentials(verifiableCredentialCaptor.capture(), any());
+        assertEquals(TEST_VERIFIABLE_CREDENTIAL, verifiableCredentialCaptor.getValue());
 
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
 
@@ -218,7 +230,7 @@ class CredentialIssuerReturnHandlerTest {
             throws JsonProcessingException {
         when(credentialIssuerService.exchangeCodeForToken(any(), any()))
                 .thenReturn(new BearerAccessToken());
-        when(credentialIssuerService.getCredential(any(), any()))
+        when(credentialIssuerService.getVerifiableCredential(any(), any(), any()))
                 .thenThrow(
                         new CredentialIssuerException(
                                 HTTPResponse.SC_SERVER_ERROR,
