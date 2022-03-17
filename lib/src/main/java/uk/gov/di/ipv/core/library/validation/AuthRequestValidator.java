@@ -14,8 +14,11 @@ import java.util.Optional;
 
 public class AuthRequestValidator {
 
+    public static final String RESPONSE_TYPE_PARAM = "response_type";
     public static final String CLIENT_ID_PARAM = "client_id";
     public static final String REDIRECT_URI_PARAM = "redirect_uri";
+    public static final String SCOPE_PARAM = "scope";
+    public static final String STATE_PARAM = "state";
     private static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthRequestValidator.class);
 

@@ -22,22 +22,6 @@ paths:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCredentialIssuerConfig.Arn}/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
-  /authorize:
-    get:
-      description: "Request an authorization code"
-      responses:
-        200:
-          description: "The authorization code"
-          content:
-            application/json:
-              schema:
-                type: "object"
-      x-amazon-apigateway-integration:
-        httpMethod: "POST"
-        uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVAuthorizationFunction.Arn}/invocations
-        passthroughBehavior: "when_no_match"
-        type: "aws_proxy"
   /issued-credentials:
     get:
       description: "Debug endpoint - only used by core-front debug page to get a list of current retrieved crdentials for users journey"
@@ -79,11 +63,27 @@ paths:
           content:
             application/jose:
               schema:
-                type: "object"
+                $ref: "#/components/schemas/journeyResponse"
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCriReturnFunction.Arn}/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
+  /journey/session/end:
+    post:
+      description: "Called when the user has completed their user journey in IPV Core"
+      responses:
+        200:
+          description: "Authorization Code and details"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/journeyResponse"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVSessionEndFunction.Arn}/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
   /journey/{journeyStep}:

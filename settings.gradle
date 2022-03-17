@@ -2,7 +2,7 @@ rootProject.name = 'di-ipv-core-back'
 include "lib",
 		"lambdas",
 		"lambdas:accesstoken",
-		"lambdas:authorization",
+		"lambdas:sessionend",
 		"lambdas:credentialissuerreturn",
 		"lambdas:credentialissuerconfig",
 		"lambdas:issuedcredentials",
