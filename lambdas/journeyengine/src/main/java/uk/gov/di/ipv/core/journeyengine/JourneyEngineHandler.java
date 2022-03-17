@@ -32,6 +32,7 @@ import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_KBV;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_UK_PASSPORT;
 import static uk.gov.di.ipv.core.library.domain.UserStates.DEBUG_PAGE;
+import static uk.gov.di.ipv.core.library.domain.UserStates.IPV_ERROR_PAGE;
 import static uk.gov.di.ipv.core.library.domain.UserStates.TRANSITION_PAGE_1;
 import static uk.gov.di.ipv.core.library.domain.UserStates.TRANSITION_PAGE_2;
 
@@ -166,6 +167,9 @@ public class JourneyEngineHandler
                     break;
                 case DEBUG_PAGE:
                     builder.setPageResponse(new PageResponse(DEBUG_PAGE.value));
+                    break;
+                case CRI_ERROR:
+                    builder.setPageResponse(new PageResponse(IPV_ERROR_PAGE.value));
                     break;
             }
 

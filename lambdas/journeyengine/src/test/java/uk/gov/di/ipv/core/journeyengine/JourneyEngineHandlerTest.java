@@ -472,4 +472,29 @@ class JourneyEngineHandlerTest {
         assertEquals(200, response.getStatusCode());
         assertEquals(UserStates.DEBUG_PAGE.value, pageResponse.getPage());
     }
+
+    @Test
+    void shouldReturnErrorPageResponseWhenRequired() throws IOException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+
+        Map<String, String> pathParameters = new HashMap<>();
+        pathParameters.put("journeyStep", "next");
+        event.setPathParameters(pathParameters);
+
+        event.setHeaders(Map.of("ipv-session-id", "1234"));
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setCreationDateTime(new Date().toString());
+        ipvSessionItem.setUserState(UserStates.CRI_ERROR.toString());
+
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
+        APIGatewayProxyResponseEvent response =
+                journeyEngineHandler.handleRequest(event, mockContext);
+        PageResponse pageResponse = objectMapper.readValue(response.getBody(), PageResponse.class);
+
+        assertEquals(200, response.getStatusCode());
+        assertEquals(UserStates.IPV_ERROR_PAGE.value, pageResponse.getPage());
+    }
 }
