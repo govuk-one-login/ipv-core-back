@@ -15,8 +15,8 @@ public class ClientSessionDetailsDto {
     public ClientSessionDetailsDto() {}
 
     public ClientSessionDetailsDto(
-            String reseponseType, String clientId, String redirectUri, String scope, String state) {
-        this.responseType = reseponseType;
+            String responseType, String clientId, String redirectUri, String scope, String state) {
+        this.responseType = responseType;
         this.clientId = clientId;
         this.redirectUri = redirectUri;
         this.scope = scope;
