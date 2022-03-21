@@ -54,7 +54,8 @@ class IpvSessionStartHandlerTest {
                         "test-client",
                         "https://example.com",
                         "test-scope",
-                        "test-state");
+                        "test-state",
+                        false);
         event.setBody(objectMapper.writeValueAsString(clientSessionDetailsDto));
 
         APIGatewayProxyResponseEvent response =
@@ -105,7 +106,12 @@ class IpvSessionStartHandlerTest {
 
         ClientSessionDetailsDto clientSessionDetailsDto =
                 new ClientSessionDetailsDto(
-                        null, "test-client-id", "https://example.com", "test-scope", "test-state");
+                        null,
+                        "test-client-id",
+                        "https://example.com",
+                        "test-scope",
+                        "test-state",
+                        false);
         event.setBody(objectMapper.writeValueAsString(clientSessionDetailsDto));
 
         APIGatewayProxyResponseEvent response =
@@ -130,7 +136,8 @@ class IpvSessionStartHandlerTest {
                         null,
                         "https://example.com",
                         "test-scope",
-                        "test-state");
+                        "test-state",
+                        false);
         event.setBody(objectMapper.writeValueAsString(clientSessionDetailsDto));
 
         APIGatewayProxyResponseEvent response =
@@ -151,7 +158,12 @@ class IpvSessionStartHandlerTest {
 
         ClientSessionDetailsDto clientSessionDetailsDto =
                 new ClientSessionDetailsDto(
-                        "test-response-type", "test-client-id", null, "test-scope", "test-state");
+                        "test-response-type",
+                        "test-client-id",
+                        null,
+                        "test-scope",
+                        "test-state",
+                        false);
         event.setBody(objectMapper.writeValueAsString(clientSessionDetailsDto));
 
         APIGatewayProxyResponseEvent response =
@@ -176,7 +188,8 @@ class IpvSessionStartHandlerTest {
                         "test-client-id",
                         "https://example.com",
                         null,
-                        "test-state");
+                        "test-state",
+                        false);
         event.setBody(objectMapper.writeValueAsString(clientSessionDetailsDto));
 
         APIGatewayProxyResponseEvent response =
@@ -201,7 +214,8 @@ class IpvSessionStartHandlerTest {
                         "test-client-id",
                         "https://example.com",
                         "test-scope",
-                        null);
+                        null,
+                        false);
         event.setBody(objectMapper.writeValueAsString(clientSessionDetailsDto));
 
         APIGatewayProxyResponseEvent response =

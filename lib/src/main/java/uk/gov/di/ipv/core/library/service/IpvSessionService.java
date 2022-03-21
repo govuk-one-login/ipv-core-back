@@ -37,11 +37,18 @@ public class IpvSessionService {
     }
 
     public String generateIpvSession(ClientSessionDetailsDto clientSessionDetailsDto) {
+
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
-        ipvSessionItem.setUserState(UserStates.INITIAL_IPV_JOURNEY.toString());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+
+        String userState =
+                clientSessionDetailsDto.isDebugJourney()
+                        ? UserStates.DEBUG_PAGE.toString()
+                        : UserStates.INITIAL_IPV_JOURNEY.toString();
+        ipvSessionItem.setUserState(userState);
+
         dataStore.create(ipvSessionItem);
 
         return ipvSessionItem.getIpvSessionId();
