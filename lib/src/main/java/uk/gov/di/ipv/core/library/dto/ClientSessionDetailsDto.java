@@ -70,11 +70,11 @@ public class ClientSessionDetailsDto {
         this.state = state;
     }
 
-    public boolean isDebugJourney() {
+    public boolean getIsDebugJourney() {
         return isDebugJourney;
     }
 
-    public void setDebugJourney(boolean debugJourney) {
-        isDebugJourney = debugJourney;
+    public void setIsDebugJourney(boolean isDebugJourney) {
+        this.isDebugJourney = isDebugJourney;
     }
 }
