@@ -63,7 +63,8 @@ class IpvSessionServiceTest {
                                 "test-client",
                                 "http://example.come",
                                 "test-scope",
-                                "test-state"));
+                                "test-state",
+                                false));
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -72,6 +73,33 @@ class IpvSessionServiceTest {
         assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
 
         assertEquals(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(), ipvSessionID);
+        assertEquals(
+                UserStates.INITIAL_IPV_JOURNEY.toString(),
+                ipvSessionItemArgumentCaptor.getValue().getUserState());
+    }
+
+    @Test
+    void shouldCreateSessionItemForDebugJourney() {
+        String ipvSessionID =
+                ipvSessionService.generateIpvSession(
+                        new ClientSessionDetailsDto(
+                                "jwt",
+                                "test-client",
+                                "http://example.come",
+                                "test-scope",
+                                "test-state",
+                                true));
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockDataStore).create(ipvSessionItemArgumentCaptor.capture());
+        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
+        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
+
+        assertEquals(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(), ipvSessionID);
+        assertEquals(
+                UserStates.DEBUG_PAGE.toString(),
+                ipvSessionItemArgumentCaptor.getValue().getUserState());
     }
 
     @Test

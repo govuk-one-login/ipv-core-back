@@ -11,16 +11,23 @@ public class ClientSessionDetailsDto {
     String redirectUri;
     String scope;
     String state;
+    boolean isDebugJourney;
 
     public ClientSessionDetailsDto() {}
 
     public ClientSessionDetailsDto(
-            String responseType, String clientId, String redirectUri, String scope, String state) {
+            String responseType,
+            String clientId,
+            String redirectUri,
+            String scope,
+            String state,
+            boolean isDebugJourney) {
         this.responseType = responseType;
         this.clientId = clientId;
         this.redirectUri = redirectUri;
         this.scope = scope;
         this.state = state;
+        this.isDebugJourney = isDebugJourney;
     }
 
     public String getResponseType() {
@@ -61,5 +68,13 @@ public class ClientSessionDetailsDto {
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    public boolean isDebugJourney() {
+        return isDebugJourney;
+    }
+
+    public void setDebugJourney(boolean debugJourney) {
+        isDebugJourney = debugJourney;
     }
 }
