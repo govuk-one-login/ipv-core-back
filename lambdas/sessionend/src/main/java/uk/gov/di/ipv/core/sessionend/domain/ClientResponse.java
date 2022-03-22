@@ -6,22 +6,14 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 
 @ExcludeFromGeneratedCoverageReport
 public class ClientResponse {
-    @JsonProperty private String redirectUrl;
-    @JsonProperty private String authCode;
+    @JsonProperty private ClientDetails client;
 
     @JsonCreator
-    public ClientResponse(
-            @JsonProperty(value = "redirectUrl", required = true) String redirectUrl,
-            @JsonProperty(value = "authCode", required = true) String authCode) {
-        this.redirectUrl = redirectUrl;
-        this.authCode = authCode;
+    public ClientResponse(@JsonProperty(value = "client", required = true) ClientDetails client) {
+        this.client = client;
     }
 
-    public String getRedirectUrl() {
-        return redirectUrl;
-    }
-
-    public String getAuthCode() {
-        return authCode;
+    public ClientDetails getClient() {
+        return client;
     }
 }

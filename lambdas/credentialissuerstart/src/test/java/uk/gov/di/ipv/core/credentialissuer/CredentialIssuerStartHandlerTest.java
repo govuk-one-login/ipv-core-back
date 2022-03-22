@@ -87,7 +87,7 @@ class CredentialIssuerStartHandlerTest {
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
 
-        Map responseBody = getResponseBodyAsMap(response);
+        Map responseBody = getResponseBodyAsMap(response).get("cri");
 
         assertEquals(CRI_ID, responseBody.get("id"));
         assertEquals(IPV_CLIENT_ID, responseBody.get("ipvClientId"));
@@ -96,8 +96,8 @@ class CredentialIssuerStartHandlerTest {
         verifyNoInteractions(context);
     }
 
-    private Map getResponseBodyAsMap(APIGatewayProxyResponseEvent response)
-            throws JsonProcessingException {
+    private Map<String, Map<String, String>> getResponseBodyAsMap(
+            APIGatewayProxyResponseEvent response) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.readValue(response.getBody(), Map.class);
     }

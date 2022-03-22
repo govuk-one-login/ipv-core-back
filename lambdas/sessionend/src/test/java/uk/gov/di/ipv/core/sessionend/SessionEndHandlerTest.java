@@ -88,9 +88,11 @@ class SessionEndHandlerTest {
 
         verify(mockAuthorizationCodeService)
                 .persistAuthorizationCode(
-                        responseBody.getAuthCode(), "12345", responseBody.getRedirectUrl());
-        assertEquals(authorizationCode.toString(), responseBody.getAuthCode());
-        assertEquals("https://example.com", responseBody.getRedirectUrl());
+                        responseBody.getClient().getAuthCode(),
+                        "12345",
+                        responseBody.getClient().getRedirectUrl());
+        assertEquals(authorizationCode.toString(), responseBody.getClient().getAuthCode());
+        assertEquals("https://example.com", responseBody.getClient().getRedirectUrl());
     }
 
     @Test
