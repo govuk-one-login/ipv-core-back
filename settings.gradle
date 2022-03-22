@@ -11,4 +11,5 @@ include "lib",
 		"lambdas:sharedattributes",
 		"lambdas:journeyengine",
 		"lambdas:credentialissuerstart",
+		"lambdas:credentialissuererror",
 		"integration-test"

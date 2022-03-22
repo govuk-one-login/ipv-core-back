@@ -49,7 +49,6 @@ public class CredentialIssuerReturnHandler
     @Tracing
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-
         CredentialIssuerRequestDto request =
                 RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
 

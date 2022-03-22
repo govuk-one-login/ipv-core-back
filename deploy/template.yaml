@@ -251,6 +251,37 @@ Resources:
             Path: /journey/cri/start/{criId}
             Method: POST
 
+  IPVCredentialIssuerErrorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "ipv-credential-issuer-error-${Environment}"
+      Handler: uk.gov.di.ipv.core.credentialissuererror.CredentialIssuerErrorHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/credentialissuererror
+      Architectures:
+        - x86_64
+      MemorySize: 3008
+      Tracing: Active
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-error-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionsTable
+      Events:
+        IPVCoreInternalAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCoreInternalAPI
+            Path: /journey/cri/error
+            Method: POST
+
   IPVUserIdentityFunction:
     Type: AWS::Serverless::Function
     Properties:
