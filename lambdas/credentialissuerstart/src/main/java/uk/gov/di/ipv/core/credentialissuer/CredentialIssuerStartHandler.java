@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import software.amazon.lambda.powertools.tracing.Tracing;
+import uk.gov.di.ipv.core.credentialissuer.domain.CriDetails;
 import uk.gov.di.ipv.core.credentialissuer.domain.CriResponse;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -54,9 +55,10 @@ public class CredentialIssuerStartHandler
 
         CriResponse criResponse =
                 new CriResponse(
-                        credentialIssuerConfig.getId(),
-                        credentialIssuerConfig.getIpvClientId(),
-                        credentialIssuerConfig.getAuthorizeUrl().toString());
+                        new CriDetails(
+                                credentialIssuerConfig.getId(),
+                                credentialIssuerConfig.getIpvClientId(),
+                                credentialIssuerConfig.getAuthorizeUrl().toString()));
 
         return ApiGatewayResponseGenerator.proxyJsonResponse(200, criResponse);
     }

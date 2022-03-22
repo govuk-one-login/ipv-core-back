@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.AuthRequestValidator;
+import uk.gov.di.ipv.core.sessionend.domain.ClientDetails;
 import uk.gov.di.ipv.core.sessionend.domain.ClientResponse;
 
 import java.util.Collections;
@@ -95,8 +96,9 @@ public class SessionEndHandler
 
         ClientResponse clientResponse =
                 new ClientResponse(
-                        ipvSessionItem.getClientSessionDetails().getRedirectUri(),
-                        authorizationCode.getValue());
+                        new ClientDetails(
+                                ipvSessionItem.getClientSessionDetails().getRedirectUri(),
+                                authorizationCode.getValue()));
 
         return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, clientResponse);
     }
