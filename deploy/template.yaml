@@ -127,11 +127,14 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub session-end-${Environment}
           AUTH_CODES_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AuthCodesTable.Arn]]
+          IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref AuthCodesTable
         - DynamoDBReadPolicy:
             TableName: !Ref AuthCodesTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
         - SSMParameterReadPolicy:
               ParameterName: !Sub ${Environment}/core/*
       Events:
