@@ -5,8 +5,8 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
+import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.ParseException;
-import com.nimbusds.openid.connect.sdk.AuthenticationRequest;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,9 +77,9 @@ public class SessionEndHandler
                     HttpStatus.SC_BAD_REQUEST, validationResult.getError());
         }
 
-        AuthenticationRequest authenticationRequest;
+        AuthorizationRequest authorizationRequest;
         try {
-            authenticationRequest = AuthenticationRequest.parse(authParameters);
+            authorizationRequest = AuthorizationRequest.parse(authParameters);
         } catch (ParseException e) {
             LOGGER.error("Authentication request could not be parsed", e);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
@@ -92,7 +92,7 @@ public class SessionEndHandler
         authorizationCodeService.persistAuthorizationCode(
                 authorizationCode.getValue(),
                 ipvSessionId,
-                authenticationRequest.getRedirectionURI().toString());
+                authorizationRequest.getRedirectionURI().toString());
 
         ClientResponse clientResponse =
                 new ClientResponse(
