@@ -129,24 +129,17 @@ class SessionEndHandlerTest {
         when(mockSessionService.getIpvSession(anyString())).thenReturn(generateIpvSessionItem());
 
         List<String> paramsToRemove =
-                List.of(
-                        OAuth2RequestParams.REDIRECT_URI,
-                        OAuth2RequestParams.CLIENT_ID,
-                        OAuth2RequestParams.RESPONSE_TYPE,
-                        OAuth2RequestParams.SCOPE);
+                List.of(OAuth2RequestParams.CLIENT_ID, OAuth2RequestParams.RESPONSE_TYPE);
         for (String param : paramsToRemove) {
             IpvSessionItem item = generateIpvSessionItem();
             ClientSessionDetailsDto clientSessionDetailsDto =
                     generateValidClientSessionDetailsDto();
-            if (param.equals(OAuth2RequestParams.REDIRECT_URI)) {
-                clientSessionDetailsDto.setRedirectUri(null);
-            } else if (param.equals(OAuth2RequestParams.CLIENT_ID)) {
+            if (param.equals(OAuth2RequestParams.CLIENT_ID)) {
                 clientSessionDetailsDto.setClientId(null);
             } else if (param.equals(OAuth2RequestParams.RESPONSE_TYPE)) {
                 clientSessionDetailsDto.setResponseType(null);
-            } else if (param.equals(OAuth2RequestParams.SCOPE)) {
-                clientSessionDetailsDto.setScope(null);
             }
+
             item.setClientSessionDetails(clientSessionDetailsDto);
 
             when(mockSessionService.getIpvSession(anyString())).thenReturn(item);
