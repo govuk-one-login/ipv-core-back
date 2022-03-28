@@ -185,7 +185,7 @@ class JourneyEngineHandlerTest {
     }
 
     @Test
-    void shouldReturn1stTransitionPageResponseWhenRequired() throws IOException {
+    void shouldReturnIdentityStartPageResponseWhenRequired() throws IOException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
@@ -209,11 +209,11 @@ class JourneyEngineHandlerTest {
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(
-                UserStates.TRANSITION_PAGE_1.toString(),
+                UserStates.IPV_IDENTITY_START_PAGE.toString(),
                 sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(UserStates.TRANSITION_PAGE_1.value, pageResponse.getPage());
+        assertEquals(UserStates.IPV_IDENTITY_START_PAGE.value, pageResponse.getPage());
     }
 
     @Test
@@ -229,7 +229,7 @@ class JourneyEngineHandlerTest {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
         ipvSessionItem.setCreationDateTime(new Date().toString());
-        ipvSessionItem.setUserState(UserStates.TRANSITION_PAGE_1.toString());
+        ipvSessionItem.setUserState(UserStates.IPV_IDENTITY_START_PAGE.toString());
 
         when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
         when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
@@ -286,7 +286,7 @@ class JourneyEngineHandlerTest {
     }
 
     @Test
-    void shouldReturnCriKbvJourneyResponseWhenRequired() throws IOException {
+    void shouldReturnCriFraudJourneyResponseWhenRequired() throws IOException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
@@ -313,72 +313,6 @@ class JourneyEngineHandlerTest {
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(
-                UserStates.CRI_KBV.toString(), sessionArgumentCaptor.getValue().getUserState());
-
-        assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/cri/start/kbv", journeyResponse.getJourney());
-    }
-
-    @Test
-    void shouldReturn2ndTransitionPageResponseWhenRequired() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "next");
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
-
-        IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
-        ipvSessionItem.setCreationDateTime(new Date().toString());
-        ipvSessionItem.setUserState(UserStates.CRI_KBV.toString());
-
-        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-
-        APIGatewayProxyResponseEvent response =
-                journeyEngineHandler.handleRequest(event, mockContext);
-        PageResponse pageResponse = objectMapper.readValue(response.getBody(), PageResponse.class);
-
-        ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-        verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(
-                UserStates.TRANSITION_PAGE_2.toString(),
-                sessionArgumentCaptor.getValue().getUserState());
-
-        assertEquals(200, response.getStatusCode());
-        assertEquals(UserStates.TRANSITION_PAGE_2.value, pageResponse.getPage());
-    }
-
-    @Test
-    void shouldReturnCriFraudJourneyResponseWhenRequired() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "next");
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
-
-        IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
-        ipvSessionItem.setCreationDateTime(new Date().toString());
-        ipvSessionItem.setUserState(UserStates.TRANSITION_PAGE_2.toString());
-
-        when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
-        when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
-        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-
-        APIGatewayProxyResponseEvent response =
-                journeyEngineHandler.handleRequest(event, mockContext);
-        JourneyResponse journeyResponse =
-                objectMapper.readValue(response.getBody(), JourneyResponse.class);
-
-        ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-        verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(
                 UserStates.CRI_FRAUD.toString(), sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
@@ -386,7 +320,7 @@ class JourneyEngineHandlerTest {
     }
 
     @Test
-    void shouldReturnCriActivityHistoryJourneyResponseWhenRequired() throws IOException {
+    void shouldReturnPreKbvTransitionPageResponseWhenRequired() throws IOException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
@@ -400,6 +334,38 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(new Date().toString());
         ipvSessionItem.setUserState(UserStates.CRI_FRAUD.toString());
 
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
+        APIGatewayProxyResponseEvent response =
+                journeyEngineHandler.handleRequest(event, mockContext);
+        PageResponse pageResponse = objectMapper.readValue(response.getBody(), PageResponse.class);
+
+        ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
+        assertEquals(
+                UserStates.PRE_KBV_TRANSITION_PAGE.toString(),
+                sessionArgumentCaptor.getValue().getUserState());
+
+        assertEquals(200, response.getStatusCode());
+        assertEquals(UserStates.PRE_KBV_TRANSITION_PAGE.value, pageResponse.getPage());
+    }
+
+    @Test
+    void shouldReturnCriKbvJourneyResponseWhenRequired() throws IOException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+
+        Map<String, String> pathParameters = new HashMap<>();
+        pathParameters.put("journeyStep", "next");
+        event.setPathParameters(pathParameters);
+
+        event.setHeaders(Map.of("ipv-session-id", "1234"));
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setCreationDateTime(new Date().toString());
+        ipvSessionItem.setUserState(UserStates.PRE_KBV_TRANSITION_PAGE.toString());
+
         when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
         when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
@@ -413,11 +379,45 @@ class JourneyEngineHandlerTest {
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(
-                UserStates.CRI_ACTIVITY_HISTORY.toString(),
+                UserStates.CRI_KBV.toString(), sessionArgumentCaptor.getValue().getUserState());
+
+        assertEquals(200, response.getStatusCode());
+        assertEquals("/journey/cri/start/kbv", journeyResponse.getJourney());
+    }
+
+    @Test
+    void shouldReturnIpvSuccessPageResponseWhenRequired() throws IOException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+
+        Map<String, String> pathParameters = new HashMap<>();
+        pathParameters.put("journeyStep", "next");
+        event.setPathParameters(pathParameters);
+
+        event.setHeaders(Map.of("ipv-session-id", "1234"));
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setCreationDateTime(new Date().toString());
+        ipvSessionItem.setUserState(UserStates.CRI_KBV.toString());
+
+        when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
+        when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
+        APIGatewayProxyResponseEvent response =
+                journeyEngineHandler.handleRequest(event, mockContext);
+        PageResponse pageResponse = objectMapper.readValue(response.getBody(), PageResponse.class);
+
+        ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
+
+        assertEquals(
+                UserStates.IPV_SUCCESS_PAGE.toString(),
                 sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/cri/start/activityHistory", journeyResponse.getJourney());
+        assertEquals(UserStates.IPV_SUCCESS_PAGE.value, pageResponse.getPage());
     }
 
     @Test
@@ -433,7 +433,7 @@ class JourneyEngineHandlerTest {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
         ipvSessionItem.setCreationDateTime(new Date().toString());
-        ipvSessionItem.setUserState(UserStates.CRI_ACTIVITY_HISTORY.toString());
+        ipvSessionItem.setUserState(UserStates.IPV_SUCCESS_PAGE.toString());
 
         when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
         when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");

@@ -26,15 +26,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_ACTIVITY_HISTORY;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_KBV;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_UK_PASSPORT;
 import static uk.gov.di.ipv.core.library.domain.UserStates.DEBUG_PAGE;
 import static uk.gov.di.ipv.core.library.domain.UserStates.IPV_ERROR_PAGE;
-import static uk.gov.di.ipv.core.library.domain.UserStates.TRANSITION_PAGE_1;
-import static uk.gov.di.ipv.core.library.domain.UserStates.TRANSITION_PAGE_2;
+import static uk.gov.di.ipv.core.library.domain.UserStates.IPV_IDENTITY_START_PAGE;
+import static uk.gov.di.ipv.core.library.domain.UserStates.IPV_SUCCESS_PAGE;
+import static uk.gov.di.ipv.core.library.domain.UserStates.PRE_KBV_TRANSITION_PAGE;
 
 public class JourneyEngineHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -133,10 +133,10 @@ public class JourneyEngineHandler
 
             switch (currentUserStateValue) {
                 case INITIAL_IPV_JOURNEY:
-                    updateUserState(TRANSITION_PAGE_1, ipvSessionItem);
-                    builder.setPageResponse(new PageResponse(TRANSITION_PAGE_1.value));
+                    updateUserState(IPV_IDENTITY_START_PAGE, ipvSessionItem);
+                    builder.setPageResponse(new PageResponse(IPV_IDENTITY_START_PAGE.value));
                     break;
-                case TRANSITION_PAGE_1:
+                case IPV_IDENTITY_START_PAGE:
                     updateUserState(CRI_UK_PASSPORT, ipvSessionItem);
                     builder.setJourneyResponse(
                             new JourneyResponse(criStartUri + UK_PASSPORT_CRI_ID));
@@ -146,23 +146,22 @@ public class JourneyEngineHandler
                     builder.setJourneyResponse(new JourneyResponse(criStartUri + ADDRESS_CRI_ID));
                     break;
                 case CRI_ADDRESS:
-                    updateUserState(CRI_KBV, ipvSessionItem);
-                    builder.setJourneyResponse(new JourneyResponse(criStartUri + KBV_CRI_ID));
-                    break;
-                case CRI_KBV:
-                    updateUserState(TRANSITION_PAGE_2, ipvSessionItem);
-                    builder.setPageResponse(new PageResponse(TRANSITION_PAGE_2.value));
-                    break;
-                case TRANSITION_PAGE_2:
                     updateUserState(CRI_FRAUD, ipvSessionItem);
                     builder.setJourneyResponse(new JourneyResponse(criStartUri + FRAUD_CRI_ID));
                     break;
                 case CRI_FRAUD:
-                    updateUserState(CRI_ACTIVITY_HISTORY, ipvSessionItem);
-                    builder.setJourneyResponse(
-                            new JourneyResponse(criStartUri + ACTIVITY_HISTORY_CRI_ID));
+                    updateUserState(PRE_KBV_TRANSITION_PAGE, ipvSessionItem);
+                    builder.setPageResponse(new PageResponse(PRE_KBV_TRANSITION_PAGE.value));
                     break;
-                case CRI_ACTIVITY_HISTORY:
+                case PRE_KBV_TRANSITION_PAGE:
+                    updateUserState(CRI_KBV, ipvSessionItem);
+                    builder.setJourneyResponse(new JourneyResponse(criStartUri + KBV_CRI_ID));
+                    break;
+                case CRI_KBV:
+                    updateUserState(IPV_SUCCESS_PAGE, ipvSessionItem);
+                    builder.setPageResponse(new PageResponse(IPV_SUCCESS_PAGE.value));
+                    break;
+                case IPV_SUCCESS_PAGE:
                     builder.setJourneyResponse(new JourneyResponse(journeyEndUri));
                     break;
                 case DEBUG_PAGE:

@@ -2,9 +2,10 @@ package uk.gov.di.ipv.core.library.domain;
 
 public enum UserStates {
     DEBUG_PAGE("page-ipv-debug"),
-    INITIAL_IPV_JOURNEY("page-ipv-start"),
-    TRANSITION_PAGE_1("page-cri-transition"),
-    TRANSITION_PAGE_2("page-cri-transition"),
+    INITIAL_IPV_JOURNEY("initial-ipv-journey"),
+    IPV_IDENTITY_START_PAGE("page-ipv-identity-start"),
+    PRE_KBV_TRANSITION_PAGE("page-pre-kbv-transition"),
+    IPV_SUCCESS_PAGE("page-ipv-success"),
     CRI_UK_PASSPORT("cri-ukPassport"),
     CRI_ACTIVITY_HISTORY("cri-activityHistory"),
     CRI_ADDRESS("cri-Address"),
