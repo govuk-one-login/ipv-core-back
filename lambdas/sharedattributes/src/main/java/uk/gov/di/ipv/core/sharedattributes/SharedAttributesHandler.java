@@ -56,7 +56,7 @@ public class SharedAttributesHandler
     public SharedAttributesHandler() {
         ConfigurationService configurationService = new ConfigurationService();
         this.userIdentityService = new UserIdentityService(configurationService);
-        this.signer = new KmsEs256Signer(configurationService.getSharedAttributesSigningKeyId());
+        this.signer = new KmsEs256Signer(configurationService.getSigningKeyId());
     }
 
     @Override

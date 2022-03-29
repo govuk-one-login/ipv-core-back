@@ -40,8 +40,7 @@ public class CredentialIssuerReturnHandler
     @ExcludeFromGeneratedCoverageReport
     public CredentialIssuerReturnHandler() {
         this.configurationService = new ConfigurationService();
-        JWSSigner signer =
-                new KmsEs256Signer(configurationService.getSharedAttributesSigningKeyId());
+        JWSSigner signer = new KmsEs256Signer(configurationService.getSigningKeyId());
 
         this.credentialIssuerService = new CredentialIssuerService(configurationService, signer);
     }

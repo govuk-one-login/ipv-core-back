@@ -162,8 +162,8 @@ public class ConfigurationService {
         return splitKey;
     }
 
-    public String getSharedAttributesSigningKeyId() {
-        return ssmProvider.get(System.getenv("SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM"));
+    public String getSigningKeyId() {
+        return ssmProvider.get(System.getenv("SIGNING_KEY_ID_PARAM"));
     }
 
     public String getAudienceForClients() {
