@@ -15,7 +15,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
-import uk.gov.di.ipv.core.library.helpers.KmsSigner;
+import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
@@ -40,7 +40,8 @@ public class CredentialIssuerReturnHandler
     @ExcludeFromGeneratedCoverageReport
     public CredentialIssuerReturnHandler() {
         this.configurationService = new ConfigurationService();
-        JWSSigner signer = new KmsSigner(configurationService.getSharedAttributesSigningKeyId());
+        JWSSigner signer =
+                new KmsEs256Signer(configurationService.getSharedAttributesSigningKeyId());
 
         this.credentialIssuerService = new CredentialIssuerService(configurationService, signer);
     }

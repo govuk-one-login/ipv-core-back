@@ -16,7 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.helpers.KmsSigner;
+import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.io.ByteArrayInputStream;
@@ -130,7 +130,7 @@ class SharedAttributesHandlerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
     @Mock private Context context;
     @Mock private UserIdentityService userIdentityService;
-    @Mock private KmsSigner mockKmsSigner;
+    @Mock private KmsEs256Signer mockKmsSigner;
     private SharedAttributesHandler underTest;
 
     @BeforeEach
