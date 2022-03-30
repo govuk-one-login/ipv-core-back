@@ -26,6 +26,7 @@ public class IpvSessionStartHandler
 
     private static final Logger LOGGER =
             LoggerFactory.getLogger(IpvSessionStartHandler.class.getName());
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final String IPV_SESSION_ID_KEY = "ipvSessionId";
 
     private final ConfigurationService configurationService;
@@ -49,7 +50,6 @@ public class IpvSessionStartHandler
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
             ClientSessionDetailsDto clientSessionDetails =
                     objectMapper.readValue(input.getBody(), ClientSessionDetailsDto.class);
 

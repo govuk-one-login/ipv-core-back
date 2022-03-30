@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
@@ -93,6 +94,31 @@ class SessionEndHandlerTest {
                         responseBody.getClient().getRedirectUrl());
         assertEquals(authorizationCode.toString(), responseBody.getClient().getAuthCode());
         assertEquals("https://example.com", responseBody.getClient().getRedirectUrl());
+        assertEquals("test-state", responseBody.getClient().getState());
+    }
+
+    @Test
+    void shouldReturn200WhenStateNotInSession() throws Exception {
+        when(mockAuthorizationCodeService.generateAuthorizationCode())
+                .thenReturn(authorizationCode);
+        when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
+                .thenReturn(ValidationResult.createValidResult());
+        IpvSessionItem ipvSessionItemWithoutState = generateIpvSessionItem();
+        ipvSessionItemWithoutState.getClientSessionDetails().setState("");
+        when(mockSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItemWithoutState);
+
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        event.setQueryStringParameters(VALID_QUERY_PARAMS);
+        event.setHeaders(TEST_EVENT_HEADERS);
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+
+        ClientResponse responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertNull(responseBody.getClient().getState());
     }
 
     @Test

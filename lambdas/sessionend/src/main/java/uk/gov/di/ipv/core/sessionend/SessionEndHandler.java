@@ -98,7 +98,8 @@ public class SessionEndHandler
                 new ClientResponse(
                         new ClientDetails(
                                 ipvSessionItem.getClientSessionDetails().getRedirectUri(),
-                                authorizationCode.getValue()));
+                                authorizationCode.getValue(),
+                                ipvSessionItem.getClientSessionDetails().getState()));
 
         return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, clientResponse);
     }
