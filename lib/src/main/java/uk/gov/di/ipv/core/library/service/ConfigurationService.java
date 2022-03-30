@@ -11,13 +11,8 @@ import software.amazon.lambda.powertools.parameters.SSMProvider;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 
-import java.io.ByteArrayInputStream;
 import java.net.URI;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -181,10 +176,11 @@ public class ConfigurationService {
         return Arrays.asList(redirectUrlStrings.split(CLIENT_REDIRECT_URL_SEPARATOR));
     }
 
-    public Certificate getClientCertificate(String clientId) throws CertificateException {
-        return getCertificateFromStore(
+    public String getClientPublicKeyMaterial(String clientId) {
+
+        return ssmProvider.get(
                 String.format(
-                        "/%s/core/clients/%s/publicCertificateForCoreToVerify",
+                        "/%s/core/clients/%s/publicKeyMaterialForCoreToVerify",
                         System.getenv(ENVIRONMENT), clientId));
     }
 
@@ -219,11 +215,5 @@ public class ConfigurationService {
     public String getIpvTokenTtl() {
         return ssmProvider.get(
                 String.format("/%s/core/self/jwtTtlSeconds", System.getenv(ENVIRONMENT)));
-    }
-
-    private Certificate getCertificateFromStore(String parameterName) throws CertificateException {
-        byte[] binaryCertificate = Base64.getDecoder().decode(ssmProvider.get(parameterName));
-        CertificateFactory factory = CertificateFactory.getInstance("X.509");
-        return factory.generateCertificate(new ByteArrayInputStream(binaryCertificate));
     }
 }

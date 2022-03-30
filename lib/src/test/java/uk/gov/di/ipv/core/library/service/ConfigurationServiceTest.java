@@ -19,7 +19,6 @@ import uk.org.webcompere.systemstubs.properties.SystemProperties;
 
 import java.net.URI;
 import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -226,12 +225,10 @@ class ConfigurationServiceTest {
     @Test
     void shouldReturnValidClientCertificateForAuth() throws CertificateException {
         environmentVariables.set("ENVIRONMENT", "test");
-        when(ssmProvider.get("/test/core/clients/aClientId/publicCertificateForCoreToVerify"))
+        when(ssmProvider.get("/test/core/clients/aClientId/publicKeyMaterialForCoreToVerify"))
                 .thenReturn(TEST_CERT);
 
-        X509Certificate result =
-                (X509Certificate) configurationService.getClientCertificate("aClientId");
-        assertEquals("C=GB,CN=cri-uk-passport-back", result.getIssuerX500Principal().getName());
+        assertEquals(TEST_CERT, configurationService.getClientPublicKeyMaterial("aClientId"));
     }
 
     @Test
