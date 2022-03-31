@@ -3,6 +3,8 @@ package uk.gov.di.ipv.core.library.service;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
+import com.nimbusds.jose.crypto.impl.ECDSA;
+import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWTClaimNames;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.PlainJWT;
@@ -37,6 +39,8 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Objects;
+
+import static com.nimbusds.jose.JWSAlgorithm.ES256;
 
 public class CredentialIssuerService {
 
@@ -152,10 +156,15 @@ public class CredentialIssuerService {
             }
 
             SignedJWT verifiableCredential = (SignedJWT) response.getContentAsJWT();
+
+            // Signatures from AWS are in DER format. Nimbus needs then in concat format.
+            if (signatureIsDerFormat(verifiableCredential)) {
+                LOGGER.info("Transcoding signature");
+                verifiableCredential = transcodeSignature(verifiableCredential);
+            }
+
             if (!verifiableCredential.verify(new ECDSAVerifier(config.getVcVerifyingPublicJwk()))) {
                 LOGGER.error("Verifiable credential signature not valid");
-                LOGGER.error(verifiableCredential.serialize());
-                LOGGER.error(config.getVcVerifyingPublicJwk().toJSONString());
                 throw new CredentialIssuerException(
                         HTTPResponse.SC_SERVER_ERROR,
                         ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
@@ -169,7 +178,7 @@ public class CredentialIssuerService {
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
         } catch (JOSEException e) {
-            LOGGER.error("Error creating signature verifier from public key: {}", e.getMessage());
+            LOGGER.error("JOSE exception when verifying signature: {}", e.getMessage());
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
@@ -197,5 +206,21 @@ public class CredentialIssuerService {
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
         }
+    }
+
+    private SignedJWT transcodeSignature(SignedJWT vc)
+            throws JOSEException, java.text.ParseException {
+        Base64URL transcodedSignatureBase64 =
+                Base64URL.encode(
+                        ECDSA.transcodeSignatureToConcat(
+                                vc.getSignature().decode(),
+                                ECDSA.getSignatureByteArrayLength(ES256)));
+        String[] jwtParts = vc.serialize().split("\\.");
+        return SignedJWT.parse(
+                String.format("%s.%s.%s", jwtParts[0], jwtParts[1], transcodedSignatureBase64));
+    }
+
+    private boolean signatureIsDerFormat(SignedJWT signedJWT) throws JOSEException {
+        return signedJWT.getSignature().decode().length != ECDSA.getSignatureByteArrayLength(ES256);
     }
 }

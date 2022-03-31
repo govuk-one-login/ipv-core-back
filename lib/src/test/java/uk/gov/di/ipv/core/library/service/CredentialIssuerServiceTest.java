@@ -3,6 +3,9 @@ package uk.gov.di.ipv.core.library.service;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.crypto.impl.ECDSA;
+import com.nimbusds.jose.util.Base64URL;
+import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
@@ -232,6 +235,40 @@ class CredentialIssuerServiceTest {
         verify(
                 postRequestedFor(urlEqualTo("/credentials/issue"))
                         .withHeader("Authorization", equalTo("Bearer " + accessToken.getValue())));
+    }
+
+    @Test
+    void getVerifiableCredentialCanHandleDerEncodedSignatures(WireMockRuntimeInfo wmRuntimeInfo)
+            throws Exception {
+
+        SignedJWT concatEncodedSignedJwt = SignedJWT.parse(SIGNED_VC_1);
+        Base64URL transcodedSignatureBase64 =
+                Base64URL.encode(
+                        ECDSA.transcodeSignatureToDER(
+                                concatEncodedSignedJwt.getSignature().decode()));
+        String[] jwtParts = concatEncodedSignedJwt.serialize().split("\\.");
+        SignedJWT derEncodedSignedJwt =
+                SignedJWT.parse(
+                        String.format(
+                                "%s.%s.%s", jwtParts[0], jwtParts[1], transcodedSignatureBase64));
+
+        stubFor(
+                post("/credentials/issue")
+                        .willReturn(
+                                aResponse()
+                                        .withHeader("Content-Type", "application/jwt;charset=UTF-8")
+                                        .withBody(derEncodedSignedJwt.serialize())));
+
+        CredentialIssuerConfig credentialIssuerConfig =
+                getStubCredentialIssuerConfig(wmRuntimeInfo);
+
+        BearerAccessToken accessToken = new BearerAccessToken();
+
+        String credential =
+                credentialIssuerService.getVerifiableCredential(
+                        accessToken, credentialIssuerConfig, "subject");
+
+        assertEquals(SIGNED_VC_1, credential);
     }
 
     @Test
