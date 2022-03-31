@@ -72,9 +72,6 @@ Resources:
             RestApiId: !Ref IPVCoreInternalAPI
             Path: /shared-attributes
             Method: GET
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: 1
 
   IPVAccessTokenFunction:
     Type: AWS::Serverless::Function
@@ -112,9 +109,6 @@ Resources:
             RestApiId: !Ref IPVCoreExternalAPI
             Path: /token
             Method: POST
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: 1
 
   IPVSessionEndFunction:
     Type: AWS::Serverless::Function
@@ -151,9 +145,6 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /journey/session/end
             Method: POST
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: 1
 
   IPVSessionStartFunction:
     Type: AWS::Serverless::Function
@@ -185,9 +176,6 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /session/start
             Method: POST
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: 1
 
   IPVCriReturnFunction:
     Type: AWS::Serverless::Function
@@ -234,9 +222,6 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /journey/cri/return
             Method: POST
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: 1
 
   IPVCredentialIssuerStartFunction:
     Type: AWS::Serverless::Function
@@ -268,9 +253,6 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /journey/cri/start/{criId}
             Method: POST
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: 1
 
   IPVCredentialIssuerErrorFunction:
     Type: AWS::Serverless::Function
@@ -302,9 +284,6 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /journey/cri/error
             Method: POST
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: 1
 
   IPVUserIdentityFunction:
     Type: AWS::Serverless::Function
@@ -339,9 +318,6 @@ Resources:
               Ref: IPVCoreExternalAPI
             Path: /user-identity
             Method: GET
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: 1
 
   IPVCredentialIssuerConfig:
     Type: AWS::Serverless::Function
@@ -373,9 +349,6 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /request-config
             Method: GET
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: 1
 
   IPVIssuedCredentials:
     Type: AWS::Serverless::Function
@@ -407,9 +380,6 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /issued-credentials
             Method: GET
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: 1
 
   IPVJourneyEngineFunction:
     Type: AWS::Serverless::Function
@@ -443,9 +413,6 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /journey/{journeyStep}
             Method: POST
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: 1
 
   UserIssuedCredentialsTable:
     Type: AWS::DynamoDB::Table
