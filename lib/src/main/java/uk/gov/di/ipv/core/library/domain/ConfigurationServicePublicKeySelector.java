@@ -56,35 +56,31 @@ public class ConfigurationServicePublicKeySelector implements ClientCredentialsS
         String clientId = claimedClientID.getValue();
         String publicKeyMaterial = configurationService.getClientPublicKeyMaterial(clientId);
 
-        switch (algorithm.toString()) {
-            case ES256:
-                try {
+        try {
+            switch (algorithm.toString()) {
+                case ES256:
                     return List.of(ECKey.parse(publicKeyMaterial).toECPublicKey());
-                } catch (ParseException | JOSEException e) {
-                    throw new InvalidClientException(
-                            String.format(
-                                    "Could not parse public key material for client ID '%s': %s",
-                                    clientId, e.getMessage()));
-                }
-            case RS256:
-                try {
+                case RS256:
                     return List.of(
                             CertificateFactory.getInstance("X.509")
                                     .generateCertificate(
                                             new ByteArrayInputStream(
                                                     decoder.decode(publicKeyMaterial)))
                                     .getPublicKey());
-                } catch (CertificateException | IllegalArgumentException e) {
+                default:
                     throw new InvalidClientException(
                             String.format(
-                                    "Could not parse public key material for client ID '%s': %s",
-                                    clientId, e.getMessage()));
-                }
-            default:
-                throw new InvalidClientException(
-                        String.format(
-                                "%s algorithm is not supported. Received from client ID '%s'",
-                                algorithm, clientId));
+                                    "%s algorithm is not supported. Received from client ID '%s'",
+                                    algorithm, clientId));
+            }
+        } catch (ParseException
+                | JOSEException
+                | CertificateException
+                | IllegalArgumentException e) {
+            throw new InvalidClientException(
+                    String.format(
+                            "Could not parse public key material for client ID '%s': %s",
+                            clientId, e.getMessage()));
         }
     }
 }
