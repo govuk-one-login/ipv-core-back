@@ -3,8 +3,6 @@ package uk.gov.di.ipv.core.library.service;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
-import com.nimbusds.jose.crypto.impl.ECDSA;
-import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWTClaimNames;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.PlainJWT;
@@ -39,8 +37,6 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Objects;
-
-import static com.nimbusds.jose.JWSAlgorithm.ES256;
 
 public class CredentialIssuerService {
 
@@ -156,12 +152,6 @@ public class CredentialIssuerService {
             }
 
             SignedJWT verifiableCredential = (SignedJWT) response.getContentAsJWT();
-
-            if (config.getId().equals("ukPassport")) {
-                LOGGER.info("Transcoding ukPassport signature");
-                verifiableCredential = transcodeSignature(verifiableCredential);
-            }
-
             if (!verifiableCredential.verify(new ECDSAVerifier(config.getVcVerifyingPublicJwk()))) {
                 LOGGER.error("Verifiable credential signature not valid");
                 LOGGER.error(verifiableCredential.serialize());
@@ -207,17 +197,5 @@ public class CredentialIssuerService {
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
         }
-    }
-
-    private SignedJWT transcodeSignature(SignedJWT vc)
-            throws JOSEException, java.text.ParseException {
-        Base64URL transcodedSignatureBase64 =
-                Base64URL.encode(
-                        ECDSA.transcodeSignatureToConcat(
-                                vc.getSignature().decode(),
-                                ECDSA.getSignatureByteArrayLength(ES256)));
-        String[] jwtParts = vc.serialize().split("\\.");
-        return SignedJWT.parse(
-                String.format("%s.%s.%s", jwtParts[0], jwtParts[1], transcodedSignatureBase64));
     }
 }
