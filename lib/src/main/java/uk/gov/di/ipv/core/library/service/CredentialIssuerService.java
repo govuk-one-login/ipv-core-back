@@ -154,6 +154,8 @@ public class CredentialIssuerService {
             SignedJWT verifiableCredential = (SignedJWT) response.getContentAsJWT();
             if (!verifiableCredential.verify(new ECDSAVerifier(config.getVcVerifyingPublicJwk()))) {
                 LOGGER.error("Verifiable credential signature not valid");
+                LOGGER.error(verifiableCredential.serialize());
+                LOGGER.error(config.getVcVerifyingPublicJwk().toJSONString());
                 throw new CredentialIssuerException(
                         HTTPResponse.SC_SERVER_ERROR,
                         ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
