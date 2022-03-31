@@ -11,15 +11,6 @@ Parameters:
   Environment:
     Type: String
 
-Mappings:
-  ProvisionedConcurrency:
-    dev:
-      executions: 0
-    build:
-      executions: 0
-    staging:
-      executions: 1
-
 Resources:
 
   IPVCoreInternalAPI:
@@ -81,9 +72,6 @@ Resources:
             RestApiId: !Ref IPVCoreInternalAPI
             Path: /shared-attributes
             Method: GET
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: !FindInMap [ProvisionedConcurrency, !Ref Environment, executions ]
 
   IPVAccessTokenFunction:
     Type: AWS::Serverless::Function
@@ -121,9 +109,6 @@ Resources:
             RestApiId: !Ref IPVCoreExternalAPI
             Path: /token
             Method: POST
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: !FindInMap [ProvisionedConcurrency, !Ref Environment, executions ]
 
   IPVSessionEndFunction:
     Type: AWS::Serverless::Function
@@ -160,9 +145,6 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /journey/session/end
             Method: POST
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: !FindInMap [ProvisionedConcurrency, !Ref Environment, executions ]
 
   IPVSessionStartFunction:
     Type: AWS::Serverless::Function
@@ -194,9 +176,6 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /session/start
             Method: POST
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: !FindInMap [ProvisionedConcurrency, !Ref Environment, executions ]
 
   IPVCriReturnFunction:
     Type: AWS::Serverless::Function
@@ -243,9 +222,6 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /journey/cri/return
             Method: POST
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: !FindInMap [ProvisionedConcurrency, !Ref Environment, executions ]
 
   IPVCredentialIssuerStartFunction:
     Type: AWS::Serverless::Function
@@ -277,9 +253,6 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /journey/cri/start/{criId}
             Method: POST
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: !FindInMap [ProvisionedConcurrency, !Ref Environment, executions ]
 
   IPVCredentialIssuerErrorFunction:
     Type: AWS::Serverless::Function
@@ -311,9 +284,6 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /journey/cri/error
             Method: POST
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: !FindInMap [ProvisionedConcurrency, !Ref Environment, executions ]
 
   IPVUserIdentityFunction:
     Type: AWS::Serverless::Function
@@ -348,9 +318,6 @@ Resources:
               Ref: IPVCoreExternalAPI
             Path: /user-identity
             Method: GET
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: !FindInMap [ProvisionedConcurrency, !Ref Environment, executions ]
 
   IPVCredentialIssuerConfig:
     Type: AWS::Serverless::Function
@@ -382,9 +349,6 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /request-config
             Method: GET
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: !FindInMap [ProvisionedConcurrency, !Ref Environment, executions ]
 
   IPVIssuedCredentials:
     Type: AWS::Serverless::Function
@@ -416,9 +380,6 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /issued-credentials
             Method: GET
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: !FindInMap [ProvisionedConcurrency, !Ref Environment, executions ]
 
   IPVJourneyEngineFunction:
     Type: AWS::Serverless::Function
@@ -452,9 +413,6 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /journey/{journeyStep}
             Method: POST
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: !FindInMap [ProvisionedConcurrency, !Ref Environment, executions ]
 
   UserIssuedCredentialsTable:
     Type: AWS::DynamoDB::Table
