@@ -18,7 +18,7 @@ paths:
         type: "aws_proxy"
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVAccessTokenFunction.Arn}/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVAccessTokenFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
 
 
@@ -38,5 +38,5 @@ paths:
         type: "aws_proxy"
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVUserIdentityFunction.Arn}/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVUserIdentityFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
