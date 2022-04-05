@@ -6,8 +6,9 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.crypto.RSASSASigner;
-import com.nimbusds.jose.crypto.RSASSAVerifier;
+import com.nimbusds.jose.crypto.ECDSASigner;
+import com.nimbusds.jose.crypto.ECDSAVerifier;
+import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,8 +26,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
+import java.security.interfaces.ECPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.ArrayList;
@@ -40,6 +40,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.vcClaim;
 import static uk.gov.di.ipv.core.sharedattributes.SharedAttributesHandler.CLAIMS_CLAIM;
@@ -134,9 +136,9 @@ class SharedAttributesHandlerTest {
     private SharedAttributesHandler underTest;
 
     @BeforeEach
-    void setUp() throws NoSuchAlgorithmException, InvalidKeySpecException {
-        RSASSASigner rsaSigner = new RSASSASigner(getPrivateKey());
-        underTest = new SharedAttributesHandler(userIdentityService, rsaSigner);
+    void setUp() throws Exception {
+        ECDSASigner signer = new ECDSASigner(getPrivateKey());
+        underTest = new SharedAttributesHandler(userIdentityService, signer);
     }
 
     @Test
@@ -188,13 +190,12 @@ class SharedAttributesHandlerTest {
         assertEquals(3, (vcAttributes.get("address")).size());
         assertEquals(3, (vcAttributes.get("birthDate")).size());
 
-        RSASSAVerifier rsaVerifier =
-                new RSASSAVerifier((RSAPublicKey) getCertificate().getPublicKey());
-        assertTrue(signedJWT.verify(rsaVerifier));
+        ECDSAVerifier verifier = new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK));
+        assertTrue(signedJWT.verify(verifier));
     }
 
     @Test
-    void shouldReturnOKIfZeroCredentialExists() throws Exception {
+    void shouldReturnOKIfZeroCredentialExists() {
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
                 .thenReturn(Collections.emptyMap());
 
@@ -230,9 +231,8 @@ class SharedAttributesHandlerTest {
         assertEquals(0, vcAttributes.get("birthDate").size());
         assertEquals(0, vcAttributes.get("address").size());
 
-        RSASSAVerifier rsaVerifier =
-                new RSASSAVerifier((RSAPublicKey) getCertificate().getPublicKey());
-        assertTrue(signedJWT.verify(rsaVerifier));
+        ECDSAVerifier verifier = new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK));
+        assertTrue(signedJWT.verify(verifier));
     }
 
     @Test
@@ -319,11 +319,11 @@ class SharedAttributesHandlerTest {
         return factory.generateCertificate(new ByteArrayInputStream(binaryCertificate));
     }
 
-    private RSAPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
-        return (RSAPrivateKey)
-                KeyFactory.getInstance("RSA")
+    private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
+        return (ECPrivateKey)
+                KeyFactory.getInstance("EC")
                         .generatePrivate(
                                 new PKCS8EncodedKeySpec(
-                                        Base64.getDecoder().decode(BASE64_PRIVATE_KEY)));
+                                        Base64.getDecoder().decode(EC_PRIVATE_KEY)));
     }
 }

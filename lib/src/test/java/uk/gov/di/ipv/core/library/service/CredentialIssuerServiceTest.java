@@ -2,7 +2,7 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
-import com.nimbusds.jose.crypto.RSASSASigner;
+import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.crypto.impl.ECDSA;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.SignedJWT;
@@ -26,7 +26,7 @@ import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 import java.net.URI;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
-import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.ECPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
@@ -46,8 +46,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 
 @WireMockTest
@@ -62,11 +62,11 @@ class CredentialIssuerServiceTest {
     private CredentialIssuerService credentialIssuerService;
 
     @BeforeEach
-    void setUp() throws InvalidKeySpecException, NoSuchAlgorithmException {
-        RSASSASigner rsaSigner = new RSASSASigner(getPrivateKey());
+    void setUp() throws Exception {
+        ECDSASigner signer = new ECDSASigner(getPrivateKey());
 
         credentialIssuerService =
-                new CredentialIssuerService(mockDataStore, mockConfigurationService, rsaSigner);
+                new CredentialIssuerService(mockDataStore, mockConfigurationService, signer);
     }
 
     @Test
@@ -399,11 +399,11 @@ class CredentialIssuerServiceTest {
                 EC_PUBLIC_JWK);
     }
 
-    private RSAPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
-        return (RSAPrivateKey)
-                KeyFactory.getInstance("RSA")
+    private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
+        return (ECPrivateKey)
+                KeyFactory.getInstance("EC")
                         .generatePrivate(
                                 new PKCS8EncodedKeySpec(
-                                        Base64.getDecoder().decode(RSA_PRIVATE_KEY)));
+                                        Base64.getDecoder().decode(EC_PRIVATE_KEY)));
     }
 }
