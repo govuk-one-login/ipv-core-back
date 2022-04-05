@@ -20,7 +20,7 @@ import uk.gov.di.ipv.core.library.domain.SharedAttributesResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
-import uk.gov.di.ipv.core.library.helpers.KmsSigner;
+import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -56,7 +56,7 @@ public class SharedAttributesHandler
     public SharedAttributesHandler() {
         ConfigurationService configurationService = new ConfigurationService();
         this.userIdentityService = new UserIdentityService(configurationService);
-        this.signer = new KmsSigner(configurationService.getSharedAttributesSigningKeyId());
+        this.signer = new KmsEs256Signer(configurationService.getSigningKeyId());
     }
 
     @Override

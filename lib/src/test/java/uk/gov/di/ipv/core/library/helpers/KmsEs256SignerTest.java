@@ -22,7 +22,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class KmsSignerTest {
+class KmsEs256SignerTest {
 
     public static final String KEY_ID = "test";
 
@@ -35,11 +35,11 @@ class KmsSignerTest {
 
         byte[] bytes = new byte[10];
         when(signResult.getSignature()).thenReturn(ByteBuffer.wrap(bytes));
-        KmsSigner kmsSigner = new KmsSigner(KEY_ID, kmsClient);
+        KmsEs256Signer kmsSigner = new KmsEs256Signer(KEY_ID, kmsClient);
 
         JSONObject jsonPayload = new JSONObject(Map.of("test", "test"));
 
-        JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.RS256).build();
+        JWSHeader jwsHeader = new JWSHeader.Builder(JWSAlgorithm.ES256).build();
         JWSObject jwsObject = new JWSObject(jwsHeader, new Payload(jsonPayload));
 
         jwsObject.sign(kmsSigner);

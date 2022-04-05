@@ -55,12 +55,12 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub shared-attributes-${Environment}
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
-          SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/sharedAttributesJwtSigningKeyId"
+          SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/sharedAttributesJwtSigningKeyId
+            ParameterName: !Sub ${Environment}/core/self/signingKeyId
         - Statement:
           - Sid: kmsSigningKeyPermission
             Effect: Allow
@@ -196,7 +196,7 @@ Resources:
         Variables:
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
-          SHARED_ATTRIBUTES_SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/sharedAttributesJwtSigningKeyId"
+          SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub cri-return-${Environment}
       Policies:
@@ -207,7 +207,7 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/sharedAttributesJwtSigningKeyId
+            ParameterName: !Sub ${Environment}/core/self/signingKeyId
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/jwtTtlSeconds
         - Statement:

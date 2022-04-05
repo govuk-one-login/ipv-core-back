@@ -20,9 +20,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Set;
 
-import static com.nimbusds.jose.JWSAlgorithm.RS256;
+import static com.nimbusds.jose.JWSAlgorithm.ES256;
+import static org.apache.commons.codec.digest.MessageDigestAlgorithms.SHA_256;
 
-public class KmsSigner implements JWSSigner {
+public class KmsEs256Signer implements JWSSigner {
 
     private final AWSKMS kmsClient;
 
@@ -31,12 +32,12 @@ public class KmsSigner implements JWSSigner {
     private final String keyId;
 
     @ExcludeFromGeneratedCoverageReport
-    public KmsSigner(String keyId) {
+    public KmsEs256Signer(String keyId) {
         this.keyId = keyId;
         this.kmsClient = AWSKMSClientBuilder.defaultClient();
     }
 
-    public KmsSigner(String keyId, AWSKMS kmsClient) {
+    public KmsEs256Signer(String keyId, AWSKMS kmsClient) {
         this.keyId = keyId;
         this.kmsClient = kmsClient;
     }
@@ -46,15 +47,14 @@ public class KmsSigner implements JWSSigner {
         byte[] signingInputHash;
 
         try {
-            signingInputHash = MessageDigest.getInstance("SHA-256").digest(signingInput);
+            signingInputHash = MessageDigest.getInstance(SHA_256).digest(signingInput);
         } catch (NoSuchAlgorithmException e) {
             throw new JOSEException(e.getMessage());
         }
 
         SignRequest signRequest =
                 new SignRequest()
-                        .withSigningAlgorithm(
-                                SigningAlgorithmSpec.RSASSA_PKCS1_V1_5_SHA_256.toString())
+                        .withSigningAlgorithm(SigningAlgorithmSpec.ECDSA_SHA_256.toString())
                         .withKeyId(keyId)
                         .withMessage(ByteBuffer.wrap(signingInputHash))
                         .withMessageType(MessageType.DIGEST);
@@ -66,7 +66,7 @@ public class KmsSigner implements JWSSigner {
 
     @Override
     public Set<JWSAlgorithm> supportedJWSAlgorithms() {
-        return Set.of(RS256);
+        return Set.of(ES256);
     }
 
     @Override
