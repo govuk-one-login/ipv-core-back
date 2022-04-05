@@ -27,7 +27,7 @@ public class JwtHelper {
     }
 
     private static JWSHeader generateHeader() {
-        return new JWSHeader.Builder(JWSAlgorithm.RS256).type(JOSEObjectType.JWT).build();
+        return new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build();
     }
 
     private static <T> JWTClaimsSet generateClaims(T claimInput) {
