@@ -41,8 +41,8 @@ public class SharedAttributesHandler
     public static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
     public static final int BAD_REQUEST = 400;
     public static final int OK = 200;
-    public static final String VC_HTTP_API_CLAIM = "vc_http_api";
-    public static final String CLAIMS_CLAIM = "claims";
+    public static final String SHARED_CLAIMS = "shared_claims";
+
     private final UserIdentityService userIdentityService;
     private final ObjectMapper mapper = new ObjectMapper();
     private final JWSSigner signer;
@@ -115,8 +115,7 @@ public class SharedAttributesHandler
             throws HttpResponseExceptionWithErrorBody {
         try {
             return JwtHelper.createSignedJwtFromObject(
-                    Map.of(CLAIMS_CLAIM, Map.of(VC_HTTP_API_CLAIM, sharedAttributesResponse)),
-                    signer);
+                    Map.of(SHARED_CLAIMS, sharedAttributesResponse), signer);
         } catch (JOSEException e) {
             LOGGER.error("Failed to sign Shared Attributes: {}", e.getMessage());
             throw new HttpResponseExceptionWithErrorBody(

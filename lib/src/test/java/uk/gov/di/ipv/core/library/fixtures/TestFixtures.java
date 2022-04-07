@@ -1,5 +1,8 @@
 package uk.gov.di.ipv.core.library.fixtures;
 
+import java.util.List;
+import java.util.Map;
+
 public interface TestFixtures {
     String EC_PRIVATE_KEY =
             "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgOXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthWhRANCAAQT1nO46ipxVTilUH2umZPN7OPI49GU6Y8YkcqLxFKUgypUzGbYR2VJGM+QJXk0PI339EyYkt6tjgfS+RcOMQNO";
@@ -21,4 +24,75 @@ public interface TestFixtures {
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvaXNzdWVyLmV4YW1wbGUuY29tIiwic3ViIjoiaHR0cHM6XC9cL3N1YmplY3QuZXhhbXBsZS5jb20iLCJuYmYiOjE2NDczNjUxNDIsImV4cCI6MTY0NzM2NTQ0MiwidmMiOnsiQGNvbnRleHQiOlsiaHR0cHM6XC9cL3d3dy53My5vcmdcLzIwMThcL2NyZWRlbnRpYWxzXC92MSIsImh0dHBzOlwvXC92b2NhYi5sb25kb24uY2xvdWRhcHBzLmRpZ2l0YWxcL2NvbnRleHRzXC9pZGVudGl0eS12MS5qc29ubGQiXSwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIklkZW50aXR5Q2hlY2tDcmVkZW50aWFsIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7Im5hbWUiOlt7Im5hbWVQYXJ0cyI6W3sidHlwZSI6IkdpdmVuTmFtZSIsInZhbHVlIjoiQ2hyaXMifV19XSwiYmlydGhEYXRlIjpbeyJ2YWx1ZSI6IjE5ODQtMDktMjgifV0sImFkZHJlc3MiOlt7InBvc3RhbENvZGUiOiJMRTEyIDlCTiIsInR5cGUiOiJQb3N0YWxBZGRyZXNzIn1dfSwiZXZpZGVuY2UiOlt7InN0cmVuZ3RoIjo0LCJ0eXBlIjoiQ3JpU3R1YkNoZWNrIiwidmFsaWRpdHkiOjJ9XX19.1ebu-Biwynx0OjNdCOK1INjxYec-2CdWT26jthn7nJQjwB5EckGdalpJAjNGZUSvTqWXG2UteS-fb0oxV-5GMw";
     String SIGNED_VC_2 =
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvaXNzdWVyLmV4YW1wbGUuY29tIiwic3ViIjoiaHR0cHM6XC9cL3N1YmplY3QuZXhhbXBsZS5jb20iLCJuYmYiOjE2NDc0MzMzMDksImV4cCI6MTY0NzQzMzkwOSwidmMiOnsiQGNvbnRleHQiOlsiaHR0cHM6XC9cL3d3dy53My5vcmdcLzIwMThcL2NyZWRlbnRpYWxzXC92MSIsImh0dHBzOlwvXC92b2NhYi5sb25kb24uY2xvdWRhcHBzLmRpZ2l0YWxcL2NvbnRleHRzXC9pZGVudGl0eS12MS5qc29ubGQiXSwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIklkZW50aXR5Q2hlY2tDcmVkZW50aWFsIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7ImFkZHJlc3MiOlt7ImFkZHJlc3NSZWdpb24iOiJJbGxpbm9pcyIsInN0cmVldEFkZHJlc3MiOiIzNSBJZHN3b3J0aCBSb2FkIiwiYWRkcmVzc0xvY2FsaXR5IjoiU2hlZmZpZWxkIiwidHlwZSI6IlBvc3RhbEFkZHJlc3MiLCJhZGRyZXNzQ291bnRyeSI6IlVLIiwib3JnYW5pemF0aW9uTmFtZSI6IlNvZnR3YXJlIEx0ZCIsInBvc3RhbENvZGUiOiJTNSA2VU4ifV0sImJpcnRoRGF0ZSI6W3sidmFsdWUiOiIyMDIwLTAxLTAzIn1dLCJuYW1lIjpbeyJuYW1lUGFydHMiOlt7InR5cGUiOiJHaXZlbk5hbWUiLCJ2YWx1ZSI6IkFsaWNlIn0seyJ2YWxpZEZyb20iOiIyMDIwLTAzLTAxIiwidHlwZSI6IkZhbWlseU5hbWUiLCJ2YWx1ZSI6IkRvZSJ9XX1dfSwiZXZpZGVuY2UiOlt7IkdwZzQ1IjoiU2NvcmUifV19fQ.PUaeFsQPPvqu4cz0Pjof0a4v0lJCt6uCs7LwxVY2R7DIx31EX_2DBTK2FnsZcnb2HLXjHRsZZyWWh4M6dXnTuQ";
+
+    Map<String, Object> CREDENTIAL_ATTRIBUTES_1 =
+            Map.of(
+                    "name",
+                    List.of(
+                            Map.of(
+                                    "nameParts",
+                                    List.of(
+                                            Map.of("value", "Alice", "type", "GivenName"),
+                                            Map.of("value", "Jane", "type", "GivenName"),
+                                            Map.of("value", "Laura", "type", "GivenName"),
+                                            Map.of(
+                                                    "value",
+                                                    "Doe",
+                                                    "validFrom",
+                                                    "2021-03-01",
+                                                    "type",
+                                                    "FamilyName"),
+                                            Map.of(
+                                                    "value",
+                                                    "Musk",
+                                                    "validFrom",
+                                                    "2021-02-01",
+                                                    "type",
+                                                    "FamilyName")))),
+                    "birthDate",
+                    List.of(Map.of("value", "2020-01-03"), Map.of("value", "2021-01-03")),
+                    "address",
+                    List.of(
+                            Map.of(
+                                    "type", "PostalAddress",
+                                    "organizationName", "Lebsack Inc",
+                                    "streetAddress", "758 Huel Neck",
+                                    "addressLocality", "Hagenesstad",
+                                    "addressRegion", "Illinois",
+                                    "postalCode", "38421-3292",
+                                    "addressCountry", "Tonga"),
+                            Map.of(
+                                    "type", "PostalAddress",
+                                    "postalCode", "M34 1AA")));
+
+    Map<String, Object> CREDENTIAL_ATTRIBUTES_2 =
+            Map.of(
+                    "name",
+                    List.of(
+                            Map.of(
+                                    "nameParts",
+                                    List.of(
+                                            Map.of("value", "Alice", "type", "GivenName"),
+                                            Map.of(
+                                                    "value",
+                                                    "Doe",
+                                                    "validFrom",
+                                                    "2020-03-01",
+                                                    "type",
+                                                    "FamilyName")))),
+                    "birthDate",
+                    List.of(Map.of("value", "2020-01-03")),
+                    "address",
+                    List.of(
+                            Map.of(
+                                    "type", "PostalAddress",
+                                    "organizationName", "Software Ltd",
+                                    "streetAddress", "35 Idsworth Road",
+                                    "addressLocality", "Sheffield",
+                                    "addressRegion", "Illinois",
+                                    "postalCode", "S5 6UN",
+                                    "addressCountry", "UK")));
+
+    Map<String, Object> CREDENTIAL_ATTRIBUTES_WITHOUT_SHARED_ATTRIBUTES =
+            Map.of("name", Map.of("testProperty", "test value"));
 }
