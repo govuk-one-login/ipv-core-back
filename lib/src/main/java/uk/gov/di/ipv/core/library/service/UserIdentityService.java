@@ -76,8 +76,7 @@ public class UserIdentityService {
                             LOGGER.error("Evidence not found in verifiable credential");
                         } else {
                             JSONArray evidenceArray = ((JSONArray) vcClaim.get(VC_EVIDENCE));
-                            debugCredential.setGpg45Score(
-                                    (Map<String, Object>) evidenceArray.get(0));
+                            debugCredential.setEvidence((Map<String, Object>) evidenceArray.get(0));
                         }
                     } catch (ParseException e) {
                         LOGGER.error("Failed to parse credential JSON for the debug page");

@@ -81,10 +81,10 @@ class UserIdentityServiceTest {
                 userIdentityService.getUserIssuedDebugCredentials("ipv-session-id-1");
 
         assertEquals(
-                "{\"attributes\":{\"ipvSessionId\":\"ipv-session-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"},\"gpg45Score\":{\"strength\":4,\"validity\":2,\"type\":\"CriStubCheck\"}}",
+                "{\"attributes\":{\"ipvSessionId\":\"ipv-session-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"},\"evidence\":{\"strength\":4,\"validity\":2,\"type\":\"CriStubCheck\"}}",
                 credentials.get("PassportIssuer"));
         assertEquals(
-                "{\"attributes\":{\"ipvSessionId\":\"ipv-session-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"},\"gpg45Score\":{\"Gpg45\":\"Score\"}}",
+                "{\"attributes\":{\"ipvSessionId\":\"ipv-session-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"},\"evidence\":{\"Gpg45\":\"Score\"}}",
                 credentials.get("FraudIssuer"));
     }
 
