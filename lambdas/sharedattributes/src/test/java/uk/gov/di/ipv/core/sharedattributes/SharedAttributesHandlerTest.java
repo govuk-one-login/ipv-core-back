@@ -17,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -66,11 +67,12 @@ class SharedAttributesHandlerTest {
     void shouldExtractSessionIdFromHeaderAndReturnSharedAttributesAndStatusOK() throws Exception {
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
                 .thenReturn(
-                        Map.of(
-                                "CredentialIssuer1",
-                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_1)),
-                                "CredentialIssuer2",
-                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_2))));
+                        new UserIdentity(
+                                List.of(
+                                        generateVerifiableCredential(
+                                                vcClaim(CREDENTIAL_ATTRIBUTES_1)),
+                                        generateVerifiableCredential(
+                                                vcClaim(CREDENTIAL_ATTRIBUTES_2)))));
 
         List<Address> addressList = new ArrayList<>();
 
@@ -116,7 +118,7 @@ class SharedAttributesHandlerTest {
     @Test
     void shouldReturnOKIfZeroCredentialExists() {
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
-                .thenReturn(Collections.emptyMap());
+                .thenReturn(new UserIdentity(Collections.emptyList()));
 
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
@@ -129,10 +131,11 @@ class SharedAttributesHandlerTest {
     void shouldReturnOKIfCredentialExistsWithoutAnySharedAttributeFields() throws Exception {
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
                 .thenReturn(
-                        Map.of(
-                                "CredentialIssuer3",
-                                generateVerifiableCredential(
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_WITHOUT_SHARED_ATTRIBUTES))));
+                        new UserIdentity(
+                                List.of(
+                                        generateVerifiableCredential(
+                                                vcClaim(
+                                                        CREDENTIAL_ATTRIBUTES_WITHOUT_SHARED_ATTRIBUTES)))));
 
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
@@ -169,11 +172,12 @@ class SharedAttributesHandlerTest {
     void shouldReturn500WhenUnableToSignSharedAttributes() throws Exception {
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
                 .thenReturn(
-                        Map.of(
-                                "CredentialIssuer1",
-                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_1)),
-                                "CredentialIssuer2",
-                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_2))));
+                        new UserIdentity(
+                                List.of(
+                                        generateVerifiableCredential(
+                                                vcClaim(CREDENTIAL_ATTRIBUTES_1)),
+                                        generateVerifiableCredential(
+                                                vcClaim(CREDENTIAL_ATTRIBUTES_2)))));
 
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
@@ -194,7 +198,7 @@ class SharedAttributesHandlerTest {
     @Test
     void shouldReturn500WhenUnableToParseCredentials() throws Exception {
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
-                .thenReturn(Map.of("CredentialIssuer1", "Not a verifiable credential"));
+                .thenReturn(new UserIdentity(List.of("Not a verifiable credential")));
 
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
@@ -217,7 +221,7 @@ class SharedAttributesHandlerTest {
         vcClaim.remove(VC_CREDENTIAL_SUBJECT);
 
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
-                .thenReturn(Map.of("CredentialIssuer1", generateVerifiableCredential(vcClaim)));
+                .thenReturn(new UserIdentity(List.of(generateVerifiableCredential(vcClaim))));
 
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
