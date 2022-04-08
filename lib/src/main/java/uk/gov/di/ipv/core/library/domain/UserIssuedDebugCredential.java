@@ -12,10 +12,10 @@ import java.util.Map;
 public class UserIssuedDebugCredential {
 
     DebugCredentialAttributes attributes;
-    private Map<String, Object> gpg45Score;
+    private Map<String, Object> evidence;
 
     public UserIssuedDebugCredential(DebugCredentialAttributes attributes) {
         this.attributes = attributes;
-        this.gpg45Score = null;
+        this.evidence = null;
     }
 }
