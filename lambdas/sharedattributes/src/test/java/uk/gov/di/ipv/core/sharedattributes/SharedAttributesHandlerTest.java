@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
+import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -72,7 +73,8 @@ class SharedAttributesHandlerTest {
                                         generateVerifiableCredential(
                                                 vcClaim(CREDENTIAL_ATTRIBUTES_1)),
                                         generateVerifiableCredential(
-                                                vcClaim(CREDENTIAL_ATTRIBUTES_2)))));
+                                                vcClaim(CREDENTIAL_ATTRIBUTES_2))),
+                                VectorOfTrust.P2.toString()));
 
         List<Address> addressList = new ArrayList<>();
 
@@ -118,7 +120,7 @@ class SharedAttributesHandlerTest {
     @Test
     void shouldReturnOKIfZeroCredentialExists() {
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
-                .thenReturn(new UserIdentity(Collections.emptyList()));
+                .thenReturn(new UserIdentity(Collections.emptyList(), VectorOfTrust.P0.toString()));
 
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
@@ -135,7 +137,8 @@ class SharedAttributesHandlerTest {
                                 List.of(
                                         generateVerifiableCredential(
                                                 vcClaim(
-                                                        CREDENTIAL_ATTRIBUTES_WITHOUT_SHARED_ATTRIBUTES)))));
+                                                        CREDENTIAL_ATTRIBUTES_WITHOUT_SHARED_ATTRIBUTES))),
+                                VectorOfTrust.P2.toString()));
 
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
@@ -177,7 +180,8 @@ class SharedAttributesHandlerTest {
                                         generateVerifiableCredential(
                                                 vcClaim(CREDENTIAL_ATTRIBUTES_1)),
                                         generateVerifiableCredential(
-                                                vcClaim(CREDENTIAL_ATTRIBUTES_2)))));
+                                                vcClaim(CREDENTIAL_ATTRIBUTES_2))),
+                                VectorOfTrust.P2.toString()));
 
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
@@ -198,7 +202,10 @@ class SharedAttributesHandlerTest {
     @Test
     void shouldReturn500WhenUnableToParseCredentials() throws Exception {
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
-                .thenReturn(new UserIdentity(List.of("Not a verifiable credential")));
+                .thenReturn(
+                        new UserIdentity(
+                                List.of("Not a verifiable credential"),
+                                VectorOfTrust.P0.toString()));
 
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
@@ -221,7 +228,10 @@ class SharedAttributesHandlerTest {
         vcClaim.remove(VC_CREDENTIAL_SUBJECT);
 
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
-                .thenReturn(new UserIdentity(List.of(generateVerifiableCredential(vcClaim))));
+                .thenReturn(
+                        new UserIdentity(
+                                List.of(generateVerifiableCredential(vcClaim)),
+                                VectorOfTrust.P2.toString()));
 
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID));

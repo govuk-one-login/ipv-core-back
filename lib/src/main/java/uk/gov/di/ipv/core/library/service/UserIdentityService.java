@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.domain.DebugCredentialAttributes;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.UserIssuedDebugCredential;
+import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 
@@ -18,6 +19,7 @@ import java.text.ParseException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -25,6 +27,15 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 
 public class UserIdentityService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserIdentityService.class);
+    private static final String PASSPORT_CRI_TYPE = "ukPassport";
+    private static final String FRAUD_CRI_TYPE = "fraud";
+    private static final String KBV_CRI_TYPE = "kbv";
+    private static final String GPG_45_VALIDITY_PROPERTY_NAME = "validity";
+    private static final String GPG_45_FRAUD_PROPERTY_NAME = "fraud";
+    private static final String GPG_45_VERIFICATION_PROPERTY_NAME = "verification";
+    private static final int GPG_45_MAX_VALIDITY_SCORE = 2;
+    private static final int GPG_45_MAX_FRAUD_SCORE = 1;
+    private static final int GPG_45_MAX_VERIFICATION_SCORE = 2;
 
     private final ConfigurationService configurationService;
     private final DataStore<UserIssuedCredentialsItem> dataStore;
@@ -49,14 +60,16 @@ public class UserIdentityService {
     }
 
     public UserIdentity getUserIssuedCredentials(String ipvSessionId) {
-        List<UserIssuedCredentialsItem> credentialIssuerItem = dataStore.getItems(ipvSessionId);
+        List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(ipvSessionId);
 
         List<String> vcJwts =
-                credentialIssuerItem.stream()
+                credentialIssuerItems.stream()
                         .map(UserIssuedCredentialsItem::getCredential)
                         .collect(Collectors.toList());
 
-        return new UserIdentity(vcJwts);
+        String vot = generateVectorOfTrustClaim(credentialIssuerItems);
+
+        return new UserIdentity.Builder().setVcs(vcJwts).setVot(vot).build();
     }
 
     public Map<String, String> getUserIssuedDebugCredentials(String ipvSessionId) {
@@ -93,6 +106,74 @@ public class UserIdentityService {
                 });
 
         return userIssuedDebugCredentials;
+    }
+
+    private String generateVectorOfTrustClaim(
+            List<UserIssuedCredentialsItem> credentialIssuerItems) {
+        Optional<Boolean> validPassport = Optional.empty();
+        Optional<Boolean> validFraud = Optional.empty();
+        Optional<Boolean> validKbv = Optional.empty();
+
+        for (UserIssuedCredentialsItem item : credentialIssuerItems) {
+            try {
+                JWTClaimsSet jwtClaimsSet = SignedJWT.parse(item.getCredential()).getJWTClaimsSet();
+                JSONObject vcClaim = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
+                JSONArray evidenceArray = ((JSONArray) vcClaim.get(VC_EVIDENCE));
+
+                if (item.getCredentialIssuer().equals(PASSPORT_CRI_TYPE)) {
+                    validPassport =
+                            isValidScore(
+                                    evidenceArray,
+                                    GPG_45_VALIDITY_PROPERTY_NAME,
+                                    GPG_45_MAX_VALIDITY_SCORE);
+                }
+
+                if (item.getCredentialIssuer().equals(FRAUD_CRI_TYPE)) {
+                    validFraud =
+                            isValidScore(
+                                    evidenceArray,
+                                    GPG_45_FRAUD_PROPERTY_NAME,
+                                    GPG_45_MAX_FRAUD_SCORE);
+                }
+
+                if (item.getCredentialIssuer().equals(KBV_CRI_TYPE)) {
+                    validKbv =
+                            isValidScore(
+                                    evidenceArray,
+                                    GPG_45_VERIFICATION_PROPERTY_NAME,
+                                    GPG_45_MAX_VERIFICATION_SCORE);
+                }
+            } catch (ParseException e) {
+                LOGGER.warn("Failed to parse VC JWT");
+            }
+        }
+
+        return getVectorOfTrustValue(validPassport, validFraud, validKbv);
+    }
+
+    private Optional<Boolean> isValidScore(
+            JSONArray evidenceArray, String property, int scoreValue) {
+        Long gpg45ScoreValue = ((Map<String, Long>) evidenceArray.get(0)).get(property);
+        if (gpg45ScoreValue != null) {
+            return Optional.of(gpg45ScoreValue.intValue() == scoreValue);
+        }
+        return Optional.empty();
+    }
+
+    private String getVectorOfTrustValue(
+            Optional<Boolean> validPassport,
+            Optional<Boolean> validFraud,
+            Optional<Boolean> validKbv) {
+        if (validPassport.isPresent()
+                && Boolean.TRUE.equals(validPassport.get())
+                && validFraud.isPresent()
+                && Boolean.TRUE.equals(validFraud.get())
+                && validKbv.isPresent()
+                && Boolean.TRUE.equals(validKbv.get())) {
+            return VectorOfTrust.P2.toString();
+        } else {
+            return VectorOfTrust.P0.toString();
+        }
     }
 
     private boolean isNotPopulatedJsonArray(Object input) {
