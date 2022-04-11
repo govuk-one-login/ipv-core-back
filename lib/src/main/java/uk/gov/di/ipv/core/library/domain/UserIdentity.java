@@ -12,10 +12,15 @@ import java.util.List;
 @Setter
 @ExcludeFromGeneratedCoverageReport
 public class UserIdentity {
-    @JsonProperty private List<String> vcs;
+    @JsonProperty("https://vocab.sign-in.service.gov.uk/v1/credentials")
+    private List<String> vcs;
 
     @JsonCreator
-    public UserIdentity(@JsonProperty(value = "vcs", required = true) List<String> vcs) {
+    public UserIdentity(
+            @JsonProperty(
+                            value = "https://vocab.sign-in.service.gov.uk/v1/credentials",
+                            required = true)
+                    List<String> vcs) {
         this.vcs = vcs;
     }
 }
