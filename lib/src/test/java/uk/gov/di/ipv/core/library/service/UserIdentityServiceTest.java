@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
+import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 
@@ -20,6 +21,8 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_2;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_3;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_4;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.vcClaim;
 
@@ -42,15 +45,9 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1",
-                                "PassportIssuer",
-                                SIGNED_VC_1,
-                                LocalDateTime.now()),
+                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1",
-                                "FraudIssuer",
-                                SIGNED_VC_2,
-                                LocalDateTime.now()));
+                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
@@ -66,12 +63,12 @@ class UserIdentityServiceTest {
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "ipv-session-id-1",
-                                "PassportIssuer",
+                                "ukPassport",
                                 SIGNED_VC_1,
                                 LocalDateTime.parse("2022-01-25T12:28:56.414849")),
                         createUserIssuedCredentialsItem(
                                 "ipv-session-id-1",
-                                "FraudIssuer",
+                                "fraud",
                                 SIGNED_VC_2,
                                 LocalDateTime.parse("2022-01-25T12:28:56.414849")));
 
@@ -82,10 +79,10 @@ class UserIdentityServiceTest {
 
         assertEquals(
                 "{\"attributes\":{\"ipvSessionId\":\"ipv-session-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"},\"evidence\":{\"strength\":4,\"validity\":2,\"type\":\"CriStubCheck\"}}",
-                credentials.get("PassportIssuer"));
+                credentials.get("ukPassport"));
         assertEquals(
-                "{\"attributes\":{\"ipvSessionId\":\"ipv-session-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"},\"evidence\":{\"Gpg45\":\"Score\"}}",
-                credentials.get("FraudIssuer"));
+                "{\"attributes\":{\"ipvSessionId\":\"ipv-session-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"},\"evidence\":{\"fraud\":1}}",
+                credentials.get("fraud"));
     }
 
     @Test
@@ -96,12 +93,12 @@ class UserIdentityServiceTest {
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "ipv-session-id-1",
-                                "PassportIssuer",
+                                "ukPassport",
                                 generateVerifiableCredential(credentialVcClaim),
                                 LocalDateTime.parse("2022-01-25T12:28:56.414849")),
                         createUserIssuedCredentialsItem(
                                 "ipv-session-id-1",
-                                "FraudIssuer",
+                                "fraud",
                                 generateVerifiableCredential(credentialVcClaim),
                                 LocalDateTime.parse("2022-01-25T12:28:56.414849")));
 
@@ -112,10 +109,10 @@ class UserIdentityServiceTest {
 
         assertEquals(
                 "{\"attributes\":{\"ipvSessionId\":\"ipv-session-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"}}",
-                credentials.get("PassportIssuer"));
+                credentials.get("ukPassport"));
         assertEquals(
                 "{\"attributes\":{\"ipvSessionId\":\"ipv-session-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"}}",
-                credentials.get("FraudIssuer"));
+                credentials.get("fraud"));
     }
 
     @Test
@@ -124,7 +121,7 @@ class UserIdentityServiceTest {
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "ipv-session-id-1",
-                                "PassportIssuer",
+                                "ukPassport",
                                 "invalid-verifiable-credential",
                                 LocalDateTime.parse("2022-01-25T12:28:56.414849")));
 
@@ -135,7 +132,7 @@ class UserIdentityServiceTest {
 
         assertEquals(
                 "{\"attributes\":{\"ipvSessionId\":\"ipv-session-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"}}",
-                credentials.get("PassportIssuer"));
+                credentials.get("ukPassport"));
     }
 
     @Test
@@ -147,7 +144,7 @@ class UserIdentityServiceTest {
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "ipv-session-id-1",
-                                "PassportIssuer",
+                                "ukPassport",
                                 generateVerifiableCredential(credentialVcClaim),
                                 LocalDateTime.parse("2022-01-25T12:28:56.414849")));
 
@@ -158,7 +155,59 @@ class UserIdentityServiceTest {
 
         assertEquals(
                 "{\"attributes\":{\"ipvSessionId\":\"ipv-session-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"}}",
-                credentials.get("PassportIssuer"));
+                credentials.get("ukPassport"));
+    }
+
+    @Test
+    void shouldSetVotClaimToP2OnSuccessfulIdentityCheck() {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+
+        UserIdentity credentials = userIdentityService.getUserIssuedCredentials("ipv-session-id-1");
+
+        assertEquals(VectorOfTrust.P2.toString(), credentials.getVot());
+    }
+
+    @Test
+    void shouldSetVotClaimToP0OnMissingRequiredVC() {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+
+        UserIdentity credentials = userIdentityService.getUserIssuedCredentials("ipv-session-id-1");
+
+        assertEquals(VectorOfTrust.P0.toString(), credentials.getVot());
+    }
+
+    @Test
+    void shouldSetVotClaimToP0OnFailedIdentityCheck() {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "kbv", SIGNED_VC_4, LocalDateTime.now()));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+
+        UserIdentity credentials = userIdentityService.getUserIssuedCredentials("ipv-session-id-1");
+
+        assertEquals(VectorOfTrust.P0.toString(), credentials.getVot());
     }
 
     private UserIssuedCredentialsItem createUserIssuedCredentialsItem(

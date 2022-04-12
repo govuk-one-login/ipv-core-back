@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
+import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -54,7 +55,9 @@ class UserIdentityHandlerTest {
     void setUp() {
         responseBody = new HashMap<>();
 
-        userIdentity = new UserIdentity(List.of("12345", "Test credential", "bar"));
+        userIdentity =
+                new UserIdentity(
+                        List.of("12345", "Test credential", "bar"), VectorOfTrust.P2.toString());
 
         userInfoHandler =
                 new UserIdentityHandler(
