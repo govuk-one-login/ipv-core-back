@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.DebugCredentialAttributes;
+import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.UserIssuedDebugCredential;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
@@ -47,12 +48,15 @@ public class UserIdentityService {
         this.dataStore = dataStore;
     }
 
-    public Map<String, String> getUserIssuedCredentials(String ipvSessionId) {
+    public UserIdentity getUserIssuedCredentials(String ipvSessionId) {
         List<UserIssuedCredentialsItem> credentialIssuerItem = dataStore.getItems(ipvSessionId);
 
-        return credentialIssuerItem.stream()
-                .map(ciItem -> Map.entry(ciItem.getCredentialIssuer(), ciItem.getCredential()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        List<String> vcJwts =
+                credentialIssuerItem.stream()
+                        .map(UserIssuedCredentialsItem::getCredential)
+                        .collect(Collectors.toList());
+
+        return new UserIdentity(vcJwts);
     }
 
     public Map<String, String> getUserIssuedDebugCredentials(String ipvSessionId) {

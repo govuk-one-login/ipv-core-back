@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.SharedAttributes;
 import uk.gov.di.ipv.core.library.domain.SharedAttributesResponse;
+import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
@@ -79,11 +80,10 @@ public class SharedAttributesHandler
     @Tracing
     private SharedAttributesResponse getSharedAttributes(String ipvSessionId)
             throws HttpResponseExceptionWithErrorBody {
-        Map<String, String> credentials =
-                userIdentityService.getUserIssuedCredentials(ipvSessionId);
+        UserIdentity credentials = userIdentityService.getUserIssuedCredentials(ipvSessionId);
 
         List<SharedAttributes> sharedAttributes = new ArrayList<>();
-        for (String credential : credentials.values()) {
+        for (String credential : credentials.getVcs()) {
             try {
                 JsonNode credentialSubject =
                         mapper.readTree(SignedJWT.parse(credential).getPayload().toString())

@@ -15,12 +15,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -45,17 +47,14 @@ class UserIdentityHandlerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private UserIdentityHandler userInfoHandler;
-    private Map<String, String> userIssuedCredential;
+    private UserIdentity userIdentity;
     private Map<String, String> responseBody;
 
     @BeforeEach
     void setUp() {
-        userIssuedCredential = new HashMap<>();
         responseBody = new HashMap<>();
 
-        userIssuedCredential.put("id", "12345");
-        userIssuedCredential.put("type", "Test credential");
-        userIssuedCredential.put("foo", "bar");
+        userIdentity = new UserIdentity(List.of("12345", "Test credential", "bar"));
 
         userInfoHandler =
                 new UserIdentityHandler(
@@ -72,8 +71,7 @@ class UserIdentityHandlerTest {
 
         when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString()))
                 .thenReturn(TEST_IPV_SESSION_ID);
-        when(mockUserIdentityService.getUserIssuedCredentials(any()))
-                .thenReturn(userIssuedCredential);
+        when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(userIdentity);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
 
@@ -90,16 +88,15 @@ class UserIdentityHandlerTest {
 
         when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString()))
                 .thenReturn(TEST_IPV_SESSION_ID);
-        when(mockUserIdentityService.getUserIssuedCredentials(any()))
-                .thenReturn(userIssuedCredential);
+        when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(userIdentity);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
-        Map<String, Object> responseBody =
+        UserIdentity responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(userIssuedCredential.get("id"), responseBody.get("id"));
-        assertEquals(userIssuedCredential.get("type"), responseBody.get("type"));
-        assertEquals(userIssuedCredential.get("foo"), responseBody.get("foo"));
+        assertEquals(userIdentity.getVcs().get(0), responseBody.getVcs().get(0));
+        assertEquals(userIdentity.getVcs().get(1), responseBody.getVcs().get(1));
+        assertEquals(userIdentity.getVcs().get(2), responseBody.getVcs().get(2));
     }
 
     @Test

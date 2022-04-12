@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 
@@ -53,11 +54,10 @@ class UserIdentityServiceTest {
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
-        Map<String, String> credentials =
-                userIdentityService.getUserIssuedCredentials("ipv-session-id-1");
+        UserIdentity credentials = userIdentityService.getUserIssuedCredentials("ipv-session-id-1");
 
-        assertEquals(SIGNED_VC_1, credentials.get("PassportIssuer"));
-        assertEquals(SIGNED_VC_2, credentials.get("FraudIssuer"));
+        assertEquals(SIGNED_VC_1, credentials.getVcs().get(0));
+        assertEquals(SIGNED_VC_2, credentials.getVcs().get(1));
     }
 
     @Test
