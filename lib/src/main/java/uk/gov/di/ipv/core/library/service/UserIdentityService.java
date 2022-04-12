@@ -33,9 +33,9 @@ public class UserIdentityService {
     private static final String GPG_45_VALIDITY_PROPERTY_NAME = "validity";
     private static final String GPG_45_FRAUD_PROPERTY_NAME = "fraud";
     private static final String GPG_45_VERIFICATION_PROPERTY_NAME = "verification";
-    private static final int GPG_45_MAX_VALIDITY_SCORE = 2;
-    private static final int GPG_45_MAX_FRAUD_SCORE = 1;
-    private static final int GPG_45_MAX_VERIFICATION_SCORE = 2;
+    private static final int GPG_45_M1A_VALIDITY_SCORE = 2;
+    private static final int GPG_45_M1A_FRAUD_SCORE = 1;
+    private static final int GPG_45_M1A_VERIFICATION_SCORE = 2;
 
     private final ConfigurationService configurationService;
     private final DataStore<UserIssuedCredentialsItem> dataStore;
@@ -125,7 +125,7 @@ public class UserIdentityService {
                             isValidScore(
                                     evidenceArray,
                                     GPG_45_VALIDITY_PROPERTY_NAME,
-                                    GPG_45_MAX_VALIDITY_SCORE);
+                                    GPG_45_M1A_VALIDITY_SCORE);
                 }
 
                 if (item.getCredentialIssuer().equals(FRAUD_CRI_TYPE)) {
@@ -133,7 +133,7 @@ public class UserIdentityService {
                             isValidScore(
                                     evidenceArray,
                                     GPG_45_FRAUD_PROPERTY_NAME,
-                                    GPG_45_MAX_FRAUD_SCORE);
+                                    GPG_45_M1A_FRAUD_SCORE);
                 }
 
                 if (item.getCredentialIssuer().equals(KBV_CRI_TYPE)) {
@@ -141,7 +141,7 @@ public class UserIdentityService {
                             isValidScore(
                                     evidenceArray,
                                     GPG_45_VERIFICATION_PROPERTY_NAME,
-                                    GPG_45_MAX_VERIFICATION_SCORE);
+                                    GPG_45_M1A_VERIFICATION_SCORE);
                 }
             } catch (ParseException e) {
                 LOGGER.warn("Failed to parse VC JWT");
@@ -155,7 +155,7 @@ public class UserIdentityService {
             JSONArray evidenceArray, String property, int scoreValue) {
         Long gpg45ScoreValue = ((Map<String, Long>) evidenceArray.get(0)).get(property);
         if (gpg45ScoreValue != null) {
-            return Optional.of(gpg45ScoreValue.intValue() == scoreValue);
+            return Optional.of(gpg45ScoreValue.intValue() >= scoreValue);
         }
         return Optional.empty();
     }
