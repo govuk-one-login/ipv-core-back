@@ -220,6 +220,13 @@ Resources:
               - 'kms:sign'
             Resource:
               - !ImportValue SigningKeyArn
+          - Sid: kmsAuditEventQueueEncryptionKeyPermission
+            Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+              - 'kms:GenerateDataKey'
+            Resource:
+              - !ImportValue AuditEventQueueEncryptionKeyArn
       Events:
         IPVCoreInternalAPI:
           Type: Api
