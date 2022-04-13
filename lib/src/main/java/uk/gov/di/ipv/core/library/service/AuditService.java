@@ -11,11 +11,11 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 
 import java.time.Instant;
 
-public class SqsService {
+public class AuditService {
     private final AmazonSQS sqs;
     private final String queueUrl;
 
-    public SqsService(AmazonSQS sqs, ConfigurationService configurationService) {
+    public AuditService(AmazonSQS sqs, ConfigurationService configurationService) {
         this.sqs = sqs;
         queueUrl = configurationService.getSqsAuditEventQueueUrl();
     }
@@ -38,8 +38,7 @@ public class SqsService {
     }
 
     private String generateMessageBody(AuditEventTypes eventType) throws JsonProcessingException {
-        AuditEvent auditEvent =
-                new AuditEvent(Instant.now().getEpochSecond(), eventType.toString());
+        AuditEvent auditEvent = new AuditEvent(Instant.now().getEpochSecond(), eventType);
 
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.writeValueAsString(auditEvent);

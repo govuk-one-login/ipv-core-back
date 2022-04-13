@@ -19,26 +19,26 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class SqsServiceTest {
+class AuditServiceTest {
 
     @Mock AmazonSQS mockSqs;
     @Mock ConfigurationService mockConfigurationService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private SqsService sqsService;
+    private AuditService auditService;
 
     @BeforeEach
     void setup() {
         when(mockConfigurationService.getSqsAuditEventQueueUrl())
                 .thenReturn("https://example-queue-url");
 
-        sqsService = new SqsService(mockSqs, mockConfigurationService);
+        auditService = new AuditService(mockSqs, mockConfigurationService);
     }
 
     @Test
     void shouldSendMessageToSqsQueue() throws JsonProcessingException, SqsException {
-        sqsService.sendAuditEvent(AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED);
+        auditService.sendAuditEvent(AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED);
 
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
                 ArgumentCaptor.forClass(SendMessageRequest.class);
@@ -51,7 +51,7 @@ class SqsServiceTest {
                 objectMapper.readValue(
                         sqsSendMessageRequestCaptor.getValue().getMessageBody(), AuditEvent.class);
         assertEquals(
-                AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED.toString(),
-                messageBody.getEventName());
+                AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED,
+                messageBody.getEvent());
     }
 }

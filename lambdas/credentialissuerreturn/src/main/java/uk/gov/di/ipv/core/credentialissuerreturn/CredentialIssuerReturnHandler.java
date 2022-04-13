@@ -21,9 +21,9 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
-import uk.gov.di.ipv.core.library.service.SqsService;
 
 import java.util.Optional;
 
@@ -35,15 +35,15 @@ public class CredentialIssuerReturnHandler
 
     private final CredentialIssuerService credentialIssuerService;
     private final ConfigurationService configurationService;
-    private final SqsService sqsService;
+    private final AuditService auditService;
 
     public CredentialIssuerReturnHandler(
             CredentialIssuerService credentialIssuerService,
             ConfigurationService configurationService,
-            SqsService sqsService) {
+            AuditService auditService) {
         this.credentialIssuerService = credentialIssuerService;
         this.configurationService = configurationService;
-        this.sqsService = sqsService;
+        this.auditService = auditService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -52,7 +52,8 @@ public class CredentialIssuerReturnHandler
         JWSSigner signer = new KmsEs256Signer(configurationService.getSigningKeyId());
 
         this.credentialIssuerService = new CredentialIssuerService(configurationService, signer);
-        this.sqsService = new SqsService(SqsService.getDefaultSqsClient(), configurationService);
+        this.auditService =
+                new AuditService(AuditService.getDefaultSqsClient(), configurationService);
     }
 
     @Override
@@ -74,10 +75,11 @@ public class CredentialIssuerReturnHandler
             String verifiableCredential =
                     credentialIssuerService.getVerifiableCredential(
                             accessToken, credentialIssuerConfig, request.getIpvSessionId());
-            credentialIssuerService.persistUserCredentials(verifiableCredential, request);
 
-            sqsService.sendAuditEvent(
+            auditService.sendAuditEvent(
                     AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED);
+
+            credentialIssuerService.persistUserCredentials(verifiableCredential, request);
 
             JourneyResponse journeyResponse = new JourneyResponse(NEXT_JOURNEY_STEP_URI);
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, journeyResponse);
