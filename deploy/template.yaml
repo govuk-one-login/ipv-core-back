@@ -211,9 +211,7 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/jwtTtlSeconds
         - SQSSendMessagePolicy:
-            QueueName:
-              Fn::ImportValue:
-                !Sub ${Environment}AuditEventQueueName
+            QueueName: !ImportValue AuditEventQueueName
         - Statement:
           - Sid: kmsSigningKeyPermission
             Effect: Allow
