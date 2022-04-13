@@ -7,34 +7,43 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
+import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
+import uk.gov.di.ipv.core.library.service.SqsService;
 
 import java.util.Optional;
 
 public class CredentialIssuerReturnHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-
+    private static final Logger LOGGER =
+            LoggerFactory.getLogger(CredentialIssuerReturnHandler.class);
     private static final String NEXT_JOURNEY_STEP_URI = "/journey/next";
 
     private final CredentialIssuerService credentialIssuerService;
     private final ConfigurationService configurationService;
+    private final SqsService sqsService;
 
     public CredentialIssuerReturnHandler(
             CredentialIssuerService credentialIssuerService,
-            ConfigurationService configurationService) {
+            ConfigurationService configurationService,
+            SqsService sqsService) {
         this.credentialIssuerService = credentialIssuerService;
         this.configurationService = configurationService;
+        this.sqsService = sqsService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -43,6 +52,7 @@ public class CredentialIssuerReturnHandler
         JWSSigner signer = new KmsEs256Signer(configurationService.getSigningKeyId());
 
         this.credentialIssuerService = new CredentialIssuerService(configurationService, signer);
+        this.sqsService = new SqsService(SqsService.getDefaultSqsClient(), configurationService);
     }
 
     @Override
@@ -66,11 +76,17 @@ public class CredentialIssuerReturnHandler
                             accessToken, credentialIssuerConfig, request.getIpvSessionId());
             credentialIssuerService.persistUserCredentials(verifiableCredential, request);
 
+            sqsService.sendAuditEvent(
+                    AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED);
+
             JourneyResponse journeyResponse = new JourneyResponse(NEXT_JOURNEY_STEP_URI);
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, journeyResponse);
         } catch (CredentialIssuerException e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getHttpStatusCode(), e.getErrorResponse());
+        } catch (SqsException e) {
+            LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(400, e.getMessage());
         }
     }
 
