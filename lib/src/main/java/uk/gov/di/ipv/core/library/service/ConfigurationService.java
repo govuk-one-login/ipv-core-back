@@ -88,6 +88,10 @@ public class ConfigurationService {
         return System.getenv("IPV_JOURNEY_SESSION_END_URI");
     }
 
+    public String getSqsAuditEventQueueUrl() {
+        return System.getenv("SQS_AUDIT_EVENT_QUEUE_URL");
+    }
+
     public long getBearerAccessTokenTtl() {
         return Optional.ofNullable(System.getenv("BEARER_TOKEN_TTL"))
                 .map(Long::valueOf)
