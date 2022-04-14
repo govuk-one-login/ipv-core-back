@@ -3,13 +3,11 @@ package uk.gov.di.ipv.core.library.service;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.auditing.AuditEventProto;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 
 import java.time.Instant;
+import java.util.Base64;
 
 public class AuditService {
     private final AmazonSQS sqs;
@@ -24,23 +22,22 @@ public class AuditService {
         return AmazonSQSClientBuilder.defaultClient();
     }
 
-    public void sendAuditEvent(AuditEventTypes eventType) throws SqsException {
-        try {
-            SendMessageRequest sendMessageRequest =
-                    new SendMessageRequest()
-                            .withQueueUrl(queueUrl)
-                            .withMessageBody(generateMessageBody(eventType));
+    public void sendAuditEvent(AuditEventTypes eventType) {
+        SendMessageRequest sendMessageRequest =
+                new SendMessageRequest()
+                        .withQueueUrl(queueUrl)
+                        .withMessageBody(generateMessageBody(eventType));
 
-            sqs.sendMessage(sendMessageRequest);
-        } catch (JsonProcessingException e) {
-            throw new SqsException(e);
-        }
+        sqs.sendMessage(sendMessageRequest);
     }
 
-    private String generateMessageBody(AuditEventTypes eventType) throws JsonProcessingException {
-        AuditEvent auditEvent = new AuditEvent(Instant.now().getEpochSecond(), eventType);
+    private String generateMessageBody(AuditEventTypes eventType) {
+        AuditEventProto.AuditEvent auditEvent =
+                AuditEventProto.AuditEvent.newBuilder()
+                        .setTimestamp((int) Instant.now().getEpochSecond())
+                        .setEventName(eventType.toString())
+                        .build();
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.writeValueAsString(auditEvent);
+        return Base64.getEncoder().encodeToString(auditEvent.toByteArray());
     }
 }

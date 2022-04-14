@@ -17,7 +17,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
-import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -86,9 +85,6 @@ public class CredentialIssuerReturnHandler
         } catch (CredentialIssuerException e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getHttpStatusCode(), e.getErrorResponse());
-        } catch (SqsException e) {
-            LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, e.getMessage());
         }
     }
 

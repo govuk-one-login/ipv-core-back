@@ -2,7 +2,7 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.amazonaws.util.Base64;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,9 +10,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.auditing.AuditEventProto;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
@@ -37,7 +39,7 @@ class AuditServiceTest {
     }
 
     @Test
-    void shouldSendMessageToSqsQueue() throws JsonProcessingException, SqsException {
+    void shouldSendMessageToSqsQueue() throws IOException, SqsException {
         auditService.sendAuditEvent(AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED);
 
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
@@ -47,11 +49,13 @@ class AuditServiceTest {
         assertEquals(
                 "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().getQueueUrl());
 
-        AuditEvent messageBody =
-                objectMapper.readValue(
-                        sqsSendMessageRequestCaptor.getValue().getMessageBody(), AuditEvent.class);
+        String base64EncodedBody = sqsSendMessageRequestCaptor.getValue().getMessageBody();
+
+        AuditEventProto.AuditEvent messageBody =
+                AuditEventProto.AuditEvent.parseFrom(Base64.decode(base64EncodedBody));
+
         assertEquals(
-                AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED,
-                messageBody.getEvent());
+                AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED.toString(),
+                messageBody.getEventName());
     }
 }
