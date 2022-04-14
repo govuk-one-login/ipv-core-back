@@ -38,7 +38,7 @@ public class AuditService {
     }
 
     private String generateMessageBody(AuditEventTypes eventType) throws JsonProcessingException {
-        AuditEvent auditEvent = new AuditEvent(Instant.now().getEpochSecond(), eventType);
+        AuditEvent auditEvent = new AuditEvent((int) Instant.now().getEpochSecond(), eventType);
 
         ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.writeValueAsString(auditEvent);
