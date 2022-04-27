@@ -103,7 +103,7 @@ public class CredentialIssuerStartHandler
                             signer,
                             credentialIssuerConfig.getId(),
                             credentialIssuerConfig.getIpvClientId(),
-                            credentialIssuerConfig.getAuthorizeUrl().toString(),
+                            credentialIssuerConfig.getTokenUrl().toString(),
                             configurationService.getIpvTokenTtl(),
                             configurationService.getCoreFrontCallbackUrl());
         } catch (HttpResponseExceptionWithErrorBody exception) {

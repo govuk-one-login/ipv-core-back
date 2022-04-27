@@ -168,7 +168,7 @@ class CredentialIssuerStartHandlerTest {
         assertEquals(IPV_CLIENT_ID, signedJWT.getJWTClaimsSet().getClaim("client_id"));
         assertEquals(IPV_CLIENT_ID, signedJWT.getJWTClaimsSet().getIssuer());
         assertEquals(IPV_CLIENT_ID, signedJWT.getJWTClaimsSet().getSubject());
-        assertEquals(CRI_AUTHORIZE_URL, signedJWT.getJWTClaimsSet().getAudience().get(0));
+        assertEquals(CRI_TOKEN_URL, signedJWT.getJWTClaimsSet().getAudience().get(0));
 
         assertEquals(3, claimsSet.get(SHARED_CLAIMS).size());
         JsonNode vcAttributes = claimsSet.get(SHARED_CLAIMS);
