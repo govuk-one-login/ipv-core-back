@@ -263,7 +263,7 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/jwtTtlSeconds
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/coreFrontCallbackUrlValue
+            ParameterName: !Sub ${Environment}/core/self/coreFrontCallbackUrl
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:

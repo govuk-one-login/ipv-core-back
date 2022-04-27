@@ -224,6 +224,6 @@ public class ConfigurationService {
     public String getCoreFrontCallbackUrl() {
         return ssmProvider.get(
                 String.format(
-                        "/%s/core/self/coreFrontCallbackUrlValue", System.getenv(ENVIRONMENT)));
+                        "/%s/core/self/coreFrontCallbackUrl", System.getenv(ENVIRONMENT)));
     }
 }
