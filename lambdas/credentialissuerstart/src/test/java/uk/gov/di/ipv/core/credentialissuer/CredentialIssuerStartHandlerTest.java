@@ -116,6 +116,8 @@ class CredentialIssuerStartHandlerTest {
     @Test
     void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponse() throws Exception {
         when(configurationService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
+        when(configurationService.getIpvTokenTtl()).thenReturn("900");
+        when(configurationService.getCoreFrontCallbackUrl()).thenReturn("callbackUrl");
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
                 .thenReturn(
                         new UserIdentity(
@@ -139,7 +141,6 @@ class CredentialIssuerStartHandlerTest {
         assertEquals(IPV_CLIENT_ID, responseBody.get("ipvClientId"));
         assertEquals(CRI_AUTHORIZE_URL, responseBody.get("authorizeUrl"));
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
-
         assertSharedClaimsJWTIsValid(responseBody.get("request").toString());
 
         verifyNoInteractions(context);
@@ -163,6 +164,11 @@ class CredentialIssuerStartHandlerTest {
             throws ParseException, JsonProcessingException, JOSEException {
         SignedJWT signedJWT = SignedJWT.parse(request);
         JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
+
+        assertEquals(IPV_CLIENT_ID, signedJWT.getJWTClaimsSet().getClaim("client_id"));
+        assertEquals(IPV_CLIENT_ID, signedJWT.getJWTClaimsSet().getIssuer());
+        assertEquals(IPV_CLIENT_ID, signedJWT.getJWTClaimsSet().getSubject());
+        assertEquals(CRI_AUTHORIZE_URL, signedJWT.getJWTClaimsSet().getAudience().get(0));
 
         assertEquals(3, claimsSet.get(SHARED_CLAIMS).size());
         JsonNode vcAttributes = claimsSet.get(SHARED_CLAIMS);

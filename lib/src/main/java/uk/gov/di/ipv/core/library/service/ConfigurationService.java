@@ -220,4 +220,10 @@ public class ConfigurationService {
         return ssmProvider.get(
                 String.format("/%s/core/self/jwtTtlSeconds", System.getenv(ENVIRONMENT)));
     }
+
+    public String getCoreFrontCallbackUrl() {
+        return ssmProvider.get(
+                String.format(
+                        "/%s/core/self/coreFrontCallbackUrlValue", System.getenv(ENVIRONMENT)));
+    }
 }

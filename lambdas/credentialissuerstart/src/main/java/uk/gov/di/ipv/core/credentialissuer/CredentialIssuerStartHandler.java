@@ -101,7 +101,11 @@ public class CredentialIssuerStartHandler
                     AuthorizationRequestHelper.createJWTWithSharedClaims(
                             sharedAttributesResponse,
                             signer,
-                            credentialIssuerConfig.getIpvClientId());
+                            credentialIssuerConfig.getId(),
+                            credentialIssuerConfig.getIpvClientId(),
+                            credentialIssuerConfig.getAuthorizeUrl().toString(),
+                            configurationService.getIpvTokenTtl(),
+                            configurationService.getCoreFrontCallbackUrl());
         } catch (HttpResponseExceptionWithErrorBody exception) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     exception.getResponseCode(), exception.getErrorBody());
