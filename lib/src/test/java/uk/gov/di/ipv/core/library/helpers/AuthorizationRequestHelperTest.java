@@ -113,7 +113,26 @@ class AuthorizationRequestHelperTest {
                                         AUDIENCE,
                                         IPV_TOKEN_TTL,
                                         CORE_FRONT_CALLBACK_URL));
+        assertEquals(500, exception.getResponseCode());
         assertEquals("Failed to sign Shared Attributes", exception.getErrorReason());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUnableToBuildRedirectionUri() {
+        HttpResponseExceptionWithErrorBody exception =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () ->
+                                AuthorizationRequestHelper.createJWTWithSharedClaims(
+                                        null,
+                                        jwsSigner,
+                                        CRI_ID,
+                                        IPV_CLIENT_ID_VALUE,
+                                        AUDIENCE,
+                                        IPV_TOKEN_TTL,
+                                        "[[]]]][[["));
+        assertEquals(500, exception.getResponseCode());
+        assertEquals("Failed to build Core Front Callback Url", exception.getErrorReason());
     }
 
     private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
