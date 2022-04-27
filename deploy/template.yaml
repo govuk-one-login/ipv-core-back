@@ -253,11 +253,24 @@ Resources:
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-start-${Environment}
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsTable.Arn ] ]
+          SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
       Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/signingKeyId
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers
+        - Statement:
+            - Sid: kmsSigningKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:sign'
+              Resource:
+                - !ImportValue SigningKeyArn
       Events:
         IPVCoreInternalAPI:
           Type: Api
