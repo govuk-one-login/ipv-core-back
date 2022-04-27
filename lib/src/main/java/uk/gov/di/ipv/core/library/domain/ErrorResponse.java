@@ -32,7 +32,8 @@ public enum ErrorResponse {
     MISSING_JOURNEY_STEP_URL_PATH_PARAM(1023, "Missing journeyStep url path parameter in request"),
     FAILED_TO_PARSE_ISSUED_CREDENTIALS(1024, "Failed to parse issued credentials"),
     CREDENTIAL_SUBJECT_MISSING(1025, "Credential subject missing from verified credential"),
-    INVALID_SESSION_REQUEST(1026, "Failed to parse the session start request");
+    INVALID_SESSION_REQUEST(1026, "Failed to parse the session start request"),
+    FAILED_TO_BUILD_CORE_FRONT_CALLBACK_URL(1027, "Failed to build Core Front Callback Url");
 
     @JsonProperty("code")
     private final int code;

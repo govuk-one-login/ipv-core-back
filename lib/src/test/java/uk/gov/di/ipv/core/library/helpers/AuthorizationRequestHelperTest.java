@@ -40,7 +40,11 @@ import static uk.gov.di.ipv.core.library.helpers.AuthorizationRequestHelper.SHAR
 class AuthorizationRequestHelperTest {
 
     public static final String CLIENT_ID_FIELD = "client_id";
-    public static final String CLIENT_ID_VALUE = "testClientId";
+    public static final String IPV_CLIENT_ID_VALUE = "testClientId";
+    public static final String AUDIENCE = "Audience";
+    public static final String IPV_TOKEN_TTL = "900";
+    public static final String CORE_FRONT_CALLBACK_URL = "callbackUri";
+    public static final String CRI_ID = "cri_id";
     private final SharedAttributesResponse sharedAttributes =
             new SharedAttributesResponse(
                     Set.of(new Name(List.of(new NameParts("Dan", "first_name")))),
@@ -61,12 +65,22 @@ class AuthorizationRequestHelperTest {
             throws JOSEException, ParseException, HttpResponseExceptionWithErrorBody {
         SignedJWT result =
                 AuthorizationRequestHelper.createJWTWithSharedClaims(
-                        sharedAttributes, signer, CLIENT_ID_VALUE);
-        assertEquals("issuer", result.getJWTClaimsSet().getIssuer());
-        assertEquals("audience", result.getJWTClaimsSet().getAudience().get(0));
-        assertEquals("subject", result.getJWTClaimsSet().getSubject());
+                        sharedAttributes,
+                        signer,
+                        CRI_ID,
+                        IPV_CLIENT_ID_VALUE,
+                        AUDIENCE,
+                        IPV_TOKEN_TTL,
+                        CORE_FRONT_CALLBACK_URL);
+        assertEquals(IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getIssuer());
+        assertEquals(IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getSubject());
+        assertEquals(AUDIENCE, result.getJWTClaimsSet().getAudience().get(0));
         assertEquals(sharedAttributes, result.getJWTClaimsSet().getClaims().get(SHARED_CLAIMS));
-        assertEquals(CLIENT_ID_VALUE, result.getJWTClaimsSet().getClaims().get(CLIENT_ID_FIELD));
+        assertEquals(
+                IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getClaims().get(CLIENT_ID_FIELD));
+        assertEquals(
+                String.format("%s?id=%s", CORE_FRONT_CALLBACK_URL, CRI_ID),
+                result.getJWTClaimsSet().getClaims().get("redirect_uri"));
         assertTrue(result.verify(new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK))));
     }
 
@@ -74,7 +88,14 @@ class AuthorizationRequestHelperTest {
     void shouldNotReturnSharedClaimsIfSharedClaimsMapIsEmpty()
             throws ParseException, HttpResponseExceptionWithErrorBody {
         SignedJWT result =
-                AuthorizationRequestHelper.createJWTWithSharedClaims(null, signer, CLIENT_ID_FIELD);
+                AuthorizationRequestHelper.createJWTWithSharedClaims(
+                        null,
+                        signer,
+                        CRI_ID,
+                        IPV_CLIENT_ID_VALUE,
+                        AUDIENCE,
+                        IPV_TOKEN_TTL,
+                        CORE_FRONT_CALLBACK_URL);
         assertNull(result.getJWTClaimsSet().getClaims().get(SHARED_CLAIMS));
     }
 
@@ -85,7 +106,13 @@ class AuthorizationRequestHelperTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 AuthorizationRequestHelper.createJWTWithSharedClaims(
-                                        null, jwsSigner, CLIENT_ID_FIELD));
+                                        null,
+                                        jwsSigner,
+                                        CRI_ID,
+                                        IPV_CLIENT_ID_VALUE,
+                                        AUDIENCE,
+                                        IPV_TOKEN_TTL,
+                                        CORE_FRONT_CALLBACK_URL));
         assertEquals("Failed to sign Shared Attributes", exception.getErrorReason());
     }
 
