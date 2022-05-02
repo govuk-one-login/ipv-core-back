@@ -50,6 +50,7 @@ import static java.util.Collections.emptyMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.credentialissuer.CredentialIssuerStartHandler.SHARED_CLAIMS;
@@ -70,6 +71,7 @@ class CredentialIssuerStartHandlerTest {
     public static final String CRI_TOKEN_URL = "http://www.example.com";
     public static final String CRI_CREDENTIAL_URL = "http://www.example.com/credential";
     public static final String CRI_AUTHORIZE_URL = "http://www.example.com/authorize";
+    public static final String CRI_AUDIENCE = "http://www.example.com/audience";
     public static final String IPV_CLIENT_ID = "ipv-core";
     public static final String SESSION_ID = "the-session-id";
 
@@ -131,6 +133,7 @@ class CredentialIssuerStartHandlerTest {
         when(configurationService.getCoreFrontCallbackUrl()).thenReturn("callbackUrl");
         when(configurationService.getEncryptionPublicKey(CRI_ID))
                 .thenReturn(getEncryptionPublicKey());
+        when(configurationService.getClientAudience(anyString())).thenReturn(CRI_AUDIENCE);
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
                 .thenReturn(
                         new UserIdentity(
@@ -184,7 +187,7 @@ class CredentialIssuerStartHandlerTest {
         assertEquals(IPV_CLIENT_ID, signedJWT.getJWTClaimsSet().getClaim("client_id"));
         assertEquals(IPV_CLIENT_ID, signedJWT.getJWTClaimsSet().getIssuer());
         assertEquals(IPV_CLIENT_ID, signedJWT.getJWTClaimsSet().getSubject());
-        assertEquals(CRI_TOKEN_URL, signedJWT.getJWTClaimsSet().getAudience().get(0));
+        assertEquals(CRI_AUDIENCE, signedJWT.getJWTClaimsSet().getAudience().get(0));
 
         assertEquals(3, claimsSet.get(SHARED_CLAIMS).size());
         JsonNode vcAttributes = claimsSet.get(SHARED_CLAIMS);

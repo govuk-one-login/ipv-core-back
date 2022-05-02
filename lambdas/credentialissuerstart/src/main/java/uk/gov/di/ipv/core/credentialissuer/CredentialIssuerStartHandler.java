@@ -105,7 +105,7 @@ public class CredentialIssuerStartHandler
                             signer,
                             credentialIssuerConfig.getId(),
                             credentialIssuerConfig.getIpvClientId(),
-                            credentialIssuerConfig.getTokenUrl().toString(),
+                            configurationService.getClientAudience(credentialIssuerConfig.getId()),
                             configurationService.getIpvTokenTtl(),
                             configurationService.getCoreFrontCallbackUrl());
 

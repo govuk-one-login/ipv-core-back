@@ -83,7 +83,7 @@ public class CredentialIssuerService {
                     new ClientAuthClaims(
                             config.getIpvClientId(),
                             config.getIpvClientId(),
-                            config.getTokenUrl().toString(),
+                            configurationService.getClientAudience(config.getId()),
                             dateTime.plusSeconds(
                                             Long.parseLong(configurationService.getIpvTokenTtl()))
                                     .toEpochSecond());

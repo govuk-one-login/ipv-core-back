@@ -243,7 +243,8 @@ class ConfigurationServiceTest {
     void shouldReturnClientAudience() {
         environmentVariables.set("ENVIRONMENT", "test");
         String clientIssuer = "aClientAudience";
-        when(ssmProvider.get("/test/core/clients/aClientId/audience")).thenReturn(clientIssuer);
+        when(ssmProvider.get("/test/core/credentialIssuers/aClientId/audienceForClients"))
+                .thenReturn(clientIssuer);
         assertEquals(clientIssuer, configurationService.getClientAudience("aClientId"));
     }
 
