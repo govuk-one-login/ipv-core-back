@@ -8,10 +8,10 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 @ExcludeFromGeneratedCoverageReport
 @Getter
 public class AuditEvent {
-    @JsonProperty private int timestamp;
+    @JsonProperty private final int timestamp;
 
     @JsonProperty("event_name")
-    private AuditEventTypes event;
+    private final AuditEventTypes event;
 
     @JsonCreator
     public AuditEvent(

@@ -7,9 +7,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonInclude(Include.NON_EMPTY)
 public class ClientDetails {
-    @JsonProperty private String redirectUrl;
-    @JsonProperty private String authCode;
-    @JsonProperty private String state;
+    @JsonProperty private final String redirectUrl;
+    @JsonProperty private final String authCode;
+    @JsonProperty private final String state;
 
     @JsonCreator
     public ClientDetails(

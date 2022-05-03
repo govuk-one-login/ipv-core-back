@@ -46,7 +46,7 @@ public class CredentialIssuerErrorHandler
                 RequestHelper.convertRequest(input, CredentialIssuerErrorDto.class);
 
         LOGGER.error(
-                "An error occured with the {} cri",
+                "An error occurred with the {} cri",
                 credentialIssuerErrorDto.getCredentialIssuerId());
         LOGGER.error("Error code: {}", credentialIssuerErrorDto.getError());
         LOGGER.error(credentialIssuerErrorDto.getErrorDescription());
