@@ -1,10 +1,14 @@
 package uk.gov.di.ipv.core.library.helpers;
 
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
+import com.nimbusds.jose.crypto.RSADecrypter;
+import com.nimbusds.jose.crypto.RSAEncrypter;
 import com.nimbusds.jose.jwk.ECKey;
+import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,9 +24,13 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.interfaces.ECPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.RSAPublicKeySpec;
 import java.text.ParseException;
 import java.util.Base64;
 import java.util.List;
@@ -34,6 +42,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_JWT;
 import static uk.gov.di.ipv.core.library.helpers.AuthorizationRequestHelper.SHARED_CLAIMS;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,7 +56,8 @@ class AuthorizationRequestHelperTest {
     public static final String IPV_TOKEN_TTL = "900";
     public static final String CORE_FRONT_CALLBACK_URL = "callbackUri";
     public static final String CRI_ID = "cri_id";
-    private final SharedAttributesResponse sharedAttributes =
+
+    private final SharedAttributesResponse sharedClaims =
             new SharedAttributesResponse(
                     Set.of(new Name(List.of(new NameParts("Dan", "first_name")))),
                     Set.of(new BirthDate("2011-01-01")),
@@ -54,28 +66,34 @@ class AuthorizationRequestHelperTest {
     private ECDSASigner signer;
 
     @Mock JWSSigner jwsSigner;
+    private RSAEncrypter rsaEncrypter;
 
     @BeforeEach
-    void setUp() throws InvalidKeySpecException, NoSuchAlgorithmException, JOSEException {
+    void setUp()
+            throws InvalidKeySpecException, NoSuchAlgorithmException, JOSEException,
+                    ParseException {
         signer = new ECDSASigner(getPrivateKey());
+        rsaEncrypter = new RSAEncrypter((RSAPublicKey) getEncryptionPublicKey());
     }
 
     @Test
-    void shouldCreateAuthorizationRequestWithCorrectClaims()
+    void shouldCreateSignedJWTWithCorrectClaims()
             throws JOSEException, ParseException, HttpResponseExceptionWithErrorBody {
+
         SignedJWT result =
-                AuthorizationRequestHelper.createJWTWithSharedClaims(
-                        sharedAttributes,
+                AuthorizationRequestHelper.createSignedJWT(
+                        sharedClaims,
                         signer,
                         CRI_ID,
                         IPV_CLIENT_ID_VALUE,
                         AUDIENCE,
                         IPV_TOKEN_TTL,
                         CORE_FRONT_CALLBACK_URL);
+
         assertEquals(IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getIssuer());
         assertEquals(IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getSubject());
         assertEquals(AUDIENCE, result.getJWTClaimsSet().getAudience().get(0));
-        assertEquals(sharedAttributes, result.getJWTClaimsSet().getClaims().get(SHARED_CLAIMS));
+        assertEquals(sharedClaims, result.getJWTClaimsSet().getClaims().get(SHARED_CLAIMS));
         assertEquals(
                 IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getClaims().get(CLIENT_ID_FIELD));
         assertEquals(
@@ -88,7 +106,7 @@ class AuthorizationRequestHelperTest {
     void shouldNotReturnSharedClaimsIfSharedClaimsMapIsEmpty()
             throws ParseException, HttpResponseExceptionWithErrorBody {
         SignedJWT result =
-                AuthorizationRequestHelper.createJWTWithSharedClaims(
+                AuthorizationRequestHelper.createSignedJWT(
                         null,
                         signer,
                         CRI_ID,
@@ -105,7 +123,7 @@ class AuthorizationRequestHelperTest {
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
-                                AuthorizationRequestHelper.createJWTWithSharedClaims(
+                                AuthorizationRequestHelper.createSignedJWT(
                                         null,
                                         jwsSigner,
                                         CRI_ID,
@@ -123,7 +141,7 @@ class AuthorizationRequestHelperTest {
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
-                                AuthorizationRequestHelper.createJWTWithSharedClaims(
+                                AuthorizationRequestHelper.createSignedJWT(
                                         null,
                                         jwsSigner,
                                         CRI_ID,
@@ -135,11 +153,53 @@ class AuthorizationRequestHelperTest {
         assertEquals("Failed to build Core Front Callback Url", exception.getErrorReason());
     }
 
+    @Test
+    void shouldCreateJWEObject()
+            throws ParseException, JOSEException, NoSuchAlgorithmException, InvalidKeySpecException,
+                    HttpResponseExceptionWithErrorBody {
+        JWEObject result =
+                AuthorizationRequestHelper.createJweObject(
+                        rsaEncrypter, SignedJWT.parse(SIGNED_JWT));
+
+        assertEquals(JWEObject.State.ENCRYPTED, result.getState());
+
+        RSADecrypter rsaDecrypter = new RSADecrypter(getEncryptionPrivateKey());
+        result.decrypt(rsaDecrypter);
+        SignedJWT signedJWT = result.getPayload().toSignedJWT();
+
+        assertEquals(IPV_CLIENT_ID_VALUE, signedJWT.getJWTClaimsSet().getIssuer());
+        assertEquals(IPV_CLIENT_ID_VALUE, signedJWT.getJWTClaimsSet().getSubject());
+        assertEquals(AUDIENCE, signedJWT.getJWTClaimsSet().getAudience().get(0));
+        assertEquals(
+                IPV_CLIENT_ID_VALUE, signedJWT.getJWTClaimsSet().getClaims().get(CLIENT_ID_FIELD));
+        assertEquals(
+                String.format("%s?id=%s", CORE_FRONT_CALLBACK_URL, CRI_ID),
+                signedJWT.getJWTClaimsSet().getClaims().get("redirect_uri"));
+    }
+
+    private PrivateKey getEncryptionPrivateKey()
+            throws NoSuchAlgorithmException, InvalidKeySpecException {
+        return KeyFactory.getInstance("RSA")
+                .generatePrivate(
+                        new PKCS8EncodedKeySpec(
+                                Base64.getDecoder().decode(RSA_ENCRYPTION_PRIVATE_KEY)));
+    }
+
     private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
         return (ECPrivateKey)
                 KeyFactory.getInstance("EC")
                         .generatePrivate(
                                 new PKCS8EncodedKeySpec(
                                         Base64.getDecoder().decode(EC_PRIVATE_KEY)));
+    }
+
+    private PublicKey getEncryptionPublicKey()
+            throws NoSuchAlgorithmException, ParseException, InvalidKeySpecException {
+        RSAKey rsaKey = RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK);
+        RSAPublicKeySpec rsaPublicKeySpec =
+                new RSAPublicKeySpec(
+                        rsaKey.getModulus().decodeToBigInteger(),
+                        rsaKey.getPublicExponent().decodeToBigInteger());
+        return KeyFactory.getInstance("RSA").generatePublic(rsaPublicKeySpec);
     }
 }

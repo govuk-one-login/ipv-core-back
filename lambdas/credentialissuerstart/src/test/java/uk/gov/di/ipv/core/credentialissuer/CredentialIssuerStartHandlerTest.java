@@ -7,9 +7,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
+import com.nimbusds.jose.crypto.RSADecrypter;
 import com.nimbusds.jose.jwk.ECKey;
+import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +25,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -29,9 +33,12 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.interfaces.ECPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.RSAPublicKeySpec;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -50,6 +57,8 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIB
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.vcClaim;
 
@@ -80,7 +89,8 @@ class CredentialIssuerStartHandlerTest {
     void setUp()
             throws URISyntaxException, InvalidKeySpecException, NoSuchAlgorithmException,
                     JOSEException {
-        ECDSASigner signer = new ECDSASigner(getPrivateKey());
+        ECDSASigner signer = new ECDSASigner(getSigningPrivateKey());
+
         underTest =
                 new CredentialIssuerStartHandler(configurationService, userIdentityService, signer);
         credentialIssuerConfig =
@@ -114,10 +124,13 @@ class CredentialIssuerStartHandlerTest {
     }
 
     @Test
-    void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponse() throws Exception {
+    void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponse()
+            throws Exception, HttpResponseExceptionWithErrorBody {
         when(configurationService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
         when(configurationService.getIpvTokenTtl()).thenReturn("900");
         when(configurationService.getCoreFrontCallbackUrl()).thenReturn("callbackUrl");
+        when(configurationService.getEncryptionPublicKey(CRI_ID))
+                .thenReturn(getEncryptionPublicKey());
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
                 .thenReturn(
                         new UserIdentity(
@@ -141,7 +154,10 @@ class CredentialIssuerStartHandlerTest {
         assertEquals(IPV_CLIENT_ID, responseBody.get("ipvClientId"));
         assertEquals(CRI_AUTHORIZE_URL, responseBody.get("authorizeUrl"));
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
-        assertSharedClaimsJWTIsValid(responseBody.get("request").toString());
+
+        JWEObject jweObject = JWEObject.parse(responseBody.get("request"));
+        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+        assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
 
         verifyNoInteractions(context);
     }
@@ -228,11 +244,30 @@ class CredentialIssuerStartHandlerTest {
         assertEquals(errorResponse.getCode(), responseBody.get("code"));
     }
 
-    private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
+    private ECPrivateKey getSigningPrivateKey()
+            throws InvalidKeySpecException, NoSuchAlgorithmException {
         return (ECPrivateKey)
                 KeyFactory.getInstance("EC")
                         .generatePrivate(
                                 new PKCS8EncodedKeySpec(
                                         Base64.getDecoder().decode(EC_PRIVATE_KEY)));
+    }
+
+    private PublicKey getEncryptionPublicKey()
+            throws NoSuchAlgorithmException, ParseException, InvalidKeySpecException {
+        RSAKey rsaKey = RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK);
+        RSAPublicKeySpec rsaPublicKeySpec =
+                new RSAPublicKeySpec(
+                        rsaKey.getModulus().decodeToBigInteger(),
+                        rsaKey.getPublicExponent().decodeToBigInteger());
+        return KeyFactory.getInstance("RSA").generatePublic(rsaPublicKeySpec);
+    }
+
+    private PrivateKey getEncryptionPrivateKey()
+            throws NoSuchAlgorithmException, InvalidKeySpecException {
+        return KeyFactory.getInstance("RSA")
+                .generatePrivate(
+                        new PKCS8EncodedKeySpec(
+                                Base64.getDecoder().decode(RSA_ENCRYPTION_PRIVATE_KEY)));
     }
 }

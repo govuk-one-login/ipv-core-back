@@ -1,10 +1,16 @@
 package uk.gov.di.ipv.core.library.helpers;
 
+import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JOSEObjectType;
+import com.nimbusds.jose.JWEAlgorithm;
+import com.nimbusds.jose.JWEHeader;
+import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.Payload;
+import com.nimbusds.jose.crypto.RSAEncrypter;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
@@ -30,7 +36,7 @@ public class AuthorizationRequestHelper {
 
     private AuthorizationRequestHelper() {}
 
-    public static SignedJWT createJWTWithSharedClaims(
+    public static SignedJWT createSignedJWT(
             SharedAttributesResponse sharedClaims,
             JWSSigner signer,
             String criId,
@@ -79,6 +85,23 @@ public class AuthorizationRequestHelper {
         }
 
         return signedJWT;
+    }
+
+    public static JWEObject createJweObject(RSAEncrypter rsaEncrypter, SignedJWT signedJWT)
+            throws HttpResponseExceptionWithErrorBody {
+        try {
+            JWEObject jweObject =
+                    new JWEObject(
+                            new JWEHeader.Builder(
+                                            JWEAlgorithm.RSA_OAEP_256, EncryptionMethod.A256GCM)
+                                    .contentType("JWT")
+                                    .build(),
+                            new Payload(signedJWT));
+            jweObject.encrypt(rsaEncrypter);
+            return jweObject;
+        } catch (JOSEException e) {
+            throw new HttpResponseExceptionWithErrorBody(500, ErrorResponse.FAILED_TO_ENCRYPT_JWT);
+        }
     }
 
     private static URI getRedirectionURI(String criId, String coreFrontCallbackUrl)
