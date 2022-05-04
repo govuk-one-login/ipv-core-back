@@ -6,7 +6,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 
 @ExcludeFromGeneratedCoverageReport
 public class ClientResponse {
-    @JsonProperty private ClientDetails client;
+    @JsonProperty private final ClientDetails client;
 
     @JsonCreator
     public ClientResponse(@JsonProperty(value = "client", required = true) ClientDetails client) {

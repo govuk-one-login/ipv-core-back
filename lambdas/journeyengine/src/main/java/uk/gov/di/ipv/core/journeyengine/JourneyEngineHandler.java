@@ -47,7 +47,6 @@ public class JourneyEngineHandler
     private static final String ADDRESS_CRI_ID = "address";
     private static final String KBV_CRI_ID = "kbv";
     private static final String FRAUD_CRI_ID = "fraud";
-    private static final String ACTIVITY_HISTORY_CRI_ID = "activityHistory";
 
     private static final List<String> VALID_JOURNEY_STEPS = List.of("next");
 
@@ -180,11 +179,12 @@ public class JourneyEngineHandler
         }
     }
 
-    private void updateUserState(UserStates updatedStateValue, IpvSessionItem previosSessionItem) {
+    private void updateUserState(UserStates updatedStateValue, IpvSessionItem previousSessionItem) {
         IpvSessionItem updatedIpvSessionItem = new IpvSessionItem();
-        updatedIpvSessionItem.setIpvSessionId(previosSessionItem.getIpvSessionId());
-        updatedIpvSessionItem.setCreationDateTime(previosSessionItem.getCreationDateTime());
-        updatedIpvSessionItem.setClientSessionDetails(previosSessionItem.getClientSessionDetails());
+        updatedIpvSessionItem.setIpvSessionId(previousSessionItem.getIpvSessionId());
+        updatedIpvSessionItem.setCreationDateTime(previousSessionItem.getCreationDateTime());
+        updatedIpvSessionItem.setClientSessionDetails(
+                previousSessionItem.getClientSessionDetails());
         updatedIpvSessionItem.setUserState(updatedStateValue.toString());
 
         ipvSessionService.updateIpvSession(updatedIpvSessionItem);
