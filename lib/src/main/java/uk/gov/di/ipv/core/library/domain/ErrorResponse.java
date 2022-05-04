@@ -33,7 +33,9 @@ public enum ErrorResponse {
     FAILED_TO_PARSE_ISSUED_CREDENTIALS(1024, "Failed to parse issued credentials"),
     CREDENTIAL_SUBJECT_MISSING(1025, "Credential subject missing from verified credential"),
     INVALID_SESSION_REQUEST(1026, "Failed to parse the session start request"),
-    FAILED_TO_BUILD_CORE_FRONT_CALLBACK_URL(1027, "Failed to build Core Front Callback Url");
+    FAILED_TO_BUILD_CORE_FRONT_CALLBACK_URL(1027, "Failed to build Core Front Callback Url"),
+    FAILED_TO_ENCRYPT_JWT(1028, "Failed to encrypt JWT"),
+    FAILED_TO_GET_ENCRYPTION_PUBLIC_KEY(1029, "Failed to load Encryption Public Key");
 
     @JsonProperty("code")
     private final int code;

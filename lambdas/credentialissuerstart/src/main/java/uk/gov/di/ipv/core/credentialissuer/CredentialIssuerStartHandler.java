@@ -7,7 +7,9 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.crypto.RSAEncrypter;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.slf4j.Logger;
@@ -29,6 +31,7 @@ import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
+import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,13 +95,12 @@ public class CredentialIssuerStartHandler
                     400, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
         }
 
-        SignedJWT authorizationRequest;
         try {
             String ipvSessionId = getIpvSessionId(input.getHeaders());
 
             SharedAttributesResponse sharedAttributesResponse = getSharedAttributes(ipvSessionId);
-            authorizationRequest =
-                    AuthorizationRequestHelper.createJWTWithSharedClaims(
+            SignedJWT signedJWT =
+                    AuthorizationRequestHelper.createSignedJWT(
                             sharedAttributesResponse,
                             signer,
                             credentialIssuerConfig.getId(),
@@ -106,20 +108,28 @@ public class CredentialIssuerStartHandler
                             credentialIssuerConfig.getTokenUrl().toString(),
                             configurationService.getIpvTokenTtl(),
                             configurationService.getCoreFrontCallbackUrl());
+
+            RSAEncrypter rsaEncrypter =
+                    new RSAEncrypter(
+                            (RSAPublicKey)
+                                    configurationService.getEncryptionPublicKey(
+                                            credentialIssuerConfig.getId()));
+            JWEObject jweObject =
+                    AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
+
+            CriResponse criResponse =
+                    new CriResponse(
+                            new CriDetails(
+                                    credentialIssuerConfig.getId(),
+                                    credentialIssuerConfig.getIpvClientId(),
+                                    credentialIssuerConfig.getAuthorizeUrl().toString(),
+                                    jweObject.serialize()));
+
+            return ApiGatewayResponseGenerator.proxyJsonResponse(OK, criResponse);
         } catch (HttpResponseExceptionWithErrorBody exception) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     exception.getResponseCode(), exception.getErrorBody());
         }
-
-        CriResponse criResponse =
-                new CriResponse(
-                        new CriDetails(
-                                credentialIssuerConfig.getId(),
-                                credentialIssuerConfig.getIpvClientId(),
-                                credentialIssuerConfig.getAuthorizeUrl().toString(),
-                                authorizationRequest.serialize()));
-
-        return ApiGatewayResponseGenerator.proxyJsonResponse(OK, criResponse);
     }
 
     @Tracing
