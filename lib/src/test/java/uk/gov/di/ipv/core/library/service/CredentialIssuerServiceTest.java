@@ -73,6 +73,7 @@ class CredentialIssuerServiceTest {
     @Test
     void validTokenResponse(WireMockRuntimeInfo wmRuntimeInfo) {
         when(mockConfigurationService.getIpvTokenTtl()).thenReturn("900");
+        when(mockConfigurationService.getAudienceForClients()).thenReturn("test-issuer");
         when(mockConfigurationService.getClientAudience(anyString())).thenReturn("test-audience");
         stubFor(
                 post("/token")
@@ -103,6 +104,7 @@ class CredentialIssuerServiceTest {
     @Test
     void tokenErrorResponse(WireMockRuntimeInfo wmRuntimeInfo) {
         when(mockConfigurationService.getIpvTokenTtl()).thenReturn("900");
+        when(mockConfigurationService.getAudienceForClients()).thenReturn("test-issuer");
         when(mockConfigurationService.getClientAudience(anyString())).thenReturn("test-audience");
         var errorJson =
                 "{ \"error\": \"invalid_request\", \"error_description\": \"Request was missing the 'redirect_uri' parameter.\", \"error_uri\": \"See the full API docs at https://authorization-server.com/docs/access_token\"}";
@@ -137,6 +139,7 @@ class CredentialIssuerServiceTest {
     @Test
     void invalidHeaderThrowsCredentialIssuerException(WireMockRuntimeInfo wmRuntimeInfo) {
         when(mockConfigurationService.getIpvTokenTtl()).thenReturn("900");
+        when(mockConfigurationService.getAudienceForClients()).thenReturn("test-issuer");
         when(mockConfigurationService.getClientAudience(anyString())).thenReturn("test-audience");
         stubFor(
                 post("/token")
