@@ -81,8 +81,8 @@ public class CredentialIssuerService {
             OffsetDateTime dateTime = OffsetDateTime.now();
             ClientAuthClaims clientAuthClaims =
                     new ClientAuthClaims(
-                            configurationService.getAudienceForClients(),
-                            configurationService.getAudienceForClients(),
+                            config.getIpvClientId(),
+                            config.getIpvClientId(),
                             configurationService.getClientAudience(config.getId()),
                             dateTime.plusSeconds(
                                             Long.parseLong(configurationService.getIpvTokenTtl()))
