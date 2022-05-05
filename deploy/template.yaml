@@ -30,16 +30,16 @@ Resources:
         DestinationArn: !GetAtt IPVCoreInternalAPILogGroup.Arn
         Format: >-
           {
-          "requestId":"$context.requestId",
-          "ip":"$context.identity.sourceIp",
-          "requestTime":"$context.requestTime",
-          "httpMethod":"$context.httpMethod",
-          "path":"$context.path",
-          "routeKey":"$context.routeKey",
-          "status":"$context.status",
-          "protocol":"$context.protocol",
+          "requestId":      "$context.requestId",
+          "ip":             "$context.identity.sourceIp",
+          "requestTime":    "$context.requestTime",
+          "httpMethod":     "$context.httpMethod",
+          "path":           "$context.path",
+          "routeKey":       "$context.routeKey",
+          "status":         "$context.status",
+          "protocol":       "$context.protocol",
           "responseLatency":"$context.responseLatency",
-          "responseLength":"$context.responseLength"
+          "responseLength": "$context.responseLength"
           }
 
   IPVCoreInternalAPILogGroup:
@@ -69,16 +69,16 @@ Resources:
         DestinationArn: !GetAtt IPVCoreExternalAPILogGroup.Arn
         Format: >-
           {
-          "requestId":"$context.requestId",
-          "ip":"$context.identity.sourceIp",
-          "requestTime":"$context.requestTime",
-          "httpMethod":"$context.httpMethod",
-          "path":"$context.path",
-          "routeKey":"$context.routeKey",
-          "status":"$context.status",
-          "protocol":"$context.protocol",
+          "requestId":      "$context.requestId",
+          "ip":             "$context.identity.sourceIp",
+          "requestTime":    "$context.requestTime",
+          "httpMethod":     "$context.httpMethod",
+          "path":           "$context.path",
+          "routeKey":       "$context.routeKey",
+          "status":         "$context.status",
+          "protocol":       "$context.protocol",
           "responseLatency":"$context.responseLatency",
-          "responseLength":"$context.responseLength"
+          "responseLength": "$context.responseLength"
           }
 
   IPVCoreExternalAPILogGroup:
