@@ -40,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
@@ -175,6 +176,18 @@ class AuthorizationRequestHelperTest {
         assertEquals(
                 String.format("%s?id=%s", CORE_FRONT_CALLBACK_URL, CRI_ID),
                 signedJWT.getJWTClaimsSet().getClaims().get("redirect_uri"));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUnableToEncryptJwt() throws JOSEException {
+        HttpResponseExceptionWithErrorBody exception =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () ->
+                                AuthorizationRequestHelper.createJweObject(
+                                        mock(RSAEncrypter.class), SignedJWT.parse(SIGNED_JWT)));
+        assertEquals(500, exception.getResponseCode());
+        assertEquals("Failed to encrypt JWT", exception.getErrorReason());
     }
 
     private PrivateKey getEncryptionPrivateKey()

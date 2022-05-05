@@ -11,13 +11,16 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
+import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 import uk.org.webcompere.systemstubs.properties.SystemProperties;
 
 import java.net.URI;
+import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.List;
@@ -261,5 +264,15 @@ class ConfigurationServiceTest {
         String clientIssuer = "aClientTokenTtl";
         when(ssmProvider.get("/test/core/self/maxAllowedAuthClientTtl")).thenReturn(clientIssuer);
         assertEquals(clientIssuer, configurationService.getMaxAllowedAuthClientTtl());
+    }
+
+    @Test
+    void shouldReturnEncryptionPublicKey() throws HttpResponseExceptionWithErrorBody {
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/credentialIssuers/aClientId/jarEncryptionPublicJwk"))
+                .thenReturn(TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK);
+        PublicKey publicKey = configurationService.getEncryptionPublicKey("aClientId");
+        assertEquals("RSA", publicKey.getAlgorithm());
+        assertEquals("X.509", publicKey.getFormat());
     }
 }
