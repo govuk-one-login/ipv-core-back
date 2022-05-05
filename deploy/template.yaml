@@ -173,6 +173,8 @@ Resources:
             ParameterName: !Sub ${Environment}/core/self/signingKeyId
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/jwtTtlSeconds
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/audienceForClients
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -224,6 +226,8 @@ Resources:
             ParameterName: !Sub ${Environment}/core/self/signingKeyId
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/jwtTtlSeconds
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/audienceForClients
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/coreFrontCallbackUrl
         - SSMParameterReadPolicy:
