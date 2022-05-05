@@ -71,6 +71,7 @@ class CredentialIssuerStartHandlerTest {
     public static final String CRI_TOKEN_URL = "http://www.example.com";
     public static final String CRI_CREDENTIAL_URL = "http://www.example.com/credential";
     public static final String CRI_AUTHORIZE_URL = "http://www.example.com/authorize";
+    public static final String IPV_ISSUER = "http://www.example.com/issuer";
     public static final String CRI_AUDIENCE = "http://www.example.com/audience";
     public static final String IPV_CLIENT_ID = "ipv-core";
     public static final String SESSION_ID = "the-session-id";
@@ -133,6 +134,7 @@ class CredentialIssuerStartHandlerTest {
         when(configurationService.getCoreFrontCallbackUrl()).thenReturn("callbackUrl");
         when(configurationService.getEncryptionPublicKey(CRI_ID))
                 .thenReturn(getEncryptionPublicKey());
+        when(configurationService.getAudienceForClients()).thenReturn(IPV_ISSUER);
         when(configurationService.getClientAudience(anyString())).thenReturn(CRI_AUDIENCE);
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
                 .thenReturn(
@@ -185,7 +187,7 @@ class CredentialIssuerStartHandlerTest {
         JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
 
         assertEquals(IPV_CLIENT_ID, signedJWT.getJWTClaimsSet().getClaim("client_id"));
-        assertEquals(IPV_CLIENT_ID, signedJWT.getJWTClaimsSet().getIssuer());
+        assertEquals(IPV_ISSUER, signedJWT.getJWTClaimsSet().getIssuer());
         assertEquals(IPV_CLIENT_ID, signedJWT.getJWTClaimsSet().getSubject());
         assertEquals(CRI_AUDIENCE, signedJWT.getJWTClaimsSet().getAudience().get(0));
 
