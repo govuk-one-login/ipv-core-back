@@ -38,44 +38,6 @@ Resources:
           Parameters:
             Location: "../openAPI/core-back-external.yaml"
 
-  IPVSharedAttributesFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: !Sub "ipv-shared-attributes-${Environment}"
-      Handler: uk.gov.di.ipv.core.sharedattributes.SharedAttributesHandler::handleRequest
-      Runtime: java11
-      PackageType: Zip
-      CodeUri: ../lambdas/sharedattributes
-      Architectures:
-        - x86_64
-      MemorySize: 512
-      Tracing: Active
-      Environment:
-        Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub shared-attributes-${Environment}
-          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
-          SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref UserIssuedCredentialsTable
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/signingKeyId
-        - Statement:
-          - Sid: kmsSigningKeyPermission
-            Effect: Allow
-            Action:
-              - 'kms:sign'
-            Resource:
-              - !ImportValue SigningKeyArn
-      Events:
-        IPVCoreInternalAPI:
-          Type: Api
-          Properties:
-            RestApiId: !Ref IPVCoreInternalAPI
-            Path: /shared-attributes
-            Method: GET
-
   IPVAccessTokenFunction:
     Type: AWS::Serverless::Function
     Properties:
