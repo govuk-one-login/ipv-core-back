@@ -26,34 +26,6 @@ Resources:
           Name: "AWS::Include"
           Parameters:
             Location: "../openAPI/core-back-internal.yaml"
-      AccessLogSetting:
-        DestinationArn: !GetAtt IPVCoreInternalAPILogGroup.Arn
-        Format: >-
-          {
-          "requestId":"$context.requestId",
-          "ip":"$context.identity.sourceIp",
-          "requestTime":"$context.requestTime",
-          "httpMethod":"$context.httpMethod",
-          "path":"$context.path",
-          "routeKey":"$context.routeKey",
-          "status":"$context.status",
-          "protocol":"$context.protocol",
-          "responseLatency":"$context.responseLatency",
-          "responseLength":"$context.responseLength"
-          }
-
-  IPVCoreInternalAPILogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-CoreBackInternal-API-GW-AccessLogs
-      RetentionInDays: 14
-
-  IPVCoreInternalAPILogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref IPVCoreInternalAPILogGroup
 
   IPVCoreExternalAPI:
     Type: AWS::Serverless::Api
@@ -65,34 +37,6 @@ Resources:
           Name: "AWS::Include"
           Parameters:
             Location: "../openAPI/core-back-external.yaml"
-      AccessLogSetting:
-        DestinationArn: !GetAtt IPVCoreExternalAPILogGroup.Arn
-        Format: >-
-          {
-          "requestId":"$context.requestId",
-          "ip":"$context.identity.sourceIp",
-          "requestTime":"$context.requestTime",
-          "httpMethod":"$context.httpMethod",
-          "path":"$context.path",
-          "routeKey":"$context.routeKey",
-          "status":"$context.status",
-          "protocol":"$context.protocol",
-          "responseLatency":"$context.responseLatency",
-          "responseLength":"$context.responseLength"
-          }
-
-  IPVCoreExternalAPILogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-CoreBackExternal-API-GW-AccessLogs
-      RetentionInDays: 14
-
-  IPVCoreExternalAPILogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref IPVCoreExternalAPILogGroup
 
   IPVAccessTokenFunction:
     Type: AWS::Serverless::Function
@@ -131,19 +75,6 @@ Resources:
             Path: /token
             Method: POST
 
-  IPVAccessTokenFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVAccessTokenFunction}"
-
-  IPVAccessTokenFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref IPVAccessTokenFunctionLogGroup
-
   IPVSessionEndFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -180,19 +111,6 @@ Resources:
             Path: /journey/session/end
             Method: POST
 
-  IPVSessionEndFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVSessionEndFunction}"
-
-  IPVSessionEndFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref IPVSessionEndFunctionLogGroup
-
   IPVSessionStartFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -223,19 +141,6 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /session/start
             Method: POST
-
-  IPVSessionStartFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVSessionStartFunction}"
-
-  IPVSessionStartFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref IPVSessionStartFunctionLogGroup
 
   IPVCriReturnFunction:
     Type: AWS::Serverless::Function
@@ -293,19 +198,6 @@ Resources:
             Path: /journey/cri/return
             Method: POST
 
-  IPVCriReturnFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVCriReturnFunction}"
-
-  IPVCriReturnFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref IPVCriReturnFunctionLogGroup
-
   IPVCredentialIssuerStartFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -354,19 +246,6 @@ Resources:
             Path: /journey/cri/start/{criId}
             Method: POST
 
-  IPVCredentialIssuerStartFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVCredentialIssuerStartFunction}"
-
-  IPVCredentialIssuerStartFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref IPVCredentialIssuerStartFunctionLogGroup
-
   IPVCredentialIssuerErrorFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -397,19 +276,6 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /journey/cri/error
             Method: POST
-
-  IPVCredentialIssuerErrorFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVCredentialIssuerErrorFunction}"
-
-  IPVCredentialIssuerErrorFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref IPVCredentialIssuerErrorFunctionLogGroup
 
   IPVUserIdentityFunction:
     Type: AWS::Serverless::Function
@@ -445,19 +311,6 @@ Resources:
             Path: /user-identity
             Method: GET
 
-  IPVUserIdentityFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVUserIdentityFunction}"
-
-  IPVUserIdentityFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref IPVUserIdentityFunctionLogGroup
-
   IPVCredentialIssuerConfig:
     Type: AWS::Serverless::Function
     Properties:
@@ -489,19 +342,6 @@ Resources:
             Path: /request-config
             Method: GET
 
-  IPVCredentialIssuerFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVCredentialIssuerConfig}"
-
-  IPVCredentialIssuerFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref IPVCredentialIssuerFunctionLogGroup
-
   IPVIssuedCredentials:
     Type: AWS::Serverless::Function
     Properties:
@@ -532,19 +372,6 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /issued-credentials
             Method: GET
-
-  IPVIssuedCredentialsFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVIssuedCredentials}"
-
-  IPVIssuedCredentialsFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref IPVIssuedCredentialsFunctionLogGroup
 
   IPVJourneyEngineFunction:
     Type: AWS::Serverless::Function
@@ -578,19 +405,6 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /journey/{journeyStep}
             Method: POST
-
-  IPVJourneyEngineFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVJourneyEngineFunction}"
-
-  IPVJourneyEngineFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref IPVJourneyEngineFunctionLogGroup
 
   UserIssuedCredentialsTable:
     Type: AWS::DynamoDB::Table
