@@ -52,6 +52,7 @@ class AuthorizationRequestHelperTest {
 
     public static final String CLIENT_ID_FIELD = "client_id";
     public static final String IPV_CLIENT_ID_VALUE = "testClientId";
+    public static final String IPV_ISSUER = "http://example.com/issuer";
     public static final String AUDIENCE = "Audience";
     public static final String IPV_TOKEN_TTL = "900";
     public static final String CORE_FRONT_CALLBACK_URL = "callbackUri";
@@ -86,11 +87,12 @@ class AuthorizationRequestHelperTest {
                         signer,
                         CRI_ID,
                         IPV_CLIENT_ID_VALUE,
+                        IPV_ISSUER,
                         AUDIENCE,
                         IPV_TOKEN_TTL,
                         CORE_FRONT_CALLBACK_URL);
 
-        assertEquals(IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getIssuer());
+        assertEquals(IPV_ISSUER, result.getJWTClaimsSet().getIssuer());
         assertEquals(IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getSubject());
         assertEquals(AUDIENCE, result.getJWTClaimsSet().getAudience().get(0));
         assertEquals(sharedClaims, result.getJWTClaimsSet().getClaims().get(SHARED_CLAIMS));
@@ -111,6 +113,7 @@ class AuthorizationRequestHelperTest {
                         signer,
                         CRI_ID,
                         IPV_CLIENT_ID_VALUE,
+                        IPV_ISSUER,
                         AUDIENCE,
                         IPV_TOKEN_TTL,
                         CORE_FRONT_CALLBACK_URL);
@@ -128,6 +131,7 @@ class AuthorizationRequestHelperTest {
                                         jwsSigner,
                                         CRI_ID,
                                         IPV_CLIENT_ID_VALUE,
+                                        IPV_ISSUER,
                                         AUDIENCE,
                                         IPV_TOKEN_TTL,
                                         CORE_FRONT_CALLBACK_URL));
@@ -146,6 +150,7 @@ class AuthorizationRequestHelperTest {
                                         jwsSigner,
                                         CRI_ID,
                                         IPV_CLIENT_ID_VALUE,
+                                        IPV_ISSUER,
                                         AUDIENCE,
                                         IPV_TOKEN_TTL,
                                         "[[]]]][[["));

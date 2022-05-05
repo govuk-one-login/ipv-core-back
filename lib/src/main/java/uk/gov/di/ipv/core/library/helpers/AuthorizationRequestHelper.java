@@ -41,6 +41,7 @@ public class AuthorizationRequestHelper {
             JWSSigner signer,
             String criId,
             String ipvClientId,
+            String issuer,
             String audience,
             String ipvTokenTtl,
             String coreFrontCallbackUrl)
@@ -64,7 +65,7 @@ public class AuthorizationRequestHelper {
         JWTClaimsSet.Builder claimsSetBuilder =
                 new JWTClaimsSet.Builder(authClaimsSet)
                         .audience(audience)
-                        .issuer(ipvClientId)
+                        .issuer(issuer)
                         .issueTime(Date.from(now))
                         .expirationTime(
                                 Date.from(
