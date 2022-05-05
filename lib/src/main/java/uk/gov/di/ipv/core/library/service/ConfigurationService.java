@@ -212,7 +212,8 @@ public class ConfigurationService {
     public String getClientAudience(String clientId) {
         return ssmProvider.get(
                 String.format(
-                        "/%s/core/clients/%s/audience", System.getenv(ENVIRONMENT), clientId));
+                        "/%s/core/credentialIssuers/%s/audienceForClients",
+                        System.getenv(ENVIRONMENT), clientId));
     }
 
     public String getClientSubject(String clientId) {

@@ -43,6 +43,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -72,6 +73,7 @@ class CredentialIssuerServiceTest {
     @Test
     void validTokenResponse(WireMockRuntimeInfo wmRuntimeInfo) {
         when(mockConfigurationService.getIpvTokenTtl()).thenReturn("900");
+        when(mockConfigurationService.getClientAudience(anyString())).thenReturn("test-audience");
         stubFor(
                 post("/token")
                         .willReturn(
@@ -101,6 +103,7 @@ class CredentialIssuerServiceTest {
     @Test
     void tokenErrorResponse(WireMockRuntimeInfo wmRuntimeInfo) {
         when(mockConfigurationService.getIpvTokenTtl()).thenReturn("900");
+        when(mockConfigurationService.getClientAudience(anyString())).thenReturn("test-audience");
         var errorJson =
                 "{ \"error\": \"invalid_request\", \"error_description\": \"Request was missing the 'redirect_uri' parameter.\", \"error_uri\": \"See the full API docs at https://authorization-server.com/docs/access_token\"}";
         stubFor(
@@ -134,6 +137,7 @@ class CredentialIssuerServiceTest {
     @Test
     void invalidHeaderThrowsCredentialIssuerException(WireMockRuntimeInfo wmRuntimeInfo) {
         when(mockConfigurationService.getIpvTokenTtl()).thenReturn("900");
+        when(mockConfigurationService.getClientAudience(anyString())).thenReturn("test-audience");
         stubFor(
                 post("/token")
                         .willReturn(
