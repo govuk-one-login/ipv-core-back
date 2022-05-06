@@ -39,6 +39,7 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Objects;
+import java.util.UUID;
 
 import static com.nimbusds.jose.JWSAlgorithm.ES256;
 
@@ -86,7 +87,8 @@ public class CredentialIssuerService {
                             configurationService.getClientAudience(config.getId()),
                             dateTime.plusSeconds(
                                             Long.parseLong(configurationService.getIpvTokenTtl()))
-                                    .toEpochSecond());
+                                    .toEpochSecond(),
+                            UUID.randomUUID().toString());
             SignedJWT signedClientJwt =
                     JwtHelper.createSignedJwtFromObject(clientAuthClaims, signer);
 
