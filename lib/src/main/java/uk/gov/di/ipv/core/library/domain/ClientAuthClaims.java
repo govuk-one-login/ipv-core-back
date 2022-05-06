@@ -8,12 +8,14 @@ public class ClientAuthClaims {
     private final String sub;
     private final String aud;
     private final long exp;
+    private final String jti;
 
-    public ClientAuthClaims(String iss, String sub, String aud, long exp) {
+    public ClientAuthClaims(String iss, String sub, String aud, long exp, String jti) {
         this.iss = iss;
         this.sub = sub;
         this.aud = aud;
         this.exp = exp;
+        this.jti = jti;
     }
 
     public String getIss() {
@@ -30,5 +32,9 @@ public class ClientAuthClaims {
 
     public long getExp() {
         return exp;
+    }
+
+    public String getJti() {
+        return jti;
     }
 }
