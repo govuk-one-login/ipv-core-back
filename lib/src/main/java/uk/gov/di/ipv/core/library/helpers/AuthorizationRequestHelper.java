@@ -20,7 +20,9 @@ import com.nimbusds.oauth2.sdk.id.State;
 import org.apache.http.client.utils.URIBuilder;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.SharedAttributesResponse;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -39,18 +41,19 @@ public class AuthorizationRequestHelper {
     public static SignedJWT createSignedJWT(
             SharedAttributesResponse sharedClaims,
             JWSSigner signer,
-            String criId,
-            String ipvClientId,
-            String issuer,
-            String audience,
-            String ipvTokenTtl,
-            String coreFrontCallbackUrl)
+            CredentialIssuerConfig credentialIssuerConfig,
+            ConfigurationService configurationService)
             throws HttpResponseExceptionWithErrorBody {
         Instant now = Instant.now();
 
+        String ipvClientId = credentialIssuerConfig.getIpvClientId();
+
         ClientID clientID = new ClientID(ipvClientId);
 
-        URI redirectionURI = getRedirectionURI(criId, coreFrontCallbackUrl);
+        String criId = credentialIssuerConfig.getId();
+
+        URI redirectionURI =
+                getRedirectionURI(criId, configurationService.getCoreFrontCallbackUrl());
 
         JWSHeader header =
                 new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build();
@@ -64,12 +67,15 @@ public class AuthorizationRequestHelper {
 
         JWTClaimsSet.Builder claimsSetBuilder =
                 new JWTClaimsSet.Builder(authClaimsSet)
-                        .audience(audience)
-                        .issuer(issuer)
+                        .audience(configurationService.getClientAudience(criId))
+                        .issuer(configurationService.getAudienceForClients())
                         .issueTime(Date.from(now))
                         .expirationTime(
                                 Date.from(
-                                        now.plus(Long.parseLong(ipvTokenTtl), ChronoUnit.SECONDS)))
+                                        now.plus(
+                                                Long.parseLong(
+                                                        configurationService.getIpvTokenTtl()),
+                                                ChronoUnit.SECONDS)))
                         .notBeforeTime(Date.from(now))
                         .subject(ipvClientId);
 

@@ -103,12 +103,8 @@ public class CredentialIssuerStartHandler
                     AuthorizationRequestHelper.createSignedJWT(
                             sharedAttributesResponse,
                             signer,
-                            credentialIssuerConfig.getId(),
-                            credentialIssuerConfig.getIpvClientId(),
-                            configurationService.getAudienceForClients(),
-                            configurationService.getClientAudience(credentialIssuerConfig.getId()),
-                            configurationService.getIpvTokenTtl(),
-                            configurationService.getCoreFrontCallbackUrl());
+                            credentialIssuerConfig,
+                            configurationService);
 
             RSAEncrypter rsaEncrypter =
                     new RSAEncrypter(
