@@ -20,7 +20,9 @@ import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.SharedAttributesResponse;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -40,7 +42,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
@@ -68,6 +72,11 @@ class AuthorizationRequestHelperTest {
     private ECDSASigner signer;
 
     @Mock JWSSigner jwsSigner;
+
+    @Mock CredentialIssuerConfig credentialIssuerConfig;
+
+    @Mock ConfigurationService configurationService;
+
     private RSAEncrypter rsaEncrypter;
 
     @BeforeEach
@@ -81,17 +90,12 @@ class AuthorizationRequestHelperTest {
     @Test
     void shouldCreateSignedJWTWithCorrectClaims()
             throws JOSEException, ParseException, HttpResponseExceptionWithErrorBody {
+        setupCredentialIssuerConfigMock();
+        setupConfigurationServiceMock();
 
         SignedJWT result =
                 AuthorizationRequestHelper.createSignedJWT(
-                        sharedClaims,
-                        signer,
-                        CRI_ID,
-                        IPV_CLIENT_ID_VALUE,
-                        IPV_ISSUER,
-                        AUDIENCE,
-                        IPV_TOKEN_TTL,
-                        CORE_FRONT_CALLBACK_URL);
+                        sharedClaims, signer, credentialIssuerConfig, configurationService);
 
         assertEquals(IPV_ISSUER, result.getJWTClaimsSet().getIssuer());
         assertEquals(IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getSubject());
@@ -108,21 +112,20 @@ class AuthorizationRequestHelperTest {
     @Test
     void shouldNotReturnSharedClaimsIfSharedClaimsMapIsEmpty()
             throws ParseException, HttpResponseExceptionWithErrorBody {
+        setupCredentialIssuerConfigMock();
+        setupConfigurationServiceMock();
+
         SignedJWT result =
                 AuthorizationRequestHelper.createSignedJWT(
-                        null,
-                        signer,
-                        CRI_ID,
-                        IPV_CLIENT_ID_VALUE,
-                        IPV_ISSUER,
-                        AUDIENCE,
-                        IPV_TOKEN_TTL,
-                        CORE_FRONT_CALLBACK_URL);
+                        null, signer, credentialIssuerConfig, configurationService);
         assertNull(result.getJWTClaimsSet().getClaims().get(SHARED_CLAIMS));
     }
 
     @Test
     void shouldThrowExceptionWhenUnableToSignJwt() {
+        setupCredentialIssuerConfigMock();
+        setupConfigurationServiceMock();
+
         HttpResponseExceptionWithErrorBody exception =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
@@ -130,18 +133,17 @@ class AuthorizationRequestHelperTest {
                                 AuthorizationRequestHelper.createSignedJWT(
                                         null,
                                         jwsSigner,
-                                        CRI_ID,
-                                        IPV_CLIENT_ID_VALUE,
-                                        IPV_ISSUER,
-                                        AUDIENCE,
-                                        IPV_TOKEN_TTL,
-                                        CORE_FRONT_CALLBACK_URL));
+                                        credentialIssuerConfig,
+                                        configurationService));
         assertEquals(500, exception.getResponseCode());
         assertEquals("Failed to sign Shared Attributes", exception.getErrorReason());
     }
 
     @Test
     void shouldThrowExceptionWhenUnableToBuildRedirectionUri() {
+        setupCredentialIssuerConfigMock();
+        when(configurationService.getCoreFrontCallbackUrl()).thenReturn("[[]]]][[[");
+
         HttpResponseExceptionWithErrorBody exception =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
@@ -149,12 +151,8 @@ class AuthorizationRequestHelperTest {
                                 AuthorizationRequestHelper.createSignedJWT(
                                         null,
                                         jwsSigner,
-                                        CRI_ID,
-                                        IPV_CLIENT_ID_VALUE,
-                                        IPV_ISSUER,
-                                        AUDIENCE,
-                                        IPV_TOKEN_TTL,
-                                        "[[]]]][[["));
+                                        credentialIssuerConfig,
+                                        configurationService));
         assertEquals(500, exception.getResponseCode());
         assertEquals("Failed to build Core Front Callback Url", exception.getErrorReason());
     }
@@ -193,6 +191,18 @@ class AuthorizationRequestHelperTest {
                                         mock(RSAEncrypter.class), SignedJWT.parse(SIGNED_JWT)));
         assertEquals(500, exception.getResponseCode());
         assertEquals("Failed to encrypt JWT", exception.getErrorReason());
+    }
+
+    private void setupCredentialIssuerConfigMock() {
+        when(credentialIssuerConfig.getId()).thenReturn(CRI_ID);
+        when(credentialIssuerConfig.getIpvClientId()).thenReturn(IPV_CLIENT_ID_VALUE);
+    }
+
+    private void setupConfigurationServiceMock() {
+        when(configurationService.getCoreFrontCallbackUrl()).thenReturn(CORE_FRONT_CALLBACK_URL);
+        when(configurationService.getIpvTokenTtl()).thenReturn(IPV_TOKEN_TTL);
+        when(configurationService.getAudienceForClients()).thenReturn(IPV_ISSUER);
+        when(configurationService.getClientAudience(anyString())).thenReturn(AUDIENCE);
     }
 
     private PrivateKey getEncryptionPrivateKey()
