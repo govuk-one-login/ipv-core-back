@@ -6,10 +6,14 @@ import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.crypto.impl.ECDSA;
+import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
 import java.util.Map;
+
+import static com.nimbusds.jose.JWSAlgorithm.ES256;
 
 public class JwtHelper {
 
@@ -37,5 +41,21 @@ public class JwtHelper {
                 .forEach((key, value) -> claimsBuilder.claim((String) key, value));
 
         return claimsBuilder.build();
+    }
+
+    public static SignedJWT transcodeSignature(SignedJWT signedJWT)
+            throws JOSEException, java.text.ParseException {
+        Base64URL transcodedSignatureBase64 =
+                Base64URL.encode(
+                        ECDSA.transcodeSignatureToConcat(
+                                signedJWT.getSignature().decode(),
+                                ECDSA.getSignatureByteArrayLength(ES256)));
+        String[] jwtParts = signedJWT.serialize().split("\\.");
+        return SignedJWT.parse(
+                String.format("%s.%s.%s", jwtParts[0], jwtParts[1], transcodedSignatureBase64));
+    }
+
+    public static boolean signatureIsDerFormat(SignedJWT signedJWT) throws JOSEException {
+        return signedJWT.getSignature().decode().length != ECDSA.getSignatureByteArrayLength(ES256);
     }
 }

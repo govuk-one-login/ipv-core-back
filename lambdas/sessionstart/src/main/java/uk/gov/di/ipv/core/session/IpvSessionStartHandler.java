@@ -6,6 +6,8 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.JWEObject;
+import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
@@ -14,10 +16,14 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.exceptions.JarValidationException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.KmsRsaDecrypter;
+import uk.gov.di.ipv.core.library.validation.JarValidator;
 
+import java.text.ParseException;
 import java.util.Map;
 import java.util.Optional;
 
@@ -30,19 +36,27 @@ public class IpvSessionStartHandler
     private static final String IPV_SESSION_ID_KEY = "ipvSessionId";
 
     private final ConfigurationService configurationService;
-
     private final IpvSessionService ipvSessionService;
+    private final KmsRsaDecrypter kmsRsaDecrypter;
+    private final JarValidator jarValidator;
 
     @ExcludeFromGeneratedCoverageReport
     public IpvSessionStartHandler() {
         this.configurationService = new ConfigurationService();
         this.ipvSessionService = new IpvSessionService(configurationService);
+        this.kmsRsaDecrypter = new KmsRsaDecrypter(configurationService.getJarKmsEncryptionKeyId());
+        this.jarValidator = new JarValidator(kmsRsaDecrypter, configurationService);
     }
 
     public IpvSessionStartHandler(
-            IpvSessionService ipvSessionService, ConfigurationService configurationService) {
+            IpvSessionService ipvSessionService,
+            ConfigurationService configurationService,
+            KmsRsaDecrypter kmsRsaDecrypter,
+            JarValidator jarValidator) {
         this.ipvSessionService = ipvSessionService;
         this.configurationService = configurationService;
+        this.kmsRsaDecrypter = kmsRsaDecrypter;
+        this.jarValidator = jarValidator;
     }
 
     @Override
@@ -61,6 +75,10 @@ public class IpvSessionStartHandler
                         HttpStatus.SC_BAD_REQUEST, error.get());
             }
 
+            SignedJWT signedJWT = decryptRequest(clientSessionDetails.getRequest());
+
+            jarValidator.validateRequestJwt(signedJWT, clientSessionDetails.getClientId());
+
             String ipvSessionId = ipvSessionService.generateIpvSession(clientSessionDetails);
 
             Map<String, String> response = Map.of(IPV_SESSION_ID_KEY, ipvSessionId);
@@ -69,6 +87,14 @@ public class IpvSessionStartHandler
         } catch (IllegalArgumentException | JsonProcessingException e) {
             LOGGER.error(
                     "Failed to parse the request body into a ClientSessionDetailsDto object", e);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
+        } catch (ParseException e) {
+            LOGGER.error("Failed to parse the decrypted JWE because: {}", e.getMessage());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
+        } catch (JarValidationException e) {
+            LOGGER.error("Jar validation failed because: {}", e.getErrorObject().getDescription());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
         }
@@ -106,5 +132,16 @@ public class IpvSessionStartHandler
             return Optional.of(ErrorResponse.INVALID_SESSION_REQUEST);
         }
         return Optional.empty();
+    }
+
+    private SignedJWT decryptRequest(String jarString)
+            throws ParseException, JarValidationException {
+        try {
+            JWEObject jweObject = JWEObject.parse(jarString);
+            return jarValidator.decryptJWE(jweObject);
+        } catch (ParseException e) {
+            LOGGER.info("The JAR is not currently encrypted. Skipping the decryption step.");
+            return SignedJWT.parse(jarString);
+        }
     }
 }

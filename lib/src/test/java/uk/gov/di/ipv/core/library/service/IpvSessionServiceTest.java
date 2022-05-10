@@ -64,7 +64,8 @@ class IpvSessionServiceTest {
                                 "http://example.come",
                                 "test-scope",
                                 "test-state",
-                                false));
+                                false,
+                                null));
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -88,7 +89,8 @@ class IpvSessionServiceTest {
                                 "http://example.come",
                                 "test-scope",
                                 "test-state",
-                                true));
+                                true,
+                                null));
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
