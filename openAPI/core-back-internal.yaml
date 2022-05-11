@@ -19,7 +19,7 @@ paths:
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCredentialIssuerConfig.Arn}/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCredentialIssuerConfig.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
   /issued-credentials:
@@ -35,7 +35,7 @@ paths:
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVIssuedCredentials.Arn}/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVIssuedCredentials.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
   /session/start:
@@ -51,7 +51,7 @@ paths:
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVSessionStartFunction.Arn}/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVSessionStartFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
   /journey/cri/return:
@@ -67,7 +67,7 @@ paths:
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCriReturnFunction.Arn}/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCriReturnFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
   /journey/cri/error:
@@ -83,7 +83,7 @@ paths:
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCredentialIssuerErrorFunction.Arn}/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCredentialIssuerErrorFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
   /journey/session/end:
@@ -99,7 +99,7 @@ paths:
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVSessionEndFunction.Arn}/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVSessionEndFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
   /journey/{journeyStep}:
@@ -115,7 +115,7 @@ paths:
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVJourneyEngineFunction.Arn}/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVJourneyEngineFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
   /journey/cri/start/{criId}:
@@ -131,7 +131,7 @@ paths:
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCredentialIssuerStartFunction.Arn}/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCredentialIssuerStartFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
 

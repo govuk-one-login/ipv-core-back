@@ -13,6 +13,17 @@ Globals:
 Parameters:
   Environment:
     Type: String
+  ProvisionedConcurrentExecutions:
+    Type: Number
+    Description: >-
+      The number of lambda execution environments to keep permanently ready to reduce cold starts.
+    Default: 0
+
+Conditions:
+  AddProvisionedConcurrency: !Not
+    - !Equals
+      - !Ref ProvisionedConcurrentExecutions
+      -  0
 
 Resources:
 
@@ -130,6 +141,12 @@ Resources:
             RestApiId: !Ref IPVCoreExternalAPI
             Path: /token
             Method: POST
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - !Ref AWS::NoValue
 
   IPVAccessTokenFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -179,6 +196,12 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /journey/session/end
             Method: POST
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - !Ref AWS::NoValue
 
   IPVSessionEndFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -239,6 +262,12 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /session/start
             Method: POST
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - !Ref AWS::NoValue
 
   IPVSessionStartFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -310,6 +339,12 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /journey/cri/return
             Method: POST
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - !Ref AWS::NoValue
 
   IPVCriReturnFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -373,6 +408,12 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /journey/cri/start/{criId}
             Method: POST
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - !Ref AWS::NoValue
 
   IPVCredentialIssuerStartFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -417,6 +458,12 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /journey/cri/error
             Method: POST
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - !Ref AWS::NoValue
 
   IPVCredentialIssuerErrorFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -464,6 +511,12 @@ Resources:
               Ref: IPVCoreExternalAPI
             Path: /user-identity
             Method: GET
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - !Ref AWS::NoValue
 
   IPVUserIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -508,6 +561,12 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /request-config
             Method: GET
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - !Ref AWS::NoValue
 
   IPVCredentialIssuerFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -552,6 +611,12 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /issued-credentials
             Method: GET
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - !Ref AWS::NoValue
 
   IPVIssuedCredentialsFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -598,6 +663,12 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /journey/{journeyStep}
             Method: POST
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - !Ref AWS::NoValue
 
   IPVJourneyEngineFunctionLogGroup:
     Type: AWS::Logs::LogGroup
