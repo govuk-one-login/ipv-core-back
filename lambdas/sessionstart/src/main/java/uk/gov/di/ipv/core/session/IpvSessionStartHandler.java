@@ -75,9 +75,10 @@ public class IpvSessionStartHandler
                         HttpStatus.SC_BAD_REQUEST, error.get());
             }
 
-            SignedJWT signedJWT = decryptRequest(clientSessionDetails.getRequest());
-
-            jarValidator.validateRequestJwt(signedJWT, clientSessionDetails.getClientId());
+            if (StringUtils.isNotBlank(clientSessionDetails.getRequest())) {
+                SignedJWT signedJWT = decryptRequest(clientSessionDetails.getRequest());
+                jarValidator.validateRequestJwt(signedJWT, clientSessionDetails.getClientId());
+            }
 
             String ipvSessionId = ipvSessionService.generateIpvSession(clientSessionDetails);
 
