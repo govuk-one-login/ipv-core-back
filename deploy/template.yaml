@@ -221,6 +221,8 @@ Resources:
             ParameterName: !Sub ${Environment}/core/self/audienceForClients
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/maxAllowedAuthClientTtl
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/jarKmsEncryptionKeyId
         - Statement:
             - Sid: jarKmsEncryptionKeyPermission
               Effect: Allow

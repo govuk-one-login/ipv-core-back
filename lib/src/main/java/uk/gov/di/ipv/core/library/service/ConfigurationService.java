@@ -177,7 +177,7 @@ public class ConfigurationService {
     public String getJarKmsEncryptionKeyId() {
         return ssmProvider.get(
                 String.format(
-                        "/%s/core/self/jarKmsEncryptionPublicKey", System.getenv(ENVIRONMENT)));
+                        "/%s/core/self/jarKmsEncryptionKeyId", System.getenv(ENVIRONMENT)));
     }
 
     public String getAudienceForClients() {
