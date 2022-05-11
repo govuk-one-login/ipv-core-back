@@ -174,6 +174,12 @@ public class ConfigurationService {
         return ssmProvider.get(System.getenv("SIGNING_KEY_ID_PARAM"));
     }
 
+    public String getJarKmsEncryptionKeyId() {
+        return ssmProvider.get(
+                String.format(
+                        "/%s/core/self/jarKmsEncryptionPublicKey", System.getenv(ENVIRONMENT)));
+    }
+
     public String getAudienceForClients() {
         return ssmProvider.get(
                 String.format("/%s/core/self/audienceForClients", System.getenv(ENVIRONMENT)));

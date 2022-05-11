@@ -215,6 +215,20 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/clients/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/audienceForClients
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/maxAllowedAuthClientTtl
+        - Statement:
+            - Sid: jarKmsEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue CoreEncryptionKeyArn
       Events:
         IPVCoreInternalAPI:
           Type: Api
