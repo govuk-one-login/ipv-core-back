@@ -7,7 +7,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
-import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.lambda.powertools.tracing.Tracing;
@@ -38,6 +37,7 @@ public class CredentialIssuerReturnHandler
 
     private final CredentialIssuerService credentialIssuerService;
     private final ConfigurationService configurationService;
+    private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     private final IpvSessionService ipvSessionService;
@@ -45,11 +45,13 @@ public class CredentialIssuerReturnHandler
     public CredentialIssuerReturnHandler(
             CredentialIssuerService credentialIssuerService,
             ConfigurationService configurationService,
+            IpvSessionService ipvSessionService,
             AuditService auditService,
             VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
             IpvSessionService ipvSessionService) {
         this.credentialIssuerService = credentialIssuerService;
         this.configurationService = configurationService;
+        this.ipvSessionService = ipvSessionService;
         this.auditService = auditService;
         this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
         this.ipvSessionService = ipvSessionService;
@@ -64,6 +66,7 @@ public class CredentialIssuerReturnHandler
                         new KmsEs256Signer(configurationService.getSigningKeyId()));
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
+        this.ipvSessionService = new IpvSessionService(configurationService);
         this.verifiableCredentialJwtValidator =
                 new VerifiableCredentialJwtValidator(configurationService.getAudienceForClients());
         this.ipvSessionService = new IpvSessionService(configurationService);
@@ -80,6 +83,7 @@ public class CredentialIssuerReturnHandler
             auditService.sendAuditEvent(AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED);
 
             var errorResponse = validate(request);
+
             if (errorResponse.isPresent()) {
                 return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
             }
@@ -133,10 +137,26 @@ public class CredentialIssuerReturnHandler
             return Optional.of(ErrorResponse.MISSING_IPV_SESSION_ID);
         }
 
+        if (StringUtils.isBlank(request.getState())) {
+            return Optional.of(ErrorResponse.MISSING_OAUTH_STATE);
+        }
+
+        if (!request.getState().equals(getPersistedOauthState(request))) {
+            return Optional.of(ErrorResponse.INVALID_OAUTH_STATE);
+        }
+
         if (getCredentialIssuerConfig(request) == null) {
             return Optional.of(ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
         }
         return Optional.empty();
+    }
+
+    @Tracing
+    private String getPersistedOauthState(CredentialIssuerRequestDto request) {
+        return ipvSessionService
+                .getIpvSession(request.getIpvSessionId())
+                .getCredentialIssuerSessionDetails()
+                .getState();
     }
 
     @Tracing

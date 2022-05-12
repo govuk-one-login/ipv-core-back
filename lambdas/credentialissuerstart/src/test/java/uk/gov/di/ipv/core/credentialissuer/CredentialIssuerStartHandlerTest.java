@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -86,6 +87,7 @@ class CredentialIssuerStartHandlerTest {
     @Mock private ConfigurationService configurationService;
     @Mock private UserIdentityService userIdentityService;
     @Mock private AuditService mockAuditService;
+    @Mock private IpvSessionService ipvSessionService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private IpvSessionItem mockIpvSessionItem;
 
@@ -167,6 +169,7 @@ class CredentialIssuerStartHandlerTest {
                                 VTM));
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+        mockGetIPVSessionItem();
 
         APIGatewayProxyRequestEvent input = createRequestEvent(emptyMap(), emptyMap());
 
@@ -270,6 +273,12 @@ class CredentialIssuerStartHandlerTest {
         Map responseBody = getResponseBodyAsMap(response);
         assertEquals(HTTPResponse.SC_BAD_REQUEST, statusCode);
         assertEquals(errorResponse.getCode(), responseBody.get("code"));
+    }
+
+    private void mockGetIPVSessionItem() {
+        IpvSessionItem value = new IpvSessionItem();
+        value.setClientSessionDetails(new ClientSessionDetailsDto());
+        when(ipvSessionService.getIpvSession(SESSION_ID)).thenReturn(value);
     }
 
     private ECPrivateKey getSigningPrivateKey()

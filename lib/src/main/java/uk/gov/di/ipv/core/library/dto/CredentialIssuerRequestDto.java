@@ -12,15 +12,19 @@ public class CredentialIssuerRequestDto {
 
     private final String redirectUri;
 
+    private final String state;
+
     public CredentialIssuerRequestDto(
             @JsonProperty(value = "authorization_code") String authorizationCode,
             @JsonProperty(value = "credential_issuer_id") String credentialIssuerId,
             @JsonProperty(value = "ipv_session_id") String ipvSessionId,
-            @JsonProperty(value = "redirect_uri") String redirectUri) {
+            @JsonProperty(value = "redirect_uri") String redirectUri,
+            @JsonProperty(value = "state") String state) {
         this.authorizationCode = authorizationCode;
         this.credentialIssuerId = credentialIssuerId;
         this.ipvSessionId = ipvSessionId;
         this.redirectUri = redirectUri;
+        this.state = state;
     }
 
     public String getAuthorizationCode() {
@@ -37,5 +41,9 @@ public class CredentialIssuerRequestDto {
 
     public String getRedirectUri() {
         return redirectUri;
+    }
+
+    public String getState() {
+        return state;
     }
 }

@@ -37,6 +37,7 @@ import java.text.ParseException;
 import java.util.Base64;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -62,6 +63,7 @@ class AuthorizationRequestHelperTest {
     public static final String CORE_FRONT_CALLBACK_URL = "callbackUri";
     public static final String CRI_ID = "cri_id";
     public static final String TEST_USER_ID = "test-user-id";
+    public static final UUID OAUTH_STATE = UUID.randomUUID();
 
     private final SharedAttributesResponse sharedClaims =
             new SharedAttributesResponse(
@@ -100,12 +102,14 @@ class AuthorizationRequestHelperTest {
                         signer,
                         credentialIssuerConfig,
                         configurationService,
+                        OAUTH_STATE,
                         TEST_USER_ID);
 
         assertEquals(IPV_ISSUER, result.getJWTClaimsSet().getIssuer());
         assertEquals(TEST_USER_ID, result.getJWTClaimsSet().getSubject());
         assertEquals(AUDIENCE, result.getJWTClaimsSet().getAudience().get(0));
         assertEquals(sharedClaims, result.getJWTClaimsSet().getClaims().get(SHARED_CLAIMS));
+        assertEquals(OAUTH_STATE.toString(), result.getJWTClaimsSet().getClaim("state"));
         assertEquals(
                 IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getClaims().get(CLIENT_ID_FIELD));
         assertEquals(
@@ -122,7 +126,7 @@ class AuthorizationRequestHelperTest {
 
         SignedJWT result =
                 AuthorizationRequestHelper.createSignedJWT(
-                        null, signer, credentialIssuerConfig, configurationService, TEST_USER_ID);
+                        null, signer, credentialIssuerConfig, configurationService, OAUTH_STATE, TEST_USER_ID);
         assertNull(result.getJWTClaimsSet().getClaims().get(SHARED_CLAIMS));
     }
 
@@ -140,6 +144,7 @@ class AuthorizationRequestHelperTest {
                                         jwsSigner,
                                         credentialIssuerConfig,
                                         configurationService,
+                                        OAUTH_STATE,
                                         TEST_USER_ID));
         assertEquals(500, exception.getResponseCode());
         assertEquals("Failed to sign Shared Attributes", exception.getErrorReason());
@@ -159,6 +164,7 @@ class AuthorizationRequestHelperTest {
                                         jwsSigner,
                                         credentialIssuerConfig,
                                         configurationService,
+                                        OAUTH_STATE,
                                         TEST_USER_ID));
         assertEquals(500, exception.getResponseCode());
         assertEquals("Failed to build Core Front Callback Url", exception.getErrorReason());
