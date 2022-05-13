@@ -25,9 +25,6 @@ Conditions:
       - !Ref ProvisionedConcurrentExecutions
       -  0
 
-  SendLogsToSplunk: !Not
-    - !Equals [ !Ref Environment, integration ]
-
 Resources:
 
   IPVCoreInternalAPI:
@@ -63,7 +60,6 @@ Resources:
       RetentionInDays: 14
 
   IPVCoreInternalAPILogGroupSubscriptionFilter:
-    Condition: SendLogsToSplunk
     Type: AWS::Logs::SubscriptionFilter
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
@@ -103,7 +99,6 @@ Resources:
       RetentionInDays: 14
 
   IPVCoreExternalAPILogGroupSubscriptionFilter:
-    Condition: SendLogsToSplunk
     Type: AWS::Logs::SubscriptionFilter
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
@@ -160,7 +155,6 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${IPVAccessTokenFunction}"
 
   IPVAccessTokenFunctionLogGroupSubscriptionFilter:
-    Condition: SendLogsToSplunk
     Type: AWS::Logs::SubscriptionFilter
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
@@ -216,7 +210,6 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${IPVSessionEndFunction}"
 
   IPVSessionEndFunctionLogGroupSubscriptionFilter:
-    Condition: SendLogsToSplunk
     Type: AWS::Logs::SubscriptionFilter
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
@@ -283,7 +276,6 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${IPVSessionStartFunction}"
 
   IPVSessionStartFunctionLogGroupSubscriptionFilter:
-    Condition: SendLogsToSplunk
     Type: AWS::Logs::SubscriptionFilter
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
@@ -361,7 +353,6 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${IPVCriReturnFunction}"
 
   IPVCriReturnFunctionLogGroupSubscriptionFilter:
-    Condition: SendLogsToSplunk
     Type: AWS::Logs::SubscriptionFilter
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
@@ -431,7 +422,6 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${IPVCredentialIssuerStartFunction}"
 
   IPVCredentialIssuerStartFunctionLogGroupSubscriptionFilter:
-    Condition: SendLogsToSplunk
     Type: AWS::Logs::SubscriptionFilter
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
@@ -482,7 +472,6 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${IPVCredentialIssuerErrorFunction}"
 
   IPVCredentialIssuerErrorFunctionLogGroupSubscriptionFilter:
-    Condition: SendLogsToSplunk
     Type: AWS::Logs::SubscriptionFilter
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
@@ -536,7 +525,6 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${IPVUserIdentityFunction}"
 
   IPVUserIdentityFunctionLogGroupSubscriptionFilter:
-    Condition: SendLogsToSplunk
     Type: AWS::Logs::SubscriptionFilter
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
@@ -587,7 +575,6 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${IPVCredentialIssuerConfig}"
 
   IPVCredentialIssuerFunctionLogGroupSubscriptionFilter:
-    Condition: SendLogsToSplunk
     Type: AWS::Logs::SubscriptionFilter
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
@@ -638,7 +625,6 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${IPVIssuedCredentials}"
 
   IPVIssuedCredentialsFunctionLogGroupSubscriptionFilter:
-    Condition: SendLogsToSplunk
     Type: AWS::Logs::SubscriptionFilter
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
@@ -691,7 +677,6 @@ Resources:
       LogGroupName: !Sub "/aws/lambda/${IPVJourneyEngineFunction}"
 
   IPVJourneyEngineFunctionLogGroupSubscriptionFilter:
-    Condition: SendLogsToSplunk
     Type: AWS::Logs::SubscriptionFilter
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
