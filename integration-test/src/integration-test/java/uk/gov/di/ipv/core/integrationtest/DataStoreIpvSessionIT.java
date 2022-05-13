@@ -110,9 +110,6 @@ public class DataStoreIpvSessionIT {
         assertEquals(
                 ipvSessionItem.getClientSessionDetails().getState(),
                 clientSessionDetailsDto.getState());
-        assertEquals(
-                ipvSessionItem.getClientSessionDetails().getScope(),
-                clientSessionDetailsDto.getScope());
     }
 
     @Test
@@ -143,9 +140,6 @@ public class DataStoreIpvSessionIT {
         assertEquals(
                 ipvSessionItem.getClientSessionDetails().getState(),
                 result.getClientSessionDetails().getState());
-        assertEquals(
-                ipvSessionItem.getClientSessionDetails().getScope(),
-                result.getClientSessionDetails().getScope());
     }
 
     @Test
@@ -182,19 +176,10 @@ public class DataStoreIpvSessionIT {
         assertEquals(
                 ipvSessionItem.getClientSessionDetails().getState(),
                 result.getClientSessionDetails().getState());
-        assertEquals(
-                ipvSessionItem.getClientSessionDetails().getScope(),
-                result.getClientSessionDetails().getScope());
     }
 
     private ClientSessionDetailsDto generateClientSessionDetails() {
         return new ClientSessionDetailsDto(
-                "test-response-type",
-                "test-client-id",
-                "https//example.com",
-                "test-state",
-                "test-scope",
-                false,
-                null);
+                "test-response-type", "test-client-id", "https//example.com", "test-state", false);
     }
 }

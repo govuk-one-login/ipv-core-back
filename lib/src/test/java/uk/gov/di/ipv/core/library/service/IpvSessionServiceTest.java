@@ -59,13 +59,7 @@ class IpvSessionServiceTest {
         String ipvSessionID =
                 ipvSessionService.generateIpvSession(
                         new ClientSessionDetailsDto(
-                                "jwt",
-                                "test-client",
-                                "http://example.come",
-                                "test-scope",
-                                "test-state",
-                                false,
-                                null));
+                                "jwt", "test-client", "http://example.come", "test-state", false));
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -84,13 +78,7 @@ class IpvSessionServiceTest {
         String ipvSessionID =
                 ipvSessionService.generateIpvSession(
                         new ClientSessionDetailsDto(
-                                "jwt",
-                                "test-client",
-                                "http://example.come",
-                                "test-scope",
-                                "test-state",
-                                true,
-                                null));
+                                "jwt", "test-client", "http://example.come", "test-state", true));
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);

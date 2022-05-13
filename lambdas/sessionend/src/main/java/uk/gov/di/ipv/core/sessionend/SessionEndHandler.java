@@ -119,9 +119,6 @@ public class SessionEndHandler
                     AuthRequestValidator.REDIRECT_URI_PARAM,
                     Collections.singletonList(clientSessionDetailsDto.getRedirectUri()));
             authParams.put(
-                    AuthRequestValidator.SCOPE_PARAM,
-                    Collections.singletonList(clientSessionDetailsDto.getScope()));
-            authParams.put(
                     AuthRequestValidator.STATE_PARAM,
                     Collections.singletonList(clientSessionDetailsDto.getState()));
 

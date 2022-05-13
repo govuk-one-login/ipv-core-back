@@ -197,13 +197,7 @@ class SessionEndHandlerTest {
 
         ClientSessionDetailsDto clientSessionDetailsDto =
                 new ClientSessionDetailsDto(
-                        "code",
-                        "test-client-id",
-                        "https://example.com",
-                        "openid",
-                        "test-state",
-                        false,
-                        null);
+                        "code", "test-client-id", "https://example.com", "test-state", false);
         item.setClientSessionDetails(clientSessionDetailsDto);
 
         return item;
@@ -211,12 +205,6 @@ class SessionEndHandlerTest {
 
     private ClientSessionDetailsDto generateValidClientSessionDetailsDto() {
         return new ClientSessionDetailsDto(
-                "code",
-                "test-client-id",
-                "https://example.com",
-                "openid",
-                "test-state",
-                false,
-                null);
+                "code", "test-client-id", "https://example.com", "test-state", false);
     }
 }
