@@ -14,10 +14,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.JarValidationException;
+import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.KmsRsaDecrypter;
@@ -39,6 +42,7 @@ public class IpvSessionStartHandler
     private final IpvSessionService ipvSessionService;
     private final KmsRsaDecrypter kmsRsaDecrypter;
     private final JarValidator jarValidator;
+    private final AuditService auditService;
 
     @ExcludeFromGeneratedCoverageReport
     public IpvSessionStartHandler() {
@@ -46,17 +50,21 @@ public class IpvSessionStartHandler
         this.ipvSessionService = new IpvSessionService(configurationService);
         this.kmsRsaDecrypter = new KmsRsaDecrypter(configurationService.getJarKmsEncryptionKeyId());
         this.jarValidator = new JarValidator(kmsRsaDecrypter, configurationService);
+        this.auditService =
+                new AuditService(AuditService.getDefaultSqsClient(), configurationService);
     }
 
     public IpvSessionStartHandler(
             IpvSessionService ipvSessionService,
             ConfigurationService configurationService,
             KmsRsaDecrypter kmsRsaDecrypter,
-            JarValidator jarValidator) {
+            JarValidator jarValidator,
+            AuditService auditService) {
         this.ipvSessionService = ipvSessionService;
         this.configurationService = configurationService;
         this.kmsRsaDecrypter = kmsRsaDecrypter;
         this.jarValidator = jarValidator;
+        this.auditService = auditService;
     }
 
     @Override
@@ -82,6 +90,8 @@ public class IpvSessionStartHandler
 
             String ipvSessionId = ipvSessionService.generateIpvSession(clientSessionDetails);
 
+            auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START);
+
             Map<String, String> response = Map.of(IPV_SESSION_ID_KEY, ipvSessionId);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
@@ -98,6 +108,10 @@ public class IpvSessionStartHandler
             LOGGER.error("Jar validation failed because: {}", e.getErrorObject().getDescription());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
+        } catch (SqsException e) {
+            LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
