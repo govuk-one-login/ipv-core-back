@@ -246,6 +246,8 @@ Resources:
             ParameterName: !Sub ${Environment}/core/self/maxAllowedAuthClientTtl
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/jarKmsEncryptionKeyId
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
         - Statement:
             - Sid: jarKmsEncryptionKeyPermission
               Effect: Allow
