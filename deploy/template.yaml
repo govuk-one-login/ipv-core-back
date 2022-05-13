@@ -257,6 +257,13 @@ Resources:
                 - 'kms:GenerateDataKey'
               Resource:
                 - !ImportValue CoreEncryptionKeyArn
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
       Events:
         IPVCoreInternalAPI:
           Type: Api
