@@ -18,9 +18,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.JarValidationException;
+import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.KmsRsaDecrypter;
@@ -40,6 +43,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 
@@ -52,6 +56,7 @@ class IpvSessionStartHandlerTest {
     @Mock private ConfigurationService mockConfigurationService;
     @Mock private KmsRsaDecrypter mockKmsRsaDecrypter;
     @Mock private JarValidator mockJarValidator;
+    @Mock private AuditService mockAuditService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -65,7 +70,8 @@ class IpvSessionStartHandlerTest {
                         mockIpvSessionService,
                         mockConfigurationService,
                         mockKmsRsaDecrypter,
-                        mockJarValidator);
+                        mockJarValidator,
+                        mockAuditService);
 
         JWTClaimsSet claimsSet =
                 new JWTClaimsSet.Builder()
@@ -87,7 +93,7 @@ class IpvSessionStartHandlerTest {
 
     @Test
     void shouldReturnIpvSessionIdWhenProvidedValidRequest()
-            throws JsonProcessingException, JarValidationException, ParseException {
+            throws JsonProcessingException, JarValidationException, ParseException, SqsException {
         String ipvSessionId = UUID.randomUUID().toString();
         when(mockIpvSessionService.generateIpvSession(any())).thenReturn(ipvSessionId);
         when(mockJarValidator.validateRequestJwt(any(), any()))
@@ -113,6 +119,8 @@ class IpvSessionStartHandlerTest {
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
         assertEquals(ipvSessionId, responseBody.get("ipvSessionId"));
+
+        verify(mockAuditService).sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START);
     }
 
     @Test
