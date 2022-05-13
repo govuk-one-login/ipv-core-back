@@ -17,20 +17,25 @@ public class UserIdentity {
 
     @JsonProperty private String vot;
 
+    @JsonProperty private String vtm;
+
     @JsonCreator
     public UserIdentity(
             @JsonProperty(
                             value = "https://vocab.sign-in.service.gov.uk/v1/credentials",
                             required = true)
                     List<String> vcs,
-            @JsonProperty(value = "vot", required = true) String vot) {
+            @JsonProperty(value = "vot", required = true) String vot,
+            @JsonProperty(value = "vtm", required = true) String vtm) {
         this.vcs = vcs;
         this.vot = vot;
+        this.vtm = vtm;
     }
 
     public static class Builder {
         private List<String> vcs;
         private String vot;
+        private String vtm;
 
         public Builder setVcs(List<String> vcs) {
             this.vcs = vcs;
@@ -42,8 +47,13 @@ public class UserIdentity {
             return this;
         }
 
+        public Builder setVtm(String vtm) {
+            this.vtm = vtm;
+            return this;
+        }
+
         public UserIdentity build() {
-            return new UserIdentity(vcs, vot);
+            return new UserIdentity(vcs, vot, vtm);
         }
     }
 }

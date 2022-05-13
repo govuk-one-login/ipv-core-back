@@ -78,6 +78,7 @@ class CredentialIssuerStartHandlerTest {
     public static final String CRI_AUDIENCE = "http://www.example.com/audience";
     public static final String IPV_CLIENT_ID = "ipv-core";
     public static final String SESSION_ID = "the-session-id";
+    public static final String VTM = "http://www.example.com/vtm";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -147,7 +148,8 @@ class CredentialIssuerStartHandlerTest {
                                                 vcClaim(CREDENTIAL_ATTRIBUTES_1)),
                                         generateVerifiableCredential(
                                                 vcClaim(CREDENTIAL_ATTRIBUTES_2))),
-                                VectorOfTrust.P2.toString()));
+                                VectorOfTrust.P2.toString(),
+                                VTM));
 
         APIGatewayProxyRequestEvent input = createRequestEvent(emptyMap(), emptyMap());
 
