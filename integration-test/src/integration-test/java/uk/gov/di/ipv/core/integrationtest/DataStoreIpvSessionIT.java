@@ -180,6 +180,11 @@ public class DataStoreIpvSessionIT {
 
     private ClientSessionDetailsDto generateClientSessionDetails() {
         return new ClientSessionDetailsDto(
-                "test-response-type", "test-client-id", "https//example.com", "test-state", false);
+                "test-response-type",
+                "test-client-id",
+                "https//example.com",
+                "test-state",
+                "test-user-id",
+                false);
     }
 }
