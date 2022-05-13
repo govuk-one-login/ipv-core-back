@@ -10,6 +10,7 @@ public class ClientSessionDetailsDto {
     String clientId;
     String redirectUri;
     String state;
+    String userId;
     boolean isDebugJourney;
 
     public ClientSessionDetailsDto() {}
@@ -19,11 +20,13 @@ public class ClientSessionDetailsDto {
             String clientId,
             String redirectUri,
             String state,
+            String userId,
             boolean isDebugJourney) {
         this.responseType = responseType;
         this.clientId = clientId;
         this.redirectUri = redirectUri;
         this.state = state;
+        this.userId = userId;
         this.isDebugJourney = isDebugJourney;
     }
 
@@ -57,6 +60,14 @@ public class ClientSessionDetailsDto {
 
     public void setState(String state) {
         this.state = state;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public boolean getIsDebugJourney() {

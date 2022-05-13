@@ -153,6 +153,7 @@ public class IpvSessionStartHandler
                 clientId,
                 claimsSet.getStringClaim("redirect_uri"),
                 claimsSet.getStringClaim("state"),
+                claimsSet.getSubject(),
                 isDebugJourney);
     }
 
