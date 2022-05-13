@@ -13,9 +13,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -53,6 +56,7 @@ class SessionEndHandlerTest {
     @Mock private IpvSessionService mockSessionService;
     @Mock private ConfigurationService mockConfigurationService;
     @Mock private AuthRequestValidator mockAuthRequestValidator;
+    @Mock private AuditService mockAuditService;
 
     private SessionEndHandler handler;
     private AuthorizationCode authorizationCode;
@@ -65,11 +69,12 @@ class SessionEndHandlerTest {
                         mockAuthorizationCodeService,
                         mockSessionService,
                         mockConfigurationService,
-                        mockAuthRequestValidator);
+                        mockAuthRequestValidator,
+                        mockAuditService);
     }
 
     @Test
-    void shouldReturn200OnSuccessfulOauthRequest() throws JsonProcessingException {
+    void shouldReturn200OnSuccessfulOauthRequest() throws JsonProcessingException, SqsException {
         when(mockAuthorizationCodeService.generateAuthorizationCode())
                 .thenReturn(authorizationCode);
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
@@ -92,6 +97,9 @@ class SessionEndHandlerTest {
                         responseBody.getClient().getAuthCode(),
                         "12345",
                         responseBody.getClient().getRedirectUrl());
+
+        verify(mockAuditService).sendAuditEvent(AuditEventTypes.IPV_JOURNEY_END);
+
         assertEquals(authorizationCode.toString(), responseBody.getClient().getAuthCode());
         assertEquals("https://example.com", responseBody.getClient().getRedirectUrl());
         assertEquals("test-state", responseBody.getClient().getState());
