@@ -233,6 +233,7 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub session-start-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt SessionsTable.Arn]]
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
