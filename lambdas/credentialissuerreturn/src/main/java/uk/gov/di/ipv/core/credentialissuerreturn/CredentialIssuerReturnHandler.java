@@ -7,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.lambda.powertools.tracing.Tracing;
@@ -62,14 +63,16 @@ public class CredentialIssuerReturnHandler
             APIGatewayProxyRequestEvent input, Context context) {
         CredentialIssuerRequestDto request =
                 RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
-
-        var errorResponse = validate(request);
-        if (errorResponse.isPresent()) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
-        }
-        CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request);
-
         try {
+
+            auditService.sendAuditEvent(AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED);
+
+            var errorResponse = validate(request);
+            if (errorResponse.isPresent()) {
+                return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
+            }
+            CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request);
+
             BearerAccessToken accessToken =
                     credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);
             String verifiableCredential =
@@ -88,7 +91,8 @@ public class CredentialIssuerReturnHandler
                     e.getHttpStatusCode(), e.getErrorResponse());
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, e.getMessage());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 

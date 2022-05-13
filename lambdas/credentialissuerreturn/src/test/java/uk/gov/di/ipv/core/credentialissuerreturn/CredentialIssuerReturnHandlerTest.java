@@ -102,6 +102,8 @@ class CredentialIssuerReturnHandlerTest {
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
 
+        verify(auditService).sendAuditEvent(AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED);
+
         verify(auditService)
                 .sendAuditEvent(AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED);
 
