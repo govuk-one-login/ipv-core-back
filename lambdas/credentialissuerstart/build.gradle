@@ -15,6 +15,7 @@ dependencies {
 	implementation "com.amazonaws:aws-lambda-java-core:1.2.1",
 			"com.amazonaws:aws-lambda-java-events:3.11.0",
 			'com.amazonaws:aws-java-sdk-dynamodb:1.12.167',
+			"com.amazonaws:aws-java-sdk-sqs:1.12.197",
 			'com.nimbusds:oauth2-oidc-sdk:9.27',
 			'com.fasterxml.jackson.core:jackson-core:2.13.2',
 			'com.fasterxml.jackson.core:jackson-databind:2.13.2',

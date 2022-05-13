@@ -20,12 +20,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -51,6 +53,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.credentialissuer.CredentialIssuerStartHandler.SHARED_CLAIMS;
@@ -79,10 +82,9 @@ class CredentialIssuerStartHandlerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock private Context context;
-
-    @Mock ConfigurationService configurationService;
-
-    @Mock UserIdentityService userIdentityService;
+    @Mock private ConfigurationService configurationService;
+    @Mock private UserIdentityService userIdentityService;
+    @Mock private AuditService mockAuditService;
 
     private CredentialIssuerConfig credentialIssuerConfig;
 
@@ -95,7 +97,8 @@ class CredentialIssuerStartHandlerTest {
         ECDSASigner signer = new ECDSASigner(getSigningPrivateKey());
 
         underTest =
-                new CredentialIssuerStartHandler(configurationService, userIdentityService, signer);
+                new CredentialIssuerStartHandler(
+                        configurationService, userIdentityService, signer, mockAuditService);
         credentialIssuerConfig =
                 new CredentialIssuerConfig(
                         CRI_ID,
@@ -165,6 +168,7 @@ class CredentialIssuerStartHandlerTest {
         assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
 
         verifyNoInteractions(context);
+        verify(mockAuditService).sendAuditEvent(AuditEventTypes.IPV_REDIRECT_TO_CRI);
     }
 
     @Test
