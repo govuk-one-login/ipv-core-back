@@ -268,6 +268,23 @@ class ConfigurationServiceTest {
     }
 
     @Test
+    void shouldReturnCoreFrontCallbackUrl() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        String coreFrontCallbackUrl = "aCoreFrontCallbackUrl";
+        when(ssmProvider.get("/test/core/self/coreFrontCallbackUrl"))
+                .thenReturn(coreFrontCallbackUrl);
+        assertEquals(coreFrontCallbackUrl, configurationService.getCoreFrontCallbackUrl());
+    }
+
+    @Test
+    void shouldReturnCoreVtmClaim() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        String coreVtmClaim = "aCoreVtmClaim";
+        when(ssmProvider.get("/test/core/self/coreVtmClaim")).thenReturn(coreVtmClaim);
+        assertEquals(coreVtmClaim, configurationService.getCoreVtmClaim());
+    }
+
+    @Test
     void shouldReturnEncryptionPublicKey() throws HttpResponseExceptionWithErrorBody {
         environmentVariables.set("ENVIRONMENT", "test");
         when(ssmProvider.get("/test/core/credentialIssuers/aClientId/jarEncryptionPublicJwk"))
