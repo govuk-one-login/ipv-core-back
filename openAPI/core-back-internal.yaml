@@ -160,11 +160,9 @@ components:
         client:
           type: object
           description: redirect to the oauth client, ending the session.
-          required: [ "callbackUrl", "authcode" ]
+          required: [ "callbackUrl" ]
           properties:
             callbackUrl:
-              type: string
-            authcode:
               type: string
       oneOf:
         - required: [ "page" ]
