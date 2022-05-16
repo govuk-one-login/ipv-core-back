@@ -412,6 +412,8 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/coreFrontCallbackUrl
         - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/coreVtmClaim
+        - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers
