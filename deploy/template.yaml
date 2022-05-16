@@ -193,12 +193,12 @@ Resources:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
-                Effect: Allow
-                Action:
-                  - 'kms:Decrypt'
-                  - 'kms:GenerateDataKey'
-                Resource:
-                  - !ImportValue AuditEventQueueEncryptionKeyArn
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
       Events:
         IPVCoreInternalAPI:
           Type: Api
@@ -425,12 +425,12 @@ Resources:
               Resource:
                 - !ImportValue SigningKeyArn
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
-                Effect: Allow
-                Action:
-                  - 'kms:Decrypt'
-                  - 'kms:GenerateDataKey'
-                Resource:
-                  - !ImportValue AuditEventQueueEncryptionKeyArn
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
       Events:
         IPVCoreInternalAPI:
           Type: Api
@@ -539,12 +539,12 @@ Resources:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
-                Effect: Allow
-                Action:
-                  - 'kms:Decrypt'
-                  - 'kms:GenerateDataKey'
-                Resource:
-                  - !ImportValue AuditEventQueueEncryptionKeyArn
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
       Events:
         IPVCoreExternalAPI:
           Type: Api
