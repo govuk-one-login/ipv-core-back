@@ -100,7 +100,7 @@ class IpvSessionStartHandlerTest {
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, Object> sessionParams =
-                Map.of("client_id", "test-client", "request", signedJWT.serialize());
+                Map.of("clientId", "test-client", "request", signedJWT.serialize());
         event.setBody(objectMapper.writeValueAsString(sessionParams));
 
         APIGatewayProxyResponseEvent response =
@@ -171,7 +171,7 @@ class IpvSessionStartHandlerTest {
     void shouldReturn400IfMissingRequestParameter() throws JsonProcessingException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
-        Map<String, Object> sessionParams = Map.of("client_id", "test-client");
+        Map<String, Object> sessionParams = Map.of("clientId", "test-client");
 
         event.setBody(objectMapper.writeValueAsString(sessionParams));
 

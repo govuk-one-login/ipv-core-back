@@ -39,7 +39,7 @@ public class IpvSessionStartHandler
             LoggerFactory.getLogger(IpvSessionStartHandler.class.getName());
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final String IPV_SESSION_ID_KEY = "ipvSessionId";
-    private static final String CLIENT_ID_PARAM_KEY = "client_id";
+    private static final String CLIENT_ID_PARAM_KEY = "clientId";
     private static final String REQUEST_PARAM_KEY = "request";
     private static final String IS_DEBUG_JOURNEY_PARAM_KEY = "isDebugJourney";
 
