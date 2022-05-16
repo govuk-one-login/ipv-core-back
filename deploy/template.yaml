@@ -144,9 +144,9 @@ Resources:
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
-        - AddProvisionedConcurrency
-        - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
-        - !Ref AWS::NoValue
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - !Ref AWS::NoValue
 
   IPVAccessTokenFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -188,7 +188,7 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
+              ParameterName: !Sub ${Environment}/core/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -210,9 +210,9 @@ Resources:
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
-        - AddProvisionedConcurrency
-        - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
-        - !Ref AWS::NoValue
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - !Ref AWS::NoValue
 
   IPVSessionEndFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -286,9 +286,9 @@ Resources:
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
-        - AddProvisionedConcurrency
-        - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
-        - !Ref AWS::NoValue
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - !Ref AWS::NoValue
 
   IPVSessionStartFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -339,19 +339,19 @@ Resources:
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
-            - Sid: kmsSigningKeyPermission
-              Effect: Allow
-              Action:
-                - 'kms:sign'
-              Resource:
-                - !ImportValue SigningKeyArn
-            - Sid: kmsAuditEventQueueEncryptionKeyPermission
-              Effect: Allow
-              Action:
-                - 'kms:Decrypt'
-                - 'kms:GenerateDataKey'
-              Resource:
-                - !ImportValue AuditEventQueueEncryptionKeyArn
+          - Sid: kmsSigningKeyPermission
+            Effect: Allow
+            Action:
+              - 'kms:sign'
+            Resource:
+              - !ImportValue SigningKeyArn
+          - Sid: kmsAuditEventQueueEncryptionKeyPermission
+            Effect: Allow
+            Action:
+              - 'kms:Decrypt'
+              - 'kms:GenerateDataKey'
+            Resource:
+              - !ImportValue AuditEventQueueEncryptionKeyArn
       Events:
         IPVCoreInternalAPI:
           Type: Api
@@ -363,9 +363,9 @@ Resources:
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
-        - AddProvisionedConcurrency
-        - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
-        - !Ref AWS::NoValue
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - !Ref AWS::NoValue
 
   IPVCriReturnFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -442,9 +442,9 @@ Resources:
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
-        - AddProvisionedConcurrency
-        - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
-        - !Ref AWS::NoValue
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - !Ref AWS::NoValue
 
   IPVCredentialIssuerStartFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -492,9 +492,9 @@ Resources:
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
-        - AddProvisionedConcurrency
-        - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
-        - !Ref AWS::NoValue
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - !Ref AWS::NoValue
 
   IPVCredentialIssuerErrorFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -558,9 +558,9 @@ Resources:
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
-        - AddProvisionedConcurrency
-        - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
-        - !Ref AWS::NoValue
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - !Ref AWS::NoValue
 
   IPVUserIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -608,9 +608,9 @@ Resources:
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
-        - AddProvisionedConcurrency
-        - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
-        - !Ref AWS::NoValue
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - !Ref AWS::NoValue
 
   IPVCredentialIssuerFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -658,9 +658,9 @@ Resources:
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
-        - AddProvisionedConcurrency
-        - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
-        - !Ref AWS::NoValue
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - !Ref AWS::NoValue
 
   IPVIssuedCredentialsFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -710,9 +710,9 @@ Resources:
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
-        - AddProvisionedConcurrency
-        - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
-        - !Ref AWS::NoValue
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - !Ref AWS::NoValue
 
   IPVJourneyEngineFunctionLogGroup:
     Type: AWS::Logs::LogGroup
