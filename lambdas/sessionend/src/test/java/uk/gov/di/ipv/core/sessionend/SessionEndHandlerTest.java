@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.utils.URIBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,6 +27,7 @@ import uk.gov.di.ipv.core.library.validation.AuthRequestValidator;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 import uk.gov.di.ipv.core.sessionend.domain.ClientResponse;
 
+import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -33,7 +35,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
@@ -74,7 +75,8 @@ class SessionEndHandlerTest {
     }
 
     @Test
-    void shouldReturn200OnSuccessfulOauthRequest() throws JsonProcessingException, SqsException {
+    void shouldReturn200OnSuccessfulOauthRequest()
+            throws JsonProcessingException, SqsException, URISyntaxException {
         when(mockAuthorizationCodeService.generateAuthorizationCode())
                 .thenReturn(authorizationCode);
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
@@ -94,15 +96,18 @@ class SessionEndHandlerTest {
 
         verify(mockAuthorizationCodeService)
                 .persistAuthorizationCode(
-                        responseBody.getClient().getAuthCode(),
-                        "12345",
-                        responseBody.getClient().getRedirectUrl());
+                        authorizationCode.getValue(), "12345", "https://example.com");
 
         verify(mockAuditService).sendAuditEvent(AuditEventTypes.IPV_JOURNEY_END);
 
-        assertEquals(authorizationCode.toString(), responseBody.getClient().getAuthCode());
-        assertEquals("https://example.com", responseBody.getClient().getRedirectUrl());
-        assertEquals("test-state", responseBody.getClient().getState());
+        String expectedRedirectUrl =
+                new URIBuilder("https://example.com")
+                        .addParameter("code", authorizationCode.toString())
+                        .addParameter("state", "test-state")
+                        .build()
+                        .toString();
+
+        assertEquals(expectedRedirectUrl, responseBody.getClient().getRedirectUrl());
     }
 
     @Test
@@ -125,8 +130,6 @@ class SessionEndHandlerTest {
 
         ClientResponse responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertNull(responseBody.getClient().getState());
     }
 
     @Test

@@ -7,7 +7,9 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.ParseException;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.lambda.powertools.tracing.Tracing;
@@ -27,6 +29,7 @@ import uk.gov.di.ipv.core.library.validation.AuthRequestValidator;
 import uk.gov.di.ipv.core.sessionend.domain.ClientDetails;
 import uk.gov.di.ipv.core.sessionend.domain.ClientResponse;
 
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -95,12 +98,17 @@ public class SessionEndHandler
                     ipvSessionId,
                     authorizationRequest.getRedirectionURI().toString());
 
+            URIBuilder redirectUri =
+                    new URIBuilder(ipvSessionItem.getClientSessionDetails().getRedirectUri())
+                            .addParameter("code", authorizationCode.getValue());
+
+            if (StringUtils.isNotBlank(ipvSessionItem.getClientSessionDetails().getState())) {
+                redirectUri.addParameter(
+                        "state", ipvSessionItem.getClientSessionDetails().getState());
+            }
+
             ClientResponse clientResponse =
-                    new ClientResponse(
-                            new ClientDetails(
-                                    ipvSessionItem.getClientSessionDetails().getRedirectUri(),
-                                    authorizationCode.getValue(),
-                                    ipvSessionItem.getClientSessionDetails().getState()));
+                    new ClientResponse(new ClientDetails(redirectUri.build().toString()));
 
             auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_END);
 
@@ -113,6 +121,10 @@ public class SessionEndHandler
                     ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS);
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        } catch (URISyntaxException e) {
+            LOGGER.error("Failed to construct redirect uri because: {}", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
