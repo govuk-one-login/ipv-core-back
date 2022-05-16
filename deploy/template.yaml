@@ -179,6 +179,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub session-end-${Environment}
           AUTH_CODES_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AuthCodesTable.Arn]]
           IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       Policies:
         - DynamoDBWritePolicy:
             TableName: !Ref AuthCodesTable
@@ -188,6 +189,16 @@ Resources:
             TableName: !Ref SessionsTable
         - SSMParameterReadPolicy:
               ParameterName: !Sub ${Environment}/core/*
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
+        - Statement:
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+                Effect: Allow
+                Action:
+                  - 'kms:Decrypt'
+                  - 'kms:GenerateDataKey'
+                Resource:
+                  - !ImportValue AuditEventQueueEncryptionKeyArn
       Events:
         IPVCoreInternalAPI:
           Type: Api
@@ -388,6 +399,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-start-${Environment}
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsTable.Arn ] ]
           SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsTable
@@ -403,6 +415,8 @@ Resources:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
         - Statement:
             - Sid: kmsSigningKeyPermission
               Effect: Allow
@@ -410,6 +424,13 @@ Resources:
                 - 'kms:sign'
               Resource:
                 - !ImportValue SigningKeyArn
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+                Effect: Allow
+                Action:
+                  - 'kms:Decrypt'
+                  - 'kms:GenerateDataKey'
+                Resource:
+                  - !ImportValue AuditEventQueueEncryptionKeyArn
       Events:
         IPVCoreInternalAPI:
           Type: Api
@@ -506,6 +527,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub user-identity-${Environment}
           ACCESS_TOKENS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AccessTokensTable.Arn]]
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsTable
@@ -513,6 +535,16 @@ Resources:
             TableName: !Ref UserIssuedCredentialsTable
         - DynamoDBCrudPolicy:
             TableName: !Ref AccessTokensTable
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
+        - Statement:
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+                Effect: Allow
+                Action:
+                  - 'kms:Decrypt'
+                  - 'kms:GenerateDataKey'
+                Resource:
+                  - !ImportValue AuditEventQueueEncryptionKeyArn
       Events:
         IPVCoreExternalAPI:
           Type: Api
