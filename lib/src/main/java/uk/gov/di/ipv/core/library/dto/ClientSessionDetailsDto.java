@@ -9,10 +9,9 @@ public class ClientSessionDetailsDto {
     String responseType;
     String clientId;
     String redirectUri;
-    String scope;
     String state;
+    String userId;
     boolean isDebugJourney;
-    String request;
 
     public ClientSessionDetailsDto() {}
 
@@ -20,17 +19,15 @@ public class ClientSessionDetailsDto {
             String responseType,
             String clientId,
             String redirectUri,
-            String scope,
             String state,
-            boolean isDebugJourney,
-            String request) {
+            String userId,
+            boolean isDebugJourney) {
         this.responseType = responseType;
         this.clientId = clientId;
         this.redirectUri = redirectUri;
-        this.scope = scope;
         this.state = state;
+        this.userId = userId;
         this.isDebugJourney = isDebugJourney;
-        this.request = request;
     }
 
     public String getResponseType() {
@@ -57,14 +54,6 @@ public class ClientSessionDetailsDto {
         this.redirectUri = redirectUri;
     }
 
-    public String getScope() {
-        return scope;
-    }
-
-    public void setScope(String scope) {
-        this.scope = scope;
-    }
-
     public String getState() {
         return state;
     }
@@ -73,19 +62,19 @@ public class ClientSessionDetailsDto {
         this.state = state;
     }
 
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
     public boolean getIsDebugJourney() {
         return isDebugJourney;
     }
 
     public void setIsDebugJourney(boolean isDebugJourney) {
         this.isDebugJourney = isDebugJourney;
-    }
-
-    public String getRequest() {
-        return request;
-    }
-
-    public void setRequest(String request) {
-        this.request = request;
     }
 }

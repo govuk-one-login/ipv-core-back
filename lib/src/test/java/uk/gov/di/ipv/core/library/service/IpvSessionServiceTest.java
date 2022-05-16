@@ -62,10 +62,9 @@ class IpvSessionServiceTest {
                                 "jwt",
                                 "test-client",
                                 "http://example.come",
-                                "test-scope",
                                 "test-state",
-                                false,
-                                null));
+                                "test-user-id",
+                                false));
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -87,10 +86,9 @@ class IpvSessionServiceTest {
                                 "jwt",
                                 "test-client",
                                 "http://example.come",
-                                "test-scope",
                                 "test-state",
-                                true,
-                                null));
+                                "test-user-id",
+                                true));
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);

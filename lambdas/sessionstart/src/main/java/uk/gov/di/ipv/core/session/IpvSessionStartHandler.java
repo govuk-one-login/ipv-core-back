@@ -5,8 +5,10 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JWEObject;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
@@ -37,6 +39,9 @@ public class IpvSessionStartHandler
             LoggerFactory.getLogger(IpvSessionStartHandler.class.getName());
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final String IPV_SESSION_ID_KEY = "ipvSessionId";
+    private static final String CLIENT_ID_PARAM_KEY = "client_id";
+    private static final String REQUEST_PARAM_KEY = "request";
+    private static final String IS_DEBUG_JOURNEY_PARAM_KEY = "isDebugJourney";
 
     private final ConfigurationService configurationService;
     private final IpvSessionService ipvSessionService;
@@ -72,34 +77,37 @@ public class IpvSessionStartHandler
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
         try {
-            ClientSessionDetailsDto clientSessionDetails =
-                    objectMapper.readValue(input.getBody(), ClientSessionDetailsDto.class);
+            Map<String, String> sessionParams =
+                    objectMapper.readValue(input.getBody(), new TypeReference<>() {});
 
-            Optional<ErrorResponse> error = validateClientSessionDetails(clientSessionDetails);
+            Optional<ErrorResponse> error = validateSessionParams(sessionParams);
 
             if (error.isPresent()) {
-                LOGGER.error("Validation of the client session details failed");
+                LOGGER.error(
+                        "Validation of the client session params failed because: {}",
+                        error.get().getMessage());
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatus.SC_BAD_REQUEST, error.get());
             }
 
-            if (StringUtils.isNotBlank(clientSessionDetails.getRequest())) {
-                SignedJWT signedJWT = decryptRequest(clientSessionDetails.getRequest());
-                jarValidator.validateRequestJwt(signedJWT, clientSessionDetails.getClientId());
-            }
+            SignedJWT signedJWT = decryptRequest(sessionParams.get(REQUEST_PARAM_KEY));
+            JWTClaimsSet claimsSet =
+                    jarValidator.validateRequestJwt(
+                            signedJWT, sessionParams.get(CLIENT_ID_PARAM_KEY));
 
-            String ipvSessionId = ipvSessionService.generateIpvSession(clientSessionDetails);
+            ClientSessionDetailsDto clientSessionDetailsDto =
+                    generateClientSessionDetails(
+                            claimsSet,
+                            sessionParams.get(CLIENT_ID_PARAM_KEY),
+                            Boolean.parseBoolean(sessionParams.get(IS_DEBUG_JOURNEY_PARAM_KEY)));
+
+            String ipvSessionId = ipvSessionService.generateIpvSession(clientSessionDetailsDto);
 
             auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START);
 
             Map<String, String> response = Map.of(IPV_SESSION_ID_KEY, ipvSessionId);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
-        } catch (IllegalArgumentException | JsonProcessingException e) {
-            LOGGER.error(
-                    "Failed to parse the request body into a ClientSessionDetailsDto object", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
         } catch (ParseException e) {
             LOGGER.error("Failed to parse the decrypted JWE because: {}", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
@@ -112,34 +120,23 @@ public class IpvSessionStartHandler
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        } catch (JsonProcessingException | IllegalArgumentException e) {
+            LOGGER.error("Failed to parse request body into map because: {}", e.getMessage());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
         }
     }
 
-    private Optional<ErrorResponse> validateClientSessionDetails(
-            ClientSessionDetailsDto clientSessionDetailsDto) {
+    private Optional<ErrorResponse> validateSessionParams(Map<String, String> sessionParams) {
         boolean isInvalid = false;
-        if (StringUtils.isBlank(clientSessionDetailsDto.getResponseType())) {
-            LOGGER.warn("Missing response_type query parameter");
-            isInvalid = true;
-        }
 
-        if (StringUtils.isBlank(clientSessionDetailsDto.getClientId())) {
+        if (StringUtils.isBlank(sessionParams.get(CLIENT_ID_PARAM_KEY))) {
             LOGGER.warn("Missing client_id query parameter");
             isInvalid = true;
         }
 
-        if (StringUtils.isBlank(clientSessionDetailsDto.getRedirectUri())) {
-            LOGGER.warn("Missing redirect_uri query parameter");
-            isInvalid = true;
-        }
-
-        if (StringUtils.isBlank(clientSessionDetailsDto.getScope())) {
-            LOGGER.warn("Missing scope query parameter");
-            isInvalid = true;
-        }
-
-        if (StringUtils.isBlank(clientSessionDetailsDto.getState())) {
-            LOGGER.warn("Missing state query parameter");
+        if (StringUtils.isBlank(sessionParams.get(REQUEST_PARAM_KEY))) {
+            LOGGER.warn("Missing request query parameter");
             isInvalid = true;
         }
 
@@ -147,6 +144,17 @@ public class IpvSessionStartHandler
             return Optional.of(ErrorResponse.INVALID_SESSION_REQUEST);
         }
         return Optional.empty();
+    }
+
+    private ClientSessionDetailsDto generateClientSessionDetails(
+            JWTClaimsSet claimsSet, String clientId, boolean isDebugJourney) throws ParseException {
+        return new ClientSessionDetailsDto(
+                claimsSet.getStringClaim("response_type"),
+                clientId,
+                claimsSet.getStringClaim("redirect_uri"),
+                claimsSet.getStringClaim("state"),
+                claimsSet.getSubject(),
+                isDebugJourney);
     }
 
     private SignedJWT decryptRequest(String jarString)

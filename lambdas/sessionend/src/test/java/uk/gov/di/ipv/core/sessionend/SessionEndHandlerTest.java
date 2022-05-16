@@ -208,10 +208,9 @@ class SessionEndHandlerTest {
                         "code",
                         "test-client-id",
                         "https://example.com",
-                        "openid",
                         "test-state",
-                        false,
-                        null);
+                        "test-user-id",
+                        false);
         item.setClientSessionDetails(clientSessionDetailsDto);
 
         return item;
@@ -222,9 +221,8 @@ class SessionEndHandlerTest {
                 "code",
                 "test-client-id",
                 "https://example.com",
-                "openid",
                 "test-state",
-                false,
-                null);
+                "test-user-id",
+                false);
     }
 }
