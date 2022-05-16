@@ -2,10 +2,12 @@ package uk.gov.di.ipv.core.library.persistence.item;
 
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 
 @DynamoDbBean
+@ExcludeFromGeneratedCoverageReport
 public class IpvSessionItem {
     private String ipvSessionId;
     private String userState;

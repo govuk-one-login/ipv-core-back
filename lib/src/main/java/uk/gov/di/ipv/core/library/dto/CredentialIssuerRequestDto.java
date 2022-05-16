@@ -1,7 +1,9 @@
 package uk.gov.di.ipv.core.library.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
+@ExcludeFromGeneratedCoverageReport
 public class CredentialIssuerRequestDto {
 
     private final String authorizationCode;
