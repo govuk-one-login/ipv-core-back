@@ -199,6 +199,7 @@ public class CredentialIssuerStartHandler
         return SharedAttributesResponse.from(sharedAttributes);
     }
 
+    @Tracing
     private String getIpvSessionId(Map<String, String> headers)
             throws HttpResponseExceptionWithErrorBody {
         String ipvSessionId = RequestHelper.getHeaderByKey(headers, IPV_SESSION_ID_HEADER_KEY);

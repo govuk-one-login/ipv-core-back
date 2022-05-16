@@ -127,6 +127,7 @@ public class IpvSessionStartHandler
         }
     }
 
+    @Tracing
     private Optional<ErrorResponse> validateSessionParams(Map<String, String> sessionParams) {
         boolean isInvalid = false;
 
@@ -146,6 +147,7 @@ public class IpvSessionStartHandler
         return Optional.empty();
     }
 
+    @Tracing
     private ClientSessionDetailsDto generateClientSessionDetails(
             JWTClaimsSet claimsSet, String clientId, boolean isDebugJourney) throws ParseException {
         return new ClientSessionDetailsDto(
