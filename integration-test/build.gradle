@@ -15,26 +15,24 @@ repositories {
 }
 
 dependencies {
-	implementation "com.amazonaws:aws-lambda-java-core:1.2.1",
-			"com.amazonaws:aws-lambda-java-events:3.11.0",
-			"com.amazonaws:aws-java-sdk-dynamodb:1.12.122",
-			"com.nimbusds:oauth2-oidc-sdk:9.3.1",
-			"com.fasterxml.jackson.core:jackson-core:2.13.0",
-			"com.fasterxml.jackson.core:jackson-databind:2.13.0",
-			"com.fasterxml.jackson.core:jackson-annotations:2.13.0",
-			"com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.0",
-			"org.slf4j:slf4j-simple:1.7.32",
-			"software.amazon.awssdk:dynamodb-enhanced:2.17.89",
-			"software.amazon.lambda:powertools-parameters:1.8.0",
-			"com.google.code.gson:gson:2.8.9",
-			"com.nimbusds:nimbus-jose-jwt:9.15.2",
-			'org.junit.jupiter:junit-jupiter:5.8.2',
+	implementation "com.amazonaws:aws-java-sdk-dynamodb:$rootProject.ext.dependencyVersions.awsJavaSdkDynamodb",
+			"com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
+			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
+			"com.fasterxml.jackson.core:jackson-annotations:$rootProject.ext.dependencyVersions.jackson",
+			"com.fasterxml.jackson.core:jackson-core:$rootProject.ext.dependencyVersions.jackson",
+			"com.fasterxml.jackson.core:jackson-databind:$rootProject.ext.dependencyVersions.jackson",
+			"com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$rootProject.ext.dependencyVersions.jackson",
+			"com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson",
+			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
+			"org.slf4j:slf4j-simple:$rootProject.ext.dependencyVersions.slf4j",
+			"software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
+			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters",
 			project(":lib")
 
-	testImplementation 'org.junit.jupiter:junit-jupiter:5.8.2',
+	testImplementation "com.github.tomakehurst:wiremock-jre8:2.31.0",
+			"org.junit.jupiter:junit-jupiter:5.8.2",
 			"org.mockito:mockito-core:4.2.0",
 			"org.mockito:mockito-junit-jupiter:4.2.0",
-			"com.github.tomakehurst:wiremock-jre8:2.31.0",
 			"uk.org.webcompere:system-stubs-jupiter:1.1.0"
 }
 

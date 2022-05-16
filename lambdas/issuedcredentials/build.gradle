@@ -12,15 +12,15 @@ repositories {
 
 dependencies {
 
-	implementation "com.amazonaws:aws-lambda-java-core:1.2.1",
-			"com.amazonaws:aws-lambda-java-events:3.11.0",
+	implementation "com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
+			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
 			project(":lib")
 
-	aspect 'software.amazon.lambda:powertools-tracing:1.11.0'
+	aspect "software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
 
-	testImplementation 'com.google.code.gson:gson:2.8.9',
-			'org.junit.jupiter:junit-jupiter:5.8.2',
-			'org.mockito:mockito-junit-jupiter:4.2.0'
+	testImplementation "com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson",
+			"org.junit.jupiter:junit-jupiter:5.8.2",
+			"org.mockito:mockito-junit-jupiter:4.2.0"
 }
 
 java {
