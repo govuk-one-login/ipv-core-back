@@ -5,9 +5,6 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jose.crypto.impl.ECDSA;
 import com.nimbusds.jose.util.Base64URL;
-import com.nimbusds.jwt.JWTClaimNames;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.PlainJWT;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
@@ -130,20 +127,10 @@ public class CredentialIssuerService {
     }
 
     public String getVerifiableCredential(
-            BearerAccessToken accessToken, CredentialIssuerConfig config, String subject) {
-        String requestJWT =
-                new PlainJWT(
-                                new JWTClaimsSet.Builder()
-                                        .claim(
-                                                JWTClaimNames.SUBJECT,
-                                                String.format("urn:uuid:%s", subject))
-                                        .build())
-                        .serialize();
-
+            BearerAccessToken accessToken, CredentialIssuerConfig config) {
         HTTPRequest credentialRequest =
                 new HTTPRequest(HTTPRequest.Method.POST, config.getCredentialUrl());
         credentialRequest.setAuthorization(accessToken.toAuthorizationHeader());
-        credentialRequest.setQuery(requestJWT);
 
         try {
             HTTPResponse response = credentialRequest.send();

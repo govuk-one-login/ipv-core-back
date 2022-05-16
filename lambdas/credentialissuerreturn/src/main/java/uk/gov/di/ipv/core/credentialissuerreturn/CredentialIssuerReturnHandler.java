@@ -77,7 +77,7 @@ public class CredentialIssuerReturnHandler
                     credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);
             String verifiableCredential =
                     credentialIssuerService.getVerifiableCredential(
-                            accessToken, credentialIssuerConfig, request.getIpvSessionId());
+                            accessToken, credentialIssuerConfig);
 
             auditService.sendAuditEvent(
                     AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED);

@@ -98,7 +98,7 @@ class CredentialIssuerReturnHandlerTest {
         when(credentialIssuerService.exchangeCodeForToken(requestDto.capture(), eq(passportIssuer)))
                 .thenReturn(new BearerAccessToken());
 
-        when(credentialIssuerService.getVerifiableCredential(any(), any(), any()))
+        when(credentialIssuerService.getVerifiableCredential(any(), any()))
                 .thenReturn(TEST_VERIFIABLE_CREDENTIAL);
 
         when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
@@ -186,8 +186,7 @@ class CredentialIssuerReturnHandlerTest {
         when(credentialIssuerService.exchangeCodeForToken(requestDto.capture(), eq(passportIssuer)))
                 .thenReturn(accessToken);
 
-        when(credentialIssuerService.getVerifiableCredential(
-                        accessToken, passportIssuer, sessionId))
+        when(credentialIssuerService.getVerifiableCredential(accessToken, passportIssuer))
                 .thenReturn(TEST_VERIFIABLE_CREDENTIAL);
 
         when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
@@ -254,7 +253,7 @@ class CredentialIssuerReturnHandlerTest {
             throws JsonProcessingException {
         when(credentialIssuerService.exchangeCodeForToken(any(), any()))
                 .thenReturn(new BearerAccessToken());
-        when(credentialIssuerService.getVerifiableCredential(any(), any(), any()))
+        when(credentialIssuerService.getVerifiableCredential(any(), any()))
                 .thenThrow(
                         new CredentialIssuerException(
                                 HTTPResponse.SC_SERVER_ERROR,

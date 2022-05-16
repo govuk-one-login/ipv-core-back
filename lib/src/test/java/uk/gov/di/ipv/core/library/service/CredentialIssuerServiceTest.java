@@ -229,7 +229,7 @@ class CredentialIssuerServiceTest {
 
         String credential =
                 credentialIssuerService.getVerifiableCredential(
-                        accessToken, credentialIssuerConfig, "subject");
+                        accessToken, credentialIssuerConfig);
 
         assertEquals(SIGNED_VC_1, credential);
 
@@ -267,7 +267,7 @@ class CredentialIssuerServiceTest {
 
         String credential =
                 credentialIssuerService.getVerifiableCredential(
-                        accessToken, credentialIssuerConfig, "subject");
+                        accessToken, credentialIssuerConfig);
 
         assertEquals(SIGNED_VC_1, credential);
     }
@@ -292,7 +292,7 @@ class CredentialIssuerServiceTest {
                         CredentialIssuerException.class,
                         () ->
                                 credentialIssuerService.getVerifiableCredential(
-                                        accessToken, credentialIssuerConfig, "subject"));
+                                        accessToken, credentialIssuerConfig));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
@@ -316,7 +316,7 @@ class CredentialIssuerServiceTest {
                         CredentialIssuerException.class,
                         () ->
                                 credentialIssuerService.getVerifiableCredential(
-                                        accessToken, credentialIssuerConfig, "subject"));
+                                        accessToken, credentialIssuerConfig));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
         assertEquals(
@@ -358,7 +358,7 @@ class CredentialIssuerServiceTest {
                         CredentialIssuerException.class,
                         () ->
                                 credentialIssuerService.getVerifiableCredential(
-                                        accessToken, credentialIssuerConfig, "subject"));
+                                        accessToken, credentialIssuerConfig));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_PARSE_JWK, thrown.getErrorResponse());
@@ -383,7 +383,7 @@ class CredentialIssuerServiceTest {
                         CredentialIssuerException.class,
                         () ->
                                 credentialIssuerService.getVerifiableCredential(
-                                        accessToken, credentialIssuerConfig, "subject"));
+                                        accessToken, credentialIssuerConfig));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
