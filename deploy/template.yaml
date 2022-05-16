@@ -546,7 +546,7 @@ Resources:
               Resource:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/coreVtmClaim
+            ParameterName: !Sub ${Environment}/core/self/coreVtmClaim
       Events:
         IPVCoreExternalAPI:
           Type: Api
