@@ -12,11 +12,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -38,6 +41,7 @@ public class SessionEndHandler
     private final IpvSessionService sessionService;
     private final ConfigurationService configurationService;
     private final AuthRequestValidator authRequestValidator;
+    private final AuditService auditService;
 
     @ExcludeFromGeneratedCoverageReport
     public SessionEndHandler() {
@@ -45,17 +49,21 @@ public class SessionEndHandler
         this.authorizationCodeService = new AuthorizationCodeService(configurationService);
         this.sessionService = new IpvSessionService(configurationService);
         this.authRequestValidator = new AuthRequestValidator(configurationService);
+        this.auditService =
+                new AuditService(AuditService.getDefaultSqsClient(), configurationService);
     }
 
     public SessionEndHandler(
             AuthorizationCodeService authorizationCodeService,
             IpvSessionService sessionService,
             ConfigurationService configurationService,
-            AuthRequestValidator authRequestValidator) {
+            AuthRequestValidator authRequestValidator,
+            AuditService auditService) {
         this.authorizationCodeService = authorizationCodeService;
         this.sessionService = sessionService;
         this.configurationService = configurationService;
         this.authRequestValidator = authRequestValidator;
+        this.auditService = auditService;
     }
 
     @Override
@@ -77,31 +85,37 @@ public class SessionEndHandler
                     HttpStatus.SC_BAD_REQUEST, validationResult.getError());
         }
 
-        AuthorizationRequest authorizationRequest;
         try {
-            authorizationRequest = AuthorizationRequest.parse(authParameters);
+            AuthorizationRequest authorizationRequest = AuthorizationRequest.parse(authParameters);
+            AuthorizationCode authorizationCode =
+                    authorizationCodeService.generateAuthorizationCode();
+
+            authorizationCodeService.persistAuthorizationCode(
+                    authorizationCode.getValue(),
+                    ipvSessionId,
+                    authorizationRequest.getRedirectionURI().toString());
+
+            ClientResponse clientResponse =
+                    new ClientResponse(
+                            new ClientDetails(
+                                    ipvSessionItem.getClientSessionDetails().getRedirectUri(),
+                                    authorizationCode.getValue(),
+                                    ipvSessionItem.getClientSessionDetails().getState()));
+
+            auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_END);
+
+            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, clientResponse);
+
         } catch (ParseException e) {
             LOGGER.error("Authentication request could not be parsed", e);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST,
                     ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS);
+        } catch (SqsException e) {
+            LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
-
-        AuthorizationCode authorizationCode = authorizationCodeService.generateAuthorizationCode();
-
-        authorizationCodeService.persistAuthorizationCode(
-                authorizationCode.getValue(),
-                ipvSessionId,
-                authorizationRequest.getRedirectionURI().toString());
-
-        ClientResponse clientResponse =
-                new ClientResponse(
-                        new ClientDetails(
-                                ipvSessionItem.getClientSessionDetails().getRedirectUri(),
-                                authorizationCode.getValue(),
-                                ipvSessionItem.getClientSessionDetails().getState()));
-
-        return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, clientResponse);
     }
 
     @Tracing
