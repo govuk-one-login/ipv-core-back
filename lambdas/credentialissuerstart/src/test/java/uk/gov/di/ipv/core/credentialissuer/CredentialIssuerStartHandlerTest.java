@@ -27,7 +27,6 @@ import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -80,6 +79,7 @@ class CredentialIssuerStartHandlerTest {
     public static final String SESSION_ID = "the-session-id";
     public static final String VTM = "http://www.example.com/vtm";
     public static final String TEST_USER_ID = "test-user-id";
+    public static final String OAUTH_STATE = "test-state";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -87,7 +87,6 @@ class CredentialIssuerStartHandlerTest {
     @Mock private ConfigurationService configurationService;
     @Mock private UserIdentityService userIdentityService;
     @Mock private AuditService mockAuditService;
-    @Mock private IpvSessionService ipvSessionService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private IpvSessionItem mockIpvSessionItem;
 
@@ -127,7 +126,7 @@ class CredentialIssuerStartHandlerTest {
                         "code",
                         "test-client-id",
                         "https://example.com/redirect",
-                        "test-state",
+                        OAUTH_STATE,
                         TEST_USER_ID,
                         false);
     }
@@ -169,7 +168,6 @@ class CredentialIssuerStartHandlerTest {
                                 VTM));
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
-        mockGetIPVSessionItem();
 
         APIGatewayProxyRequestEvent input = createRequestEvent(emptyMap(), emptyMap());
 
@@ -273,12 +271,6 @@ class CredentialIssuerStartHandlerTest {
         Map responseBody = getResponseBodyAsMap(response);
         assertEquals(HTTPResponse.SC_BAD_REQUEST, statusCode);
         assertEquals(errorResponse.getCode(), responseBody.get("code"));
-    }
-
-    private void mockGetIPVSessionItem() {
-        IpvSessionItem value = new IpvSessionItem();
-        value.setClientSessionDetails(new ClientSessionDetailsDto());
-        when(ipvSessionService.getIpvSession(SESSION_ID)).thenReturn(value);
     }
 
     private ECPrivateKey getSigningPrivateKey()

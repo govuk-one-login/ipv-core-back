@@ -178,7 +178,7 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub session-end-${Environment}
           AUTH_CODES_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AuthCodesTable.Arn]]
-          IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       Policies:
         - DynamoDBWritePolicy:
@@ -323,7 +323,7 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub cri-return-${Environment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-          IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UserIssuedCredentialsTable
@@ -405,7 +405,7 @@ Resources:
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsTable.Arn ] ]
           SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-          IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsTable
@@ -487,7 +487,7 @@ Resources:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-error-${Environment}
-          IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
@@ -703,7 +703,7 @@ Resources:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub session-${Environment}
-          IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           IPV_JOURNEY_CRI_START_URI: "/journey/cri/start/"
           IPV_JOURNEY_SESSION_END_URI: "/journey/session/end"
       Policies:

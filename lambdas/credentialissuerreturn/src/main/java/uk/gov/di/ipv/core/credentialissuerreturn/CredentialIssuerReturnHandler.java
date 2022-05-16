@@ -7,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.lambda.powertools.tracing.Tracing;
@@ -37,7 +38,6 @@ public class CredentialIssuerReturnHandler
 
     private final CredentialIssuerService credentialIssuerService;
     private final ConfigurationService configurationService;
-    private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     private final IpvSessionService ipvSessionService;
@@ -47,11 +47,9 @@ public class CredentialIssuerReturnHandler
             ConfigurationService configurationService,
             IpvSessionService ipvSessionService,
             AuditService auditService,
-            VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
-            IpvSessionService ipvSessionService) {
+            VerifiableCredentialJwtValidator verifiableCredentialJwtValidator) {
         this.credentialIssuerService = credentialIssuerService;
         this.configurationService = configurationService;
-        this.ipvSessionService = ipvSessionService;
         this.auditService = auditService;
         this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
         this.ipvSessionService = ipvSessionService;
@@ -66,7 +64,6 @@ public class CredentialIssuerReturnHandler
                         new KmsEs256Signer(configurationService.getSigningKeyId()));
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
-        this.ipvSessionService = new IpvSessionService(configurationService);
         this.verifiableCredentialJwtValidator =
                 new VerifiableCredentialJwtValidator(configurationService.getAudienceForClients());
         this.ipvSessionService = new IpvSessionService(configurationService);

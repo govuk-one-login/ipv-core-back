@@ -126,7 +126,12 @@ class AuthorizationRequestHelperTest {
 
         SignedJWT result =
                 AuthorizationRequestHelper.createSignedJWT(
-                        null, signer, credentialIssuerConfig, configurationService, OAUTH_STATE, TEST_USER_ID);
+                        null,
+                        signer,
+                        credentialIssuerConfig,
+                        configurationService,
+                        OAUTH_STATE,
+                        TEST_USER_ID);
         assertNull(result.getJWTClaimsSet().getClaims().get(SHARED_CLAIMS));
     }
 
