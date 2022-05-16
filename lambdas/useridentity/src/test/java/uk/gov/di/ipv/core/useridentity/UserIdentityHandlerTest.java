@@ -15,9 +15,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
+import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -30,6 +33,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,12 +42,10 @@ class UserIdentityHandlerTest {
     private static final String TEST_IPV_SESSION_ID = UUID.randomUUID().toString();
 
     @Mock private Context mockContext;
-
     @Mock private UserIdentityService mockUserIdentityService;
-
     @Mock private AccessTokenService mockAccessTokenService;
-
     @Mock private ConfigurationService mockConfigurationService;
+    @Mock private AuditService mockAuditService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -61,7 +63,10 @@ class UserIdentityHandlerTest {
 
         userInfoHandler =
                 new UserIdentityHandler(
-                        mockUserIdentityService, mockAccessTokenService, mockConfigurationService);
+                        mockUserIdentityService,
+                        mockAccessTokenService,
+                        mockConfigurationService,
+                        mockAuditService);
     }
 
     @Test
@@ -82,7 +87,8 @@ class UserIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnCredentialsOnSuccessfulUserInfoRequest() throws JsonProcessingException {
+    void shouldReturnCredentialsOnSuccessfulUserInfoRequest()
+            throws JsonProcessingException, SqsException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken();
         Map<String, String> headers =
@@ -100,6 +106,8 @@ class UserIdentityHandlerTest {
         assertEquals(userIdentity.getVcs().get(0), responseBody.getVcs().get(0));
         assertEquals(userIdentity.getVcs().get(1), responseBody.getVcs().get(1));
         assertEquals(userIdentity.getVcs().get(2), responseBody.getVcs().get(2));
+
+        verify(mockAuditService).sendAuditEvent(AuditEventTypes.IPV_IDENTITY_ISSUED);
     }
 
     @Test
