@@ -85,6 +85,7 @@ public class CredentialIssuerReturnHandler
             var errorResponse = validate(request);
 
             if (errorResponse.isPresent()) {
+                LOGGER.error("Validation failed: {}", errorResponse.get().getMessage());
                 return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
             }
             CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request);
