@@ -235,6 +235,23 @@ class UserIdentityServiceTest {
         assertEquals("mock-vtm-claim", credentials.getVtm());
     }
 
+    @Test
+    void shouldReturnListOfVcsForSharedAttributes() {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+
+        List<String> vcList = userIdentityService.getUserIssuedCredentials("ipv-session-id-1");
+
+        assertEquals(SIGNED_VC_1, vcList.get(0));
+        assertEquals(SIGNED_VC_2, vcList.get(1));
+    }
+
     private UserIssuedCredentialsItem createUserIssuedCredentialsItem(
             String ipvSessionId,
             String credentialIssuer,
