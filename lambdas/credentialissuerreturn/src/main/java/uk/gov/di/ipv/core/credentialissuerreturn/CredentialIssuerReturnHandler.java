@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
@@ -25,6 +26,7 @@ import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
+import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 
 import java.util.Optional;
 
@@ -37,14 +39,17 @@ public class CredentialIssuerReturnHandler
     private final CredentialIssuerService credentialIssuerService;
     private final ConfigurationService configurationService;
     private final AuditService auditService;
+    private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
 
     public CredentialIssuerReturnHandler(
             CredentialIssuerService credentialIssuerService,
             ConfigurationService configurationService,
-            AuditService auditService) {
+            AuditService auditService,
+            VerifiableCredentialJwtValidator verifiableCredentialJwtValidator) {
         this.credentialIssuerService = credentialIssuerService;
         this.configurationService = configurationService;
         this.auditService = auditService;
+        this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -55,6 +60,8 @@ public class CredentialIssuerReturnHandler
         this.credentialIssuerService = new CredentialIssuerService(configurationService, signer);
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
+        this.verifiableCredentialJwtValidator =
+                new VerifiableCredentialJwtValidator(configurationService.getAudienceForClients());
     }
 
     @Override
@@ -75,16 +82,20 @@ public class CredentialIssuerReturnHandler
 
             BearerAccessToken accessToken =
                     credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);
-            String verifiableCredential =
+            SignedJWT verifiableCredential =
                     credentialIssuerService.getVerifiableCredential(
                             accessToken, credentialIssuerConfig);
+
+            verifiableCredentialJwtValidator.validate(
+                    verifiableCredential, credentialIssuerConfig, "userId");
 
             auditService.sendAuditEvent(
                     AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED);
 
             auditService.sendAuditEvent(AuditEventTypes.IPV_VC_RECEIVED);
 
-            credentialIssuerService.persistUserCredentials(verifiableCredential, request);
+            credentialIssuerService.persistUserCredentials(
+                    verifiableCredential.serialize(), request);
 
             JourneyResponse journeyResponse = new JourneyResponse(NEXT_JOURNEY_STEP_URI);
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, journeyResponse);

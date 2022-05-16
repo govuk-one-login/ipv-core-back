@@ -3,8 +3,6 @@ package uk.gov.di.ipv.core.library.service;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.nimbusds.jose.crypto.ECDSASigner;
-import com.nimbusds.jose.crypto.impl.ECDSA;
-import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
@@ -227,49 +225,15 @@ class CredentialIssuerServiceTest {
 
         BearerAccessToken accessToken = new BearerAccessToken();
 
-        String credential =
+        SignedJWT credential =
                 credentialIssuerService.getVerifiableCredential(
                         accessToken, credentialIssuerConfig);
 
-        assertEquals(SIGNED_VC_1, credential);
+        assertEquals(SIGNED_VC_1, credential.serialize());
 
         verify(
                 postRequestedFor(urlEqualTo("/credentials/issue"))
                         .withHeader("Authorization", equalTo("Bearer " + accessToken.getValue())));
-    }
-
-    @Test
-    void getVerifiableCredentialCanHandleDerEncodedSignatures(WireMockRuntimeInfo wmRuntimeInfo)
-            throws Exception {
-
-        SignedJWT concatEncodedSignedJwt = SignedJWT.parse(SIGNED_VC_1);
-        Base64URL transcodedSignatureBase64 =
-                Base64URL.encode(
-                        ECDSA.transcodeSignatureToDER(
-                                concatEncodedSignedJwt.getSignature().decode()));
-        String[] jwtParts = concatEncodedSignedJwt.serialize().split("\\.");
-        SignedJWT derEncodedSignedJwt =
-                SignedJWT.parse(
-                        String.format(
-                                "%s.%s.%s", jwtParts[0], jwtParts[1], transcodedSignatureBase64));
-
-        stubFor(
-                post("/credentials/issue")
-                        .willReturn(
-                                aResponse()
-                                        .withHeader("Content-Type", "application/jwt;charset=UTF-8")
-                                        .withBody(derEncodedSignedJwt.serialize())));
-
-        CredentialIssuerConfig credentialIssuerConfig =
-                getStubCredentialIssuerConfig(wmRuntimeInfo);
-
-        BearerAccessToken accessToken = new BearerAccessToken();
-
-        String credential =
-                credentialIssuerService.getVerifiableCredential(
-                        accessToken, credentialIssuerConfig);
-
-        assertEquals(SIGNED_VC_1, credential);
     }
 
     @Test
@@ -296,72 +260,6 @@ class CredentialIssuerServiceTest {
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
-    }
-
-    @Test
-    void getVerifiableCredentialThrowsIfNotValidSignature(WireMockRuntimeInfo wmRuntimeInfo) {
-        stubFor(
-                post("/credentials/issue")
-                        .willReturn(
-                                aResponse()
-                                        .withHeader("Content-Type", "application/jwt;charset=UTF-8")
-                                        .withBody(SIGNED_VC_1 + "THISWILLBREAKTHESIGNATURE")));
-
-        CredentialIssuerConfig credentialIssuerConfig =
-                getStubCredentialIssuerConfig(wmRuntimeInfo);
-        BearerAccessToken accessToken = new BearerAccessToken();
-
-        CredentialIssuerException thrown =
-                assertThrows(
-                        CredentialIssuerException.class,
-                        () ->
-                                credentialIssuerService.getVerifiableCredential(
-                                        accessToken, credentialIssuerConfig));
-
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL, thrown.getErrorResponse());
-    }
-
-    @Test
-    void getVerifiableCredentialThrowsIfNotValidPublicKey(WireMockRuntimeInfo wmRuntimeInfo) {
-        stubFor(
-                post("/credentials/issue")
-                        .willReturn(
-                                aResponse()
-                                        .withHeader("Content-Type", "application/jwt;charset=UTF-8")
-                                        .withBody(SIGNED_VC_1)));
-
-        CredentialIssuerConfig credentialIssuerConfig =
-                new CredentialIssuerConfig(
-                        "StubPassport",
-                        "any",
-                        URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/token"),
-                        URI.create(
-                                "http://localhost:"
-                                        + wmRuntimeInfo.getHttpPort()
-                                        + "/credentials/issue"),
-                        URI.create(
-                                "http://localhost:"
-                                        + wmRuntimeInfo.getHttpPort()
-                                        + "/authorizeUrl"),
-                        "ipv-core",
-                        "NOT A KEY",
-                        RSA_ENCRYPTION_PUBLIC_JWK,
-                        "test-audience");
-        ;
-
-        BearerAccessToken accessToken = new BearerAccessToken();
-
-        CredentialIssuerException thrown =
-                assertThrows(
-                        CredentialIssuerException.class,
-                        () ->
-                                credentialIssuerService.getVerifiableCredential(
-                                        accessToken, credentialIssuerConfig));
-
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_JWK, thrown.getErrorResponse());
     }
 
     @Test
