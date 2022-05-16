@@ -105,6 +105,8 @@ class CredentialIssuerReturnHandlerTest {
         verify(auditService)
                 .sendAuditEvent(AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED);
 
+        verify(auditService).sendAuditEvent(AuditEventTypes.IPV_VC_RECEIVED);
+
         Integer statusCode = response.getStatusCode();
         Map responseBody = getResponseBodyAsMap(response);
         assertEquals(HTTPResponse.SC_OK, statusCode);

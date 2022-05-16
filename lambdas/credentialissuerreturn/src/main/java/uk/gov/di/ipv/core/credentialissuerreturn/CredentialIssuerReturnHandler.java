@@ -79,6 +79,8 @@ public class CredentialIssuerReturnHandler
             auditService.sendAuditEvent(
                     AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED);
 
+            auditService.sendAuditEvent(AuditEventTypes.IPV_VC_RECEIVED);
+
             credentialIssuerService.persistUserCredentials(verifiableCredential, request);
 
             JourneyResponse journeyResponse = new JourneyResponse(NEXT_JOURNEY_STEP_URI);
