@@ -42,7 +42,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
@@ -93,6 +92,7 @@ class AuthorizationRequestHelperTest {
             throws JOSEException, ParseException, HttpResponseExceptionWithErrorBody {
         setupCredentialIssuerConfigMock();
         setupConfigurationServiceMock();
+        when(credentialIssuerConfig.getAudienceForClients()).thenReturn(AUDIENCE);
 
         SignedJWT result =
                 AuthorizationRequestHelper.createSignedJWT(
@@ -209,7 +209,6 @@ class AuthorizationRequestHelperTest {
         when(configurationService.getCoreFrontCallbackUrl()).thenReturn(CORE_FRONT_CALLBACK_URL);
         when(configurationService.getIpvTokenTtl()).thenReturn(IPV_TOKEN_TTL);
         when(configurationService.getAudienceForClients()).thenReturn(IPV_ISSUER);
-        when(configurationService.getClientAudience(anyString())).thenReturn(AUDIENCE);
     }
 
     private PrivateKey getEncryptionPrivateKey()

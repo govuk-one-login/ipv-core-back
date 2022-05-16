@@ -38,6 +38,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
 @ExtendWith(MockitoExtension.class)
 class CredentialIssuerReturnHandlerTest {
@@ -71,7 +72,9 @@ class CredentialIssuerReturnHandlerTest {
                         new URI("http://www.example.com/credential"),
                         new URI("http://www.example.com/authorize"),
                         "ipv-core",
-                        "{}");
+                        "{}",
+                        RSA_ENCRYPTION_PUBLIC_JWK,
+                        "test-audience");
     }
 
     @Test

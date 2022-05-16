@@ -7,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSAEncrypter;
@@ -36,7 +37,6 @@ import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
-import java.security.interfaces.RSAPublicKey;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
@@ -124,10 +124,8 @@ public class CredentialIssuerStartHandler
                                     .getUserId());
 
             RSAEncrypter rsaEncrypter =
-                    new RSAEncrypter(
-                            (RSAPublicKey)
-                                    configurationService.getEncryptionPublicKey(
-                                            credentialIssuerConfig.getId()));
+                    new RSAEncrypter(credentialIssuerConfig.getJarEncryptionPublicJwk());
+
             JWEObject jweObject =
                     AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
 
@@ -147,6 +145,10 @@ public class CredentialIssuerStartHandler
                     exception.getResponseCode(), exception.getErrorBody());
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        } catch (ParseException | JOSEException e) {
+            LOGGER.error("Failed to parse encryption public JWK: {}", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }

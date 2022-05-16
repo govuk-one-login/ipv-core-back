@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.dto;
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.nimbusds.jose.jwk.ECKey;
+import com.nimbusds.jose.jwk.RSAKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.net.URI;
@@ -20,9 +21,12 @@ public class CredentialIssuerConfig {
     private URI authorizeUrl;
     private String ipvClientId;
     private String vcVerifyingPublicJwk;
+    private String jarEncryptionPublicJwk;
+    private String audienceForClients;
 
     public CredentialIssuerConfig() {}
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public CredentialIssuerConfig(
             String id,
             String name,
@@ -30,7 +34,9 @@ public class CredentialIssuerConfig {
             URI credentialUrl,
             URI authorizeUrl,
             String ipvClientId,
-            String vcVerifyingPublicJwk) {
+            String vcVerifyingPublicJwk,
+            String jarEncryptionPublicJwk,
+            String audienceForClients) {
         this.id = id;
         this.name = name;
         this.tokenUrl = tokenUrl;
@@ -38,6 +44,8 @@ public class CredentialIssuerConfig {
         this.authorizeUrl = authorizeUrl;
         this.ipvClientId = ipvClientId;
         this.vcVerifyingPublicJwk = vcVerifyingPublicJwk;
+        this.jarEncryptionPublicJwk = jarEncryptionPublicJwk;
+        this.audienceForClients = audienceForClients;
     }
 
     public String getId() {
@@ -71,6 +79,19 @@ public class CredentialIssuerConfig {
 
     public ECKey getVcVerifyingPublicJwk() throws ParseException {
         return ECKey.parse(vcVerifyingPublicJwk);
+    }
+
+    @JsonGetter("jarEncryptionPublicJwk")
+    public String getJarEncryptionPublicJwkString() {
+        return jarEncryptionPublicJwk;
+    }
+
+    public RSAKey getJarEncryptionPublicJwk() throws ParseException {
+        return RSAKey.parse(jarEncryptionPublicJwk);
+    }
+
+    public String getAudienceForClients() {
+        return audienceForClients;
     }
 
     @Override

@@ -12,7 +12,6 @@ import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jose.crypto.RSADecrypter;
 import com.nimbusds.jose.jwk.ECKey;
-import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +26,7 @@ import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -39,11 +38,9 @@ import java.net.URISyntaxException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.interfaces.ECPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.RSAPublicKeySpec;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -120,7 +117,9 @@ class CredentialIssuerStartHandlerTest {
                         new URI(CRI_CREDENTIAL_URL),
                         new URI(CRI_AUTHORIZE_URL),
                         IPV_CLIENT_ID,
-                        "{}");
+                        "{}",
+                        RSA_ENCRYPTION_PUBLIC_JWK,
+                        "http://www.example.com/audience");
 
         clientSessionDetailsDto =
                 new ClientSessionDetailsDto(
@@ -152,15 +151,11 @@ class CredentialIssuerStartHandlerTest {
     }
 
     @Test
-    void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponse()
-            throws Exception, HttpResponseExceptionWithErrorBody {
+    void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponse() throws Exception {
         when(configurationService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
         when(configurationService.getIpvTokenTtl()).thenReturn("900");
         when(configurationService.getCoreFrontCallbackUrl()).thenReturn("callbackUrl");
-        when(configurationService.getEncryptionPublicKey(CRI_ID))
-                .thenReturn(getEncryptionPublicKey());
         when(configurationService.getAudienceForClients()).thenReturn(IPV_ISSUER);
-        when(configurationService.getClientAudience(anyString())).thenReturn(CRI_AUDIENCE);
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
                 .thenReturn(
                         new UserIdentity(
@@ -285,16 +280,6 @@ class CredentialIssuerStartHandlerTest {
                         .generatePrivate(
                                 new PKCS8EncodedKeySpec(
                                         Base64.getDecoder().decode(EC_PRIVATE_KEY)));
-    }
-
-    private PublicKey getEncryptionPublicKey()
-            throws NoSuchAlgorithmException, ParseException, InvalidKeySpecException {
-        RSAKey rsaKey = RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK);
-        RSAPublicKeySpec rsaPublicKeySpec =
-                new RSAPublicKeySpec(
-                        rsaKey.getModulus().decodeToBigInteger(),
-                        rsaKey.getPublicExponent().decodeToBigInteger());
-        return KeyFactory.getInstance("RSA").generatePublic(rsaPublicKeySpec);
     }
 
     private PrivateKey getEncryptionPrivateKey()
