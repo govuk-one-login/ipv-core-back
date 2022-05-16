@@ -241,6 +241,11 @@ public class ConfigurationService {
                 String.format("/%s/core/self/coreFrontCallbackUrl", System.getenv(ENVIRONMENT)));
     }
 
+    public String getCoreVtmClaim() {
+        return ssmProvider.get(
+                String.format("/%s/core/self/coreVtmClaim", System.getenv(ENVIRONMENT)));
+    }
+
     public PublicKey getEncryptionPublicKey(String clientId)
             throws HttpResponseExceptionWithErrorBody {
         try {

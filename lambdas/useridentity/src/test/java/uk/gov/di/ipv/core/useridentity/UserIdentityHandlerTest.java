@@ -40,6 +40,7 @@ import static org.mockito.Mockito.when;
 class UserIdentityHandlerTest {
 
     private static final String TEST_IPV_SESSION_ID = UUID.randomUUID().toString();
+    public static final String VTM = "http://www.example.com/vtm";
 
     @Mock private Context mockContext;
     @Mock private UserIdentityService mockUserIdentityService;
@@ -59,7 +60,9 @@ class UserIdentityHandlerTest {
 
         userIdentity =
                 new UserIdentity(
-                        List.of("12345", "Test credential", "bar"), VectorOfTrust.P2.toString());
+                        List.of("12345", "Test credential", "bar"),
+                        VectorOfTrust.P2.toString(),
+                        VTM);
 
         userInfoHandler =
                 new UserIdentityHandler(

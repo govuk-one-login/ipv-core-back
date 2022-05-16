@@ -69,7 +69,9 @@ public class UserIdentityService {
 
         String vot = generateVectorOfTrustClaim(credentialIssuerItems);
 
-        return new UserIdentity.Builder().setVcs(vcJwts).setVot(vot).build();
+        String vtm = configurationService.getCoreVtmClaim();
+
+        return new UserIdentity.Builder().setVcs(vcJwts).setVot(vot).setVtm(vtm).build();
     }
 
     public Map<String, String> getUserIssuedDebugCredentials(String ipvSessionId) {

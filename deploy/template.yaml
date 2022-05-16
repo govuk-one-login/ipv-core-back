@@ -412,6 +412,8 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/coreFrontCallbackUrl
         - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/coreVtmClaim
+        - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers
@@ -545,6 +547,8 @@ Resources:
                 - 'kms:GenerateDataKey'
               Resource:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/coreVtmClaim
       Events:
         IPVCoreExternalAPI:
           Type: Api

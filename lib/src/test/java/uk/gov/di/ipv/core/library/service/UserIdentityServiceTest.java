@@ -210,6 +210,15 @@ class UserIdentityServiceTest {
         assertEquals(VectorOfTrust.P0.toString(), credentials.getVot());
     }
 
+    @Test
+    void shouldSetVtmClaimOnUserIdentity() {
+        when(mockConfigurationService.getCoreVtmClaim()).thenReturn("mock-vtm-claim");
+
+        UserIdentity credentials = userIdentityService.getUserIssuedCredentials("ipv-session-id-1");
+
+        assertEquals("mock-vtm-claim", credentials.getVtm());
+    }
+
     private UserIssuedCredentialsItem createUserIssuedCredentialsItem(
             String ipvSessionId,
             String credentialIssuer,
