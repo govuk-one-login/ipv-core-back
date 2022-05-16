@@ -12,22 +12,26 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.RSAEncrypter;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.credentialissuer.domain.CriDetails;
 import uk.gov.di.ipv.core.credentialissuer.domain.CriResponse;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.SharedAttributes;
 import uk.gov.di.ipv.core.library.domain.SharedAttributesResponse;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.AuthorizationRequestHelper;
 import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -58,14 +62,17 @@ public class CredentialIssuerStartHandler
     private final ConfigurationService configurationService;
     private final UserIdentityService userIdentityService;
     private final JWSSigner signer;
+    private final AuditService auditService;
 
     public CredentialIssuerStartHandler(
             ConfigurationService configurationService,
             UserIdentityService userIdentityService,
-            JWSSigner signer) {
+            JWSSigner signer,
+            AuditService auditService) {
         this.configurationService = configurationService;
         this.userIdentityService = userIdentityService;
         this.signer = signer;
+        this.auditService = auditService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -73,6 +80,8 @@ public class CredentialIssuerStartHandler
         this.configurationService = new ConfigurationService();
         this.userIdentityService = new UserIdentityService(configurationService);
         this.signer = new KmsEs256Signer(configurationService.getSigningKeyId());
+        this.auditService =
+                new AuditService(AuditService.getDefaultSqsClient(), configurationService);
     }
 
     @Override
@@ -122,10 +131,16 @@ public class CredentialIssuerStartHandler
                                     credentialIssuerConfig.getAuthorizeUrl().toString(),
                                     jweObject.serialize()));
 
+            auditService.sendAuditEvent(AuditEventTypes.IPV_REDIRECT_TO_CRI);
+
             return ApiGatewayResponseGenerator.proxyJsonResponse(OK, criResponse);
         } catch (HttpResponseExceptionWithErrorBody exception) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     exception.getResponseCode(), exception.getErrorBody());
+        } catch (SqsException e) {
+            LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
