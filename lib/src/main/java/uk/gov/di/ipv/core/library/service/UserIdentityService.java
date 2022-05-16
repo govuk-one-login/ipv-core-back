@@ -59,7 +59,15 @@ public class UserIdentityService {
         this.dataStore = dataStore;
     }
 
-    public UserIdentity getUserIssuedCredentials(String ipvSessionId) {
+    public List<String> getUserIssuedCredentials(String ipvSessionId) {
+        List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(ipvSessionId);
+
+        return credentialIssuerItems.stream()
+                .map(UserIssuedCredentialsItem::getCredential)
+                .collect(Collectors.toList());
+    }
+
+    public UserIdentity generateUserIdentity(String ipvSessionId, String sub) {
         List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(ipvSessionId);
 
         List<String> vcJwts =
@@ -71,7 +79,12 @@ public class UserIdentityService {
 
         String vtm = configurationService.getCoreVtmClaim();
 
-        return new UserIdentity.Builder().setVcs(vcJwts).setVot(vot).setVtm(vtm).build();
+        return new UserIdentity.Builder()
+                .setVcs(vcJwts)
+                .setSub(sub)
+                .setVot(vot)
+                .setVtm(vtm)
+                .build();
     }
 
     public Map<String, String> getUserIssuedDebugCredentials(String ipvSessionId) {

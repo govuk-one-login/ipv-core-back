@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 public class UserIdentityHandler
@@ -32,16 +33,19 @@ public class UserIdentityHandler
 
     private final UserIdentityService userIdentityService;
     private final AccessTokenService accessTokenService;
+    private final IpvSessionService ipvSessionService;
     private final ConfigurationService configurationService;
     private final AuditService auditService;
 
     public UserIdentityHandler(
             UserIdentityService userIdentityService,
             AccessTokenService accessTokenService,
+            IpvSessionService ipvSessionService,
             ConfigurationService configurationService,
             AuditService auditService) {
         this.userIdentityService = userIdentityService;
         this.accessTokenService = accessTokenService;
+        this.ipvSessionService = ipvSessionService;
         this.configurationService = configurationService;
         this.auditService = auditService;
     }
@@ -51,6 +55,7 @@ public class UserIdentityHandler
         this.configurationService = new ConfigurationService();
         this.userIdentityService = new UserIdentityService(configurationService);
         this.accessTokenService = new AccessTokenService(configurationService);
+        this.ipvSessionService = new IpvSessionService(configurationService);
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
     }
@@ -80,7 +85,14 @@ public class UserIdentityHandler
                                 .toJSONObject());
             }
 
-            UserIdentity userIdentity = userIdentityService.getUserIssuedCredentials(ipvSessionId);
+            String userId =
+                    ipvSessionService
+                            .getIpvSession(ipvSessionId)
+                            .getClientSessionDetails()
+                            .getUserId();
+
+            UserIdentity userIdentity =
+                    userIdentityService.generateUserIdentity(ipvSessionId, userId);
 
             auditService.sendAuditEvent(AuditEventTypes.IPV_IDENTITY_ISSUED);
 

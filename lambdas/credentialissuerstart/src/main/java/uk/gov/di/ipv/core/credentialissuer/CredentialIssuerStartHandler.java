@@ -24,7 +24,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.SharedAttributes;
 import uk.gov.di.ipv.core.library.domain.SharedAttributesResponse;
-import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -170,10 +169,10 @@ public class CredentialIssuerStartHandler
     @Tracing
     private SharedAttributesResponse getSharedAttributes(String ipvSessionId)
             throws HttpResponseExceptionWithErrorBody {
-        UserIdentity credentials = userIdentityService.getUserIssuedCredentials(ipvSessionId);
+        List<String> credentials = userIdentityService.getUserIssuedCredentials(ipvSessionId);
 
         List<SharedAttributes> sharedAttributes = new ArrayList<>();
-        for (String credential : credentials.getVcs()) {
+        for (String credential : credentials) {
             try {
                 JsonNode credentialSubject =
                         mapper.readTree(SignedJWT.parse(credential).getPayload().toString())

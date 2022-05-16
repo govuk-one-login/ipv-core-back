@@ -18,10 +18,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.util.Collections;
@@ -45,6 +48,7 @@ class UserIdentityHandlerTest {
     @Mock private Context mockContext;
     @Mock private UserIdentityService mockUserIdentityService;
     @Mock private AccessTokenService mockAccessTokenService;
+    @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ConfigurationService mockConfigurationService;
     @Mock private AuditService mockAuditService;
 
@@ -52,6 +56,7 @@ class UserIdentityHandlerTest {
 
     private UserIdentityHandler userInfoHandler;
     private UserIdentity userIdentity;
+    private IpvSessionItem ipvSessionItem;
     private Map<String, String> responseBody;
 
     @BeforeEach
@@ -61,13 +66,27 @@ class UserIdentityHandlerTest {
         userIdentity =
                 new UserIdentity(
                         List.of("12345", "Test credential", "bar"),
+                        "test-sub",
                         VectorOfTrust.P2.toString(),
                         VTM);
+
+        ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId("12345");
+        ipvSessionItem.setUserState("test-state");
+        ipvSessionItem.setClientSessionDetails(
+                new ClientSessionDetailsDto(
+                        "code",
+                        "test-client",
+                        "http://example.com",
+                        "test-state",
+                        "test-user-id",
+                        false));
 
         userInfoHandler =
                 new UserIdentityHandler(
                         mockUserIdentityService,
                         mockAccessTokenService,
+                        mockIpvSessionService,
                         mockConfigurationService,
                         mockAuditService);
     }
@@ -82,7 +101,8 @@ class UserIdentityHandlerTest {
 
         when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString()))
                 .thenReturn(TEST_IPV_SESSION_ID);
-        when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(userIdentity);
+        when(mockUserIdentityService.generateUserIdentity(any(), any())).thenReturn(userIdentity);
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
 
@@ -100,7 +120,8 @@ class UserIdentityHandlerTest {
 
         when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString()))
                 .thenReturn(TEST_IPV_SESSION_ID);
-        when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(userIdentity);
+        when(mockUserIdentityService.generateUserIdentity(any(), any())).thenReturn(userIdentity);
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
         UserIdentity responseBody =

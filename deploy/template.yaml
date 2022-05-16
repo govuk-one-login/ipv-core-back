@@ -418,8 +418,6 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/coreFrontCallbackUrl
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/coreVtmClaim
-        - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers
@@ -535,6 +533,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub user-identity-${Environment}
           ACCESS_TOKENS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AccessTokensTable.Arn]]
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
+          IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       Policies:
         - DynamoDBReadPolicy:
@@ -543,6 +542,8 @@ Resources:
             TableName: !Ref UserIssuedCredentialsTable
         - DynamoDBCrudPolicy:
             TableName: !Ref AccessTokensTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:

@@ -22,8 +22,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.UserIdentity;
-import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -51,7 +49,6 @@ import static java.util.Collections.emptyMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -155,18 +152,13 @@ class CredentialIssuerStartHandlerTest {
         when(configurationService.getIpvTokenTtl()).thenReturn("900");
         when(configurationService.getCoreFrontCallbackUrl()).thenReturn("callbackUrl");
         when(configurationService.getAudienceForClients()).thenReturn(IPV_ISSUER);
+        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
                 .thenReturn(
-                        new UserIdentity(
-                                List.of(
-                                        generateVerifiableCredential(
-                                                vcClaim(CREDENTIAL_ATTRIBUTES_1)),
-                                        generateVerifiableCredential(
-                                                vcClaim(CREDENTIAL_ATTRIBUTES_2))),
-                                VectorOfTrust.P2.toString(),
-                                VTM));
-        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+                        List.of(
+                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_1)),
+                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_2))));
 
         APIGatewayProxyRequestEvent input = createRequestEvent(emptyMap(), emptyMap());
 

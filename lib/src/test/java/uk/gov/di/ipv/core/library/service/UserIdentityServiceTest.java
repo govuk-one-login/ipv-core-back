@@ -51,10 +51,12 @@ class UserIdentityServiceTest {
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
-        UserIdentity credentials = userIdentityService.getUserIssuedCredentials("ipv-session-id-1");
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
 
         assertEquals(SIGNED_VC_1, credentials.getVcs().get(0));
         assertEquals(SIGNED_VC_2, credentials.getVcs().get(1));
+        assertEquals("test-sub", credentials.getSub());
     }
 
     @Test
@@ -171,7 +173,8 @@ class UserIdentityServiceTest {
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
-        UserIdentity credentials = userIdentityService.getUserIssuedCredentials("ipv-session-id-1");
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
 
         assertEquals(VectorOfTrust.P2.toString(), credentials.getVot());
     }
@@ -187,9 +190,20 @@ class UserIdentityServiceTest {
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
-        UserIdentity credentials = userIdentityService.getUserIssuedCredentials("ipv-session-id-1");
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
 
         assertEquals(VectorOfTrust.P0.toString(), credentials.getVot());
+    }
+
+    @Test
+    void shouldSetsubClaimOnUserIdentity() {
+        when(mockConfigurationService.getCoreVtmClaim()).thenReturn("mock-vtm-claim");
+
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+
+        assertEquals("test-sub", credentials.getSub());
     }
 
     @Test
@@ -205,7 +219,8 @@ class UserIdentityServiceTest {
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
-        UserIdentity credentials = userIdentityService.getUserIssuedCredentials("ipv-session-id-1");
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
 
         assertEquals(VectorOfTrust.P0.toString(), credentials.getVot());
     }
@@ -214,7 +229,8 @@ class UserIdentityServiceTest {
     void shouldSetVtmClaimOnUserIdentity() {
         when(mockConfigurationService.getCoreVtmClaim()).thenReturn("mock-vtm-claim");
 
-        UserIdentity credentials = userIdentityService.getUserIssuedCredentials("ipv-session-id-1");
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
 
         assertEquals("mock-vtm-claim", credentials.getVtm());
     }
