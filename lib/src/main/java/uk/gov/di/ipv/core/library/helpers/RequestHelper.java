@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 public class RequestHelper {
 
     public static final String IPV_SESSION_ID_HEADER = "ipv-session-id";
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private RequestHelper() {}
 
@@ -23,7 +24,6 @@ public class RequestHelper {
         Map<String, String> map = parseRequestBody(request.getBody());
         getHeader(request.getHeaders(), IPV_SESSION_ID_HEADER)
                 .ifPresent(h -> map.put("ipv_session_id", h));
-        ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.convertValue(map, type);
     }
 

@@ -66,7 +66,7 @@ public class AuthorizationRequestHelper {
 
         JWTClaimsSet.Builder claimsSetBuilder =
                 new JWTClaimsSet.Builder(authClaimsSet)
-                        .audience(configurationService.getClientAudience(criId))
+                        .audience(credentialIssuerConfig.getAudienceForClients())
                         .issuer(configurationService.getAudienceForClients())
                         .issueTime(Date.from(now))
                         .expirationTime(

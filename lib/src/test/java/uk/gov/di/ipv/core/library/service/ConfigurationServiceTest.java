@@ -11,16 +11,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
-import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 import uk.org.webcompere.systemstubs.properties.SystemProperties;
 
 import java.net.URI;
-import java.security.PublicKey;
 import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
 @WireMockTest(httpPort = ConfigurationService.LOCALHOST_PORT)
 @ExtendWith(MockitoExtension.class)
@@ -88,12 +86,18 @@ class ConfigurationServiceTest {
     }
 
     @Test
-    void shouldGetCredentialIssuerFromParameterStore() {
+    void shouldGetCredentialIssuerFromParameterStore() throws Exception {
         environmentVariables.set(
                 "CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "/dev/core/credentialIssuers");
 
         Map<String, String> credentialIssuerParameters =
-                Map.of("tokenUrl", TEST_TOKEN_URL, "credentialUrl", TEST_CREDENTIAL_URL);
+                Map.of(
+                        "tokenUrl",
+                        TEST_TOKEN_URL,
+                        "credentialUrl",
+                        TEST_CREDENTIAL_URL,
+                        "jarEncryptionPublicJwk",
+                        RSA_ENCRYPTION_PUBLIC_JWK);
         when(ssmProvider.getMultiple("/dev/core/credentialIssuers/passportCri"))
                 .thenReturn(credentialIssuerParameters);
 
@@ -107,10 +111,13 @@ class ConfigurationServiceTest {
                         URI.create(TEST_CREDENTIAL_URL),
                         URI.create(TEST_CREDENTIAL_URL),
                         "ipv-core",
-                        "{}");
+                        "{}",
+                        RSA_ENCRYPTION_PUBLIC_JWK,
+                        "test-audience");
 
         assertEquals(expected.getTokenUrl(), result.getTokenUrl());
         assertEquals(expected.getCredentialUrl(), result.getCredentialUrl());
+        assertEquals("RSA", result.getJarEncryptionPublicJwk().getKeyType().toString());
     }
 
     @Test
@@ -243,15 +250,6 @@ class ConfigurationServiceTest {
     }
 
     @Test
-    void shouldReturnClientAudience() {
-        environmentVariables.set("ENVIRONMENT", "test");
-        String clientIssuer = "aClientAudience";
-        when(ssmProvider.get("/test/core/credentialIssuers/aClientId/audienceForClients"))
-                .thenReturn(clientIssuer);
-        assertEquals(clientIssuer, configurationService.getClientAudience("aClientId"));
-    }
-
-    @Test
     void shouldReturnClientSubject() {
         environmentVariables.set("ENVIRONMENT", "test");
         String clientIssuer = "aClientSubject";
@@ -282,15 +280,5 @@ class ConfigurationServiceTest {
         String coreVtmClaim = "aCoreVtmClaim";
         when(ssmProvider.get("/test/core/self/coreVtmClaim")).thenReturn(coreVtmClaim);
         assertEquals(coreVtmClaim, configurationService.getCoreVtmClaim());
-    }
-
-    @Test
-    void shouldReturnEncryptionPublicKey() throws HttpResponseExceptionWithErrorBody {
-        environmentVariables.set("ENVIRONMENT", "test");
-        when(ssmProvider.get("/test/core/credentialIssuers/aClientId/jarEncryptionPublicJwk"))
-                .thenReturn(TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK);
-        PublicKey publicKey = configurationService.getEncryptionPublicKey("aClientId");
-        assertEquals("RSA", publicKey.getAlgorithm());
-        assertEquals("X.509", publicKey.getFormat());
     }
 }

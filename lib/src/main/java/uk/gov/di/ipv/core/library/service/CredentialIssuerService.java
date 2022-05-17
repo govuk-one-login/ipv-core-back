@@ -2,12 +2,6 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSSigner;
-import com.nimbusds.jose.crypto.ECDSAVerifier;
-import com.nimbusds.jose.crypto.impl.ECDSA;
-import com.nimbusds.jose.util.Base64URL;
-import com.nimbusds.jwt.JWTClaimNames;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.PlainJWT;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
@@ -40,8 +34,6 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
-
-import static com.nimbusds.jose.JWSAlgorithm.ES256;
 
 public class CredentialIssuerService {
 
@@ -84,7 +76,7 @@ public class CredentialIssuerService {
                     new ClientAuthClaims(
                             config.getIpvClientId(),
                             config.getIpvClientId(),
-                            configurationService.getClientAudience(config.getId()),
+                            config.getAudienceForClients(),
                             dateTime.plusSeconds(
                                             Long.parseLong(configurationService.getIpvTokenTtl()))
                                     .toEpochSecond(),
@@ -129,21 +121,11 @@ public class CredentialIssuerService {
         }
     }
 
-    public String getVerifiableCredential(
-            BearerAccessToken accessToken, CredentialIssuerConfig config, String subject) {
-        String requestJWT =
-                new PlainJWT(
-                                new JWTClaimsSet.Builder()
-                                        .claim(
-                                                JWTClaimNames.SUBJECT,
-                                                String.format("urn:uuid:%s", subject))
-                                        .build())
-                        .serialize();
-
+    public SignedJWT getVerifiableCredential(
+            BearerAccessToken accessToken, CredentialIssuerConfig config) {
         HTTPRequest credentialRequest =
                 new HTTPRequest(HTTPRequest.Method.POST, config.getCredentialUrl());
         credentialRequest.setAuthorization(accessToken.toAuthorizationHeader());
-        credentialRequest.setQuery(requestJWT);
 
         try {
             HTTPResponse response = credentialRequest.send();
@@ -157,37 +139,13 @@ public class CredentialIssuerService {
                         ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
             }
 
-            SignedJWT verifiableCredential = (SignedJWT) response.getContentAsJWT();
-
-            // Signatures from AWS are in DER format. Nimbus needs then in concat format.
-            if (signatureIsDerFormat(verifiableCredential)) {
-                LOGGER.info("Transcoding signature");
-                verifiableCredential = transcodeSignature(verifiableCredential);
-            }
-
-            if (!verifiableCredential.verify(new ECDSAVerifier(config.getVcVerifyingPublicJwk()))) {
-                LOGGER.error("Verifiable credential signature not valid");
-                throw new CredentialIssuerException(
-                        HTTPResponse.SC_SERVER_ERROR,
-                        ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
-            }
-
-            return verifiableCredential.serialize();
+            return (SignedJWT) response.getContentAsJWT();
 
         } catch (IOException | ParseException e) {
             LOGGER.error("Error retrieving credential: {}", e.getMessage());
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
-        } catch (JOSEException e) {
-            LOGGER.error("JOSE exception when verifying signature: {}", e.getMessage());
-            throw new CredentialIssuerException(
-                    HTTPResponse.SC_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
-        } catch (java.text.ParseException e) {
-            LOGGER.error("Error parsing credential issuer public JWK: {}", e.getMessage());
-            throw new CredentialIssuerException(
-                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_JWK);
         }
     }
 
@@ -208,21 +166,5 @@ public class CredentialIssuerService {
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
         }
-    }
-
-    private SignedJWT transcodeSignature(SignedJWT vc)
-            throws JOSEException, java.text.ParseException {
-        Base64URL transcodedSignatureBase64 =
-                Base64URL.encode(
-                        ECDSA.transcodeSignatureToConcat(
-                                vc.getSignature().decode(),
-                                ECDSA.getSignatureByteArrayLength(ES256)));
-        String[] jwtParts = vc.serialize().split("\\.");
-        return SignedJWT.parse(
-                String.format("%s.%s.%s", jwtParts[0], jwtParts[1], transcodedSignatureBase64));
-    }
-
-    private boolean signatureIsDerFormat(SignedJWT signedJWT) throws JOSEException {
-        return signedJWT.getSignature().decode().length != ECDSA.getSignatureByteArrayLength(ES256);
     }
 }

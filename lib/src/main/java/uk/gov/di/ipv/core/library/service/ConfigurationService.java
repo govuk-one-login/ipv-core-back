@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.library.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.jwk.RSAKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
@@ -9,18 +8,10 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 
 import java.net.URI;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.RSAPublicKeySpec;
-import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -214,13 +205,6 @@ public class ConfigurationService {
                 String.format("/%s/core/clients/%s/issuer", System.getenv(ENVIRONMENT), clientId));
     }
 
-    public String getClientAudience(String clientId) {
-        return ssmProvider.get(
-                String.format(
-                        "/%s/core/credentialIssuers/%s/audienceForClients",
-                        System.getenv(ENVIRONMENT), clientId));
-    }
-
     public String getClientSubject(String clientId) {
         return ssmProvider.get(
                 String.format("/%s/core/clients/%s/subject", System.getenv(ENVIRONMENT), clientId));
@@ -244,25 +228,5 @@ public class ConfigurationService {
     public String getCoreVtmClaim() {
         return ssmProvider.get(
                 String.format("/%s/core/self/coreVtmClaim", System.getenv(ENVIRONMENT)));
-    }
-
-    public PublicKey getEncryptionPublicKey(String clientId)
-            throws HttpResponseExceptionWithErrorBody {
-        try {
-            RSAKey rsaKey =
-                    RSAKey.parse(
-                            ssmProvider.get(
-                                    String.format(
-                                            "/%s/core/credentialIssuers/%s/jarEncryptionPublicJwk",
-                                            System.getenv(ENVIRONMENT), clientId)));
-            RSAPublicKeySpec rsaPublicKeySpec =
-                    new RSAPublicKeySpec(
-                            rsaKey.getModulus().decodeToBigInteger(),
-                            rsaKey.getPublicExponent().decodeToBigInteger());
-            return KeyFactory.getInstance("RSA").generatePublic(rsaPublicKeySpec);
-        } catch (InvalidKeySpecException | NoSuchAlgorithmException | ParseException e) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.FAILED_TO_GET_ENCRYPTION_PUBLIC_KEY);
-        }
     }
 }
