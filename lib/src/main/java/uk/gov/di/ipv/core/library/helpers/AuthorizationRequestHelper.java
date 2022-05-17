@@ -42,13 +42,10 @@ public class AuthorizationRequestHelper {
             SharedAttributesResponse sharedClaims,
             JWSSigner signer,
             CredentialIssuerConfig credentialIssuerConfig,
-            ConfigurationService configurationService)
+            ConfigurationService configurationService,
+            String userId)
             throws HttpResponseExceptionWithErrorBody {
         Instant now = Instant.now();
-
-        String ipvClientId = credentialIssuerConfig.getIpvClientId();
-
-        ClientID clientID = new ClientID(ipvClientId);
 
         String criId = credentialIssuerConfig.getId();
 
@@ -59,7 +56,9 @@ public class AuthorizationRequestHelper {
                 new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build();
 
         JWTClaimsSet authClaimsSet =
-                new AuthorizationRequest.Builder(ResponseType.CODE, clientID)
+                new AuthorizationRequest.Builder(
+                                ResponseType.CODE,
+                                new ClientID(credentialIssuerConfig.getIpvClientId()))
                         .redirectionURI(redirectionURI)
                         .state(new State("read"))
                         .build()
@@ -77,7 +76,7 @@ public class AuthorizationRequestHelper {
                                                         configurationService.getIpvTokenTtl()),
                                                 ChronoUnit.SECONDS)))
                         .notBeforeTime(Date.from(now))
-                        .subject(ipvClientId);
+                        .subject(userId);
 
         if (Objects.nonNull(sharedClaims)) {
             claimsSetBuilder.claim(SHARED_CLAIMS, sharedClaims);
