@@ -25,10 +25,13 @@ import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.net.URI;
@@ -79,6 +82,7 @@ class CredentialIssuerStartHandlerTest {
     public static final String IPV_CLIENT_ID = "ipv-core";
     public static final String SESSION_ID = "the-session-id";
     public static final String VTM = "http://www.example.com/vtm";
+    public static final String TEST_USER_ID = "test-user-id";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -86,6 +90,10 @@ class CredentialIssuerStartHandlerTest {
     @Mock private ConfigurationService configurationService;
     @Mock private UserIdentityService userIdentityService;
     @Mock private AuditService mockAuditService;
+    @Mock private IpvSessionService mockIpvSessionService;
+    @Mock private IpvSessionItem mockIpvSessionItem;
+
+    private ClientSessionDetailsDto clientSessionDetailsDto;
 
     private CredentialIssuerConfig credentialIssuerConfig;
 
@@ -99,7 +107,11 @@ class CredentialIssuerStartHandlerTest {
 
         underTest =
                 new CredentialIssuerStartHandler(
-                        configurationService, userIdentityService, signer, mockAuditService);
+                        configurationService,
+                        userIdentityService,
+                        signer,
+                        mockAuditService,
+                        mockIpvSessionService);
         credentialIssuerConfig =
                 new CredentialIssuerConfig(
                         CRI_ID,
@@ -109,6 +121,15 @@ class CredentialIssuerStartHandlerTest {
                         new URI(CRI_AUTHORIZE_URL),
                         IPV_CLIENT_ID,
                         "{}");
+
+        clientSessionDetailsDto =
+                new ClientSessionDetailsDto(
+                        "code",
+                        "test-client-id",
+                        "https://example.com/redirect",
+                        "test-state",
+                        TEST_USER_ID,
+                        false);
     }
 
     @Test
@@ -150,6 +171,8 @@ class CredentialIssuerStartHandlerTest {
                                                 vcClaim(CREDENTIAL_ATTRIBUTES_2))),
                                 VectorOfTrust.P2.toString(),
                                 VTM));
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
 
         APIGatewayProxyRequestEvent input = createRequestEvent(emptyMap(), emptyMap());
 
@@ -194,7 +217,7 @@ class CredentialIssuerStartHandlerTest {
 
         assertEquals(IPV_CLIENT_ID, signedJWT.getJWTClaimsSet().getClaim("client_id"));
         assertEquals(IPV_ISSUER, signedJWT.getJWTClaimsSet().getIssuer());
-        assertEquals(IPV_CLIENT_ID, signedJWT.getJWTClaimsSet().getSubject());
+        assertEquals(TEST_USER_ID, signedJWT.getJWTClaimsSet().getSubject());
         assertEquals(CRI_AUDIENCE, signedJWT.getJWTClaimsSet().getAudience().get(0));
 
         assertEquals(3, claimsSet.get(SHARED_CLAIMS).size());

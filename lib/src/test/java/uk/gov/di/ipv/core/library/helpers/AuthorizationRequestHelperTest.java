@@ -62,6 +62,7 @@ class AuthorizationRequestHelperTest {
     public static final String IPV_TOKEN_TTL = "900";
     public static final String CORE_FRONT_CALLBACK_URL = "callbackUri";
     public static final String CRI_ID = "cri_id";
+    public static final String TEST_USER_ID = "test-user-id";
 
     private final SharedAttributesResponse sharedClaims =
             new SharedAttributesResponse(
@@ -95,10 +96,14 @@ class AuthorizationRequestHelperTest {
 
         SignedJWT result =
                 AuthorizationRequestHelper.createSignedJWT(
-                        sharedClaims, signer, credentialIssuerConfig, configurationService);
+                        sharedClaims,
+                        signer,
+                        credentialIssuerConfig,
+                        configurationService,
+                        TEST_USER_ID);
 
         assertEquals(IPV_ISSUER, result.getJWTClaimsSet().getIssuer());
-        assertEquals(IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getSubject());
+        assertEquals(TEST_USER_ID, result.getJWTClaimsSet().getSubject());
         assertEquals(AUDIENCE, result.getJWTClaimsSet().getAudience().get(0));
         assertEquals(sharedClaims, result.getJWTClaimsSet().getClaims().get(SHARED_CLAIMS));
         assertEquals(
@@ -117,7 +122,7 @@ class AuthorizationRequestHelperTest {
 
         SignedJWT result =
                 AuthorizationRequestHelper.createSignedJWT(
-                        null, signer, credentialIssuerConfig, configurationService);
+                        null, signer, credentialIssuerConfig, configurationService, TEST_USER_ID);
         assertNull(result.getJWTClaimsSet().getClaims().get(SHARED_CLAIMS));
     }
 
@@ -134,14 +139,15 @@ class AuthorizationRequestHelperTest {
                                         null,
                                         jwsSigner,
                                         credentialIssuerConfig,
-                                        configurationService));
+                                        configurationService,
+                                        TEST_USER_ID));
         assertEquals(500, exception.getResponseCode());
         assertEquals("Failed to sign Shared Attributes", exception.getErrorReason());
     }
 
     @Test
     void shouldThrowExceptionWhenUnableToBuildRedirectionUri() {
-        setupCredentialIssuerConfigMock();
+        when(credentialIssuerConfig.getId()).thenReturn(CRI_ID);
         when(configurationService.getCoreFrontCallbackUrl()).thenReturn("[[]]]][[[");
 
         HttpResponseExceptionWithErrorBody exception =
@@ -152,7 +158,8 @@ class AuthorizationRequestHelperTest {
                                         null,
                                         jwsSigner,
                                         credentialIssuerConfig,
-                                        configurationService));
+                                        configurationService,
+                                        TEST_USER_ID));
         assertEquals(500, exception.getResponseCode());
         assertEquals("Failed to build Core Front Callback Url", exception.getErrorReason());
     }

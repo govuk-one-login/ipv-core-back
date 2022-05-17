@@ -400,9 +400,12 @@ Resources:
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsTable.Arn ] ]
           SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/signingKeyId
         - SSMParameterReadPolicy:

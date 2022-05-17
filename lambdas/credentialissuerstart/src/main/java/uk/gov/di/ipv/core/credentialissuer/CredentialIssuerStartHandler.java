@@ -33,6 +33,7 @@ import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.security.interfaces.RSAPublicKey;
@@ -63,16 +64,19 @@ public class CredentialIssuerStartHandler
     private final UserIdentityService userIdentityService;
     private final JWSSigner signer;
     private final AuditService auditService;
+    private final IpvSessionService ipvSessionService;
 
     public CredentialIssuerStartHandler(
             ConfigurationService configurationService,
             UserIdentityService userIdentityService,
             JWSSigner signer,
-            AuditService auditService) {
+            AuditService auditService,
+            IpvSessionService ipvSessionService) {
         this.configurationService = configurationService;
         this.userIdentityService = userIdentityService;
         this.signer = signer;
         this.auditService = auditService;
+        this.ipvSessionService = ipvSessionService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -82,6 +86,7 @@ public class CredentialIssuerStartHandler
         this.signer = new KmsEs256Signer(configurationService.getSigningKeyId());
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
+        this.ipvSessionService = new IpvSessionService(configurationService);
     }
 
     @Override
@@ -107,13 +112,16 @@ public class CredentialIssuerStartHandler
         try {
             String ipvSessionId = getIpvSessionId(input.getHeaders());
 
-            SharedAttributesResponse sharedAttributesResponse = getSharedAttributes(ipvSessionId);
             SignedJWT signedJWT =
                     AuthorizationRequestHelper.createSignedJWT(
-                            sharedAttributesResponse,
+                            getSharedAttributes(ipvSessionId),
                             signer,
                             credentialIssuerConfig,
-                            configurationService);
+                            configurationService,
+                            ipvSessionService
+                                    .getIpvSession(ipvSessionId)
+                                    .getClientSessionDetails()
+                                    .getUserId());
 
             RSAEncrypter rsaEncrypter =
                     new RSAEncrypter(
