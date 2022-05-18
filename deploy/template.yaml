@@ -336,6 +336,8 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers
         - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/coreFrontCallbackUrl
+        - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/signingKeyId
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/jwtTtlSeconds

@@ -16,6 +16,7 @@ import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
+import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -30,6 +31,7 @@ import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Objects;
@@ -85,12 +87,15 @@ public class CredentialIssuerService {
 
             ClientAuthentication clientAuthentication = new PrivateKeyJWT(signedClientJwt);
 
+            String coreFrontCallbackUrl = configurationService.getCoreFrontCallbackUrl();
+
             TokenRequest tokenRequest =
                     new TokenRequest(
                             config.getTokenUrl(),
                             clientAuthentication,
                             new AuthorizationCodeGrant(
-                                    authorizationCode, URI.create(request.getRedirectUri())));
+                                    authorizationCode,
+                                    getRedirectionUri(config.getId(), coreFrontCallbackUrl)));
 
             HTTPResponse httpResponse = tokenRequest.toHTTPRequest().send();
             TokenResponse tokenResponse = parseTokenResponse(httpResponse);
@@ -112,7 +117,7 @@ public class CredentialIssuerService {
                         HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST);
             }
             return tokenResponse.toSuccessResponse().getTokens().getBearerAccessToken();
-        } catch (IOException | ParseException | JOSEException e) {
+        } catch (IOException | ParseException | JOSEException | URISyntaxException e) {
             LOGGER.error("Error exchanging token: {}", e.getMessage(), e);
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR,
@@ -165,5 +170,11 @@ public class CredentialIssuerService {
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
         }
+    }
+
+    private static URI getRedirectionUri(String criId, String coreFrontCallbackUrl)
+            throws URISyntaxException {
+        URIBuilder uriBuilder = new URIBuilder(coreFrontCallbackUrl).addParameter("id", criId);
+        return uriBuilder.build();
     }
 }
