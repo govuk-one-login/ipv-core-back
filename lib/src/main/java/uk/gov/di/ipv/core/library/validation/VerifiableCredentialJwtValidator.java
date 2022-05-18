@@ -28,12 +28,6 @@ public class VerifiableCredentialJwtValidator {
             LoggerFactory.getLogger(VerifiableCredentialJwtValidator.class);
     public static final String VC_CLAIM_NAME = "vc";
 
-    private final String audience;
-
-    public VerifiableCredentialJwtValidator(String audience) {
-        this.audience = audience;
-    }
-
     public void validate(
             SignedJWT verifiableCredential,
             CredentialIssuerConfig credentialIssuerConfig,
@@ -104,7 +98,6 @@ public class VerifiableCredentialJwtValidator {
                 new DefaultJWTClaimsVerifier<>(
                         new JWTClaimsSet.Builder()
                                 .issuer(credentialIssuerConfig.getAudienceForClients())
-                                .audience(audience)
                                 .subject(userId)
                                 .build(),
                         new HashSet<>(

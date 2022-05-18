@@ -64,8 +64,7 @@ public class CredentialIssuerReturnHandler
                         new KmsEs256Signer(configurationService.getSigningKeyId()));
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
-        this.verifiableCredentialJwtValidator =
-                new VerifiableCredentialJwtValidator(configurationService.getAudienceForClients());
+        this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator();
         this.ipvSessionService = new IpvSessionService(configurationService);
     }
 
