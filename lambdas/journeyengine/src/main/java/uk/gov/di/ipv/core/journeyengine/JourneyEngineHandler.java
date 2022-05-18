@@ -112,6 +112,7 @@ public class JourneyEngineHandler
         }
     }
 
+    @Tracing
     private JourneyEngineResult executeJourneyEvent(
             String journeyStep, IpvSessionItem ipvSessionItem) throws JourneyEngineException {
         String criStartUri = configurationService.getIpvJourneyCriStartUri();
@@ -179,6 +180,7 @@ public class JourneyEngineHandler
         }
     }
 
+    @Tracing
     private void updateUserState(UserStates updatedStateValue, IpvSessionItem previousSessionItem) {
         IpvSessionItem updatedIpvSessionItem = new IpvSessionItem();
         updatedIpvSessionItem.setIpvSessionId(previousSessionItem.getIpvSessionId());
