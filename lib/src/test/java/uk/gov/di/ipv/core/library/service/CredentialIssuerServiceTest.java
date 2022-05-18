@@ -72,6 +72,8 @@ class CredentialIssuerServiceTest {
     @Test
     void validTokenResponse(WireMockRuntimeInfo wmRuntimeInfo) {
         when(mockConfigurationService.getIpvTokenTtl()).thenReturn("900");
+        when(mockConfigurationService.getCoreFrontCallbackUrl())
+                .thenReturn("http://www.example.com/redirect");
         stubFor(
                 post("/token")
                         .willReturn(
@@ -102,6 +104,8 @@ class CredentialIssuerServiceTest {
     @Test
     void tokenErrorResponse(WireMockRuntimeInfo wmRuntimeInfo) {
         when(mockConfigurationService.getIpvTokenTtl()).thenReturn("900");
+        when(mockConfigurationService.getCoreFrontCallbackUrl())
+                .thenReturn("http://www.example.com/redirect");
         var errorJson =
                 "{ \"error\": \"invalid_request\", \"error_description\": \"Request was missing the 'redirect_uri' parameter.\", \"error_uri\": \"See the full API docs at https://authorization-server.com/docs/access_token\"}";
         stubFor(
@@ -136,6 +140,8 @@ class CredentialIssuerServiceTest {
     @Test
     void invalidHeaderThrowsCredentialIssuerException(WireMockRuntimeInfo wmRuntimeInfo) {
         when(mockConfigurationService.getIpvTokenTtl()).thenReturn("900");
+        when(mockConfigurationService.getCoreFrontCallbackUrl())
+                .thenReturn("http://www.example.com/redirect");
         stubFor(
                 post("/token")
                         .willReturn(
@@ -194,7 +200,6 @@ class CredentialIssuerServiceTest {
 
     @Test
     void expectedExceptionWhenSaveCredentials() {
-
         CredentialIssuerRequestDto credentialIssuerRequestDto =
                 new CredentialIssuerRequestDto(
                         "1234",
@@ -244,6 +249,7 @@ class CredentialIssuerServiceTest {
 
     @Test
     void getVerifiableCredentialThrowsIfResponseIsNotOk(WireMockRuntimeInfo wmRuntimeInfo) {
+
         stubFor(
                 post("/credentials/issue")
                         .willReturn(
