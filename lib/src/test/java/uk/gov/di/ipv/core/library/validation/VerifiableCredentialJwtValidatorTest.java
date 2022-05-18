@@ -55,7 +55,7 @@ class VerifiableCredentialJwtValidatorTest {
 
         SignedJWT signedJWT = getValidSignedJwt();
 
-        VerifiableCredentialJwtValidator validator = new VerifiableCredentialJwtValidator(AUDIENCE);
+        VerifiableCredentialJwtValidator validator = new VerifiableCredentialJwtValidator();
 
         assertDoesNotThrow(() -> validator.validate(signedJWT, credentialIssuerConfig, SUBJECT));
     }
@@ -75,7 +75,7 @@ class VerifiableCredentialJwtValidatorTest {
                         signedJWT.getPayload().toBase64URL(),
                         derSignature);
 
-        VerifiableCredentialJwtValidator validator = new VerifiableCredentialJwtValidator(AUDIENCE);
+        VerifiableCredentialJwtValidator validator = new VerifiableCredentialJwtValidator();
 
         assertDoesNotThrow(() -> validator.validate(derSignedJwt, credentialIssuerConfig, SUBJECT));
     }
@@ -87,7 +87,7 @@ class VerifiableCredentialJwtValidatorTest {
 
         SignedJWT signedJWT = getValidSignedJwt();
 
-        VerifiableCredentialJwtValidator validator = new VerifiableCredentialJwtValidator(AUDIENCE);
+        VerifiableCredentialJwtValidator validator = new VerifiableCredentialJwtValidator();
 
         CredentialIssuerException exception =
                 assertThrows(
@@ -106,7 +106,7 @@ class VerifiableCredentialJwtValidatorTest {
 
         SignedJWT signedJWT = getValidSignedJwt();
 
-        VerifiableCredentialJwtValidator validator = new VerifiableCredentialJwtValidator(AUDIENCE);
+        VerifiableCredentialJwtValidator validator = new VerifiableCredentialJwtValidator();
 
         CredentialIssuerException exception =
                 assertThrows(
@@ -124,28 +124,7 @@ class VerifiableCredentialJwtValidatorTest {
 
         SignedJWT signedJWT = getValidSignedJwt();
 
-        VerifiableCredentialJwtValidator validator = new VerifiableCredentialJwtValidator(AUDIENCE);
-
-        CredentialIssuerException exception =
-                assertThrows(
-                        CredentialIssuerException.class,
-                        () -> validator.validate(signedJWT, credentialIssuerConfig, SUBJECT));
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
-                exception.getErrorResponse());
-    }
-
-    @Test
-    void throwsIfAudienceDoesNotMatch() throws Exception {
-        when(credentialIssuerConfig.getVcVerifyingPublicJwk())
-                .thenReturn(ECKey.parse(EC_PUBLIC_JWK));
-        when(credentialIssuerConfig.getAudienceForClients()).thenReturn(ISSUER);
-
-        SignedJWT signedJWT = getValidSignedJwt();
-
-        VerifiableCredentialJwtValidator validator =
-                new VerifiableCredentialJwtValidator("THIS IS THE WRONG AUDIENCE");
+        VerifiableCredentialJwtValidator validator = new VerifiableCredentialJwtValidator();
 
         CredentialIssuerException exception =
                 assertThrows(
@@ -165,7 +144,7 @@ class VerifiableCredentialJwtValidatorTest {
 
         SignedJWT signedJWT = getValidSignedJwt();
 
-        VerifiableCredentialJwtValidator validator = new VerifiableCredentialJwtValidator(AUDIENCE);
+        VerifiableCredentialJwtValidator validator = new VerifiableCredentialJwtValidator();
 
         CredentialIssuerException exception =
                 assertThrows(
@@ -202,7 +181,7 @@ class VerifiableCredentialJwtValidatorTest {
 
         signedJWT.sign(signer);
 
-        VerifiableCredentialJwtValidator validator = new VerifiableCredentialJwtValidator(AUDIENCE);
+        VerifiableCredentialJwtValidator validator = new VerifiableCredentialJwtValidator();
 
         CredentialIssuerException exception =
                 assertThrows(
@@ -235,7 +214,7 @@ class VerifiableCredentialJwtValidatorTest {
 
         signedJWT.sign(signer);
 
-        VerifiableCredentialJwtValidator validator = new VerifiableCredentialJwtValidator(AUDIENCE);
+        VerifiableCredentialJwtValidator validator = new VerifiableCredentialJwtValidator();
 
         CredentialIssuerException exception =
                 assertThrows(
@@ -267,7 +246,7 @@ class VerifiableCredentialJwtValidatorTest {
 
         signedJWT.sign(signer);
 
-        VerifiableCredentialJwtValidator validator = new VerifiableCredentialJwtValidator(AUDIENCE);
+        VerifiableCredentialJwtValidator validator = new VerifiableCredentialJwtValidator();
 
         CredentialIssuerException exception =
                 assertThrows(
