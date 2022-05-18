@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.core.library.domain.UserStates;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 
@@ -35,7 +36,11 @@ public class DataStoreIpvSessionIT {
     private static final String USER_STATE = "userState";
     private static final String CREATION_DATE_TIME = "creationDateTime";
     private static final String CLIENT_SESSION_DETAILS = "clientSessionDetails";
+    private static final String CREDENTIAL_ISSUER_SESSION_DETAILS =
+            "credentialIssuerSessionDetails";
     private static final List<String> createdItemIds = new ArrayList<>();
+    private static final String CRI_ID = "criId";
+    private static final String OAUTH_STATE = UUID.randomUUID().toString();
 
     private static DataStore<IpvSessionItem> ipvSessionItemDataStore;
     private static Table tableTestHarness;
@@ -83,21 +88,26 @@ public class DataStoreIpvSessionIT {
         ipvSessionItem.setUserState(UserStates.INITIAL_IPV_JOURNEY.toString());
         ipvSessionItem.setCreationDateTime(new Date().toString());
         ipvSessionItem.setClientSessionDetails(generateClientSessionDetails());
+        ipvSessionItem.setCredentialIssuerSessionDetails(generateCredentialIssuerSessionDetails());
 
         ipvSessionItemDataStore.create(ipvSessionItem);
 
-        Item savedPassportCheck =
+        Item savedIpvSession =
                 tableTestHarness.getItem(IPV_SESSION_ID, ipvSessionItem.getIpvSessionId());
 
-        assertEquals(ipvSessionItem.getIpvSessionId(), savedPassportCheck.get(IPV_SESSION_ID));
-        assertEquals(ipvSessionItem.getUserState(), savedPassportCheck.get(USER_STATE));
-        assertEquals(
-                ipvSessionItem.getCreationDateTime(), savedPassportCheck.get(CREATION_DATE_TIME));
+        assertEquals(ipvSessionItem.getIpvSessionId(), savedIpvSession.get(IPV_SESSION_ID));
+        assertEquals(ipvSessionItem.getUserState(), savedIpvSession.get(USER_STATE));
+        assertEquals(ipvSessionItem.getCreationDateTime(), savedIpvSession.get(CREATION_DATE_TIME));
 
         ClientSessionDetailsDto clientSessionDetailsDto =
                 objectMapper.convertValue(
-                        savedPassportCheck.getMap(CLIENT_SESSION_DETAILS),
+                        savedIpvSession.getMap(CLIENT_SESSION_DETAILS),
                         ClientSessionDetailsDto.class);
+
+        CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto =
+                objectMapper.convertValue(
+                        savedIpvSession.getMap(CREDENTIAL_ISSUER_SESSION_DETAILS),
+                        CredentialIssuerSessionDetailsDto.class);
         assertEquals(
                 ipvSessionItem.getClientSessionDetails().getResponseType(),
                 clientSessionDetailsDto.getResponseType());
@@ -110,6 +120,12 @@ public class DataStoreIpvSessionIT {
         assertEquals(
                 ipvSessionItem.getClientSessionDetails().getState(),
                 clientSessionDetailsDto.getState());
+        assertEquals(
+                ipvSessionItem.getCredentialIssuerSessionDetails().getCriId(),
+                credentialIssuerSessionDetailsDto.getCriId());
+        assertEquals(
+                ipvSessionItem.getCredentialIssuerSessionDetails().getState(),
+                credentialIssuerSessionDetailsDto.getState());
     }
 
     @Test
@@ -119,6 +135,7 @@ public class DataStoreIpvSessionIT {
         ipvSessionItem.setUserState(UserStates.INITIAL_IPV_JOURNEY.toString());
         ipvSessionItem.setCreationDateTime(new Date().toString());
         ipvSessionItem.setClientSessionDetails(generateClientSessionDetails());
+        ipvSessionItem.setCredentialIssuerSessionDetails(generateCredentialIssuerSessionDetails());
 
         Item item = Item.fromJSON(OBJECT_MAPPER.writeValueAsString(ipvSessionItem));
         tableTestHarness.putItem(item);
@@ -140,6 +157,12 @@ public class DataStoreIpvSessionIT {
         assertEquals(
                 ipvSessionItem.getClientSessionDetails().getState(),
                 result.getClientSessionDetails().getState());
+        assertEquals(
+                ipvSessionItem.getCredentialIssuerSessionDetails().getCriId(),
+                result.getCredentialIssuerSessionDetails().getCriId());
+        assertEquals(
+                ipvSessionItem.getCredentialIssuerSessionDetails().getState(),
+                result.getCredentialIssuerSessionDetails().getState());
     }
 
     @Test
@@ -149,6 +172,7 @@ public class DataStoreIpvSessionIT {
         ipvSessionItem.setUserState(UserStates.INITIAL_IPV_JOURNEY.toString());
         ipvSessionItem.setCreationDateTime(new Date().toString());
         ipvSessionItem.setClientSessionDetails(generateClientSessionDetails());
+        ipvSessionItem.setCredentialIssuerSessionDetails(generateCredentialIssuerSessionDetails());
 
         Item item = Item.fromJSON(OBJECT_MAPPER.writeValueAsString(ipvSessionItem));
         tableTestHarness.putItem(item);
@@ -158,6 +182,8 @@ public class DataStoreIpvSessionIT {
         updatedIpvSessionItem.setCreationDateTime(ipvSessionItem.getCreationDateTime());
         updatedIpvSessionItem.setUserState(UserStates.DEBUG_PAGE.toString());
         updatedIpvSessionItem.setClientSessionDetails(ipvSessionItem.getClientSessionDetails());
+        updatedIpvSessionItem.setCredentialIssuerSessionDetails(
+                ipvSessionItem.getCredentialIssuerSessionDetails());
 
         IpvSessionItem result = ipvSessionItemDataStore.update(updatedIpvSessionItem);
 
@@ -176,6 +202,12 @@ public class DataStoreIpvSessionIT {
         assertEquals(
                 ipvSessionItem.getClientSessionDetails().getState(),
                 result.getClientSessionDetails().getState());
+        assertEquals(
+                ipvSessionItem.getCredentialIssuerSessionDetails().getCriId(),
+                result.getCredentialIssuerSessionDetails().getCriId());
+        assertEquals(
+                ipvSessionItem.getCredentialIssuerSessionDetails().getState(),
+                result.getCredentialIssuerSessionDetails().getState());
     }
 
     private ClientSessionDetailsDto generateClientSessionDetails() {
@@ -186,5 +218,9 @@ public class DataStoreIpvSessionIT {
                 "test-state",
                 "test-user-id",
                 false);
+    }
+
+    private CredentialIssuerSessionDetailsDto generateCredentialIssuerSessionDetails() {
+        return new CredentialIssuerSessionDetailsDto(CRI_ID, OAUTH_STATE);
     }
 }

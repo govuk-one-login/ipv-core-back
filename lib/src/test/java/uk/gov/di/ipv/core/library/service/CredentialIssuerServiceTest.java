@@ -54,6 +54,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 class CredentialIssuerServiceTest {
 
     private static final String TEST_IPV_SESSION_ID = UUID.randomUUID().toString();
+    public static final String OAUTH_STATE = "oauth-state";
 
     @Mock private DataStore<UserIssuedCredentialsItem> mockDataStore;
     @Mock private ConfigurationService mockConfigurationService;
@@ -84,7 +85,8 @@ class CredentialIssuerServiceTest {
                         "1234",
                         "cred_issuer_id_1",
                         TEST_IPV_SESSION_ID,
-                        "http://www.example.com/redirect");
+                        "http://www.example.com/redirect",
+                        OAUTH_STATE);
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
 
@@ -115,7 +117,8 @@ class CredentialIssuerServiceTest {
                         "1234",
                         "cred_issuer_id_1",
                         TEST_IPV_SESSION_ID,
-                        "http://www.example.com/redirect");
+                        "http://www.example.com/redirect",
+                        OAUTH_STATE);
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
 
@@ -146,7 +149,8 @@ class CredentialIssuerServiceTest {
                         "1234",
                         "cred_issuer_id_1",
                         TEST_IPV_SESSION_ID,
-                        "http://www.example.com/redirect");
+                        "http://www.example.com/redirect",
+                        OAUTH_STATE);
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
         CredentialIssuerException exception =
@@ -171,7 +175,8 @@ class CredentialIssuerServiceTest {
                         "1234",
                         "cred_issuer_id_1",
                         TEST_IPV_SESSION_ID,
-                        "http://www.example.com/redirect");
+                        "http://www.example.com/redirect",
+                        OAUTH_STATE);
 
         credentialIssuerService.persistUserCredentials(SIGNED_VC_1, credentialIssuerRequestDto);
         verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture());
@@ -195,7 +200,8 @@ class CredentialIssuerServiceTest {
                         "1234",
                         "cred_issuer_id_1",
                         TEST_IPV_SESSION_ID,
-                        "http://www.example.com/redirect");
+                        "http://www.example.com/redirect",
+                        OAUTH_STATE);
 
         doThrow(new UnsupportedOperationException()).when(mockDataStore).create(any());
 

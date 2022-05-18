@@ -56,7 +56,6 @@ public class CredentialIssuerService {
                         isRunningLocally);
     }
 
-    // used for testing
     public CredentialIssuerService(
             DataStore<UserIssuedCredentialsItem> dataStore,
             ConfigurationService configurationService,

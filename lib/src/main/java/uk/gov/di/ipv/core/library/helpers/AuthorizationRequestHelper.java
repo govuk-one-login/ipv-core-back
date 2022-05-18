@@ -30,6 +30,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Objects;
+import java.util.UUID;
 
 public class AuthorizationRequestHelper {
 
@@ -43,6 +44,7 @@ public class AuthorizationRequestHelper {
             JWSSigner signer,
             CredentialIssuerConfig credentialIssuerConfig,
             ConfigurationService configurationService,
+            UUID oauthState,
             String userId)
             throws HttpResponseExceptionWithErrorBody {
         Instant now = Instant.now();
@@ -60,7 +62,7 @@ public class AuthorizationRequestHelper {
                                 ResponseType.CODE,
                                 new ClientID(credentialIssuerConfig.getIpvClientId()))
                         .redirectionURI(redirectionURI)
-                        .state(new State("read"))
+                        .state(new State(oauthState.toString()))
                         .build()
                         .toJWTClaimsSet();
 

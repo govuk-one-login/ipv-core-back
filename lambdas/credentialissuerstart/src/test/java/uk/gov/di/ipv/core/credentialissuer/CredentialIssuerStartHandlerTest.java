@@ -76,6 +76,7 @@ class CredentialIssuerStartHandlerTest {
     public static final String SESSION_ID = "the-session-id";
     public static final String VTM = "http://www.example.com/vtm";
     public static final String TEST_USER_ID = "test-user-id";
+    public static final String OAUTH_STATE = "test-state";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -122,7 +123,7 @@ class CredentialIssuerStartHandlerTest {
                         "code",
                         "test-client-id",
                         "https://example.com/redirect",
-                        "test-state",
+                        OAUTH_STATE,
                         TEST_USER_ID,
                         false);
     }

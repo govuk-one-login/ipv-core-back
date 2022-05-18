@@ -25,12 +25,14 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.SharedAttributes;
 import uk.gov.di.ipv.core.library.domain.SharedAttributesResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.AuthorizationRequestHelper;
 import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -41,6 +43,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
@@ -110,31 +113,12 @@ public class CredentialIssuerStartHandler
 
         try {
             String ipvSessionId = getIpvSessionId(input.getHeaders());
+            UUID oauthState = UUID.randomUUID();
+            JWEObject jweObject = signEncryptJar(credentialIssuerConfig, ipvSessionId, oauthState);
 
-            SignedJWT signedJWT =
-                    AuthorizationRequestHelper.createSignedJWT(
-                            getSharedAttributes(ipvSessionId),
-                            signer,
-                            credentialIssuerConfig,
-                            configurationService,
-                            ipvSessionService
-                                    .getIpvSession(ipvSessionId)
-                                    .getClientSessionDetails()
-                                    .getUserId());
+            CriResponse criResponse = getCriResponse(credentialIssuerConfig, jweObject);
 
-            RSAEncrypter rsaEncrypter =
-                    new RSAEncrypter(credentialIssuerConfig.getJarEncryptionPublicJwk());
-
-            JWEObject jweObject =
-                    AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
-
-            CriResponse criResponse =
-                    new CriResponse(
-                            new CriDetails(
-                                    credentialIssuerConfig.getId(),
-                                    credentialIssuerConfig.getIpvClientId(),
-                                    credentialIssuerConfig.getAuthorizeUrl().toString(),
-                                    jweObject.serialize()));
+            persistOauthState(ipvSessionId, credentialIssuerConfig.getId(), oauthState);
 
             auditService.sendAuditEvent(AuditEventTypes.IPV_REDIRECT_TO_CRI);
 
@@ -151,6 +135,50 @@ public class CredentialIssuerStartHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
+    }
+
+    private CriResponse getCriResponse(
+            CredentialIssuerConfig credentialIssuerConfig, JWEObject jweObject) {
+        return new CriResponse(
+                new CriDetails(
+                        credentialIssuerConfig.getId(),
+                        credentialIssuerConfig.getIpvClientId(),
+                        credentialIssuerConfig.getAuthorizeUrl().toString(),
+                        jweObject.serialize()));
+    }
+
+    private JWEObject signEncryptJar(
+            CredentialIssuerConfig credentialIssuerConfig, String ipvSessionId, UUID oauthState)
+            throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException {
+        SharedAttributesResponse sharedAttributesResponse = getSharedAttributes(ipvSessionId);
+        SignedJWT signedJWT =
+                getSignedJWT(
+                        credentialIssuerConfig,
+                        oauthState,
+                        sharedAttributesResponse,
+                        ipvSessionService
+                                .getIpvSession(ipvSessionId)
+                                .getClientSessionDetails()
+                                .getUserId());
+
+        RSAEncrypter rsaEncrypter =
+                new RSAEncrypter(credentialIssuerConfig.getJarEncryptionPublicJwk());
+        return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
+    }
+
+    private SignedJWT getSignedJWT(
+            CredentialIssuerConfig credentialIssuerConfig,
+            UUID oauthState,
+            SharedAttributesResponse sharedAttributesResponse,
+            String userId)
+            throws HttpResponseExceptionWithErrorBody {
+        return AuthorizationRequestHelper.createSignedJWT(
+                sharedAttributesResponse,
+                signer,
+                credentialIssuerConfig,
+                configurationService,
+                oauthState,
+                userId);
     }
 
     @Tracing
@@ -208,5 +236,14 @@ public class CredentialIssuerStartHandler
                     BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
         }
         return ipvSessionId;
+    }
+
+    @Tracing
+    private void persistOauthState(String ipvSessionId, String criId, UUID oauthState) {
+        IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+        CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto =
+                new CredentialIssuerSessionDetailsDto(criId, oauthState.toString());
+        ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
+        ipvSessionService.updateIpvSession(ipvSessionItem);
     }
 }

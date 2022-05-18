@@ -45,9 +45,9 @@ public class CredentialIssuerReturnHandler
     public CredentialIssuerReturnHandler(
             CredentialIssuerService credentialIssuerService,
             ConfigurationService configurationService,
+            IpvSessionService ipvSessionService,
             AuditService auditService,
-            VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
-            IpvSessionService ipvSessionService) {
+            VerifiableCredentialJwtValidator verifiableCredentialJwtValidator) {
         this.credentialIssuerService = credentialIssuerService;
         this.configurationService = configurationService;
         this.auditService = auditService;
@@ -80,7 +80,9 @@ public class CredentialIssuerReturnHandler
             auditService.sendAuditEvent(AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED);
 
             var errorResponse = validate(request);
+
             if (errorResponse.isPresent()) {
+                LOGGER.error("Validation failed: {}", errorResponse.get().getMessage());
                 return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
             }
             CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request);
@@ -133,10 +135,26 @@ public class CredentialIssuerReturnHandler
             return Optional.of(ErrorResponse.MISSING_IPV_SESSION_ID);
         }
 
+        if (StringUtils.isBlank(request.getState())) {
+            return Optional.of(ErrorResponse.MISSING_OAUTH_STATE);
+        }
+
+        if (!request.getState().equals(getPersistedOauthState(request))) {
+            return Optional.of(ErrorResponse.INVALID_OAUTH_STATE);
+        }
+
         if (getCredentialIssuerConfig(request) == null) {
             return Optional.of(ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
         }
         return Optional.empty();
+    }
+
+    @Tracing
+    private String getPersistedOauthState(CredentialIssuerRequestDto request) {
+        return ipvSessionService
+                .getIpvSession(request.getIpvSessionId())
+                .getCredentialIssuerSessionDetails()
+                .getState();
     }
 
     @Tracing
