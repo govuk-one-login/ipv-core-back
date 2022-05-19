@@ -31,8 +31,8 @@ public class UserIdentityService {
     private static final String FRAUD_CRI_TYPE = "fraud";
     private static final String KBV_CRI_TYPE = "kbv";
     private static final String GPG_45_VALIDITY_PROPERTY_NAME = "validityScore";
-    private static final String GPG_45_FRAUD_PROPERTY_NAME = "fraud";
-    private static final String GPG_45_VERIFICATION_PROPERTY_NAME = "verification";
+    private static final String GPG_45_FRAUD_PROPERTY_NAME = "identityFraudScore";
+    private static final String GPG_45_VERIFICATION_PROPERTY_NAME = "verificationScore";
     private static final int GPG_45_M1A_VALIDITY_SCORE = 2;
     private static final int GPG_45_M1A_FRAUD_SCORE = 1;
     private static final int GPG_45_M1A_VERIFICATION_SCORE = 2;

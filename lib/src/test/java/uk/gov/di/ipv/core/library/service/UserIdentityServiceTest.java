@@ -83,7 +83,7 @@ class UserIdentityServiceTest {
                 "{\"attributes\":{\"ipvSessionId\":\"ipv-session-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"},\"evidence\":{\"validityScore\":2,\"strengthScore\":4,\"txn\":\"1e0f28c5-6329-46f0-bf0e-833cb9b58c9e\",\"type\":\"IdentityCheck\"}}",
                 credentials.get("ukPassport"));
         assertEquals(
-                "{\"attributes\":{\"ipvSessionId\":\"ipv-session-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"},\"evidence\":{\"fraud\":1}}",
+                "{\"attributes\":{\"ipvSessionId\":\"ipv-session-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"},\"evidence\":{\"txn\":\"some-uuid\",\"identityFraudScore\":1,\"type\":\"CriStubCheck\"}}",
                 credentials.get("fraud"));
     }
 
