@@ -4,15 +4,14 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.jwk.RSAKey;
-import lombok.EqualsAndHashCode;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.net.URI;
 import java.text.ParseException;
+import java.util.Objects;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ExcludeFromGeneratedCoverageReport
-@EqualsAndHashCode
 public class CredentialIssuerConfig {
 
     private String id;
@@ -93,6 +92,25 @@ public class CredentialIssuerConfig {
 
     public String getAudienceForClients() {
         return audienceForClients;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        CredentialIssuerConfig that = (CredentialIssuerConfig) o;
+        return id.equals(that.id)
+                && tokenUrl.equals(that.tokenUrl)
+                && credentialUrl.equals(that.credentialUrl);
     }
 
     public void setId(String credentialIssuerId) {
