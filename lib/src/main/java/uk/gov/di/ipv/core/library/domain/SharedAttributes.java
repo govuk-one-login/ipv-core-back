@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.domain;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.EqualsAndHashCode;
 
 import java.util.Optional;
 import java.util.Set;
@@ -10,9 +11,10 @@ import java.util.Set;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonPropertyOrder({"name", "birthDate", "address"})
 @JsonDeserialize(using = SharedAttributesDeserializer.class)
+@EqualsAndHashCode
 public class SharedAttributes {
-
     private Set<Name> name;
+
     private Set<BirthDate> birthDate;
     private Set<Address> address;
 
@@ -41,6 +43,7 @@ public class SharedAttributes {
     }
 
     public static class Builder {
+
         private Set<Name> name;
         private Set<BirthDate> birthDate;
         private Set<Address> address;

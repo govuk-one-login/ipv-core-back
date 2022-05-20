@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.library.domain;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 @JsonPropertyOrder({"name", "birthDate", "address"})
@@ -32,18 +31,18 @@ public class SharedAttributesResponse {
         return address;
     }
 
-    public static SharedAttributesResponse from(List<SharedAttributes> sharedAttributes) {
-        Set<Name> name = new LinkedHashSet<>();
-        Set<BirthDate> birthDate = new LinkedHashSet<>();
-        Set<Address> address = new LinkedHashSet<>();
+    public static SharedAttributesResponse from(Set<SharedAttributes> sharedAttributes) {
+        Set<Name> nameSet = new LinkedHashSet<>();
+        Set<BirthDate> birthDateSet = new LinkedHashSet<>();
+        Set<Address> addressSet = new LinkedHashSet<>();
 
         sharedAttributes.forEach(
                 sharedAttribute -> {
-                    sharedAttribute.getName().ifPresent(name::addAll);
-                    sharedAttribute.getBirthDate().ifPresent(birthDate::addAll);
-                    sharedAttribute.getAddress().ifPresent(address::addAll);
+                    sharedAttribute.getName().ifPresent(nameSet::addAll);
+                    sharedAttribute.getBirthDate().ifPresent(birthDateSet::addAll);
+                    sharedAttribute.getAddress().ifPresent(addressSet::addAll);
                 });
 
-        return new SharedAttributesResponse(name, birthDate, address);
+        return new SharedAttributesResponse(nameSet, birthDateSet, addressSet);
     }
 }

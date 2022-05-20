@@ -60,7 +60,7 @@ class SharedAttributesResponseTest {
                         .setBirthDate(birthDaySet2)
                         .build();
 
-        List<SharedAttributes> sharedAttributes = List.of(sharedAttributes1, sharedAttributes2);
+        Set<SharedAttributes> sharedAttributes = Set.of(sharedAttributes1, sharedAttributes2);
 
         SharedAttributesResponse sharedAttributesResponse =
                 SharedAttributesResponse.from(sharedAttributes);

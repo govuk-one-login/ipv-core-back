@@ -39,10 +39,11 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.text.ParseException;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -199,7 +200,7 @@ public class CredentialIssuerStartHandler
             throws HttpResponseExceptionWithErrorBody {
         List<String> credentials = userIdentityService.getUserIssuedCredentials(ipvSessionId);
 
-        List<SharedAttributes> sharedAttributes = new ArrayList<>();
+        Set<SharedAttributes> sharedAttributes = new HashSet<>();
         for (String credential : credentials) {
             try {
                 JsonNode credentialSubject =

@@ -5,6 +5,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 
 @JsonPropertyOrder({"value", "type"})
 @ExcludeFromGeneratedCoverageReport
+@EqualsAndHashCode
 public class NameParts {
     private String value;
     private String type;

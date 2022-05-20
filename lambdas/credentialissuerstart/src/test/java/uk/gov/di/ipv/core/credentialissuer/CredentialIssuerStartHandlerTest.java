@@ -233,10 +233,43 @@ class CredentialIssuerStartHandlerTest {
 
         assertEquals(2, (vcAttributes.get("name")).size());
         assertEquals(3, (vcAttributes.get("address")).size());
-        assertEquals(3, (vcAttributes.get("birthDate")).size());
+        assertEquals(2, (vcAttributes.get("birthDate")).size());
 
         ECDSAVerifier verifier = new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK));
         assertTrue(signedJWT.verify(verifier));
+    }
+
+    @Test
+    void shouldDeduplicateSharedClaims() throws Exception {
+        when(configurationService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
+        when(configurationService.getIpvTokenTtl()).thenReturn("900");
+        when(configurationService.getCoreFrontCallbackUrl()).thenReturn("callbackUrl");
+        when(configurationService.getAudienceForClients()).thenReturn(IPV_ISSUER);
+        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
+                .thenReturn(
+                        List.of(
+                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_1)),
+                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_1))));
+
+        APIGatewayProxyRequestEvent input = createRequestEvent(emptyMap(), emptyMap());
+
+        input.setPathParameters(Map.of("criId", CRI_ID));
+        input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
+
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
+        JWEObject jweObject = JWEObject.parse(responseBody.get("request"));
+        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+
+        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
+        JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
+
+        JsonNode sharedClaims = claimsSet.get(SHARED_CLAIMS);
+        assertEquals(1, sharedClaims.get("name").size());
+        assertEquals(2, sharedClaims.get("birthDate").size());
+        assertEquals(2, sharedClaims.get("address").size());
     }
 
     private Map<String, Map<String, String>> getResponseBodyAsMap(

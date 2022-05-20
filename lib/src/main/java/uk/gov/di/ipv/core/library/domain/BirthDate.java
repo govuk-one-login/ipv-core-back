@@ -1,8 +1,10 @@
 package uk.gov.di.ipv.core.library.domain;
 
+import lombok.EqualsAndHashCode;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 @ExcludeFromGeneratedCoverageReport
+@EqualsAndHashCode
 public class BirthDate {
     private String value;
 

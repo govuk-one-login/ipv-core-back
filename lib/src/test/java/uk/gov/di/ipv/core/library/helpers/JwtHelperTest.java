@@ -54,7 +54,7 @@ class JwtHelperTest {
                 new SharedAttributes.Builder().setName(nameSet).setBirthDate(birthDaySet).build();
 
         SharedAttributesResponse sharedAttributesResponse =
-                SharedAttributesResponse.from(List.of(sharedAttributes));
+                SharedAttributesResponse.from(Set.of(sharedAttributes));
 
         SignedJWT signedJWT = JwtHelper.createSignedJwtFromObject(sharedAttributesResponse, signer);
         JWTClaimsSet generatedClaims = signedJWT.getJWTClaimsSet();
