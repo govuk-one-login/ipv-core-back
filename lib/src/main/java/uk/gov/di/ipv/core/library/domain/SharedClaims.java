@@ -10,24 +10,24 @@ import java.util.Set;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonPropertyOrder({"name", "birthDate", "address"})
-@JsonDeserialize(using = SharedAttributesDeserializer.class)
+@JsonDeserialize(using = SharedClaimsDeserializer.class)
 @EqualsAndHashCode
-public class SharedAttributes {
+public class SharedClaims {
     private Set<Name> name;
 
     private Set<BirthDate> birthDate;
     private Set<Address> address;
 
-    private SharedAttributes() {}
+    private SharedClaims() {}
 
-    public SharedAttributes(Set<Name> name, Set<BirthDate> birthDate, Set<Address> address) {
+    public SharedClaims(Set<Name> name, Set<BirthDate> birthDate, Set<Address> address) {
         this.name = name;
         this.birthDate = birthDate;
         this.address = address;
     }
 
-    public static SharedAttributes empty() {
-        return new SharedAttributes();
+    public static SharedClaims empty() {
+        return new SharedClaims();
     }
 
     public Optional<Set<Name>> getName() {
@@ -63,8 +63,8 @@ public class SharedAttributes {
             return this;
         }
 
-        public SharedAttributes build() {
-            return new SharedAttributes(name, birthDate, address);
+        public SharedClaims build() {
+            return new SharedClaims(name, birthDate, address);
         }
     }
 }

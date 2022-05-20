@@ -14,26 +14,26 @@ import java.util.List;
 import java.util.Set;
 
 @ExcludeFromGeneratedCoverageReport
-public class SharedAttributesDeserializer extends StdDeserializer<SharedAttributes> {
+public class SharedClaimsDeserializer extends StdDeserializer<SharedClaims> {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    SharedAttributesDeserializer() {
+    SharedClaimsDeserializer() {
         this(null);
     }
 
-    protected SharedAttributesDeserializer(Class<?> vc) {
+    protected SharedClaimsDeserializer(Class<?> vc) {
         super(vc);
     }
 
     @Override
-    public SharedAttributes deserialize(JsonParser jsonParser, DeserializationContext ctxt)
+    public SharedClaims deserialize(JsonParser jsonParser, DeserializationContext ctxt)
             throws IOException {
-        SharedAttributes.Builder sharedAttributesBuilder = new SharedAttributes.Builder();
+        SharedClaims.Builder sharedAttributesBuilder = new SharedClaims.Builder();
 
         JsonNode node = jsonParser.getCodec().readTree(jsonParser);
         if (node.isEmpty()) {
-            return SharedAttributes.empty();
+            return SharedClaims.empty();
         }
 
         JsonNode nameNode = node.get("name");

@@ -15,8 +15,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
-import uk.gov.di.ipv.core.library.domain.SharedAttributes;
-import uk.gov.di.ipv.core.library.domain.SharedAttributesResponse;
+import uk.gov.di.ipv.core.library.domain.SharedClaims;
+import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -50,13 +50,12 @@ class JwtHelperTest {
         Set<BirthDate> birthDaySet = new HashSet<>();
         birthDaySet.add(new BirthDate("2020-02-03"));
 
-        SharedAttributes sharedAttributes =
-                new SharedAttributes.Builder().setName(nameSet).setBirthDate(birthDaySet).build();
+        SharedClaims sharedClaims =
+                new SharedClaims.Builder().setName(nameSet).setBirthDate(birthDaySet).build();
 
-        SharedAttributesResponse sharedAttributesResponse =
-                SharedAttributesResponse.from(Set.of(sharedAttributes));
+        SharedClaimsResponse sharedClaimsResponse = SharedClaimsResponse.from(Set.of(sharedClaims));
 
-        SignedJWT signedJWT = JwtHelper.createSignedJwtFromObject(sharedAttributesResponse, signer);
+        SignedJWT signedJWT = JwtHelper.createSignedJwtFromObject(sharedClaimsResponse, signer);
         JWTClaimsSet generatedClaims = signedJWT.getJWTClaimsSet();
 
         assertTrue(signedJWT.verify(new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK))));

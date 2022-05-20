@@ -6,14 +6,13 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 @JsonPropertyOrder({"name", "birthDate", "address"})
-public class SharedAttributesResponse {
+public class SharedClaimsResponse {
 
     private final Set<Name> name;
     private final Set<BirthDate> birthDate;
     private final Set<Address> address;
 
-    public SharedAttributesResponse(
-            Set<Name> name, Set<BirthDate> birthDate, Set<Address> address) {
+    public SharedClaimsResponse(Set<Name> name, Set<BirthDate> birthDate, Set<Address> address) {
         this.name = name;
         this.birthDate = birthDate;
         this.address = address;
@@ -31,7 +30,7 @@ public class SharedAttributesResponse {
         return address;
     }
 
-    public static SharedAttributesResponse from(Set<SharedAttributes> sharedAttributes) {
+    public static SharedClaimsResponse from(Set<SharedClaims> sharedAttributes) {
         Set<Name> nameSet = new LinkedHashSet<>();
         Set<BirthDate> birthDateSet = new LinkedHashSet<>();
         Set<Address> addressSet = new LinkedHashSet<>();
@@ -43,6 +42,6 @@ public class SharedAttributesResponse {
                     sharedAttribute.getAddress().ifPresent(addressSet::addAll);
                 });
 
-        return new SharedAttributesResponse(nameSet, birthDateSet, addressSet);
+        return new SharedClaimsResponse(nameSet, birthDateSet, addressSet);
     }
 }

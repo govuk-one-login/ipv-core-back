@@ -95,13 +95,7 @@ public interface TestFixtures {
                                     List.of(
                                             Map.of("value", "Alice", "type", "GivenName"),
                                             Map.of("value", "Jane", "type", "GivenName"),
-                                            Map.of(
-                                                    "value",
-                                                    "Doe",
-                                                    "validFrom",
-                                                    "2020-03-01",
-                                                    "type",
-                                                    "FamilyName")))),
+                                            Map.of("value", "Doe", "type", "FamilyName")))),
                     "birthDate",
                     List.of(Map.of("value", "2020-01-03")),
                     "address",

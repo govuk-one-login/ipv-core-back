@@ -19,7 +19,7 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import org.apache.http.client.utils.URIBuilder;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.SharedAttributesResponse;
+import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -40,7 +40,7 @@ public class AuthorizationRequestHelper {
     private AuthorizationRequestHelper() {}
 
     public static SignedJWT createSignedJWT(
-            SharedAttributesResponse sharedClaims,
+            SharedClaimsResponse sharedClaims,
             JWSSigner signer,
             CredentialIssuerConfig credentialIssuerConfig,
             ConfigurationService configurationService,
