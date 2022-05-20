@@ -53,12 +53,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.credentialissuer.CredentialIssuerStartHandler.SHARED_CLAIMS;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.*;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.vcClaim;
 
@@ -270,6 +265,37 @@ class CredentialIssuerStartHandlerTest {
         assertEquals(1, sharedClaims.get("name").size());
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(2, sharedClaims.get("address").size());
+    }
+
+    @Test
+    void shouldNotDeduplicateSharedClaimsIfFullNameDifferent() throws Exception {
+        when(configurationService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
+        when(configurationService.getIpvTokenTtl()).thenReturn("900");
+        when(configurationService.getCoreFrontCallbackUrl()).thenReturn("callbackUrl");
+        when(configurationService.getAudienceForClients()).thenReturn(IPV_ISSUER);
+        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
+                .thenReturn(
+                        List.of(
+                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_2)),
+                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_3))));
+
+        APIGatewayProxyRequestEvent input = createRequestEvent(emptyMap(), emptyMap());
+
+        input.setPathParameters(Map.of("criId", CRI_ID));
+        input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
+
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
+        JWEObject jweObject = JWEObject.parse(responseBody.get("request"));
+        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+
+        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
+        JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
+
+        JsonNode sharedClaims = claimsSet.get(SHARED_CLAIMS);
+        assertEquals(2, sharedClaims.get("name").size());
     }
 
     private Map<String, Map<String, String>> getResponseBodyAsMap(

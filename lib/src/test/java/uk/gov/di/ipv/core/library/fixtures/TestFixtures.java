@@ -57,7 +57,6 @@ public interface TestFixtures {
                                     "type", "PostalAddress",
                                     "organizationName", "Lebsack Inc",
                                     "streetAddress", "758 Huel Neck",
-                                    "addressLocality", "Hagenesstad",
                                     "addressRegion", "Illinois",
                                     "postalCode", "38421-3292",
                                     "addressCountry", "Tonga"),
@@ -74,6 +73,35 @@ public interface TestFixtures {
                                     List.of(
                                             Map.of("value", "Alice", "type", "GivenName"),
                                             Map.of("value", "Doe", "type", "FamilyName")))),
+                    "birthDate",
+                    List.of(Map.of("value", "2020-01-03")),
+                    "address",
+                    List.of(
+                            Map.of(
+                                    "type", "PostalAddress",
+                                    "organizationName", "Software Ltd",
+                                    "streetAddress", "35 Idsworth Road",
+                                    "addressLocality", "Sheffield",
+                                    "addressRegion", "Illinois",
+                                    "postalCode", "S5 6UN",
+                                    "addressCountry", "UK")));
+
+    Map<String, Object> CREDENTIAL_ATTRIBUTES_3 =
+            Map.of(
+                    "name",
+                    List.of(
+                            Map.of(
+                                    "nameParts",
+                                    List.of(
+                                            Map.of("value", "Alice", "type", "GivenName"),
+                                            Map.of("value", "Jane", "type", "GivenName"),
+                                            Map.of(
+                                                    "value",
+                                                    "Doe",
+                                                    "validFrom",
+                                                    "2020-03-01",
+                                                    "type",
+                                                    "FamilyName")))),
                     "birthDate",
                     List.of(Map.of("value", "2020-01-03")),
                     "address",
