@@ -85,7 +85,7 @@ Resources:
                     - IsDevelopmentEnvironment
                     - !ImportValue "network-shared-development-ApiGatewayVpcEndpointId"
                     - Fn::ImportValue:
-                        !Sub networking-${Environment}-ApiGatewayVpcEndpointId"
+                        !Sub "networking-${Environment}-ApiGatewayVpcEndpointId"
       StageName: !Sub ${Environment}
       AccessLogSetting:
         DestinationArn: !GetAtt IPVCoreInternalAPILogGroup.Arn
