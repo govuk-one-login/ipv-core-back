@@ -87,11 +87,6 @@ Resources:
                     - Fn::ImportValue:
                         !Sub networking-${Environment}-ApiGatewayVpcEndpointId"
       StageName: !Sub ${Environment}
-      DefinitionBody:
-        'Fn::Transform':
-          Name: "AWS::Include"
-          Parameters:
-            Location: "../openAPI/core-back-internal.yaml"
       AccessLogSetting:
         DestinationArn: !GetAtt IPVCoreInternalAPILogGroup.Arn
         Format: >-
