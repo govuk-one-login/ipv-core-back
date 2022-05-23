@@ -8,14 +8,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.domain.UserStates;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerErrorDto;
+import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
-import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
-import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 public class CredentialIssuerErrorHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -23,21 +23,22 @@ public class CredentialIssuerErrorHandler
     private static final Logger LOGGER =
             LoggerFactory.getLogger(CredentialIssuerErrorHandler.class.getName());
 
-    private static final String NEXT_JOURNEY_STEP_URI = "/journey/next";
+    private static final String ERROR_JOURNEY_STEP_URI = "/journey/error";
 
-    private final IpvSessionService ipvSessionService;
     private final ConfigurationService configurationService;
+    private final AuditService auditService;
 
     public CredentialIssuerErrorHandler(
-            IpvSessionService ipvSessionService, ConfigurationService configurationService) {
-        this.ipvSessionService = ipvSessionService;
+            ConfigurationService configurationService, AuditService auditService) {
         this.configurationService = configurationService;
+        this.auditService = auditService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public CredentialIssuerErrorHandler() {
         this.configurationService = new ConfigurationService();
-        this.ipvSessionService = new IpvSessionService(configurationService);
+        this.auditService =
+                new AuditService(AuditService.getDefaultSqsClient(), configurationService);
     }
 
     @Override
@@ -53,13 +54,13 @@ public class CredentialIssuerErrorHandler
         LOGGER.error("Error code: {}", credentialIssuerErrorDto.getError());
         LOGGER.error(credentialIssuerErrorDto.getErrorDescription());
 
-        IpvSessionItem ipvSessionItem =
-                ipvSessionService.getIpvSession(credentialIssuerErrorDto.getIpvSessionId());
-        ipvSessionItem.setUserState(UserStates.CRI_ERROR.toString());
+        try {
+            this.auditService.sendAuditEvent(AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED);
+        } catch (SqsException e) {
+            LOGGER.error("Failed to write event to audit queue");
+        }
 
-        ipvSessionService.updateIpvSession(ipvSessionItem);
-
-        JourneyResponse journeyResponse = new JourneyResponse(NEXT_JOURNEY_STEP_URI);
+        JourneyResponse journeyResponse = new JourneyResponse(ERROR_JOURNEY_STEP_URI);
 
         return ApiGatewayResponseGenerator.proxyJsonResponse(200, journeyResponse);
     }

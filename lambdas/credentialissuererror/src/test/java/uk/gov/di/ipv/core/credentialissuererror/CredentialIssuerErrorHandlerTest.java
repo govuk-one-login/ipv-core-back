@@ -8,13 +8,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.domain.UserStates;
-import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
-import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.io.IOException;
 import java.util.Map;
@@ -22,16 +21,14 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CredentialIssuerErrorHandlerTest {
 
     @Mock private Context mockContext;
-    @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ConfigurationService mockConfigurationService;
+    @Mock private AuditService mockAuditService;
 
     private CredentialIssuerErrorHandler credentialIssuerErrorHandler;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -39,11 +36,11 @@ class CredentialIssuerErrorHandlerTest {
     @BeforeEach
     void setUp() {
         credentialIssuerErrorHandler =
-                new CredentialIssuerErrorHandler(mockIpvSessionService, mockConfigurationService);
+                new CredentialIssuerErrorHandler(mockConfigurationService, mockAuditService);
     }
 
     @Test
-    void shouldReturnJourneyResponseAndUpdateUserState() throws IOException {
+    void shouldReturnJourneyResponseAndSendAuditLog() throws IOException, SqsException {
         APIGatewayProxyRequestEvent event =
                 createRequestEvent(
                         Map.of(
@@ -52,21 +49,14 @@ class CredentialIssuerErrorHandlerTest {
                                 "credential_issuer_id", "ukPassport"),
                         Map.of("ipv-session-id", UUID.randomUUID().toString()));
 
-        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(new IpvSessionItem());
-
-        ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-
         APIGatewayProxyResponseEvent response =
                 credentialIssuerErrorHandler.handleRequest(event, mockContext);
 
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-        verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(
-                UserStates.CRI_ERROR.toString(), sessionArgumentCaptor.getValue().getUserState());
+        verify(mockAuditService).sendAuditEvent(AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED);
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/next", responseBody.get("journey"));
+        assertEquals("/journey/error", responseBody.get("journey"));
     }
 
     private APIGatewayProxyRequestEvent createRequestEvent(
