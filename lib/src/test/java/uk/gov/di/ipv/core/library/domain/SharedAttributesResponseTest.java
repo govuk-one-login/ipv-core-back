@@ -14,8 +14,7 @@ class SharedAttributesResponseTest {
     void shouldCreateSharedAttributesResponseFromListOfSharedAttributes() {
 
         Set<Name> nameSet = new HashSet<>();
-        nameSet.add(
-                new Name(List.of(new NameParts("Paul", "GivenName", "2020-03-03", "2021-04-04"))));
+        nameSet.add(new Name(List.of(new NameParts("Paul", "GivenName"))));
 
         Set<Address> addressSet = new HashSet<>();
         addressSet.add(
@@ -39,8 +38,7 @@ class SharedAttributesResponseTest {
                         .build();
 
         Set<Name> nameSet2 = new HashSet<>();
-        nameSet2.add(
-                new Name(List.of(new NameParts("Tony", "GivenName", "2021-03-03", "2021-04-04"))));
+        nameSet2.add(new Name(List.of(new NameParts("Tony", "GivenName"))));
 
         Set<Address> addressSet2 = new HashSet<>();
         addressSet2.add(
