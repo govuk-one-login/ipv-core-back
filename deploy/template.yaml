@@ -85,7 +85,7 @@ Resources:
                     - IsDevelopmentEnvironment
                     - !ImportValue "network-shared-development-ApiGatewayVpcEndpointId"
                     - Fn::ImportValue:
-                        !Sub network-${Environment}-ApiGatewayVpcEndpointId"
+                        !Sub networking-${Environment}-ApiGatewayVpcEndpointId"
       StageName: !Sub ${Environment}
       DefinitionBody:
         'Fn::Transform':
