@@ -913,6 +913,8 @@ Outputs:
     Value: !Ref IPVCoreInternalAPI
   IPVCorePrivateAPIGatewayID:
     Description: Core Back Private API Gateway ID
+    Export:
+      Name: !Sub "${AWS::StackName}-IPVCorePrivateAPIGatewayID"
     Value: !Ref IPVCorePrivateAPI
   IPVCoreExternalAPIGatewayID:
     Description: Core Back External API Gateway ID
