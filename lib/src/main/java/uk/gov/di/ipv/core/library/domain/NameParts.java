@@ -1,10 +1,12 @@
 package uk.gov.di.ipv.core.library.domain;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import lombok.EqualsAndHashCode;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 @JsonPropertyOrder({"value", "type"})
 @ExcludeFromGeneratedCoverageReport
+@EqualsAndHashCode
 public class NameParts {
     private String value;
     private String type;

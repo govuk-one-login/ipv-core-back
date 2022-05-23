@@ -3,29 +3,31 @@ package uk.gov.di.ipv.core.library.domain;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.EqualsAndHashCode;
 
 import java.util.Optional;
 import java.util.Set;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonPropertyOrder({"name", "birthDate", "address"})
-@JsonDeserialize(using = SharedAttributesDeserializer.class)
-public class SharedAttributes {
-
+@JsonDeserialize(using = SharedClaimsDeserializer.class)
+@EqualsAndHashCode
+public class SharedClaims {
     private Set<Name> name;
+
     private Set<BirthDate> birthDate;
     private Set<Address> address;
 
-    private SharedAttributes() {}
+    private SharedClaims() {}
 
-    public SharedAttributes(Set<Name> name, Set<BirthDate> birthDate, Set<Address> address) {
+    public SharedClaims(Set<Name> name, Set<BirthDate> birthDate, Set<Address> address) {
         this.name = name;
         this.birthDate = birthDate;
         this.address = address;
     }
 
-    public static SharedAttributes empty() {
-        return new SharedAttributes();
+    public static SharedClaims empty() {
+        return new SharedClaims();
     }
 
     public Optional<Set<Name>> getName() {
@@ -41,6 +43,7 @@ public class SharedAttributes {
     }
 
     public static class Builder {
+
         private Set<Name> name;
         private Set<BirthDate> birthDate;
         private Set<Address> address;
@@ -60,8 +63,8 @@ public class SharedAttributes {
             return this;
         }
 
-        public SharedAttributes build() {
-            return new SharedAttributes(name, birthDate, address);
+        public SharedClaims build() {
+            return new SharedClaims(name, birthDate, address);
         }
     }
 }

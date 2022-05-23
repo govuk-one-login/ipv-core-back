@@ -8,7 +8,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class SharedAttributesResponseTest {
+class SharedClaimsResponseTest {
 
     @Test
     void shouldCreateSharedAttributesResponseFromListOfSharedAttributes() {
@@ -30,8 +30,8 @@ class SharedAttributesResponseTest {
         Set<BirthDate> birthDaySet = new HashSet<>();
         birthDaySet.add(new BirthDate("2020-02-03"));
 
-        SharedAttributes sharedAttributes1 =
-                new SharedAttributes.Builder()
+        SharedClaims sharedClaims1 =
+                new SharedClaims.Builder()
                         .setName(nameSet)
                         .setAddress(addressSet)
                         .setBirthDate(birthDaySet)
@@ -53,19 +53,18 @@ class SharedAttributesResponseTest {
 
         Set<BirthDate> birthDaySet2 = new HashSet<>();
         birthDaySet2.add(new BirthDate("2021-02-03"));
-        SharedAttributes sharedAttributes2 =
-                new SharedAttributes.Builder()
+        SharedClaims sharedClaims2 =
+                new SharedClaims.Builder()
                         .setName(nameSet2)
                         .setAddress(addressSet2)
                         .setBirthDate(birthDaySet2)
                         .build();
 
-        List<SharedAttributes> sharedAttributes = List.of(sharedAttributes1, sharedAttributes2);
+        Set<SharedClaims> sharedAttributes = Set.of(sharedClaims1, sharedClaims2);
 
-        SharedAttributesResponse sharedAttributesResponse =
-                SharedAttributesResponse.from(sharedAttributes);
+        SharedClaimsResponse sharedClaimsResponse = SharedClaimsResponse.from(sharedAttributes);
 
-        for (Address n : sharedAttributesResponse.getAddress()) {
+        for (Address n : sharedClaimsResponse.getAddress()) {
             System.out.println(n.getAddressRegion());
             if (n.getAddressRegion().equals("Illinois")) {
                 assertEquals("Illinois", n.getAddressRegion());
@@ -74,8 +73,8 @@ class SharedAttributesResponseTest {
                 assertEquals("York", n.getAddressRegion());
             }
         }
-        assertEquals(2, sharedAttributesResponse.getName().size());
-        assertEquals(2, sharedAttributesResponse.getAddress().size());
-        assertEquals(2, sharedAttributesResponse.getBirthDate().size());
+        assertEquals(2, sharedClaimsResponse.getName().size());
+        assertEquals(2, sharedClaimsResponse.getAddress().size());
+        assertEquals(2, sharedClaimsResponse.getBirthDate().size());
     }
 }

@@ -10,7 +10,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class SharedAttributesTest {
+class SharedClaimsTest {
 
     @Test
     void shouldBuildSharedAttributes() {
@@ -35,8 +35,8 @@ class SharedAttributesTest {
         BirthDate birthDate = new BirthDate("2020-02-03");
         birthDaySet.add(birthDate);
 
-        SharedAttributes response =
-                new SharedAttributes.Builder()
+        SharedClaims response =
+                new SharedClaims.Builder()
                         .setName(nameSet)
                         .setAddress(addressSet)
                         .setBirthDate(birthDaySet)
@@ -49,8 +49,8 @@ class SharedAttributesTest {
 
     @Test
     void shouldReturnEmptySharedAttributes() {
-        assertEquals(Optional.empty(), SharedAttributes.empty().getName());
-        assertEquals(Optional.empty(), SharedAttributes.empty().getAddress());
-        assertEquals(Optional.empty(), SharedAttributes.empty().getBirthDate());
+        assertEquals(Optional.empty(), SharedClaims.empty().getName());
+        assertEquals(Optional.empty(), SharedClaims.empty().getAddress());
+        assertEquals(Optional.empty(), SharedClaims.empty().getBirthDate());
     }
 }

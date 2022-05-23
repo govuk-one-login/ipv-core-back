@@ -22,8 +22,8 @@ import uk.gov.di.ipv.core.credentialissuer.domain.CriResponse;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.SharedAttributes;
-import uk.gov.di.ipv.core.library.domain.SharedAttributesResponse;
+import uk.gov.di.ipv.core.library.domain.SharedClaims;
+import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -39,10 +39,11 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.text.ParseException;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -150,12 +151,12 @@ public class CredentialIssuerStartHandler
     private JWEObject signEncryptJar(
             CredentialIssuerConfig credentialIssuerConfig, String ipvSessionId, UUID oauthState)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException {
-        SharedAttributesResponse sharedAttributesResponse = getSharedAttributes(ipvSessionId);
+        SharedClaimsResponse sharedClaimsResponse = getSharedAttributes(ipvSessionId);
         SignedJWT signedJWT =
                 getSignedJWT(
                         credentialIssuerConfig,
                         oauthState,
-                        sharedAttributesResponse,
+                        sharedClaimsResponse,
                         ipvSessionService
                                 .getIpvSession(ipvSessionId)
                                 .getClientSessionDetails()
@@ -169,11 +170,11 @@ public class CredentialIssuerStartHandler
     private SignedJWT getSignedJWT(
             CredentialIssuerConfig credentialIssuerConfig,
             UUID oauthState,
-            SharedAttributesResponse sharedAttributesResponse,
+            SharedClaimsResponse sharedClaimsResponse,
             String userId)
             throws HttpResponseExceptionWithErrorBody {
         return AuthorizationRequestHelper.createSignedJWT(
-                sharedAttributesResponse,
+                sharedClaimsResponse,
                 signer,
                 credentialIssuerConfig,
                 configurationService,
@@ -195,11 +196,11 @@ public class CredentialIssuerStartHandler
     }
 
     @Tracing
-    private SharedAttributesResponse getSharedAttributes(String ipvSessionId)
+    private SharedClaimsResponse getSharedAttributes(String ipvSessionId)
             throws HttpResponseExceptionWithErrorBody {
         List<String> credentials = userIdentityService.getUserIssuedCredentials(ipvSessionId);
 
-        List<SharedAttributes> sharedAttributes = new ArrayList<>();
+        Set<SharedClaims> sharedAttributes = new HashSet<>();
         for (String credential : credentials) {
             try {
                 JsonNode credentialSubject =
@@ -212,7 +213,7 @@ public class CredentialIssuerStartHandler
                             500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
                 }
                 sharedAttributes.add(
-                        mapper.readValue(credentialSubject.toString(), SharedAttributes.class));
+                        mapper.readValue(credentialSubject.toString(), SharedClaims.class));
             } catch (JsonProcessingException e) {
                 LOGGER.error("Failed to get Shared Attributes: {}", e.getMessage());
                 throw new HttpResponseExceptionWithErrorBody(
@@ -223,7 +224,7 @@ public class CredentialIssuerStartHandler
                         500, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
             }
         }
-        return SharedAttributesResponse.from(sharedAttributes);
+        return SharedClaimsResponse.from(sharedAttributes);
     }
 
     @Tracing

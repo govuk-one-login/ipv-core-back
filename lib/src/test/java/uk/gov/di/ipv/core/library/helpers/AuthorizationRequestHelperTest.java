@@ -19,7 +19,7 @@ import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
-import uk.gov.di.ipv.core.library.domain.SharedAttributesResponse;
+import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -65,8 +65,8 @@ class AuthorizationRequestHelperTest {
     public static final String TEST_USER_ID = "test-user-id";
     public static final UUID OAUTH_STATE = UUID.randomUUID();
 
-    private final SharedAttributesResponse sharedClaims =
-            new SharedAttributesResponse(
+    private final SharedClaimsResponse sharedClaims =
+            new SharedClaimsResponse(
                     Set.of(new Name(List.of(new NameParts("Dan", "first_name")))),
                     Set.of(new BirthDate("2011-01-01")),
                     Set.of(new Address()));

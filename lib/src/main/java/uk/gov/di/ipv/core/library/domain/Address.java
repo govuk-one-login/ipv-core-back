@@ -2,13 +2,16 @@ package uk.gov.di.ipv.core.library.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.EqualsAndHashCode;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ExcludeFromGeneratedCoverageReport
+@EqualsAndHashCode
 public class Address {
     private String type;
+
     private String organizationName;
     private String streetAddress;
     private String addressLocality;
