@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.nimbusds.oauth2.sdk.OAuth2Error;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.lambda.powertools.tracing.Tracing;
@@ -17,6 +18,9 @@ import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class CredentialIssuerErrorHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
@@ -24,6 +28,14 @@ public class CredentialIssuerErrorHandler
             LoggerFactory.getLogger(CredentialIssuerErrorHandler.class.getName());
 
     private static final String ERROR_JOURNEY_STEP_URI = "/journey/error";
+
+    private static final List<String> ALLOWED_OAUTH_ERROR_CODES =
+            Arrays.asList(
+                    OAuth2Error.SERVER_ERROR_CODE,
+                    OAuth2Error.INVALID_REQUEST_CODE,
+                    OAuth2Error.INVALID_REQUEST_OBJECT_CODE,
+                    OAuth2Error.INVALID_GRANT_CODE,
+                    OAuth2Error.INVALID_CLIENT_CODE);
 
     private final ConfigurationService configurationService;
     private final AuditService auditService;
@@ -51,6 +63,10 @@ public class CredentialIssuerErrorHandler
         LOGGER.error(
                 "An error occurred with the {} cri",
                 credentialIssuerErrorDto.getCredentialIssuerId());
+
+        if (!ALLOWED_OAUTH_ERROR_CODES.contains(credentialIssuerErrorDto.getError())) {
+            LOGGER.error("Unknown Oauth error code recieved");
+        }
         LOGGER.error("Error code: {}", credentialIssuerErrorDto.getError());
         LOGGER.error(credentialIssuerErrorDto.getErrorDescription());
 
