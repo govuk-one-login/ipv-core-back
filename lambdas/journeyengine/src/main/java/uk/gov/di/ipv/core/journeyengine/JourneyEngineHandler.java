@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_ERROR;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_KBV;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_UK_PASSPORT;
@@ -43,12 +44,14 @@ public class JourneyEngineHandler
 
     private static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
     private static final String JOURNEY_STEP_PARAM = "journeyStep";
+    private static final String NEXT_STEP = "next";
+    private static final String ERROR_STEP = "error";
     private static final String UK_PASSPORT_CRI_ID = "ukPassport";
     private static final String ADDRESS_CRI_ID = "address";
     private static final String KBV_CRI_ID = "kbv";
     private static final String FRAUD_CRI_ID = "fraud";
 
-    private static final List<String> VALID_JOURNEY_STEPS = List.of("next");
+    private static final List<String> VALID_JOURNEY_STEPS = List.of(NEXT_STEP, ERROR_STEP);
 
     private final IpvSessionService ipvSessionService;
     private final ConfigurationService configurationService;
@@ -142,34 +145,56 @@ public class JourneyEngineHandler
                             new JourneyResponse(criStartUri + UK_PASSPORT_CRI_ID));
                     break;
                 case CRI_UK_PASSPORT:
-                    updateUserState(CRI_ADDRESS, ipvSessionItem);
-                    builder.setJourneyResponse(new JourneyResponse(criStartUri + ADDRESS_CRI_ID));
+                    if (journeyStep.equals(NEXT_STEP)) {
+                        updateUserState(CRI_ADDRESS, ipvSessionItem);
+                        builder.setJourneyResponse(
+                                new JourneyResponse(criStartUri + ADDRESS_CRI_ID));
+                    } else if (journeyStep.equals(ERROR_STEP)) {
+                        updateUserState(CRI_ERROR, ipvSessionItem);
+                        builder.setPageResponse(new PageResponse(IPV_ERROR_PAGE.value));
+                    }
                     break;
                 case CRI_ADDRESS:
-                    updateUserState(CRI_FRAUD, ipvSessionItem);
-                    builder.setJourneyResponse(new JourneyResponse(criStartUri + FRAUD_CRI_ID));
+                    if (journeyStep.equals(NEXT_STEP)) {
+                        updateUserState(CRI_FRAUD, ipvSessionItem);
+                        builder.setJourneyResponse(new JourneyResponse(criStartUri + FRAUD_CRI_ID));
+                    } else if (journeyStep.equals(ERROR_STEP)) {
+                        updateUserState(CRI_ERROR, ipvSessionItem);
+                        builder.setPageResponse(new PageResponse(IPV_ERROR_PAGE.value));
+                    }
                     break;
                 case CRI_FRAUD:
-                    updateUserState(PRE_KBV_TRANSITION_PAGE, ipvSessionItem);
-                    builder.setPageResponse(new PageResponse(PRE_KBV_TRANSITION_PAGE.value));
+                    if (journeyStep.equals(NEXT_STEP)) {
+                        updateUserState(PRE_KBV_TRANSITION_PAGE, ipvSessionItem);
+                        builder.setPageResponse(new PageResponse(PRE_KBV_TRANSITION_PAGE.value));
+                    } else if (journeyStep.equals(ERROR_STEP)) {
+                        updateUserState(CRI_ERROR, ipvSessionItem);
+                        builder.setPageResponse(new PageResponse(IPV_ERROR_PAGE.value));
+                    }
                     break;
                 case PRE_KBV_TRANSITION_PAGE:
                     updateUserState(CRI_KBV, ipvSessionItem);
                     builder.setJourneyResponse(new JourneyResponse(criStartUri + KBV_CRI_ID));
                     break;
                 case CRI_KBV:
-                    updateUserState(IPV_SUCCESS_PAGE, ipvSessionItem);
-                    builder.setPageResponse(new PageResponse(IPV_SUCCESS_PAGE.value));
+                    if (journeyStep.equals(NEXT_STEP)) {
+                        updateUserState(IPV_SUCCESS_PAGE, ipvSessionItem);
+                        builder.setPageResponse(new PageResponse(IPV_SUCCESS_PAGE.value));
+                    } else if (journeyStep.equals(ERROR_STEP)) {
+                        updateUserState(CRI_ERROR, ipvSessionItem);
+                        builder.setPageResponse(new PageResponse(IPV_ERROR_PAGE.value));
+                    }
                     break;
                 case IPV_SUCCESS_PAGE:
+                case CRI_ERROR:
                     builder.setJourneyResponse(new JourneyResponse(journeyEndUri));
                     break;
                 case DEBUG_PAGE:
                     builder.setPageResponse(new PageResponse(DEBUG_PAGE.value));
                     break;
-                case CRI_ERROR:
+                default:
+                    updateUserState(CRI_ERROR, ipvSessionItem);
                     builder.setPageResponse(new PageResponse(IPV_ERROR_PAGE.value));
-                    break;
             }
 
             return builder.build();
