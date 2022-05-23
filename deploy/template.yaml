@@ -25,12 +25,67 @@ Conditions:
       - !Ref ProvisionedConcurrentExecutions
       -  0
 
+  IsDevelopmentEnvironment: !Not
+    - !Or
+      - !Equals [ !Ref Environment, "build"]
+      - !Equals [ !Ref Environment, "staging"]
+      - !Equals [ !Ref Environment, "integration"]
+      - !Equals [ !Ref Environment, "production"]
+
 Resources:
 
   IPVCoreInternalAPI:
     Type: AWS::Serverless::Api
     Properties:
       Name: !Sub IPV Core Internal API Gateway ${Environment}
+      StageName: !Sub ${Environment}
+      DefinitionBody:
+        'Fn::Transform':
+          Name: "AWS::Include"
+          Parameters:
+            Location: "../openAPI/core-back-internal.yaml"
+      AccessLogSetting:
+        DestinationArn: !GetAtt IPVCoreInternalAPILogGroup.Arn
+        Format: >-
+          {
+          "requestId":"$context.requestId",
+          "ip":"$context.identity.sourceIp",
+          "requestTime":"$context.requestTime",
+          "httpMethod":"$context.httpMethod",
+          "path":"$context.path",
+          "routeKey":"$context.routeKey",
+          "status":"$context.status",
+          "protocol":"$context.protocol",
+          "responseLatency":"$context.responseLatency",
+          "responseLength":"$context.responseLength"
+          }
+
+  IPVCorePrivateAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub IPV Core Private API Gateway ${Environment}
+      EndpointConfiguration:
+        Type: PRIVATE
+      Auth:
+        ResourcePolicy:
+          CustomStatements:
+            - Action: 'execute-api:Invoke'
+              Effect: Allow
+              Principal: '*'
+              Resource:
+                - 'execute-api:/*'
+            - Action: 'execute-api:Invoke'
+              Effect: Deny
+              Principal: '*'
+              Resource:
+                - 'execute-api:/*'
+              Condition:
+                StringNotEquals:
+                  'aws:SourceVpce': !If
+                    - IsDevelopmentEnvironment
+                    - !ImportValue "network-shared-development-ApiGatewayVpcEndpointId"
+                    - Fn::ImportValue:
+                        !Sub networking-${Environment}-ApiGatewayVpcEndpointId"
       StageName: !Sub ${Environment}
       DefinitionBody:
         'Fn::Transform':
@@ -207,6 +262,13 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /journey/session/end
             Method: POST
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+            Path: /journey/session/end
+            Method: POST
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
@@ -281,6 +343,13 @@ Resources:
           Properties:
             RestApiId:
               Ref: IPVCoreInternalAPI
+            Path: /session/start
+            Method: POST
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
             Path: /session/start
             Method: POST
       AutoPublishAlias: live
@@ -367,6 +436,13 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /journey/cri/return
             Method: POST
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+            Path: /journey/cri/return
+            Method: POST
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
@@ -451,6 +527,13 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /journey/cri/start/{criId}
             Method: POST
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+            Path: /journey/cri/start/{criId}
+            Method: POST
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
@@ -499,6 +582,13 @@ Resources:
           Properties:
             RestApiId:
               Ref: IPVCoreInternalAPI
+            Path: /journey/cri/error
+            Method: POST
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
             Path: /journey/cri/error
             Method: POST
       AutoPublishAlias: live
@@ -620,6 +710,13 @@ Resources:
               Ref: IPVCoreInternalAPI
             Path: /request-config
             Method: GET
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+            Path: /request-config
+            Method: GET
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
@@ -668,6 +765,13 @@ Resources:
           Properties:
             RestApiId:
               Ref: IPVCoreInternalAPI
+            Path: /issued-credentials
+            Method: GET
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
             Path: /issued-credentials
             Method: GET
       AutoPublishAlias: live
@@ -720,6 +824,13 @@ Resources:
           Properties:
             RestApiId:
               Ref: IPVCoreInternalAPI
+            Path: /journey/{journeyStep}
+            Method: POST
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
             Path: /journey/{journeyStep}
             Method: POST
       AutoPublishAlias: live
@@ -800,6 +911,11 @@ Outputs:
     Export:
       Name: !Sub "${AWS::StackName}-IPVCoreInternalAPIGatewayID"
     Value: !Ref IPVCoreInternalAPI
+  IPVCorePrivateAPIGatewayID:
+    Description: Core Back Private API Gateway ID
+    Export:
+      Name: !Sub "${AWS::StackName}-IPVCorePrivateAPIGatewayID"
+    Value: !Ref IPVCorePrivateAPI
   IPVCoreExternalAPIGatewayID:
     Description: Core Back External API Gateway ID
     Export:
