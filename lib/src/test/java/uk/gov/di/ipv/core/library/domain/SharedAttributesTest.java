@@ -14,8 +14,7 @@ class SharedAttributesTest {
 
     @Test
     void shouldBuildSharedAttributes() {
-        List<NameParts> namePartsList =
-                Arrays.asList(new NameParts("Paul", "GivenName", "2020-03-03", "2021-04-04"));
+        List<NameParts> namePartsList = Arrays.asList(new NameParts("Paul", "GivenName"));
         Set<Name> nameSet = new HashSet<>();
         Name names = new Name(namePartsList);
         nameSet.add(names);

@@ -44,15 +44,8 @@ class JwtHelperTest {
                     JsonProcessingException {
         ECDSASigner signer = new ECDSASigner(getPrivateKey());
 
-        String generatedClaimsValue = "";
-        String generatedClaimsType = "";
-        String generatedClaimsValidFrom = "";
-        String generatedClaimsValidUntil = "";
-        String generatedClaimsbirthDate = "";
-
         Set<Name> nameSet = new HashSet<>();
-        nameSet.add(
-                new Name(List.of(new NameParts("Paul", "GivenName", "2020-03-03", "2021-04-04"))));
+        nameSet.add(new Name(List.of(new NameParts("Paul", "GivenName"))));
 
         Set<BirthDate> birthDaySet = new HashSet<>();
         birthDaySet.add(new BirthDate("2020-02-03"));
@@ -69,28 +62,10 @@ class JwtHelperTest {
         assertTrue(signedJWT.verify(new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK))));
 
         JsonNode claimsSet = objectMapper.readTree(generatedClaims.toString());
-
-        JsonNode nameNode = claimsSet.get("name");
-        if (nameNode != null) {
-            for (JsonNode jo : nameNode) {
-                generatedClaimsValue = jo.get("nameParts").get(0).get("value").asText();
-                generatedClaimsType = jo.get("nameParts").get(0).get("type").asText();
-                generatedClaimsValidFrom = jo.get("nameParts").get(0).get("validFrom").asText();
-                generatedClaimsValidUntil = jo.get("nameParts").get(0).get("validUntil").asText();
-            }
-        }
-        JsonNode bdateNode = claimsSet.get("birthDate");
-        if (bdateNode != null) {
-            for (JsonNode jo : bdateNode) {
-                generatedClaimsbirthDate = jo.get("value").asText();
-            }
-        }
-
-        assertEquals("Paul", generatedClaimsValue);
-        assertEquals("GivenName", generatedClaimsType);
-        assertEquals("2020-03-03", generatedClaimsValidFrom);
-        assertEquals("2021-04-04", generatedClaimsValidUntil);
-        assertEquals("2020-02-03", generatedClaimsbirthDate);
+        JsonNode namePartsNode = claimsSet.get("name").get(0).get("nameParts").get(0);
+        assertEquals("Paul", namePartsNode.get("value").asText());
+        assertEquals("GivenName", namePartsNode.get("type").asText());
+        assertEquals("2020-02-03", claimsSet.get("birthDate").get(0).get("value").asText());
     }
 
     private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
