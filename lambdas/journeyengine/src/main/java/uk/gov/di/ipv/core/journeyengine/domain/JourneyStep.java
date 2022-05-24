@@ -2,7 +2,8 @@ package uk.gov.di.ipv.core.journeyengine.domain;
 
 public enum JourneyStep {
     NEXT("next"),
-    ERROR("error");
+    ERROR("error"),
+    FAIL("fail");
 
     private final String step;
 

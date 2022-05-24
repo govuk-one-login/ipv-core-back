@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.utils.StringUtils;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.journeyengine.domain.JourneyEngineResult;
+import uk.gov.di.ipv.core.journeyengine.domain.JourneyStep;
 import uk.gov.di.ipv.core.journeyengine.domain.PageResponse;
 import uk.gov.di.ipv.core.journeyengine.exceptions.JourneyEngineException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -22,7 +23,7 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
-import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 
@@ -45,15 +46,10 @@ public class JourneyEngineHandler
 
     private static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
     private static final String JOURNEY_STEP_PARAM = "journeyStep";
-    private static final String NEXT_STEP = "next";
-    private static final String ERROR_STEP = "error";
     private static final String UK_PASSPORT_CRI_ID = "ukPassport";
     private static final String ADDRESS_CRI_ID = "address";
     private static final String KBV_CRI_ID = "kbv";
     private static final String FRAUD_CRI_ID = "fraud";
-
-    private static final List<String> VALID_JOURNEY_STEPS =
-            List.of(NEXT.toString(), ERROR.toString());
 
     private final IpvSessionService ipvSessionService;
     private final ConfigurationService configurationService;
@@ -131,11 +127,7 @@ public class JourneyEngineHandler
 
             JourneyEngineResult.Builder builder = new JourneyEngineResult.Builder();
 
-            if (!VALID_JOURNEY_STEPS.contains(journeyStep)) {
-                LOGGER.warn("Unknown journey step: {}", journeyStep);
-                throw new JourneyEngineException(
-                        "Invalid journey step provided, failed to execute journey engine step.");
-            }
+            validateJourneyStep(journeyStep);
 
             switch (currentUserStateValue) {
                 case INITIAL_IPV_JOURNEY:
@@ -148,11 +140,14 @@ public class JourneyEngineHandler
                             new JourneyResponse(criStartUri + UK_PASSPORT_CRI_ID));
                     break;
                 case CRI_UK_PASSPORT:
-                    if (journeyStep.equals(NEXT_STEP)) {
+                    if (journeyStep.equals(JourneyStep.NEXT.toString())) {
                         updateUserState(CRI_ADDRESS, ipvSessionItem);
                         builder.setJourneyResponse(
                                 new JourneyResponse(criStartUri + ADDRESS_CRI_ID));
-                    } else if (journeyStep.equals(ERROR_STEP)) {
+                    } else if (journeyStep.equals(JourneyStep.ERROR.toString())) {
+                        updateUserState(CRI_ERROR, ipvSessionItem);
+                        builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
+                    } else if (journeyStep.equals(JourneyStep.FAIL.toString())) {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
                     } else {
@@ -160,10 +155,10 @@ public class JourneyEngineHandler
                     }
                     break;
                 case CRI_ADDRESS:
-                    if (journeyStep.equals(NEXT_STEP)) {
+                    if (journeyStep.equals(JourneyStep.NEXT.toString())) {
                         updateUserState(CRI_FRAUD, ipvSessionItem);
                         builder.setJourneyResponse(new JourneyResponse(criStartUri + FRAUD_CRI_ID));
-                    } else if (journeyStep.equals(ERROR_STEP)) {
+                    } else if (journeyStep.equals(JourneyStep.ERROR.toString())) {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
                     } else {
@@ -171,10 +166,10 @@ public class JourneyEngineHandler
                     }
                     break;
                 case CRI_FRAUD:
-                    if (journeyStep.equals(NEXT_STEP)) {
+                    if (journeyStep.equals(JourneyStep.NEXT.toString())) {
                         updateUserState(PRE_KBV_TRANSITION_PAGE, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PRE_KBV_TRANSITION_PAGE.value));
-                    } else if (journeyStep.equals(ERROR_STEP)) {
+                    } else if (journeyStep.equals(JourneyStep.ERROR.toString())) {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
                     } else {
@@ -186,10 +181,10 @@ public class JourneyEngineHandler
                     builder.setJourneyResponse(new JourneyResponse(criStartUri + KBV_CRI_ID));
                     break;
                 case CRI_KBV:
-                    if (journeyStep.equals(NEXT_STEP)) {
+                    if (journeyStep.equals(JourneyStep.NEXT.toString())) {
                         updateUserState(IPV_SUCCESS_PAGE, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(IPV_SUCCESS_PAGE.value));
-                    } else if (journeyStep.equals(ERROR_STEP)) {
+                    } else if (journeyStep.equals(JourneyStep.ERROR.toString())) {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
                     } else {
@@ -216,6 +211,18 @@ public class JourneyEngineHandler
             throw new JourneyEngineException(
                     "Unknown user state, failed to execute journey engine step.");
         }
+    }
+
+    private void validateJourneyStep(String journeyStep) throws JourneyEngineException {
+        Arrays.stream(JourneyStep.values())
+                .filter(step -> step.toString().equalsIgnoreCase(journeyStep))
+                .findFirst()
+                .orElseThrow(
+                        () -> {
+                            LOGGER.warn("Unknown journey step: {}", journeyStep);
+                            return new JourneyEngineException(
+                                    "Invalid journey step provided, failed to execute journey engine step.");
+                        });
     }
 
     private void handleInvalidJourneyStep(String journeyStep, String currentUserState)
