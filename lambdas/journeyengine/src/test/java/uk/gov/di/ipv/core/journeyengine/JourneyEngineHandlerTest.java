@@ -313,7 +313,7 @@ class JourneyEngineHandlerTest {
                 UserStates.CRI_ERROR.toString(), sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(UserStates.IPV_ERROR_PAGE.value, pageResponse.getPage());
+        assertEquals(UserStates.PYI_TECHNICAL_ERROR_PAGE.value, pageResponse.getPage());
     }
 
     @Test
@@ -378,7 +378,7 @@ class JourneyEngineHandlerTest {
                 UserStates.CRI_ERROR.toString(), sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(UserStates.IPV_ERROR_PAGE.value, pageResponse.getPage());
+        assertEquals(UserStates.PYI_TECHNICAL_ERROR_PAGE.value, pageResponse.getPage());
     }
 
     @Test
@@ -475,7 +475,7 @@ class JourneyEngineHandlerTest {
                 UserStates.CRI_ERROR.toString(), sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(UserStates.IPV_ERROR_PAGE.value, pageResponse.getPage());
+        assertEquals(UserStates.PYI_TECHNICAL_ERROR_PAGE.value, pageResponse.getPage());
     }
 
     @Test
@@ -541,7 +541,7 @@ class JourneyEngineHandlerTest {
                 UserStates.CRI_ERROR.toString(), sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(UserStates.IPV_ERROR_PAGE.value, pageResponse.getPage());
+        assertEquals(UserStates.PYI_TECHNICAL_ERROR_PAGE.value, pageResponse.getPage());
     }
 
     @Test

@@ -12,7 +12,9 @@ public enum UserStates {
     CRI_FRAUD("cri-fraud"),
     CRI_KBV("cri-kbv"),
     CRI_ERROR("cri-error"),
-    IPV_ERROR_PAGE("page-ipv-error");
+    IPV_ERROR_PAGE("page-ipv-error"),
+    PYI_TECHNICAL_ERROR_PAGE("pyi-technical"),
+    PYI_TECHNICAL_UNRECOVERABLE_ERROR_PAGE("pyi-technical-unrecoverable");
 
     public final String value;
 
