@@ -150,7 +150,7 @@ public class JourneyEngineHandler
                         updateUserState(CRI_ADDRESS, ipvSessionItem);
                         builder.setJourneyResponse(
                                 new JourneyResponse(criStartUri + ADDRESS_CRI_ID));
-                    } else if (journeyStep.equals(ERROR_STEP)) {
+                    } else {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
                     }
@@ -159,7 +159,7 @@ public class JourneyEngineHandler
                     if (journeyStep.equals(NEXT_STEP)) {
                         updateUserState(CRI_FRAUD, ipvSessionItem);
                         builder.setJourneyResponse(new JourneyResponse(criStartUri + FRAUD_CRI_ID));
-                    } else if (journeyStep.equals(ERROR_STEP)) {
+                    } else {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
                     }
@@ -168,7 +168,7 @@ public class JourneyEngineHandler
                     if (journeyStep.equals(NEXT_STEP)) {
                         updateUserState(PRE_KBV_TRANSITION_PAGE, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PRE_KBV_TRANSITION_PAGE.value));
-                    } else if (journeyStep.equals(ERROR_STEP)) {
+                    } else {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
                     }
@@ -181,7 +181,7 @@ public class JourneyEngineHandler
                     if (journeyStep.equals(NEXT_STEP)) {
                         updateUserState(IPV_SUCCESS_PAGE, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(IPV_SUCCESS_PAGE.value));
-                    } else if (journeyStep.equals(ERROR_STEP)) {
+                    } else {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
                     }
