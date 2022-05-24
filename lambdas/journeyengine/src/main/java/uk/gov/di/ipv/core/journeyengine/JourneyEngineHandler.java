@@ -116,6 +116,7 @@ public class JourneyEngineHandler
         }
     }
 
+    @SuppressWarnings("java:S3776") // Cognitive complexity rule
     @Tracing
     private JourneyEngineResult executeJourneyEvent(
             String journeyStep, IpvSessionItem ipvSessionItem) throws JourneyEngineException {
@@ -150,27 +151,33 @@ public class JourneyEngineHandler
                         updateUserState(CRI_ADDRESS, ipvSessionItem);
                         builder.setJourneyResponse(
                                 new JourneyResponse(criStartUri + ADDRESS_CRI_ID));
-                    } else {
+                    } else if (journeyStep.equals(ERROR_STEP)) {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
+                    } else {
+                        handleInvalidJourneyStep(journeyStep, CRI_UK_PASSPORT.value);
                     }
                     break;
                 case CRI_ADDRESS:
                     if (journeyStep.equals(NEXT_STEP)) {
                         updateUserState(CRI_FRAUD, ipvSessionItem);
                         builder.setJourneyResponse(new JourneyResponse(criStartUri + FRAUD_CRI_ID));
-                    } else {
+                    } else if (journeyStep.equals(ERROR_STEP)) {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
+                    } else {
+                        handleInvalidJourneyStep(journeyStep, CRI_ADDRESS.value);
                     }
                     break;
                 case CRI_FRAUD:
                     if (journeyStep.equals(NEXT_STEP)) {
                         updateUserState(PRE_KBV_TRANSITION_PAGE, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PRE_KBV_TRANSITION_PAGE.value));
-                    } else {
+                    } else if (journeyStep.equals(ERROR_STEP)) {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
+                    } else {
+                        handleInvalidJourneyStep(journeyStep, CRI_FRAUD.value);
                     }
                     break;
                 case PRE_KBV_TRANSITION_PAGE:
@@ -181,9 +188,11 @@ public class JourneyEngineHandler
                     if (journeyStep.equals(NEXT_STEP)) {
                         updateUserState(IPV_SUCCESS_PAGE, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(IPV_SUCCESS_PAGE.value));
-                    } else {
+                    } else if (journeyStep.equals(ERROR_STEP)) {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
+                    } else {
+                        handleInvalidJourneyStep(journeyStep, CRI_KBV.value);
                     }
                     break;
                 case IPV_SUCCESS_PAGE:
@@ -194,6 +203,7 @@ public class JourneyEngineHandler
                     builder.setPageResponse(new PageResponse(DEBUG_PAGE.value));
                     break;
                 default:
+                    LOGGER.info("Unknown current user state: {}", currentUserState);
                     updateUserState(CRI_ERROR, ipvSessionItem);
                     builder.setPageResponse(
                             new PageResponse(PYI_TECHNICAL_UNRECOVERABLE_ERROR_PAGE.value));
@@ -205,6 +215,18 @@ public class JourneyEngineHandler
             throw new JourneyEngineException(
                     "Unknown user state, failed to execute journey engine step.");
         }
+    }
+
+    private void handleInvalidJourneyStep(String journeyStep, String currentUserState)
+            throws JourneyEngineException {
+        LOGGER.error(
+                "Invalid jourey step provided: {} for the current user state: {}",
+                journeyStep,
+                currentUserState);
+        throw new JourneyEngineException(
+                String.format(
+                        "Invalid journey step provided: %s for the current user status: %s",
+                        journeyStep, currentUserState));
     }
 
     @Tracing
