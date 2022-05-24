@@ -37,7 +37,8 @@ public enum ErrorResponse {
     FAILED_TO_ENCRYPT_JWT(1028, "Failed to encrypt JWT"),
     FAILED_TO_GET_ENCRYPTION_PUBLIC_KEY(1029, "Failed to load Encryption Public Key"),
     MISSING_OAUTH_STATE(1030, "Missing OAuth state in Response"),
-    INVALID_OAUTH_STATE(1031, "Invalid OAuth State");
+    INVALID_OAUTH_STATE(1031, "Invalid OAuth State"),
+    WRONG_NUMBER_OF_ELEMENTS_IN_EVIDENCE(1032, "Wrong number of elements in evidence");
 
     @JsonProperty("code")
     private final int code;
