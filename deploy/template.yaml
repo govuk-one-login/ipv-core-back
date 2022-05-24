@@ -34,32 +34,6 @@ Conditions:
 
 Resources:
 
-  IPVCoreInternalAPI:
-    Type: AWS::Serverless::Api
-    Properties:
-      Name: !Sub IPV Core Internal API Gateway ${Environment}
-      StageName: !Sub ${Environment}
-      DefinitionBody:
-        'Fn::Transform':
-          Name: "AWS::Include"
-          Parameters:
-            Location: "../openAPI/core-back-internal.yaml"
-      AccessLogSetting:
-        DestinationArn: !GetAtt IPVCoreInternalAPILogGroup.Arn
-        Format: >-
-          {
-          "requestId":"$context.requestId",
-          "ip":"$context.identity.sourceIp",
-          "requestTime":"$context.requestTime",
-          "httpMethod":"$context.httpMethod",
-          "path":"$context.path",
-          "routeKey":"$context.routeKey",
-          "status":"$context.status",
-          "protocol":"$context.protocol",
-          "responseLatency":"$context.responseLatency",
-          "responseLength":"$context.responseLength"
-          }
-
   IPVCorePrivateAPI:
     Type: AWS::Serverless::Api
     Properties:
@@ -88,7 +62,7 @@ Resources:
                         !Sub "networking-${Environment}-ApiGatewayVpcEndpointId"
       StageName: !Sub ${Environment}
       AccessLogSetting:
-        DestinationArn: !GetAtt IPVCoreInternalAPILogGroup.Arn
+        DestinationArn: !GetAtt IPVCorePrivateAPILogGroup.Arn
         Format: >-
           {
           "requestId":"$context.requestId",
@@ -103,18 +77,18 @@ Resources:
           "responseLength":"$context.responseLength"
           }
 
-  IPVCoreInternalAPILogGroup:
+  IPVCorePrivateAPILogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-CoreBackInternal-API-GW-AccessLogs
+      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-CoreBackPrivate-API-GW-AccessLogs
       RetentionInDays: 14
 
-  IPVCoreInternalAPILogGroupSubscriptionFilter:
+  IPVCorePrivateAPILogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
-      LogGroupName: !Ref IPVCoreInternalAPILogGroup
+      LogGroupName: !Ref IPVCorePrivateAPILogGroup
 
   IPVCoreExternalAPI:
     Type: AWS::Serverless::Api
@@ -250,13 +224,6 @@ Resources:
               Resource:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
       Events:
-        IPVCoreInternalAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCoreInternalAPI
-            Path: /journey/session/end
-            Method: POST
         IPVCorePrivateAPI:
           Type: Api
           Properties:
@@ -333,13 +300,6 @@ Resources:
               Resource:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
       Events:
-        IPVCoreInternalAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCoreInternalAPI
-            Path: /session/start
-            Method: POST
         IPVCorePrivateAPI:
           Type: Api
           Properties:
@@ -424,13 +384,6 @@ Resources:
             Resource:
               - !ImportValue AuditEventQueueEncryptionKeyArn
       Events:
-        IPVCoreInternalAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCoreInternalAPI
-            Path: /journey/cri/return
-            Method: POST
         IPVCorePrivateAPI:
           Type: Api
           Properties:
@@ -515,13 +468,6 @@ Resources:
               Resource:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
       Events:
-        IPVCoreInternalAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCoreInternalAPI
-            Path: /journey/cri/start/{criId}
-            Method: POST
         IPVCorePrivateAPI:
           Type: Api
           Properties:
@@ -572,13 +518,6 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
       Events:
-        IPVCoreInternalAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCoreInternalAPI
-            Path: /journey/cri/error
-            Method: POST
         IPVCorePrivateAPI:
           Type: Api
           Properties:
@@ -698,13 +637,6 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers
       Events:
-        IPVCoreInternalAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCoreInternalAPI
-            Path: /request-config
-            Method: GET
         IPVCorePrivateAPI:
           Type: Api
           Properties:
@@ -755,13 +687,6 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref UserIssuedCredentialsTable
       Events:
-        IPVCoreInternalAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCoreInternalAPI
-            Path: /issued-credentials
-            Method: GET
         IPVCorePrivateAPI:
           Type: Api
           Properties:
@@ -814,13 +739,6 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
       Events:
-        IPVCoreInternalAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCoreInternalAPI
-            Path: /journey/{journeyStep}
-            Method: POST
         IPVCorePrivateAPI:
           Type: Api
           Properties:
@@ -901,11 +819,6 @@ Resources:
           KeyType: "HASH"
 
 Outputs:
-  IPVCoreInternalAPIGatewayID:
-    Description: Core Back Internal API Gateway ID
-    Export:
-      Name: !Sub "${AWS::StackName}-IPVCoreInternalAPIGatewayID"
-    Value: !Ref IPVCoreInternalAPI
   IPVCorePrivateAPIGatewayID:
     Description: Core Back Private API Gateway ID
     Export:
