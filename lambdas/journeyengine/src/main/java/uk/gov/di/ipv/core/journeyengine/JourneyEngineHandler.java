@@ -52,7 +52,8 @@ public class JourneyEngineHandler
     private static final String KBV_CRI_ID = "kbv";
     private static final String FRAUD_CRI_ID = "fraud";
 
-    private static final List<String> VALID_JOURNEY_STEPS = List.of(NEXT_STEP, ERROR_STEP);
+    private static final List<String> VALID_JOURNEY_STEPS =
+            List.of(NEXT.toString(), ERROR.toString());
 
     private final IpvSessionService ipvSessionService;
     private final ConfigurationService configurationService;
