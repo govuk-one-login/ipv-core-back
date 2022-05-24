@@ -27,14 +27,16 @@ import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_ADDRESS;
+import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_ERROR;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_FRAUD;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_KBV;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_UK_PASSPORT;
 import static uk.gov.di.ipv.core.library.domain.UserStates.DEBUG_PAGE;
-import static uk.gov.di.ipv.core.library.domain.UserStates.IPV_ERROR_PAGE;
 import static uk.gov.di.ipv.core.library.domain.UserStates.IPV_IDENTITY_START_PAGE;
 import static uk.gov.di.ipv.core.library.domain.UserStates.IPV_SUCCESS_PAGE;
 import static uk.gov.di.ipv.core.library.domain.UserStates.PRE_KBV_TRANSITION_PAGE;
+import static uk.gov.di.ipv.core.library.domain.UserStates.PYI_TECHNICAL_ERROR_PAGE;
+import static uk.gov.di.ipv.core.library.domain.UserStates.PYI_TECHNICAL_UNRECOVERABLE_ERROR_PAGE;
 
 public class JourneyEngineHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -43,12 +45,14 @@ public class JourneyEngineHandler
 
     private static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
     private static final String JOURNEY_STEP_PARAM = "journeyStep";
+    private static final String NEXT_STEP = "next";
+    private static final String ERROR_STEP = "error";
     private static final String UK_PASSPORT_CRI_ID = "ukPassport";
     private static final String ADDRESS_CRI_ID = "address";
     private static final String KBV_CRI_ID = "kbv";
     private static final String FRAUD_CRI_ID = "fraud";
 
-    private static final List<String> VALID_JOURNEY_STEPS = List.of("next");
+    private static final List<String> VALID_JOURNEY_STEPS = List.of(NEXT_STEP, ERROR_STEP);
 
     private final IpvSessionService ipvSessionService;
     private final ConfigurationService configurationService;
@@ -112,6 +116,7 @@ public class JourneyEngineHandler
         }
     }
 
+    @SuppressWarnings("java:S3776") // Cognitive complexity rule
     @Tracing
     private JourneyEngineResult executeJourneyEvent(
             String journeyStep, IpvSessionItem ipvSessionItem) throws JourneyEngineException {
@@ -142,34 +147,66 @@ public class JourneyEngineHandler
                             new JourneyResponse(criStartUri + UK_PASSPORT_CRI_ID));
                     break;
                 case CRI_UK_PASSPORT:
-                    updateUserState(CRI_ADDRESS, ipvSessionItem);
-                    builder.setJourneyResponse(new JourneyResponse(criStartUri + ADDRESS_CRI_ID));
+                    if (journeyStep.equals(NEXT_STEP)) {
+                        updateUserState(CRI_ADDRESS, ipvSessionItem);
+                        builder.setJourneyResponse(
+                                new JourneyResponse(criStartUri + ADDRESS_CRI_ID));
+                    } else if (journeyStep.equals(ERROR_STEP)) {
+                        updateUserState(CRI_ERROR, ipvSessionItem);
+                        builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
+                    } else {
+                        handleInvalidJourneyStep(journeyStep, CRI_UK_PASSPORT.value);
+                    }
                     break;
                 case CRI_ADDRESS:
-                    updateUserState(CRI_FRAUD, ipvSessionItem);
-                    builder.setJourneyResponse(new JourneyResponse(criStartUri + FRAUD_CRI_ID));
+                    if (journeyStep.equals(NEXT_STEP)) {
+                        updateUserState(CRI_FRAUD, ipvSessionItem);
+                        builder.setJourneyResponse(new JourneyResponse(criStartUri + FRAUD_CRI_ID));
+                    } else if (journeyStep.equals(ERROR_STEP)) {
+                        updateUserState(CRI_ERROR, ipvSessionItem);
+                        builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
+                    } else {
+                        handleInvalidJourneyStep(journeyStep, CRI_ADDRESS.value);
+                    }
                     break;
                 case CRI_FRAUD:
-                    updateUserState(PRE_KBV_TRANSITION_PAGE, ipvSessionItem);
-                    builder.setPageResponse(new PageResponse(PRE_KBV_TRANSITION_PAGE.value));
+                    if (journeyStep.equals(NEXT_STEP)) {
+                        updateUserState(PRE_KBV_TRANSITION_PAGE, ipvSessionItem);
+                        builder.setPageResponse(new PageResponse(PRE_KBV_TRANSITION_PAGE.value));
+                    } else if (journeyStep.equals(ERROR_STEP)) {
+                        updateUserState(CRI_ERROR, ipvSessionItem);
+                        builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
+                    } else {
+                        handleInvalidJourneyStep(journeyStep, CRI_FRAUD.value);
+                    }
                     break;
                 case PRE_KBV_TRANSITION_PAGE:
                     updateUserState(CRI_KBV, ipvSessionItem);
                     builder.setJourneyResponse(new JourneyResponse(criStartUri + KBV_CRI_ID));
                     break;
                 case CRI_KBV:
-                    updateUserState(IPV_SUCCESS_PAGE, ipvSessionItem);
-                    builder.setPageResponse(new PageResponse(IPV_SUCCESS_PAGE.value));
+                    if (journeyStep.equals(NEXT_STEP)) {
+                        updateUserState(IPV_SUCCESS_PAGE, ipvSessionItem);
+                        builder.setPageResponse(new PageResponse(IPV_SUCCESS_PAGE.value));
+                    } else if (journeyStep.equals(ERROR_STEP)) {
+                        updateUserState(CRI_ERROR, ipvSessionItem);
+                        builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
+                    } else {
+                        handleInvalidJourneyStep(journeyStep, CRI_KBV.value);
+                    }
                     break;
                 case IPV_SUCCESS_PAGE:
+                case CRI_ERROR:
                     builder.setJourneyResponse(new JourneyResponse(journeyEndUri));
                     break;
                 case DEBUG_PAGE:
                     builder.setPageResponse(new PageResponse(DEBUG_PAGE.value));
                     break;
-                case CRI_ERROR:
-                    builder.setPageResponse(new PageResponse(IPV_ERROR_PAGE.value));
-                    break;
+                default:
+                    LOGGER.info("Unknown current user state: {}", currentUserState);
+                    updateUserState(CRI_ERROR, ipvSessionItem);
+                    builder.setPageResponse(
+                            new PageResponse(PYI_TECHNICAL_UNRECOVERABLE_ERROR_PAGE.value));
             }
 
             return builder.build();
@@ -178,6 +215,18 @@ public class JourneyEngineHandler
             throw new JourneyEngineException(
                     "Unknown user state, failed to execute journey engine step.");
         }
+    }
+
+    private void handleInvalidJourneyStep(String journeyStep, String currentUserState)
+            throws JourneyEngineException {
+        LOGGER.error(
+                "Invalid jourey step provided: {} for the current user state: {}",
+                journeyStep,
+                currentUserState);
+        throw new JourneyEngineException(
+                String.format(
+                        "Invalid journey step provided: %s for the current user status: %s",
+                        journeyStep, currentUserState));
     }
 
     @Tracing
