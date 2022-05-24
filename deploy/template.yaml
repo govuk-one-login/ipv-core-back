@@ -766,6 +766,54 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref IPVJourneyEngineFunctionLogGroup
 
+  IPVValidateCriCheckFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "validate-cri-check-${Environment}"
+      Handler: uk.gov.di.ipv.core.validatecricheck.ValidateCriCheckHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/validatecricheck
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Tracing: Active
+      Environment:
+        Variables:
+          ENVIRONMENT: !Ref Environment
+          POWERTOOLS_SERVICE_NAME: !Sub validate-cri-check-${Environment}
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsTable
+      Events:
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+            Path: /journey/cri/validate/{criId}
+            Method: GET
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+        - AddProvisionedConcurrency
+        - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+        - !Ref AWS::NoValue
+
+  IPVValidateCriCheckFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+      LogGroupName: !Sub "/aws/lambda/${IPVValidateCriCheckFunction}"
+
+  IPVValidateCriCheckFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
+      FilterPattern: ""
+      LogGroupName: !Ref IPVValidateCriCheckFunctionLogGroup
+
   UserIssuedCredentialsTable:
     Type: AWS::DynamoDB::Table
     Properties:

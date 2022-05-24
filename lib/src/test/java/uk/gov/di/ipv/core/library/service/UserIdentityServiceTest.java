@@ -10,7 +10,6 @@ import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 
-import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +40,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldReturnCredentialsFromDataStore() throws ParseException {
+    void shouldReturnCredentialsFromDataStore() {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
@@ -57,6 +56,22 @@ class UserIdentityServiceTest {
         assertEquals(SIGNED_VC_1, credentials.getVcs().get(0));
         assertEquals(SIGNED_VC_2, credentials.getVcs().get(1));
         assertEquals("test-sub", credentials.getSub());
+    }
+
+    @Test
+    void shouldReturnCredentialFromDataStoreForSpecificCri() {
+        String ipvSessionId = "ipvSessionId";
+        String criId = "criId";
+        UserIssuedCredentialsItem credentialItem =
+                createUserIssuedCredentialsItem(
+                        "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now());
+
+        when(mockDataStore.getItem(ipvSessionId, criId)).thenReturn(credentialItem);
+
+        UserIssuedCredentialsItem retrievedCredentialItem =
+                userIdentityService.getUserIssuedCredential(ipvSessionId, criId);
+
+        assertEquals(credentialItem, retrievedCredentialItem);
     }
 
     @Test

@@ -16,6 +16,8 @@ public class ApiGatewayResponseGenerator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ApiGatewayResponseGenerator.class);
 
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
     private ApiGatewayResponseGenerator() {}
 
     public static APIGatewayProxyResponseEvent proxyJoseResponse(int statusCode, String payload) {
@@ -47,6 +49,6 @@ public class ApiGatewayResponseGenerator {
     }
 
     private static <T> String generateResponseBody(T body) throws JsonProcessingException {
-        return new ObjectMapper().writeValueAsString(body);
+        return objectMapper.writeValueAsString(body);
     }
 }

@@ -67,6 +67,10 @@ public class UserIdentityService {
                 .collect(Collectors.toList());
     }
 
+    public UserIssuedCredentialsItem getUserIssuedCredential(String ipvSessionId, String criId) {
+        return dataStore.getItem(ipvSessionId, criId);
+    }
+
     public UserIdentity generateUserIdentity(String ipvSessionId, String sub) {
         List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(ipvSessionId);
 
