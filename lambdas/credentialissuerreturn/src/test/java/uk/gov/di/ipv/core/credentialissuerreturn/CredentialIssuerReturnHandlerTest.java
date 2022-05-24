@@ -55,6 +55,7 @@ class CredentialIssuerReturnHandlerTest {
 
     private static final String TEST_VERIFIABLE_CREDENTIAL = "A.VERIFIABLE.CREDENTIAL";
     public static final String OAUTH_STATE = "oauth-state";
+    public static final String CREDENTIAL_ISSUER_ID = "PassportIssuer";
 
     @Mock private Context context;
 
@@ -83,13 +84,13 @@ class CredentialIssuerReturnHandlerTest {
     private static CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto;
     private final String authorization_code = "bar";
     private final String sessionId = UUID.randomUUID().toString();
-    private final String passportIssuerId = "PassportIssuer";
+    private final String passportIssuerId = CREDENTIAL_ISSUER_ID;
 
     @BeforeAll
     static void setUp() throws URISyntaxException {
         passportIssuer =
                 new CredentialIssuerConfig(
-                        "PassportIssuer",
+                        CREDENTIAL_ISSUER_ID,
                         "any",
                         new URI("http://www.example.com"),
                         new URI("http://www.example.com/credential"),
@@ -109,7 +110,7 @@ class CredentialIssuerReturnHandlerTest {
                         false);
 
         credentialIssuerSessionDetailsDto =
-                new CredentialIssuerSessionDetailsDto("PassportIssuer", OAUTH_STATE);
+                new CredentialIssuerSessionDetailsDto(CREDENTIAL_ISSUER_ID, OAUTH_STATE);
     }
 
     @Test
@@ -135,7 +136,8 @@ class CredentialIssuerReturnHandlerTest {
 
         when(credentialIssuerService.getVerifiableCredential(any(), any())).thenReturn(signedJWT);
 
-        when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
+        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
+                .thenReturn(passportIssuer);
 
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -159,7 +161,7 @@ class CredentialIssuerReturnHandlerTest {
         Integer statusCode = response.getStatusCode();
         Map responseBody = getResponseBodyAsMap(response);
         assertEquals(HTTPResponse.SC_OK, statusCode);
-        assertEquals("/journey/next", responseBody.get("journey"));
+        assertEquals("/journey/cri/validate/" + CREDENTIAL_ISSUER_ID, responseBody.get("journey"));
     }
 
     @Test
@@ -273,7 +275,8 @@ class CredentialIssuerReturnHandlerTest {
         when(credentialIssuerService.getVerifiableCredential(accessToken, passportIssuer))
                 .thenReturn(SignedJWT.parse(SIGNED_VC_1));
 
-        when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
+        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
+                .thenReturn(passportIssuer);
 
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -328,7 +331,8 @@ class CredentialIssuerReturnHandlerTest {
                         new CredentialIssuerException(
                                 HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST));
 
-        when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
+        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
+                .thenReturn(passportIssuer);
 
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(ipvSessionItem.getCredentialIssuerSessionDetails())
@@ -353,7 +357,8 @@ class CredentialIssuerReturnHandlerTest {
                                 HTTPResponse.SC_SERVER_ERROR,
                                 ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER));
 
-        when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
+        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
+                .thenReturn(passportIssuer);
 
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(ipvSessionItem.getCredentialIssuerSessionDetails())
@@ -387,7 +392,8 @@ class CredentialIssuerReturnHandlerTest {
         when(credentialIssuerService.getVerifiableCredential(accessToken, passportIssuer))
                 .thenReturn(SignedJWT.parse(SIGNED_VC_1));
 
-        when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
+        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
+                .thenReturn(passportIssuer);
 
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
