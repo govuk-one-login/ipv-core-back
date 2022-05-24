@@ -787,11 +787,11 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsTable
       Events:
-        IPVCoreInternalAPI:
+        IPVCorePrivateAPI:
           Type: Api
           Properties:
             RestApiId:
-              Ref: IPVCoreInternalAPI
+              Ref: IPVCorePrivateAPI
             Path: /journey/cri/validate/{criId}
             Method: GET
       AutoPublishAlias: live
