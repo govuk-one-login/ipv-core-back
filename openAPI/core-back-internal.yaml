@@ -134,6 +134,22 @@ paths:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCredentialIssuerStartFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
+  /journey/cri/validate/{criId}:
+    get:
+      description: "Returns a next or fail journey step, depending on if a CRI check meets requirements to continue the journey"
+      responses:
+        200:
+          description: "Returns a journeyResponse of '/journey/next' or '/journey/fail'"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/journeyType"
+      x-amazon-apigateway-integration:
+        httpMethod: "GET"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVValidateCriCheckFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
 
 components:
   schemas:
