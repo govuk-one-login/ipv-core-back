@@ -17,23 +17,38 @@ import java.util.Map;
 import static com.nimbusds.jose.JWSAlgorithm.ES256;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.WRONG_NUMBER_OF_ELEMENTS_IN_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_5;
 import static uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator.CRI_ID_UK_PASSPORT;
 import static uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator.EVIDENCE;
 import static uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator.GPG_45_M1A_STRENGTH_SCORE;
 import static uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator.GPG_45_M1A_VALIDITY_SCORE;
 import static uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator.SERVER_ERROR;
 
-class CriCheckValidatorTest {
+class EvidenceValidatorTest {
+
     private final CriCheckValidator criCheckValidator = new CriCheckValidator();
 
     @Test
-    void isSuccessThrowsIfCredentialCanNotBeParsed() throws Exception {
-        JSONObject evidenceJsonWithLowScore =
+    void isSuccessThrowsIfThereAreNoEvidenceItems() throws Exception {
+        JSONObject evidenceJsonWithNoEvidence = new JSONObject(Map.of(EVIDENCE, List.of()));
+
+        UserIssuedCredentialsItem userIssuedCredentialsItem =
+                getUserIssuedCredentialsItem(evidenceJsonWithNoEvidence);
+
+        HttpResponseExceptionWithErrorBody error =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> criCheckValidator.isSuccess(userIssuedCredentialsItem));
+
+        assertEquals(SERVER_ERROR, error.getResponseCode());
+        assertEquals(WRONG_NUMBER_OF_ELEMENTS_IN_EVIDENCE.getMessage(), error.getErrorReason());
+    }
+
+    @Test
+    void isSuccessThrowsIfThereAreMoreThanOneEvidenceItems() throws Exception {
+        JSONObject evidenceJsonWithTwoGoodEvidences =
                 new JSONObject(
                         Map.of(
                                 EVIDENCE,
@@ -46,12 +61,19 @@ class CriCheckValidatorTest {
                                                 "strengthScore",
                                                 GPG_45_M1A_STRENGTH_SCORE,
                                                 "validityScore",
+                                                GPG_45_M1A_VALIDITY_SCORE),
+                                        Map.of(
+                                                "type",
+                                                "IdentityCheck",
+                                                "txn",
+                                                "a-random-uuid",
+                                                "strengthScore",
+                                                GPG_45_M1A_STRENGTH_SCORE,
+                                                "validityScore",
                                                 GPG_45_M1A_VALIDITY_SCORE))));
 
         UserIssuedCredentialsItem userIssuedCredentialsItem =
-                getUserIssuedCredentialsItem(evidenceJsonWithLowScore);
-        userIssuedCredentialsItem.setCredential(
-                userIssuedCredentialsItem.getCredential().replaceAll("\\.", "?"));
+                getUserIssuedCredentialsItem(evidenceJsonWithTwoGoodEvidences);
 
         HttpResponseExceptionWithErrorBody error =
                 assertThrows(
@@ -59,22 +81,7 @@ class CriCheckValidatorTest {
                         () -> criCheckValidator.isSuccess(userIssuedCredentialsItem));
 
         assertEquals(SERVER_ERROR, error.getResponseCode());
-        assertEquals(FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(), error.getErrorReason());
-    }
-
-    @Test
-    void isSuccessThrowsIfCriIdNotRecognised() {
-        UserIssuedCredentialsItem userIssuedCredentialsItem = new UserIssuedCredentialsItem();
-        userIssuedCredentialsItem.setCredential(SIGNED_VC_5);
-        userIssuedCredentialsItem.setCredentialIssuer("Who's this?");
-
-        HttpResponseExceptionWithErrorBody error =
-                assertThrows(
-                        HttpResponseExceptionWithErrorBody.class,
-                        () -> criCheckValidator.isSuccess(userIssuedCredentialsItem));
-
-        assertEquals(SERVER_ERROR, error.getResponseCode());
-        assertEquals(INVALID_CREDENTIAL_ISSUER_ID.getMessage(), error.getErrorReason());
+        assertEquals(WRONG_NUMBER_OF_ELEMENTS_IN_EVIDENCE.getMessage(), error.getErrorReason());
     }
 
     private UserIssuedCredentialsItem getUserIssuedCredentialsItem(JSONObject evidence)
