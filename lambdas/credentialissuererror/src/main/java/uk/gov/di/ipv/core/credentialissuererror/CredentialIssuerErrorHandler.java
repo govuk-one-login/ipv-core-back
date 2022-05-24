@@ -31,11 +31,13 @@ public class CredentialIssuerErrorHandler
 
     private static final List<String> ALLOWED_OAUTH_ERROR_CODES =
             Arrays.asList(
-                    OAuth2Error.SERVER_ERROR_CODE,
                     OAuth2Error.INVALID_REQUEST_CODE,
-                    OAuth2Error.INVALID_REQUEST_OBJECT_CODE,
-                    OAuth2Error.INVALID_GRANT_CODE,
-                    OAuth2Error.INVALID_CLIENT_CODE);
+                    OAuth2Error.UNAUTHORIZED_CLIENT_CODE,
+                    OAuth2Error.ACCESS_DENIED_CODE,
+                    OAuth2Error.UNSUPPORTED_RESPONSE_TYPE_CODE,
+                    OAuth2Error.INVALID_SCOPE_CODE,
+                    OAuth2Error.SERVER_ERROR_CODE,
+                    OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE);
 
     private final ConfigurationService configurationService;
     private final AuditService auditService;
@@ -65,7 +67,7 @@ public class CredentialIssuerErrorHandler
                 credentialIssuerErrorDto.getCredentialIssuerId());
 
         if (!ALLOWED_OAUTH_ERROR_CODES.contains(credentialIssuerErrorDto.getError())) {
-            LOGGER.error("Unknown Oauth error code recieved");
+            LOGGER.error("Unknown Oauth error code received");
         }
         LOGGER.error("Error code: {}", credentialIssuerErrorDto.getError());
         LOGGER.error(credentialIssuerErrorDto.getErrorDescription());
