@@ -6,6 +6,8 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.ErrorObject;
+import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import net.minidev.json.JSONObject;
@@ -310,7 +312,7 @@ class CredentialIssuerReturnHandlerTest {
     }
 
     @Test
-    void shouldReceive400ResponseCodeIfCredentialIssuerServiceThrowsException()
+    void shouldReceive500ResponseCodeIfCredentialIssuerServiceThrowsException()
             throws JsonProcessingException {
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
@@ -326,7 +328,10 @@ class CredentialIssuerReturnHandlerTest {
         when(credentialIssuerService.exchangeCodeForToken(requestDto.capture(), eq(passportIssuer)))
                 .thenThrow(
                         new CredentialIssuerException(
-                                HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST));
+                                HTTPResponse.SC_BAD_REQUEST,
+                                new ErrorObject(
+                                        OAuth2Error.SERVER_ERROR_CODE,
+                                        ErrorResponse.INVALID_TOKEN_REQUEST.getMessage())));
 
         when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
 
@@ -337,8 +342,8 @@ class CredentialIssuerReturnHandlerTest {
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
         Integer statusCode = response.getStatusCode();
         Map responseBody = getResponseBodyAsMap(response);
-        assertEquals(HTTPResponse.SC_BAD_REQUEST, statusCode);
-        assertEquals(ErrorResponse.INVALID_TOKEN_REQUEST.getCode(), responseBody.get("code"));
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, statusCode);
+        assertEquals(OAuth2Error.SERVER_ERROR_CODE, responseBody.get("error"));
         verifyNoInteractions(context);
     }
 
@@ -351,7 +356,10 @@ class CredentialIssuerReturnHandlerTest {
                 .thenThrow(
                         new CredentialIssuerException(
                                 HTTPResponse.SC_SERVER_ERROR,
-                                ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER));
+                                new ErrorObject(
+                                        OAuth2Error.SERVER_ERROR_CODE,
+                                        ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER
+                                                .getMessage())));
 
         when(configurationService.getCredentialIssuer("PassportIssuer")).thenReturn(passportIssuer);
 
@@ -372,9 +380,7 @@ class CredentialIssuerReturnHandlerTest {
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, response.getStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER.getCode(),
-                getResponseBodyAsMap(response).get("code"));
+        assertEquals(OAuth2Error.SERVER_ERROR_CODE, getResponseBodyAsMap(response).get("error"));
     }
 
     @Test
@@ -399,7 +405,10 @@ class CredentialIssuerReturnHandlerTest {
         doThrow(
                         new CredentialIssuerException(
                                 HTTPResponse.SC_SERVER_ERROR,
-                                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL))
+                                new ErrorObject(
+                                        OAuth2Error.SERVER_ERROR_CODE,
+                                        ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL
+                                                .getMessage())))
                 .when(verifiableCredentialJwtValidator)
                 .validate(any(), any(), any());
 
@@ -416,9 +425,7 @@ class CredentialIssuerReturnHandlerTest {
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, response.getStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL.getCode(),
-                getResponseBodyAsMap(response).get("code"));
+        assertEquals(OAuth2Error.SERVER_ERROR_CODE, getResponseBodyAsMap(response).get("error"));
     }
 
     private Map getResponseBodyAsMap(APIGatewayProxyResponseEvent response)

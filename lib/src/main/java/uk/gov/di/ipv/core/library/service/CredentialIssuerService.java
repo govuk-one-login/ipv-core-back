@@ -6,6 +6,7 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
+import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.TokenErrorResponse;
 import com.nimbusds.oauth2.sdk.TokenRequest;
@@ -113,15 +114,16 @@ public class CredentialIssuerService {
                         errorObject.getCode(),
                         errorObject.getDescription(),
                         errorObject.getHTTPStatusCode());
-                throw new CredentialIssuerException(
-                        HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST);
+                throw new CredentialIssuerException(HTTPResponse.SC_BAD_REQUEST, errorObject);
             }
             return tokenResponse.toSuccessResponse().getTokens().getBearerAccessToken();
         } catch (IOException | ParseException | JOSEException | URISyntaxException e) {
             LOGGER.error("Error exchanging token: {}", e.getMessage(), e);
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE);
+                    new ErrorObject(
+                            OAuth2Error.SERVER_ERROR_CODE,
+                            ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE.getMessage()));
         }
     }
 
@@ -140,7 +142,9 @@ public class CredentialIssuerService {
                         response.getStatusMessage());
                 throw new CredentialIssuerException(
                         HTTPResponse.SC_SERVER_ERROR,
-                        ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
+                        new ErrorObject(
+                                OAuth2Error.SERVER_ERROR_CODE,
+                                ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER.getMessage()));
             }
 
             return (SignedJWT) response.getContentAsJWT();
@@ -149,7 +153,9 @@ public class CredentialIssuerService {
             LOGGER.error("Error retrieving credential: {}", e.getMessage());
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
+                    new ErrorObject(
+                            OAuth2Error.SERVER_ERROR_CODE,
+                            ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER.getMessage()));
         }
     }
 
@@ -168,7 +174,10 @@ public class CredentialIssuerService {
         } catch (UnsupportedOperationException e) {
             LOGGER.error("Error persisting user credential: {}", e.getMessage(), e);
             throw new CredentialIssuerException(
-                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
+                    HTTPResponse.SC_SERVER_ERROR,
+                    new ErrorObject(
+                            OAuth2Error.SERVER_ERROR_CODE,
+                            ErrorResponse.FAILED_TO_SAVE_CREDENTIAL.getMessage()));
         }
     }
 

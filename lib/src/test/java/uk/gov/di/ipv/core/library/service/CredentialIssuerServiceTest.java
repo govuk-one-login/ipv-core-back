@@ -102,7 +102,7 @@ class CredentialIssuerServiceTest {
     }
 
     @Test
-    void tokenErrorResponse(WireMockRuntimeInfo wmRuntimeInfo) {
+    void tokenErrorResponseMissingRedirectUri(WireMockRuntimeInfo wmRuntimeInfo) {
         when(mockConfigurationService.getIpvTokenTtl()).thenReturn("900");
         when(mockConfigurationService.getCoreFrontCallbackUrl())
                 .thenReturn("http://www.example.com/redirect");
@@ -134,7 +134,9 @@ class CredentialIssuerServiceTest {
                                         credentialIssuerRequestDto, credentialIssuerConfig));
 
         assertEquals(HTTPResponse.SC_BAD_REQUEST, exception.getHttpStatusCode());
-        assertEquals(ErrorResponse.INVALID_TOKEN_REQUEST, exception.getErrorResponse());
+        assertEquals(
+                "Request was missing the 'redirect_uri' parameter.",
+                exception.getErrorObject().getDescription());
     }
 
     @Test
@@ -168,7 +170,8 @@ class CredentialIssuerServiceTest {
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE, exception.getErrorResponse());
+                ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE.getMessage(),
+                exception.getErrorObject().getDescription());
     }
 
     @Test
@@ -219,7 +222,9 @@ class CredentialIssuerServiceTest {
 
         assertNotNull(thrown);
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_SAVE_CREDENTIAL, thrown.getErrorResponse());
+        assertEquals(
+                ErrorResponse.FAILED_TO_SAVE_CREDENTIAL.getMessage(),
+                thrown.getErrorObject().getDescription());
     }
 
     @Test
@@ -271,7 +276,9 @@ class CredentialIssuerServiceTest {
                                         accessToken, credentialIssuerConfig));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
+        assertEquals(
+                ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER.getMessage(),
+                thrown.getErrorObject().getDescription());
     }
 
     @Test
@@ -296,7 +303,9 @@ class CredentialIssuerServiceTest {
                                         accessToken, credentialIssuerConfig));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
+        assertEquals(
+                ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER.getMessage(),
+                thrown.getErrorObject().getDescription());
     }
 
     private CredentialIssuerConfig getStubCredentialIssuerConfig(

@@ -95,8 +95,8 @@ class VerifiableCredentialJwtValidatorTest {
                         () -> validator.validate(signedJWT, credentialIssuerConfig, SUBJECT));
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
-                exception.getErrorResponse());
+                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL.getMessage(),
+                exception.getErrorObject().getDescription());
     }
 
     @Test
@@ -113,7 +113,9 @@ class VerifiableCredentialJwtValidatorTest {
                         CredentialIssuerException.class,
                         () -> validator.validate(signedJWT, credentialIssuerConfig, SUBJECT));
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_JWK, exception.getErrorResponse());
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_JWK.getMessage(),
+                exception.getErrorObject().getDescription());
     }
 
     @Test
@@ -132,8 +134,8 @@ class VerifiableCredentialJwtValidatorTest {
                         () -> validator.validate(signedJWT, credentialIssuerConfig, SUBJECT));
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
-                exception.getErrorResponse());
+                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL.getMessage(),
+                exception.getErrorObject().getDescription());
     }
 
     @Test
@@ -156,8 +158,8 @@ class VerifiableCredentialJwtValidatorTest {
                                         "THIS IS THE WRONG SUBJECT"));
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
-                exception.getErrorResponse());
+                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL.getMessage(),
+                exception.getErrorObject().getDescription());
     }
 
     @Test
@@ -189,8 +191,8 @@ class VerifiableCredentialJwtValidatorTest {
                         () -> validator.validate(signedJWT, credentialIssuerConfig, SUBJECT));
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
-                exception.getErrorResponse());
+                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL.getMessage(),
+                exception.getErrorObject().getDescription());
     }
 
     @Test
@@ -222,8 +224,8 @@ class VerifiableCredentialJwtValidatorTest {
                         () -> validator.validate(signedJWT, credentialIssuerConfig, SUBJECT));
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
-                exception.getErrorResponse());
+                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL.getMessage(),
+                exception.getErrorObject().getDescription());
     }
 
     @Test
@@ -254,8 +256,8 @@ class VerifiableCredentialJwtValidatorTest {
                         () -> validator.validate(signedJWT, credentialIssuerConfig, SUBJECT));
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
-                exception.getErrorResponse());
+                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL.getMessage(),
+                exception.getErrorObject().getDescription());
     }
 
     private ECDSASigner getSigner() throws Exception {

@@ -10,6 +10,8 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.proc.BadJWTException;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
+import com.nimbusds.oauth2.sdk.ErrorObject;
+import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +52,9 @@ public class VerifiableCredentialJwtValidator {
             LOGGER.error("Error transcoding signature: '{}'", e.getMessage());
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
+                    new ErrorObject(
+                            OAuth2Error.SERVER_ERROR_CODE,
+                            ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL.getMessage()));
         }
 
         try {
@@ -60,17 +64,25 @@ public class VerifiableCredentialJwtValidator {
                 LOGGER.error("Verifiable credential signature not valid");
                 throw new CredentialIssuerException(
                         HTTPResponse.SC_SERVER_ERROR,
-                        ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
+                        new ErrorObject(
+                                OAuth2Error.SERVER_ERROR_CODE,
+                                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL
+                                        .getMessage()));
             }
         } catch (JOSEException e) {
             LOGGER.error("JOSE exception when verifying signature: '{}'", e.getMessage());
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
+                    new ErrorObject(
+                            OAuth2Error.SERVER_ERROR_CODE,
+                            ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL.getMessage()));
         } catch (ParseException e) {
             LOGGER.error("Error parsing credential issuer public JWK: '{}'", e.getMessage());
             throw new CredentialIssuerException(
-                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_JWK);
+                    HTTPResponse.SC_SERVER_ERROR,
+                    new ErrorObject(
+                            OAuth2Error.SERVER_ERROR_CODE,
+                            ErrorResponse.FAILED_TO_PARSE_JWK.getMessage()));
         }
     }
 
@@ -112,7 +124,9 @@ public class VerifiableCredentialJwtValidator {
             LOGGER.error("Verifiable credential claims set not valid: '{}'", e.getMessage());
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
+                    new ErrorObject(
+                            OAuth2Error.SERVER_ERROR_CODE,
+                            ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL.getMessage()));
         }
     }
 }

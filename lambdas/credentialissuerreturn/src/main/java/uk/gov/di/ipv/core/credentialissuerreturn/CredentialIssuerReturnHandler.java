@@ -82,7 +82,9 @@ public class CredentialIssuerReturnHandler
 
             if (errorResponse.isPresent()) {
                 LOGGER.error("Validation failed: {}", errorResponse.get().getMessage());
-                return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
+
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        HttpStatus.SC_BAD_REQUEST, errorResponse.get());
             }
             CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request);
 
@@ -111,8 +113,12 @@ public class CredentialIssuerReturnHandler
             JourneyResponse journeyResponse = new JourneyResponse(NEXT_JOURNEY_STEP_URI);
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, journeyResponse);
         } catch (CredentialIssuerException e) {
+            LOGGER.error(
+                    "Error retreiving credential from CRI beccause: {}",
+                    e.getErrorObject().getDescription());
+
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getHttpStatusCode(), e.getErrorResponse());
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getErrorObject().toJSONObject());
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
