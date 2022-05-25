@@ -4,11 +4,19 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import com.google.gson.Gson;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.DecryptionFailureException;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+import software.amazon.awssdk.services.secretsmanager.model.InternalServiceErrorException;
+import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterException;
+import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
@@ -30,8 +38,10 @@ import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
@@ -53,11 +63,15 @@ class ConfigurationServiceTest {
 
     @Mock SSMProvider ssmProvider2;
 
+    @Mock SecretsManagerClient secretsManagerClient;
+
     private ConfigurationService configurationService;
+
+    private Gson gson = new Gson();
 
     @BeforeEach
     void setUp() {
-        configurationService = new ConfigurationService(ssmProvider);
+        configurationService = new ConfigurationService(ssmProvider, secretsManagerClient);
     }
 
     @Test
@@ -280,5 +294,70 @@ class ConfigurationServiceTest {
         String coreVtmClaim = "aCoreVtmClaim";
         when(ssmProvider.get("/test/core/self/coreVtmClaim")).thenReturn(coreVtmClaim);
         assertEquals(coreVtmClaim, configurationService.getCoreVtmClaim());
+    }
+
+    @Test
+    void shouldGetSecretValueFromSecretsManager() {
+        Map<String, String> apiKeySecret = Map.of("apiKey", "api-key-value");
+        GetSecretValueResponse response =
+                GetSecretValueResponse.builder().secretString(gson.toJson(apiKeySecret)).build();
+        when(secretsManagerClient.getSecretValue((GetSecretValueRequest) any()))
+                .thenReturn(response);
+
+        String apiKey = configurationService.getCriPrivateApiKey("ukPassport");
+
+        assertEquals("api-key-value", apiKey);
+    }
+
+    @Test
+    void shouldReturnNullOnDecryptionFailureFromSecretsManager() {
+        DecryptionFailureException decryptionFailureException =
+                DecryptionFailureException.builder().message("Test decryption error").build();
+        when(secretsManagerClient.getSecretValue((GetSecretValueRequest) any()))
+                .thenThrow(decryptionFailureException);
+
+        String apiKey = configurationService.getCriPrivateApiKey("ukPassport");
+
+        assertNull(apiKey);
+    }
+
+    @Test
+    void shouldReturnNullOnInternalServiceErrorExceptionFromSecretsManager() {
+        InternalServiceErrorException internalServiceErrorException =
+                InternalServiceErrorException.builder()
+                        .message("Test internal service error")
+                        .build();
+        when(secretsManagerClient.getSecretValue((GetSecretValueRequest) any()))
+                .thenThrow(internalServiceErrorException);
+
+        String apiKey = configurationService.getCriPrivateApiKey("ukPassport");
+
+        assertNull(apiKey);
+    }
+
+    @Test
+    void shouldReturnNullOnInvalidParameterExceptionFromSecretsManager() {
+        InvalidParameterException invalidParameterException =
+                InvalidParameterException.builder().message("Test invalid parameter error").build();
+        when(secretsManagerClient.getSecretValue((GetSecretValueRequest) any()))
+                .thenThrow(invalidParameterException);
+
+        String apiKey = configurationService.getCriPrivateApiKey("ukPassport");
+
+        assertNull(apiKey);
+    }
+
+    @Test
+    void shouldReturnNullOnResourceNotFoundExceptionFromSecretsManager() {
+        ResourceNotFoundException resourceNotFoundException =
+                ResourceNotFoundException.builder()
+                        .message("Test resource not found error")
+                        .build();
+        when(secretsManagerClient.getSecretValue((GetSecretValueRequest) any()))
+                .thenThrow(resourceNotFoundException);
+
+        String apiKey = configurationService.getCriPrivateApiKey("ukPassport");
+
+        assertNull(apiKey);
     }
 }

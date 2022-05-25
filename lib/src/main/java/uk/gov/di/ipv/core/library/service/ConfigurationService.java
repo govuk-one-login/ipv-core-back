@@ -1,10 +1,19 @@
 package uk.gov.di.ipv.core.library.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.DecryptionFailureException;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+import software.amazon.awssdk.services.secretsmanager.model.InternalServiceErrorException;
+import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterException;
+import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
@@ -27,15 +36,19 @@ public class ConfigurationService {
     private static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
     private static final String IS_LOCAL = "IS_LOCAL";
     private static final String CLIENT_REDIRECT_URL_SEPARATOR = ",";
+    private static final String API_KEY = "apiKey";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationService.class);
     public static final String ENVIRONMENT = "ENVIRONMENT";
 
     private final SSMProvider ssmProvider;
+    private final SecretsManagerClient secretsManagerClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public ConfigurationService(SSMProvider ssmProvider) {
+    public ConfigurationService(
+            SSMProvider ssmProvider, SecretsManagerClient secretsManagerClient) {
         this.ssmProvider = ssmProvider;
+        this.secretsManagerClient = secretsManagerClient;
     }
 
     public ConfigurationService() {
@@ -47,12 +60,24 @@ public class ConfigurationService {
                                     .httpClient(UrlConnectionHttpClient.create())
                                     .region(Region.EU_WEST_2)
                                     .build());
+
+            this.secretsManagerClient =
+                    SecretsManagerClient.builder()
+                            .endpointOverride(URI.create(LOCALHOST_URI))
+                            .httpClient(UrlConnectionHttpClient.create())
+                            .region(Region.EU_WEST_2)
+                            .build();
         } else {
             this.ssmProvider =
                     ParamManager.getSsmProvider(
                             SsmClient.builder()
                                     .httpClient(UrlConnectionHttpClient.create())
                                     .build());
+
+            this.secretsManagerClient =
+                    SecretsManagerClient.builder()
+                            .httpClient(UrlConnectionHttpClient.create())
+                            .build();
         }
     }
 
@@ -228,5 +253,56 @@ public class ConfigurationService {
     public String getCoreVtmClaim() {
         return ssmProvider.get(
                 String.format("/%s/core/self/coreVtmClaim", System.getenv(ENVIRONMENT)));
+    }
+
+    public String getCriPrivateApiKey(String criId) {
+        GetSecretValueRequest valueRequest =
+                GetSecretValueRequest.builder()
+                        .secretId(
+                                String.format(
+                                        "%s/credential-issuers/%s/api-key",
+                                        System.getenv(ENVIRONMENT), criId))
+                        .build();
+
+        try {
+            String secretManagerKeyValueJson = getSecretsManagerValue(valueRequest);
+
+            if (secretManagerKeyValueJson != null) {
+                Map<String, String> secret =
+                        objectMapper.readValue(secretManagerKeyValueJson, new TypeReference<>() {});
+                return secret.get(API_KEY);
+            }
+            return null;
+        } catch (JsonProcessingException e) {
+            LOGGER.error(
+                    "Failed to parse the api key secret from secrets manager for client: {}",
+                    criId);
+            return null;
+        }
+    }
+
+    private String getSecretsManagerValue(GetSecretValueRequest valueRequest) {
+        try {
+            GetSecretValueResponse valueResponse =
+                    secretsManagerClient.getSecretValue(valueRequest);
+            return valueResponse.secretString();
+        } catch (DecryptionFailureException e) {
+            LOGGER.error(
+                    "Secrets manager failed to decrypt the protected secret using the configured KMS key because: {}",
+                    e.getMessage());
+        } catch (InternalServiceErrorException e) {
+            LOGGER.error("Internal server error occured with Secrets manager: {}", e.getMessage());
+        } catch (InvalidParameterException e) {
+            LOGGER.error(
+                    "An invalid value was provided for the param value: {}, details: {}",
+                    valueRequest.secretId(),
+                    e.getMessage());
+        } catch (ResourceNotFoundException e) {
+            LOGGER.error(
+                    "Failed to find the resource within Secrets manager: {}, details: {}",
+                    valueRequest.secretId(),
+                    e.getMessage());
+        }
+        return null;
     }
 }
