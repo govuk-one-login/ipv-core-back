@@ -55,7 +55,7 @@ class ValidateCriCheckHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyFailForUnSuccessfulCheck() throws HttpResponseExceptionWithErrorBody {
+    void shouldReturnJourneyFailForUnsuccessfulCheck() throws HttpResponseExceptionWithErrorBody {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setPathParameters(Map.of(CRI_ID, criId));
         event.setHeaders(Map.of(IPV_SESSION_ID_HEADER_KEY, sessionId));
