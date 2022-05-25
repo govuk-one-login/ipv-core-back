@@ -22,8 +22,8 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JW
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_5;
 import static uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator.CRI_ID_UK_PASSPORT;
 import static uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator.EVIDENCE;
-import static uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator.GPG_45_M1A_STRENGTH_SCORE;
-import static uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator.GPG_45_M1A_VALIDITY_SCORE;
+import static uk.gov.di.ipv.core.validatecricheck.validation.PassportEvidenceValidator.GPG_45_M1A_STRENGTH_SCORE;
+import static uk.gov.di.ipv.core.validatecricheck.validation.PassportEvidenceValidator.GPG_45_M1A_VALIDITY_SCORE;
 
 class PassportEvidenceValidatorTest {
 

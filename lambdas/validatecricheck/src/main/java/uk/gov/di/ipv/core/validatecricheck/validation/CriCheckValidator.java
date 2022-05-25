@@ -17,8 +17,6 @@ public class CriCheckValidator {
     public static final String CRI_ID_UK_PASSPORT = "ukPassport";
     public static final String CRI_ID_KBV = "kbv";
     public static final String EVIDENCE = "evidence";
-    public static final int GPG_45_M1A_STRENGTH_SCORE = 4;
-    public static final int GPG_45_M1A_VALIDITY_SCORE = 2;
     public static final int SERVER_ERROR = 500;
 
     public boolean isSuccess(UserIssuedCredentialsItem userIssuedCredentialsItem)
