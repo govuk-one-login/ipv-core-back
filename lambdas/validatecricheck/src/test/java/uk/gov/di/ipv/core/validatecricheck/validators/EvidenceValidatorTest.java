@@ -17,6 +17,7 @@ import java.util.Map;
 import static com.nimbusds.jose.JWSAlgorithm.ES256;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.EVIDENCE_MISSING_FROM_VC;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.WRONG_NUMBER_OF_ELEMENTS_IN_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
@@ -44,6 +45,38 @@ class EvidenceValidatorTest {
 
         assertEquals(SERVER_ERROR, error.getResponseCode());
         assertEquals(WRONG_NUMBER_OF_ELEMENTS_IN_EVIDENCE.getMessage(), error.getErrorReason());
+    }
+
+    @Test
+    void isSuccessThrowsIfEvidencePropertyIsNotAnArray() throws Exception {
+        JSONObject evidenceJsonWithEvidenceAsStringInsteadOfArray =
+                new JSONObject(Map.of(EVIDENCE, "Not an array"));
+        UserIssuedCredentialsItem userIssuedCredentialsItem =
+                getUserIssuedCredentialsItem(evidenceJsonWithEvidenceAsStringInsteadOfArray);
+
+        HttpResponseExceptionWithErrorBody error =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> criCheckValidator.isSuccess(userIssuedCredentialsItem));
+
+        assertEquals(SERVER_ERROR, error.getResponseCode());
+        assertEquals(EVIDENCE_MISSING_FROM_VC.getMessage(), error.getErrorReason());
+    }
+
+    @Test
+    void isSuccessThrowsIfEvidenceIsMissingFromVc() throws Exception {
+        JSONObject evidenceJsonWithMissingEvidence = new JSONObject(Map.of());
+
+        UserIssuedCredentialsItem userIssuedCredentialsItem =
+                getUserIssuedCredentialsItem(evidenceJsonWithMissingEvidence);
+
+        HttpResponseExceptionWithErrorBody error =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> criCheckValidator.isSuccess(userIssuedCredentialsItem));
+
+        assertEquals(SERVER_ERROR, error.getResponseCode());
+        assertEquals(EVIDENCE_MISSING_FROM_VC.getMessage(), error.getErrorReason());
     }
 
     @Test
