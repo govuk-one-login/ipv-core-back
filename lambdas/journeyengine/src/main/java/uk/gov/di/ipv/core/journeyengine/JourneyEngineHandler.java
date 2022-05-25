@@ -27,6 +27,9 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.journeyengine.domain.JourneyStep.ERROR;
+import static uk.gov.di.ipv.core.journeyengine.domain.JourneyStep.FAIL;
+import static uk.gov.di.ipv.core.journeyengine.domain.JourneyStep.NEXT;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_ERROR;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_FRAUD;
@@ -78,7 +81,8 @@ public class JourneyEngineHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
         }
 
-        String journeyStep = input.getPathParameters().get(JOURNEY_STEP_PARAM);
+        JourneyStep journeyStep =
+                JourneyStep.valueOf(input.getPathParameters().get(JOURNEY_STEP_PARAM));
 
         var ipvSessionId =
                 RequestHelper.getHeaderByKey(input.getHeaders(), IPV_SESSION_ID_HEADER_KEY);
@@ -116,7 +120,7 @@ public class JourneyEngineHandler
     @SuppressWarnings("java:S3776") // Cognitive complexity rule
     @Tracing
     private JourneyEngineResult executeJourneyEvent(
-            String journeyStep, IpvSessionItem ipvSessionItem) throws JourneyEngineException {
+            JourneyStep journeyStep, IpvSessionItem ipvSessionItem) throws JourneyEngineException {
         String criStartUri = configurationService.getIpvJourneyCriStartUri();
         String journeyEndUri = configurationService.getIpvJourneySessionEnd();
 
@@ -140,14 +144,14 @@ public class JourneyEngineHandler
                             new JourneyResponse(criStartUri + UK_PASSPORT_CRI_ID));
                     break;
                 case CRI_UK_PASSPORT:
-                    if (journeyStep.equals(JourneyStep.NEXT.toString())) {
+                    if (journeyStep.equals(NEXT)) {
                         updateUserState(CRI_ADDRESS, ipvSessionItem);
                         builder.setJourneyResponse(
                                 new JourneyResponse(criStartUri + ADDRESS_CRI_ID));
-                    } else if (journeyStep.equals(JourneyStep.ERROR.toString())) {
+                    } else if (journeyStep.equals(ERROR)) {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
-                    } else if (journeyStep.equals(JourneyStep.FAIL.toString())) {
+                    } else if (journeyStep.equals(FAIL)) {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
                     } else {
@@ -155,10 +159,10 @@ public class JourneyEngineHandler
                     }
                     break;
                 case CRI_ADDRESS:
-                    if (journeyStep.equals(JourneyStep.NEXT.toString())) {
+                    if (journeyStep.equals(NEXT)) {
                         updateUserState(CRI_FRAUD, ipvSessionItem);
                         builder.setJourneyResponse(new JourneyResponse(criStartUri + FRAUD_CRI_ID));
-                    } else if (journeyStep.equals(JourneyStep.ERROR.toString())) {
+                    } else if (journeyStep.equals(ERROR)) {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
                     } else {
@@ -166,10 +170,10 @@ public class JourneyEngineHandler
                     }
                     break;
                 case CRI_FRAUD:
-                    if (journeyStep.equals(JourneyStep.NEXT.toString())) {
+                    if (journeyStep.equals(NEXT)) {
                         updateUserState(PRE_KBV_TRANSITION_PAGE, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PRE_KBV_TRANSITION_PAGE.value));
-                    } else if (journeyStep.equals(JourneyStep.ERROR.toString())) {
+                    } else if (journeyStep.equals(ERROR)) {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
                     } else {
@@ -181,10 +185,10 @@ public class JourneyEngineHandler
                     builder.setJourneyResponse(new JourneyResponse(criStartUri + KBV_CRI_ID));
                     break;
                 case CRI_KBV:
-                    if (journeyStep.equals(JourneyStep.NEXT.toString())) {
+                    if (journeyStep.equals(NEXT)) {
                         updateUserState(IPV_SUCCESS_PAGE, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(IPV_SUCCESS_PAGE.value));
-                    } else if (journeyStep.equals(JourneyStep.ERROR.toString())) {
+                    } else if (journeyStep.equals(ERROR)) {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
                     } else {
@@ -213,9 +217,9 @@ public class JourneyEngineHandler
         }
     }
 
-    private void validateJourneyStep(String journeyStep) throws JourneyEngineException {
+    private void validateJourneyStep(JourneyStep journeyStep) throws JourneyEngineException {
         Arrays.stream(JourneyStep.values())
-                .filter(step -> step.toString().equalsIgnoreCase(journeyStep))
+                .filter(step -> step.toString().equalsIgnoreCase(journeyStep.toString()))
                 .findFirst()
                 .orElseThrow(
                         () -> {
@@ -225,7 +229,7 @@ public class JourneyEngineHandler
                         });
     }
 
-    private void handleInvalidJourneyStep(String journeyStep, String currentUserState)
+    private void handleInvalidJourneyStep(JourneyStep journeyStep, String currentUserState)
             throws JourneyEngineException {
         LOGGER.error(
                 "Invalid jourey step provided: {} for the current user state: {}",
