@@ -221,7 +221,7 @@ public class JourneyEngineHandler
 
     private JourneyStep getJourneyStep(String journeyStep) throws JourneyEngineException {
         return Arrays.stream(JourneyStep.values())
-                .filter(step -> step.toString().equalsIgnoreCase(journeyStep.toString()))
+                .filter(step -> step.toString().equalsIgnoreCase(journeyStep))
                 .findFirst()
                 .orElseThrow(
                         () -> {
