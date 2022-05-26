@@ -34,7 +34,7 @@ public class CredentialIssuerReturnHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER =
             LoggerFactory.getLogger(CredentialIssuerReturnHandler.class);
-    private static final String NEXT_JOURNEY_STEP_URI = "/journey/next";
+    private static final String CRI_VALIDATE_ENDPOINT = "/journey/cri/validate/";
 
     private final CredentialIssuerService credentialIssuerService;
     private final ConfigurationService configurationService;
@@ -108,7 +108,10 @@ public class CredentialIssuerReturnHandler
             credentialIssuerService.persistUserCredentials(
                     verifiableCredential.serialize(), request);
 
-            JourneyResponse journeyResponse = new JourneyResponse(NEXT_JOURNEY_STEP_URI);
+            JourneyResponse journeyResponse =
+                    new JourneyResponse(
+                            String.format(
+                                    "%s%s", CRI_VALIDATE_ENDPOINT, credentialIssuerConfig.getId()));
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, journeyResponse);
         } catch (CredentialIssuerException e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
