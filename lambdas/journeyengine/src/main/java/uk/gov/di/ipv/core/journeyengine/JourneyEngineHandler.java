@@ -177,8 +177,8 @@ public class JourneyEngineHandler
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
                     } else if (journeyStep.equals(FAIL)) {
-                        updateUserState(PYI_KBV_FAIL, ipvSessionItem);
-                        builder.setPageResponse(new PageResponse(PYI_KBV_FAIL.value));
+                        updateUserState(PYI_NO_MATCH, ipvSessionItem);
+                        builder.setPageResponse(new PageResponse(PYI_NO_MATCH.value));
                     } else {
                         handleInvalidJourneyStep(journeyStep, CRI_FRAUD.value);
                     }
@@ -194,6 +194,10 @@ public class JourneyEngineHandler
                     } else if (journeyStep.equals(ERROR)) {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
+                    } else if (journeyStep.equals(FAIL)) {
+                        updateUserState(PYI_KBV_FAIL, ipvSessionItem);
+                        builder.setPageResponse(new PageResponse(PYI_KBV_FAIL.value));
+
                     } else {
                         handleInvalidJourneyStep(journeyStep, CRI_KBV.value);
                     }

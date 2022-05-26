@@ -33,6 +33,11 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class JourneyEngineHandlerTest {
+    private static final String JOURNEY_STEP = "journeyStep";
+    private static final String FAIL = "fail";
+    private static final String NEXT = "next";
+    private static final String ERROR = "error";
+    private static final String INVALID_STEP = "invalid-step";
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ConfigurationService mockConfigurationService;
@@ -92,7 +97,7 @@ class JourneyEngineHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "next");
+        pathParameters.put(JOURNEY_STEP, NEXT);
         event.setPathParameters(pathParameters);
 
         APIGatewayProxyResponseEvent response =
@@ -111,7 +116,7 @@ class JourneyEngineHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "next");
+        pathParameters.put(JOURNEY_STEP, NEXT);
         event.setPathParameters(pathParameters);
 
         event.setHeaders(Map.of("ipv-session-id", "1234"));
@@ -133,7 +138,7 @@ class JourneyEngineHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "invalid-step");
+        pathParameters.put(JOURNEY_STEP, INVALID_STEP);
         event.setPathParameters(pathParameters);
 
         event.setHeaders(Map.of("ipv-session-id", "1234"));
@@ -161,7 +166,7 @@ class JourneyEngineHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "next");
+        pathParameters.put(JOURNEY_STEP, NEXT);
         event.setPathParameters(pathParameters);
 
         event.setHeaders(Map.of("ipv-session-id", "1234"));
@@ -189,7 +194,7 @@ class JourneyEngineHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "next");
+        pathParameters.put(JOURNEY_STEP, NEXT);
         event.setPathParameters(pathParameters);
 
         event.setHeaders(Map.of("ipv-session-id", "1234"));
@@ -221,7 +226,7 @@ class JourneyEngineHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "next");
+        pathParameters.put(JOURNEY_STEP, NEXT);
         event.setPathParameters(pathParameters);
 
         event.setHeaders(Map.of("ipv-session-id", "1234"));
@@ -256,7 +261,7 @@ class JourneyEngineHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "next");
+        pathParameters.put(JOURNEY_STEP, NEXT);
         event.setPathParameters(pathParameters);
 
         event.setHeaders(Map.of("ipv-session-id", "1234"));
@@ -290,7 +295,7 @@ class JourneyEngineHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "error");
+        pathParameters.put(JOURNEY_STEP, ERROR);
         event.setPathParameters(pathParameters);
 
         event.setHeaders(Map.of("ipv-session-id", "1234"));
@@ -321,7 +326,7 @@ class JourneyEngineHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "next");
+        pathParameters.put(JOURNEY_STEP, NEXT);
         event.setPathParameters(pathParameters);
 
         event.setHeaders(Map.of("ipv-session-id", "1234"));
@@ -355,7 +360,7 @@ class JourneyEngineHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "error");
+        pathParameters.put(JOURNEY_STEP, ERROR);
         event.setPathParameters(pathParameters);
 
         event.setHeaders(Map.of("ipv-session-id", "1234"));
@@ -386,7 +391,7 @@ class JourneyEngineHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "next");
+        pathParameters.put(JOURNEY_STEP, NEXT);
         event.setPathParameters(pathParameters);
 
         event.setHeaders(Map.of("ipv-session-id", "1234"));
@@ -418,7 +423,7 @@ class JourneyEngineHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "next");
+        pathParameters.put(JOURNEY_STEP, NEXT);
         event.setPathParameters(pathParameters);
 
         event.setHeaders(Map.of("ipv-session-id", "1234"));
@@ -452,7 +457,7 @@ class JourneyEngineHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "error");
+        pathParameters.put(JOURNEY_STEP, ERROR);
         event.setPathParameters(pathParameters);
 
         event.setHeaders(Map.of("ipv-session-id", "1234"));
@@ -483,7 +488,7 @@ class JourneyEngineHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "next");
+        pathParameters.put(JOURNEY_STEP, NEXT);
         event.setPathParameters(pathParameters);
 
         event.setHeaders(Map.of("ipv-session-id", "1234"));
@@ -518,7 +523,7 @@ class JourneyEngineHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "error");
+        pathParameters.put(JOURNEY_STEP, ERROR);
         event.setPathParameters(pathParameters);
 
         event.setHeaders(Map.of("ipv-session-id", "1234"));
@@ -549,7 +554,7 @@ class JourneyEngineHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "next");
+        pathParameters.put(JOURNEY_STEP, NEXT);
         event.setPathParameters(pathParameters);
 
         event.setHeaders(Map.of("ipv-session-id", "1234"));
@@ -577,7 +582,7 @@ class JourneyEngineHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "next");
+        pathParameters.put(JOURNEY_STEP, NEXT);
         event.setPathParameters(pathParameters);
 
         event.setHeaders(Map.of("ipv-session-id", "1234"));
@@ -602,7 +607,7 @@ class JourneyEngineHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "next");
+        pathParameters.put(JOURNEY_STEP, NEXT);
         event.setPathParameters(pathParameters);
 
         event.setHeaders(Map.of("ipv-session-id", "1234"));
@@ -629,7 +634,7 @@ class JourneyEngineHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "fail");
+        pathParameters.put(JOURNEY_STEP, FAIL);
         event.setPathParameters(pathParameters);
 
         event.setHeaders(Map.of("ipv-session-id", "1234"));
@@ -656,11 +661,11 @@ class JourneyEngineHandlerTest {
     }
 
     @Test
-    void shouldReturnPYIKbvErrorPageIfFraudCriVCValidationReturnsFail() throws IOException {
+    void shouldReturnPYINoMatchPageIfFraudCriVCValidationReturnsFail() throws IOException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put("journeyStep", "fail");
+        pathParameters.put(JOURNEY_STEP, FAIL);
         event.setPathParameters(pathParameters);
 
         event.setHeaders(Map.of("ipv-session-id", "1234"));
@@ -679,6 +684,41 @@ class JourneyEngineHandlerTest {
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
+        assertEquals(
+                UserStates.PYI_NO_MATCH.toString(),
+                sessionArgumentCaptor.getValue().getUserState());
+
+        assertEquals(200, response.getStatusCode());
+        assertEquals(UserStates.PYI_NO_MATCH.value, pageResponse.getPage());
+    }
+
+    @Test
+    void shouldReturnPYIKbvFailPageIfKbvCriVCValidationReturnsFail() throws IOException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+
+        Map<String, String> pathParameters = new HashMap<>();
+        pathParameters.put(JOURNEY_STEP, FAIL);
+        event.setPathParameters(pathParameters);
+
+        event.setHeaders(Map.of("ipv-session-id", "1234"));
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setCreationDateTime(new Date().toString());
+        ipvSessionItem.setUserState(UserStates.CRI_KBV.toString());
+
+        when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
+        when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
+        APIGatewayProxyResponseEvent response =
+                journeyEngineHandler.handleRequest(event, mockContext);
+        PageResponse pageResponse = objectMapper.readValue(response.getBody(), PageResponse.class);
+
+        ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
+
         assertEquals(
                 UserStates.PYI_KBV_FAIL.toString(),
                 sessionArgumentCaptor.getValue().getUserState());
