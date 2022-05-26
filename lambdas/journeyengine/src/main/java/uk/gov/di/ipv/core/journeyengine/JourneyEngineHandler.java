@@ -39,6 +39,7 @@ import static uk.gov.di.ipv.core.library.domain.UserStates.DEBUG_PAGE;
 import static uk.gov.di.ipv.core.library.domain.UserStates.IPV_IDENTITY_START_PAGE;
 import static uk.gov.di.ipv.core.library.domain.UserStates.IPV_SUCCESS_PAGE;
 import static uk.gov.di.ipv.core.library.domain.UserStates.PRE_KBV_TRANSITION_PAGE;
+import static uk.gov.di.ipv.core.library.domain.UserStates.PYI_KBV_FAIL;
 import static uk.gov.di.ipv.core.library.domain.UserStates.PYI_NO_MATCH;
 import static uk.gov.di.ipv.core.library.domain.UserStates.PYI_TECHNICAL_ERROR_PAGE;
 import static uk.gov.di.ipv.core.library.domain.UserStates.PYI_TECHNICAL_UNRECOVERABLE_ERROR_PAGE;
@@ -176,8 +177,8 @@ public class JourneyEngineHandler
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
                     } else if (journeyStep.equals(FAIL)) {
-                        updateUserState(PYI_NO_MATCH, ipvSessionItem);
-                        builder.setPageResponse(new PageResponse(PYI_NO_MATCH.value));
+                        updateUserState(PYI_KBV_FAIL, ipvSessionItem);
+                        builder.setPageResponse(new PageResponse(PYI_KBV_FAIL.value));
                     } else {
                         handleInvalidJourneyStep(journeyStep, CRI_FRAUD.value);
                     }

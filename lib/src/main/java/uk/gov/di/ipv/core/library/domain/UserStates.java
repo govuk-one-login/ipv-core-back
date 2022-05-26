@@ -15,7 +15,8 @@ public enum UserStates {
     IPV_ERROR_PAGE("page-ipv-error"),
     PYI_TECHNICAL_ERROR_PAGE("pyi-technical"),
     PYI_TECHNICAL_UNRECOVERABLE_ERROR_PAGE("pyi-technical-unrecoverable"),
-    PYI_NO_MATCH("pyi-no-match");
+    PYI_NO_MATCH("pyi-no-match"),
+    PYI_KBV_FAIL("pyi-kbv-fail");
 
     public final String value;
 
