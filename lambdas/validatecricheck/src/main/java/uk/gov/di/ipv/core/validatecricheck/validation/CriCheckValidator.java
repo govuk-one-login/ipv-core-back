@@ -17,6 +17,7 @@ public class CriCheckValidator {
     public static final String CRI_ID_UK_PASSPORT = "ukPassport";
     public static final String CRI_ID_KBV = "kbv";
     public static final String CRI_ID_FRAUD = "fraud";
+    public static final String CRI_ID_ADDRESS = "address";
     public static final String EVIDENCE = "evidence";
     public static final int SERVER_ERROR = 500;
 
@@ -43,6 +44,9 @@ public class CriCheckValidator {
                 return new EvidenceValidator(new KbvEvidenceValidator()).validate(vcClaimJson);
             case CRI_ID_FRAUD:
                 return new EvidenceValidator(new FraudEvidenceValidator()).validate(vcClaimJson);
+            case CRI_ID_ADDRESS:
+                // The address CRI has no evidence to validate
+                return true;
             default:
                 LOGGER.error("Credential issuer ID not recognised: '{}'", credentialIssuerId);
                 throw new HttpResponseExceptionWithErrorBody(
