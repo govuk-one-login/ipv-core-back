@@ -17,11 +17,13 @@ import java.util.Map;
 import static com.nimbusds.jose.JWSAlgorithm.ES256;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_5;
+import static uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator.CRI_ID_ADDRESS;
 import static uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator.CRI_ID_UK_PASSPORT;
 import static uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator.EVIDENCE;
 import static uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator.SERVER_ERROR;
@@ -75,6 +77,15 @@ class CriCheckValidatorTest {
 
         assertEquals(SERVER_ERROR, error.getResponseCode());
         assertEquals(INVALID_CREDENTIAL_ISSUER_ID.getMessage(), error.getErrorReason());
+    }
+
+    @Test
+    void isSuccessReturnsTrueForAddressCri() throws HttpResponseExceptionWithErrorBody {
+        UserIssuedCredentialsItem userIssuedCredentialsItem = new UserIssuedCredentialsItem();
+        userIssuedCredentialsItem.setCredential(SIGNED_VC_5);
+        userIssuedCredentialsItem.setCredentialIssuer(CRI_ID_ADDRESS);
+
+        assertTrue(criCheckValidator.isSuccess(userIssuedCredentialsItem));
     }
 
     private UserIssuedCredentialsItem getUserIssuedCredentialsItem(JSONObject evidence)
