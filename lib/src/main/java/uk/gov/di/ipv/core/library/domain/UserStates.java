@@ -14,7 +14,8 @@ public enum UserStates {
     CRI_ERROR("cri-error"),
     IPV_ERROR_PAGE("page-ipv-error"),
     PYI_TECHNICAL_ERROR_PAGE("pyi-technical"),
-    PYI_TECHNICAL_UNRECOVERABLE_ERROR_PAGE("pyi-technical-unrecoverable");
+    PYI_TECHNICAL_UNRECOVERABLE_ERROR_PAGE("pyi-technical-unrecoverable"),
+    PYI_NO_MATCH("pyi-no-match");
 
     public final String value;
 
