@@ -138,8 +138,8 @@ Resources:
       PackageType: Zip
       CodeUri: ../lambdas/accesstoken
       Architectures:
-        - x86_64
-      MemorySize: 512
+        - arm64
+      MemorySize: 4096
       Tracing: Active
       Environment:
         Variables:
@@ -194,8 +194,8 @@ Resources:
       PackageType: Zip
       CodeUri: ../lambdas/sessionend
       Architectures:
-        - x86_64
-      MemorySize: 512
+        - arm64
+      MemorySize: 4096
       Tracing: Active
       Environment:
         Variables:
@@ -260,8 +260,8 @@ Resources:
       PackageType: Zip
       CodeUri: ../lambdas/sessionstart
       Architectures:
-        - x86_64
-      MemorySize: 512
+        - arm64
+      MemorySize: 4096
       Tracing: Active
       Environment:
         Variables:
@@ -336,8 +336,8 @@ Resources:
       PackageType: Zip
       CodeUri: ../lambdas/credentialissuerreturn
       Architectures:
-        - x86_64
-      MemorySize: 512
+        - arm64
+      MemorySize: 4096
       Tracing: Active
       Environment:
         Variables:
@@ -420,7 +420,7 @@ Resources:
       PackageType: Zip
       CodeUri: ../lambdas/credentialissuerstart
       Architectures:
-        - x86_64
+        - arm64
       MemorySize: 3008
       Tracing: Active
       Environment:
@@ -504,7 +504,7 @@ Resources:
       PackageType: Zip
       CodeUri: ../lambdas/credentialissuererror
       Architectures:
-        - x86_64
+        - arm64
       MemorySize: 3008
       Tracing: Active
       Environment:
@@ -565,8 +565,8 @@ Resources:
       PackageType: Zip
       CodeUri: ../lambdas/useridentity
       Architectures:
-        - x86_64
-      MemorySize: 512
+        - arm64
+      MemorySize: 4096
       Tracing: Active
       Environment:
         Variables:
@@ -634,8 +634,8 @@ Resources:
       PackageType: Zip
       CodeUri: ../lambdas/credentialissuerconfig
       Architectures:
-        - x86_64
-      MemorySize: 512
+        - arm64
+      MemorySize: 4096
       Tracing: Active
       Environment:
         Variables:
@@ -684,8 +684,8 @@ Resources:
       PackageType: Zip
       CodeUri: ../lambdas/issuedcredentials
       Architectures:
-        - x86_64
-      MemorySize: 512
+        - arm64
+      MemorySize: 4096
       Tracing: Active
       Environment:
         Variables:
@@ -734,8 +734,8 @@ Resources:
       PackageType: Zip
       CodeUri: ../lambdas/journeyengine
       Architectures:
-        - x86_64
-      MemorySize: 512
+        - arm64
+      MemorySize: 4096
       Tracing: Active
       Environment:
         Variables:
