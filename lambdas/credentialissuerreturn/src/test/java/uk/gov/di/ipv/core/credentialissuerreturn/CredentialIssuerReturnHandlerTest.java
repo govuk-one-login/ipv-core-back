@@ -85,6 +85,7 @@ class CredentialIssuerReturnHandlerTest {
     private final String authorization_code = "bar";
     private final String sessionId = UUID.randomUUID().toString();
     private final String passportIssuerId = CREDENTIAL_ISSUER_ID;
+    private final String testApiKey = "test-api-key";
 
     @BeforeAll
     static void setUp() throws URISyntaxException {
@@ -131,13 +132,17 @@ class CredentialIssuerReturnHandlerTest {
         JSONObject testCredential = new JSONObject();
         testCredential.appendField("foo", "bar");
 
-        when(credentialIssuerService.exchangeCodeForToken(requestDto.capture(), eq(passportIssuer)))
+        when(credentialIssuerService.exchangeCodeForToken(
+                        requestDto.capture(), eq(passportIssuer), eq(testApiKey)))
                 .thenReturn(new BearerAccessToken());
 
-        when(credentialIssuerService.getVerifiableCredential(any(), any())).thenReturn(signedJWT);
+        when(credentialIssuerService.getVerifiableCredential(any(), any(), anyString()))
+                .thenReturn(signedJWT);
 
         when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
                 .thenReturn(passportIssuer);
+
+        when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -269,14 +274,18 @@ class CredentialIssuerReturnHandlerTest {
     void shouldReceive200ResponseCodeIfAllRequestParametersValid() throws Exception {
         BearerAccessToken accessToken = mock(BearerAccessToken.class);
 
-        when(credentialIssuerService.exchangeCodeForToken(requestDto.capture(), eq(passportIssuer)))
+        when(credentialIssuerService.exchangeCodeForToken(
+                        requestDto.capture(), eq(passportIssuer), eq(testApiKey)))
                 .thenReturn(accessToken);
 
-        when(credentialIssuerService.getVerifiableCredential(accessToken, passportIssuer))
+        when(credentialIssuerService.getVerifiableCredential(
+                        accessToken, passportIssuer, testApiKey))
                 .thenReturn(SignedJWT.parse(SIGNED_VC_1));
 
         when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
                 .thenReturn(passportIssuer);
+
+        when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -326,13 +335,15 @@ class CredentialIssuerReturnHandlerTest {
                                 OAUTH_STATE),
                         Map.of("ipv-session-id", sessionId));
 
-        when(credentialIssuerService.exchangeCodeForToken(requestDto.capture(), eq(passportIssuer)))
+        when(credentialIssuerService.exchangeCodeForToken(
+                        requestDto.capture(), eq(passportIssuer), eq(testApiKey)))
                 .thenThrow(
                         new CredentialIssuerException(
                                 HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST));
 
         when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
                 .thenReturn(passportIssuer);
+        when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(ipvSessionItem.getCredentialIssuerSessionDetails())
@@ -349,9 +360,9 @@ class CredentialIssuerReturnHandlerTest {
     @Test
     void shouldReturn500IfCredentialIssuerServiceGetCredentialThrows()
             throws JsonProcessingException {
-        when(credentialIssuerService.exchangeCodeForToken(any(), any()))
+        when(credentialIssuerService.exchangeCodeForToken(any(), any(), anyString()))
                 .thenReturn(new BearerAccessToken());
-        when(credentialIssuerService.getVerifiableCredential(any(), any()))
+        when(credentialIssuerService.getVerifiableCredential(any(), any(), anyString()))
                 .thenThrow(
                         new CredentialIssuerException(
                                 HTTPResponse.SC_SERVER_ERROR,
@@ -359,6 +370,7 @@ class CredentialIssuerReturnHandlerTest {
 
         when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
                 .thenReturn(passportIssuer);
+        when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(ipvSessionItem.getCredentialIssuerSessionDetails())
@@ -386,14 +398,18 @@ class CredentialIssuerReturnHandlerTest {
     void shouldThrow500IfVCFailsValidation() throws Exception {
         BearerAccessToken accessToken = mock(BearerAccessToken.class);
 
-        when(credentialIssuerService.exchangeCodeForToken(requestDto.capture(), eq(passportIssuer)))
+        when(credentialIssuerService.exchangeCodeForToken(
+                        requestDto.capture(), eq(passportIssuer), eq(testApiKey)))
                 .thenReturn(accessToken);
 
-        when(credentialIssuerService.getVerifiableCredential(accessToken, passportIssuer))
+        when(credentialIssuerService.getVerifiableCredential(
+                        accessToken, passportIssuer, testApiKey))
                 .thenReturn(SignedJWT.parse(SIGNED_VC_1));
 
         when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
                 .thenReturn(passportIssuer);
+
+        when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 

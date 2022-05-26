@@ -74,8 +74,8 @@ public class CredentialIssuerReturnHandler
             APIGatewayProxyRequestEvent input, Context context) {
         CredentialIssuerRequestDto request =
                 RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
-        try {
 
+        try {
             auditService.sendAuditEvent(AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED);
 
             var errorResponse = validate(request);
@@ -86,11 +86,15 @@ public class CredentialIssuerReturnHandler
             }
             CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request);
 
+            String apiKey =
+                    configurationService.getCriPrivateApiKey(credentialIssuerConfig.getId());
+
             BearerAccessToken accessToken =
-                    credentialIssuerService.exchangeCodeForToken(request, credentialIssuerConfig);
+                    credentialIssuerService.exchangeCodeForToken(
+                            request, credentialIssuerConfig, apiKey);
             SignedJWT verifiableCredential =
                     credentialIssuerService.getVerifiableCredential(
-                            accessToken, credentialIssuerConfig);
+                            accessToken, credentialIssuerConfig, apiKey);
 
             verifiableCredentialJwtValidator.validate(
                     verifiableCredential,

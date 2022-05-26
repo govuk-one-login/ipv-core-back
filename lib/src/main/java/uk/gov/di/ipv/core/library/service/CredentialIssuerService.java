@@ -40,6 +40,7 @@ import java.util.UUID;
 public class CredentialIssuerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CredentialIssuerService.class);
+    private static final String API_KEY_HEADER = "x-api-key";
 
     private final DataStore<UserIssuedCredentialsItem> dataStore;
     private final ConfigurationService configurationService;
@@ -68,7 +69,7 @@ public class CredentialIssuerService {
     }
 
     public BearerAccessToken exchangeCodeForToken(
-            CredentialIssuerRequestDto request, CredentialIssuerConfig config) {
+            CredentialIssuerRequestDto request, CredentialIssuerConfig config, String apiKey) {
 
         AuthorizationCode authorizationCode = new AuthorizationCode(request.getAuthorizationCode());
         try {
@@ -97,7 +98,15 @@ public class CredentialIssuerService {
                                     authorizationCode,
                                     getRedirectionUri(config.getId(), coreFrontCallbackUrl)));
 
-            HTTPResponse httpResponse = tokenRequest.toHTTPRequest().send();
+            HTTPRequest httpRequest = tokenRequest.toHTTPRequest();
+            if (apiKey != null) {
+                LOGGER.info(
+                        "Private api key found for cri {}, sending key in header for token request",
+                        config.getId());
+                httpRequest.setHeader(API_KEY_HEADER, apiKey);
+            }
+
+            HTTPResponse httpResponse = httpRequest.send();
             TokenResponse tokenResponse = parseTokenResponse(httpResponse);
 
             if (tokenResponse instanceof TokenErrorResponse) {
@@ -126,9 +135,17 @@ public class CredentialIssuerService {
     }
 
     public SignedJWT getVerifiableCredential(
-            BearerAccessToken accessToken, CredentialIssuerConfig config) {
+            BearerAccessToken accessToken, CredentialIssuerConfig config, String apiKey) {
         HTTPRequest credentialRequest =
                 new HTTPRequest(HTTPRequest.Method.POST, config.getCredentialUrl());
+
+        if (apiKey != null) {
+            LOGGER.info(
+                    "Private api key found for cri {}, sending key in header for credential request",
+                    config.getId());
+            credentialRequest.setHeader(API_KEY_HEADER, apiKey);
+        }
+
         credentialRequest.setAuthorization(accessToken.toAuthorizationHeader());
 
         try {

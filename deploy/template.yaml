@@ -367,6 +367,14 @@ Resources:
             ParameterName: !Sub ${Environment}/core/self/jwtTtlSeconds
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/audienceForClients
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:${Environment}/credential-issuers/ukPassport/api-key-*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:${Environment}/credential-issuers/address/api-key-*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:${Environment}/credential-issuers/fraud/api-key-*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:${Environment}/credential-issuers/kbv/api-key-*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:

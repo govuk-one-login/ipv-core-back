@@ -60,6 +60,7 @@ class CredentialIssuerServiceTest {
     @Mock private ConfigurationService mockConfigurationService;
 
     private CredentialIssuerService credentialIssuerService;
+    private String testApiKey = "test-api-key";
 
     @BeforeEach
     void setUp() throws Exception {
@@ -94,7 +95,39 @@ class CredentialIssuerServiceTest {
 
         AccessToken accessToken =
                 credentialIssuerService.exchangeCodeForToken(
-                        credentialIssuerRequestDto, credentialIssuerConfig);
+                        credentialIssuerRequestDto, credentialIssuerConfig, testApiKey);
+        AccessTokenType type = accessToken.getType();
+        assertEquals("Bearer", type.toString());
+        assertEquals(3600, accessToken.getLifetime());
+        assertEquals("d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4", accessToken.getValue());
+    }
+
+    @Test
+    void validTokenResponseWithoutApiKey(WireMockRuntimeInfo wmRuntimeInfo) {
+        when(mockConfigurationService.getIpvTokenTtl()).thenReturn("900");
+        when(mockConfigurationService.getCoreFrontCallbackUrl())
+                .thenReturn("http://www.example.com/redirect");
+        stubFor(
+                post("/token")
+                        .willReturn(
+                                aResponse()
+                                        .withHeader("Content-Type", "application/json")
+                                        .withBody(
+                                                "{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n")));
+
+        CredentialIssuerRequestDto credentialIssuerRequestDto =
+                new CredentialIssuerRequestDto(
+                        "1234",
+                        "cred_issuer_id_1",
+                        TEST_IPV_SESSION_ID,
+                        "http://www.example.com/redirect",
+                        OAUTH_STATE);
+        CredentialIssuerConfig credentialIssuerConfig =
+                getStubCredentialIssuerConfig(wmRuntimeInfo);
+
+        AccessToken accessToken =
+                credentialIssuerService.exchangeCodeForToken(
+                        credentialIssuerRequestDto, credentialIssuerConfig, null);
         AccessTokenType type = accessToken.getType();
         assertEquals("Bearer", type.toString());
         assertEquals(3600, accessToken.getLifetime());
@@ -131,7 +164,9 @@ class CredentialIssuerServiceTest {
                         CredentialIssuerException.class,
                         () ->
                                 credentialIssuerService.exchangeCodeForToken(
-                                        credentialIssuerRequestDto, credentialIssuerConfig));
+                                        credentialIssuerRequestDto,
+                                        credentialIssuerConfig,
+                                        testApiKey));
 
         assertEquals(HTTPResponse.SC_BAD_REQUEST, exception.getHttpStatusCode());
         assertEquals(ErrorResponse.INVALID_TOKEN_REQUEST, exception.getErrorResponse());
@@ -164,7 +199,9 @@ class CredentialIssuerServiceTest {
                         CredentialIssuerException.class,
                         () ->
                                 credentialIssuerService.exchangeCodeForToken(
-                                        credentialIssuerRequestDto, credentialIssuerConfig));
+                                        credentialIssuerRequestDto,
+                                        credentialIssuerConfig,
+                                        testApiKey));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
         assertEquals(
@@ -238,7 +275,33 @@ class CredentialIssuerServiceTest {
 
         SignedJWT credential =
                 credentialIssuerService.getVerifiableCredential(
-                        accessToken, credentialIssuerConfig);
+                        accessToken, credentialIssuerConfig, testApiKey);
+
+        assertEquals(SIGNED_VC_1, credential.serialize());
+
+        verify(
+                postRequestedFor(urlEqualTo("/credentials/issue"))
+                        .withHeader("Authorization", equalTo("Bearer " + accessToken.getValue())));
+    }
+
+    @Test
+    void getVerifiableCredentialCorrectlyCallsACredentialIssuerWithoutApiKey(
+            WireMockRuntimeInfo wmRuntimeInfo) {
+        stubFor(
+                post("/credentials/issue")
+                        .willReturn(
+                                aResponse()
+                                        .withHeader("Content-Type", "application/jwt;charset=UTF-8")
+                                        .withBody(SIGNED_VC_1)));
+
+        CredentialIssuerConfig credentialIssuerConfig =
+                getStubCredentialIssuerConfig(wmRuntimeInfo);
+
+        BearerAccessToken accessToken = new BearerAccessToken();
+
+        SignedJWT credential =
+                credentialIssuerService.getVerifiableCredential(
+                        accessToken, credentialIssuerConfig, null);
 
         assertEquals(SIGNED_VC_1, credential.serialize());
 
@@ -268,7 +331,7 @@ class CredentialIssuerServiceTest {
                         CredentialIssuerException.class,
                         () ->
                                 credentialIssuerService.getVerifiableCredential(
-                                        accessToken, credentialIssuerConfig));
+                                        accessToken, credentialIssuerConfig, testApiKey));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
@@ -293,7 +356,7 @@ class CredentialIssuerServiceTest {
                         CredentialIssuerException.class,
                         () ->
                                 credentialIssuerService.getVerifiableCredential(
-                                        accessToken, credentialIssuerConfig));
+                                        accessToken, credentialIssuerConfig, testApiKey));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
