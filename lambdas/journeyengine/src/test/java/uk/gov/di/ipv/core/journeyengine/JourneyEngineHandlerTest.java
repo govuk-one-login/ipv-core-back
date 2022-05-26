@@ -625,7 +625,7 @@ class JourneyEngineHandlerTest {
     }
 
     @Test
-    void shouldReturnCriErrorPageResponseIfPassportCriReturnsFail() throws IOException {
+    void shouldReturnPYINoMatchPageIfPassportCriVCValidationReturnsFail() throws IOException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
@@ -656,7 +656,7 @@ class JourneyEngineHandlerTest {
     }
 
     @Test
-    void shouldReturnPYINoMatchPageIfFraudVCValidationCriReturnsFail() throws IOException {
+    void shouldReturnPYIKbvErrorPageIfFraudCriVCValidationReturnsFail() throws IOException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
