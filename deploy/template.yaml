@@ -812,7 +812,7 @@ Resources:
             RestApiId:
               Ref: IPVCorePrivateAPI
             Path: /journey/cri/validate/{criId}
-            Method: GET
+            Method: POST
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
