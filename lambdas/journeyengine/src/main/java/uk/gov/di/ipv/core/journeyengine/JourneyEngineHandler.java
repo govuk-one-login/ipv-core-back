@@ -81,9 +81,6 @@ public class JourneyEngineHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
         }
 
-        JourneyStep journeyStep =
-                JourneyStep.valueOf(input.getPathParameters().get(JOURNEY_STEP_PARAM));
-
         var ipvSessionId =
                 RequestHelper.getHeaderByKey(input.getHeaders(), IPV_SESSION_ID_HEADER_KEY);
 
@@ -101,6 +98,9 @@ public class JourneyEngineHandler
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_ID);
         }
         try {
+            JourneyStep journeyStep =
+                    getJourneyStep(input.getPathParameters().get(JOURNEY_STEP_PARAM));
+
             JourneyEngineResult journeyEngineResult =
                     executeJourneyEvent(journeyStep, ipvSessionItem);
 
@@ -130,8 +130,6 @@ public class JourneyEngineHandler
             UserStates currentUserStateValue = UserStates.valueOf(currentUserState);
 
             JourneyEngineResult.Builder builder = new JourneyEngineResult.Builder();
-
-            validateJourneyStep(journeyStep);
 
             switch (currentUserStateValue) {
                 case INITIAL_IPV_JOURNEY:
@@ -217,8 +215,8 @@ public class JourneyEngineHandler
         }
     }
 
-    private void validateJourneyStep(JourneyStep journeyStep) throws JourneyEngineException {
-        Arrays.stream(JourneyStep.values())
+    private JourneyStep getJourneyStep(String journeyStep) throws JourneyEngineException {
+        return Arrays.stream(JourneyStep.values())
                 .filter(step -> step.toString().equalsIgnoreCase(journeyStep.toString()))
                 .findFirst()
                 .orElseThrow(
