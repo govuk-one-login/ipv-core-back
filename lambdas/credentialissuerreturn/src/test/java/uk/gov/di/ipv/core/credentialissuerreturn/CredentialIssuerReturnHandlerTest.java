@@ -322,7 +322,7 @@ class CredentialIssuerReturnHandlerTest {
     }
 
     @Test
-    void shouldReceive400ResponseCodeIfCredentialIssuerServiceThrowsException()
+    void shouldReceive200ErrorJourneyResponseIfCredentialIssuerServiceThrowsException()
             throws JsonProcessingException {
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
@@ -352,13 +352,13 @@ class CredentialIssuerReturnHandlerTest {
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
         Integer statusCode = response.getStatusCode();
         Map responseBody = getResponseBodyAsMap(response);
-        assertEquals(HTTPResponse.SC_BAD_REQUEST, statusCode);
-        assertEquals(ErrorResponse.INVALID_TOKEN_REQUEST.getCode(), responseBody.get("code"));
+        assertEquals(HTTPResponse.SC_OK, statusCode);
+        assertEquals("/journey/error", responseBody.get("journey"));
         verifyNoInteractions(context);
     }
 
     @Test
-    void shouldReturn500IfCredentialIssuerServiceGetCredentialThrows()
+    void shouldReturn200ErrorJourneyResponseIfCredentialIssuerServiceGetCredentialThrows()
             throws JsonProcessingException {
         when(credentialIssuerService.exchangeCodeForToken(any(), any(), anyString()))
                 .thenReturn(new BearerAccessToken());
@@ -388,14 +388,12 @@ class CredentialIssuerReturnHandlerTest {
                         Map.of("ipv-session-id", sessionId));
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
 
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, response.getStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER.getCode(),
-                getResponseBodyAsMap(response).get("code"));
+        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/error", getResponseBodyAsMap(response).get("journey"));
     }
 
     @Test
-    void shouldThrow500IfVCFailsValidation() throws Exception {
+    void shouldReturrn200ErrorJourneyIfVCFailsValidation() throws Exception {
         BearerAccessToken accessToken = mock(BearerAccessToken.class);
 
         when(credentialIssuerService.exchangeCodeForToken(
@@ -437,10 +435,8 @@ class CredentialIssuerReturnHandlerTest {
                         Map.of("ipv-session-id", sessionId));
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
 
-        assertEquals(HTTPResponse.SC_SERVER_ERROR, response.getStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL.getCode(),
-                getResponseBodyAsMap(response).get("code"));
+        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/error", getResponseBodyAsMap(response).get("journey"));
     }
 
     private Map getResponseBodyAsMap(APIGatewayProxyResponseEvent response)
