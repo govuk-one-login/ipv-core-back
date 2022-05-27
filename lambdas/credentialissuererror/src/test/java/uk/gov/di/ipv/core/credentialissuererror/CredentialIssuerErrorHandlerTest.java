@@ -8,9 +8,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.AuditExtensionParams;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -41,11 +43,13 @@ class CredentialIssuerErrorHandlerTest {
 
     @Test
     void shouldReturnJourneyResponseAndSendAuditLog() throws IOException, SqsException {
+        String errorCode = "server_error";
+        String errorDescription = "User is not allowed!";
         APIGatewayProxyRequestEvent event =
                 createRequestEvent(
                         Map.of(
-                                "error", "fgdfhgfh",
-                                "error_description", "User is not allowed!",
+                                "error", errorCode,
+                                "error_description", errorDescription,
                                 "credential_issuer_id", "ukPassport"),
                         Map.of("ipv-session-id", UUID.randomUUID().toString()));
 
@@ -54,9 +58,18 @@ class CredentialIssuerErrorHandlerTest {
 
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-        verify(mockAuditService).sendAuditEvent(AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED);
+        ArgumentCaptor<AuditEventTypes> auditEventType =
+                ArgumentCaptor.forClass(AuditEventTypes.class);
+        ArgumentCaptor<AuditExtensionParams> auditExtensionParams =
+                ArgumentCaptor.forClass(AuditExtensionParams.class);
+
+        verify(mockAuditService)
+                .sendAuditEvent(auditEventType.capture(), auditExtensionParams.capture());
         assertEquals(200, response.getStatusCode());
         assertEquals("/journey/error", responseBody.get("journey"));
+        assertEquals(AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED, auditEventType.getValue());
+        assertEquals(errorCode, auditExtensionParams.getValue().getErrorCode());
+        assertEquals(errorDescription, auditExtensionParams.getValue().getErrorDescription());
     }
 
     private APIGatewayProxyRequestEvent createRequestEvent(

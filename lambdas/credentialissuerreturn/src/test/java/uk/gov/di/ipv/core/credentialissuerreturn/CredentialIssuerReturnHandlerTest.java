@@ -153,12 +153,13 @@ class CredentialIssuerReturnHandlerTest {
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
 
-        verify(auditService).sendAuditEvent(AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED);
+        verify(auditService).sendAuditEvent(AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED, null);
 
         verify(auditService)
-                .sendAuditEvent(AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED);
+                .sendAuditEvent(
+                        AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED, null);
 
-        verify(auditService).sendAuditEvent(AuditEventTypes.IPV_VC_RECEIVED);
+        verify(auditService).sendAuditEvent(AuditEventTypes.IPV_VC_RECEIVED, null);
 
         verify(verifiableCredentialJwtValidator)
                 .validate(signedJWT, passportIssuer, "test-user-id");

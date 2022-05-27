@@ -103,7 +103,7 @@ public class IpvSessionStartHandler
 
             String ipvSessionId = ipvSessionService.generateIpvSession(clientSessionDetailsDto);
 
-            auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START);
+            auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, null);
 
             Map<String, String> response = Map.of(IPV_SESSION_ID_KEY, ipvSessionId);
 

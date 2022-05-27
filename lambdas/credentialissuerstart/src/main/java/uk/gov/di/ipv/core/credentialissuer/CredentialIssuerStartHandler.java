@@ -121,7 +121,7 @@ public class CredentialIssuerStartHandler
 
             persistOauthState(ipvSessionId, credentialIssuerConfig.getId(), oauthState);
 
-            auditService.sendAuditEvent(AuditEventTypes.IPV_REDIRECT_TO_CRI);
+            auditService.sendAuditEvent(AuditEventTypes.IPV_REDIRECT_TO_CRI, null);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(OK, criResponse);
         } catch (HttpResponseExceptionWithErrorBody exception) {

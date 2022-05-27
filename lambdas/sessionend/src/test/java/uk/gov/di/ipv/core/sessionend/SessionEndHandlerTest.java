@@ -98,7 +98,7 @@ class SessionEndHandlerTest {
                 .persistAuthorizationCode(
                         authorizationCode.getValue(), "12345", "https://example.com");
 
-        verify(mockAuditService).sendAuditEvent(AuditEventTypes.IPV_JOURNEY_END);
+        verify(mockAuditService).sendAuditEvent(AuditEventTypes.IPV_JOURNEY_END, null);
 
         String expectedRedirectUrl =
                 new URIBuilder("https://example.com")

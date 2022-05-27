@@ -76,7 +76,7 @@ public class CredentialIssuerReturnHandler
                 RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
 
         try {
-            auditService.sendAuditEvent(AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED);
+            auditService.sendAuditEvent(AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED, null);
 
             var errorResponse = validate(request);
 
@@ -105,9 +105,9 @@ public class CredentialIssuerReturnHandler
                             .getUserId());
 
             auditService.sendAuditEvent(
-                    AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED);
+                    AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED, null);
 
-            auditService.sendAuditEvent(AuditEventTypes.IPV_VC_RECEIVED);
+            auditService.sendAuditEvent(AuditEventTypes.IPV_VC_RECEIVED, null);
 
             credentialIssuerService.persistUserCredentials(
                     verifiableCredential.serialize(), request);

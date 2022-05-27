@@ -94,7 +94,7 @@ public class UserIdentityHandler
             UserIdentity userIdentity =
                     userIdentityService.generateUserIdentity(ipvSessionId, userId);
 
-            auditService.sendAuditEvent(AuditEventTypes.IPV_IDENTITY_ISSUED);
+            auditService.sendAuditEvent(AuditEventTypes.IPV_IDENTITY_ISSUED, null);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HTTPResponse.SC_OK, userIdentity);
         } catch (ParseException e) {
