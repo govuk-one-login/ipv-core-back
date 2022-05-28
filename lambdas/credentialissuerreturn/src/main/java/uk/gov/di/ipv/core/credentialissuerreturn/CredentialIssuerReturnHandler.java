@@ -124,8 +124,9 @@ public class CredentialIssuerReturnHandler
                     HttpStatus.SC_OK, errorJourneyResponse);
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
+            JourneyResponse errorJourneyResponse = new JourneyResponse(JOURNEY_ERROR_ENDPOINT);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+                    HttpStatus.SC_OK, errorJourneyResponse);
         }
     }
 

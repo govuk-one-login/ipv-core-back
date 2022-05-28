@@ -439,6 +439,31 @@ class CredentialIssuerReturnHandlerTest {
         assertEquals("/journey/error", getResponseBodyAsMap(response).get("journey"));
     }
 
+    @Test
+    void shouldReceive200ErrorJourneyResponseIfSqsExceptionIsThrown()
+            throws JsonProcessingException, SqsException {
+        APIGatewayProxyRequestEvent input =
+                createRequestEvent(
+                        Map.of(
+                                "authorization_code",
+                                "foo",
+                                "credential_issuer_id",
+                                passportIssuerId,
+                                "state",
+                                OAUTH_STATE),
+                        Map.of("ipv-session-id", sessionId));
+
+        JSONObject testCredential = new JSONObject();
+        testCredential.appendField("foo", "bar");
+
+        doThrow(new SqsException("Test sqs error")).when(auditService).sendAuditEvent(any());
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
+
+        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/error", getResponseBodyAsMap(response).get("journey"));
+    }
+
     private Map getResponseBodyAsMap(APIGatewayProxyResponseEvent response)
             throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
