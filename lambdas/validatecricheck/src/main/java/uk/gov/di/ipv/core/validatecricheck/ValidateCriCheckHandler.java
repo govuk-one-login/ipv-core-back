@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.awssdk.utils.StringUtils;
@@ -28,6 +29,7 @@ public class ValidateCriCheckHandler
     public static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
     public static final String JOURNEY_NEXT = "/journey/next";
     public static final String JOURNEY_FAIL = "/journey/fail";
+    public static final String JOURNEY_ERROR = "/journey/error";
     public static final int OK = 200;
     public static final int BAD_REQUEST = 400;
 
@@ -63,8 +65,9 @@ public class ValidateCriCheckHandler
                             : new JourneyResponse(JOURNEY_FAIL);
             return ApiGatewayResponseGenerator.proxyJsonResponse(OK, journeyResponse);
         } catch (HttpResponseExceptionWithErrorBody e) {
+            JourneyResponse errorJourneyResponse = new JourneyResponse(JOURNEY_ERROR);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getResponseCode(), e.getErrorBody());
+                    HttpStatus.SC_OK, errorJourneyResponse);
         }
     }
 
