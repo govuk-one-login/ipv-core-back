@@ -16,6 +16,8 @@ public class AuditService {
     private final AmazonSQS sqs;
     private final String queueUrl;
 
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
     public AuditService(AmazonSQS sqs, ConfigurationService configurationService) {
         this.sqs = sqs;
         queueUrl = configurationService.getSqsAuditEventQueueUrl();
@@ -23,6 +25,10 @@ public class AuditService {
 
     public static AmazonSQS getDefaultSqsClient() {
         return AmazonSQSClientBuilder.defaultClient();
+    }
+
+    public void sendAuditEvent(AuditEventTypes eventType) throws SqsException {
+        sendAuditEvent(eventType, null);
     }
 
     public void sendAuditEvent(AuditEventTypes eventType, AuditExtensionParams extensions)
@@ -44,7 +50,6 @@ public class AuditService {
         AuditEvent auditEvent =
                 new AuditEvent((int) Instant.now().getEpochSecond(), eventType, extensions);
 
-        ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.writeValueAsString(auditEvent);
     }
 }

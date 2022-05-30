@@ -110,7 +110,7 @@ public class SessionEndHandler
             ClientResponse clientResponse =
                     new ClientResponse(new ClientDetails(redirectUri.build().toString()));
 
-            auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_END, null);
+            auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_END);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, clientResponse);
 

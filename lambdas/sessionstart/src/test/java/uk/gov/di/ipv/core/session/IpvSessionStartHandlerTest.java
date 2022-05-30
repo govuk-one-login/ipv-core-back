@@ -112,7 +112,7 @@ class IpvSessionStartHandlerTest {
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
         assertEquals(ipvSessionId, responseBody.get("ipvSessionId"));
 
-        verify(mockAuditService).sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, null);
+        verify(mockAuditService).sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START);
     }
 
     @Test

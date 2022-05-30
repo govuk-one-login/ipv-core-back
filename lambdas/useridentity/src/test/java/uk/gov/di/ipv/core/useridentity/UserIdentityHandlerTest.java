@@ -131,7 +131,7 @@ class UserIdentityHandlerTest {
         assertEquals(userIdentity.getVcs().get(1), responseBody.getVcs().get(1));
         assertEquals(userIdentity.getVcs().get(2), responseBody.getVcs().get(2));
 
-        verify(mockAuditService).sendAuditEvent(AuditEventTypes.IPV_IDENTITY_ISSUED, null);
+        verify(mockAuditService).sendAuditEvent(AuditEventTypes.IPV_IDENTITY_ISSUED);
     }
 
     @Test

@@ -181,7 +181,7 @@ class CredentialIssuerStartHandlerTest {
         assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
 
         verifyNoInteractions(context);
-        verify(mockAuditService).sendAuditEvent(AuditEventTypes.IPV_REDIRECT_TO_CRI, null);
+        verify(mockAuditService).sendAuditEvent(AuditEventTypes.IPV_REDIRECT_TO_CRI);
     }
 
     @Test
