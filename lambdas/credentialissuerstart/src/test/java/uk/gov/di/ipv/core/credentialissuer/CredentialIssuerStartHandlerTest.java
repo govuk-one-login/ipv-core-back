@@ -185,17 +185,16 @@ class CredentialIssuerStartHandlerTest {
     }
 
     @Test
-    void shouldReturnBadRequestIfSessionIdIsNotInTheHeader() throws JsonProcessingException {
+    void shouldReturnErrorJourneyIfSessionIdIsNotInTheHeader() throws JsonProcessingException {
         when(configurationService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         input.setPathParameters(Map.of("criId", CRI_ID));
         input.setHeaders(Map.of("not-ipv-session-header", "dummy-value"));
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
-        assertEquals(400, response.getStatusCode());
+        assertEquals(200, response.getStatusCode());
         Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
-        assertEquals(1010, responseBody.get("code"));
-        assertEquals("Missing ipv session id header", responseBody.get("message"));
+        assertEquals("/journey/error", responseBody.get("journey"));
     }
 
     private void assertSharedClaimsJWTIsValid(String request)

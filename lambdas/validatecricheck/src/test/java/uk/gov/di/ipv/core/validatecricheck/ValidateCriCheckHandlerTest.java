@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.validatecricheck.ValidateCriCheckHandler.BAD_REQUEST;
 import static uk.gov.di.ipv.core.validatecricheck.ValidateCriCheckHandler.CRI_ID;
 import static uk.gov.di.ipv.core.validatecricheck.ValidateCriCheckHandler.IPV_SESSION_ID_HEADER_KEY;
 import static uk.gov.di.ipv.core.validatecricheck.ValidateCriCheckHandler.JOURNEY_FAIL;
@@ -71,19 +70,19 @@ class ValidateCriCheckHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorIfCriIdPathParameterIsNull() {
+    void shouldReturnJourneyErrorIfCriIdPathParameterIsNull() {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setHeaders(Map.of(IPV_SESSION_ID_HEADER_KEY, sessionId));
 
         var response = validateCriCheckHandler.handleRequest(event, context);
         var error = gson.fromJson(response.getBody(), Map.class);
 
-        assertEquals(BAD_REQUEST, response.getStatusCode());
-        assertEquals("Missing credential issuer id", error.get("message"));
+        assertEquals(OK, response.getStatusCode());
+        assertEquals("/journey/error", error.get("journey"));
     }
 
     @Test
-    void shouldReturnErrorIfCriIdPathParameterIsEmpty() {
+    void shouldReturnJourneyErrorIfCriIdPathParameterIsEmpty() {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setPathParameters(Map.of(CRI_ID, ""));
         event.setHeaders(Map.of(IPV_SESSION_ID_HEADER_KEY, sessionId));
@@ -91,24 +90,24 @@ class ValidateCriCheckHandlerTest {
         var response = validateCriCheckHandler.handleRequest(event, context);
         var error = gson.fromJson(response.getBody(), Map.class);
 
-        assertEquals(BAD_REQUEST, response.getStatusCode());
-        assertEquals("Missing credential issuer id", error.get("message"));
+        assertEquals(OK, response.getStatusCode());
+        assertEquals("/journey/error", error.get("journey"));
     }
 
     @Test
-    void shouldReturnErrorIfIpvSessionIdHeaderIsNull() {
+    void shouldReturnJourneyErrorIfIpvSessionIdHeaderIsNull() {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setPathParameters(Map.of(CRI_ID, criId));
 
         var response = validateCriCheckHandler.handleRequest(event, context);
         var error = gson.fromJson(response.getBody(), Map.class);
 
-        assertEquals(BAD_REQUEST, response.getStatusCode());
-        assertEquals("Missing ipv session id header", error.get("message"));
+        assertEquals(OK, response.getStatusCode());
+        assertEquals("/journey/error", error.get("journey"));
     }
 
     @Test
-    void shouldReturnErrorIfIpvSessionIdHeaderIsMissing() {
+    void shouldReturnJourneyErrorIfIpvSessionIdHeaderIsMissing() {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setPathParameters(Map.of(CRI_ID, criId));
         event.setHeaders(Map.of(IPV_SESSION_ID_HEADER_KEY, ""));
@@ -116,7 +115,7 @@ class ValidateCriCheckHandlerTest {
         var response = validateCriCheckHandler.handleRequest(event, context);
         var error = gson.fromJson(response.getBody(), Map.class);
 
-        assertEquals(BAD_REQUEST, response.getStatusCode());
-        assertEquals("Missing ipv session id header", error.get("message"));
+        assertEquals(OK, response.getStatusCode());
+        assertEquals("/journey/error", error.get("journey"));
     }
 }

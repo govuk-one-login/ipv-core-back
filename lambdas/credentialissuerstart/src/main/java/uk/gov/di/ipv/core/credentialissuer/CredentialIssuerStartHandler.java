@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.credentialissuer.domain.CriResponse;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -60,6 +61,7 @@ public class CredentialIssuerStartHandler
     public static final int BAD_REQUEST = 400;
     public static final int OK = 200;
     public static final String SHARED_CLAIMS = "shared_claims";
+    public static final JourneyResponse ERROR_JOURNEY = new JourneyResponse("/journey/error");
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -125,16 +127,14 @@ public class CredentialIssuerStartHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(OK, criResponse);
         } catch (HttpResponseExceptionWithErrorBody exception) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    exception.getResponseCode(), exception.getErrorBody());
+            LOGGER.error("Failed to create cri JAR because: {}", exception.getMessage());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, ERROR_JOURNEY);
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, ERROR_JOURNEY);
         } catch (ParseException | JOSEException e) {
             LOGGER.error("Failed to parse encryption public JWK: {}", e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, ERROR_JOURNEY);
         }
     }
 
