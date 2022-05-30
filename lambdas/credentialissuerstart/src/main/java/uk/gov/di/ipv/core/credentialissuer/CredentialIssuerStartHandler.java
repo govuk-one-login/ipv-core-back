@@ -61,7 +61,7 @@ public class CredentialIssuerStartHandler
     public static final int BAD_REQUEST = 400;
     public static final int OK = 200;
     public static final String SHARED_CLAIMS = "shared_claims";
-    public static final String ERROR_JOURNEY_STEP_URI = "/journey/error";
+    public static final JourneyResponse ERROR_JOURNEY = new JourneyResponse("/journey/error");
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -128,19 +128,13 @@ public class CredentialIssuerStartHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(OK, criResponse);
         } catch (HttpResponseExceptionWithErrorBody exception) {
             LOGGER.error("Failed to create cri JAR because: {}", exception.getMessage());
-            JourneyResponse errorJourneyResponse = new JourneyResponse(ERROR_JOURNEY_STEP_URI);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, errorJourneyResponse);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, ERROR_JOURNEY);
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
-            JourneyResponse errorJourneyResponse = new JourneyResponse(ERROR_JOURNEY_STEP_URI);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, errorJourneyResponse);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, ERROR_JOURNEY);
         } catch (ParseException | JOSEException e) {
             LOGGER.error("Failed to parse encryption public JWK: {}", e.getMessage());
-            JourneyResponse errorJourneyResponse = new JourneyResponse(ERROR_JOURNEY_STEP_URI);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, errorJourneyResponse);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, ERROR_JOURNEY);
         }
     }
 
