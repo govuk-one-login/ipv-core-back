@@ -35,6 +35,7 @@ public class CredentialIssuerReturnHandler
     private static final Logger LOGGER =
             LoggerFactory.getLogger(CredentialIssuerReturnHandler.class);
     private static final String CRI_VALIDATE_ENDPOINT = "/journey/cri/validate/";
+    private static final String JOURNEY_ERROR_ENDPOINT = "/journey/error";
 
     private final CredentialIssuerService credentialIssuerService;
     private final ConfigurationService configurationService;
@@ -116,14 +117,16 @@ public class CredentialIssuerReturnHandler
                     new JourneyResponse(
                             String.format(
                                     "%s%s", CRI_VALIDATE_ENDPOINT, credentialIssuerConfig.getId()));
-            return ApiGatewayResponseGenerator.proxyJsonResponse(200, journeyResponse);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, journeyResponse);
         } catch (CredentialIssuerException e) {
+            JourneyResponse errorJourneyResponse = new JourneyResponse(JOURNEY_ERROR_ENDPOINT);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getHttpStatusCode(), e.getErrorResponse());
+                    HttpStatus.SC_OK, errorJourneyResponse);
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
+            JourneyResponse errorJourneyResponse = new JourneyResponse(JOURNEY_ERROR_ENDPOINT);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+                    HttpStatus.SC_OK, errorJourneyResponse);
         }
     }
 
