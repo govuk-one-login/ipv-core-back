@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.AuditExtensionParams;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,7 +39,8 @@ class AuditServiceTest {
 
     @Test
     void shouldSendMessageToSqsQueue() throws JsonProcessingException, SqsException {
-        auditService.sendAuditEvent(AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED);
+        auditService.sendAuditEvent(
+                AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED, null);
 
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
                 ArgumentCaptor.forClass(SendMessageRequest.class);
@@ -53,5 +55,36 @@ class AuditServiceTest {
         assertEquals(
                 AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED,
                 messageBody.getEvent());
+    }
+
+    @Test
+    void shouldSendMessageToSqsQueueWithExtensions() throws JsonProcessingException, SqsException {
+        String errorCode = "server_error";
+        String errorDescription = "Test error";
+        AuditExtensionParams extensions =
+                new AuditExtensionParams.Builder()
+                        .setErrorCode(errorCode)
+                        .setErrorDescription(errorDescription)
+                        .build();
+        auditService.sendAuditEvent(
+                AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED, extensions);
+
+        ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
+                ArgumentCaptor.forClass(SendMessageRequest.class);
+        verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
+
+        assertEquals(
+                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().getQueueUrl());
+
+        AuditEvent messageBody =
+                objectMapper.readValue(
+                        sqsSendMessageRequestCaptor.getValue().getMessageBody(), AuditEvent.class);
+        assertEquals(
+                AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED,
+                messageBody.getEvent());
+        assertEquals(extensions.getErrorCode(), messageBody.getExtensions().getErrorCode());
+        assertEquals(
+                extensions.getErrorDescription(),
+                messageBody.getExtensions().getErrorDescription());
     }
 }
