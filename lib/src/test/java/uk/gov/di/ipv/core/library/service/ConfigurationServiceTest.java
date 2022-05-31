@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueReques
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
 import software.amazon.awssdk.services.secretsmanager.model.InternalServiceErrorException;
 import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterException;
+import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -341,6 +342,18 @@ class ConfigurationServiceTest {
                 InvalidParameterException.builder().message("Test invalid parameter error").build();
         when(secretsManagerClient.getSecretValue((GetSecretValueRequest) any()))
                 .thenThrow(invalidParameterException);
+
+        String apiKey = configurationService.getCriPrivateApiKey("ukPassport");
+
+        assertNull(apiKey);
+    }
+
+    @Test
+    void shouldReturnNullOnInvalidRequestExceptionFromSecretsManager() {
+        InvalidRequestException invalidRequestException =
+                InvalidRequestException.builder().message("Test invalid request error").build();
+        when(secretsManagerClient.getSecretValue((GetSecretValueRequest) any()))
+                .thenThrow(invalidRequestException);
 
         String apiKey = configurationService.getCriPrivateApiKey("ukPassport");
 

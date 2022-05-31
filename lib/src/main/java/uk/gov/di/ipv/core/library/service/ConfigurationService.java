@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueReques
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
 import software.amazon.awssdk.services.secretsmanager.model.InternalServiceErrorException;
 import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterException;
+import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.lambda.powertools.parameters.ParamManager;
@@ -297,8 +298,12 @@ public class ConfigurationService {
                     "An invalid value was provided for the param value: {}, details: {}",
                     valueRequest.secretId(),
                     e.getMessage());
-        } catch (ResourceNotFoundException e) {
+        } catch (InvalidRequestException e) {
             LOGGER.error(
+                    "Parameter value is not valid for the current state of the resource, details: {}",
+                    e.getMessage());
+        } catch (ResourceNotFoundException e) {
+            LOGGER.warn(
                     "Failed to find the resource within Secrets manager: {}, details: {}",
                     valueRequest.secretId(),
                     e.getMessage());
