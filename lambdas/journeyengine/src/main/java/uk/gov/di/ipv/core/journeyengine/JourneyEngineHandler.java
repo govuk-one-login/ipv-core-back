@@ -152,7 +152,7 @@ public class JourneyEngineHandler
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
                     } else if (journeyStep.equals(FAIL)) {
-                        updateUserState(CRI_ERROR, ipvSessionItem);
+                        updateUserState(PYI_NO_MATCH, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_NO_MATCH.value));
                     } else {
                         handleInvalidJourneyStep(journeyStep, CRI_UK_PASSPORT.value);
@@ -203,6 +203,8 @@ public class JourneyEngineHandler
                     }
                     break;
                 case IPV_SUCCESS_PAGE:
+                case PYI_NO_MATCH:
+                case PYI_KBV_FAIL:
                 case CRI_ERROR:
                     builder.setJourneyResponse(new JourneyResponse(journeyEndUri));
                     break;
