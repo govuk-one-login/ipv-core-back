@@ -63,6 +63,9 @@ public class ValidateCriCheckHandler
                                             ipvSessionId, criId))
                             ? new JourneyResponse(JOURNEY_NEXT)
                             : new JourneyResponse(JOURNEY_FAIL);
+
+            LOGGER.info("VALIDATION RESULT: {}", journeyResponse.getJourney());
+
             return ApiGatewayResponseGenerator.proxyJsonResponse(OK, journeyResponse);
         } catch (HttpResponseExceptionWithErrorBody e) {
             JourneyResponse errorJourneyResponse = new JourneyResponse(JOURNEY_ERROR);

@@ -209,7 +209,17 @@ public class JourneyEngineHandler
                     builder.setJourneyResponse(new JourneyResponse(journeyEndUri));
                     break;
                 case DEBUG_PAGE:
-                    builder.setPageResponse(new PageResponse(DEBUG_PAGE.value));
+                    if (journeyStep.equals(NEXT)) {
+                        builder.setPageResponse(new PageResponse(DEBUG_PAGE.value));
+                    } else if (journeyStep.equals(ERROR)) {
+                        updateUserState(CRI_ERROR, ipvSessionItem);
+                        builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
+                    } else if (journeyStep.equals(FAIL)) {
+                        updateUserState(PYI_NO_MATCH, ipvSessionItem);
+                        builder.setPageResponse(new PageResponse(PYI_NO_MATCH.value));
+                    } else {
+                        handleInvalidJourneyStep(journeyStep, DEBUG_PAGE.value);
+                    }
                     break;
                 default:
                     LOGGER.info("Unknown current user state: {}", currentUserState);
