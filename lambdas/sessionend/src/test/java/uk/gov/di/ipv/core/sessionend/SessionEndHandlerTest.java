@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
+import com.nimbusds.oauth2.sdk.OAuth2Error;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.utils.URIBuilder;
 import org.junit.jupiter.api.BeforeEach;
@@ -200,6 +201,28 @@ class SessionEndHandlerTest {
         }
     }
 
+    @Test
+    void shouldReturn200WithErrorParams() throws Exception {
+        IpvSessionItem ipvSessionItemWithError = generateIpvSessionItem();
+        ipvSessionItemWithError.setErrorCode(OAuth2Error.SERVER_ERROR_CODE);
+        ipvSessionItemWithError.setErrorDescription("Test error description");
+        when(mockSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItemWithError);
+
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        event.setQueryStringParameters(VALID_QUERY_PARAMS);
+        event.setHeaders(TEST_EVENT_HEADERS);
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+
+        ClientResponse responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        URIBuilder uriBuilder = new URIBuilder(responseBody.getClient().getRedirectUrl());
+        assertEquals(OAuth2Error.SERVER_ERROR_CODE, uriBuilder.getQueryParams().get(0).getValue());
+    }
+
     private IpvSessionItem generateIpvSessionItem() {
         IpvSessionItem item = new IpvSessionItem();
         item.setIpvSessionId(UUID.randomUUID().toString());
@@ -213,8 +236,7 @@ class SessionEndHandlerTest {
                         "https://example.com",
                         "test-state",
                         "test-user-id",
-                        false,
-                        null);
+                        false);
         item.setClientSessionDetails(clientSessionDetailsDto);
 
         return item;
@@ -227,7 +249,6 @@ class SessionEndHandlerTest {
                 "https://example.com",
                 "test-state",
                 "test-user-id",
-                false,
-                null);
+                false);
     }
 }

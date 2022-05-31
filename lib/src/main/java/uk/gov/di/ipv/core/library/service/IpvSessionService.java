@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.service;
 
+import com.nimbusds.oauth2.sdk.ErrorObject;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.UserStates;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
@@ -10,7 +11,6 @@ import java.time.Instant;
 import java.util.UUID;
 
 public class IpvSessionService {
-
     private final DataStore<IpvSessionItem> dataStore;
     private final ConfigurationService configurationService;
 
@@ -36,7 +36,8 @@ public class IpvSessionService {
         return dataStore.getItem(ipvSessionId);
     }
 
-    public String generateIpvSession(ClientSessionDetailsDto clientSessionDetailsDto) {
+    public String generateIpvSession(
+            ClientSessionDetailsDto clientSessionDetailsDto, ErrorObject errorObject) {
 
         Instant now = Instant.now();
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
@@ -48,12 +49,13 @@ public class IpvSessionService {
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         String userState =
-                clientSessionDetailsDto.getIsDebugJourney()
-                        ? UserStates.DEBUG_PAGE.toString()
-                        : UserStates.INITIAL_IPV_JOURNEY.toString();
+                generateStartingState(clientSessionDetailsDto.getIsDebugJourney(), errorObject);
         ipvSessionItem.setUserState(userState);
 
-        ipvSessionItem.setErrorObject(clientSessionDetailsDto.getErrorObject());
+        if (errorObject != null) {
+            ipvSessionItem.setErrorCode(errorObject.getCode());
+            ipvSessionItem.setErrorDescription(errorObject.getDescription());
+        }
 
         dataStore.create(ipvSessionItem);
 
@@ -62,5 +64,15 @@ public class IpvSessionService {
 
     public void updateIpvSession(IpvSessionItem updatedIpvSessionItem) {
         dataStore.update(updatedIpvSessionItem);
+    }
+
+    private String generateStartingState(boolean isDebugJourney, ErrorObject errorObject) {
+        if (errorObject != null) {
+            return UserStates.FAILED_CLIENT_JAR.toString();
+        } else {
+            return isDebugJourney
+                    ? UserStates.DEBUG_PAGE.toString()
+                    : UserStates.INITIAL_IPV_JOURNEY.toString();
+        }
     }
 }

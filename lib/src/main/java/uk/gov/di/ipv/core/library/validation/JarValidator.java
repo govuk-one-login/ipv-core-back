@@ -65,7 +65,6 @@ public class JarValidator {
         try {
             return getValidatedClaimSet(signedJWT, clientId);
         } catch (JarValidationException e) {
-
             throw new RecoverableJarValidationException(
                     e.getErrorObject(), redirectUri.toString(), clientId);
         }

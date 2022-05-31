@@ -77,43 +77,41 @@ public class SessionEndHandler
                 RequestHelper.getHeaderByKey(input.getHeaders(), IPV_SESSION_ID_HEADER_KEY);
 
         IpvSessionItem ipvSessionItem = sessionService.getIpvSession(ipvSessionId);
-
-        Map<String, List<String>> authParameters =
-                getAuthParamsAsMap(ipvSessionItem.getClientSessionDetails());
-
-        var validationResult =
-                authRequestValidator.validateRequest(authParameters, input.getHeaders());
-        if (!validationResult.isValid()) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_BAD_REQUEST, validationResult.getError());
-        }
-
+        ClientResponse clientResponse;
         try {
-            AuthorizationRequest authorizationRequest = AuthorizationRequest.parse(authParameters);
-            AuthorizationCode authorizationCode =
-                    authorizationCodeService.generateAuthorizationCode();
+            if (ipvSessionItem.getErrorCode() != null) {
+                clientResponse = generateClientErrorResponse(ipvSessionItem);
 
-            authorizationCodeService.persistAuthorizationCode(
-                    authorizationCode.getValue(),
-                    ipvSessionId,
-                    authorizationRequest.getRedirectionURI().toString());
+                auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_END);
+            } else {
 
-            URIBuilder redirectUri =
-                    new URIBuilder(ipvSessionItem.getClientSessionDetails().getRedirectUri())
-                            .addParameter("code", authorizationCode.getValue());
+                Map<String, List<String>> authParameters =
+                        getAuthParamsAsMap(ipvSessionItem.getClientSessionDetails());
 
-            if (StringUtils.isNotBlank(ipvSessionItem.getClientSessionDetails().getState())) {
-                redirectUri.addParameter(
-                        "state", ipvSessionItem.getClientSessionDetails().getState());
+                var validationResult =
+                        authRequestValidator.validateRequest(authParameters, input.getHeaders());
+                if (!validationResult.isValid()) {
+                    return ApiGatewayResponseGenerator.proxyJsonResponse(
+                            HttpStatus.SC_BAD_REQUEST, validationResult.getError());
+                }
+
+                AuthorizationRequest authorizationRequest =
+                        AuthorizationRequest.parse(authParameters);
+                AuthorizationCode authorizationCode =
+                        authorizationCodeService.generateAuthorizationCode();
+
+                authorizationCodeService.persistAuthorizationCode(
+                        authorizationCode.getValue(),
+                        ipvSessionId,
+                        authorizationRequest.getRedirectionURI().toString());
+
+                clientResponse =
+                        generateClientSuccessResponse(ipvSessionItem, authorizationCode.getValue());
+
+                auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_END);
             }
 
-            ClientResponse clientResponse =
-                    new ClientResponse(new ClientDetails(redirectUri.build().toString()));
-
-            auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_END);
-
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, clientResponse);
-
         } catch (ParseException e) {
             LOGGER.error("Authentication request could not be parsed", e);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
@@ -128,6 +126,29 @@ public class SessionEndHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
+    }
+
+    private ClientResponse generateClientSuccessResponse(
+            IpvSessionItem ipvSessionItem, String authorizationCode) throws URISyntaxException {
+        URIBuilder redirectUri =
+                new URIBuilder(ipvSessionItem.getClientSessionDetails().getRedirectUri())
+                        .addParameter("code", authorizationCode);
+
+        if (StringUtils.isNotBlank(ipvSessionItem.getClientSessionDetails().getState())) {
+            redirectUri.addParameter("state", ipvSessionItem.getClientSessionDetails().getState());
+        }
+
+        return new ClientResponse(new ClientDetails(redirectUri.build().toString()));
+    }
+
+    private ClientResponse generateClientErrorResponse(IpvSessionItem ipvSessionItem)
+            throws URISyntaxException {
+        URIBuilder uriBuilder =
+                new URIBuilder(ipvSessionItem.getClientSessionDetails().getRedirectUri());
+        uriBuilder.addParameter("error", ipvSessionItem.getErrorCode());
+        uriBuilder.addParameter("error_description", ipvSessionItem.getErrorDescription());
+
+        return new ClientResponse(new ClientDetails(uriBuilder.build().toString()));
     }
 
     @Tracing

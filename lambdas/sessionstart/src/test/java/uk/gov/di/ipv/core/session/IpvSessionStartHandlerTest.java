@@ -12,6 +12,7 @@ import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.ErrorObject;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.JarValidationException;
+import uk.gov.di.ipv.core.library.exceptions.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -94,7 +96,7 @@ class IpvSessionStartHandlerTest {
     void shouldReturnIpvSessionIdWhenProvidedValidRequest()
             throws JsonProcessingException, JarValidationException, ParseException, SqsException {
         String ipvSessionId = UUID.randomUUID().toString();
-        when(mockIpvSessionService.generateIpvSession(any())).thenReturn(ipvSessionId);
+        when(mockIpvSessionService.generateIpvSession(any(), any())).thenReturn(ipvSessionId);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(signedJWT.getJWTClaimsSet());
 
@@ -185,6 +187,33 @@ class IpvSessionStartHandlerTest {
         assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
         assertEquals(
                 ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
+    }
+
+    @Test
+    void shouldReturnIpvSessionIdWhenRecoverableErrorFound()
+            throws JsonProcessingException, JarValidationException, ParseException, SqsException {
+        String ipvSessionId = UUID.randomUUID().toString();
+        when(mockIpvSessionService.generateIpvSession(any(), any())).thenReturn(ipvSessionId);
+        when(mockJarValidator.validateRequestJwt(any(), any()))
+                .thenThrow(
+                        new RecoverableJarValidationException(
+                                new ErrorObject("server_error", "test error"),
+                                "http://example.com",
+                                "test-client"));
+
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        Map<String, Object> sessionParams =
+                Map.of("clientId", "test-client", "request", signedJWT.serialize());
+        event.setBody(objectMapper.writeValueAsString(sessionParams));
+
+        APIGatewayProxyResponseEvent response =
+                ipvSessionStartHandler.handleRequest(event, mockContext);
+
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(ipvSessionId, responseBody.get("ipvSessionId"));
     }
 
     private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {

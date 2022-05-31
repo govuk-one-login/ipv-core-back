@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.persistence.item;
 
-import com.nimbusds.oauth2.sdk.ErrorObject;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -16,7 +15,8 @@ public class IpvSessionItem {
     private String expirationDateTime;
     private ClientSessionDetailsDto clientSessionDetails;
     private CredentialIssuerSessionDetailsDto credentialIssuerSessionDetails;
-    private ErrorObject errorObject;
+    private String errorCode;
+    private String errorDescription;
 
     @DynamoDbPartitionKey
     public String getIpvSessionId() {
@@ -68,11 +68,19 @@ public class IpvSessionItem {
         return credentialIssuerSessionDetails;
     }
 
-    public ErrorObject getErrorObject() {
-        return errorObject;
+    public String getErrorCode() {
+        return errorCode;
     }
 
-    public void setErrorObject(ErrorObject errorObject) {
-        this.errorObject = errorObject;
+    public void setErrorCode(String errorCode) {
+        this.errorCode = errorCode;
+    }
+
+    public String getErrorDescription() {
+        return errorDescription;
+    }
+
+    public void setErrorDescription(String errorDescription) {
+        this.errorDescription = errorDescription;
     }
 }

@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
@@ -103,7 +102,8 @@ public class IpvSessionStartHandler
                             sessionParams.get(CLIENT_ID_PARAM_KEY),
                             Boolean.parseBoolean(sessionParams.get(IS_DEBUG_JOURNEY_PARAM_KEY)));
 
-            String ipvSessionId = ipvSessionService.generateIpvSession(clientSessionDetailsDto);
+            String ipvSessionId =
+                    ipvSessionService.generateIpvSession(clientSessionDetailsDto, null);
 
             auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START);
 
@@ -120,10 +120,11 @@ public class IpvSessionStartHandler
                     e.getErrorObject().getDescription());
 
             ClientSessionDetailsDto clientSessionDetailsDto =
-                    generateErrorClientSessionDetails(
-                            e.getRedirectUri(), e.getClientId(), e.getErrorObject());
+                    generateErrorClientSessionDetails(e.getRedirectUri(), e.getClientId());
 
-            String ipvSessionId = ipvSessionService.generateIpvSession(clientSessionDetailsDto);
+            String ipvSessionId =
+                    ipvSessionService.generateIpvSession(
+                            clientSessionDetailsDto, e.getErrorObject());
 
             Map<String, String> response = Map.of(IPV_SESSION_ID_KEY, ipvSessionId);
 
@@ -172,15 +173,13 @@ public class IpvSessionStartHandler
                 claimsSet.getStringClaim("redirect_uri"),
                 claimsSet.getStringClaim("state"),
                 claimsSet.getSubject(),
-                isDebugJourney,
-                null);
+                isDebugJourney);
     }
 
     @Tracing
     private ClientSessionDetailsDto generateErrorClientSessionDetails(
-            String redirectUri, String clientId, ErrorObject errorObject) {
-        return new ClientSessionDetailsDto(
-                null, clientId, redirectUri, null, null, false, errorObject);
+            String redirectUri, String clientId) {
+        return new ClientSessionDetailsDto(null, clientId, redirectUri, null, null, false);
     }
 
     private SignedJWT decryptRequest(String jarString)

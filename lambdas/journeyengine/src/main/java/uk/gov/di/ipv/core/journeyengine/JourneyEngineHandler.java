@@ -206,6 +206,7 @@ public class JourneyEngineHandler
                 case PYI_NO_MATCH:
                 case PYI_KBV_FAIL:
                 case CRI_ERROR:
+                case FAILED_CLIENT_JAR:
                     builder.setJourneyResponse(new JourneyResponse(journeyEndUri));
                     break;
                 case DEBUG_PAGE:
@@ -268,7 +269,8 @@ public class JourneyEngineHandler
         updatedIpvSessionItem.setClientSessionDetails(
                 previousSessionItem.getClientSessionDetails());
         updatedIpvSessionItem.setUserState(updatedStateValue.toString());
-        updatedIpvSessionItem.setErrorObject(previousSessionItem.getErrorObject());
+        updatedIpvSessionItem.setErrorCode(previousSessionItem.getErrorCode());
+        updatedIpvSessionItem.setErrorDescription(previousSessionItem.getErrorDescription());
 
         ipvSessionService.updateIpvSession(updatedIpvSessionItem);
     }

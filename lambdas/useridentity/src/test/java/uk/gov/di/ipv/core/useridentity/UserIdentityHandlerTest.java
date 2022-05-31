@@ -92,8 +92,7 @@ class UserIdentityHandlerTest {
                         "http://example.com",
                         "test-state",
                         "test-user-id",
-                        false,
-                        null));
+                        false));
 
         userInfoHandler =
                 new UserIdentityHandler(

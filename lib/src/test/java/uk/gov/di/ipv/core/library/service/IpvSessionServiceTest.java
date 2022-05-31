@@ -62,8 +62,8 @@ class IpvSessionServiceTest {
                                 "http://example.come",
                                 "test-state",
                                 "test-user-id",
-                                false,
-                                new ErrorObject("server_error", "Test error")));
+                                false),
+                        null);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -95,8 +95,8 @@ class IpvSessionServiceTest {
                                 "http://example.come",
                                 "test-state",
                                 "test-user-id",
-                                true,
-                                new ErrorObject("server_error", "Test error")));
+                                true),
+                        null);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -114,6 +114,36 @@ class IpvSessionServiceTest {
 
         assertEquals(capturedIpvSessionItem.getIpvSessionId(), ipvSessionID);
         assertEquals(UserStates.DEBUG_PAGE.toString(), capturedIpvSessionItem.getUserState());
+    }
+
+    @Test
+    void shouldCreateSessionItemWithErrorObject() {
+        ErrorObject testErrorObject = new ErrorObject("server_error", "Test error");
+        String ipvSessionID =
+                ipvSessionService.generateIpvSession(
+                        new ClientSessionDetailsDto(
+                                "jwt",
+                                "test-client",
+                                "http://example.come",
+                                "test-state",
+                                "test-user-id",
+                                false),
+                        testErrorObject);
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockDataStore).create(ipvSessionItemArgumentCaptor.capture());
+        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
+        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
+        assertEquals(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(), ipvSessionID);
+        assertEquals(
+                UserStates.FAILED_CLIENT_JAR.toString(),
+                ipvSessionItemArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                testErrorObject.getCode(), ipvSessionItemArgumentCaptor.getValue().getErrorCode());
+        assertEquals(
+                testErrorObject.getDescription(),
+                ipvSessionItemArgumentCaptor.getValue().getErrorDescription());
     }
 
     @Test
