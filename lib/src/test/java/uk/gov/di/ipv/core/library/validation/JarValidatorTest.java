@@ -148,7 +148,8 @@ class JarValidatorTest {
 
     @Test
     void shouldFailValidationChecksOnValidJWTalgHeader()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
+            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
+                    ParseException {
 
         RSASSASigner signer = new RSASSASigner(getRsaPrivateKey());
 
@@ -225,8 +226,8 @@ class JarValidatorTest {
                     ParseException {
         when(configurationService.getClientPublicKeyMaterial(anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.getAudienceForClients()).thenReturn(audienceClaim);
-        when(configurationService.getClientIssuer(anyString())).thenReturn(issuerClaim);
+        when(configurationService.getClientRedirectUrls(anyString()))
+                .thenReturn(Collections.singletonList(redirectUriClaim));
 
         ECDSASigner signer = new ECDSASigner(getPrivateKey());
 
@@ -248,7 +249,7 @@ class JarValidatorTest {
                     OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
             assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
             assertEquals(
-                    "JWT missing required claims: [exp, iat, iss, nbf, response_type, sub]",
+                    "Invalid redirct_uri claim provided for configured client",
                     errorObject.getDescription());
         }
     }
@@ -261,6 +262,8 @@ class JarValidatorTest {
                 .thenReturn(EC_PUBLIC_JWK);
         when(configurationService.getAudienceForClients()).thenReturn(audienceClaim);
         when(configurationService.getClientIssuer(anyString())).thenReturn(issuerClaim);
+        when(configurationService.getClientRedirectUrls(anyString()))
+                .thenReturn(Collections.singletonList(redirectUriClaim));
 
         Map<String, Object> invalidAudienceClaims =
                 Map.of(
@@ -307,6 +310,8 @@ class JarValidatorTest {
                 .thenReturn(EC_PUBLIC_JWK);
         when(configurationService.getAudienceForClients()).thenReturn(audienceClaim);
         when(configurationService.getClientIssuer(anyString())).thenReturn(issuerClaim);
+        when(configurationService.getClientRedirectUrls(anyString()))
+                .thenReturn(Collections.singletonList(redirectUriClaim));
 
         Map<String, Object> invalidAudienceClaims =
                 Map.of(
@@ -355,6 +360,8 @@ class JarValidatorTest {
                 .thenReturn(EC_PUBLIC_JWK);
         when(configurationService.getAudienceForClients()).thenReturn(audienceClaim);
         when(configurationService.getClientIssuer(anyString())).thenReturn(issuerClaim);
+        when(configurationService.getClientRedirectUrls(anyString()))
+                .thenReturn(Collections.singletonList(redirectUriClaim));
 
         Map<String, Object> invalidAudienceClaims =
                 Map.of(
@@ -403,6 +410,8 @@ class JarValidatorTest {
                 .thenReturn(EC_PUBLIC_JWK);
         when(configurationService.getAudienceForClients()).thenReturn(audienceClaim);
         when(configurationService.getClientIssuer(anyString())).thenReturn(issuerClaim);
+        when(configurationService.getClientRedirectUrls(anyString()))
+                .thenReturn(Collections.singletonList(redirectUriClaim));
 
         Map<String, Object> invalidAudienceClaims =
                 Map.of(
@@ -449,6 +458,8 @@ class JarValidatorTest {
                 .thenReturn(EC_PUBLIC_JWK);
         when(configurationService.getAudienceForClients()).thenReturn(audienceClaim);
         when(configurationService.getClientIssuer(anyString())).thenReturn(issuerClaim);
+        when(configurationService.getClientRedirectUrls(anyString()))
+                .thenReturn(Collections.singletonList(redirectUriClaim));
 
         Map<String, Object> invalidAudienceClaims =
                 Map.of(
@@ -496,6 +507,8 @@ class JarValidatorTest {
         when(configurationService.getAudienceForClients()).thenReturn(audienceClaim);
         when(configurationService.getClientIssuer(anyString())).thenReturn(issuerClaim);
         when(configurationService.getMaxAllowedAuthClientTtl()).thenReturn("1500");
+        when(configurationService.getClientRedirectUrls(anyString()))
+                .thenReturn(Collections.singletonList(redirectUriClaim));
 
         Map<String, Object> invalidAudienceClaims =
                 Map.of(
@@ -542,9 +555,6 @@ class JarValidatorTest {
                     ParseException {
         when(configurationService.getClientPublicKeyMaterial(anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.getAudienceForClients()).thenReturn(audienceClaim);
-        when(configurationService.getClientIssuer(anyString())).thenReturn(issuerClaim);
-        when(configurationService.getMaxAllowedAuthClientTtl()).thenReturn("1500");
         when(configurationService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList("test-redirect-uri"));
 
@@ -570,9 +580,6 @@ class JarValidatorTest {
                     ParseException {
         when(configurationService.getClientPublicKeyMaterial(anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.getAudienceForClients()).thenReturn(audienceClaim);
-        when(configurationService.getClientIssuer(anyString())).thenReturn(issuerClaim);
-        when(configurationService.getMaxAllowedAuthClientTtl()).thenReturn("1500");
 
         Map<String, Object> claims =
                 Map.of(

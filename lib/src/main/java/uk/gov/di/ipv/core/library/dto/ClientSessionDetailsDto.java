@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.dto;
 
+import com.nimbusds.oauth2.sdk.ErrorObject;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
@@ -12,6 +13,7 @@ public class ClientSessionDetailsDto {
     String state;
     String userId;
     boolean isDebugJourney;
+    ErrorObject errorObject;
 
     public ClientSessionDetailsDto() {}
 
@@ -21,13 +23,15 @@ public class ClientSessionDetailsDto {
             String redirectUri,
             String state,
             String userId,
-            boolean isDebugJourney) {
+            boolean isDebugJourney,
+            ErrorObject errorObject) {
         this.responseType = responseType;
         this.clientId = clientId;
         this.redirectUri = redirectUri;
         this.state = state;
         this.userId = userId;
         this.isDebugJourney = isDebugJourney;
+        this.errorObject = errorObject;
     }
 
     public String getResponseType() {
@@ -76,5 +80,13 @@ public class ClientSessionDetailsDto {
 
     public void setIsDebugJourney(boolean isDebugJourney) {
         this.isDebugJourney = isDebugJourney;
+    }
+
+    public ErrorObject getErrorObject() {
+        return errorObject;
+    }
+
+    public void setErrorObject(ErrorObject errorObject) {
+        this.errorObject = errorObject;
     }
 }

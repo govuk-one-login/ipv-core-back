@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
@@ -20,6 +21,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.JarValidationException;
+import uk.gov.di.ipv.core.library.exceptions.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -112,6 +114,20 @@ public class IpvSessionStartHandler
             LOGGER.error("Failed to parse the decrypted JWE because: {}", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
+        } catch (RecoverableJarValidationException e) {
+            LOGGER.error(
+                    "Recoverable Jar validation failed because: {}",
+                    e.getErrorObject().getDescription());
+
+            ClientSessionDetailsDto clientSessionDetailsDto =
+                    generateErrorClientSessionDetails(
+                            e.getRedirectUri(), e.getClientId(), e.getErrorObject());
+
+            String ipvSessionId = ipvSessionService.generateIpvSession(clientSessionDetailsDto);
+
+            Map<String, String> response = Map.of(IPV_SESSION_ID_KEY, ipvSessionId);
+
+            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
         } catch (JarValidationException e) {
             LOGGER.error("Jar validation failed because: {}", e.getErrorObject().getDescription());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
@@ -156,7 +172,15 @@ public class IpvSessionStartHandler
                 claimsSet.getStringClaim("redirect_uri"),
                 claimsSet.getStringClaim("state"),
                 claimsSet.getSubject(),
-                isDebugJourney);
+                isDebugJourney,
+                null);
+    }
+
+    @Tracing
+    private ClientSessionDetailsDto generateErrorClientSessionDetails(
+            String redirectUri, String clientId, ErrorObject errorObject) {
+        return new ClientSessionDetailsDto(
+                null, clientId, redirectUri, null, null, false, errorObject);
     }
 
     private SignedJWT decryptRequest(String jarString)

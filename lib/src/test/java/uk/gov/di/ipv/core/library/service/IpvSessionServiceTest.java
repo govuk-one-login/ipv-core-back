@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.service;
 
+import com.nimbusds.oauth2.sdk.ErrorObject;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -61,7 +62,8 @@ class IpvSessionServiceTest {
                                 "http://example.come",
                                 "test-state",
                                 "test-user-id",
-                                false));
+                                false,
+                                new ErrorObject("server_error", "Test error")));
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -93,7 +95,8 @@ class IpvSessionServiceTest {
                                 "http://example.come",
                                 "test-state",
                                 "test-user-id",
-                                true));
+                                true,
+                                new ErrorObject("server_error", "Test error")));
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);

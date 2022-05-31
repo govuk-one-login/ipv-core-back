@@ -268,6 +268,7 @@ public class JourneyEngineHandler
         updatedIpvSessionItem.setClientSessionDetails(
                 previousSessionItem.getClientSessionDetails());
         updatedIpvSessionItem.setUserState(updatedStateValue.toString());
+        updatedIpvSessionItem.setErrorObject(previousSessionItem.getErrorObject());
 
         ipvSessionService.updateIpvSession(updatedIpvSessionItem);
     }

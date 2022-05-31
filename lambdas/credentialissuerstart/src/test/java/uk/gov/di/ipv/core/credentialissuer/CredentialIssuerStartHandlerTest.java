@@ -13,6 +13,7 @@ import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jose.crypto.RSADecrypter;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -126,7 +127,8 @@ class CredentialIssuerStartHandlerTest {
                         "https://example.com/redirect",
                         OAUTH_STATE,
                         TEST_USER_ID,
-                        false);
+                        false,
+                        new ErrorObject("server_error", "Test error"));
     }
 
     @Test

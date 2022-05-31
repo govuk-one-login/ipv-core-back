@@ -53,6 +53,8 @@ public class IpvSessionService {
                         : UserStates.INITIAL_IPV_JOURNEY.toString();
         ipvSessionItem.setUserState(userState);
 
+        ipvSessionItem.setErrorObject(clientSessionDetailsDto.getErrorObject());
+
         dataStore.create(ipvSessionItem);
 
         return ipvSessionItem.getIpvSessionId();

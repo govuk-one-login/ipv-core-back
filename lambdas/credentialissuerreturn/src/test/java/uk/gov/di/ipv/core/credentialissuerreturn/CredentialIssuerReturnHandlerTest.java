@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import net.minidev.json.JSONObject;
@@ -108,7 +109,8 @@ class CredentialIssuerReturnHandlerTest {
                         "https://example.com/redirect",
                         "test-state",
                         "test-user-id",
-                        false);
+                        false,
+                        new ErrorObject("server_error", "Test error"));
 
         credentialIssuerSessionDetailsDto =
                 new CredentialIssuerSessionDetailsDto(CREDENTIAL_ISSUER_ID, OAUTH_STATE);
