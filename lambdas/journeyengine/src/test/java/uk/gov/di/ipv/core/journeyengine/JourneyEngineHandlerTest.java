@@ -654,7 +654,8 @@ class JourneyEngineHandlerTest {
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(
-                UserStates.CRI_ERROR.toString(), sessionArgumentCaptor.getValue().getUserState());
+                UserStates.PYI_NO_MATCH.toString(),
+                sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
         assertEquals(UserStates.PYI_NO_MATCH.value, pageResponse.getPage());
