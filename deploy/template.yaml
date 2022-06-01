@@ -139,7 +139,7 @@ Resources:
       CodeUri: ../lambdas/accesstoken
       Architectures:
         - arm64
-      MemorySize: 4096
+      MemorySize: 2048
       Tracing: Active
       Environment:
         Variables:
@@ -195,7 +195,7 @@ Resources:
       CodeUri: ../lambdas/sessionend
       Architectures:
         - arm64
-      MemorySize: 4096
+      MemorySize: 2048
       Tracing: Active
       Environment:
         Variables:
@@ -261,7 +261,7 @@ Resources:
       CodeUri: ../lambdas/sessionstart
       Architectures:
         - arm64
-      MemorySize: 4096
+      MemorySize: 2048
       Tracing: Active
       Environment:
         Variables:
@@ -337,7 +337,7 @@ Resources:
       CodeUri: ../lambdas/credentialissuerreturn
       Architectures:
         - arm64
-      MemorySize: 4096
+      MemorySize: 2048
       Tracing: Active
       Environment:
         Variables:
@@ -574,7 +574,7 @@ Resources:
       CodeUri: ../lambdas/useridentity
       Architectures:
         - arm64
-      MemorySize: 4096
+      MemorySize: 2048
       Tracing: Active
       Environment:
         Variables:
@@ -643,7 +643,7 @@ Resources:
       CodeUri: ../lambdas/credentialissuerconfig
       Architectures:
         - arm64
-      MemorySize: 4096
+      MemorySize: 2048
       Tracing: Active
       Environment:
         Variables:
@@ -693,7 +693,7 @@ Resources:
       CodeUri: ../lambdas/issuedcredentials
       Architectures:
         - arm64
-      MemorySize: 4096
+      MemorySize: 2048
       Tracing: Active
       Environment:
         Variables:
@@ -743,7 +743,7 @@ Resources:
       CodeUri: ../lambdas/journeyengine
       Architectures:
         - arm64
-      MemorySize: 4096
+      MemorySize: 2048
       Tracing: Active
       Environment:
         Variables:
@@ -794,8 +794,8 @@ Resources:
       PackageType: Zip
       CodeUri: ../lambdas/validatecricheck
       Architectures:
-        - x86_64
-      MemorySize: 512
+        - arm64
+      MemorySize: 2048
       Tracing: Active
       Environment:
         Variables:
