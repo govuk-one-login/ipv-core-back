@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
@@ -209,6 +211,47 @@ class UserIdentityServiceTest {
                 userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
 
         assertEquals(VectorOfTrust.P0.toString(), credentials.getVot());
+    }
+
+    @Test
+    void shouldSetIdenityClaimWhenVotIsP2() {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+
+        IdentityClaim identityClaim = credentials.getIdentityClaim();
+
+        assertEquals("GivenName", identityClaim.getName().get(0).getNameParts().get(0).getType());
+        assertEquals("Paul", identityClaim.getName().get(0).getNameParts().get(0).getValue());
+
+        assertEquals("2020-02-03", identityClaim.getBirthDate().get(0).getValue());
+    }
+
+    @Test
+    void shouldNotSetIdenityClaimWhenVotIsP0() {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+
+        assertNull(credentials.getIdentityClaim());
     }
 
     @Test

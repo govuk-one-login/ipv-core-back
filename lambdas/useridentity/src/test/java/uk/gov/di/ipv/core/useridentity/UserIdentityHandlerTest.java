@@ -16,6 +16,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.domain.BirthDate;
+import uk.gov.di.ipv.core.library.domain.IdentityClaim;
+import uk.gov.di.ipv.core.library.domain.Name;
+import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
@@ -63,9 +67,15 @@ class UserIdentityHandlerTest {
     void setUp() {
         responseBody = new HashMap<>();
 
+        List<Name> names =
+                Collections.singletonList(
+                        new Name(Collections.singletonList(new NameParts("GivenName", "Daniel"))));
+        List<BirthDate> birthDates = Collections.singletonList(new BirthDate("1990-02-10"));
+
         userIdentity =
                 new UserIdentity(
                         List.of("12345", "Test credential", "bar"),
+                        new IdentityClaim(names, birthDates),
                         "test-sub",
                         VectorOfTrust.P2.toString(),
                         VTM);

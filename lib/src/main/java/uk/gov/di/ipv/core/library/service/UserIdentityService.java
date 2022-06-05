@@ -1,5 +1,8 @@
 package uk.gov.di.ipv.core.library.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
@@ -8,7 +11,10 @@ import com.nimbusds.jwt.SignedJWT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.DebugCredentialAttributes;
+import uk.gov.di.ipv.core.library.domain.IdentityClaim;
+import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.UserIssuedDebugCredential;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
@@ -23,6 +29,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
 public class UserIdentityService {
@@ -30,12 +37,15 @@ public class UserIdentityService {
     private static final String PASSPORT_CRI_TYPE = "ukPassport";
     private static final String FRAUD_CRI_TYPE = "fraud";
     private static final String KBV_CRI_TYPE = "kbv";
+    private static final String NAME_PROPERTY_NAME = "name";
+    private static final String BIRTH_DATE_PROPERTY_NAME = "birthDate";
     private static final String GPG_45_VALIDITY_PROPERTY_NAME = "validityScore";
     private static final String GPG_45_FRAUD_PROPERTY_NAME = "identityFraudScore";
     private static final String GPG_45_VERIFICATION_PROPERTY_NAME = "verificationScore";
     private static final int GPG_45_M1A_VALIDITY_SCORE = 2;
     private static final int GPG_45_M1A_FRAUD_SCORE = 1;
     private static final int GPG_45_M1A_VERIFICATION_SCORE = 2;
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final ConfigurationService configurationService;
     private final DataStore<UserIssuedCredentialsItem> dataStore;
@@ -83,19 +93,22 @@ public class UserIdentityService {
 
         String vtm = configurationService.getCoreVtmClaim();
 
-        return new UserIdentity.Builder()
-                .setVcs(vcJwts)
-                .setSub(sub)
-                .setVot(vot)
-                .setVtm(vtm)
-                .build();
+        UserIdentity.Builder userIdentityBuilder =
+                new UserIdentity.Builder().setVcs(vcJwts).setSub(sub).setVot(vot).setVtm(vtm);
+
+        if (vot.equals(VectorOfTrust.P2.toString())) {
+            Optional<IdentityClaim> identityClaim = generateIdentityClaim(credentialIssuerItems);
+            identityClaim.ifPresent(userIdentityBuilder::setIdentityClaim);
+        }
+
+        return userIdentityBuilder.build();
     }
 
     public Map<String, String> getUserIssuedDebugCredentials(String ipvSessionId) {
         List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(ipvSessionId);
         Map<String, String> userIssuedDebugCredentials = new HashMap<>();
-
         Gson gson = new Gson();
+
         credentialIssuerItems.forEach(
                 criItem -> {
                     DebugCredentialAttributes attributes =
@@ -168,6 +181,64 @@ public class UserIdentityService {
         }
 
         return getVectorOfTrustValue(validPassport, validFraud, validKbv);
+    }
+
+    private Optional<IdentityClaim> generateIdentityClaim(
+            List<UserIssuedCredentialsItem> credentialIssuerItems) {
+        for (UserIssuedCredentialsItem item : credentialIssuerItems) {
+            if (item.getCredentialIssuer().equals(PASSPORT_CRI_TYPE)) {
+                try {
+                    JsonNode nameNode =
+                            objectMapper
+                                    .readTree(
+                                            SignedJWT.parse(item.getCredential())
+                                                    .getPayload()
+                                                    .toString())
+                                    .path(VC_CLAIM)
+                                    .path(VC_CREDENTIAL_SUBJECT)
+                                    .path(NAME_PROPERTY_NAME);
+
+                    if (nameNode.isMissingNode()) {
+                        LOGGER.error("Name property is missing from passport VC");
+                        return Optional.empty();
+                    }
+
+                    JsonNode birthDateNode =
+                            objectMapper
+                                    .readTree(
+                                            SignedJWT.parse(item.getCredential())
+                                                    .getPayload()
+                                                    .toString())
+                                    .path(VC_CLAIM)
+                                    .path(VC_CREDENTIAL_SUBJECT)
+                                    .path(BIRTH_DATE_PROPERTY_NAME);
+
+                    if (birthDateNode.isMissingNode()) {
+                        LOGGER.error("BirthDate property is missing from passport VC");
+                        return Optional.empty();
+                    }
+
+                    List<Name> names =
+                            objectMapper.treeToValue(
+                                    nameNode,
+                                    objectMapper
+                                            .getTypeFactory()
+                                            .constructCollectionType(List.class, Name.class));
+                    List<BirthDate> birthDates =
+                            objectMapper.treeToValue(
+                                    birthDateNode,
+                                    objectMapper
+                                            .getTypeFactory()
+                                            .constructCollectionType(List.class, BirthDate.class));
+
+                    return Optional.of(new IdentityClaim(names, birthDates));
+                } catch (ParseException | JsonProcessingException e) {
+                    LOGGER.error("Failed to parse VC JWT because: {}", e.getMessage());
+                    return Optional.empty();
+                }
+            }
+        }
+        return Optional.empty();
     }
 
     private Optional<Boolean> isValidScore(
