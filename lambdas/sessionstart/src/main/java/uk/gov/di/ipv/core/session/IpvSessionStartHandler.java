@@ -110,10 +110,6 @@ public class IpvSessionStartHandler
             Map<String, String> response = Map.of(IPV_SESSION_ID_KEY, ipvSessionId);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
-        } catch (ParseException e) {
-            LOGGER.error("Failed to parse the decrypted JWE because: {}", e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
         } catch (RecoverableJarValidationException e) {
             LOGGER.error(
                     "Recoverable Jar validation failed because: {}",
@@ -129,6 +125,10 @@ public class IpvSessionStartHandler
             Map<String, String> response = Map.of(IPV_SESSION_ID_KEY, ipvSessionId);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
+        } catch (ParseException e) {
+            LOGGER.error("Failed to parse the decrypted JWE because: {}", e.getMessage());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
         } catch (JarValidationException e) {
             LOGGER.error("Jar validation failed because: {}", e.getErrorObject().getDescription());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
