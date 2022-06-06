@@ -7,12 +7,14 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 public class RecoverableJarValidationException extends JarValidationException {
     private final String redirectUri;
     private final String clientId;
+    private final String state;
 
     public RecoverableJarValidationException(
-            ErrorObject errorObject, String redirectUri, String clientId) {
+            ErrorObject errorObject, String redirectUri, String clientId, String state) {
         super(errorObject);
         this.redirectUri = redirectUri;
         this.clientId = clientId;
+        this.state = state;
     }
 
     public String getRedirectUri() {
@@ -21,5 +23,9 @@ public class RecoverableJarValidationException extends JarValidationException {
 
     public String getClientId() {
         return this.clientId;
+    }
+
+    public String getState() {
+        return state;
     }
 }

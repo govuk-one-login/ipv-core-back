@@ -118,6 +118,7 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldCreateSessionItemWithErrorObject() {
+        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
         ErrorObject testErrorObject = new ErrorObject("server_error", "Test error");
         String ipvSessionID =
                 ipvSessionService.generateIpvSession(

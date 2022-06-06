@@ -148,6 +148,10 @@ public class SessionEndHandler
         uriBuilder.addParameter("error", ipvSessionItem.getErrorCode());
         uriBuilder.addParameter("error_description", ipvSessionItem.getErrorDescription());
 
+        if (StringUtils.isNotBlank(ipvSessionItem.getClientSessionDetails().getState())) {
+            uriBuilder.addParameter("state", ipvSessionItem.getClientSessionDetails().getState());
+        }
+
         return new ClientResponse(new ClientDetails(uriBuilder.build().toString()));
     }
 

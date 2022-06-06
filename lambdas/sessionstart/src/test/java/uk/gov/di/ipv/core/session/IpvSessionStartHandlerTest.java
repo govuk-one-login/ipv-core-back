@@ -199,7 +199,8 @@ class IpvSessionStartHandlerTest {
                         new RecoverableJarValidationException(
                                 new ErrorObject("server_error", "test error"),
                                 "http://example.com",
-                                "test-client"));
+                                "test-client",
+                                "test-state"));
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, Object> sessionParams =

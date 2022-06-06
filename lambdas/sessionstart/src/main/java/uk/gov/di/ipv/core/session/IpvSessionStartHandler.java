@@ -116,7 +116,8 @@ public class IpvSessionStartHandler
                     e.getErrorObject().getDescription());
 
             ClientSessionDetailsDto clientSessionDetailsDto =
-                    generateErrorClientSessionDetails(e.getRedirectUri(), e.getClientId());
+                    generateErrorClientSessionDetails(
+                            e.getRedirectUri(), e.getClientId(), e.getState());
 
             String ipvSessionId =
                     ipvSessionService.generateIpvSession(
@@ -178,8 +179,8 @@ public class IpvSessionStartHandler
 
     @Tracing
     private ClientSessionDetailsDto generateErrorClientSessionDetails(
-            String redirectUri, String clientId) {
-        return new ClientSessionDetailsDto(null, clientId, redirectUri, null, null, false);
+            String redirectUri, String clientId, String state) {
+        return new ClientSessionDetailsDto(null, clientId, redirectUri, state, null, false);
     }
 
     private SignedJWT decryptRequest(String jarString)

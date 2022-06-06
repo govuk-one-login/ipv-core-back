@@ -66,7 +66,10 @@ public class JarValidator {
             return getValidatedClaimSet(signedJWT, clientId);
         } catch (JarValidationException e) {
             throw new RecoverableJarValidationException(
-                    e.getErrorObject(), redirectUri.toString(), clientId);
+                    e.getErrorObject(),
+                    redirectUri.toString(),
+                    clientId,
+                    jwtClaimsSet.getStringClaim("state"));
         }
     }
 
