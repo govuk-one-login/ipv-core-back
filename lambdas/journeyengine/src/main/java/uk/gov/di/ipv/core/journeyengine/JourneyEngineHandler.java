@@ -54,10 +54,6 @@ public class JourneyEngineHandler
 
     private static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
     private static final String JOURNEY_STEP_PARAM = "journeyStep";
-    private static final String UK_PASSPORT_CRI_ID = "ukPassport";
-    private static final String ADDRESS_CRI_ID = "address";
-    private static final String KBV_CRI_ID = "kbv";
-    private static final String FRAUD_CRI_ID = "fraud";
 
     private final IpvSessionService ipvSessionService;
     private final ConfigurationService configurationService;
@@ -150,13 +146,15 @@ public class JourneyEngineHandler
                 case IPV_IDENTITY_START_PAGE:
                     updateUserState(CRI_UK_PASSPORT, ipvSessionItem);
                     builder.setJourneyResponse(
-                            new JourneyResponse(criStartUri + UK_PASSPORT_CRI_ID));
+                            new JourneyResponse(
+                                    criStartUri + configurationService.getPassportCriId()));
                     break;
                 case CRI_UK_PASSPORT:
                     if (journeyStep.equals(NEXT)) {
                         updateUserState(CRI_ADDRESS, ipvSessionItem);
                         builder.setJourneyResponse(
-                                new JourneyResponse(criStartUri + ADDRESS_CRI_ID));
+                                new JourneyResponse(
+                                        criStartUri + configurationService.getAddressCriId()));
                     } else if (journeyStep.equals(ERROR)) {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
@@ -170,7 +168,9 @@ public class JourneyEngineHandler
                 case CRI_ADDRESS:
                     if (journeyStep.equals(NEXT)) {
                         updateUserState(CRI_FRAUD, ipvSessionItem);
-                        builder.setJourneyResponse(new JourneyResponse(criStartUri + FRAUD_CRI_ID));
+                        builder.setJourneyResponse(
+                                new JourneyResponse(
+                                        criStartUri + configurationService.getFraudCriId()));
                     } else if (journeyStep.equals(ERROR)) {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
@@ -194,7 +194,8 @@ public class JourneyEngineHandler
                     break;
                 case PRE_KBV_TRANSITION_PAGE:
                     updateUserState(CRI_KBV, ipvSessionItem);
-                    builder.setJourneyResponse(new JourneyResponse(criStartUri + KBV_CRI_ID));
+                    builder.setJourneyResponse(
+                            new JourneyResponse(criStartUri + configurationService.getKbvCriId()));
                     break;
                 case CRI_KBV:
                     if (journeyStep.equals(NEXT)) {

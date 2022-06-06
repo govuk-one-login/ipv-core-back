@@ -118,6 +118,22 @@ public class ConfigurationService {
         return System.getenv("SQS_AUDIT_EVENT_QUEUE_URL");
     }
 
+    public String getPassportCriId() {
+        return System.getenv("PASSPORT_CRI_ID");
+    }
+
+    public String getAddressCriId() {
+        return System.getenv("ADDRESS_CRI_ID");
+    }
+
+    public String getFraudCriId() {
+        return System.getenv("FRAUD_CRI_ID");
+    }
+
+    public String getKbvCriId() {
+        return System.getenv("KBV_CRI_ID");
+    }
+
     public long getBearerAccessTokenTtl() {
         return Optional.ofNullable(System.getenv("BEARER_TOKEN_TTL"))
                 .map(Long::valueOf)
