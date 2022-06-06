@@ -17,12 +17,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
@@ -102,7 +104,8 @@ class UserIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturn200OnSuccessfulUserIdentityRequest() {
+    void shouldReturn200OnSuccessfulUserIdentityRequest()
+            throws HttpResponseExceptionWithErrorBody {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken();
         Map<String, String> headers =
@@ -121,7 +124,7 @@ class UserIdentityHandlerTest {
 
     @Test
     void shouldReturnCredentialsOnSuccessfulUserInfoRequest()
-            throws JsonProcessingException, SqsException {
+            throws JsonProcessingException, SqsException, HttpResponseExceptionWithErrorBody {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken();
         Map<String, String> headers =
@@ -142,6 +145,36 @@ class UserIdentityHandlerTest {
         assertEquals(userIdentity.getVcs().get(2), responseBody.getVcs().get(2));
 
         verify(mockAuditService).sendAuditEvent(AuditEventTypes.IPV_IDENTITY_ISSUED);
+    }
+
+    @Test
+    void shouldReturnErrorResponseWhenUserIdentityGenerationFails()
+            throws JsonProcessingException, SqsException, HttpResponseExceptionWithErrorBody {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        AccessToken accessToken = new BearerAccessToken();
+        Map<String, String> headers =
+                Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
+        event.setHeaders(headers);
+
+        when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString()))
+                .thenReturn(TEST_IPV_SESSION_ID);
+        when(mockUserIdentityService.generateUserIdentity(any(), any()))
+                .thenThrow(
+                        new HttpResponseExceptionWithErrorBody(
+                                500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM));
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
+        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+
+        responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(500, response.getStatusCode());
+        assertEquals(
+                String.valueOf(ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getCode()),
+                responseBody.get("code"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
+                responseBody.get("message"));
     }
 
     @Test

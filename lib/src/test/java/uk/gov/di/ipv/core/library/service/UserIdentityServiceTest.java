@@ -5,9 +5,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 
@@ -17,9 +19,12 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_PASSPORT_VC_MISSING_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_3;
@@ -42,7 +47,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldReturnCredentialsFromDataStore() {
+    void shouldReturnCredentialsFromDataStore() throws HttpResponseExceptionWithErrorBody {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
@@ -178,7 +183,8 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldSetVotClaimToP2OnSuccessfulIdentityCheck() {
+    void shouldSetVotClaimToP2OnSuccessfulIdentityCheck()
+            throws HttpResponseExceptionWithErrorBody {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
@@ -197,7 +203,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldSetVotClaimToP0OnMissingRequiredVC() {
+    void shouldSetVotClaimToP0OnMissingRequiredVC() throws HttpResponseExceptionWithErrorBody {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
@@ -214,7 +220,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldSetIdenityClaimWhenVotIsP2() {
+    void shouldSetIdenityClaimWhenVotIsP2() throws HttpResponseExceptionWithErrorBody {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
@@ -238,7 +244,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldNotSetIdenityClaimWhenVotIsP0() {
+    void shouldNotSetIdenityClaimWhenVotIsP0() throws HttpResponseExceptionWithErrorBody {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
@@ -255,7 +261,70 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldSetsubClaimOnUserIdentity() {
+    void shouldThrowExceptionWhenMissingNameProperty() throws HttpResponseExceptionWithErrorBody {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1",
+                                "ukPassport",
+                                SIGNED_PASSPORT_VC_MISSING_NAME,
+                                LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+
+        try {
+            UserIdentity credentials =
+                    userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+            fail();
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            assertEquals(500, e.getResponseCode());
+            assertEquals(
+                    ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getCode(),
+                    e.getErrorBody().get("code"));
+            assertEquals(
+                    ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
+                    e.getErrorBody().get("message"));
+        }
+    }
+
+    @Test
+    void shouldThrowExceptionWhenMissingBirthDateProperty()
+            throws HttpResponseExceptionWithErrorBody {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1",
+                                "ukPassport",
+                                SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE,
+                                LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+
+        try {
+            UserIdentity credentials =
+                    userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+            fail();
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            assertEquals(500, e.getResponseCode());
+            assertEquals(
+                    ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getCode(),
+                    e.getErrorBody().get("code"));
+            assertEquals(
+                    ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
+                    e.getErrorBody().get("message"));
+        }
+    }
+
+    @Test
+    void shouldSetsubClaimOnUserIdentity() throws HttpResponseExceptionWithErrorBody {
         when(mockConfigurationService.getCoreVtmClaim()).thenReturn("mock-vtm-claim");
 
         UserIdentity credentials =
@@ -265,7 +334,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldSetVotClaimToP0OnFailedIdentityCheck() {
+    void shouldSetVotClaimToP0OnFailedIdentityCheck() throws HttpResponseExceptionWithErrorBody {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
@@ -284,7 +353,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldSetVtmClaimOnUserIdentity() {
+    void shouldSetVtmClaimOnUserIdentity() throws HttpResponseExceptionWithErrorBody {
         when(mockConfigurationService.getCoreVtmClaim()).thenReturn("mock-vtm-claim");
 
         UserIdentity credentials =

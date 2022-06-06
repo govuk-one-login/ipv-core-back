@@ -13,11 +13,13 @@ import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.DebugCredentialAttributes;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.UserIssuedDebugCredential;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 
@@ -81,7 +83,8 @@ public class UserIdentityService {
         return dataStore.getItem(ipvSessionId, criId);
     }
 
-    public UserIdentity generateUserIdentity(String ipvSessionId, String sub) {
+    public UserIdentity generateUserIdentity(String ipvSessionId, String sub)
+            throws HttpResponseExceptionWithErrorBody {
         List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(ipvSessionId);
 
         List<String> vcJwts =
@@ -97,8 +100,8 @@ public class UserIdentityService {
                 new UserIdentity.Builder().setVcs(vcJwts).setSub(sub).setVot(vot).setVtm(vtm);
 
         if (vot.equals(VectorOfTrust.P2.toString())) {
-            Optional<IdentityClaim> identityClaim = generateIdentityClaim(credentialIssuerItems);
-            identityClaim.ifPresent(userIdentityBuilder::setIdentityClaim);
+            IdentityClaim identityClaim = generateIdentityClaim(credentialIssuerItems);
+            userIdentityBuilder.setIdentityClaim(identityClaim);
         }
 
         return userIdentityBuilder.build();
@@ -183,8 +186,9 @@ public class UserIdentityService {
         return getVectorOfTrustValue(validPassport, validFraud, validKbv);
     }
 
-    private Optional<IdentityClaim> generateIdentityClaim(
-            List<UserIssuedCredentialsItem> credentialIssuerItems) {
+    private IdentityClaim generateIdentityClaim(
+            List<UserIssuedCredentialsItem> credentialIssuerItems)
+            throws HttpResponseExceptionWithErrorBody {
         for (UserIssuedCredentialsItem item : credentialIssuerItems) {
             if (item.getCredentialIssuer().equals(PASSPORT_CRI_TYPE)) {
                 try {
@@ -200,7 +204,8 @@ public class UserIdentityService {
 
                     if (nameNode.isMissingNode()) {
                         LOGGER.error("Name property is missing from passport VC");
-                        return Optional.empty();
+                        throw new HttpResponseExceptionWithErrorBody(
+                                500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
                     }
 
                     JsonNode birthDateNode =
@@ -215,7 +220,8 @@ public class UserIdentityService {
 
                     if (birthDateNode.isMissingNode()) {
                         LOGGER.error("BirthDate property is missing from passport VC");
-                        return Optional.empty();
+                        throw new HttpResponseExceptionWithErrorBody(
+                                500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
                     }
 
                     List<Name> names =
@@ -231,14 +237,16 @@ public class UserIdentityService {
                                             .getTypeFactory()
                                             .constructCollectionType(List.class, BirthDate.class));
 
-                    return Optional.of(new IdentityClaim(names, birthDates));
+                    return new IdentityClaim(names, birthDates);
                 } catch (ParseException | JsonProcessingException e) {
                     LOGGER.error("Failed to parse VC JWT because: {}", e.getMessage());
-                    return Optional.empty();
+                    throw new HttpResponseExceptionWithErrorBody(
+                            500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
                 }
             }
         }
-        return Optional.empty();
+        throw new HttpResponseExceptionWithErrorBody(
+                500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
     }
 
     private Optional<Boolean> isValidScore(
