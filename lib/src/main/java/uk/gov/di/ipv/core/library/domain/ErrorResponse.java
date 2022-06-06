@@ -39,7 +39,8 @@ public enum ErrorResponse {
     MISSING_OAUTH_STATE(1030, "Missing OAuth state in Response"),
     INVALID_OAUTH_STATE(1031, "Invalid OAuth State"),
     WRONG_NUMBER_OF_ELEMENTS_IN_EVIDENCE(1032, "Wrong number of elements in evidence"),
-    EVIDENCE_MISSING_FROM_VC(1033, "Evidence missing from verifiable credential");
+    EVIDENCE_MISSING_FROM_VC(1033, "Evidence missing from verifiable credential"),
+    FAILED_TO_GENERATE_IDENTIY_CLAIM(1034, "Failed to generate the identity claim");
 
     @JsonProperty("code")
     private final int code;

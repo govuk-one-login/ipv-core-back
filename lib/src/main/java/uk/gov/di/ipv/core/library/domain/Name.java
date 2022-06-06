@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 
 import java.util.List;
@@ -8,7 +9,7 @@ import java.util.List;
 public class Name {
     private final List<NameParts> nameParts;
 
-    public Name(List<NameParts> nameParts) {
+    public Name(@JsonProperty(value = "nameParts", required = true) List<NameParts> nameParts) {
         this.nameParts = nameParts;
     }
 

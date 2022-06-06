@@ -16,6 +16,7 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -105,6 +106,11 @@ public class UserIdentityHandler
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            LOGGER.error(
+                    "Failed to generate the user identity output because: {}", e.getErrorReason());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    e.getResponseCode(), e.getErrorBody());
         }
     }
 }
