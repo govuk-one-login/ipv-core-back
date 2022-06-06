@@ -373,4 +373,12 @@ class ConfigurationServiceTest {
 
         assertNull(apiKey);
     }
+
+    @Test
+    void shouldReturnBackendSessionTimeout() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        String ttl = "7200";
+        when(ssmProvider.get("/test/core/self/backendSessionTimeout")).thenReturn(ttl);
+        assertEquals(ttl, configurationService.getBackendSessionTimeout());
+    }
 }

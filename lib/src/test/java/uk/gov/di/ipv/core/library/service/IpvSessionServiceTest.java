@@ -1,9 +1,9 @@
 package uk.gov.di.ipv.core.library.service;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.UserStates;
@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
 
@@ -26,12 +27,7 @@ class IpvSessionServiceTest {
 
     @Mock private ConfigurationService mockConfigurationService;
 
-    private IpvSessionService ipvSessionService;
-
-    @BeforeEach
-    void setUp() {
-        ipvSessionService = new IpvSessionService(mockDataStore, mockConfigurationService);
-    }
+    @InjectMocks private IpvSessionService ipvSessionService;
 
     @Test
     void shouldReturnSessionItem() {
@@ -56,6 +52,7 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldCreateSessionItem() {
+        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
         String ipvSessionID =
                 ipvSessionService.generateIpvSession(
                         new ClientSessionDetailsDto(
@@ -69,17 +66,25 @@ class IpvSessionServiceTest {
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockDataStore).create(ipvSessionItemArgumentCaptor.capture());
-        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
-        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
+        IpvSessionItem capturedIpvSessionItem = ipvSessionItemArgumentCaptor.getValue();
 
-        assertEquals(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(), ipvSessionID);
+        assertNotNull(capturedIpvSessionItem.getIpvSessionId());
+        assertNotNull(capturedIpvSessionItem.getCreationDateTime());
+        assertNotNull(capturedIpvSessionItem.getExpirationDateTime());
         assertEquals(
-                UserStates.INITIAL_IPV_JOURNEY.toString(),
-                ipvSessionItemArgumentCaptor.getValue().getUserState());
+                7200,
+                Instant.parse(capturedIpvSessionItem.getExpirationDateTime()).getEpochSecond()
+                        - Instant.parse(capturedIpvSessionItem.getCreationDateTime())
+                                .getEpochSecond());
+
+        assertEquals(capturedIpvSessionItem.getIpvSessionId(), ipvSessionID);
+        assertEquals(
+                UserStates.INITIAL_IPV_JOURNEY.toString(), capturedIpvSessionItem.getUserState());
     }
 
     @Test
     void shouldCreateSessionItemForDebugJourney() {
+        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
         String ipvSessionID =
                 ipvSessionService.generateIpvSession(
                         new ClientSessionDetailsDto(
@@ -93,13 +98,19 @@ class IpvSessionServiceTest {
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockDataStore).create(ipvSessionItemArgumentCaptor.capture());
-        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
-        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
+        IpvSessionItem capturedIpvSessionItem = ipvSessionItemArgumentCaptor.getValue();
 
-        assertEquals(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(), ipvSessionID);
+        assertNotNull(capturedIpvSessionItem.getIpvSessionId());
+        assertNotNull(capturedIpvSessionItem.getCreationDateTime());
+        assertNotNull(capturedIpvSessionItem.getExpirationDateTime());
         assertEquals(
-                UserStates.DEBUG_PAGE.toString(),
-                ipvSessionItemArgumentCaptor.getValue().getUserState());
+                7200,
+                Instant.parse(capturedIpvSessionItem.getExpirationDateTime()).getEpochSecond()
+                        - Instant.parse(capturedIpvSessionItem.getCreationDateTime())
+                                .getEpochSecond());
+
+        assertEquals(capturedIpvSessionItem.getIpvSessionId(), ipvSessionID);
+        assertEquals(UserStates.DEBUG_PAGE.toString(), capturedIpvSessionItem.getUserState());
     }
 
     @Test
