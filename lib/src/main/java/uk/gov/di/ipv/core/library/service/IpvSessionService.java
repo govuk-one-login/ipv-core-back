@@ -38,9 +38,13 @@ public class IpvSessionService {
 
     public String generateIpvSession(ClientSessionDetailsDto clientSessionDetailsDto) {
 
+        Instant now = Instant.now();
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
-        ipvSessionItem.setCreationDateTime(Instant.now().toString());
+        ipvSessionItem.setCreationDateTime(now.toString());
+        ipvSessionItem.setExpirationDateTime(
+                now.plusSeconds(Long.parseLong(configurationService.getBackendSessionTimeout()))
+                        .toString());
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         String userState =

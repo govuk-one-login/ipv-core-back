@@ -12,6 +12,7 @@ public class IpvSessionItem {
     private String ipvSessionId;
     private String userState;
     private String creationDateTime;
+    private String expirationDateTime;
     private ClientSessionDetailsDto clientSessionDetails;
     private CredentialIssuerSessionDetailsDto credentialIssuerSessionDetails;
 
@@ -38,6 +39,14 @@ public class IpvSessionItem {
 
     public void setCreationDateTime(String creationDateTime) {
         this.creationDateTime = creationDateTime;
+    }
+
+    public String getExpirationDateTime() {
+        return expirationDateTime;
+    }
+
+    public void setExpirationDateTime(String expirationDateTime) {
+        this.expirationDateTime = expirationDateTime;
     }
 
     public ClientSessionDetailsDto getClientSessionDetails() {
