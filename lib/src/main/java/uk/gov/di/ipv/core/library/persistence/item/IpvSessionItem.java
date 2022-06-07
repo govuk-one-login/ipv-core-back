@@ -15,6 +15,8 @@ public class IpvSessionItem {
     private String expirationDateTime;
     private ClientSessionDetailsDto clientSessionDetails;
     private CredentialIssuerSessionDetailsDto credentialIssuerSessionDetails;
+    private String errorCode;
+    private String errorDescription;
 
     @DynamoDbPartitionKey
     public String getIpvSessionId() {
@@ -64,5 +66,21 @@ public class IpvSessionItem {
 
     public CredentialIssuerSessionDetailsDto getCredentialIssuerSessionDetails() {
         return credentialIssuerSessionDetails;
+    }
+
+    public String getErrorCode() {
+        return errorCode;
+    }
+
+    public void setErrorCode(String errorCode) {
+        this.errorCode = errorCode;
+    }
+
+    public String getErrorDescription() {
+        return errorDescription;
+    }
+
+    public void setErrorDescription(String errorDescription) {
+        this.errorDescription = errorDescription;
     }
 }

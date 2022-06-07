@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
+import com.nimbusds.oauth2.sdk.OAuth2Error;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.utils.URIBuilder;
 import org.junit.jupiter.api.BeforeEach;
@@ -198,6 +199,61 @@ class SessionEndHandlerTest {
             verify(mockAuthorizationCodeService, never())
                     .persistAuthorizationCode(anyString(), anyString(), anyString());
         }
+    }
+
+    @Test
+    void shouldReturn200WithErrorParams() throws Exception {
+        IpvSessionItem ipvSessionItemWithError = generateIpvSessionItem();
+        ipvSessionItemWithError.setErrorCode(OAuth2Error.SERVER_ERROR_CODE);
+        ipvSessionItemWithError.setErrorDescription("Test error description");
+        when(mockSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItemWithError);
+
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        event.setQueryStringParameters(VALID_QUERY_PARAMS);
+        event.setHeaders(TEST_EVENT_HEADERS);
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+
+        ClientResponse responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        URIBuilder uriBuilder = new URIBuilder(responseBody.getClient().getRedirectUrl());
+        assertEquals(OAuth2Error.SERVER_ERROR_CODE, uriBuilder.getQueryParams().get(0).getValue());
+        assertEquals("Test error description", uriBuilder.getQueryParams().get(1).getValue());
+        assertEquals(
+                ipvSessionItemWithError.getClientSessionDetails().getState(),
+                uriBuilder.getQueryParams().get(2).getValue());
+    }
+
+    @Test
+    void shouldReturn200WithErrorParamsButWithoutStateIfNotRequired() throws Exception {
+        IpvSessionItem ipvSessionItemWithError = generateIpvSessionItem();
+        ipvSessionItemWithError.setErrorCode(OAuth2Error.SERVER_ERROR_CODE);
+        ipvSessionItemWithError.setErrorDescription("Test error description");
+
+        ClientSessionDetailsDto clientSessionDetailsDto = generateValidClientSessionDetailsDto();
+        clientSessionDetailsDto.setState(null);
+        ipvSessionItemWithError.setClientSessionDetails(clientSessionDetailsDto);
+
+        when(mockSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItemWithError);
+
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        event.setQueryStringParameters(VALID_QUERY_PARAMS);
+        event.setHeaders(TEST_EVENT_HEADERS);
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+
+        ClientResponse responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        URIBuilder uriBuilder = new URIBuilder(responseBody.getClient().getRedirectUrl());
+        assertEquals(OAuth2Error.SERVER_ERROR_CODE, uriBuilder.getQueryParams().get(0).getValue());
+        assertEquals("Test error description", uriBuilder.getQueryParams().get(1).getValue());
+        assertEquals(2, uriBuilder.getQueryParams().size());
     }
 
     private IpvSessionItem generateIpvSessionItem() {

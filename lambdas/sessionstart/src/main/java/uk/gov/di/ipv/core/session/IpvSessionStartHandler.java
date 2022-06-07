@@ -20,6 +20,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.JarValidationException;
+import uk.gov.di.ipv.core.library.exceptions.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -101,9 +102,26 @@ public class IpvSessionStartHandler
                             sessionParams.get(CLIENT_ID_PARAM_KEY),
                             Boolean.parseBoolean(sessionParams.get(IS_DEBUG_JOURNEY_PARAM_KEY)));
 
-            String ipvSessionId = ipvSessionService.generateIpvSession(clientSessionDetailsDto);
+            String ipvSessionId =
+                    ipvSessionService.generateIpvSession(clientSessionDetailsDto, null);
 
             auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START);
+
+            Map<String, String> response = Map.of(IPV_SESSION_ID_KEY, ipvSessionId);
+
+            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
+        } catch (RecoverableJarValidationException e) {
+            LOGGER.error(
+                    "Recoverable Jar validation failed because: {}",
+                    e.getErrorObject().getDescription());
+
+            ClientSessionDetailsDto clientSessionDetailsDto =
+                    generateErrorClientSessionDetails(
+                            e.getRedirectUri(), e.getClientId(), e.getState());
+
+            String ipvSessionId =
+                    ipvSessionService.generateIpvSession(
+                            clientSessionDetailsDto, e.getErrorObject());
 
             Map<String, String> response = Map.of(IPV_SESSION_ID_KEY, ipvSessionId);
 
@@ -157,6 +175,12 @@ public class IpvSessionStartHandler
                 claimsSet.getStringClaim("state"),
                 claimsSet.getSubject(),
                 isDebugJourney);
+    }
+
+    @Tracing
+    private ClientSessionDetailsDto generateErrorClientSessionDetails(
+            String redirectUri, String clientId, String state) {
+        return new ClientSessionDetailsDto(null, clientId, redirectUri, state, null, false);
     }
 
     private SignedJWT decryptRequest(String jarString)
