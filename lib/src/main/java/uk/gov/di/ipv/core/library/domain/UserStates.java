@@ -8,16 +8,15 @@ public enum UserStates {
     PRE_KBV_TRANSITION_PAGE("page-pre-kbv-transition"),
     IPV_SUCCESS_PAGE("page-ipv-success"),
     CRI_UK_PASSPORT("cri-ukPassport"),
-    CRI_ACTIVITY_HISTORY("cri-activityHistory"),
     CRI_ADDRESS("cri-Address"),
     CRI_FRAUD("cri-fraud"),
     CRI_KBV("cri-kbv"),
     CRI_ERROR("cri-error"),
-    IPV_ERROR_PAGE("page-ipv-error"),
     PYI_TECHNICAL_ERROR_PAGE("pyi-technical"),
     PYI_TECHNICAL_UNRECOVERABLE_ERROR_PAGE("pyi-technical-unrecoverable"),
     PYI_NO_MATCH("pyi-no-match"),
-    PYI_KBV_FAIL("pyi-kbv-fail");
+    PYI_KBV_FAIL("pyi-kbv-fail"),
+    CORE_SESSION_TIMEOUT("core-session-timeout");
 
     public final String value;
 

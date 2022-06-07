@@ -12,7 +12,6 @@ import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 
-import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
 
@@ -53,7 +52,6 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldCreateSessionItem() {
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
         String ipvSessionID =
                 ipvSessionService.generateIpvSession(
                         new ClientSessionDetailsDto(
@@ -68,25 +66,17 @@ class IpvSessionServiceTest {
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockDataStore).create(ipvSessionItemArgumentCaptor.capture());
-        IpvSessionItem capturedIpvSessionItem = ipvSessionItemArgumentCaptor.getValue();
+        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
+        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
 
-        assertNotNull(capturedIpvSessionItem.getIpvSessionId());
-        assertNotNull(capturedIpvSessionItem.getCreationDateTime());
-        assertNotNull(capturedIpvSessionItem.getExpirationDateTime());
+        assertEquals(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(), ipvSessionID);
         assertEquals(
-                7200,
-                Instant.parse(capturedIpvSessionItem.getExpirationDateTime()).getEpochSecond()
-                        - Instant.parse(capturedIpvSessionItem.getCreationDateTime())
-                                .getEpochSecond());
-
-        assertEquals(capturedIpvSessionItem.getIpvSessionId(), ipvSessionID);
-        assertEquals(
-                UserStates.INITIAL_IPV_JOURNEY.toString(), capturedIpvSessionItem.getUserState());
+                UserStates.INITIAL_IPV_JOURNEY.toString(),
+                ipvSessionItemArgumentCaptor.getValue().getUserState());
     }
 
     @Test
     void shouldCreateSessionItemForDebugJourney() {
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
         String ipvSessionID =
                 ipvSessionService.generateIpvSession(
                         new ClientSessionDetailsDto(
@@ -101,24 +91,17 @@ class IpvSessionServiceTest {
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockDataStore).create(ipvSessionItemArgumentCaptor.capture());
-        IpvSessionItem capturedIpvSessionItem = ipvSessionItemArgumentCaptor.getValue();
+        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
+        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
 
-        assertNotNull(capturedIpvSessionItem.getIpvSessionId());
-        assertNotNull(capturedIpvSessionItem.getCreationDateTime());
-        assertNotNull(capturedIpvSessionItem.getExpirationDateTime());
+        assertEquals(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(), ipvSessionID);
         assertEquals(
-                7200,
-                Instant.parse(capturedIpvSessionItem.getExpirationDateTime()).getEpochSecond()
-                        - Instant.parse(capturedIpvSessionItem.getCreationDateTime())
-                                .getEpochSecond());
-
-        assertEquals(capturedIpvSessionItem.getIpvSessionId(), ipvSessionID);
-        assertEquals(UserStates.DEBUG_PAGE.toString(), capturedIpvSessionItem.getUserState());
+                UserStates.DEBUG_PAGE.toString(),
+                ipvSessionItemArgumentCaptor.getValue().getUserState());
     }
 
     @Test
     void shouldCreateSessionItemWithErrorObject() {
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
         ErrorObject testErrorObject = new ErrorObject("server_error", "Test error");
         String ipvSessionID =
                 ipvSessionService.generateIpvSession(

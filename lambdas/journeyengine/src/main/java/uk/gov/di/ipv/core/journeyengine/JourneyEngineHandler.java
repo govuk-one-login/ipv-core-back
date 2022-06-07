@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.nimbusds.oauth2.sdk.OAuth2Error;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,7 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
@@ -30,6 +32,7 @@ import java.util.Optional;
 import static uk.gov.di.ipv.core.journeyengine.domain.JourneyStep.ERROR;
 import static uk.gov.di.ipv.core.journeyengine.domain.JourneyStep.FAIL;
 import static uk.gov.di.ipv.core.journeyengine.domain.JourneyStep.NEXT;
+import static uk.gov.di.ipv.core.library.domain.UserStates.CORE_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_ERROR;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_FRAUD;
@@ -127,6 +130,12 @@ public class JourneyEngineHandler
         String journeyEndUri = configurationService.getIpvJourneySessionEnd();
 
         String currentUserState = ipvSessionItem.getUserState();
+        if (sessionIsNewlyExpired(ipvSessionItem)) {
+            updateUserSessionForTimeout(ipvSessionItem);
+            return new JourneyEngineResult.Builder()
+                    .setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value))
+                    .build();
+        }
 
         try {
             UserStates currentUserStateValue = UserStates.valueOf(currentUserState);
@@ -197,7 +206,6 @@ public class JourneyEngineHandler
                     } else if (journeyStep.equals(FAIL)) {
                         updateUserState(PYI_KBV_FAIL, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_KBV_FAIL.value));
-
                     } else {
                         handleInvalidJourneyStep(journeyStep, CRI_KBV.value);
                     }
@@ -207,6 +215,7 @@ public class JourneyEngineHandler
                 case PYI_KBV_FAIL:
                 case CRI_ERROR:
                 case FAILED_CLIENT_JAR:
+                case CORE_SESSION_TIMEOUT:
                     builder.setJourneyResponse(new JourneyResponse(journeyEndUri));
                     break;
                 case DEBUG_PAGE:
@@ -252,7 +261,7 @@ public class JourneyEngineHandler
     private void handleInvalidJourneyStep(JourneyStep journeyStep, String currentUserState)
             throws JourneyEngineException {
         LOGGER.error(
-                "Invalid jourey step provided: {} for the current user state: {}",
+                "Invalid journey step provided: {} for the current user state: {}",
                 journeyStep,
                 currentUserState);
         throw new JourneyEngineException(
@@ -262,17 +271,25 @@ public class JourneyEngineHandler
     }
 
     @Tracing
-    private void updateUserState(UserStates updatedStateValue, IpvSessionItem previousSessionItem) {
-        IpvSessionItem updatedIpvSessionItem = new IpvSessionItem();
-        updatedIpvSessionItem.setIpvSessionId(previousSessionItem.getIpvSessionId());
-        updatedIpvSessionItem.setCreationDateTime(previousSessionItem.getCreationDateTime());
-        updatedIpvSessionItem.setClientSessionDetails(
-                previousSessionItem.getClientSessionDetails());
-        updatedIpvSessionItem.setUserState(updatedStateValue.toString());
-        updatedIpvSessionItem.setErrorCode(previousSessionItem.getErrorCode());
-        updatedIpvSessionItem.setErrorDescription(previousSessionItem.getErrorDescription());
+    private void updateUserState(UserStates updatedStateValue, IpvSessionItem ipvSessionItem) {
+        ipvSessionItem.setUserState(updatedStateValue.toString());
+        ipvSessionService.updateIpvSession(ipvSessionItem);
+        LOGGER.info(
+                "Session '{}' moved to '{}' state",
+                ipvSessionItem.getIpvSessionId(),
+                updatedStateValue.value);
+    }
 
-        ipvSessionService.updateIpvSession(updatedIpvSessionItem);
+    @Tracing
+    private void updateUserSessionForTimeout(IpvSessionItem ipvSessionItem) {
+        ipvSessionItem.setErrorCode(OAuth2Error.ACCESS_DENIED.getCode());
+        ipvSessionItem.setErrorDescription(OAuth2Error.ACCESS_DENIED.getDescription());
+        ipvSessionItem.setUserState(CORE_SESSION_TIMEOUT.toString());
+        ipvSessionService.updateIpvSession(ipvSessionItem);
+        LOGGER.info(
+                "Session '{}' moved to '{}' state",
+                ipvSessionItem.getIpvSessionId(),
+                CORE_SESSION_TIMEOUT.value);
     }
 
     @Tracing
@@ -282,5 +299,17 @@ public class JourneyEngineHandler
             return Optional.of(ErrorResponse.MISSING_JOURNEY_STEP_URL_PATH_PARAM);
         }
         return Optional.empty();
+    }
+
+    @Tracing
+    private boolean sessionIsNewlyExpired(IpvSessionItem ipvSessionItem) {
+        return (!CORE_SESSION_TIMEOUT.toString().equals(ipvSessionItem.getUserState()))
+                && Instant.parse(ipvSessionItem.getCreationDateTime())
+                        .isBefore(
+                                Instant.now()
+                                        .minusSeconds(
+                                                Long.parseLong(
+                                                        configurationService
+                                                                .getBackendSessionTimeout())));
     }
 }
