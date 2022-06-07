@@ -1,0 +1,25 @@
+
+name: Run Checkov static analysis on the template
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "deploy/template.yaml"
+jobs:
+  RunCheckov:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: install checkov
+        run: pip3 install checkov
+      - name: run checkov
+        run: checkov --directory deploy
+        continue-on-error: true # There are many items to fix so for now allow this pass until we have a clean template.
+        
