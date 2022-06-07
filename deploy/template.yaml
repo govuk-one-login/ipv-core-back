@@ -282,8 +282,6 @@ Resources:
             ParameterName: !Sub ${Environment}/core/self/maxAllowedAuthClientTtl
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/jarKmsEncryptionKeyId
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/backendSessionTimeout
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
