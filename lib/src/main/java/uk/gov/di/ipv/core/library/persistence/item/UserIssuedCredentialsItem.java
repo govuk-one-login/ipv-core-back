@@ -7,7 +7,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortK
 import java.time.LocalDateTime;
 
 @DynamoDbBean
-public class UserIssuedCredentialsItem {
+public class UserIssuedCredentialsItem implements DynamodbItem {
 
     private String ipvSessionId;
     private String credentialIssuer;

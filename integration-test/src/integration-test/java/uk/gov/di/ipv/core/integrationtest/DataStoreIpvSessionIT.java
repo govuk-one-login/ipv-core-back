@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -44,6 +45,7 @@ public class DataStoreIpvSessionIT {
 
     private static DataStore<IpvSessionItem> ipvSessionItemDataStore;
     private static Table tableTestHarness;
+    private static ConfigurationService configurationService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -55,12 +57,15 @@ public class DataStoreIpvSessionIT {
                     "The environment variable 'IPV_SESSIONS_TABLE_NAME' must be provided to run this test");
         }
 
+        ConfigurationService configurationService = new ConfigurationService();
+
         ipvSessionItemDataStore =
                 new DataStore<>(
                         ipvSessionsTableName,
                         IpvSessionItem.class,
                         DataStore.getClient(false),
-                        false);
+                        false,
+                        configurationService);
 
         AmazonDynamoDB independentClient =
                 AmazonDynamoDBClient.builder().withRegion("eu-west-2").build();

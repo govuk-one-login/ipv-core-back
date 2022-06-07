@@ -287,7 +287,7 @@ public class ConfigurationService {
                 String.format("/%s/core/self/backendSessionTimeout", System.getenv(ENVIRONMENT)));
     }
 
-    public long getSessionTtl() {
+    public long getBackendSessionTtl() {
         return Long.parseLong(
                 ssmProvider.get(
                         String.format(

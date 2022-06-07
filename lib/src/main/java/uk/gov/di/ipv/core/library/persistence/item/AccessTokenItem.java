@@ -4,7 +4,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
 @DynamoDbBean
-public class AccessTokenItem {
+public class AccessTokenItem implements DynamodbItem {
     private String accessToken;
     private String ipvSessionId;
     private long ttl;

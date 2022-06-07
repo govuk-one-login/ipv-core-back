@@ -23,7 +23,8 @@ public class IpvSessionService {
                         this.configurationService.getIpvSessionTableName(),
                         IpvSessionItem.class,
                         DataStore.getClient(isRunningLocally),
-                        isRunningLocally);
+                        isRunningLocally,
+                        configurationService);
     }
 
     public IpvSessionService(
@@ -52,9 +53,6 @@ public class IpvSessionService {
             ipvSessionItem.setErrorCode(errorObject.getCode());
             ipvSessionItem.setErrorDescription(errorObject.getDescription());
         }
-
-        ipvSessionItem.setTtl(
-                Instant.now().plusSeconds(configurationService.getSessionTtl()).getEpochSecond());
 
         dataStore.create(ipvSessionItem);
 

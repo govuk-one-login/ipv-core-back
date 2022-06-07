@@ -4,7 +4,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 
 @DynamoDbBean
-public class AuthorizationCodeItem {
+public class AuthorizationCodeItem implements DynamodbItem {
 
     private String authCode;
     private String ipvSessionId;

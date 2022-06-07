@@ -16,7 +16,9 @@ import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
+import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
+import java.time.Instant;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,9 +36,12 @@ class DataStoreTest {
     @Mock private DynamoDbEnhancedClient mockDynamoDbEnhancedClient;
     @Mock private DynamoDbTable<AuthorizationCodeItem> mockDynamoDbTable;
     @Mock private PageIterable<AuthorizationCodeItem> mockPageIterable;
+    @Mock private ConfigurationService mockConfigurationService;
 
     private AuthorizationCodeItem authorizationCodeItem;
     private DataStore<AuthorizationCodeItem> dataStore;
+
+    private final long ttl = 7200;
 
     @BeforeEach
     void setUp() {
@@ -53,11 +58,14 @@ class DataStoreTest {
                         TEST_TABLE_NAME,
                         AuthorizationCodeItem.class,
                         mockDynamoDbEnhancedClient,
-                        false);
+                        false,
+                        mockConfigurationService);
     }
 
     @Test
     void shouldPutItemIntoDynamoDbTable() {
+        when(mockConfigurationService.getBackendSessionTtl()).thenReturn(ttl);
+
         dataStore.create(authorizationCodeItem);
 
         ArgumentCaptor<AuthorizationCodeItem> authorizationCodeItemArgumentCaptor =
@@ -74,6 +82,9 @@ class DataStoreTest {
         assertEquals(
                 authorizationCodeItem.getIpvSessionId(),
                 authorizationCodeItemArgumentCaptor.getValue().getIpvSessionId());
+        assertEquals(
+                Instant.now().plusSeconds(ttl).getEpochSecond(),
+                authorizationCodeItemArgumentCaptor.getValue().getTtl());
     }
 
     @Test

@@ -8,12 +8,15 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import uk.gov.di.ipv.core.library.persistence.item.DynamodbItem;
+import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.net.URI;
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class DataStore<T> {
+public class DataStore<T extends DynamodbItem> {
 
     private static final String LOCALHOST_URI = "http://localhost:4567";
     private static boolean isRunningLocally;
@@ -21,15 +24,18 @@ public class DataStore<T> {
     private final DynamoDbEnhancedClient dynamoDbEnhancedClient;
     private final String tableName;
     private final Class<T> typeParameterClass;
+    private final ConfigurationService configurationService;
 
     public DataStore(
             String tableName,
             Class<T> typeParameterClass,
             DynamoDbEnhancedClient dynamoDbEnhancedClient,
-            boolean isRunningLocally) {
+            boolean isRunningLocally,
+            ConfigurationService configurationService) {
         this.tableName = tableName;
         this.typeParameterClass = typeParameterClass;
         this.dynamoDbEnhancedClient = dynamoDbEnhancedClient;
+        this.configurationService = configurationService;
         DataStore.isRunningLocally = isRunningLocally;
     }
 
@@ -45,6 +51,10 @@ public class DataStore<T> {
     }
 
     public void create(T item) {
+        item.setTtl(
+                Instant.now()
+                        .plusSeconds(configurationService.getBackendSessionTtl())
+                        .getEpochSecond());
         getTable().putItem(item);
     }
 

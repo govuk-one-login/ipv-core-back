@@ -14,7 +14,6 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.AccessTokenItem;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
-import java.time.Instant;
 import java.util.Objects;
 
 public class AccessTokenService {
@@ -30,7 +29,8 @@ public class AccessTokenService {
                         this.configurationService.getAccessTokensTableName(),
                         AccessTokenItem.class,
                         DataStore.getClient(isRunningLocally),
-                        isRunningLocally);
+                        isRunningLocally,
+                        configurationService);
     }
 
     public AccessTokenService(
@@ -63,8 +63,6 @@ public class AccessTokenService {
         accessTokenItem.setAccessToken(
                 tokenResponse.getTokens().getBearerAccessToken().toAuthorizationHeader());
         accessTokenItem.setIpvSessionId(ipvSessionId);
-        accessTokenItem.setTtl(
-                Instant.now().plusSeconds(configurationService.getSessionTtl()).getEpochSecond());
         dataStore.create(accessTokenItem);
     }
 }

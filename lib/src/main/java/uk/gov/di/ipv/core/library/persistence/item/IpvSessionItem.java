@@ -8,7 +8,7 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 
 @DynamoDbBean
 @ExcludeFromGeneratedCoverageReport
-public class IpvSessionItem {
+public class IpvSessionItem implements DynamodbItem {
     private String ipvSessionId;
     private String userState;
     private String creationDateTime;
