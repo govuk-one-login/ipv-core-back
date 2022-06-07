@@ -53,6 +53,9 @@ public class IpvSessionService {
             ipvSessionItem.setErrorDescription(errorObject.getDescription());
         }
 
+        ipvSessionItem.setTtl(
+                Instant.now().plusSeconds(configurationService.getSessionTtl()).getEpochSecond());
+
         dataStore.create(ipvSessionItem);
 
         return ipvSessionItem.getIpvSessionId();

@@ -32,6 +32,7 @@ import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Objects;
@@ -180,6 +181,8 @@ public class CredentialIssuerService {
         userIssuedCredentials.setCredentialIssuer(request.getCredentialIssuerId());
         userIssuedCredentials.setCredential(credential);
         userIssuedCredentials.setDateCreated(LocalDateTime.now());
+        userIssuedCredentials.setTtl(
+                Instant.now().plusSeconds(configurationService.getSessionTtl()).getEpochSecond());
         try {
             dataStore.create(userIssuedCredentials);
         } catch (UnsupportedOperationException e) {

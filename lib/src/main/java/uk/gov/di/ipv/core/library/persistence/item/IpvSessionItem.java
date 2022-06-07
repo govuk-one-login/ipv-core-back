@@ -16,6 +16,7 @@ public class IpvSessionItem {
     private CredentialIssuerSessionDetailsDto credentialIssuerSessionDetails;
     private String errorCode;
     private String errorDescription;
+    private long ttl;
 
     @DynamoDbPartitionKey
     public String getIpvSessionId() {
@@ -73,5 +74,13 @@ public class IpvSessionItem {
 
     public void setErrorDescription(String errorDescription) {
         this.errorDescription = errorDescription;
+    }
+
+    public long getTtl() {
+        return ttl;
+    }
+
+    public void setTtl(long ttl) {
+        this.ttl = ttl;
     }
 }

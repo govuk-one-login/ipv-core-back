@@ -7,6 +7,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 public class AccessTokenItem {
     private String accessToken;
     private String ipvSessionId;
+    private long ttl;
 
     @DynamoDbPartitionKey
     public String getAccessToken() {
@@ -23,5 +24,13 @@ public class AccessTokenItem {
 
     public void setIpvSessionId(String ipvSessionId) {
         this.ipvSessionId = ipvSessionId;
+    }
+
+    public long getTtl() {
+        return ttl;
+    }
+
+    public void setTtl(long ttl) {
+        this.ttl = ttl;
     }
 }

@@ -13,6 +13,7 @@ public class UserIssuedCredentialsItem {
     private String credentialIssuer;
     private String credential;
     private LocalDateTime dateCreated;
+    private long ttl;
 
     @DynamoDbPartitionKey
     public String getIpvSessionId() {
@@ -46,5 +47,13 @@ public class UserIssuedCredentialsItem {
 
     public void setCredential(String credential) {
         this.credential = credential;
+    }
+
+    public long getTtl() {
+        return ttl;
+    }
+
+    public void setTtl(long ttl) {
+        this.ttl = ttl;
     }
 }
