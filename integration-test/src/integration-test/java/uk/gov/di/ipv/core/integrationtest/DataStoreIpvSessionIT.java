@@ -45,7 +45,6 @@ public class DataStoreIpvSessionIT {
 
     private static DataStore<IpvSessionItem> ipvSessionItemDataStore;
     private static Table tableTestHarness;
-    private static ConfigurationService configurationService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
