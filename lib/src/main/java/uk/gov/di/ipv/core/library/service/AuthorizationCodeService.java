@@ -20,7 +20,8 @@ public class AuthorizationCodeService {
                         this.configurationService.getAuthCodesTableName(),
                         AuthorizationCodeItem.class,
                         DataStore.getClient(isRunningLocally),
-                        isRunningLocally);
+                        isRunningLocally,
+                        configurationService);
     }
 
     public AuthorizationCodeService(

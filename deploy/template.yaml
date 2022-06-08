@@ -158,6 +158,8 @@ Resources:
             ParameterName: !Sub ${Environment}/core/self/audienceForClients
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/maxAllowedAuthClientTtl
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/backendSessionTtl
       Events:
         IPVCoreExternalAPI:
           Type: Api
@@ -282,6 +284,8 @@ Resources:
             ParameterName: !Sub ${Environment}/core/self/maxAllowedAuthClientTtl
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/jarKmsEncryptionKeyId
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/backendSessionTtl
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -367,6 +371,8 @@ Resources:
             ParameterName: !Sub ${Environment}/core/self/jwtTtlSeconds
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/audienceForClients
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/backendSessionTtl
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:${Environment}/credential-issuers/ukPassport/api-key-*
         - AWSSecretsManagerGetSecretValuePolicy:
@@ -850,6 +856,9 @@ Resources:
           KeyType: "HASH"
         - AttributeName: "credentialIssuer"
           KeyType: "RANGE"
+      TimeToLiveSpecification:
+        AttributeName: "ttl"
+        Enabled: "TRUE"
 
   AuthCodesTable:
     Type: AWS::DynamoDB::Table
@@ -862,6 +871,9 @@ Resources:
       KeySchema:
         - AttributeName: "authCode"
           KeyType: "HASH"
+      TimeToLiveSpecification:
+        AttributeName: "ttl"
+        Enabled: "TRUE"
 
   AccessTokensTable:
     Type: AWS::DynamoDB::Table
@@ -874,6 +886,9 @@ Resources:
       KeySchema:
         - AttributeName: "accessToken"
           KeyType: "HASH"
+      TimeToLiveSpecification:
+        AttributeName: "ttl"
+        Enabled: "TRUE"
 
   SessionsTable:
     Type: AWS::DynamoDB::Table
@@ -886,6 +901,9 @@ Resources:
       KeySchema:
         - AttributeName: "ipvSessionId"
           KeyType: "HASH"
+      TimeToLiveSpecification:
+        AttributeName: "ttl"
+        Enabled: "TRUE"
 
 Outputs:
   IPVCorePrivateAPIGatewayID:

@@ -3,16 +3,19 @@ package uk.gov.di.ipv.core.library.persistence.item;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.time.LocalDateTime;
 
 @DynamoDbBean
-public class UserIssuedCredentialsItem {
+@ExcludeFromGeneratedCoverageReport
+public class UserIssuedCredentialsItem implements DynamodbItem {
 
     private String ipvSessionId;
     private String credentialIssuer;
     private String credential;
     private LocalDateTime dateCreated;
+    private long ttl;
 
     @DynamoDbPartitionKey
     public String getIpvSessionId() {
@@ -46,5 +49,13 @@ public class UserIssuedCredentialsItem {
 
     public void setCredential(String credential) {
         this.credential = credential;
+    }
+
+    public long getTtl() {
+        return ttl;
+    }
+
+    public void setTtl(long ttl) {
+        this.ttl = ttl;
     }
 }

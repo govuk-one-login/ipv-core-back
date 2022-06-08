@@ -52,6 +52,7 @@ jobs:
       - name: Integration tests
         env:
           IPV_SESSIONS_TABLE_NAME: sessions-build
+          ENVIRONMENT: build
         run: ./gradlew intTest
 
       - name: Perform Static Analysis

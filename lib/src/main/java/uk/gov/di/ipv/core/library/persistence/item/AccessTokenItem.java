@@ -2,11 +2,14 @@ package uk.gov.di.ipv.core.library.persistence.item;
 
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 @DynamoDbBean
-public class AccessTokenItem {
+@ExcludeFromGeneratedCoverageReport
+public class AccessTokenItem implements DynamodbItem {
     private String accessToken;
     private String ipvSessionId;
+    private long ttl;
 
     @DynamoDbPartitionKey
     public String getAccessToken() {
@@ -23,5 +26,13 @@ public class AccessTokenItem {
 
     public void setIpvSessionId(String ipvSessionId) {
         this.ipvSessionId = ipvSessionId;
+    }
+
+    public long getTtl() {
+        return ttl;
+    }
+
+    public void setTtl(long ttl) {
+        this.ttl = ttl;
     }
 }

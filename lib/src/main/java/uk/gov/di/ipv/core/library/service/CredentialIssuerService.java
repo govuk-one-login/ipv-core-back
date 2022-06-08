@@ -56,7 +56,8 @@ public class CredentialIssuerService {
                         this.configurationService.getUserIssuedCredentialTableName(),
                         UserIssuedCredentialsItem.class,
                         DataStore.getClient(isRunningLocally),
-                        isRunningLocally);
+                        isRunningLocally,
+                        configurationService);
     }
 
     public CredentialIssuerService(

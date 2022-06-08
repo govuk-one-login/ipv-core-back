@@ -8,7 +8,7 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 
 @DynamoDbBean
 @ExcludeFromGeneratedCoverageReport
-public class IpvSessionItem {
+public class IpvSessionItem implements DynamodbItem {
     private String ipvSessionId;
     private String userState;
     private String creationDateTime;
@@ -16,6 +16,7 @@ public class IpvSessionItem {
     private CredentialIssuerSessionDetailsDto credentialIssuerSessionDetails;
     private String errorCode;
     private String errorDescription;
+    private long ttl;
 
     @DynamoDbPartitionKey
     public String getIpvSessionId() {
@@ -73,5 +74,13 @@ public class IpvSessionItem {
 
     public void setErrorDescription(String errorDescription) {
         this.errorDescription = errorDescription;
+    }
+
+    public long getTtl() {
+        return ttl;
+    }
+
+    public void setTtl(long ttl) {
+        this.ttl = ttl;
     }
 }

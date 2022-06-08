@@ -381,4 +381,12 @@ class ConfigurationServiceTest {
         when(ssmProvider.get("/test/core/self/backendSessionTimeout")).thenReturn(ttl);
         assertEquals(ttl, configurationService.getBackendSessionTimeout());
     }
+
+    @Test
+    void shouldReturnBackendSessionTtl() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        long ttl = 7200;
+        when(ssmProvider.get("/test/core/self/backendSessionTtl")).thenReturn(String.valueOf(ttl));
+        assertEquals(ttl, configurationService.getBackendSessionTtl());
+    }
 }

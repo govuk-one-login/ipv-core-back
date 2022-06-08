@@ -61,7 +61,8 @@ public class UserIdentityService {
                         this.configurationService.getUserIssuedCredentialTableName(),
                         UserIssuedCredentialsItem.class,
                         DataStore.getClient(isRunningLocally),
-                        isRunningLocally);
+                        isRunningLocally,
+                        configurationService);
     }
 
     public UserIdentityService(

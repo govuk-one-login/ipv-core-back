@@ -287,6 +287,13 @@ public class ConfigurationService {
                 String.format("/%s/core/self/backendSessionTimeout", System.getenv(ENVIRONMENT)));
     }
 
+    public long getBackendSessionTtl() {
+        return Long.parseLong(
+                ssmProvider.get(
+                        String.format(
+                                "/%s/core/self/backendSessionTtl", System.getenv(ENVIRONMENT))));
+    }
+
     private String getSecretsManagerValue(GetSecretValueRequest valueRequest) {
         try {
             GetSecretValueResponse valueResponse =
