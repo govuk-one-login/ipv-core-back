@@ -219,16 +219,16 @@ class CredentialIssuerStartHandlerTest {
 
         Address streetAddress =
                 addressList.stream()
-                        .filter(x -> "35 Idsworth Road".equals(x.getStreetAddress()))
+                        .filter(x -> "NotDowningStreet".equals(x.getStreetName()))
                         .findAny()
                         .orElse(null);
         Address postCode =
                 addressList.stream()
-                        .filter(x -> "38421-3292".equals(x.getPostalCode()))
+                        .filter(x -> "SW1A2AA".equals(x.getPostalCode()))
                         .findAny()
                         .orElse(null);
 
-        assertFalse(streetAddress.getStreetAddress().isEmpty());
+        assertFalse(streetAddress.getStreetName().isEmpty());
         assertFalse(postCode.getPostalCode().isEmpty());
 
         assertEquals(2, (vcAttributes.get("name")).size());

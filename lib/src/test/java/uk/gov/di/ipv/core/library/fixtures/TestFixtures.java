@@ -70,14 +70,15 @@ public interface TestFixtures {
                     "address",
                     List.of(
                             Map.of(
-                                    "type", "PostalAddress",
-                                    "organizationName", "Lebsack Inc",
-                                    "streetAddress", "758 Huel Neck",
-                                    "addressRegion", "Illinois",
-                                    "postalCode", "38421-3292",
-                                    "addressCountry", "Tonga"),
+                                    "buildingNumber", "10",
+                                    "streetName", "DowningStreet",
+                                    "dependentAddressLocality", "Westminster",
+                                    "addressLocality", "London",
+                                    "postalCode", "SW1A2AA",
+                                    "addressCountry", "GB",
+                                    "validFrom", "2019-07-24"),
                             Map.of(
-                                    "type", "PostalAddress",
+                                    "buildingNumber", "123",
                                     "postalCode", "M34 1AA")));
 
     Map<String, Object> CREDENTIAL_ATTRIBUTES_2 =
@@ -94,13 +95,13 @@ public interface TestFixtures {
                     "address",
                     List.of(
                             Map.of(
-                                    "type", "PostalAddress",
-                                    "organizationName", "Software Ltd",
-                                    "streetAddress", "35 Idsworth Road",
-                                    "addressLocality", "Sheffield",
-                                    "addressRegion", "Illinois",
-                                    "postalCode", "S5 6UN",
-                                    "addressCountry", "UK")));
+                                    "buildingNumber", "11",
+                                    "streetName", "NotDowningStreet",
+                                    "dependentAddressLocality", "Eastminster",
+                                    "addressLocality", "Nodnol",
+                                    "postalCode", "SW2A 3BB",
+                                    "addressCountry", "GB",
+                                    "validFrom", "2018-06-23")));
 
     Map<String, Object> CREDENTIAL_ATTRIBUTES_3 =
             Map.of(
@@ -117,16 +118,18 @@ public interface TestFixtures {
                     "address",
                     List.of(
                             Map.of(
-                                    "type", "PostalAddress",
-                                    "organizationName", "Software Ltd",
-                                    "streetAddress", "35 Idsworth Road",
-                                    "addressLocality", "Sheffield",
-                                    "addressRegion", "Illinois",
-                                    "postalCode", "S5 6UN",
-                                    "addressCountry", "UK")));
+                                    "buildingNumber", "11",
+                                    "streetName", "NotDowningStreet",
+                                    "dependentAddressLocality", "Eastminster",
+                                    "addressLocality", "Nodnol",
+                                    "postalCode", "SW2A 3BB",
+                                    "addressCountry", "GB",
+                                    "validFrom", "2018-06-23")));
 
-    Map<String, Object> CREDENTIAL_ATTRIBUTES_WITHOUT_SHARED_ATTRIBUTES =
-            Map.of("name", Map.of("testProperty", "test value"));
+    String ADDRESS_JSON_1 =
+            "{\"buildingNumber\":10,\"streetName\":\"DowningStreet\",\"dependentAddressLocality\":\"Westminster\",\"addressLocality\":\"London\",\"postalCode\":\"SW1A2AA\",\"addressCountry\":\"GB\",\"validFrom\":\"2019-07-24\"}";
+    String ADDRESS_JSON_2 =
+            "{\"buildingNumber\":11,\"streetName\":\"DowningStreet\",\"dependentAddressLocality\":\"Westminster\",\"addressLocality\":\"London\",\"postalCode\":\"SW1A2AA\",\"addressCountry\":\"GB\",\"validFrom\":\"2019-07-24\"}";
 
     String SIGNED_JWT =
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJhdWQiOiJBdWRpZW5jZSIsInN1YiI6InRlc3RDbGllbnRJZCIsIm5iZiI6MTY1MTY3MzQ3NCwic2hhcmVkX2NsYWltcyI6eyJhZGRyZXNzIjpbeyJhZGRyZXNzQ291bnRyeSI6bnVsbCwib3JnYW5pemF0aW9uTmFtZSI6bnVsbCwic3RyZWV0QWRkcmVzcyI6bnVsbCwicG9zdGFsQ29kZSI6bnVsbCwiYWRkcmVzc0xvY2FsaXR5IjpudWxsLCJ0eXBlIjpudWxsLCJhZGRyZXNzUmVnaW9uIjpudWxsfV0sIm5hbWUiOlt7Im5hbWVQYXJ0cyI6W3sidmFsaWRVbnRpbCI6bnVsbCwidmFsaWRGcm9tIjpudWxsLCJ0eXBlIjoiZmlyc3RfbmFtZSIsInZhbHVlIjoiRGFuIn1dfV0sImJpcnRoRGF0ZSI6W3sidmFsdWUiOiIyMDExLTAxLTAxIn1dfSwiaXNzIjoidGVzdENsaWVudElkIiwicmVzcG9uc2VfdHlwZSI6ImNvZGUiLCJyZWRpcmVjdF91cmkiOiJjYWxsYmFja1VyaT9pZD1jcmlfaWQiLCJzdGF0ZSI6InJlYWQiLCJleHAiOjE2NTE2NzQzNzQsImlhdCI6MTY1MTY3MzQ3NCwiY2xpZW50X2lkIjoidGVzdENsaWVudElkIn0.jfYDzFJjANSkwC7Zxd45aJBzv8dgXNRdi3oWvFUEg3aWWfXW6a-R29CDrCZZXNueoOEQFjkz88R5Az0urnohgw";
