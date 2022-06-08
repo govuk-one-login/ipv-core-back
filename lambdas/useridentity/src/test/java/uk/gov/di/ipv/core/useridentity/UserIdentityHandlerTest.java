@@ -16,6 +16,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.domain.AddressClaim;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
@@ -44,6 +45,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
 
 @ExtendWith(MockitoExtension.class)
 class UserIdentityHandlerTest {
@@ -66,7 +68,7 @@ class UserIdentityHandlerTest {
     private Map<String, String> responseBody;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
         responseBody = new HashMap<>();
 
         List<Name> names =
@@ -78,6 +80,7 @@ class UserIdentityHandlerTest {
                 new UserIdentity(
                         List.of("12345", "Test credential", "bar"),
                         new IdentityClaim(names, birthDates),
+                        new AddressClaim(objectMapper.readTree(ADDRESS_JSON_1)),
                         "test-sub",
                         VectorOfTrust.P2.toString(),
                         VTM);
@@ -143,13 +146,15 @@ class UserIdentityHandlerTest {
         assertEquals(userIdentity.getVcs().get(0), responseBody.getVcs().get(0));
         assertEquals(userIdentity.getVcs().get(1), responseBody.getVcs().get(1));
         assertEquals(userIdentity.getVcs().get(2), responseBody.getVcs().get(2));
+        assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
+        assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
 
         verify(mockAuditService).sendAuditEvent(AuditEventTypes.IPV_IDENTITY_ISSUED);
     }
 
     @Test
     void shouldReturnErrorResponseWhenUserIdentityGenerationFails()
-            throws JsonProcessingException, SqsException, HttpResponseExceptionWithErrorBody {
+            throws JsonProcessingException, HttpResponseExceptionWithErrorBody {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken();
         Map<String, String> headers =

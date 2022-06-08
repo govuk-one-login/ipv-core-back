@@ -1,9 +1,11 @@
 package uk.gov.di.ipv.core.library.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
+@EqualsAndHashCode
 public class IdentityClaim {
     private final List<Name> name;
     private final List<BirthDate> birthDate;

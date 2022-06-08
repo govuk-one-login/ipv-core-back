@@ -1,5 +1,7 @@
 package uk.gov.di.ipv.core.library.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,10 +21,13 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC_MISSING_ADDRESS_PROPERTY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_PASSPORT_VC_MISSING_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
@@ -34,6 +39,8 @@ import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.v
 
 @ExtendWith(MockitoExtension.class)
 class UserIdentityServiceTest {
+
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock private ConfigurationService mockConfigurationService;
 
@@ -192,7 +199,9 @@ class UserIdentityServiceTest {
                         createUserIssuedCredentialsItem(
                                 "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()));
+                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
@@ -220,7 +229,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldSetIdenityClaimWhenVotIsP2() throws HttpResponseExceptionWithErrorBody {
+    void shouldSetIdentityClaimWhenVotIsP2() throws HttpResponseExceptionWithErrorBody, Exception {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
@@ -228,7 +237,9 @@ class UserIdentityServiceTest {
                         createUserIssuedCredentialsItem(
                                 "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()));
+                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
@@ -244,7 +255,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldNotSetIdenityClaimWhenVotIsP0() throws HttpResponseExceptionWithErrorBody {
+    void shouldNotSetIdentityClaimWhenVotIsP0() throws HttpResponseExceptionWithErrorBody {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
@@ -261,7 +272,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenMissingNameProperty() throws HttpResponseExceptionWithErrorBody {
+    void shouldThrowExceptionWhenMissingNameProperty() {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
@@ -276,24 +287,25 @@ class UserIdentityServiceTest {
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
-        try {
-            UserIdentity credentials =
-                    userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
-            fail();
-        } catch (HttpResponseExceptionWithErrorBody e) {
-            assertEquals(500, e.getResponseCode());
-            assertEquals(
-                    ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getCode(),
-                    e.getErrorBody().get("code"));
-            assertEquals(
-                    ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
-                    e.getErrorBody().get("message"));
-        }
+        HttpResponseExceptionWithErrorBody thrownError =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> {
+                            userIdentityService.generateUserIdentity(
+                                    "ipv-session-id-1", "test-sub");
+                        });
+
+        assertEquals(500, thrownError.getResponseCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getCode(),
+                thrownError.getErrorBody().get("code"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
+                thrownError.getErrorBody().get("message"));
     }
 
     @Test
-    void shouldThrowExceptionWhenMissingBirthDateProperty()
-            throws HttpResponseExceptionWithErrorBody {
+    void shouldThrowExceptionWhenMissingBirthDateProperty() {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
@@ -308,23 +320,25 @@ class UserIdentityServiceTest {
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
-        try {
-            UserIdentity credentials =
-                    userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
-            fail();
-        } catch (HttpResponseExceptionWithErrorBody e) {
-            assertEquals(500, e.getResponseCode());
-            assertEquals(
-                    ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getCode(),
-                    e.getErrorBody().get("code"));
-            assertEquals(
-                    ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
-                    e.getErrorBody().get("message"));
-        }
+        HttpResponseExceptionWithErrorBody thrownError =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> {
+                            userIdentityService.generateUserIdentity(
+                                    "ipv-session-id-1", "test-sub");
+                        });
+
+        assertEquals(500, thrownError.getResponseCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getCode(),
+                thrownError.getErrorBody().get("code"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
+                thrownError.getErrorBody().get("message"));
     }
 
     @Test
-    void shouldSetsubClaimOnUserIdentity() throws HttpResponseExceptionWithErrorBody {
+    void shouldSetSubClaimOnUserIdentity() throws HttpResponseExceptionWithErrorBody {
         when(mockConfigurationService.getCoreVtmClaim()).thenReturn("mock-vtm-claim");
 
         UserIdentity credentials =
@@ -360,6 +374,132 @@ class UserIdentityServiceTest {
                 userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
 
         assertEquals("mock-vtm-claim", credentials.getVtm());
+    }
+
+    @Test
+    void generateUserIdentityShouldSetAddressClaimOnUserIdentity()
+            throws Exception, HttpResponseExceptionWithErrorBody {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1",
+                                "address",
+                                SIGNED_ADDRESS_VC,
+                                LocalDateTime.now()));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+
+        UserIdentity userIdentity =
+                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+
+        JsonNode userIdentityJsonNode =
+                objectMapper.readTree(objectMapper.writeValueAsString(userIdentity));
+        JsonNode address = userIdentityJsonNode.get(ADDRESS_CLAIM_NAME).get("address").get(0);
+
+        assertEquals(
+                "PRIME MINISTER & FIRST LORD OF THE TREASURY",
+                address.get("organisationName").asText());
+        assertEquals("10", address.get("buildingNumber").asText());
+        assertEquals("DOWNING STREET", address.get("streetName").asText());
+        assertEquals("LONDON", address.get("addressLocality").asText());
+        assertEquals("SW1A 2AA", address.get("postalCode").asText());
+        assertEquals("GB", address.get("addressCountry").asText());
+        assertEquals("2019-01-01", address.get("validFrom").asText());
+    }
+
+    @Test
+    void generateUserIdentityShouldThrowIfAddressVCIsMissingAddressProperty() {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1",
+                                "address",
+                                SIGNED_ADDRESS_VC_MISSING_ADDRESS_PROPERTY,
+                                LocalDateTime.now()));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+
+        HttpResponseExceptionWithErrorBody thrownException =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> {
+                            userIdentityService.generateUserIdentity(
+                                    "ipv-session-id-1", "test-sub");
+                        });
+
+        assertEquals(500, thrownException.getResponseCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM.getCode(),
+                thrownException.getErrorBody().get("code"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM.getMessage(),
+                thrownException.getErrorBody().get("message"));
+    }
+
+    @Test
+    void generateUserIdentityShouldThrowIfAddressVCCanNotBeParsed() {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "address", "GARBAGE", LocalDateTime.now()));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+
+        HttpResponseExceptionWithErrorBody thrownException =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> {
+                            userIdentityService.generateUserIdentity(
+                                    "ipv-session-id-1", "test-sub");
+                        });
+
+        assertEquals(500, thrownException.getResponseCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM.getCode(),
+                thrownException.getErrorBody().get("code"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM.getMessage(),
+                thrownException.getErrorBody().get("message"));
+    }
+
+    @Test
+    void shouldNotSetAddressClaimWhenVotIsP0() throws HttpResponseExceptionWithErrorBody {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1",
+                                "address",
+                                SIGNED_ADDRESS_VC,
+                                LocalDateTime.now()));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+
+        assertNull(credentials.getAddressClaim());
     }
 
     @Test
