@@ -12,7 +12,6 @@ import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.domain.AddressClaim;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.DebugCredentialAttributes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -253,7 +252,7 @@ public class UserIdentityService {
                 500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
     }
 
-    private AddressClaim generateAddressClaim(List<UserIssuedCredentialsItem> credentialIssuerItems)
+    private JsonNode generateAddressClaim(List<UserIssuedCredentialsItem> credentialIssuerItems)
             throws HttpResponseExceptionWithErrorBody {
         UserIssuedCredentialsItem addressCredentialItem =
                 credentialIssuerItems.stream()
@@ -292,7 +291,7 @@ public class UserIdentityService {
                     ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
         }
 
-        return new AddressClaim(addressNode);
+        return addressNode;
     }
 
     private Optional<Boolean> isValidScore(

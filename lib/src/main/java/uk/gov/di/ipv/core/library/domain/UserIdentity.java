@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Getter;
 import lombok.Setter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -24,7 +25,7 @@ public class UserIdentity {
     private IdentityClaim identityClaim;
 
     @JsonProperty(ADDRESS_CLAIM_NAME)
-    private AddressClaim addressClaim;
+    private JsonNode addressClaim;
 
     @JsonProperty private String sub;
 
@@ -36,7 +37,7 @@ public class UserIdentity {
     public UserIdentity(
             @JsonProperty(value = VCS_CLAIM_NAME, required = true) List<String> vcs,
             @JsonProperty(value = IDENTITY_CLAIM_NAME) IdentityClaim identityClaim,
-            @JsonProperty(value = ADDRESS_CLAIM_NAME) AddressClaim addressClaim,
+            @JsonProperty(value = ADDRESS_CLAIM_NAME) JsonNode addressClaim,
             @JsonProperty(value = "sub", required = true) String sub,
             @JsonProperty(value = "vot", required = true) String vot,
             @JsonProperty(value = "vtm", required = true) String vtm) {
@@ -51,7 +52,7 @@ public class UserIdentity {
     public static class Builder {
         private List<String> vcs;
         private IdentityClaim identityClaim;
-        private AddressClaim addressClaim;
+        private JsonNode addressClaim;
         private String sub;
         private String vot;
         private String vtm;
@@ -66,7 +67,7 @@ public class UserIdentity {
             return this;
         }
 
-        public Builder setAddressClaim(AddressClaim addressClaim) {
+        public Builder setAddressClaim(JsonNode addressClaim) {
             this.addressClaim = addressClaim;
             return this;
         }

@@ -400,7 +400,7 @@ class UserIdentityServiceTest {
 
         JsonNode userIdentityJsonNode =
                 objectMapper.readTree(objectMapper.writeValueAsString(userIdentity));
-        JsonNode address = userIdentityJsonNode.get(ADDRESS_CLAIM_NAME).get("address").get(0);
+        JsonNode address = userIdentityJsonNode.get(ADDRESS_CLAIM_NAME).get(0);
 
         assertEquals(
                 "PRIME MINISTER & FIRST LORD OF THE TREASURY",
