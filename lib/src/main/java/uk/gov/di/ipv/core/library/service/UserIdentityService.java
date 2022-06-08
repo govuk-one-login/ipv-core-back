@@ -8,6 +8,7 @@ import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -36,11 +37,13 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 
 public class UserIdentityService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserIdentityService.class);
+    private static final String ADDRESS_CRI_TYPE = "address";
     private static final String PASSPORT_CRI_TYPE = "ukPassport";
     private static final String FRAUD_CRI_TYPE = "fraud";
     private static final String KBV_CRI_TYPE = "kbv";
     private static final String NAME_PROPERTY_NAME = "name";
     private static final String BIRTH_DATE_PROPERTY_NAME = "birthDate";
+    private static final String ADDRESS_PROPERTY_NAME = "address";
     private static final String GPG_45_VALIDITY_PROPERTY_NAME = "validityScore";
     private static final String GPG_45_FRAUD_PROPERTY_NAME = "identityFraudScore";
     private static final String GPG_45_VERIFICATION_PROPERTY_NAME = "verificationScore";
@@ -101,8 +104,8 @@ public class UserIdentityService {
                 new UserIdentity.Builder().setVcs(vcJwts).setSub(sub).setVot(vot).setVtm(vtm);
 
         if (vot.equals(VectorOfTrust.P2.toString())) {
-            IdentityClaim identityClaim = generateIdentityClaim(credentialIssuerItems);
-            userIdentityBuilder.setIdentityClaim(identityClaim);
+            userIdentityBuilder.setIdentityClaim(generateIdentityClaim(credentialIssuerItems));
+            userIdentityBuilder.setAddressClaim(generateAddressClaim(credentialIssuerItems));
         }
 
         return userIdentityBuilder.build();
@@ -248,6 +251,48 @@ public class UserIdentityService {
         }
         throw new HttpResponseExceptionWithErrorBody(
                 500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+    }
+
+    private JsonNode generateAddressClaim(List<UserIssuedCredentialsItem> credentialIssuerItems)
+            throws HttpResponseExceptionWithErrorBody {
+        UserIssuedCredentialsItem addressCredentialItem =
+                credentialIssuerItems.stream()
+                        .filter(
+                                credential ->
+                                        ADDRESS_CRI_TYPE.equals(credential.getCredentialIssuer()))
+                        .findFirst()
+                        .orElseThrow(
+                                () -> {
+                                    LOGGER.error("Failed to find Address CRI credential");
+                                    return new HttpResponseExceptionWithErrorBody(
+                                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                                            ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
+                                });
+
+        JsonNode addressNode;
+        try {
+            addressNode =
+                    objectMapper
+                            .readTree(
+                                    SignedJWT.parse(addressCredentialItem.getCredential())
+                                            .getPayload()
+                                            .toString())
+                            .path(VC_CLAIM)
+                            .path(VC_CREDENTIAL_SUBJECT)
+                            .path(ADDRESS_PROPERTY_NAME);
+            if (addressNode.isMissingNode()) {
+                LOGGER.error("Address property is missing from address VC");
+                throw new HttpResponseExceptionWithErrorBody(
+                        500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
+            }
+        } catch (JsonProcessingException | ParseException e) {
+            LOGGER.error("Error while parsing Address CRI credential: '{}'", e.getMessage());
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
+        }
+
+        return addressNode;
     }
 
     private Optional<Boolean> isValidScore(
