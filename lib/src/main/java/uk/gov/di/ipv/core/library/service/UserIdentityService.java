@@ -44,6 +44,7 @@ public class UserIdentityService {
     private static final String NAME_PROPERTY_NAME = "name";
     private static final String BIRTH_DATE_PROPERTY_NAME = "birthDate";
     private static final String ADDRESS_PROPERTY_NAME = "address";
+    private static final String PASSPORT_PROPERTY_NAME = "passport";
     private static final String GPG_45_VALIDITY_PROPERTY_NAME = "validityScore";
     private static final String GPG_45_FRAUD_PROPERTY_NAME = "identityFraudScore";
     private static final String GPG_45_VERIFICATION_PROPERTY_NAME = "verificationScore";
@@ -106,6 +107,7 @@ public class UserIdentityService {
         if (vot.equals(VectorOfTrust.P2.toString())) {
             userIdentityBuilder.setIdentityClaim(generateIdentityClaim(credentialIssuerItems));
             userIdentityBuilder.setAddressClaim(generateAddressClaim(credentialIssuerItems));
+            userIdentityBuilder.setPassportClaim(generatePassportClaim(credentialIssuerItems));
         }
 
         return userIdentityBuilder.build();
@@ -293,6 +295,47 @@ public class UserIdentityService {
         }
 
         return addressNode;
+    }
+
+    private JsonNode generatePassportClaim(List<UserIssuedCredentialsItem> credentialIssuerItems)
+            throws HttpResponseExceptionWithErrorBody {
+        UserIssuedCredentialsItem passportCredentialItem =
+                credentialIssuerItems.stream()
+                        .filter(
+                                credential ->
+                                        PASSPORT_CRI_TYPE.equals(credential.getCredentialIssuer()))
+                        .findFirst()
+                        .orElseThrow(
+                                () -> {
+                                    LOGGER.error("Failed to find Passport CRI credential");
+                                    return new HttpResponseExceptionWithErrorBody(
+                                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                                            ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
+                                });
+
+        JsonNode passportNode;
+        try {
+            passportNode =
+                    objectMapper
+                            .readTree(
+                                    SignedJWT.parse(passportCredentialItem.getCredential())
+                                            .getPayload()
+                                            .toString())
+                            .path(VC_CLAIM)
+                            .path(VC_CREDENTIAL_SUBJECT)
+                            .path(PASSPORT_PROPERTY_NAME);
+            if (passportNode.isMissingNode()) {
+                LOGGER.error("Passport property is missing from passport VC");
+                throw new HttpResponseExceptionWithErrorBody(
+                        500, ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
+            }
+        } catch (JsonProcessingException | ParseException e) {
+            LOGGER.error("Error while parsing Passport CRI credential: '{}'", e.getMessage());
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
+        }
+        return passportNode;
     }
 
     private Optional<Boolean> isValidScore(

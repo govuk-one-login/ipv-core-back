@@ -30,6 +30,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC_MISSING_ADDRESS_PROPERTY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_PASSPORT_VC_MISSING_NAME;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_PASSPORT_VC_MISSING_PASSPORT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_3;
@@ -334,6 +335,82 @@ class UserIdentityServiceTest {
                 thrownError.getErrorBody().get("code"));
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
+                thrownError.getErrorBody().get("message"));
+    }
+
+    @Test
+    void shouldSetPassportClaimWhenVotIsP2() throws HttpResponseExceptionWithErrorBody {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+
+        JsonNode passportClaim = credentials.getPassportClaim();
+
+        assertEquals("123456789", passportClaim.get(0).get("documentNumber").asText());
+        assertEquals("2020-01-01", passportClaim.get(0).get("expiryDate").asText());
+    }
+
+    @Test
+    void shouldNotSetPassportClaimWhenVotIsP0() throws HttpResponseExceptionWithErrorBody {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+
+        assertNull(credentials.getPassportClaim());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenMissingPassportProperty() {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1",
+                                "ukPassport",
+                                SIGNED_PASSPORT_VC_MISSING_PASSPORT,
+                                LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "ipv-session-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+
+        HttpResponseExceptionWithErrorBody thrownError =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> {
+                            userIdentityService.generateUserIdentity(
+                                    "ipv-session-id-1", "test-sub");
+                        });
+
+        assertEquals(500, thrownError.getResponseCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM.getCode(),
+                thrownError.getErrorBody().get("code"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM.getMessage(),
                 thrownError.getErrorBody().get("message"));
     }
 
