@@ -21,7 +21,7 @@ public class CriCheckValidator {
     public static final String CRI_ID_FRAUD = "fraud";
     public static final String CRI_ID_STUB_FRAUD = "stubFraud";
     public static final String CRI_ID_KBV = "kbv";
-    public static final String CRI_ID_STUB_KBV = "subKbv";
+    public static final String CRI_ID_STUB_KBV = "stubKbv";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CriCheckValidator.class);
     private static final List<String> ADDRESS_CRI_TYPES =
