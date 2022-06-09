@@ -1,8 +1,10 @@
 package uk.gov.di.ipv.core.library.domain;
 
+import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 @ExcludeFromGeneratedCoverageReport
+@Getter
 public class ClientAuthClaims {
     private final String iss;
     private final String sub;
@@ -16,25 +18,5 @@ public class ClientAuthClaims {
         this.aud = aud;
         this.exp = exp;
         this.jti = jti;
-    }
-
-    public String getIss() {
-        return iss;
-    }
-
-    public String getSub() {
-        return sub;
-    }
-
-    public String getAud() {
-        return aud;
-    }
-
-    public long getExp() {
-        return exp;
-    }
-
-    public String getJti() {
-        return jti;
     }
 }

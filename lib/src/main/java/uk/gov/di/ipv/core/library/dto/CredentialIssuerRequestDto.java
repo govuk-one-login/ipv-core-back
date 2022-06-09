@@ -1,9 +1,11 @@
 package uk.gov.di.ipv.core.library.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 @ExcludeFromGeneratedCoverageReport
+@Getter
 public class CredentialIssuerRequestDto {
 
     private final String authorizationCode;
@@ -27,25 +29,5 @@ public class CredentialIssuerRequestDto {
         this.ipvSessionId = ipvSessionId;
         this.redirectUri = redirectUri;
         this.state = state;
-    }
-
-    public String getAuthorizationCode() {
-        return authorizationCode;
-    }
-
-    public String getCredentialIssuerId() {
-        return credentialIssuerId;
-    }
-
-    public String getIpvSessionId() {
-        return ipvSessionId;
-    }
-
-    public String getRedirectUri() {
-        return redirectUri;
-    }
-
-    public String getState() {
-        return state;
     }
 }
