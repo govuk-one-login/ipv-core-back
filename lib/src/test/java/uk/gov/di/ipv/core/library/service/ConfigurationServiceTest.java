@@ -298,6 +298,30 @@ class ConfigurationServiceTest {
     }
 
     @Test
+    void shouldReturnPassportCriId() {
+        environmentVariables.set("PASSPORT_CRI_ID", "ukPassport");
+        assertEquals("ukPassport", configurationService.getPassportCriId());
+    }
+
+    @Test
+    void shouldReturnAddressCriId() {
+        environmentVariables.set("ADDRESS_CRI_ID", "address");
+        assertEquals("address", configurationService.getAddressCriId());
+    }
+
+    @Test
+    void shouldReturnFraudCriId() {
+        environmentVariables.set("FRAUD_CRI_ID", "fraud");
+        assertEquals("fraud", configurationService.getFraudCriId());
+    }
+
+    @Test
+    void shouldReturnKbvCriId() {
+        environmentVariables.set("KBV_CRI_ID", "kbv");
+        assertEquals("kbv", configurationService.getKbvCriId());
+    }
+
+    @Test
     void shouldGetSecretValueFromSecretsManager() {
         Map<String, String> apiKeySecret = Map.of("apiKey", "api-key-value");
         GetSecretValueResponse response =

@@ -242,6 +242,7 @@ class JourneyEngineHandlerTest {
         when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
         when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
         when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
+        when(mockConfigurationService.getPassportCriId()).thenReturn("ukPassport");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
@@ -278,6 +279,7 @@ class JourneyEngineHandlerTest {
         when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
         when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
         when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
+        when(mockConfigurationService.getAddressCriId()).thenReturn("address");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
@@ -345,6 +347,7 @@ class JourneyEngineHandlerTest {
         when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
         when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
         when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
+        when(mockConfigurationService.getFraudCriId()).thenReturn("fraud");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
@@ -445,6 +448,7 @@ class JourneyEngineHandlerTest {
         when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
         when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
         when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
+        when(mockConfigurationService.getKbvCriId()).thenReturn("kbv");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
