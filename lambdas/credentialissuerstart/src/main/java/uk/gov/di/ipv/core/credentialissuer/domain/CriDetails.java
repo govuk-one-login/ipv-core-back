@@ -2,7 +2,9 @@ package uk.gov.di.ipv.core.credentialissuer.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
 
+@Getter
 public class CriDetails {
     @JsonProperty private final String id;
 
@@ -22,21 +24,5 @@ public class CriDetails {
         this.ipvClientId = ipvClientId;
         this.authorizeUrl = authorizeUrl;
         this.request = request;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getIpvClientId() {
-        return ipvClientId;
-    }
-
-    public String getAuthorizeUrl() {
-        return authorizeUrl;
-    }
-
-    public String getRequest() {
-        return request;
     }
 }

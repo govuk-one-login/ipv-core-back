@@ -10,8 +10,6 @@ import com.nimbusds.oauth2.sdk.auth.verifier.ClientCredentialsSelector;
 import com.nimbusds.oauth2.sdk.auth.verifier.Context;
 import com.nimbusds.oauth2.sdk.auth.verifier.InvalidClientException;
 import com.nimbusds.oauth2.sdk.id.ClientID;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.io.ByteArrayInputStream;
@@ -23,9 +21,6 @@ import java.util.Base64;
 import java.util.List;
 
 public class ConfigurationServicePublicKeySelector implements ClientCredentialsSelector<Object> {
-
-    public static final Logger LOGGER =
-            LoggerFactory.getLogger(ConfigurationServicePublicKeySelector.class);
 
     private static final Base64.Decoder decoder = Base64.getDecoder();
     public static final String ES256 = "ES256";

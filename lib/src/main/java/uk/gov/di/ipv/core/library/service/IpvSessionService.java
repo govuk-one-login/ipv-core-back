@@ -46,7 +46,7 @@ public class IpvSessionService {
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         String userState =
-                generateStartingState(clientSessionDetailsDto.getIsDebugJourney(), errorObject);
+                generateStartingState(clientSessionDetailsDto.isDebugJourney(), errorObject);
         ipvSessionItem.setUserState(userState);
 
         if (errorObject != null) {
