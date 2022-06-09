@@ -7,7 +7,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "ipv-core-back-development"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev\""
+parameter_overrides = "Environment=\"dev\" PassportCriId=\"stubUkPassport\" FraudCriId=\"stubFraud\" AddressCriId=\"stubAddress\" KbvCriId=\"stubKbv\""
 
 [dev-tomw.deploy.parameters]
 stack_name = "ipv-core-back-dev-tomw"
@@ -15,7 +15,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "tom-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-tomw\""
+parameter_overrides = "Environment=\"dev-tomw\" PassportCriId=\"stubUkPassport\" FraudCriId=\"stubFraud\" AddressCriId=\"stubAddress\" KbvCriId=\"stubKbv\""
 
 [dev-danh.deploy.parameters]
 stack_name = "ipv-core-back-dev-danh"
@@ -23,7 +23,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "danh-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-danh\""
+parameter_overrides = "Environment=\"dev-danh\" PassportCriId=\"stubUkPassport\" FraudCriId=\"stubFraud\" AddressCriId=\"stubAddress\" KbvCriId=\"stubKbv\""
 
 [dev-danw.deploy.parameters]
 stack_name = "ipv-core-back-dev-danw"
@@ -31,7 +31,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "danw-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-danw\""
+parameter_overrides = "Environment=\"dev-danw\" PassportCriId=\"stubUkPassport\" FraudCriId=\"stubFraud\" AddressCriId=\"stubAddress\" KbvCriId=\"stubKbv\""
 
 [dev-danp.deploy.parameters]
 stack_name = "ipv-core-back-dev-danp"
@@ -39,7 +39,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "danp-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-danp\""
+parameter_overrides = "Environment=\"dev-danp\" PassportCriId=\"stubUkPassport\" FraudCriId=\"stubFraud\" AddressCriId=\"stubAddress\" KbvCriId=\"stubKbv\""
 
 [dev-chrisw.deploy.parameters]
 stack_name = "ipv-core-back-dev-chrisw"
@@ -47,7 +47,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "chrisw-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-chrisw\""
+parameter_overrides = "Environment=\"dev-chrisw\" PassportCriId=\"stubUkPassport\" FraudCriId=\"stubFraud\" AddressCriId=\"stubAddress\" KbvCriId=\"stubKbv\""
 
 [dev-amrits.deploy.parameters]
 stack_name = "ipv-core-back-dev-amrits"
@@ -55,7 +55,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "amrits-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-amrits\""
+parameter_overrides = "Environment=\"dev-amrits\" PassportCriId=\"stubUkPassport\" FraudCriId=\"stubFraud\" AddressCriId=\"stubAddress\" KbvCriId=\"stubKbv\""
 
 [dev-lait.deploy.parameters]
 stack_name = "ipv-core-back-dev-lait"
@@ -63,7 +63,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "lait-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-lait\""
+parameter_overrides = "Environment=\"dev-lait\" PassportCriId=\"stubUkPassport\" FraudCriId=\"stubFraud\" AddressCriId=\"stubAddress\" KbvCriId=\"stubKbv\""
 
 [dev-sunild.deploy.parameters]
 stack_name = "ipv-core-back-dev-sunild"
@@ -71,7 +71,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "sunild-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-sunild\""
+parameter_overrides = "Environment=\"dev-sunild\" PassportCriId=\"stubUkPassport\" FraudCriId=\"stubFraud\" AddressCriId=\"stubAddress\" KbvCriId=\"stubKbv\""
 
 [dev-kerrr.deploy.parameters]
 stack_name = "ipv-core-back-dev-kerrr"
@@ -79,7 +79,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "kerrr-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-kerrr\""
+parameter_overrides = "Environment=\"dev-kerrr\" PassportCriId=\"stubUkPassport\" FraudCriId=\"stubFraud\" AddressCriId=\"stubAddress\" KbvCriId=\"stubKbv\""
 
 [dev-ianj.deploy.parameters]
 stack_name = "ipv-core-back-dev-ianj"
@@ -87,7 +87,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "ianj-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-ianj\""
+parameter_overrides = "Environment=\"dev-ianj\" PassportCriId=\"stubUkPassport\" FraudCriId=\"stubFraud\" AddressCriId=\"stubAddress\" KbvCriId=\"stubKbv\""
 
 [dev-derrenw.deploy.parameters]
 stack_name = "ipv-core-back-dev-derrenw"
@@ -95,7 +95,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "derrenw-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-derrenw\""
+parameter_overrides = "Environment=\"dev-derrenw\" PassportCriId=\"stubUkPassport\" FraudCriId=\"stubFraud\" AddressCriId=\"stubAddress\" KbvCriId=\"stubKbv\""
 
 [dev-patrickb.deploy.parameters]
 stack_name = "ipv-core-back-dev-patrickb"
@@ -103,7 +103,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "patrickb-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-patrickb\""
+parameter_overrides = "Environment=\"dev-patrickb\" PassportCriId=\"stubUkPassport\" FraudCriId=\"stubFraud\" AddressCriId=\"stubAddress\" KbvCriId=\"stubKbv\""
 
 [dev-vamh.deploy.parameters]
 stack_name = "ipv-core-back-dev-vamh"
@@ -111,7 +111,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "vamh-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-vamh\""
+parameter_overrides = "Environment=\"dev-vamh\" PassportCriId=\"stubUkPassport\" FraudCriId=\"stubFraud\" AddressCriId=\"stubAddress\" KbvCriId=\"stubKbv\""
 
 [dev-wojciecho.deploy.parameters]
 stack_name = "ipv-core-back-dev-wojciecho"
@@ -119,7 +119,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "wojciecho-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-wojciecho\""
+parameter_overrides = "Environment=\"dev-wojciecho\" PassportCriId=\"stubUkPassport\" FraudCriId=\"stubFraud\" AddressCriId=\"stubAddress\" KbvCriId=\"stubKbv\""
 
 [dev-aprilm.deploy.parameters]
 stack_name = "ipv-core-back-dev-aprilm"
@@ -127,5 +127,5 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "aprilm-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-aprilm\""
+parameter_overrides = "Environment=\"dev-aprilm\" PassportCriId=\"stubUkPassport\" FraudCriId=\"stubFraud\" AddressCriId=\"stubAddress\" KbvCriId=\"stubKbv\""
 

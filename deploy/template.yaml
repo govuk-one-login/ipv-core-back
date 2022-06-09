@@ -13,14 +13,22 @@ Globals:
 Parameters:
   Environment:
     Type: String
-  PASSPORT_CRI_ID:
+  PassportCriId:
     Type: String
-  FRAUD_CRI_ID:
+    Description: The passport cri id which relates to the cri config in parameter store to be used by the journey engine
+    Default: ukPassport
+  FraudCriId:
     Type: String
-  KBV_CRI_ID:
+    Description: The fraud cri id which relates to the cri config in parameter store to be used by the journey engine
+    Default: fraud
+  KbvCriId:
     Type: String
-  ADDRESS_CRI_ID:
+    Description: The kbv cri id which relates to the cri config in parameter store to be used by the journey engine
+    Default: kbv
+  AddressCriId:
     Type: String
+    Description: The address cri id which relates to the cri config in parameter store to be used by the journey engine
+    Default: address
   ProvisionedConcurrentExecutions:
     Type: Number
     Description: >-
@@ -766,10 +774,10 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           IPV_JOURNEY_CRI_START_URI: "/journey/cri/start/"
           IPV_JOURNEY_SESSION_END_URI: "/journey/session/end"
-          PASSPORT_CRI_ID: !Sub "${PASSPORT_CRI_ID}"
-          ADDRESS_CRI_ID: !Sub "${ADDRESS_CRI_ID}"
-          FRAUD_CRI_ID: !Sub "${FRAUD_CRI_ID}"
-          KBV_CRI_ID: !Sub "${KBV_CRI_ID}"
+          PASSPORT_CRI_ID: !Sub "${PassportCriId}"
+          ADDRESS_CRI_ID: !Sub "${AddressCriId}"
+          FRAUD_CRI_ID: !Sub "${FraudCriId}"
+          KBV_CRI_ID: !Sub "${KbvCriId}"
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
