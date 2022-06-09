@@ -45,6 +45,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.PASSPORT_JSON_1;
 
 @ExtendWith(MockitoExtension.class)
 class UserIdentityHandlerTest {
@@ -80,6 +81,7 @@ class UserIdentityHandlerTest {
                         List.of("12345", "Test credential", "bar"),
                         new IdentityClaim(names, birthDates),
                         objectMapper.readTree(ADDRESS_JSON_1),
+                        objectMapper.readTree(PASSPORT_JSON_1),
                         "test-sub",
                         VectorOfTrust.P2.toString(),
                         VTM);
