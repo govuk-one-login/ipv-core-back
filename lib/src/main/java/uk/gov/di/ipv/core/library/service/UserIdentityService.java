@@ -37,10 +37,6 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 
 public class UserIdentityService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserIdentityService.class);
-    private static final String ADDRESS_CRI_TYPE = "address";
-    private static final String PASSPORT_CRI_TYPE = "ukPassport";
-    private static final String FRAUD_CRI_TYPE = "fraud";
-    private static final String KBV_CRI_TYPE = "kbv";
     private static final String NAME_PROPERTY_NAME = "name";
     private static final String BIRTH_DATE_PROPERTY_NAME = "birthDate";
     private static final String ADDRESS_PROPERTY_NAME = "address";
@@ -51,6 +47,11 @@ public class UserIdentityService {
     private static final int GPG_45_M1A_VALIDITY_SCORE = 2;
     private static final int GPG_45_M1A_FRAUD_SCORE = 1;
     private static final int GPG_45_M1A_VERIFICATION_SCORE = 2;
+    private static final List<String> ADDRESS_CRI_TYPES =
+            List.of(ADDRESS_PROPERTY_NAME, "stubAddress");
+    private static final List<String> PASSPORT_CRI_TYPES = List.of("ukPassport", "stubUkPassport");
+    private static final List<String> FRAUD_CRI_TYPES = List.of("fraud", "stubFraud");
+    private static final List<String> KBV_CRI_TYPES = List.of("kbv", "stubKbv");
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final ConfigurationService configurationService;
@@ -161,7 +162,7 @@ public class UserIdentityService {
                 JSONObject vcClaim = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
                 JSONArray evidenceArray = ((JSONArray) vcClaim.get(VC_EVIDENCE));
 
-                if (item.getCredentialIssuer().equals(PASSPORT_CRI_TYPE)) {
+                if (PASSPORT_CRI_TYPES.contains(item.getCredentialIssuer())) {
                     validPassport =
                             isValidScore(
                                     evidenceArray,
@@ -169,7 +170,7 @@ public class UserIdentityService {
                                     GPG_45_M1A_VALIDITY_SCORE);
                 }
 
-                if (item.getCredentialIssuer().equals(FRAUD_CRI_TYPE)) {
+                if (FRAUD_CRI_TYPES.contains(item.getCredentialIssuer())) {
                     validFraud =
                             isValidScore(
                                     evidenceArray,
@@ -177,7 +178,7 @@ public class UserIdentityService {
                                     GPG_45_M1A_FRAUD_SCORE);
                 }
 
-                if (item.getCredentialIssuer().equals(KBV_CRI_TYPE)) {
+                if (KBV_CRI_TYPES.contains(item.getCredentialIssuer())) {
                     validKbv =
                             isValidScore(
                                     evidenceArray,
@@ -196,7 +197,7 @@ public class UserIdentityService {
             List<UserIssuedCredentialsItem> credentialIssuerItems)
             throws HttpResponseExceptionWithErrorBody {
         for (UserIssuedCredentialsItem item : credentialIssuerItems) {
-            if (item.getCredentialIssuer().equals(PASSPORT_CRI_TYPE)) {
+            if (PASSPORT_CRI_TYPES.contains(item.getCredentialIssuer())) {
                 try {
                     JsonNode nameNode =
                             objectMapper
@@ -261,7 +262,8 @@ public class UserIdentityService {
                 credentialIssuerItems.stream()
                         .filter(
                                 credential ->
-                                        ADDRESS_CRI_TYPE.equals(credential.getCredentialIssuer()))
+                                        ADDRESS_CRI_TYPES.contains(
+                                                credential.getCredentialIssuer()))
                         .findFirst()
                         .orElseThrow(
                                 () -> {
@@ -303,7 +305,8 @@ public class UserIdentityService {
                 credentialIssuerItems.stream()
                         .filter(
                                 credential ->
-                                        PASSPORT_CRI_TYPE.equals(credential.getCredentialIssuer()))
+                                        PASSPORT_CRI_TYPES.contains(
+                                                credential.getCredentialIssuer()))
                         .findFirst()
                         .orElseThrow(
                                 () -> {
