@@ -77,6 +77,7 @@ Resources:
                     - Fn::ImportValue:
                         !Sub "networking-${Environment}-ApiGatewayVpcEndpointId"
       StageName: !Sub ${Environment}
+      TracingEnabled: true
       AccessLogSetting:
         DestinationArn: !GetAtt IPVCorePrivateAPILogGroup.Arn
         Format: >-
@@ -111,6 +112,7 @@ Resources:
     Properties:
       Name: !Sub IPV Core External API Gateway ${Environment}
       StageName: !Sub ${Environment}
+      TracingEnabled: true
       DefinitionBody:
         'Fn::Transform':
           Name: "AWS::Include"
