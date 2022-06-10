@@ -21,5 +21,4 @@ jobs:
         run: pip3 install checkov
       - name: run checkov
         run: checkov --directory deploy
-        continue-on-error: true # There are many items to fix so for now allow this pass until we have a clean template.
         

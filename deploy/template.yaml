@@ -40,7 +40,6 @@ Conditions:
     - !Equals
       - !Ref ProvisionedConcurrentExecutions
       -  0
-
   IsDevelopmentEnvironment: !Not
     - !Or
       - !Equals [ !Ref Environment, "build"]
@@ -53,6 +52,7 @@ Resources:
   IPVCorePrivateAPI:
     Type: AWS::Serverless::Api
     Properties:
+      # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
       Name: !Sub IPV Core Private API Gateway ${Environment}
       EndpointConfiguration:
         Type: PRIVATE
@@ -77,6 +77,7 @@ Resources:
                     - Fn::ImportValue:
                         !Sub "networking-${Environment}-ApiGatewayVpcEndpointId"
       StageName: !Sub ${Environment}
+      TracingEnabled: true
       AccessLogSetting:
         DestinationArn: !GetAtt IPVCorePrivateAPILogGroup.Arn
         Format: >-
@@ -98,6 +99,7 @@ Resources:
     Properties:
       LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-CoreBackPrivate-API-GW-AccessLogs
       RetentionInDays: 14
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVCorePrivateAPILogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -109,8 +111,10 @@ Resources:
   IPVCoreExternalAPI:
     Type: AWS::Serverless::Api
     Properties:
+      # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
       Name: !Sub IPV Core External API Gateway ${Environment}
       StageName: !Sub ${Environment}
+      TracingEnabled: true
       DefinitionBody:
         'Fn::Transform':
           Name: "AWS::Include"
@@ -137,6 +141,7 @@ Resources:
     Properties:
       LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-CoreBackExternal-API-GW-AccessLogs
       RetentionInDays: 14
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVCoreExternalAPILogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -148,6 +153,7 @@ Resources:
   IPVAccessTokenFunction:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       FunctionName: !Sub "ipv-access-token-${Environment}"
       Handler: uk.gov.di.ipv.core.accesstoken.AccessTokenHandler::handleRequest
       Runtime: java11
@@ -158,6 +164,7 @@ Resources:
       MemorySize: 2048
       Tracing: Active
       Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub access-token-${Environment}
@@ -195,6 +202,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVAccessTokenFunction}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVAccessTokenFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -206,6 +214,7 @@ Resources:
   IPVSessionEndFunction:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       FunctionName: !Sub "ipv-session-end-${Environment}"
       Handler: uk.gov.di.ipv.core.sessionend.SessionEndHandler::handleRequest
       Runtime: java11
@@ -216,6 +225,7 @@ Resources:
       MemorySize: 2048
       Tracing: Active
       Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub session-end-${Environment}
@@ -261,6 +271,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVSessionEndFunction}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVSessionEndFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -272,6 +283,7 @@ Resources:
   IPVSessionStartFunction:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       FunctionName: !Sub "ipv-session-start-${Environment}"
       Handler: uk.gov.di.ipv.core.session.IpvSessionStartHandler::handleRequest
       Runtime: java11
@@ -282,6 +294,7 @@ Resources:
       MemorySize: 2048
       Tracing: Active
       Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub session-start-${Environment}
@@ -339,6 +352,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVSessionStartFunction}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVSessionStartFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -350,6 +364,7 @@ Resources:
   IPVCriReturnFunction:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       FunctionName: !Sub "ipv-credential-issuer-return-${Environment}"
       Handler: uk.gov.di.ipv.core.credentialissuerreturn.CredentialIssuerReturnHandler::handleRequest
       Runtime: java11
@@ -360,6 +375,7 @@ Resources:
       MemorySize: 2048
       Tracing: Active
       Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
@@ -427,6 +443,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVCriReturnFunction}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVCriReturnFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -438,6 +455,7 @@ Resources:
   IPVCredentialIssuerStartFunction:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       FunctionName: !Sub "ipv-credential-issuer-start-${Environment}"
       Handler: uk.gov.di.ipv.core.credentialissuer.CredentialIssuerStartHandler::handleRequest
       Runtime: java11
@@ -448,6 +466,7 @@ Resources:
       MemorySize: 3008
       Tracing: Active
       Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           ENVIRONMENT: !Sub "${Environment}"
@@ -511,6 +530,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVCredentialIssuerStartFunction}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVCredentialIssuerStartFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -522,6 +542,7 @@ Resources:
   IPVCredentialIssuerErrorFunction:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       FunctionName: !Sub "ipv-credential-issuer-error-${Environment}"
       Handler: uk.gov.di.ipv.core.credentialissuererror.CredentialIssuerErrorHandler::handleRequest
       Runtime: java11
@@ -532,6 +553,7 @@ Resources:
       MemorySize: 3008
       Tracing: Active
       Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-error-${Environment}
@@ -572,6 +594,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVCredentialIssuerErrorFunction}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVCredentialIssuerErrorFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -583,6 +606,7 @@ Resources:
   IPVUserIdentityFunction:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       FunctionName: !Sub "ipv-user-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.useridentity.UserIdentityHandler::handleRequest
       Runtime: java11
@@ -593,6 +617,7 @@ Resources:
       MemorySize: 2048
       Tracing: Active
       Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub user-identity-${Environment}
@@ -641,6 +666,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVUserIdentityFunction}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVUserIdentityFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -652,6 +678,7 @@ Resources:
   IPVCredentialIssuerConfig:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       FunctionName: !Sub "credential-issuer-config-${Environment}"
       Handler: uk.gov.di.ipv.core.credentialissuerconfig.CredentialIssuerConfigHandler::handleRequest
       Runtime: java11
@@ -662,6 +689,7 @@ Resources:
       MemorySize: 2048
       Tracing: Active
       Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-config-${Environment}
@@ -691,6 +719,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVCredentialIssuerConfig}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVCredentialIssuerFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -702,6 +731,7 @@ Resources:
   IPVIssuedCredentials:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       FunctionName: !Sub "issued-credentials-${Environment}"
       Handler: uk.gov.di.ipv.core.issuedcredentials.IssuedCredentialsHandler::handleRequest
       Runtime: java11
@@ -712,6 +742,7 @@ Resources:
       MemorySize: 2048
       Tracing: Active
       Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub issued-credentials-${Environment}
@@ -741,6 +772,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVIssuedCredentials}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVIssuedCredentialsFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -752,6 +784,7 @@ Resources:
   IPVJourneyEngineFunction:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       FunctionName: !Sub "journey-engine-${Environment}"
       Handler: uk.gov.di.ipv.core.journeyengine.JourneyEngineHandler::handleRequest
       Runtime: java11
@@ -762,6 +795,7 @@ Resources:
       MemorySize: 2048
       Tracing: Active
       Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub session-${Environment}
@@ -803,6 +837,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVJourneyEngineFunction}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVJourneyEngineFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -814,6 +849,7 @@ Resources:
   IPVValidateCriCheckFunction:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       FunctionName: !Sub "validate-cri-check-${Environment}"
       Handler: uk.gov.di.ipv.core.validatecricheck.ValidateCriCheckHandler::handleRequest
       Runtime: java11
@@ -824,6 +860,7 @@ Resources:
       MemorySize: 2048
       Tracing: Active
       Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Ref Environment
           POWERTOOLS_SERVICE_NAME: !Sub validate-cri-check-${Environment}
@@ -851,6 +888,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVValidateCriCheckFunction}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVValidateCriCheckFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -862,6 +900,7 @@ Resources:
   UserIssuedCredentialsTable:
     Type: AWS::DynamoDB::Table
     Properties:
+      # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
       TableName: !Sub "user-issued-credentials-${Environment}"
       BillingMode: "PAY_PER_REQUEST"
       AttributeDefinitions:
@@ -876,11 +915,16 @@ Resources:
           KeyType: "RANGE"
       TimeToLiveSpecification:
         AttributeName: "ttl"
-        Enabled: "TRUE"
+        Enabled: true
+      SSESpecification:
+        # checkov:skip=CKV_AWS_119: Implement Customer Managed Keys in PYIC-1391
+        SSEEnabled: true
+        SSEType: KMS
 
   AuthCodesTable:
     Type: AWS::DynamoDB::Table
     Properties:
+      # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
       TableName: !Sub "auth-codes-${Environment}"
       BillingMode: "PAY_PER_REQUEST"
       AttributeDefinitions:
@@ -891,11 +935,16 @@ Resources:
           KeyType: "HASH"
       TimeToLiveSpecification:
         AttributeName: "ttl"
-        Enabled: "TRUE"
+        Enabled: true
+      SSESpecification:
+        # checkov:skip=CKV_AWS_119: Implement Customer Managed Keys in PYIC-1391
+        SSEEnabled: true
+        SSEType: KMS
 
   AccessTokensTable:
     Type: AWS::DynamoDB::Table
     Properties:
+      # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
       TableName: !Sub "access-tokens-${Environment}"
       BillingMode: "PAY_PER_REQUEST"
       AttributeDefinitions:
@@ -906,11 +955,16 @@ Resources:
           KeyType: "HASH"
       TimeToLiveSpecification:
         AttributeName: "ttl"
-        Enabled: "TRUE"
+        Enabled: true
+      SSESpecification:
+        # checkov:skip=CKV_AWS_119: Implement Customer Managed Keys in PYIC-1391
+        SSEEnabled: true
+        SSEType: KMS
 
   SessionsTable:
     Type: AWS::DynamoDB::Table
     Properties:
+      # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
       TableName: !Sub "sessions-${Environment}"
       BillingMode: "PAY_PER_REQUEST"
       AttributeDefinitions:
@@ -921,7 +975,38 @@ Resources:
           KeyType: "HASH"
       TimeToLiveSpecification:
         AttributeName: "ttl"
-        Enabled: "TRUE"
+        Enabled: true
+      SSESpecification:
+        # checkov:skip=CKV_AWS_119: Implement Customer Managed Keys in PYIC-1391
+        SSEEnabled: true
+        SSEType: KMS
+
+  LoggingKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - kms:*
+            Resource: "*"
+          - Effect: Allow
+            Principal:
+              Service: !Sub "logs.${AWS::Region}.amazonaws.com"
+            Action:
+              - "kms:Encrypt*"
+              - "kms:Decrypt*"
+              - "kms:ReEncrypt*"
+              - "kms:GenerateDataKey*"
+              - "kms:Describe*"
+            Resource: "*"
+            Condition:
+              ArnLike:
+                "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
 
 Outputs:
   IPVCorePrivateAPIGatewayID:
