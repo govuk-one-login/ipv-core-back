@@ -99,6 +99,7 @@ Resources:
     Properties:
       LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-CoreBackPrivate-API-GW-AccessLogs
       RetentionInDays: 14
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVCorePrivateAPILogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -139,6 +140,7 @@ Resources:
     Properties:
       LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-CoreBackExternal-API-GW-AccessLogs
       RetentionInDays: 14
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVCoreExternalAPILogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -197,6 +199,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVAccessTokenFunction}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVAccessTokenFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -263,6 +266,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVSessionEndFunction}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVSessionEndFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -341,6 +345,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVSessionStartFunction}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVSessionStartFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -429,6 +434,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVCriReturnFunction}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVCriReturnFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -513,6 +519,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVCredentialIssuerStartFunction}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVCredentialIssuerStartFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -574,6 +581,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVCredentialIssuerErrorFunction}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVCredentialIssuerErrorFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -643,6 +651,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVUserIdentityFunction}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVUserIdentityFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -693,6 +702,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVCredentialIssuerConfig}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVCredentialIssuerFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -743,6 +753,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVIssuedCredentials}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVIssuedCredentialsFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -801,6 +812,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVJourneyEngineFunction}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVJourneyEngineFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -849,6 +861,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/${IPVValidateCriCheckFunction}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVValidateCriCheckFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
@@ -920,6 +933,33 @@ Resources:
       TimeToLiveSpecification:
         AttributeName: "ttl"
         Enabled: "TRUE"
+
+  LoggingKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - kms:*
+            Resource: "*"
+          - Effect: Allow
+            Principal:
+              Service: !Sub "logs.${AWS::Region}.amazonaws.com"
+            Action:
+              - "kms:Encrypt*"
+              - "kms:Decrypt*"
+              - "kms:ReEncrypt*"
+              - "kms:GenerateDataKey*"
+              - "kms:Describe*"
+            Resource: "*"
+            Condition:
+              ArnLike:
+                "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
 
 Outputs:
   IPVCorePrivateAPIGatewayID:
