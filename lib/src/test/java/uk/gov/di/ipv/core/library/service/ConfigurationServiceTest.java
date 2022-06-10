@@ -299,26 +299,34 @@ class ConfigurationServiceTest {
 
     @Test
     void shouldReturnPassportCriId() {
-        environmentVariables.set("PASSPORT_CRI_ID", "ukPassport");
-        assertEquals("ukPassport", configurationService.getPassportCriId());
+        environmentVariables.set("ENVIRONMENT", "test");
+        String passportCriId = "ukPassport";
+        when(ssmProvider.get("/test/core/self/journey/passportCriId")).thenReturn(passportCriId);
+        assertEquals(passportCriId, configurationService.getPassportCriId());
     }
 
     @Test
     void shouldReturnAddressCriId() {
-        environmentVariables.set("ADDRESS_CRI_ID", "address");
-        assertEquals("address", configurationService.getAddressCriId());
+        environmentVariables.set("ENVIRONMENT", "test");
+        String addressCriId = "address";
+        when(ssmProvider.get("/test/core/self/journey/addressCriId")).thenReturn(addressCriId);
+        assertEquals(addressCriId, configurationService.getAddressCriId());
     }
 
     @Test
     void shouldReturnFraudCriId() {
-        environmentVariables.set("FRAUD_CRI_ID", "fraud");
-        assertEquals("fraud", configurationService.getFraudCriId());
+        environmentVariables.set("ENVIRONMENT", "test");
+        String fraudCriId = "fraud";
+        when(ssmProvider.get("/test/core/self/journey/fraudCriId")).thenReturn(fraudCriId);
+        assertEquals(fraudCriId, configurationService.getFraudCriId());
     }
 
     @Test
     void shouldReturnKbvCriId() {
-        environmentVariables.set("KBV_CRI_ID", "kbv");
-        assertEquals("kbv", configurationService.getKbvCriId());
+        environmentVariables.set("ENVIRONMENT", "test");
+        String kbvCriId = "kbv";
+        when(ssmProvider.get("/test/core/self/journey/kbvCriId")).thenReturn(kbvCriId);
+        assertEquals(kbvCriId, configurationService.getKbvCriId());
     }
 
     @Test
