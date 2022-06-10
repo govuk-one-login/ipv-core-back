@@ -768,10 +768,6 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           IPV_JOURNEY_CRI_START_URI: "/journey/cri/start/"
           IPV_JOURNEY_SESSION_END_URI: "/journey/session/end"
-          PASSPORT_CRI_ID: !Sub "${PassportCriId}"
-          ADDRESS_CRI_ID: !Sub "${AddressCriId}"
-          FRAUD_CRI_ID: !Sub "${FraudCriId}"
-          KBV_CRI_ID: !Sub "${KbvCriId}"
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
@@ -779,6 +775,14 @@ Resources:
             TableName: !Ref SessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/backendSessionTimeout
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/journey/passportCriId
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/journey/addressCriId
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/journey/fraudCriId
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/journey/kbvCriId
       Events:
         IPVCorePrivateAPI:
           Type: Api

@@ -118,22 +118,6 @@ public class ConfigurationService {
         return System.getenv("SQS_AUDIT_EVENT_QUEUE_URL");
     }
 
-    public String getPassportCriId() {
-        return System.getenv("PASSPORT_CRI_ID");
-    }
-
-    public String getAddressCriId() {
-        return System.getenv("ADDRESS_CRI_ID");
-    }
-
-    public String getFraudCriId() {
-        return System.getenv("FRAUD_CRI_ID");
-    }
-
-    public String getKbvCriId() {
-        return System.getenv("KBV_CRI_ID");
-    }
-
     public long getBearerAccessTokenTtl() {
         return Optional.ofNullable(System.getenv("BEARER_TOKEN_TTL"))
                 .map(Long::valueOf)
@@ -270,6 +254,26 @@ public class ConfigurationService {
     public String getCoreVtmClaim() {
         return ssmProvider.get(
                 String.format("/%s/core/self/coreVtmClaim", System.getenv(ENVIRONMENT)));
+    }
+
+    public String getPassportCriId() {
+        return ssmProvider.get(
+                String.format("/%s/core/self/journey/passportCriId", System.getenv(ENVIRONMENT)));
+    }
+
+    public String getAddressCriId() {
+        return ssmProvider.get(
+                String.format("/%s/core/self/journey/addressCriId", System.getenv(ENVIRONMENT)));
+    }
+
+    public String getFraudCriId() {
+        return ssmProvider.get(
+                String.format("/%s/core/self/journey/fraudCriId", System.getenv(ENVIRONMENT)));
+    }
+
+    public String getKbvCriId() {
+        return ssmProvider.get(
+                String.format("/%s/core/self/journey/kbvCriId", System.getenv(ENVIRONMENT)));
     }
 
     public String getCriPrivateApiKey(String criId) {
