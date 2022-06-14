@@ -14,7 +14,7 @@ repos:
     -   id: cfn-python-lint
         files: .template\.yaml$
 - repo: https://github.com/bridgecrewio/checkov.git
-  rev: '2.0.1207'
+  rev: '2.0.1211'
   hooks:
   - id: checkov
     verbose: true
