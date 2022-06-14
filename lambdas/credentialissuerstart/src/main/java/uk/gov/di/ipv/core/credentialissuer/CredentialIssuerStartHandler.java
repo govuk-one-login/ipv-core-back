@@ -153,10 +153,12 @@ public class CredentialIssuerStartHandler
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException {
         SharedClaimsResponse sharedClaimsResponse = getSharedAttributes(ipvSessionId);
         SignedJWT signedJWT =
-                getSignedJWT(
-                        credentialIssuerConfig,
-                        oauthState,
+                AuthorizationRequestHelper.createSignedJWT(
                         sharedClaimsResponse,
+                        signer,
+                        credentialIssuerConfig,
+                        configurationService,
+                        oauthState,
                         ipvSessionService
                                 .getIpvSession(ipvSessionId)
                                 .getClientSessionDetails()
@@ -165,21 +167,6 @@ public class CredentialIssuerStartHandler
         RSAEncrypter rsaEncrypter =
                 new RSAEncrypter(credentialIssuerConfig.getJarEncryptionPublicJwk());
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
-    }
-
-    private SignedJWT getSignedJWT(
-            CredentialIssuerConfig credentialIssuerConfig,
-            UUID oauthState,
-            SharedClaimsResponse sharedClaimsResponse,
-            String userId)
-            throws HttpResponseExceptionWithErrorBody {
-        return AuthorizationRequestHelper.createSignedJWT(
-                sharedClaimsResponse,
-                signer,
-                credentialIssuerConfig,
-                configurationService,
-                oauthState,
-                userId);
     }
 
     @Tracing
