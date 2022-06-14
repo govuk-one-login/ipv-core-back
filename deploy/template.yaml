@@ -13,22 +13,6 @@ Globals:
 Parameters:
   Environment:
     Type: String
-  PassportCriId:
-    Type: String
-    Description: The passport cri id which relates to the cri config in parameter store to be used by the journey engine
-    Default: ukPassport
-  FraudCriId:
-    Type: String
-    Description: The fraud cri id which relates to the cri config in parameter store to be used by the journey engine
-    Default: fraud
-  KbvCriId:
-    Type: String
-    Description: The kbv cri id which relates to the cri config in parameter store to be used by the journey engine
-    Default: kbv
-  AddressCriId:
-    Type: String
-    Description: The address cri id which relates to the cri config in parameter store to be used by the journey engine
-    Default: address
   ProvisionedConcurrentExecutions:
     Type: Number
     Description: >-
@@ -917,9 +901,9 @@ Resources:
         AttributeName: "ttl"
         Enabled: true
       SSESpecification:
-        # checkov:skip=CKV_AWS_119: Implement Customer Managed Keys in PYIC-1391
         SSEEnabled: true
         SSEType: KMS
+        KMSMasterKeyId: !GetAtt DynamoDBKmsKey.Arn
 
   AuthCodesTable:
     Type: AWS::DynamoDB::Table
@@ -937,9 +921,9 @@ Resources:
         AttributeName: "ttl"
         Enabled: true
       SSESpecification:
-        # checkov:skip=CKV_AWS_119: Implement Customer Managed Keys in PYIC-1391
         SSEEnabled: true
         SSEType: KMS
+        KMSMasterKeyId: !GetAtt DynamoDBKmsKey.Arn
 
   AccessTokensTable:
     Type: AWS::DynamoDB::Table
@@ -957,9 +941,9 @@ Resources:
         AttributeName: "ttl"
         Enabled: true
       SSESpecification:
-        # checkov:skip=CKV_AWS_119: Implement Customer Managed Keys in PYIC-1391
         SSEEnabled: true
         SSEType: KMS
+        KMSMasterKeyId: !GetAtt DynamoDBKmsKey.Arn
 
   SessionsTable:
     Type: AWS::DynamoDB::Table
@@ -977,9 +961,9 @@ Resources:
         AttributeName: "ttl"
         Enabled: true
       SSESpecification:
-        # checkov:skip=CKV_AWS_119: Implement Customer Managed Keys in PYIC-1391
         SSEEnabled: true
         SSEType: KMS
+        KMSMasterKeyId: !GetAtt DynamoDBKmsKey.Arn
 
   LoggingKmsKey:
     Type: AWS::KMS::Key
@@ -1007,6 +991,33 @@ Resources:
             Condition:
               ArnLike:
                 "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
+  DynamoDBKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - kms:*
+            Resource: "*"
+          - Effect: Allow
+            Principal:
+              Service: !Sub "dynamodb.${AWS::Region}.amazonaws.com"
+            Action:
+              - "kms:Encrypt*"
+              - "kms:Decrypt*"
+              - "kms:ReEncrypt*"
+              - "kms:GenerateDataKey*"
+              - "kms:Describe*"
+            Resource: "*"
+            Condition:
+              StringEquals:
+                "kms:CallerAccount": !Sub "${AWS::AccountId}"
+                "kms:ViaService": !Sub "dynamodb.${AWS::Region}.amazonaws.com"
 
 Outputs:
   IPVCorePrivateAPIGatewayID:
