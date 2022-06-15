@@ -15,7 +15,6 @@ import com.nimbusds.oauth2.sdk.auth.PrivateKeyJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import com.nimbusds.openid.connect.sdk.OIDCTokenResponseParser;
 import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,7 +107,7 @@ public class CredentialIssuerService {
             }
 
             HTTPResponse httpResponse = httpRequest.send();
-            TokenResponse tokenResponse = parseTokenResponse(httpResponse);
+            TokenResponse tokenResponse = TokenResponse.parse(httpResponse);
 
             if (tokenResponse instanceof TokenErrorResponse) {
                 TokenErrorResponse errorResponse = tokenResponse.toErrorResponse();
@@ -169,10 +168,6 @@ public class CredentialIssuerService {
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
         }
-    }
-
-    private TokenResponse parseTokenResponse(HTTPResponse httpResponse) throws ParseException {
-        return OIDCTokenResponseParser.parse(httpResponse);
     }
 
     public void persistUserCredentials(String credential, CredentialIssuerRequestDto request) {
