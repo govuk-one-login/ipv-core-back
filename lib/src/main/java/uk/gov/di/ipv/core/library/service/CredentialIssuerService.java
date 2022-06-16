@@ -36,6 +36,8 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariables.USER_ISSUED_CREDENTIALS_TABLE_NAME;
+
 public class CredentialIssuerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CredentialIssuerService.class);
@@ -52,7 +54,8 @@ public class CredentialIssuerService {
         boolean isRunningLocally = this.configurationService.isRunningLocally();
         this.dataStore =
                 new DataStore<>(
-                        this.configurationService.getUserIssuedCredentialTableName(),
+                        this.configurationService.getEnvironmentVariable(
+                                USER_ISSUED_CREDENTIALS_TABLE_NAME),
                         UserIssuedCredentialsItem.class,
                         DataStore.getClient(isRunningLocally),
                         isRunningLocally,

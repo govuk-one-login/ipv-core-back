@@ -7,6 +7,8 @@ import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariables.AUTH_CODES_TABLE_NAME;
+
 public class AuthorizationCodeService {
     private final DataStore<AuthorizationCodeItem> dataStore;
     private final ConfigurationService configurationService;
@@ -17,7 +19,7 @@ public class AuthorizationCodeService {
         boolean isRunningLocally = this.configurationService.isRunningLocally();
         this.dataStore =
                 new DataStore<>(
-                        this.configurationService.getAuthCodesTableName(),
+                        this.configurationService.getEnvironmentVariable(AUTH_CODES_TABLE_NAME),
                         AuthorizationCodeItem.class,
                         DataStore.getClient(isRunningLocally),
                         isRunningLocally,

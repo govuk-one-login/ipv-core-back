@@ -32,6 +32,8 @@ import java.util.Optional;
 import static uk.gov.di.ipv.core.journeyengine.domain.JourneyStep.ERROR;
 import static uk.gov.di.ipv.core.journeyengine.domain.JourneyStep.FAIL;
 import static uk.gov.di.ipv.core.journeyengine.domain.JourneyStep.NEXT;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariables.IPV_JOURNEY_CRI_START_URI;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariables.IPV_JOURNEY_SESSION_END_URI;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CORE_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_ERROR;
@@ -122,8 +124,9 @@ public class JourneyEngineHandler
     @Tracing
     private JourneyEngineResult executeJourneyEvent(
             JourneyStep journeyStep, IpvSessionItem ipvSessionItem) throws JourneyEngineException {
-        String criStartUri = configurationService.getIpvJourneyCriStartUri();
-        String journeyEndUri = configurationService.getIpvJourneySessionEnd();
+        String criStartUri = configurationService.getEnvironmentVariable(IPV_JOURNEY_CRI_START_URI);
+        String journeyEndUri =
+                configurationService.getEnvironmentVariable(IPV_JOURNEY_SESSION_END_URI);
 
         String currentUserState = ipvSessionItem.getUserState();
         if (sessionIsNewlyExpired(ipvSessionItem)) {

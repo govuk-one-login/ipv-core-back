@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariables.SQS_AUDIT_EVENT_QUEUE_URL;
 
 @ExtendWith(MockitoExtension.class)
 class AuditServiceTest {
@@ -31,7 +32,7 @@ class AuditServiceTest {
 
     @BeforeEach
     void setup() {
-        when(mockConfigurationService.getSqsAuditEventQueueUrl())
+        when(mockConfigurationService.getEnvironmentVariable(SQS_AUDIT_EVENT_QUEUE_URL))
                 .thenReturn("https://example-queue-url");
 
         auditService = new AuditService(mockSqs, mockConfigurationService);

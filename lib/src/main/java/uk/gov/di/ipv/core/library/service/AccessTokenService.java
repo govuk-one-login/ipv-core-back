@@ -16,6 +16,8 @@ import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.util.Objects;
 
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariables.ACCESS_TOKENS_TABLE_NAME;
+
 public class AccessTokenService {
     private final DataStore<AccessTokenItem> dataStore;
     private final ConfigurationService configurationService;
@@ -26,7 +28,7 @@ public class AccessTokenService {
         boolean isRunningLocally = this.configurationService.isRunningLocally();
         this.dataStore =
                 new DataStore<>(
-                        this.configurationService.getAccessTokensTableName(),
+                        this.configurationService.getEnvironmentVariable(ACCESS_TOKENS_TABLE_NAME),
                         AccessTokenItem.class,
                         DataStore.getClient(isRunningLocally),
                         isRunningLocally,
