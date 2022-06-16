@@ -10,7 +10,7 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import java.time.Instant;
 import java.util.UUID;
 
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariables.IPV_SESSIONS_TABLE_NAME;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_SESSIONS_TABLE_NAME;
 
 public class IpvSessionService {
     private final DataStore<IpvSessionItem> dataStore;

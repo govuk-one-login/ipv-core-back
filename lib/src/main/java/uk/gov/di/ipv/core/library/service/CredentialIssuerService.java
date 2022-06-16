@@ -36,7 +36,7 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariables.USER_ISSUED_CREDENTIALS_TABLE_NAME;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
 
 public class CredentialIssuerService {
 

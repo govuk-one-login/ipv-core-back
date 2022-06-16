@@ -19,6 +19,9 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_AUTHENTICATION_METHOD;
+
 public class TokenRequestValidator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TokenRequestValidator.class);
@@ -55,7 +58,7 @@ public class TokenRequestValidator {
             clientId = clientJwt.getClientID().getValue();
 
             String clientAuthenticationMethod =
-                    configurationService.getClientAuthenticationMethod(clientId);
+                    configurationService.get(CLIENT_AUTHENTICATION_METHOD, clientId);
 
             if (clientAuthenticationMethod.equals(NONE)) {
                 return;
@@ -75,7 +78,7 @@ public class TokenRequestValidator {
             clientId = queryParams.get(CLIENT_ID_PARAM);
 
             String clientAuthenticationMethod =
-                    configurationService.getClientAuthenticationMethod(clientId);
+                    configurationService.get(CLIENT_AUTHENTICATION_METHOD, clientId);
 
             if (clientAuthenticationMethod.equals(JWT)) {
                 LOGGER.error("Missing client_assertion jwt for configured client {}", clientId);
@@ -113,6 +116,6 @@ public class TokenRequestValidator {
                 new ConfigurationServicePublicKeySelector(configurationService);
         return new ClientAuthenticationVerifier<>(
                 configurationServicePublicKeySelector,
-                Set.of(new Audience(configurationService.getAudienceForClients())));
+                Set.of(new Audience(configurationService.get(AUDIENCE_FOR_CLIENTS))));
     }
 }

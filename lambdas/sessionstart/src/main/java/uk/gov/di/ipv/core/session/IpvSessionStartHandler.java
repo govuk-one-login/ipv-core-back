@@ -33,6 +33,8 @@ import java.text.ParseException;
 import java.util.Map;
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
+
 public class IpvSessionStartHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
@@ -54,7 +56,8 @@ public class IpvSessionStartHandler
     public IpvSessionStartHandler() {
         this.configurationService = new ConfigurationService();
         this.ipvSessionService = new IpvSessionService(configurationService);
-        this.kmsRsaDecrypter = new KmsRsaDecrypter(configurationService.getJarKmsEncryptionKeyId());
+        this.kmsRsaDecrypter =
+                new KmsRsaDecrypter(configurationService.get(JAR_KMS_ENCRYPTION_KEY_ID));
         this.jarValidator = new JarValidator(kmsRsaDecrypter, configurationService);
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);

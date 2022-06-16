@@ -44,6 +44,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
 @WireMockTest(httpPort = ConfigurationService.LOCALHOST_PORT)
@@ -68,7 +70,7 @@ class ConfigurationServiceTest {
 
     private ConfigurationService configurationService;
 
-    private Gson gson = new Gson();
+    private final Gson gson = new Gson();
 
     @BeforeEach
     void setUp() {
@@ -253,7 +255,9 @@ class ConfigurationServiceTest {
         when(ssmProvider.get("/test/core/clients/aClientId/publicKeyMaterialForCoreToVerify"))
                 .thenReturn(TEST_CERT);
 
-        assertEquals(TEST_CERT, configurationService.getClientPublicKeyMaterial("aClientId"));
+        assertEquals(
+                TEST_CERT,
+                configurationService.get(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "aClientId"));
     }
 
     @Test
@@ -261,7 +265,7 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String clientIssuer = "aClientIssuer";
         when(ssmProvider.get("/test/core/clients/aClientId/issuer")).thenReturn(clientIssuer);
-        assertEquals(clientIssuer, configurationService.getClientIssuer("aClientId"));
+        assertEquals(clientIssuer, configurationService.get(CLIENT_ISSUER, "aClientId"));
     }
 
     @Test

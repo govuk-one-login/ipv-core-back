@@ -31,8 +31,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariables.IPV_JOURNEY_CRI_START_URI;
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariables.IPV_JOURNEY_SESSION_END_URI;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_JOURNEY_CRI_START_URI;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_JOURNEY_SESSION_END_URI;
 
 @ExtendWith(MockitoExtension.class)
 class JourneyEngineHandlerTest {

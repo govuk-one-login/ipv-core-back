@@ -18,7 +18,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariables.SQS_AUDIT_EVENT_QUEUE_URL;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.SQS_AUDIT_EVENT_QUEUE_URL;
 
 @ExtendWith(MockitoExtension.class)
 class AuditServiceTest {

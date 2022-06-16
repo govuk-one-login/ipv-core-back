@@ -1,6 +1,6 @@
 package uk.gov.di.ipv.core.library.config;
 
-public enum EnvironmentVariables {
+public enum EnvironmentVariable {
     ACCESS_TOKENS_TABLE_NAME,
     AUTH_CODES_TABLE_NAME,
     BEARER_TOKEN_TTL,

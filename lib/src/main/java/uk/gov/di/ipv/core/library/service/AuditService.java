@@ -12,7 +12,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 
 import java.time.Instant;
 
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariables.SQS_AUDIT_EVENT_QUEUE_URL;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.SQS_AUDIT_EVENT_QUEUE_URL;
 
 public class AuditService {
     private final AmazonSQS sqs;

@@ -7,7 +7,7 @@ import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 
 import java.util.Optional;
 
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariables.AUTH_CODES_TABLE_NAME;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.AUTH_CODES_TABLE_NAME;
 
 public class AuthorizationCodeService {
     private final DataStore<AuthorizationCodeItem> dataStore;

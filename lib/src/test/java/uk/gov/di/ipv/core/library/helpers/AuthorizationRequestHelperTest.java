@@ -45,6 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
@@ -200,7 +201,7 @@ class AuthorizationRequestHelperTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenUnableToEncryptJwt() throws JOSEException {
+    void shouldThrowExceptionWhenUnableToEncryptJwt() {
         HttpResponseExceptionWithErrorBody exception =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
@@ -219,7 +220,7 @@ class AuthorizationRequestHelperTest {
     private void setupConfigurationServiceMock() {
         when(configurationService.getCoreFrontCallbackUrl()).thenReturn(CORE_FRONT_CALLBACK_URL);
         when(configurationService.getIpvTokenTtl()).thenReturn(IPV_TOKEN_TTL);
-        when(configurationService.getAudienceForClients()).thenReturn(IPV_ISSUER);
+        when(configurationService.get(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
     }
 
     private PrivateKey getEncryptionPrivateKey()

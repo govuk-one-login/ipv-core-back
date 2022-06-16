@@ -16,7 +16,7 @@ import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.util.Objects;
 
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariables.ACCESS_TOKENS_TABLE_NAME;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ACCESS_TOKENS_TABLE_NAME;
 
 public class AccessTokenService {
     private final DataStore<AccessTokenItem> dataStore;

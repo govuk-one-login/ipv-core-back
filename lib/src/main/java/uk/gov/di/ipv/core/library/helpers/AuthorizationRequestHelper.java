@@ -32,6 +32,8 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
+
 public class AuthorizationRequestHelper {
 
     public static final String SHARED_CLAIMS = "shared_claims";
@@ -69,7 +71,7 @@ public class AuthorizationRequestHelper {
         JWTClaimsSet.Builder claimsSetBuilder =
                 new JWTClaimsSet.Builder(authClaimsSet)
                         .audience(credentialIssuerConfig.getAudienceForClients())
-                        .issuer(configurationService.getAudienceForClients())
+                        .issuer(configurationService.get(AUDIENCE_FOR_CLIENTS))
                         .issueTime(Date.from(now))
                         .expirationTime(
                                 Date.from(
