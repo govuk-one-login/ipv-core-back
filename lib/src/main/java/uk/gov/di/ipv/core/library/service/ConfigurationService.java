@@ -196,61 +196,6 @@ public class ConfigurationService {
         return Arrays.asList(redirectUrlStrings.split(CLIENT_REDIRECT_URL_SEPARATOR));
     }
 
-    public String getClientSubject(String clientId) {
-        return ssmProvider.get(
-                String.format(
-                        "/%s/core/clients/%s/subject",
-                        getEnvironmentVariable(ENVIRONMENT), clientId));
-    }
-
-    public String getMaxAllowedAuthClientTtl() {
-        return ssmProvider.get(
-                String.format(
-                        "/%s/core/self/maxAllowedAuthClientTtl",
-                        getEnvironmentVariable(ENVIRONMENT)));
-    }
-
-    public String getIpvTokenTtl() {
-        return ssmProvider.get(
-                String.format("/%s/core/self/jwtTtlSeconds", getEnvironmentVariable(ENVIRONMENT)));
-    }
-
-    public String getCoreFrontCallbackUrl() {
-        return ssmProvider.get(
-                String.format(
-                        "/%s/core/self/coreFrontCallbackUrl", getEnvironmentVariable(ENVIRONMENT)));
-    }
-
-    public String getCoreVtmClaim() {
-        return ssmProvider.get(
-                String.format("/%s/core/self/coreVtmClaim", getEnvironmentVariable(ENVIRONMENT)));
-    }
-
-    public String getPassportCriId() {
-        return ssmProvider.get(
-                String.format(
-                        "/%s/core/self/journey/passportCriId",
-                        getEnvironmentVariable(ENVIRONMENT)));
-    }
-
-    public String getAddressCriId() {
-        return ssmProvider.get(
-                String.format(
-                        "/%s/core/self/journey/addressCriId", getEnvironmentVariable(ENVIRONMENT)));
-    }
-
-    public String getFraudCriId() {
-        return ssmProvider.get(
-                String.format(
-                        "/%s/core/self/journey/fraudCriId", getEnvironmentVariable(ENVIRONMENT)));
-    }
-
-    public String getKbvCriId() {
-        return ssmProvider.get(
-                String.format(
-                        "/%s/core/self/journey/kbvCriId", getEnvironmentVariable(ENVIRONMENT)));
-    }
-
     public String getCriPrivateApiKey(String criId) {
         GetSecretValueRequest valueRequest =
                 GetSecretValueRequest.builder()
@@ -277,21 +222,6 @@ public class ConfigurationService {
         }
     }
 
-    public String getBackendSessionTimeout() {
-        return ssmProvider.get(
-                String.format(
-                        "/%s/core/self/backendSessionTimeout",
-                        getEnvironmentVariable(ENVIRONMENT)));
-    }
-
-    public long getBackendSessionTtl() {
-        return Long.parseLong(
-                ssmProvider.get(
-                        String.format(
-                                "/%s/core/self/backendSessionTtl",
-                                getEnvironmentVariable(ENVIRONMENT))));
-    }
-
     private String getSecretsManagerValue(GetSecretValueRequest valueRequest) {
         try {
             GetSecretValueResponse valueResponse =
@@ -302,7 +232,7 @@ public class ConfigurationService {
                     "Secrets manager failed to decrypt the protected secret using the configured KMS key because: {}",
                     e.getMessage());
         } catch (InternalServiceErrorException e) {
-            LOGGER.error("Internal server error occured with Secrets manager: {}", e.getMessage());
+            LOGGER.error("Internal server error occurred with Secrets manager: {}", e.getMessage());
         } catch (InvalidParameterException e) {
             LOGGER.error(
                     "An invalid value was provided for the param value: {}, details: {}",

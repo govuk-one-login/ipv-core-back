@@ -21,6 +21,7 @@ import java.util.Set;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_AUTHENTICATION_METHOD;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 
 public class TokenRequestValidator {
 
@@ -98,7 +99,7 @@ public class TokenRequestValidator {
     private void validateMaxAllowedAuthClientTtl(JWTAuthenticationClaimsSet claimsSet)
             throws InvalidClientException {
         Date expirationTime = claimsSet.getExpirationTime();
-        String maxAllowedTtl = configurationService.getMaxAllowedAuthClientTtl();
+        String maxAllowedTtl = configurationService.get(MAX_ALLOWED_AUTH_CLIENT_TTL);
 
         OffsetDateTime offsetDateTime =
                 OffsetDateTime.now().plusSeconds(Long.parseLong(maxAllowedTtl));

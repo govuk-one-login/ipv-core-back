@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC;
@@ -291,10 +292,9 @@ class UserIdentityServiceTest {
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> {
-                            userIdentityService.generateUserIdentity(
-                                    "ipv-session-id-1", "test-sub");
-                        });
+                        () ->
+                                userIdentityService.generateUserIdentity(
+                                        "ipv-session-id-1", "test-sub"));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -324,10 +324,9 @@ class UserIdentityServiceTest {
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> {
-                            userIdentityService.generateUserIdentity(
-                                    "ipv-session-id-1", "test-sub");
-                        });
+                        () ->
+                                userIdentityService.generateUserIdentity(
+                                        "ipv-session-id-1", "test-sub"));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -400,10 +399,9 @@ class UserIdentityServiceTest {
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> {
-                            userIdentityService.generateUserIdentity(
-                                    "ipv-session-id-1", "test-sub");
-                        });
+                        () ->
+                                userIdentityService.generateUserIdentity(
+                                        "ipv-session-id-1", "test-sub"));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -416,7 +414,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldSetSubClaimOnUserIdentity() throws HttpResponseExceptionWithErrorBody {
-        when(mockConfigurationService.getCoreVtmClaim()).thenReturn("mock-vtm-claim");
+        when(mockConfigurationService.get(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
@@ -445,7 +443,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldSetVtmClaimOnUserIdentity() throws HttpResponseExceptionWithErrorBody {
-        when(mockConfigurationService.getCoreVtmClaim()).thenReturn("mock-vtm-claim");
+        when(mockConfigurationService.get(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
@@ -511,10 +509,9 @@ class UserIdentityServiceTest {
         HttpResponseExceptionWithErrorBody thrownException =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> {
-                            userIdentityService.generateUserIdentity(
-                                    "ipv-session-id-1", "test-sub");
-                        });
+                        () ->
+                                userIdentityService.generateUserIdentity(
+                                        "ipv-session-id-1", "test-sub"));
 
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
@@ -543,10 +540,9 @@ class UserIdentityServiceTest {
         HttpResponseExceptionWithErrorBody thrownException =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> {
-                            userIdentityService.generateUserIdentity(
-                                    "ipv-session-id-1", "test-sub");
-                        });
+                        () ->
+                                userIdentityService.generateUserIdentity(
+                                        "ipv-session-id-1", "test-sub"));
 
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(

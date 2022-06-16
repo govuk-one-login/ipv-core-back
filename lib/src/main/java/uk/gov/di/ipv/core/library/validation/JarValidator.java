@@ -30,6 +30,7 @@ import java.util.Set;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_AUTHENTICATION_METHOD;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 
 public class JarValidator {
@@ -166,7 +167,7 @@ public class JarValidator {
     }
 
     private void validateMaxAllowedJarTtl(JWTClaimsSet claimsSet) throws JarValidationException {
-        String maxAllowedTtl = configurationService.getMaxAllowedAuthClientTtl();
+        String maxAllowedTtl = configurationService.get(MAX_ALLOWED_AUTH_CLIENT_TTL);
         LocalDateTime maximumExpirationTime =
                 LocalDateTime.now().plusSeconds(Long.parseLong(maxAllowedTtl));
         LocalDateTime expirationTime =

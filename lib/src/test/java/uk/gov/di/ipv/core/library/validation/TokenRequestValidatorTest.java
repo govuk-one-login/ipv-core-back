@@ -40,6 +40,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_AUTHENTICATION_METHOD;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
@@ -69,7 +70,7 @@ class TokenRequestValidatorTest {
                 .thenReturn(RSA_PUBLIC_CERT);
         when(mockConfigurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn("jwt");
-        when(mockConfigurationService.getMaxAllowedAuthClientTtl()).thenReturn("2400");
+        when(mockConfigurationService.get(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
 
         var validQueryParams =
                 getValidQueryParams(generateClientAssertionWithRS256(getValidClaimsSetValues()));
@@ -83,7 +84,7 @@ class TokenRequestValidatorTest {
                 .thenReturn(EC_PUBLIC_JWK);
         when(mockConfigurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn("jwt");
-        when(mockConfigurationService.getMaxAllowedAuthClientTtl()).thenReturn("2400");
+        when(mockConfigurationService.get(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
 
         var validQueryParams =
                 getValidQueryParams(generateClientAssertionWithES256(getValidClaimsSetValues()));
@@ -190,7 +191,7 @@ class TokenRequestValidatorTest {
                 .thenReturn(RSA_PUBLIC_CERT);
         when(mockConfigurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn("jwt");
-        when(mockConfigurationService.getMaxAllowedAuthClientTtl()).thenReturn("2400");
+        when(mockConfigurationService.get(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
         var expiredClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
         expiredClaimsSetValues.put(
                 JWTClaimNames.EXPIRATION_TIME,

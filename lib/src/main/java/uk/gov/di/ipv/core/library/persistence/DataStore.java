@@ -16,6 +16,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
+
 public class DataStore<T extends DynamodbItem> {
 
     private static final String LOCALHOST_URI = "http://localhost:4567";
@@ -53,7 +55,7 @@ public class DataStore<T extends DynamodbItem> {
     public void create(T item) {
         item.setTtl(
                 Instant.now()
-                        .plusSeconds(configurationService.getBackendSessionTtl())
+                        .plusSeconds(Long.parseLong(configurationService.get(BACKEND_SESSION_TTL)))
                         .getEpochSecond());
         getTable().putItem(item);
     }

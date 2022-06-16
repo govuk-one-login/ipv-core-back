@@ -46,6 +46,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_AUTHENTICATION_METHOD;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
@@ -119,7 +120,7 @@ class JarValidatorTest {
                 .thenReturn(clientAuthMethod);
         when(configurationService.get(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
         when(configurationService.get(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configurationService.getMaxAllowedAuthClientTtl()).thenReturn("1500");
+        when(configurationService.get(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("1500");
         when(configurationService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
@@ -532,7 +533,7 @@ class JarValidatorTest {
                 .thenReturn(clientAuthMethod);
         when(configurationService.get(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
         when(configurationService.get(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configurationService.getMaxAllowedAuthClientTtl()).thenReturn("1500");
+        when(configurationService.get(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("1500");
         when(configurationService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 

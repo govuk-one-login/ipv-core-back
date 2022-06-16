@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.Name;
@@ -46,6 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
@@ -159,7 +161,8 @@ class AuthorizationRequestHelperTest {
     @Test
     void shouldThrowExceptionWhenUnableToBuildRedirectionUri() {
         when(credentialIssuerConfig.getId()).thenReturn(CRI_ID);
-        when(configurationService.getCoreFrontCallbackUrl()).thenReturn("[[]]]][[[");
+        when(configurationService.get(ConfigurationVariable.CORE_FRONT_CALLBACK_URL))
+                .thenReturn("[[]]]][[[");
 
         HttpResponseExceptionWithErrorBody exception =
                 assertThrows(
@@ -218,8 +221,9 @@ class AuthorizationRequestHelperTest {
     }
 
     private void setupConfigurationServiceMock() {
-        when(configurationService.getCoreFrontCallbackUrl()).thenReturn(CORE_FRONT_CALLBACK_URL);
-        when(configurationService.getIpvTokenTtl()).thenReturn(IPV_TOKEN_TTL);
+        when(configurationService.get(ConfigurationVariable.CORE_FRONT_CALLBACK_URL))
+                .thenReturn(CORE_FRONT_CALLBACK_URL);
+        when(configurationService.get(JWT_TTL_SECONDS)).thenReturn(IPV_TOKEN_TTL);
         when(configurationService.get(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
     }
 

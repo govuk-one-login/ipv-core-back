@@ -33,6 +33,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_FRONT_CALLBACK_URL;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 
 public class AuthorizationRequestHelper {
 
@@ -54,7 +56,7 @@ public class AuthorizationRequestHelper {
         String criId = credentialIssuerConfig.getId();
 
         URI redirectionURI =
-                getRedirectionURI(criId, configurationService.getCoreFrontCallbackUrl());
+                getRedirectionURI(criId, configurationService.get(CORE_FRONT_CALLBACK_URL));
 
         JWSHeader header =
                 new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build();
@@ -77,7 +79,7 @@ public class AuthorizationRequestHelper {
                                 Date.from(
                                         now.plus(
                                                 Long.parseLong(
-                                                        configurationService.getIpvTokenTtl()),
+                                                        configurationService.get(JWT_TTL_SECONDS)),
                                                 ChronoUnit.SECONDS)))
                         .notBeforeTime(Date.from(now))
                         .subject(userId);
