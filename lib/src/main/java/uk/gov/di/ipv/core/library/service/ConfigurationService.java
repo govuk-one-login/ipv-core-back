@@ -94,13 +94,13 @@ public class ConfigurationService {
         return System.getenv(environmentVariable.name());
     }
 
-    public String get(ConfigurationVariable configurationVariable) {
+    public String getSsmParameter(ConfigurationVariable configurationVariable) {
         return ssmProvider.get(
                 String.format(
                         configurationVariable.getValue(), getEnvironmentVariable(ENVIRONMENT)));
     }
 
-    public String get(ConfigurationVariable configurationVariable, String clientId) {
+    public String getSsmParameter(ConfigurationVariable configurationVariable, String clientId) {
         return ssmProvider.get(
                 String.format(
                         configurationVariable.getValue(),

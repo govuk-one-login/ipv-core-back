@@ -114,13 +114,15 @@ class JarValidatorTest {
     void shouldPassValidationChecksOnValidJARRequest()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
                     ParseException {
-        when(configurationService.get(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn(clientAuthMethod);
-        when(configurationService.get(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
-        when(configurationService.get(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configurationService.get(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("1500");
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
+        when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+                .thenReturn(issuerClaim);
+        when(configurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("1500");
         when(configurationService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
@@ -138,7 +140,7 @@ class JarValidatorTest {
     void shouldFailValidationChecksOnInvalidClientId()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
                     ParseException {
-        when(configurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenThrow(ParameterNotFoundException.builder().build());
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
@@ -188,9 +190,10 @@ class JarValidatorTest {
     void shouldFailValidationChecksOnInvalidJWTSignature()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
                     ParseException {
-        when(configurationService.get(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK_2);
-        when(configurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn(clientAuthMethod);
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
@@ -212,9 +215,10 @@ class JarValidatorTest {
     void shouldFailValidationChecksOnInvalidPublicJwk()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
                     ParseException {
-        when(configurationService.get(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn("invalid-jwk");
-        when(configurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn(clientAuthMethod);
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
@@ -237,9 +241,10 @@ class JarValidatorTest {
     void shouldFailValidationChecksOnMissingRequiredClaim()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
                     ParseException {
-        when(configurationService.get(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn(clientAuthMethod);
         when(configurationService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
@@ -273,12 +278,14 @@ class JarValidatorTest {
     void shouldFailValidationChecksOnInvalidAudienceClaim()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
                     ParseException {
-        when(configurationService.get(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn(clientAuthMethod);
-        when(configurationService.get(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
-        when(configurationService.get(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
+        when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+                .thenReturn(issuerClaim);
         when(configurationService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
@@ -323,12 +330,14 @@ class JarValidatorTest {
     void shouldFailValidationChecksOnInvalidIssuerClaim()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
                     ParseException {
-        when(configurationService.get(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn(clientAuthMethod);
-        when(configurationService.get(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
-        when(configurationService.get(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
+        when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+                .thenReturn(issuerClaim);
         when(configurationService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
@@ -375,12 +384,14 @@ class JarValidatorTest {
     void shouldFailValidationChecksOnInvalidResponseTypeClaim()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
                     ParseException {
-        when(configurationService.get(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn(clientAuthMethod);
-        when(configurationService.get(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
-        when(configurationService.get(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
+        when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+                .thenReturn(issuerClaim);
         when(configurationService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
@@ -427,12 +438,14 @@ class JarValidatorTest {
     void shouldFailValidationChecksOnExpiredJWT()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
                     ParseException {
-        when(configurationService.get(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn(clientAuthMethod);
-        when(configurationService.get(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
-        when(configurationService.get(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
+        when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+                .thenReturn(issuerClaim);
         when(configurationService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
@@ -477,12 +490,14 @@ class JarValidatorTest {
     void shouldFailValidationChecksOnFutureNbfClaim()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
                     ParseException {
-        when(configurationService.get(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn(clientAuthMethod);
-        when(configurationService.get(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
-        when(configurationService.get(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
+        when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+                .thenReturn(issuerClaim);
         when(configurationService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
@@ -527,13 +542,15 @@ class JarValidatorTest {
     void shouldFailValidationChecksOnExpiryClaimToFarInFuture()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
                     ParseException {
-        when(configurationService.get(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn(clientAuthMethod);
-        when(configurationService.get(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
-        when(configurationService.get(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
-        when(configurationService.get(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("1500");
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
+        when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+                .thenReturn(issuerClaim);
+        when(configurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("1500");
         when(configurationService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
@@ -580,9 +597,10 @@ class JarValidatorTest {
     void shouldFailValidationChecksOnInvalidRedirectUriClaim()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
                     ParseException {
-        when(configurationService.get(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn(clientAuthMethod);
         when(configurationService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList("test-redirect-uri"));
@@ -607,9 +625,10 @@ class JarValidatorTest {
     void shouldFailValidationChecksOnParseFailureOfRedirectUri()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
                     ParseException {
-        when(configurationService.get(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(configurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn(clientAuthMethod);
 
         Map<String, Object> claims =

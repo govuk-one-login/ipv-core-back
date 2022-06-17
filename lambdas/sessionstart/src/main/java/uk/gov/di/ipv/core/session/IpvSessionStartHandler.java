@@ -57,7 +57,8 @@ public class IpvSessionStartHandler
         this.configurationService = new ConfigurationService();
         this.ipvSessionService = new IpvSessionService(configurationService);
         this.kmsRsaDecrypter =
-                new KmsRsaDecrypter(configurationService.get(JAR_KMS_ENCRYPTION_KEY_ID));
+                new KmsRsaDecrypter(
+                        configurationService.getSsmParameter(JAR_KMS_ENCRYPTION_KEY_ID));
         this.jarValidator = new JarValidator(kmsRsaDecrypter, configurationService);
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);

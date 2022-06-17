@@ -59,18 +59,21 @@ class TokenRequestValidatorTest {
 
     @BeforeEach
     void setUp() {
-        when(mockConfigurationService.get(AUDIENCE_FOR_CLIENTS)).thenReturn(audience);
+        when(mockConfigurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audience);
         validator = new TokenRequestValidator(mockConfigurationService);
     }
 
     @Test
     void shouldNotThrowForValidJwtSignedWithRS256()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(mockConfigurationService.get(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(mockConfigurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(RSA_PUBLIC_CERT);
-        when(mockConfigurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+        when(mockConfigurationService.getSsmParameter(
+                        eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn("jwt");
-        when(mockConfigurationService.get(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
+        when(mockConfigurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                .thenReturn("2400");
 
         var validQueryParams =
                 getValidQueryParams(generateClientAssertionWithRS256(getValidClaimsSetValues()));
@@ -80,11 +83,14 @@ class TokenRequestValidatorTest {
     @Test
     void shouldNotThrowForValidJwtSignedWithES256()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(mockConfigurationService.get(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(mockConfigurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(mockConfigurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+        when(mockConfigurationService.getSsmParameter(
+                        eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn("jwt");
-        when(mockConfigurationService.get(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
+        when(mockConfigurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                .thenReturn("2400");
 
         var validQueryParams =
                 getValidQueryParams(generateClientAssertionWithES256(getValidClaimsSetValues()));
@@ -93,9 +99,11 @@ class TokenRequestValidatorTest {
 
     @Test
     void shouldThrowIfInvalidSignature() throws Exception {
-        when(mockConfigurationService.get(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(mockConfigurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(RSA_PUBLIC_CERT);
-        when(mockConfigurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+        when(mockConfigurationService.getSsmParameter(
+                        eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn("jwt");
 
         var invalidSignatureQueryParams =
@@ -142,7 +150,8 @@ class TokenRequestValidatorTest {
     @Test
     void shouldThrowIfWrongAudience()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(mockConfigurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+        when(mockConfigurationService.getSsmParameter(
+                        eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn("jwt");
         var wrongAudienceClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
         wrongAudienceClaimsSetValues.put(
@@ -167,7 +176,8 @@ class TokenRequestValidatorTest {
     @Test
     void shouldThrowIfClaimsSetHasExpired()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(mockConfigurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+        when(mockConfigurationService.getSsmParameter(
+                        eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn("jwt");
         var expiredClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
         expiredClaimsSetValues.put(
@@ -187,11 +197,14 @@ class TokenRequestValidatorTest {
     @Test
     void shouldFailWhenClientJWTContainsExpiryClaimTooFarInFuture()
             throws InvalidKeySpecException, NoSuchAlgorithmException, JOSEException {
-        when(mockConfigurationService.get(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+        when(mockConfigurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(RSA_PUBLIC_CERT);
-        when(mockConfigurationService.get(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+        when(mockConfigurationService.getSsmParameter(
+                        eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenReturn("jwt");
-        when(mockConfigurationService.get(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
+        when(mockConfigurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                .thenReturn("2400");
         var expiredClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
         expiredClaimsSetValues.put(
                 JWTClaimNames.EXPIRATION_TIME,
@@ -212,7 +225,7 @@ class TokenRequestValidatorTest {
 
     @Test
     void shouldNotThrowIfMissingClientAssertionParamWhenNoneRequired() {
-        when(mockConfigurationService.get(CLIENT_AUTHENTICATION_METHOD, clientId))
+        when(mockConfigurationService.getSsmParameter(CLIENT_AUTHENTICATION_METHOD, clientId))
                 .thenReturn("none");
         var params = getValidQueryParamsWithoutClientAuth(clientId);
 
@@ -222,7 +235,7 @@ class TokenRequestValidatorTest {
     @Test
     void shouldNotThrowIfContainsClientAssertionParamWhenNoneRequired()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(mockConfigurationService.get(CLIENT_AUTHENTICATION_METHOD, clientId))
+        when(mockConfigurationService.getSsmParameter(CLIENT_AUTHENTICATION_METHOD, clientId))
                 .thenReturn("none");
         var validQueryParams =
                 getValidQueryParams(generateClientAssertionWithRS256(getValidClaimsSetValues()));
@@ -233,7 +246,8 @@ class TokenRequestValidatorTest {
     @Test
     void shouldThrowIfMissingClientAssertionParamWhenRequired() {
         String invalidClientId = "invalid-client";
-        when(mockConfigurationService.get(CLIENT_AUTHENTICATION_METHOD, invalidClientId))
+        when(mockConfigurationService.getSsmParameter(
+                        CLIENT_AUTHENTICATION_METHOD, invalidClientId))
                 .thenReturn("jwt");
         var missingClientAssertionParams = getValidQueryParamsWithoutClientAuth(invalidClientId);
 

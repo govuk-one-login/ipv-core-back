@@ -52,7 +52,8 @@ public class ConfigurationServicePublicKeySelector implements ClientCredentialsS
         JWSAlgorithm algorithm = jwsHeader.getAlgorithm();
         String clientId = claimedClientID.getValue();
         String publicKeyMaterial =
-                configurationService.get(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, clientId);
+                configurationService.getSsmParameter(
+                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, clientId);
 
         try {
             switch (algorithm.toString()) {

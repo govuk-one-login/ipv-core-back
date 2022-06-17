@@ -59,7 +59,7 @@ public class TokenRequestValidator {
             clientId = clientJwt.getClientID().getValue();
 
             String clientAuthenticationMethod =
-                    configurationService.get(CLIENT_AUTHENTICATION_METHOD, clientId);
+                    configurationService.getSsmParameter(CLIENT_AUTHENTICATION_METHOD, clientId);
 
             if (clientAuthenticationMethod.equals(NONE)) {
                 return;
@@ -79,7 +79,7 @@ public class TokenRequestValidator {
             clientId = queryParams.get(CLIENT_ID_PARAM);
 
             String clientAuthenticationMethod =
-                    configurationService.get(CLIENT_AUTHENTICATION_METHOD, clientId);
+                    configurationService.getSsmParameter(CLIENT_AUTHENTICATION_METHOD, clientId);
 
             if (clientAuthenticationMethod.equals(JWT)) {
                 LOGGER.error("Missing client_assertion jwt for configured client {}", clientId);
@@ -99,7 +99,7 @@ public class TokenRequestValidator {
     private void validateMaxAllowedAuthClientTtl(JWTAuthenticationClaimsSet claimsSet)
             throws InvalidClientException {
         Date expirationTime = claimsSet.getExpirationTime();
-        String maxAllowedTtl = configurationService.get(MAX_ALLOWED_AUTH_CLIENT_TTL);
+        String maxAllowedTtl = configurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL);
 
         OffsetDateTime offsetDateTime =
                 OffsetDateTime.now().plusSeconds(Long.parseLong(maxAllowedTtl));
@@ -117,6 +117,6 @@ public class TokenRequestValidator {
                 new ConfigurationServicePublicKeySelector(configurationService);
         return new ClientAuthenticationVerifier<>(
                 configurationServicePublicKeySelector,
-                Set.of(new Audience(configurationService.get(AUDIENCE_FOR_CLIENTS))));
+                Set.of(new Audience(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))));
     }
 }

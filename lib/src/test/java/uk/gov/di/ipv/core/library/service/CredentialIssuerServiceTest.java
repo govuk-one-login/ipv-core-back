@@ -74,8 +74,8 @@ class CredentialIssuerServiceTest {
 
     @Test
     void validTokenResponse(WireMockRuntimeInfo wmRuntimeInfo) {
-        when(mockConfigurationService.get(JWT_TTL_SECONDS)).thenReturn("900");
-        when(mockConfigurationService.get(CORE_FRONT_CALLBACK_URL))
+        when(mockConfigurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
                 .thenReturn("http://www.example.com/redirect");
         stubFor(
                 post("/token")
@@ -106,8 +106,8 @@ class CredentialIssuerServiceTest {
 
     @Test
     void validTokenResponseWithoutApiKey(WireMockRuntimeInfo wmRuntimeInfo) {
-        when(mockConfigurationService.get(JWT_TTL_SECONDS)).thenReturn("900");
-        when(mockConfigurationService.get(CORE_FRONT_CALLBACK_URL))
+        when(mockConfigurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
                 .thenReturn("http://www.example.com/redirect");
         stubFor(
                 post("/token")
@@ -138,8 +138,8 @@ class CredentialIssuerServiceTest {
 
     @Test
     void tokenErrorResponse(WireMockRuntimeInfo wmRuntimeInfo) {
-        when(mockConfigurationService.get(JWT_TTL_SECONDS)).thenReturn("900");
-        when(mockConfigurationService.get(CORE_FRONT_CALLBACK_URL))
+        when(mockConfigurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
                 .thenReturn("http://www.example.com/redirect");
         var errorJson =
                 "{ \"error\": \"invalid_request\", \"error_description\": \"Request was missing the 'redirect_uri' parameter.\", \"error_uri\": \"See the full API docs at https://authorization-server.com/docs/access_token\"}";
@@ -176,8 +176,8 @@ class CredentialIssuerServiceTest {
 
     @Test
     void invalidHeaderThrowsCredentialIssuerException(WireMockRuntimeInfo wmRuntimeInfo) {
-        when(mockConfigurationService.get(JWT_TTL_SECONDS)).thenReturn("900");
-        when(mockConfigurationService.get(CORE_FRONT_CALLBACK_URL))
+        when(mockConfigurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
                 .thenReturn("http://www.example.com/redirect");
         stubFor(
                 post("/token")

@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.Name;
@@ -47,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_FRONT_CALLBACK_URL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
@@ -63,7 +63,7 @@ class AuthorizationRequestHelperTest {
     public static final String IPV_ISSUER = "http://example.com/issuer";
     public static final String AUDIENCE = "Audience";
     public static final String IPV_TOKEN_TTL = "900";
-    public static final String CORE_FRONT_CALLBACK_URL = "callbackUri";
+    public static final String MOCK_CORE_FRONT_CALLBACK_URL = "callbackUri";
     public static final String CRI_ID = "cri_id";
     public static final String TEST_USER_ID = "test-user-id";
     public static final UUID OAUTH_STATE = UUID.randomUUID();
@@ -116,7 +116,7 @@ class AuthorizationRequestHelperTest {
         assertEquals(
                 IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getClaims().get(CLIENT_ID_FIELD));
         assertEquals(
-                String.format("%s?id=%s", CORE_FRONT_CALLBACK_URL, CRI_ID),
+                String.format("%s?id=%s", MOCK_CORE_FRONT_CALLBACK_URL, CRI_ID),
                 result.getJWTClaimsSet().getClaims().get("redirect_uri"));
         assertTrue(result.verify(new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK))));
     }
@@ -161,8 +161,7 @@ class AuthorizationRequestHelperTest {
     @Test
     void shouldThrowExceptionWhenUnableToBuildRedirectionUri() {
         when(credentialIssuerConfig.getId()).thenReturn(CRI_ID);
-        when(configurationService.get(ConfigurationVariable.CORE_FRONT_CALLBACK_URL))
-                .thenReturn("[[]]]][[[");
+        when(configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL)).thenReturn("[[]]]][[[");
 
         HttpResponseExceptionWithErrorBody exception =
                 assertThrows(
@@ -199,7 +198,7 @@ class AuthorizationRequestHelperTest {
         assertEquals(
                 IPV_CLIENT_ID_VALUE, signedJWT.getJWTClaimsSet().getClaims().get(CLIENT_ID_FIELD));
         assertEquals(
-                String.format("%s?id=%s", CORE_FRONT_CALLBACK_URL, CRI_ID),
+                String.format("%s?id=%s", MOCK_CORE_FRONT_CALLBACK_URL, CRI_ID),
                 signedJWT.getJWTClaimsSet().getClaims().get("redirect_uri"));
     }
 
@@ -221,10 +220,10 @@ class AuthorizationRequestHelperTest {
     }
 
     private void setupConfigurationServiceMock() {
-        when(configurationService.get(ConfigurationVariable.CORE_FRONT_CALLBACK_URL))
-                .thenReturn(CORE_FRONT_CALLBACK_URL);
-        when(configurationService.get(JWT_TTL_SECONDS)).thenReturn(IPV_TOKEN_TTL);
-        when(configurationService.get(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
+        when(configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
+                .thenReturn(MOCK_CORE_FRONT_CALLBACK_URL);
+        when(configurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn(IPV_TOKEN_TTL);
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
     }
 
     private PrivateKey getEncryptionPrivateKey()

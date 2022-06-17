@@ -86,7 +86,8 @@ public class CredentialIssuerService {
                             config.getAudienceForClients(),
                             dateTime.plusSeconds(
                                             Long.parseLong(
-                                                    configurationService.get(JWT_TTL_SECONDS)))
+                                                    configurationService.getSsmParameter(
+                                                            JWT_TTL_SECONDS)))
                                     .toEpochSecond(),
                             UUID.randomUUID().toString());
             SignedJWT signedClientJwt =
@@ -94,7 +95,8 @@ public class CredentialIssuerService {
 
             ClientAuthentication clientAuthentication = new PrivateKeyJWT(signedClientJwt);
 
-            String coreFrontCallbackUrl = configurationService.get(CORE_FRONT_CALLBACK_URL);
+            String coreFrontCallbackUrl =
+                    configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL);
 
             TokenRequest tokenRequest =
                     new TokenRequest(

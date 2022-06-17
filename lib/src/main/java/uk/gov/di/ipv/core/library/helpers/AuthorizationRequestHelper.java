@@ -56,7 +56,8 @@ public class AuthorizationRequestHelper {
         String criId = credentialIssuerConfig.getId();
 
         URI redirectionURI =
-                getRedirectionURI(criId, configurationService.get(CORE_FRONT_CALLBACK_URL));
+                getRedirectionURI(
+                        criId, configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL));
 
         JWSHeader header =
                 new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build();
@@ -73,13 +74,14 @@ public class AuthorizationRequestHelper {
         JWTClaimsSet.Builder claimsSetBuilder =
                 new JWTClaimsSet.Builder(authClaimsSet)
                         .audience(credentialIssuerConfig.getAudienceForClients())
-                        .issuer(configurationService.get(AUDIENCE_FOR_CLIENTS))
+                        .issuer(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
                         .issueTime(Date.from(now))
                         .expirationTime(
                                 Date.from(
                                         now.plus(
                                                 Long.parseLong(
-                                                        configurationService.get(JWT_TTL_SECONDS)),
+                                                        configurationService.getSsmParameter(
+                                                                JWT_TTL_SECONDS)),
                                                 ChronoUnit.SECONDS)))
                         .notBeforeTime(Date.from(now))
                         .subject(userId);

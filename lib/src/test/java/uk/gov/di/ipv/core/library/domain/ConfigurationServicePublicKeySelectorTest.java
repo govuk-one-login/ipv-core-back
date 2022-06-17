@@ -45,11 +45,13 @@ class ConfigurationServicePublicKeySelectorTest {
 
     @Test
     void selectPublicKeysShouldReturnKeys() throws Exception {
-        when(configurationServiceMock.get(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
+        when(configurationServiceMock.getSsmParameter(
+                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationServiceMock.get(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "x509Client"))
+        when(configurationServiceMock.getSsmParameter(
+                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "x509Client"))
                 .thenReturn(RSA_PUBLIC_CERT);
-        when(configurationServiceMock.get(
+        when(configurationServiceMock.getSsmParameter(
                         PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "misconfiguredClient"))
                 .thenReturn("some nonsense");
 
@@ -94,7 +96,8 @@ class ConfigurationServicePublicKeySelectorTest {
 
     @Test
     void selectPublicKeysShouldThrowIfUnsupportedAlgorithm() {
-        when(configurationServiceMock.get(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
+        when(configurationServiceMock.getSsmParameter(
+                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
                 .thenReturn(EC_PUBLIC_JWK);
 
         InvalidClientException exception =
@@ -115,9 +118,11 @@ class ConfigurationServicePublicKeySelectorTest {
 
     @Test
     void selectPublicKeysShouldThrowIfKeyMaterialDoesNotMatchAlgo() {
-        when(configurationServiceMock.get(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
+        when(configurationServiceMock.getSsmParameter(
+                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
                 .thenReturn(RSA_PUBLIC_CERT);
-        when(configurationServiceMock.get(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "x509Client"))
+        when(configurationServiceMock.getSsmParameter(
+                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "x509Client"))
                 .thenReturn(EC_PUBLIC_JWK);
 
         assertThrows(

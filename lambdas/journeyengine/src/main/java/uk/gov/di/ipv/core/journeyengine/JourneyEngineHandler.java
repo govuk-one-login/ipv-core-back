@@ -155,14 +155,18 @@ public class JourneyEngineHandler
                     updateUserState(CRI_UK_PASSPORT, ipvSessionItem);
                     builder.setJourneyResponse(
                             new JourneyResponse(
-                                    criStartUri + configurationService.get(PASSPORT_CRI_ID)));
+                                    criStartUri
+                                            + configurationService.getSsmParameter(
+                                                    PASSPORT_CRI_ID)));
                     break;
                 case CRI_UK_PASSPORT:
                     if (journeyStep.equals(NEXT)) {
                         updateUserState(CRI_ADDRESS, ipvSessionItem);
                         builder.setJourneyResponse(
                                 new JourneyResponse(
-                                        criStartUri + configurationService.get(ADDRESS_CRI_ID)));
+                                        criStartUri
+                                                + configurationService.getSsmParameter(
+                                                        ADDRESS_CRI_ID)));
                     } else if (journeyStep.equals(ERROR)) {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
@@ -178,7 +182,9 @@ public class JourneyEngineHandler
                         updateUserState(CRI_FRAUD, ipvSessionItem);
                         builder.setJourneyResponse(
                                 new JourneyResponse(
-                                        criStartUri + configurationService.get(FRAUD_CRI_ID)));
+                                        criStartUri
+                                                + configurationService.getSsmParameter(
+                                                        FRAUD_CRI_ID)));
                     } else if (journeyStep.equals(ERROR)) {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
@@ -204,7 +210,8 @@ public class JourneyEngineHandler
                     updateUserState(CRI_KBV, ipvSessionItem);
                     builder.setJourneyResponse(
                             new JourneyResponse(
-                                    criStartUri + configurationService.get(KBV_CRI_ID)));
+                                    criStartUri
+                                            + configurationService.getSsmParameter(KBV_CRI_ID)));
                     break;
                 case CRI_KBV:
                     if (journeyStep.equals(NEXT)) {
@@ -319,7 +326,7 @@ public class JourneyEngineHandler
                                 Instant.now()
                                         .minusSeconds(
                                                 Long.parseLong(
-                                                        configurationService.get(
+                                                        configurationService.getSsmParameter(
                                                                 BACKEND_SESSION_TIMEOUT))));
     }
 }

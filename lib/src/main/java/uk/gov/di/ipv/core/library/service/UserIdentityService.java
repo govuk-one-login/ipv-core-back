@@ -103,7 +103,7 @@ public class UserIdentityService {
 
         String vot = generateVectorOfTrustClaim(credentialIssuerItems);
 
-        String vtm = configurationService.get(CORE_VTM_CLAIM);
+        String vtm = configurationService.getSsmParameter(CORE_VTM_CLAIM);
 
         UserIdentity.Builder userIdentityBuilder =
                 new UserIdentity.Builder().setVcs(vcJwts).setSub(sub).setVot(vot).setVtm(vtm);

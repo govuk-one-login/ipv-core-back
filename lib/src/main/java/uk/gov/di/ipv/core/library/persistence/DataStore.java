@@ -55,7 +55,9 @@ public class DataStore<T extends DynamodbItem> {
     public void create(T item) {
         item.setTtl(
                 Instant.now()
-                        .plusSeconds(Long.parseLong(configurationService.get(BACKEND_SESSION_TTL)))
+                        .plusSeconds(
+                                Long.parseLong(
+                                        configurationService.getSsmParameter(BACKEND_SESSION_TTL)))
                         .getEpochSecond());
         getTable().putItem(item);
     }

@@ -266,7 +266,8 @@ class ConfigurationServiceTest {
 
         assertEquals(
                 TEST_CERT,
-                configurationService.get(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "aClientId"));
+                configurationService.getSsmParameter(
+                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "aClientId"));
     }
 
     @Test
@@ -274,7 +275,8 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String clientIssuer = "aClientIssuer";
         when(ssmProvider.get("/test/core/clients/aClientId/issuer")).thenReturn(clientIssuer);
-        assertEquals(clientIssuer, configurationService.get(CLIENT_ISSUER, "aClientId"));
+        assertEquals(
+                clientIssuer, configurationService.getSsmParameter(CLIENT_ISSUER, "aClientId"));
     }
 
     @Test
@@ -282,7 +284,8 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String clientIssuer = "aClientTokenTtl";
         when(ssmProvider.get("/test/core/self/maxAllowedAuthClientTtl")).thenReturn(clientIssuer);
-        assertEquals(clientIssuer, configurationService.get(MAX_ALLOWED_AUTH_CLIENT_TTL));
+        assertEquals(
+                clientIssuer, configurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL));
     }
 
     @Test
@@ -291,7 +294,9 @@ class ConfigurationServiceTest {
         String coreFrontCallbackUrl = "aCoreFrontCallbackUrl";
         when(ssmProvider.get("/test/core/self/coreFrontCallbackUrl"))
                 .thenReturn(coreFrontCallbackUrl);
-        assertEquals(coreFrontCallbackUrl, configurationService.get(CORE_FRONT_CALLBACK_URL));
+        assertEquals(
+                coreFrontCallbackUrl,
+                configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL));
     }
 
     @Test
@@ -299,7 +304,7 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String coreVtmClaim = "aCoreVtmClaim";
         when(ssmProvider.get("/test/core/self/coreVtmClaim")).thenReturn(coreVtmClaim);
-        assertEquals(coreVtmClaim, configurationService.get(CORE_VTM_CLAIM));
+        assertEquals(coreVtmClaim, configurationService.getSsmParameter(CORE_VTM_CLAIM));
     }
 
     @Test
@@ -307,7 +312,7 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String passportCriId = "ukPassport";
         when(ssmProvider.get("/test/core/self/journey/passportCriId")).thenReturn(passportCriId);
-        assertEquals(passportCriId, configurationService.get(PASSPORT_CRI_ID));
+        assertEquals(passportCriId, configurationService.getSsmParameter(PASSPORT_CRI_ID));
     }
 
     @Test
@@ -315,7 +320,7 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String addressCriId = "address";
         when(ssmProvider.get("/test/core/self/journey/addressCriId")).thenReturn(addressCriId);
-        assertEquals(addressCriId, configurationService.get(ADDRESS_CRI_ID));
+        assertEquals(addressCriId, configurationService.getSsmParameter(ADDRESS_CRI_ID));
     }
 
     @Test
@@ -323,7 +328,7 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String fraudCriId = "fraud";
         when(ssmProvider.get("/test/core/self/journey/fraudCriId")).thenReturn(fraudCriId);
-        assertEquals(fraudCriId, configurationService.get(FRAUD_CRI_ID));
+        assertEquals(fraudCriId, configurationService.getSsmParameter(FRAUD_CRI_ID));
     }
 
     @Test
@@ -331,7 +336,7 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String kbvCriId = "kbv";
         when(ssmProvider.get("/test/core/self/journey/kbvCriId")).thenReturn(kbvCriId);
-        assertEquals(kbvCriId, configurationService.get(KBV_CRI_ID));
+        assertEquals(kbvCriId, configurationService.getSsmParameter(KBV_CRI_ID));
     }
 
     @Test
@@ -416,13 +421,13 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String ttl = "7200";
         when(ssmProvider.get("/test/core/self/backendSessionTimeout")).thenReturn(ttl);
-        assertEquals(ttl, configurationService.get(BACKEND_SESSION_TIMEOUT));
+        assertEquals(ttl, configurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT));
     }
 
     @Test
     void shouldReturnBackendSessionTtl() {
         environmentVariables.set("ENVIRONMENT", "test");
         when(ssmProvider.get("/test/core/self/backendSessionTtl")).thenReturn("7200");
-        assertEquals("7200", configurationService.get(BACKEND_SESSION_TTL));
+        assertEquals("7200", configurationService.getSsmParameter(BACKEND_SESSION_TTL));
     }
 }

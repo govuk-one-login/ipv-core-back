@@ -414,7 +414,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldSetSubClaimOnUserIdentity() throws HttpResponseExceptionWithErrorBody {
-        when(mockConfigurationService.get(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigurationService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
@@ -443,7 +443,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldSetVtmClaimOnUserIdentity() throws HttpResponseExceptionWithErrorBody {
-        when(mockConfigurationService.get(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigurationService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");

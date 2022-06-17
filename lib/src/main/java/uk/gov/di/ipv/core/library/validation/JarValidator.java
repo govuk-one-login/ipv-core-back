@@ -81,7 +81,7 @@ public class JarValidator {
 
     private void validateClientId(String clientId) throws JarValidationException {
         try {
-            configurationService.get(CLIENT_AUTHENTICATION_METHOD, clientId);
+            configurationService.getSsmParameter(CLIENT_AUTHENTICATION_METHOD, clientId);
         } catch (ParameterNotFoundException e) {
             LOGGER.error("Unknown client id provided {}", clientId);
             throw new JarValidationException(
@@ -110,12 +110,11 @@ public class JarValidator {
             } else {
                 concatSignatureJwt = signedJWT;
             }
-            boolean valid;
-            valid =
+            boolean valid =
                     concatSignatureJwt.verify(
                             new ECDSAVerifier(
                                     ECKey.parse(
-                                                    configurationService.get(
+                                                    configurationService.getSsmParameter(
                                                             PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY,
                                                             clientId))
                                             .toECPublicKey()));
@@ -137,8 +136,8 @@ public class JarValidator {
     private JWTClaimsSet getValidatedClaimSet(SignedJWT signedJWT, String clientId)
             throws JarValidationException {
 
-        String criAudience = configurationService.get(AUDIENCE_FOR_CLIENTS);
-        String clientIssuer = configurationService.get(CLIENT_ISSUER, clientId);
+        String criAudience = configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS);
+        String clientIssuer = configurationService.getSsmParameter(CLIENT_ISSUER, clientId);
 
         DefaultJWTClaimsVerifier<?> verifier =
                 new DefaultJWTClaimsVerifier<>(
@@ -167,7 +166,7 @@ public class JarValidator {
     }
 
     private void validateMaxAllowedJarTtl(JWTClaimsSet claimsSet) throws JarValidationException {
-        String maxAllowedTtl = configurationService.get(MAX_ALLOWED_AUTH_CLIENT_TTL);
+        String maxAllowedTtl = configurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL);
         LocalDateTime maximumExpirationTime =
                 LocalDateTime.now().plusSeconds(Long.parseLong(maxAllowedTtl));
         LocalDateTime expirationTime =
