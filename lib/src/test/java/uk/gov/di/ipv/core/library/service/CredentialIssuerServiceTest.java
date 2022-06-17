@@ -44,6 +44,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_FRONT_CALLBACK_URL;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
@@ -60,7 +62,7 @@ class CredentialIssuerServiceTest {
     @Mock private ConfigurationService mockConfigurationService;
 
     private CredentialIssuerService credentialIssuerService;
-    private String testApiKey = "test-api-key";
+    private final String testApiKey = "test-api-key";
 
     @BeforeEach
     void setUp() throws Exception {
@@ -72,8 +74,8 @@ class CredentialIssuerServiceTest {
 
     @Test
     void validTokenResponse(WireMockRuntimeInfo wmRuntimeInfo) {
-        when(mockConfigurationService.getIpvTokenTtl()).thenReturn("900");
-        when(mockConfigurationService.getCoreFrontCallbackUrl())
+        when(mockConfigurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
                 .thenReturn("http://www.example.com/redirect");
         stubFor(
                 post("/token")
@@ -104,8 +106,8 @@ class CredentialIssuerServiceTest {
 
     @Test
     void validTokenResponseWithoutApiKey(WireMockRuntimeInfo wmRuntimeInfo) {
-        when(mockConfigurationService.getIpvTokenTtl()).thenReturn("900");
-        when(mockConfigurationService.getCoreFrontCallbackUrl())
+        when(mockConfigurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
                 .thenReturn("http://www.example.com/redirect");
         stubFor(
                 post("/token")
@@ -136,8 +138,8 @@ class CredentialIssuerServiceTest {
 
     @Test
     void tokenErrorResponse(WireMockRuntimeInfo wmRuntimeInfo) {
-        when(mockConfigurationService.getIpvTokenTtl()).thenReturn("900");
-        when(mockConfigurationService.getCoreFrontCallbackUrl())
+        when(mockConfigurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
                 .thenReturn("http://www.example.com/redirect");
         var errorJson =
                 "{ \"error\": \"invalid_request\", \"error_description\": \"Request was missing the 'redirect_uri' parameter.\", \"error_uri\": \"See the full API docs at https://authorization-server.com/docs/access_token\"}";
@@ -174,8 +176,8 @@ class CredentialIssuerServiceTest {
 
     @Test
     void invalidHeaderThrowsCredentialIssuerException(WireMockRuntimeInfo wmRuntimeInfo) {
-        when(mockConfigurationService.getIpvTokenTtl()).thenReturn("900");
-        when(mockConfigurationService.getCoreFrontCallbackUrl())
+        when(mockConfigurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
                 .thenReturn("http://www.example.com/redirect");
         stubFor(
                 post("/token")

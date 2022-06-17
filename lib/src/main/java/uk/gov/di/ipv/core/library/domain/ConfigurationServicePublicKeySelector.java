@@ -20,6 +20,8 @@ import java.text.ParseException;
 import java.util.Base64;
 import java.util.List;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
+
 public class ConfigurationServicePublicKeySelector implements ClientCredentialsSelector<Object> {
 
     private static final Base64.Decoder decoder = Base64.getDecoder();
@@ -49,7 +51,9 @@ public class ConfigurationServicePublicKeySelector implements ClientCredentialsS
 
         JWSAlgorithm algorithm = jwsHeader.getAlgorithm();
         String clientId = claimedClientID.getValue();
-        String publicKeyMaterial = configurationService.getClientPublicKeyMaterial(clientId);
+        String publicKeyMaterial =
+                configurationService.getSsmParameter(
+                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, clientId);
 
         try {
             switch (algorithm.toString()) {

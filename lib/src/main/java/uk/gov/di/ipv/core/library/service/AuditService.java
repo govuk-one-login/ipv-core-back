@@ -12,6 +12,8 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 
 import java.time.Instant;
 
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.SQS_AUDIT_EVENT_QUEUE_URL;
+
 public class AuditService {
     private final AmazonSQS sqs;
     private final String queueUrl;
@@ -20,7 +22,7 @@ public class AuditService {
 
     public AuditService(AmazonSQS sqs, ConfigurationService configurationService) {
         this.sqs = sqs;
-        queueUrl = configurationService.getSqsAuditEventQueueUrl();
+        queueUrl = configurationService.getEnvironmentVariable(SQS_AUDIT_EVENT_QUEUE_URL);
     }
 
     public static AmazonSQS getDefaultSqsClient() {

@@ -31,6 +31,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
@@ -63,7 +65,8 @@ public class UserIdentityService {
         boolean isRunningLocally = this.configurationService.isRunningLocally();
         this.dataStore =
                 new DataStore<>(
-                        this.configurationService.getUserIssuedCredentialTableName(),
+                        this.configurationService.getEnvironmentVariable(
+                                USER_ISSUED_CREDENTIALS_TABLE_NAME),
                         UserIssuedCredentialsItem.class,
                         DataStore.getClient(isRunningLocally),
                         isRunningLocally,
@@ -100,7 +103,7 @@ public class UserIdentityService {
 
         String vot = generateVectorOfTrustClaim(credentialIssuerItems);
 
-        String vtm = configurationService.getCoreVtmClaim();
+        String vtm = configurationService.getSsmParameter(CORE_VTM_CLAIM);
 
         UserIdentity.Builder userIdentityBuilder =
                 new UserIdentity.Builder().setVcs(vcJwts).setSub(sub).setVot(vot).setVtm(vtm);

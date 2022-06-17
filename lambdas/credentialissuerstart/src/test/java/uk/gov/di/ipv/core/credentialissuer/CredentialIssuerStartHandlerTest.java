@@ -53,6 +53,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.credentialissuer.CredentialIssuerStartHandler.SHARED_CLAIMS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_FRONT_CALLBACK_URL;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_3;
@@ -151,9 +154,10 @@ class CredentialIssuerStartHandlerTest {
     @Test
     void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponse() throws Exception {
         when(configurationService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
-        when(configurationService.getIpvTokenTtl()).thenReturn("900");
-        when(configurationService.getCoreFrontCallbackUrl()).thenReturn("callbackUrl");
-        when(configurationService.getAudienceForClients()).thenReturn(IPV_ISSUER);
+        when(configurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
+                .thenReturn("callbackUrl");
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
@@ -242,9 +246,10 @@ class CredentialIssuerStartHandlerTest {
     @Test
     void shouldDeduplicateSharedClaims() throws Exception {
         when(configurationService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
-        when(configurationService.getIpvTokenTtl()).thenReturn("900");
-        when(configurationService.getCoreFrontCallbackUrl()).thenReturn("callbackUrl");
-        when(configurationService.getAudienceForClients()).thenReturn(IPV_ISSUER);
+        when(configurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
+                .thenReturn("callbackUrl");
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))
@@ -275,9 +280,10 @@ class CredentialIssuerStartHandlerTest {
     @Test
     void shouldNotDeduplicateSharedClaimsIfFullNameDifferent() throws Exception {
         when(configurationService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
-        when(configurationService.getIpvTokenTtl()).thenReturn("900");
-        when(configurationService.getCoreFrontCallbackUrl()).thenReturn("callbackUrl");
-        when(configurationService.getAudienceForClients()).thenReturn(IPV_ISSUER);
+        when(configurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
+                .thenReturn("callbackUrl");
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(SESSION_ID))

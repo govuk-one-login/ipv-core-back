@@ -27,6 +27,12 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_AUTHENTICATION_METHOD;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
+
 public class JarValidator {
     private static final Logger LOGGER = LoggerFactory.getLogger(JarValidator.class);
     private static final String REDIRECT_URI_CLAIM = "redirect_uri";
@@ -75,7 +81,7 @@ public class JarValidator {
 
     private void validateClientId(String clientId) throws JarValidationException {
         try {
-            configurationService.getClientAuthenticationMethod(clientId);
+            configurationService.getSsmParameter(CLIENT_AUTHENTICATION_METHOD, clientId);
         } catch (ParameterNotFoundException e) {
             LOGGER.error("Unknown client id provided {}", clientId);
             throw new JarValidationException(
@@ -108,7 +114,8 @@ public class JarValidator {
                     concatSignatureJwt.verify(
                             new ECDSAVerifier(
                                     ECKey.parse(
-                                                    configurationService.getClientPublicKeyMaterial(
+                                                    configurationService.getSsmParameter(
+                                                            PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY,
                                                             clientId))
                                             .toECPublicKey()));
 
@@ -129,8 +136,8 @@ public class JarValidator {
     private JWTClaimsSet getValidatedClaimSet(SignedJWT signedJWT, String clientId)
             throws JarValidationException {
 
-        String criAudience = configurationService.getAudienceForClients();
-        String clientIssuer = configurationService.getClientIssuer(clientId);
+        String criAudience = configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS);
+        String clientIssuer = configurationService.getSsmParameter(CLIENT_ISSUER, clientId);
 
         DefaultJWTClaimsVerifier<?> verifier =
                 new DefaultJWTClaimsVerifier<>(
@@ -159,7 +166,7 @@ public class JarValidator {
     }
 
     private void validateMaxAllowedJarTtl(JWTClaimsSet claimsSet) throws JarValidationException {
-        String maxAllowedTtl = configurationService.getMaxAllowedAuthClientTtl();
+        String maxAllowedTtl = configurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL);
         LocalDateTime maximumExpirationTime =
                 LocalDateTime.now().plusSeconds(Long.parseLong(maxAllowedTtl));
         LocalDateTime expirationTime =

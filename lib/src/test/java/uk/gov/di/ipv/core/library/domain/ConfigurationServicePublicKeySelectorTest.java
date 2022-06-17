@@ -22,6 +22,7 @@ import static com.nimbusds.oauth2.sdk.auth.ClientAuthenticationMethod.CLIENT_SEC
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_PUBLIC_CERT;
 
@@ -44,11 +45,14 @@ class ConfigurationServicePublicKeySelectorTest {
 
     @Test
     void selectPublicKeysShouldReturnKeys() throws Exception {
-        when(configurationServiceMock.getClientPublicKeyMaterial("jwkClient"))
+        when(configurationServiceMock.getSsmParameter(
+                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationServiceMock.getClientPublicKeyMaterial("x509Client"))
+        when(configurationServiceMock.getSsmParameter(
+                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "x509Client"))
                 .thenReturn(RSA_PUBLIC_CERT);
-        when(configurationServiceMock.getClientPublicKeyMaterial("misconfiguredClient"))
+        when(configurationServiceMock.getSsmParameter(
+                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "misconfiguredClient"))
                 .thenReturn("some nonsense");
 
         PublicKey jwkClientPublicKey =
@@ -92,7 +96,8 @@ class ConfigurationServicePublicKeySelectorTest {
 
     @Test
     void selectPublicKeysShouldThrowIfUnsupportedAlgorithm() {
-        when(configurationServiceMock.getClientPublicKeyMaterial("jwkClient"))
+        when(configurationServiceMock.getSsmParameter(
+                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
                 .thenReturn(EC_PUBLIC_JWK);
 
         InvalidClientException exception =
@@ -113,9 +118,11 @@ class ConfigurationServicePublicKeySelectorTest {
 
     @Test
     void selectPublicKeysShouldThrowIfKeyMaterialDoesNotMatchAlgo() {
-        when(configurationServiceMock.getClientPublicKeyMaterial("jwkClient"))
+        when(configurationServiceMock.getSsmParameter(
+                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
                 .thenReturn(RSA_PUBLIC_CERT);
-        when(configurationServiceMock.getClientPublicKeyMaterial("x509Client"))
+        when(configurationServiceMock.getSsmParameter(
+                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "x509Client"))
                 .thenReturn(EC_PUBLIC_JWK);
 
         assertThrows(

@@ -36,7 +36,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_AUTHENTICATION_METHOD;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_PRIVATE_KEY;
@@ -54,17 +59,21 @@ class TokenRequestValidatorTest {
 
     @BeforeEach
     void setUp() {
-        when(mockConfigurationService.getAudienceForClients()).thenReturn(audience);
+        when(mockConfigurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audience);
         validator = new TokenRequestValidator(mockConfigurationService);
     }
 
     @Test
     void shouldNotThrowForValidJwtSignedWithRS256()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(mockConfigurationService.getClientPublicKeyMaterial(anyString()))
+        when(mockConfigurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(RSA_PUBLIC_CERT);
-        when(mockConfigurationService.getClientAuthenticationMethod(anyString())).thenReturn("jwt");
-        when(mockConfigurationService.getMaxAllowedAuthClientTtl()).thenReturn("2400");
+        when(mockConfigurationService.getSsmParameter(
+                        eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+                .thenReturn("jwt");
+        when(mockConfigurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                .thenReturn("2400");
 
         var validQueryParams =
                 getValidQueryParams(generateClientAssertionWithRS256(getValidClaimsSetValues()));
@@ -74,10 +83,14 @@ class TokenRequestValidatorTest {
     @Test
     void shouldNotThrowForValidJwtSignedWithES256()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(mockConfigurationService.getClientPublicKeyMaterial(anyString()))
+        when(mockConfigurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(mockConfigurationService.getClientAuthenticationMethod(anyString())).thenReturn("jwt");
-        when(mockConfigurationService.getMaxAllowedAuthClientTtl()).thenReturn("2400");
+        when(mockConfigurationService.getSsmParameter(
+                        eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+                .thenReturn("jwt");
+        when(mockConfigurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                .thenReturn("2400");
 
         var validQueryParams =
                 getValidQueryParams(generateClientAssertionWithES256(getValidClaimsSetValues()));
@@ -86,9 +99,12 @@ class TokenRequestValidatorTest {
 
     @Test
     void shouldThrowIfInvalidSignature() throws Exception {
-        when(mockConfigurationService.getClientPublicKeyMaterial(anyString()))
+        when(mockConfigurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(RSA_PUBLIC_CERT);
-        when(mockConfigurationService.getClientAuthenticationMethod(anyString())).thenReturn("jwt");
+        when(mockConfigurationService.getSsmParameter(
+                        eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+                .thenReturn("jwt");
 
         var invalidSignatureQueryParams =
                 new HashMap<>(
@@ -134,7 +150,9 @@ class TokenRequestValidatorTest {
     @Test
     void shouldThrowIfWrongAudience()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(mockConfigurationService.getClientAuthenticationMethod(anyString())).thenReturn("jwt");
+        when(mockConfigurationService.getSsmParameter(
+                        eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+                .thenReturn("jwt");
         var wrongAudienceClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
         wrongAudienceClaimsSetValues.put(
                 JWTClaimNames.AUDIENCE, "NOT_THE_AUDIENCE_YOU_ARE_LOOKING_FOR");
@@ -158,7 +176,9 @@ class TokenRequestValidatorTest {
     @Test
     void shouldThrowIfClaimsSetHasExpired()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(mockConfigurationService.getClientAuthenticationMethod(anyString())).thenReturn("jwt");
+        when(mockConfigurationService.getSsmParameter(
+                        eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+                .thenReturn("jwt");
         var expiredClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
         expiredClaimsSetValues.put(
                 JWTClaimNames.EXPIRATION_TIME,
@@ -177,10 +197,14 @@ class TokenRequestValidatorTest {
     @Test
     void shouldFailWhenClientJWTContainsExpiryClaimTooFarInFuture()
             throws InvalidKeySpecException, NoSuchAlgorithmException, JOSEException {
-        when(mockConfigurationService.getClientPublicKeyMaterial(anyString()))
+        when(mockConfigurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(RSA_PUBLIC_CERT);
-        when(mockConfigurationService.getClientAuthenticationMethod(anyString())).thenReturn("jwt");
-        when(mockConfigurationService.getMaxAllowedAuthClientTtl()).thenReturn("2400");
+        when(mockConfigurationService.getSsmParameter(
+                        eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+                .thenReturn("jwt");
+        when(mockConfigurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                .thenReturn("2400");
         var expiredClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
         expiredClaimsSetValues.put(
                 JWTClaimNames.EXPIRATION_TIME,
@@ -201,7 +225,8 @@ class TokenRequestValidatorTest {
 
     @Test
     void shouldNotThrowIfMissingClientAssertionParamWhenNoneRequired() {
-        when(mockConfigurationService.getClientAuthenticationMethod(clientId)).thenReturn("none");
+        when(mockConfigurationService.getSsmParameter(CLIENT_AUTHENTICATION_METHOD, clientId))
+                .thenReturn("none");
         var params = getValidQueryParamsWithoutClientAuth(clientId);
 
         assertDoesNotThrow(() -> validator.authenticateClient(queryMapToString(params)));
@@ -210,7 +235,8 @@ class TokenRequestValidatorTest {
     @Test
     void shouldNotThrowIfContainsClientAssertionParamWhenNoneRequired()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(mockConfigurationService.getClientAuthenticationMethod(clientId)).thenReturn("none");
+        when(mockConfigurationService.getSsmParameter(CLIENT_AUTHENTICATION_METHOD, clientId))
+                .thenReturn("none");
         var validQueryParams =
                 getValidQueryParams(generateClientAssertionWithRS256(getValidClaimsSetValues()));
 
@@ -220,7 +246,8 @@ class TokenRequestValidatorTest {
     @Test
     void shouldThrowIfMissingClientAssertionParamWhenRequired() {
         String invalidClientId = "invalid-client";
-        when(mockConfigurationService.getClientAuthenticationMethod(invalidClientId))
+        when(mockConfigurationService.getSsmParameter(
+                        CLIENT_AUTHENTICATION_METHOD, invalidClientId))
                 .thenReturn("jwt");
         var missingClientAssertionParams = getValidQueryParamsWithoutClientAuth(invalidClientId);
 

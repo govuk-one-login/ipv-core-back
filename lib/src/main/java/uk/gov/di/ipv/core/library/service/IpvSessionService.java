@@ -10,6 +10,8 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import java.time.Instant;
 import java.util.UUID;
 
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_SESSIONS_TABLE_NAME;
+
 public class IpvSessionService {
     private final DataStore<IpvSessionItem> dataStore;
     private final ConfigurationService configurationService;
@@ -20,7 +22,7 @@ public class IpvSessionService {
         boolean isRunningLocally = this.configurationService.isRunningLocally();
         dataStore =
                 new DataStore<>(
-                        this.configurationService.getIpvSessionTableName(),
+                        this.configurationService.getEnvironmentVariable(IPV_SESSIONS_TABLE_NAME),
                         IpvSessionItem.class,
                         DataStore.getClient(isRunningLocally),
                         isRunningLocally,

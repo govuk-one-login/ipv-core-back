@@ -44,6 +44,17 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_FRONT_CALLBACK_URL;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
 @WireMockTest(httpPort = ConfigurationService.LOCALHOST_PORT)
@@ -68,7 +79,7 @@ class ConfigurationServiceTest {
 
     private ConfigurationService configurationService;
 
-    private Gson gson = new Gson();
+    private final Gson gson = new Gson();
 
     @BeforeEach
     void setUp() {
@@ -253,7 +264,10 @@ class ConfigurationServiceTest {
         when(ssmProvider.get("/test/core/clients/aClientId/publicKeyMaterialForCoreToVerify"))
                 .thenReturn(TEST_CERT);
 
-        assertEquals(TEST_CERT, configurationService.getClientPublicKeyMaterial("aClientId"));
+        assertEquals(
+                TEST_CERT,
+                configurationService.getSsmParameter(
+                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "aClientId"));
     }
 
     @Test
@@ -261,15 +275,8 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String clientIssuer = "aClientIssuer";
         when(ssmProvider.get("/test/core/clients/aClientId/issuer")).thenReturn(clientIssuer);
-        assertEquals(clientIssuer, configurationService.getClientIssuer("aClientId"));
-    }
-
-    @Test
-    void shouldReturnClientSubject() {
-        environmentVariables.set("ENVIRONMENT", "test");
-        String clientIssuer = "aClientSubject";
-        when(ssmProvider.get("/test/core/clients/aClientId/subject")).thenReturn(clientIssuer);
-        assertEquals(clientIssuer, configurationService.getClientSubject("aClientId"));
+        assertEquals(
+                clientIssuer, configurationService.getSsmParameter(CLIENT_ISSUER, "aClientId"));
     }
 
     @Test
@@ -277,7 +284,8 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String clientIssuer = "aClientTokenTtl";
         when(ssmProvider.get("/test/core/self/maxAllowedAuthClientTtl")).thenReturn(clientIssuer);
-        assertEquals(clientIssuer, configurationService.getMaxAllowedAuthClientTtl());
+        assertEquals(
+                clientIssuer, configurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL));
     }
 
     @Test
@@ -286,7 +294,9 @@ class ConfigurationServiceTest {
         String coreFrontCallbackUrl = "aCoreFrontCallbackUrl";
         when(ssmProvider.get("/test/core/self/coreFrontCallbackUrl"))
                 .thenReturn(coreFrontCallbackUrl);
-        assertEquals(coreFrontCallbackUrl, configurationService.getCoreFrontCallbackUrl());
+        assertEquals(
+                coreFrontCallbackUrl,
+                configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL));
     }
 
     @Test
@@ -294,7 +304,7 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String coreVtmClaim = "aCoreVtmClaim";
         when(ssmProvider.get("/test/core/self/coreVtmClaim")).thenReturn(coreVtmClaim);
-        assertEquals(coreVtmClaim, configurationService.getCoreVtmClaim());
+        assertEquals(coreVtmClaim, configurationService.getSsmParameter(CORE_VTM_CLAIM));
     }
 
     @Test
@@ -302,7 +312,7 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String passportCriId = "ukPassport";
         when(ssmProvider.get("/test/core/self/journey/passportCriId")).thenReturn(passportCriId);
-        assertEquals(passportCriId, configurationService.getPassportCriId());
+        assertEquals(passportCriId, configurationService.getSsmParameter(PASSPORT_CRI_ID));
     }
 
     @Test
@@ -310,7 +320,7 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String addressCriId = "address";
         when(ssmProvider.get("/test/core/self/journey/addressCriId")).thenReturn(addressCriId);
-        assertEquals(addressCriId, configurationService.getAddressCriId());
+        assertEquals(addressCriId, configurationService.getSsmParameter(ADDRESS_CRI_ID));
     }
 
     @Test
@@ -318,7 +328,7 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String fraudCriId = "fraud";
         when(ssmProvider.get("/test/core/self/journey/fraudCriId")).thenReturn(fraudCriId);
-        assertEquals(fraudCriId, configurationService.getFraudCriId());
+        assertEquals(fraudCriId, configurationService.getSsmParameter(FRAUD_CRI_ID));
     }
 
     @Test
@@ -326,7 +336,7 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String kbvCriId = "kbv";
         when(ssmProvider.get("/test/core/self/journey/kbvCriId")).thenReturn(kbvCriId);
-        assertEquals(kbvCriId, configurationService.getKbvCriId());
+        assertEquals(kbvCriId, configurationService.getSsmParameter(KBV_CRI_ID));
     }
 
     @Test
@@ -411,14 +421,13 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String ttl = "7200";
         when(ssmProvider.get("/test/core/self/backendSessionTimeout")).thenReturn(ttl);
-        assertEquals(ttl, configurationService.getBackendSessionTimeout());
+        assertEquals(ttl, configurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT));
     }
 
     @Test
     void shouldReturnBackendSessionTtl() {
         environmentVariables.set("ENVIRONMENT", "test");
-        long ttl = 7200;
-        when(ssmProvider.get("/test/core/self/backendSessionTtl")).thenReturn(String.valueOf(ttl));
-        assertEquals(ttl, configurationService.getBackendSessionTtl());
+        when(ssmProvider.get("/test/core/self/backendSessionTtl")).thenReturn("7200");
+        assertEquals("7200", configurationService.getSsmParameter(BACKEND_SESSION_TTL));
     }
 }

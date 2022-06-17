@@ -32,6 +32,10 @@ import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_FRONT_CALLBACK_URL;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
+
 public class AuthorizationRequestHelper {
 
     public static final String SHARED_CLAIMS = "shared_claims";
@@ -52,7 +56,8 @@ public class AuthorizationRequestHelper {
         String criId = credentialIssuerConfig.getId();
 
         URI redirectionURI =
-                getRedirectionURI(criId, configurationService.getCoreFrontCallbackUrl());
+                getRedirectionURI(
+                        criId, configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL));
 
         JWSHeader header =
                 new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build();
@@ -69,13 +74,14 @@ public class AuthorizationRequestHelper {
         JWTClaimsSet.Builder claimsSetBuilder =
                 new JWTClaimsSet.Builder(authClaimsSet)
                         .audience(credentialIssuerConfig.getAudienceForClients())
-                        .issuer(configurationService.getAudienceForClients())
+                        .issuer(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
                         .issueTime(Date.from(now))
                         .expirationTime(
                                 Date.from(
                                         now.plus(
                                                 Long.parseLong(
-                                                        configurationService.getIpvTokenTtl()),
+                                                        configurationService.getSsmParameter(
+                                                                JWT_TTL_SECONDS)),
                                                 ChronoUnit.SECONDS)))
                         .notBeforeTime(Date.from(now))
                         .subject(userId);

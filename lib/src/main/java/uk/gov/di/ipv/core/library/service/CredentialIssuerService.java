@@ -36,6 +36,10 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_FRONT_CALLBACK_URL;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
+
 public class CredentialIssuerService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CredentialIssuerService.class);
@@ -52,7 +56,8 @@ public class CredentialIssuerService {
         boolean isRunningLocally = this.configurationService.isRunningLocally();
         this.dataStore =
                 new DataStore<>(
-                        this.configurationService.getUserIssuedCredentialTableName(),
+                        this.configurationService.getEnvironmentVariable(
+                                USER_ISSUED_CREDENTIALS_TABLE_NAME),
                         UserIssuedCredentialsItem.class,
                         DataStore.getClient(isRunningLocally),
                         isRunningLocally,
@@ -80,7 +85,9 @@ public class CredentialIssuerService {
                             config.getIpvClientId(),
                             config.getAudienceForClients(),
                             dateTime.plusSeconds(
-                                            Long.parseLong(configurationService.getIpvTokenTtl()))
+                                            Long.parseLong(
+                                                    configurationService.getSsmParameter(
+                                                            JWT_TTL_SECONDS)))
                                     .toEpochSecond(),
                             UUID.randomUUID().toString());
             SignedJWT signedClientJwt =
@@ -88,7 +95,8 @@ public class CredentialIssuerService {
 
             ClientAuthentication clientAuthentication = new PrivateKeyJWT(signedClientJwt);
 
-            String coreFrontCallbackUrl = configurationService.getCoreFrontCallbackUrl();
+            String coreFrontCallbackUrl =
+                    configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL);
 
             TokenRequest tokenRequest =
                     new TokenRequest(

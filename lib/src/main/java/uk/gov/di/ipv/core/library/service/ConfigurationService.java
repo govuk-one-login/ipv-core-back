@@ -18,6 +18,8 @@ import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundExce
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 
@@ -30,18 +32,20 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.BEARER_TOKEN_TTL;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IS_LOCAL;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.SIGNING_KEY_ID_PARAM;
+
 public class ConfigurationService {
 
     public static final int LOCALHOST_PORT = 4567;
     private static final String LOCALHOST_URI = "http://localhost:" + LOCALHOST_PORT;
     private static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
-    private static final String IS_LOCAL = "IS_LOCAL";
     private static final String CLIENT_REDIRECT_URL_SEPARATOR = ",";
     private static final String API_KEY = "apiKey";
-
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigurationService.class);
-    public static final String ENVIRONMENT = "ENVIRONMENT";
-
     private final SSMProvider ssmProvider;
     private final SecretsManagerClient secretsManagerClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -86,40 +90,30 @@ public class ConfigurationService {
         return ssmProvider;
     }
 
+    public String getEnvironmentVariable(EnvironmentVariable environmentVariable) {
+        return System.getenv(environmentVariable.name());
+    }
+
+    public String getSsmParameter(ConfigurationVariable configurationVariable) {
+        return ssmProvider.get(
+                String.format(
+                        configurationVariable.getValue(), getEnvironmentVariable(ENVIRONMENT)));
+    }
+
+    public String getSsmParameter(ConfigurationVariable configurationVariable, String clientId) {
+        return ssmProvider.get(
+                String.format(
+                        configurationVariable.getValue(),
+                        getEnvironmentVariable(ENVIRONMENT),
+                        clientId));
+    }
+
     public boolean isRunningLocally() {
-        return Boolean.parseBoolean(System.getenv(IS_LOCAL));
-    }
-
-    public String getAuthCodesTableName() {
-        return System.getenv("AUTH_CODES_TABLE_NAME");
-    }
-
-    public String getUserIssuedCredentialTableName() {
-        return System.getenv("USER_ISSUED_CREDENTIALS_TABLE_NAME");
-    }
-
-    public String getAccessTokensTableName() {
-        return System.getenv("ACCESS_TOKENS_TABLE_NAME");
-    }
-
-    public String getIpvSessionTableName() {
-        return System.getenv("IPV_SESSIONS_TABLE_NAME");
-    }
-
-    public String getIpvJourneyCriStartUri() {
-        return System.getenv("IPV_JOURNEY_CRI_START_URI");
-    }
-
-    public String getIpvJourneySessionEnd() {
-        return System.getenv("IPV_JOURNEY_SESSION_END_URI");
-    }
-
-    public String getSqsAuditEventQueueUrl() {
-        return System.getenv("SQS_AUDIT_EVENT_QUEUE_URL");
+        return Boolean.parseBoolean(getEnvironmentVariable(IS_LOCAL));
     }
 
     public long getBearerAccessTokenTtl() {
-        return Optional.ofNullable(System.getenv("BEARER_TOKEN_TTL"))
+        return Optional.ofNullable(getEnvironmentVariable(BEARER_TOKEN_TTL))
                 .map(Long::valueOf)
                 .orElse(DEFAULT_BEARER_TOKEN_TTL_IN_SECS);
     }
@@ -129,7 +123,7 @@ public class ConfigurationService {
                 ssmProvider.getMultiple(
                         String.format(
                                 "%s/%s",
-                                System.getenv("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX"),
+                                getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
                                 credentialIssuerId));
         return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
     }
@@ -139,7 +133,8 @@ public class ConfigurationService {
         Map<String, String> params =
                 ssmProvider
                         .recursive()
-                        .getMultiple(System.getenv("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX"));
+                        .getMultiple(
+                                getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX));
 
         Map<String, Map<String, Object>> map = new HashMap<>();
         for (Entry<String, String> entry : params.entrySet()) {
@@ -188,17 +183,7 @@ public class ConfigurationService {
     }
 
     public String getSigningKeyId() {
-        return ssmProvider.get(System.getenv("SIGNING_KEY_ID_PARAM"));
-    }
-
-    public String getJarKmsEncryptionKeyId() {
-        return ssmProvider.get(
-                String.format("/%s/core/self/jarKmsEncryptionKeyId", System.getenv(ENVIRONMENT)));
-    }
-
-    public String getAudienceForClients() {
-        return ssmProvider.get(
-                String.format("/%s/core/self/audienceForClients", System.getenv(ENVIRONMENT)));
+        return ssmProvider.get(getEnvironmentVariable(SIGNING_KEY_ID_PARAM));
     }
 
     public List<String> getClientRedirectUrls(String clientId) {
@@ -206,74 +191,9 @@ public class ConfigurationService {
                 ssmProvider.get(
                         String.format(
                                 "/%s/core/clients/%s/validRedirectUrls",
-                                System.getenv(ENVIRONMENT), clientId));
+                                getEnvironmentVariable(ENVIRONMENT), clientId));
 
         return Arrays.asList(redirectUrlStrings.split(CLIENT_REDIRECT_URL_SEPARATOR));
-    }
-
-    public String getClientPublicKeyMaterial(String clientId) {
-
-        return ssmProvider.get(
-                String.format(
-                        "/%s/core/clients/%s/publicKeyMaterialForCoreToVerify",
-                        System.getenv(ENVIRONMENT), clientId));
-    }
-
-    public String getClientAuthenticationMethod(String clientId) {
-        return ssmProvider.get(
-                String.format(
-                        "/%s/core/clients/%s/authenticationMethod",
-                        System.getenv(ENVIRONMENT), clientId));
-    }
-
-    public String getClientIssuer(String clientId) {
-        return ssmProvider.get(
-                String.format("/%s/core/clients/%s/issuer", System.getenv(ENVIRONMENT), clientId));
-    }
-
-    public String getClientSubject(String clientId) {
-        return ssmProvider.get(
-                String.format("/%s/core/clients/%s/subject", System.getenv(ENVIRONMENT), clientId));
-    }
-
-    public String getMaxAllowedAuthClientTtl() {
-        return ssmProvider.get(
-                String.format("/%s/core/self/maxAllowedAuthClientTtl", System.getenv(ENVIRONMENT)));
-    }
-
-    public String getIpvTokenTtl() {
-        return ssmProvider.get(
-                String.format("/%s/core/self/jwtTtlSeconds", System.getenv(ENVIRONMENT)));
-    }
-
-    public String getCoreFrontCallbackUrl() {
-        return ssmProvider.get(
-                String.format("/%s/core/self/coreFrontCallbackUrl", System.getenv(ENVIRONMENT)));
-    }
-
-    public String getCoreVtmClaim() {
-        return ssmProvider.get(
-                String.format("/%s/core/self/coreVtmClaim", System.getenv(ENVIRONMENT)));
-    }
-
-    public String getPassportCriId() {
-        return ssmProvider.get(
-                String.format("/%s/core/self/journey/passportCriId", System.getenv(ENVIRONMENT)));
-    }
-
-    public String getAddressCriId() {
-        return ssmProvider.get(
-                String.format("/%s/core/self/journey/addressCriId", System.getenv(ENVIRONMENT)));
-    }
-
-    public String getFraudCriId() {
-        return ssmProvider.get(
-                String.format("/%s/core/self/journey/fraudCriId", System.getenv(ENVIRONMENT)));
-    }
-
-    public String getKbvCriId() {
-        return ssmProvider.get(
-                String.format("/%s/core/self/journey/kbvCriId", System.getenv(ENVIRONMENT)));
     }
 
     public String getCriPrivateApiKey(String criId) {
@@ -282,7 +202,7 @@ public class ConfigurationService {
                         .secretId(
                                 String.format(
                                         "%s/credential-issuers/%s/api-key",
-                                        System.getenv(ENVIRONMENT), criId))
+                                        getEnvironmentVariable(ENVIRONMENT), criId))
                         .build();
 
         try {
@@ -302,18 +222,6 @@ public class ConfigurationService {
         }
     }
 
-    public String getBackendSessionTimeout() {
-        return ssmProvider.get(
-                String.format("/%s/core/self/backendSessionTimeout", System.getenv(ENVIRONMENT)));
-    }
-
-    public long getBackendSessionTtl() {
-        return Long.parseLong(
-                ssmProvider.get(
-                        String.format(
-                                "/%s/core/self/backendSessionTtl", System.getenv(ENVIRONMENT))));
-    }
-
     private String getSecretsManagerValue(GetSecretValueRequest valueRequest) {
         try {
             GetSecretValueResponse valueResponse =
@@ -324,7 +232,7 @@ public class ConfigurationService {
                     "Secrets manager failed to decrypt the protected secret using the configured KMS key because: {}",
                     e.getMessage());
         } catch (InternalServiceErrorException e) {
-            LOGGER.error("Internal server error occured with Secrets manager: {}", e.getMessage());
+            LOGGER.error("Internal server error occurred with Secrets manager: {}", e.getMessage());
         } catch (InvalidParameterException e) {
             LOGGER.error(
                     "An invalid value was provided for the param value: {}, details: {}",

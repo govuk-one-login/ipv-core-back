@@ -31,6 +31,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_JOURNEY_CRI_START_URI;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_JOURNEY_SESSION_END_URI;
 
 @ExtendWith(MockitoExtension.class)
 class JourneyEngineHandlerTest {
@@ -178,7 +185,7 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setUserState("INVALID-STATE");
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
@@ -207,7 +214,7 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setUserState(UserStates.INITIAL_IPV_JOURNEY.toString());
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
@@ -239,10 +246,9 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.IPV_IDENTITY_START_PAGE.toString());
 
-        when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
-        when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
-        when(mockConfigurationService.getPassportCriId()).thenReturn("ukPassport");
+        mockEnvironmentVariables();
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockConfigurationService.getSsmParameter(PASSPORT_CRI_ID)).thenReturn("ukPassport");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
@@ -276,10 +282,9 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_UK_PASSPORT.toString());
 
-        when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
-        when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
-        when(mockConfigurationService.getAddressCriId()).thenReturn("address");
+        mockEnvironmentVariables();
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockConfigurationService.getSsmParameter(ADDRESS_CRI_ID)).thenReturn("address");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
@@ -313,7 +318,7 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setUserState(UserStates.CRI_UK_PASSPORT.toString());
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
@@ -344,10 +349,9 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_ADDRESS.toString());
 
-        when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
-        when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
-        when(mockConfigurationService.getFraudCriId()).thenReturn("fraud");
+        mockEnvironmentVariables();
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockConfigurationService.getSsmParameter(FRAUD_CRI_ID)).thenReturn("fraud");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
@@ -381,7 +385,7 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setUserState(UserStates.CRI_ADDRESS.toString());
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
@@ -413,7 +417,7 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setUserState(UserStates.CRI_FRAUD.toString());
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
@@ -445,10 +449,9 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.PRE_KBV_TRANSITION_PAGE.toString());
 
-        when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
-        when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
-        when(mockConfigurationService.getKbvCriId()).thenReturn("kbv");
+        mockEnvironmentVariables();
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockConfigurationService.getSsmParameter(KBV_CRI_ID)).thenReturn("kbv");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
@@ -482,7 +485,7 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setUserState(UserStates.CRI_FRAUD.toString());
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
@@ -513,9 +516,8 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_KBV.toString());
 
-        when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
-        when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
+        mockEnvironmentVariables();
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
@@ -550,7 +552,7 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setUserState(UserStates.CRI_KBV.toString());
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
@@ -581,9 +583,8 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.IPV_SUCCESS_PAGE.toString());
 
-        when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
-        when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
+        mockEnvironmentVariables();
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
@@ -611,7 +612,7 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setUserState(UserStates.DEBUG_PAGE.toString());
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
@@ -637,7 +638,7 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setUserState(UserStates.DEBUG_PAGE.toString());
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
@@ -669,7 +670,7 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setUserState(UserStates.DEBUG_PAGE.toString());
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
@@ -701,8 +702,8 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_ERROR.toString());
 
-        when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
+        mockEnvironmentVariables();
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
@@ -730,7 +731,7 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setUserState(UserStates.CRI_UK_PASSPORT.toString());
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
@@ -763,7 +764,7 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setUserState(UserStates.CRI_FRAUD.toString());
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
@@ -795,9 +796,8 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_KBV.toString());
 
-        when(mockConfigurationService.getIpvJourneyCriStartUri()).thenReturn("/journey/cri/start/");
-        when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("7200");
+        mockEnvironmentVariables();
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
@@ -831,7 +831,7 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
         ipvSessionItem.setUserState(UserStates.CRI_UK_PASSPORT.toString());
 
-        when(mockConfigurationService.getBackendSessionTimeout()).thenReturn("99");
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("99");
         when(mockIpvSessionService.getIpvSession("1234")).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
@@ -869,7 +869,10 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
         ipvSessionItem.setUserState(UserStates.CORE_SESSION_TIMEOUT.toString());
 
-        when(mockConfigurationService.getIpvJourneySessionEnd()).thenReturn("/journey/session/end");
+        when(mockConfigurationService.getEnvironmentVariable(IPV_JOURNEY_CRI_START_URI))
+                .thenReturn("/journey/session/start");
+        when(mockConfigurationService.getEnvironmentVariable(IPV_JOURNEY_SESSION_END_URI))
+                .thenReturn("/journey/session/end");
         when(mockIpvSessionService.getIpvSession("1234")).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
@@ -879,5 +882,12 @@ class JourneyEngineHandlerTest {
 
         assertEquals(200, response.getStatusCode());
         assertEquals("/journey/session/end", journeyResponse.getJourney());
+    }
+
+    private void mockEnvironmentVariables() {
+        when(mockConfigurationService.getEnvironmentVariable(IPV_JOURNEY_CRI_START_URI))
+                .thenReturn("/journey/cri/start/");
+        when(mockConfigurationService.getEnvironmentVariable(IPV_JOURNEY_SESSION_END_URI))
+                .thenReturn("/journey/session/end");
     }
 }

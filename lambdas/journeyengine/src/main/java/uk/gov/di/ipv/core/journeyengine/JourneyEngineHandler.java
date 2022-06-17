@@ -32,6 +32,13 @@ import java.util.Optional;
 import static uk.gov.di.ipv.core.journeyengine.domain.JourneyStep.ERROR;
 import static uk.gov.di.ipv.core.journeyengine.domain.JourneyStep.FAIL;
 import static uk.gov.di.ipv.core.journeyengine.domain.JourneyStep.NEXT;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_JOURNEY_CRI_START_URI;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_JOURNEY_SESSION_END_URI;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CORE_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_ADDRESS;
 import static uk.gov.di.ipv.core.library.domain.UserStates.CRI_ERROR;
@@ -122,8 +129,9 @@ public class JourneyEngineHandler
     @Tracing
     private JourneyEngineResult executeJourneyEvent(
             JourneyStep journeyStep, IpvSessionItem ipvSessionItem) throws JourneyEngineException {
-        String criStartUri = configurationService.getIpvJourneyCriStartUri();
-        String journeyEndUri = configurationService.getIpvJourneySessionEnd();
+        String criStartUri = configurationService.getEnvironmentVariable(IPV_JOURNEY_CRI_START_URI);
+        String journeyEndUri =
+                configurationService.getEnvironmentVariable(IPV_JOURNEY_SESSION_END_URI);
 
         String currentUserState = ipvSessionItem.getUserState();
         if (sessionIsNewlyExpired(ipvSessionItem)) {
@@ -147,14 +155,18 @@ public class JourneyEngineHandler
                     updateUserState(CRI_UK_PASSPORT, ipvSessionItem);
                     builder.setJourneyResponse(
                             new JourneyResponse(
-                                    criStartUri + configurationService.getPassportCriId()));
+                                    criStartUri
+                                            + configurationService.getSsmParameter(
+                                                    PASSPORT_CRI_ID)));
                     break;
                 case CRI_UK_PASSPORT:
                     if (journeyStep.equals(NEXT)) {
                         updateUserState(CRI_ADDRESS, ipvSessionItem);
                         builder.setJourneyResponse(
                                 new JourneyResponse(
-                                        criStartUri + configurationService.getAddressCriId()));
+                                        criStartUri
+                                                + configurationService.getSsmParameter(
+                                                        ADDRESS_CRI_ID)));
                     } else if (journeyStep.equals(ERROR)) {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
@@ -170,7 +182,9 @@ public class JourneyEngineHandler
                         updateUserState(CRI_FRAUD, ipvSessionItem);
                         builder.setJourneyResponse(
                                 new JourneyResponse(
-                                        criStartUri + configurationService.getFraudCriId()));
+                                        criStartUri
+                                                + configurationService.getSsmParameter(
+                                                        FRAUD_CRI_ID)));
                     } else if (journeyStep.equals(ERROR)) {
                         updateUserState(CRI_ERROR, ipvSessionItem);
                         builder.setPageResponse(new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value));
@@ -195,7 +209,9 @@ public class JourneyEngineHandler
                 case PRE_KBV_TRANSITION_PAGE:
                     updateUserState(CRI_KBV, ipvSessionItem);
                     builder.setJourneyResponse(
-                            new JourneyResponse(criStartUri + configurationService.getKbvCriId()));
+                            new JourneyResponse(
+                                    criStartUri
+                                            + configurationService.getSsmParameter(KBV_CRI_ID)));
                     break;
                 case CRI_KBV:
                     if (journeyStep.equals(NEXT)) {
@@ -310,7 +326,7 @@ public class JourneyEngineHandler
                                 Instant.now()
                                         .minusSeconds(
                                                 Long.parseLong(
-                                                        configurationService
-                                                                .getBackendSessionTimeout())));
+                                                        configurationService.getSsmParameter(
+                                                                BACKEND_SESSION_TIMEOUT))));
     }
 }
