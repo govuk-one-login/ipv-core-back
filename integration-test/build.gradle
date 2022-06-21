@@ -3,7 +3,6 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
 	id "java"
-	id "application"
 	id "idea"
 	id "org.sonarqube"
 	id "jacoco"
