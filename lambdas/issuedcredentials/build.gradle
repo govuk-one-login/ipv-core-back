@@ -13,7 +13,10 @@ dependencies {
 
 	implementation "com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
 			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
+			configurations.loggingImplementation,
 			project(":lib")
+
+	runtimeOnly configurations.loggingRunTimeOnly
 
 	aspect "software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
 

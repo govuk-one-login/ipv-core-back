@@ -25,7 +25,6 @@ dependencies {
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			"org.apache.commons:commons-lang3:3.5",
 			"org.apache.httpcomponents:httpclient:$rootProject.ext.dependencyVersions.apacheHttpclient",
-			"org.slf4j:slf4j-simple:$rootProject.ext.dependencyVersions.slf4j",
 			"software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
 			"software.amazon.awssdk:kms:$rootProject.ext.dependencyVersions.kms",
 			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters"

@@ -1,0 +1,20 @@
+Configuration:
+  status: warn
+  appenders:
+    Lambda:
+      name: Lambda
+      JsonTemplateLayout:
+        eventTemplateUri: "classpath:JsonLayout.json"
+        eventTemplateAdditionalField:
+          - key: session-id
+            value: "$${ctx:sessionId:-unknown}"
+          - key: request-id
+            format: JSON
+            value: '{"$resolver": "pattern", "pattern": "%X{AWSRequestId}"}'
+  Loggers:
+    Root:
+      level: info
+      AppenderRef:
+        ref: Lambda
+
+

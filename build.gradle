@@ -38,10 +38,12 @@ ext {
 		awsJavaSdkSqs:'1.12.197',
 		awsLambdaJavaCore:'1.2.1',
 		awsLambdaJavaEvents:'3.11.0',
+		awsLambdaJavaLog4j2:'1.5.1',
 		dynamodbEnhanced:'2.17.89',
 		gson:'2.8.9',
 		jackson:'2.13.2',
 		kms:'2.17.100',
+		log4j:'2.17.1',
 		lombok:'1.18.22',
 		nimbusdsOauth2OidcSdk:'9.27',
 		powertoolsParameters:'1.11.0',
@@ -51,5 +53,20 @@ ext {
 }
 
 subprojects {
+	configurations {
+		loggingImplementation
+		loggingRunTimeOnly
+	}
+
+	dependencies {
+		loggingImplementation "org.slf4j:slf4j-api:$rootProject.ext.dependencyVersions.slf4j"
+
+		loggingRunTimeOnly "org.apache.logging.log4j:log4j-api:$dependencyVersions.log4j",
+				"org.apache.logging.log4j:log4j-core:$dependencyVersions.log4j",
+				"org.apache.logging.log4j:log4j-layout-template-json:$dependencyVersions.log4j",
+				"org.apache.logging.log4j:log4j-slf4j18-impl:$dependencyVersions.log4j",
+				"com.amazonaws:aws-lambda-java-log4j2:$dependencyVersions.awsLambdaJavaLog4j2"
+	}
+
 	task allDeps(type: DependencyReportTask) {}
 }
