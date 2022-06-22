@@ -15,7 +15,10 @@ dependencies {
 			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
 			"com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson",
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
+			configurations.loggingImplementation,
 			project(":lib")
+
+	runtimeOnly configurations.loggingRunTimeOnly
 
 	aspect "software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
 

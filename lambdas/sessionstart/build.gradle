@@ -21,10 +21,12 @@ dependencies {
 			"com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$rootProject.ext.dependencyVersions.jackson",
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			"org.apache.httpcomponents:httpclient:$rootProject.ext.dependencyVersions.apacheHttpclient",
-			"org.slf4j:slf4j-simple:$rootProject.ext.dependencyVersions.slf4j",
 			"software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
 			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters",
+			configurations.loggingImplementation,
 			project(":lib")
+
+	runtimeOnly configurations.loggingRunTimeOnly
 
 	aspect "software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
 
