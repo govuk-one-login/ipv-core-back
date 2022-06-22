@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.service;
 
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
+import org.apache.commons.codec.digest.DigestUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
@@ -37,14 +38,15 @@ public class AuthorizationCodeService {
     }
 
     public Optional<AuthorizationCodeItem> getAuthorizationCodeItem(String authorizationCode) {
-        AuthorizationCodeItem authorizationCodeItem = dataStore.getItem(authorizationCode);
+        AuthorizationCodeItem authorizationCodeItem =
+                dataStore.getItem(DigestUtils.sha256Hex(authorizationCode));
         return Optional.ofNullable(authorizationCodeItem);
     }
 
     public void persistAuthorizationCode(
             String authorizationCode, String ipvSessionId, String redirectUrl) {
         AuthorizationCodeItem authorizationCodeItem = new AuthorizationCodeItem();
-        authorizationCodeItem.setAuthCode(authorizationCode);
+        authorizationCodeItem.setAuthCode(DigestUtils.sha256Hex(authorizationCode));
         authorizationCodeItem.setIpvSessionId(ipvSessionId);
         authorizationCodeItem.setRedirectUrl(redirectUrl);
 
@@ -52,6 +54,6 @@ public class AuthorizationCodeService {
     }
 
     public void revokeAuthorizationCode(String authorizationCode) {
-        dataStore.delete(authorizationCode);
+        dataStore.delete(DigestUtils.sha256Hex(authorizationCode));
     }
 }

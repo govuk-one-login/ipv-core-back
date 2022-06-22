@@ -9,6 +9,7 @@ import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
+import org.apache.commons.codec.digest.DigestUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.AccessTokenItem;
@@ -56,14 +57,14 @@ public class AccessTokenService {
     }
 
     public String getIpvSessionIdByAccessToken(String accessToken) {
-        AccessTokenItem accessTokenItem = dataStore.getItem(accessToken);
+        AccessTokenItem accessTokenItem = dataStore.getItem(DigestUtils.sha256Hex(accessToken));
         return Objects.isNull(accessTokenItem) ? null : accessTokenItem.getIpvSessionId();
     }
 
     public void persistAccessToken(AccessTokenResponse tokenResponse, String ipvSessionId) {
         AccessTokenItem accessTokenItem = new AccessTokenItem();
         accessTokenItem.setAccessToken(
-                tokenResponse.getTokens().getBearerAccessToken().toAuthorizationHeader());
+                DigestUtils.sha256Hex(tokenResponse.getTokens().getBearerAccessToken().getValue()));
         accessTokenItem.setIpvSessionId(ipvSessionId);
         dataStore.create(accessTokenItem);
     }
