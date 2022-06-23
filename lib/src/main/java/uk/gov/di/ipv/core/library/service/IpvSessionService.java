@@ -4,11 +4,11 @@ import com.nimbusds.oauth2.sdk.ErrorObject;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.UserStates;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 
 import java.time.Instant;
-import java.util.UUID;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_SESSIONS_TABLE_NAME;
 
@@ -43,7 +43,7 @@ public class IpvSessionService {
             ClientSessionDetailsDto clientSessionDetailsDto, ErrorObject errorObject) {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 

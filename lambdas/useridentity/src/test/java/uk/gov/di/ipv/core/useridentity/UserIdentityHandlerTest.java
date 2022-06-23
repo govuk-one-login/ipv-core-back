@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -37,7 +38,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -50,7 +50,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.PASSPORT_JSON_1;
 @ExtendWith(MockitoExtension.class)
 class UserIdentityHandlerTest {
 
-    private static final String TEST_IPV_SESSION_ID = UUID.randomUUID().toString();
+    private static final String TEST_IPV_SESSION_ID = SecureTokenHelper.generate();
     public static final String VTM = "http://www.example.com/vtm";
 
     @Mock private Context mockContext;
