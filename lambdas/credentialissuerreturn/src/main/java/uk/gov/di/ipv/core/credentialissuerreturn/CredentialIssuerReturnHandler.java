@@ -25,9 +25,11 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -84,11 +86,12 @@ public class CredentialIssuerReturnHandler
     @Tracing
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        CredentialIssuerRequestDto request =
-                RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
-
         try {
             auditService.sendAuditEvent(AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED);
+            RequestHelper.getIpvSessionId(input);
+
+            CredentialIssuerRequestDto request =
+                    RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
 
             var errorResponse = validate(request);
 
@@ -141,6 +144,11 @@ public class CredentialIssuerReturnHandler
             JourneyResponse errorJourneyResponse = new JourneyResponse(JOURNEY_ERROR_ENDPOINT);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, errorJourneyResponse);
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    e.getResponseCode(), e.getErrorBody());
+        } finally {
+            LogHelper.clear();
         }
     }
 
@@ -172,6 +180,7 @@ public class CredentialIssuerReturnHandler
         if (StringUtils.isBlank(request.getCredentialIssuerId())) {
             return Optional.of(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
         }
+        LogHelper.attachCriIdToLogs(request.getCredentialIssuerId());
 
         if (StringUtils.isBlank(request.getIpvSessionId())) {
             return Optional.of(ErrorResponse.MISSING_IPV_SESSION_ID);

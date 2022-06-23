@@ -17,6 +17,7 @@ import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import uk.gov.di.ipv.core.library.exceptions.JarValidationException;
 import uk.gov.di.ipv.core.library.exceptions.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.KmsRsaDecrypter;
 
@@ -82,6 +83,7 @@ public class JarValidator {
     private void validateClientId(String clientId) throws JarValidationException {
         try {
             configurationService.getSsmParameter(CLIENT_AUTHENTICATION_METHOD, clientId);
+            LogHelper.attachClientIdToLogs(clientId);
         } catch (ParameterNotFoundException e) {
             LOGGER.error("Unknown client id provided {}", clientId);
             throw new JarValidationException(

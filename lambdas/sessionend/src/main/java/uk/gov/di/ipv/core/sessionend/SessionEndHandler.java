@@ -17,8 +17,10 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -38,7 +40,6 @@ import java.util.Map;
 public class SessionEndHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LoggerFactory.getLogger(SessionEndHandler.class);
-    private static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
 
     private final AuthorizationCodeService authorizationCodeService;
     private final IpvSessionService sessionService;
@@ -73,12 +74,13 @@ public class SessionEndHandler
     @Tracing
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        String ipvSessionId =
-                RequestHelper.getHeaderByKey(input.getHeaders(), IPV_SESSION_ID_HEADER_KEY);
-
-        IpvSessionItem ipvSessionItem = sessionService.getIpvSession(ipvSessionId);
-        ClientResponse clientResponse;
         try {
+            String ipvSessionId = RequestHelper.getIpvSessionId(input);
+            IpvSessionItem ipvSessionItem = sessionService.getIpvSession(ipvSessionId);
+            LogHelper.attachClientIdToLogs(ipvSessionItem.getClientSessionDetails().getClientId());
+
+            ClientResponse clientResponse;
+
             if (ipvSessionItem.getErrorCode() != null) {
                 clientResponse = generateClientErrorResponse(ipvSessionItem);
 
@@ -125,6 +127,11 @@ public class SessionEndHandler
             LOGGER.error("Failed to construct redirect uri because: {}", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    e.getResponseCode(), e.getErrorBody());
+        } finally {
+            LogHelper.clear();
         }
     }
 

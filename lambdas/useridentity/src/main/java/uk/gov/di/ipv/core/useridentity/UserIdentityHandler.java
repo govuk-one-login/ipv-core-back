@@ -17,9 +17,11 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -86,12 +88,14 @@ public class UserIdentityHandler
                                         " - The supplied access token was not found in the database")
                                 .toJSONObject());
             }
+            LogHelper.attachSessionIdToLogs(ipvSessionId);
 
-            String userId =
-                    ipvSessionService
-                            .getIpvSession(ipvSessionId)
-                            .getClientSessionDetails()
-                            .getUserId();
+            ClientSessionDetailsDto clientSessionDetails =
+                    ipvSessionService.getIpvSession(ipvSessionId).getClientSessionDetails();
+
+            LogHelper.attachClientIdToLogs(clientSessionDetails.getClientId());
+
+            String userId = clientSessionDetails.getUserId();
 
             UserIdentity userIdentity =
                     userIdentityService.generateUserIdentity(ipvSessionId, userId);

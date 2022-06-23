@@ -19,6 +19,7 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.exceptions.ClientAuthenticationException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
 import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
@@ -88,6 +89,8 @@ public class AccessTokenHandler
                                     authorizationGrant.getAuthorizationCode().getValue())
                             .orElseThrow();
 
+            LogHelper.attachSessionIdToLogs(authorizationCodeItem.getIpvSessionId());
+
             if (redirectUrlsDoNotMatch(authorizationCodeItem, authorizationGrant)) {
                 LOGGER.error(
                         "Redirect URL in token request does not match that received in auth code request. Session ID: {}",
@@ -124,6 +127,8 @@ public class AccessTokenHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     OAuth2Error.INVALID_GRANT.getHTTPStatusCode(),
                     OAuth2Error.INVALID_GRANT.toJSONObject());
+        } finally {
+            LogHelper.clear();
         }
     }
 

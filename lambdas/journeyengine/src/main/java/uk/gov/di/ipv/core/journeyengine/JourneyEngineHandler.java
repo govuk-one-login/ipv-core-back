@@ -18,7 +18,9 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.UserStates;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -59,7 +61,6 @@ public class JourneyEngineHandler
     private static final Logger LOGGER =
             LoggerFactory.getLogger(JourneyEngineHandler.class.getName());
 
-    private static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
     private static final String JOURNEY_STEP_PARAM = "journeyStep";
 
     private final IpvSessionService ipvSessionService;
@@ -81,31 +82,23 @@ public class JourneyEngineHandler
     @Tracing
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-
-        Map<String, String> pathParameters = input.getPathParameters();
-
-        var errorResponse = validate(pathParameters);
-        if (errorResponse.isPresent()) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
-        }
-
-        var ipvSessionId =
-                RequestHelper.getHeaderByKey(input.getHeaders(), IPV_SESSION_ID_HEADER_KEY);
-
-        if (ipvSessionId == null || ipvSessionId.isEmpty()) {
-            LOGGER.warn("User credentials could not be retrieved. No session ID received.");
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
-        }
-
-        IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-
-        if (ipvSessionItem == null) {
-            LOGGER.warn("Failed to find ipv-session");
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_ID);
-        }
         try {
+            var ipvSessionId = RequestHelper.getIpvSessionId(input);
+            Map<String, String> pathParameters = input.getPathParameters();
+
+            var errorResponse = validate(pathParameters);
+            if (errorResponse.isPresent()) {
+                return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
+            }
+
+            IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+
+            if (ipvSessionItem == null) {
+                LOGGER.warn("Failed to find ipv-session");
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_ID);
+            }
+
             JourneyStep journeyStep =
                     getJourneyStep(input.getPathParameters().get(JOURNEY_STEP_PARAM));
 
@@ -119,9 +112,15 @@ public class JourneyEngineHandler
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatus.SC_OK, journeyEngineResult.getPageResponse());
             }
+
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    e.getResponseCode(), e.getErrorBody());
         } catch (JourneyEngineException e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_JOURNEY_ENGINE_STEP);
+        } finally {
+            LogHelper.clear();
         }
     }
 

@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -29,7 +30,7 @@ public class IssuedCredentialsHandlerTest {
     void shouldReturn200OnSuccessfulRequest() {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         String ipvSessionId = "a-session-id";
-        event.setHeaders(Map.of(IssuedCredentialsHandler.IPV_SESSION_ID_HEADER_KEY, ipvSessionId));
+        event.setHeaders(Map.of(RequestHelper.IPV_SESSION_ID_HEADER, ipvSessionId));
 
         Map<String, String> userIssuedCredentials =
                 Map.of(
@@ -64,7 +65,7 @@ public class IssuedCredentialsHandlerTest {
     @Test
     void shouldReturn400IfSessionIdIsEmptyString() {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        event.setHeaders(Map.of(IssuedCredentialsHandler.IPV_SESSION_ID_HEADER_KEY, ""));
+        event.setHeaders(Map.of(RequestHelper.IPV_SESSION_ID_HEADER, ""));
         IssuedCredentialsHandler issuedCredentialsHandler =
                 new IssuedCredentialsHandler(mockUserIdentityService, mockConfigurationService);
 

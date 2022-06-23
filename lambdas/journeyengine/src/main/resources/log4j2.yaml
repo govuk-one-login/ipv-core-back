@@ -6,11 +6,15 @@ Configuration:
       JsonTemplateLayout:
         eventTemplateUri: "classpath:JsonLayout.json"
         eventTemplateAdditionalField:
-          - key: session-id
-            value: "$${ctx:sessionId:-unknown}"
-          - key: request-id
+          - key: aws-request-id
             format: JSON
             value: '{"$resolver": "pattern", "pattern": "%X{AWSRequestId}"}'
+          - key: client-id
+            value: "$${ctx:client-id:-unknown}"
+          - key: cri-id
+            value: "$${ctx:cri-id:-unknown}"
+          - key: session-id
+            value: "$${ctx:session-id:-unknown}"
   Loggers:
     Root:
       level: info

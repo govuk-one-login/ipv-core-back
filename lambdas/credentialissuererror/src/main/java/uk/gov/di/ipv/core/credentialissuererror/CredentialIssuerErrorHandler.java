@@ -13,8 +13,10 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerErrorDto;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -60,19 +62,36 @@ public class CredentialIssuerErrorHandler
     @Tracing
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        CredentialIssuerErrorDto credentialIssuerErrorDto =
-                RequestHelper.convertRequest(input, CredentialIssuerErrorDto.class);
+        try {
+            RequestHelper.getIpvSessionId(input);
+            CredentialIssuerErrorDto credentialIssuerErrorDto =
+                    RequestHelper.convertRequest(input, CredentialIssuerErrorDto.class);
+            LogHelper.attachCriIdToLogs(credentialIssuerErrorDto.getCredentialIssuerId());
 
-        LOGGER.error(
-                "An error occurred with the {} cri",
-                credentialIssuerErrorDto.getCredentialIssuerId());
+            LOGGER.error(
+                    "An error occurred with the {} cri",
+                    credentialIssuerErrorDto.getCredentialIssuerId());
 
-        if (!ALLOWED_OAUTH_ERROR_CODES.contains(credentialIssuerErrorDto.getError())) {
-            LOGGER.error("Unknown Oauth error code received");
+            if (!ALLOWED_OAUTH_ERROR_CODES.contains(credentialIssuerErrorDto.getError())) {
+                LOGGER.error("Unknown Oauth error code received");
+            }
+            LOGGER.error("Error code: {}", credentialIssuerErrorDto.getError());
+            LOGGER.error(credentialIssuerErrorDto.getErrorDescription());
+
+            sendAuditEvent(credentialIssuerErrorDto);
+
+            JourneyResponse journeyResponse = new JourneyResponse(ERROR_JOURNEY_STEP_URI);
+
+            return ApiGatewayResponseGenerator.proxyJsonResponse(200, journeyResponse);
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    e.getResponseCode(), e.getErrorBody());
+        } finally {
+            LogHelper.clear();
         }
-        LOGGER.error("Error code: {}", credentialIssuerErrorDto.getError());
-        LOGGER.error(credentialIssuerErrorDto.getErrorDescription());
+    }
 
+    private void sendAuditEvent(CredentialIssuerErrorDto credentialIssuerErrorDto) {
         try {
             AuditExtensionErrorParams extensions =
                     new AuditExtensionErrorParams.Builder()
@@ -84,9 +103,5 @@ public class CredentialIssuerErrorHandler
         } catch (SqsException e) {
             LOGGER.error("Failed to write event to audit queue");
         }
-
-        JourneyResponse journeyResponse = new JourneyResponse(ERROR_JOURNEY_STEP_URI);
-
-        return ApiGatewayResponseGenerator.proxyJsonResponse(200, journeyResponse);
     }
 }

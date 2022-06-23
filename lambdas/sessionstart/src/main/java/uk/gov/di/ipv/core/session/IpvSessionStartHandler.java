@@ -23,6 +23,7 @@ import uk.gov.di.ipv.core.library.exceptions.JarValidationException;
 import uk.gov.di.ipv.core.library.exceptions.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -146,6 +147,8 @@ public class IpvSessionStartHandler
             LOGGER.error("Failed to parse request body into map because: {}", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
+        } finally {
+            LogHelper.clear();
         }
     }
 
@@ -157,6 +160,8 @@ public class IpvSessionStartHandler
             LOGGER.warn("Missing client_id query parameter");
             isInvalid = true;
         }
+        LogHelper.attachClientIdToLogs(sessionParams.get(CLIENT_ID_PARAM_KEY));
+        LOGGER.info("Client ID received in session params - not yet validated");
 
         if (StringUtils.isBlank(sessionParams.get(REQUEST_PARAM_KEY))) {
             LOGGER.warn("Missing request query parameter");

@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.gov.di.ipv.core.library.domain.ConfigurationServicePublicKeySelector;
 import uk.gov.di.ipv.core.library.exceptions.ClientAuthenticationException;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
@@ -57,6 +58,8 @@ public class TokenRequestValidator {
             clientJwt = PrivateKeyJWT.parse(requestBody);
 
             clientId = clientJwt.getClientID().getValue();
+
+            LogHelper.attachClientIdToLogs(clientId);
 
             String clientAuthenticationMethod =
                     configurationService.getSsmParameter(CLIENT_AUTHENTICATION_METHOD, clientId);
