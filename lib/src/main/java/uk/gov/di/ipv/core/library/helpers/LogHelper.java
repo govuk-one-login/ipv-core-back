@@ -1,10 +1,13 @@
 package uk.gov.di.ipv.core.library.helpers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 @ExcludeFromGeneratedCoverageReport
 public class LogHelper {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LogHelper.class);
 
     private LogHelper() {
         throw new IllegalStateException("Utility class");
@@ -27,6 +30,7 @@ public class LogHelper {
     }
 
     public static void clear() {
+        LOGGER.info("Clearing MDC");
         MDC.clear();
     }
 }
