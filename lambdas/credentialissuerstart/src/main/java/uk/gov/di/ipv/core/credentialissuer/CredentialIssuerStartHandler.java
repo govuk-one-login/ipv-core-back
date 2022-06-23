@@ -33,6 +33,7 @@ import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.AuthorizationRequestHelper;
 import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -45,7 +46,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
@@ -116,7 +116,7 @@ public class CredentialIssuerStartHandler
 
         try {
             String ipvSessionId = getIpvSessionId(input.getHeaders());
-            UUID oauthState = UUID.randomUUID();
+            String oauthState = SecureTokenHelper.generate();
             JWEObject jweObject = signEncryptJar(credentialIssuerConfig, ipvSessionId, oauthState);
 
             CriResponse criResponse = getCriResponse(credentialIssuerConfig, jweObject);
@@ -149,7 +149,7 @@ public class CredentialIssuerStartHandler
     }
 
     private JWEObject signEncryptJar(
-            CredentialIssuerConfig credentialIssuerConfig, String ipvSessionId, UUID oauthState)
+            CredentialIssuerConfig credentialIssuerConfig, String ipvSessionId, String oauthState)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException {
         SharedClaimsResponse sharedClaimsResponse = getSharedAttributes(ipvSessionId);
         SignedJWT signedJWT =
@@ -227,10 +227,10 @@ public class CredentialIssuerStartHandler
     }
 
     @Tracing
-    private void persistOauthState(String ipvSessionId, String criId, UUID oauthState) {
+    private void persistOauthState(String ipvSessionId, String criId, String oauthState) {
         IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
         CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto =
-                new CredentialIssuerSessionDetailsDto(criId, oauthState.toString());
+                new CredentialIssuerSessionDetailsDto(criId, oauthState);
         ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
         ipvSessionService.updateIpvSession(ipvSessionItem);
     }

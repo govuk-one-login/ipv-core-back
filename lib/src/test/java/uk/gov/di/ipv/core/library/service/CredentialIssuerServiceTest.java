@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 
@@ -28,7 +29,6 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
-import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -55,7 +55,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 @ExtendWith(MockitoExtension.class)
 class CredentialIssuerServiceTest {
 
-    private static final String TEST_IPV_SESSION_ID = UUID.randomUUID().toString();
+    private static final String TEST_IPV_SESSION_ID = SecureTokenHelper.generate();
     public static final String OAUTH_STATE = "oauth-state";
 
     @Mock private DataStore<UserIssuedCredentialsItem> mockDataStore;

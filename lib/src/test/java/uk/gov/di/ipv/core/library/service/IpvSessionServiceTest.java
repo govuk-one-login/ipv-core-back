@@ -9,11 +9,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.UserStates;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 
 import java.util.Date;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -31,7 +31,7 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldReturnSessionItem() {
-        String ipvSessionID = UUID.randomUUID().toString();
+        String ipvSessionID = SecureTokenHelper.generate();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(ipvSessionID);
@@ -133,7 +133,7 @@ class IpvSessionServiceTest {
     @Test
     void shouldUpdateSessionItem() {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setUserState(UserStates.INITIAL_IPV_JOURNEY.toString());
         ipvSessionItem.setCreationDateTime(new Date().toString());
 

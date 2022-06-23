@@ -14,12 +14,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionParams;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -51,7 +51,7 @@ class CredentialIssuerErrorHandlerTest {
                                 "error", errorCode,
                                 "error_description", errorDescription,
                                 "credential_issuer_id", "ukPassport"),
-                        Map.of("ipv-session-id", UUID.randomUUID().toString()));
+                        Map.of("ipv-session-id", SecureTokenHelper.generate()));
 
         APIGatewayProxyResponseEvent response =
                 credentialIssuerErrorHandler.handleRequest(event, mockContext);

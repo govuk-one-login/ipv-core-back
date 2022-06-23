@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.journeyengine.domain.PageResponse;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.UserStates;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -25,7 +26,6 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -152,7 +152,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.INITIAL_IPV_JOURNEY.toString());
 
@@ -180,7 +180,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState("INVALID-STATE");
 
@@ -209,7 +209,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.INITIAL_IPV_JOURNEY.toString());
 
@@ -242,7 +242,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.IPV_IDENTITY_START_PAGE.toString());
 
@@ -278,7 +278,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_UK_PASSPORT.toString());
 
@@ -313,7 +313,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_UK_PASSPORT.toString());
 
@@ -345,7 +345,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_ADDRESS.toString());
 
@@ -380,7 +380,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_ADDRESS.toString());
 
@@ -412,7 +412,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_FRAUD.toString());
 
@@ -445,7 +445,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.PRE_KBV_TRANSITION_PAGE.toString());
 
@@ -480,7 +480,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_FRAUD.toString());
 
@@ -512,7 +512,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_KBV.toString());
 
@@ -547,7 +547,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_KBV.toString());
 
@@ -579,7 +579,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.IPV_SUCCESS_PAGE.toString());
 
@@ -607,7 +607,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.DEBUG_PAGE.toString());
 
@@ -633,7 +633,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.DEBUG_PAGE.toString());
 
@@ -665,7 +665,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.DEBUG_PAGE.toString());
 
@@ -698,7 +698,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_ERROR.toString());
 
@@ -726,7 +726,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_UK_PASSPORT.toString());
 
@@ -759,7 +759,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_FRAUD.toString());
 
@@ -792,7 +792,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_KBV.toString());
 
@@ -827,7 +827,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
         ipvSessionItem.setUserState(UserStates.CRI_UK_PASSPORT.toString());
 
@@ -865,7 +865,7 @@ class JourneyEngineHandlerTest {
         event.setHeaders(Map.of("ipv-session-id", "1234"));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(UUID.randomUUID().toString());
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
         ipvSessionItem.setUserState(UserStates.CORE_SESSION_TIMEOUT.toString());
 

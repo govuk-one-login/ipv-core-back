@@ -21,12 +21,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.AccessTokenItem;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.net.URI;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -110,7 +110,7 @@ class AccessTokenServiceTest {
 
     @Test
     void shouldPersistAccessToken() {
-        String testIpvSessionId = UUID.randomUUID().toString();
+        String testIpvSessionId = SecureTokenHelper.generate();
         AccessToken accessToken = new BearerAccessToken();
         AccessTokenResponse accessTokenResponse =
                 new AccessTokenResponse(new Tokens(accessToken, null));
@@ -131,7 +131,7 @@ class AccessTokenServiceTest {
 
     @Test
     void shouldGetSessionIdByAccessTokenWhenValidAccessTokenProvided() {
-        String testIpvSessionId = UUID.randomUUID().toString();
+        String testIpvSessionId = SecureTokenHelper.generate();
         String accessToken = new BearerAccessToken().getValue();
 
         AccessTokenItem accessTokenItem = new AccessTokenItem();

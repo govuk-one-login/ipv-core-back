@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -35,7 +36,6 @@ import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -83,7 +83,7 @@ class CredentialIssuerReturnHandlerTest {
     private static ClientSessionDetailsDto clientSessionDetailsDto;
     private static CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto;
     private final String authorization_code = "bar";
-    private final String sessionId = UUID.randomUUID().toString();
+    private final String sessionId = SecureTokenHelper.generate();
     private final String passportIssuerId = CREDENTIAL_ISSUER_ID;
     private final String testApiKey = "test-api-key";
 

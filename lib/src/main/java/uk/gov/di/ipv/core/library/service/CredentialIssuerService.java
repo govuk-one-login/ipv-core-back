@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 
@@ -34,7 +35,6 @@ import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Objects;
-import java.util.UUID;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_FRONT_CALLBACK_URL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
@@ -89,7 +89,7 @@ public class CredentialIssuerService {
                                                     configurationService.getSsmParameter(
                                                             JWT_TTL_SECONDS)))
                                     .toEpochSecond(),
-                            UUID.randomUUID().toString());
+                            SecureTokenHelper.generate());
             SignedJWT signedClientJwt =
                     JwtHelper.createSignedJwtFromObject(clientAuthClaims, signer);
 

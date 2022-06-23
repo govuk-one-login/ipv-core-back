@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
@@ -33,7 +34,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyMap;
@@ -258,7 +258,7 @@ class SessionEndHandlerTest {
 
     private IpvSessionItem generateIpvSessionItem() {
         IpvSessionItem item = new IpvSessionItem();
-        item.setIpvSessionId(UUID.randomUUID().toString());
+        item.setIpvSessionId(SecureTokenHelper.generate());
         item.setUserState("test-state");
         item.setCreationDateTime(new Date().toString());
 

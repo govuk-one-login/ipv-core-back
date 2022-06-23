@@ -37,7 +37,6 @@ import java.text.ParseException;
 import java.util.Base64;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -66,7 +65,7 @@ class AuthorizationRequestHelperTest {
     public static final String MOCK_CORE_FRONT_CALLBACK_URL = "callbackUri";
     public static final String CRI_ID = "cri_id";
     public static final String TEST_USER_ID = "test-user-id";
-    public static final UUID OAUTH_STATE = UUID.randomUUID();
+    public static final String OAUTH_STATE = SecureTokenHelper.generate();
 
     private final SharedClaimsResponse sharedClaims =
             new SharedClaimsResponse(

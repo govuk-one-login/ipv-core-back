@@ -30,7 +30,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Objects;
-import java.util.UUID;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_FRONT_CALLBACK_URL;
@@ -48,7 +47,7 @@ public class AuthorizationRequestHelper {
             JWSSigner signer,
             CredentialIssuerConfig credentialIssuerConfig,
             ConfigurationService configurationService,
-            UUID oauthState,
+            String oauthState,
             String userId)
             throws HttpResponseExceptionWithErrorBody {
         Instant now = Instant.now();
@@ -67,7 +66,7 @@ public class AuthorizationRequestHelper {
                                 ResponseType.CODE,
                                 new ClientID(credentialIssuerConfig.getIpvClientId()))
                         .redirectionURI(redirectionURI)
-                        .state(new State(oauthState.toString()))
+                        .state(new State(oauthState))
                         .build()
                         .toJWTClaimsSet();
 

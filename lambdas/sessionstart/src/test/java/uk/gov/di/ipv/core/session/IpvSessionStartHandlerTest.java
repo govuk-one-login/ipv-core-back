@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.JarValidationException;
 import uk.gov.di.ipv.core.library.exceptions.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -40,7 +41,6 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Map;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -95,7 +95,7 @@ class IpvSessionStartHandlerTest {
     @Test
     void shouldReturnIpvSessionIdWhenProvidedValidRequest()
             throws JsonProcessingException, JarValidationException, ParseException, SqsException {
-        String ipvSessionId = UUID.randomUUID().toString();
+        String ipvSessionId = SecureTokenHelper.generate();
         when(mockIpvSessionService.generateIpvSession(any(), any())).thenReturn(ipvSessionId);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(signedJWT.getJWTClaimsSet());
@@ -192,7 +192,7 @@ class IpvSessionStartHandlerTest {
     @Test
     void shouldReturnIpvSessionIdWhenRecoverableErrorFound()
             throws JsonProcessingException, JarValidationException, ParseException, SqsException {
-        String ipvSessionId = UUID.randomUUID().toString();
+        String ipvSessionId = SecureTokenHelper.generate();
         when(mockIpvSessionService.generateIpvSession(any(), any())).thenReturn(ipvSessionId);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenThrow(
