@@ -21,6 +21,6 @@ public class AuditExtensionsVcEvidence implements AuditExtensions {
             @JsonProperty(value = "evidence", required = false) String evidence)
             throws JsonProcessingException {
         this.iss = iss;
-        this.evidence = new ObjectMapper().readTree(evidence);
+        this.evidence = evidence == null ? null : new ObjectMapper().readTree(evidence);
     }
 }
