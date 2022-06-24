@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionsVcEvidence;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
@@ -93,6 +94,7 @@ class CredentialIssuerReturnHandlerTest {
     private final String sessionId = SecureTokenHelper.generate();
     private final String passportIssuerId = CREDENTIAL_ISSUER_ID;
     private final String testApiKey = "test-api-key";
+    private final String testComponentId = "http://ipv-core-test.example.com";
 
     @BeforeAll
     static void setUp() throws URISyntaxException {
@@ -442,6 +444,8 @@ class CredentialIssuerReturnHandlerTest {
         verify(auditService).sendAuditEvent(argumentCaptor.capture());
         assertEquals(AuditEventTypes.IPV_VC_RECEIVED, argumentCaptor.getValue().getEventName());
 
+        assertEquals(testComponentId, argumentCaptor.getValue().getComponentId());
+
         AuditEventUser auditEventUser = argumentCaptor.getValue().getUser();
         assertEquals(TEST_USER_ID, auditEventUser.getUserId());
         assertEquals(sessionId, auditEventUser.getSessionId());
@@ -463,6 +467,9 @@ class CredentialIssuerReturnHandlerTest {
                 .thenReturn(passportIssuer);
 
         when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
+
+        when(configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS))
+                .thenReturn(testComponentId);
 
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 

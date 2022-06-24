@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionsVcEvidence;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -107,6 +108,10 @@ public class CredentialIssuerReturnHandler
                     credentialIssuerService.getVerifiableCredential(
                             accessToken, credentialIssuerConfig, apiKey);
 
+            String componentId =
+                    configurationService.getSsmParameter(
+                            ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+
             String userId =
                     ipvSessionService
                             .getIpvSession(request.getIpvSessionId())
@@ -116,7 +121,8 @@ public class CredentialIssuerReturnHandler
             verifiableCredentialJwtValidator.validate(
                     verifiableCredential, credentialIssuerConfig, userId);
 
-            sendIpvVcReceivedAuditEvent(verifiableCredential, userId, request.getIpvSessionId());
+            sendIpvVcReceivedAuditEvent(
+                    componentId, userId, request.getIpvSessionId(), verifiableCredential);
 
             credentialIssuerService.persistUserCredentials(
                     verifiableCredential.serialize(), request);
@@ -140,7 +146,7 @@ public class CredentialIssuerReturnHandler
 
     @Tracing
     private void sendIpvVcReceivedAuditEvent(
-            SignedJWT verifiableCredential, String userId, String ipvSessionId)
+            String componentId, String userId, String ipvSessionId, SignedJWT verifiableCredential)
             throws ParseException, JsonProcessingException, SqsException {
         JWTClaimsSet jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
         JSONObject vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
@@ -152,7 +158,7 @@ public class CredentialIssuerReturnHandler
                 new AuditEvent(
                         AuditEventTypes.IPV_VC_RECEIVED,
                         extensions,
-                        jwtClaimsSet.getIssuer(),
+                        componentId,
                         new AuditEventUser(userId, ipvSessionId));
         auditService.sendAuditEvent(auditEvent);
     }

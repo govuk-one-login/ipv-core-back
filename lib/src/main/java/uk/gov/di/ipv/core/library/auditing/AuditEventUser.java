@@ -2,7 +2,9 @@ package uk.gov.di.ipv.core.library.auditing;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
+@ExcludeFromGeneratedCoverageReport
 @Getter
 public class AuditEventUser {
 
