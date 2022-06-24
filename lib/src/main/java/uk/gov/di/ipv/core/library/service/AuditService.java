@@ -7,7 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.auditing.AuditExtensionParams;
+import uk.gov.di.ipv.core.library.auditing.AuditExtensions;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.SQS_AUDIT_EVENT_QUEUE_URL;
@@ -31,7 +31,7 @@ public class AuditService {
         sendAuditEvent(eventType, null);
     }
 
-    public void sendAuditEvent(AuditEventTypes eventType, AuditExtensionParams extensions)
+    public void sendAuditEvent(AuditEventTypes eventType, AuditExtensions extensions)
             throws SqsException {
         AuditEvent auditEvent = new AuditEvent(eventType, extensions, null, null);
         sendAuditEvent(auditEvent);

@@ -12,7 +12,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.auditing.AuditExtensionParams;
+import uk.gov.di.ipv.core.library.auditing.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -60,8 +60,8 @@ class CredentialIssuerErrorHandlerTest {
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
         ArgumentCaptor<AuditEventTypes> auditEventType =
                 ArgumentCaptor.forClass(AuditEventTypes.class);
-        ArgumentCaptor<AuditExtensionParams> auditExtensionParams =
-                ArgumentCaptor.forClass(AuditExtensionParams.class);
+        ArgumentCaptor<AuditExtensionErrorParams> auditExtensionParams =
+                ArgumentCaptor.forClass(AuditExtensionErrorParams.class);
 
         verify(mockAuditService)
                 .sendAuditEvent(auditEventType.capture(), auditExtensionParams.capture());
