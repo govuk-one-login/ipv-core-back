@@ -55,7 +55,7 @@ class AuditServiceTest {
                         sqsSendMessageRequestCaptor.getValue().getMessageBody(), AuditEvent.class);
         assertEquals(
                 AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED,
-                messageBody.getEvent());
+                messageBody.getEventName());
     }
 
     @Test
@@ -82,7 +82,7 @@ class AuditServiceTest {
                         sqsSendMessageRequestCaptor.getValue().getMessageBody(), AuditEvent.class);
         assertEquals(
                 AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED,
-                messageBody.getEvent());
+                messageBody.getEventName());
         assertEquals(extensions.getErrorCode(), messageBody.getExtensions().getErrorCode());
         assertEquals(
                 extensions.getErrorDescription(),

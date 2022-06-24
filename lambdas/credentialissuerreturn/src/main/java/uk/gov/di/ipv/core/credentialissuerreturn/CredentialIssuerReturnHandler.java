@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -108,7 +109,9 @@ public class CredentialIssuerReturnHandler
             auditService.sendAuditEvent(
                     AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED);
 
-            auditService.sendAuditEvent(AuditEventTypes.IPV_VC_RECEIVED);
+            AuditEvent auditEvent =
+                    new AuditEvent(AuditEventTypes.IPV_VC_RECEIVED, null, null, null);
+            auditService.sendAuditEvent(auditEvent);
 
             credentialIssuerService.persistUserCredentials(
                     verifiableCredential.serialize(), request);

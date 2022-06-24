@@ -17,6 +17,7 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -158,7 +159,9 @@ class CredentialIssuerReturnHandlerTest {
         verify(auditService)
                 .sendAuditEvent(AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED);
 
-        verify(auditService).sendAuditEvent(AuditEventTypes.IPV_VC_RECEIVED);
+        ArgumentCaptor<AuditEvent> argumentCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService).sendAuditEvent(argumentCaptor.capture());
+        assertEquals(AuditEventTypes.IPV_VC_RECEIVED, argumentCaptor.getValue().getEventName());
 
         verify(verifiableCredentialJwtValidator)
                 .validate(signedJWT, passportIssuer, "test-user-id");
@@ -456,7 +459,9 @@ class CredentialIssuerReturnHandlerTest {
         JSONObject testCredential = new JSONObject();
         testCredential.appendField("foo", "bar");
 
-        doThrow(new SqsException("Test sqs error")).when(auditService).sendAuditEvent(any());
+        doThrow(new SqsException("Test sqs error"))
+                .when(auditService)
+                .sendAuditEvent(any(AuditEventTypes.class));
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
 
