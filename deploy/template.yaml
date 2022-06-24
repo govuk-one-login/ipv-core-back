@@ -29,16 +29,11 @@ Parameters:
     Type: String
     Description: The address cri id which relates to the cri config in parameter store to be used by the journey engine
     Default: address
-  ProvisionedConcurrentExecutions:
-    Type: Number
-    Description: >-
-      The number of lambda execution environments to keep permanently ready to reduce cold starts.
-    Default: 0
 
 Conditions:
   AddProvisionedConcurrency: !Not
     - !Equals
-      - !Ref ProvisionedConcurrentExecutions
+      - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
       -  0
   IsDevelopmentEnvironment: !Not
     - !Or
@@ -47,8 +42,23 @@ Conditions:
       - !Equals [ !Ref Environment, "integration"]
       - !Equals [ !Ref Environment, "production"]
 
-Resources:
+# The AWS Account Id is used in the following mapping section because we have
+# multiple developer environments and it is undesirable to have to keep this
+# mapping up to date with each developer environment.
+Mappings:
+  EnvironmentConfiguration:
+    "130355686670": # Development
+      provisionedConcurrency: 0
+    "457601271792": # Build
+      provisionedConcurrency: 0
+    "335257547869": # Staging
+      provisionedConcurrency: 1
+    "991138514218": # Integration
+      provisionedConcurrency: 1
+    "075701497069": # Production
+      provisionedConcurrency: 1
 
+Resources:
   IPVCorePrivateAPI:
     Type: AWS::Serverless::Api
     Properties:
@@ -194,7 +204,7 @@ Resources:
       ProvisionedConcurrencyConfig:
         !If
           - AddProvisionedConcurrency
-          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
   IPVAccessTokenFunctionLogGroup:
@@ -263,7 +273,7 @@ Resources:
       ProvisionedConcurrencyConfig:
         !If
           - AddProvisionedConcurrency
-          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
   IPVSessionEndFunctionLogGroup:
@@ -344,7 +354,7 @@ Resources:
       ProvisionedConcurrencyConfig:
         !If
           - AddProvisionedConcurrency
-          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
   IPVSessionStartFunctionLogGroup:
@@ -435,7 +445,7 @@ Resources:
       ProvisionedConcurrencyConfig:
         !If
           - AddProvisionedConcurrency
-          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
   IPVCriReturnFunctionLogGroup:
@@ -522,7 +532,7 @@ Resources:
       ProvisionedConcurrencyConfig:
         !If
           - AddProvisionedConcurrency
-          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
   IPVCredentialIssuerStartFunctionLogGroup:
@@ -586,7 +596,7 @@ Resources:
       ProvisionedConcurrencyConfig:
         !If
           - AddProvisionedConcurrency
-          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
   IPVCredentialIssuerErrorFunctionLogGroup:
@@ -658,7 +668,7 @@ Resources:
       ProvisionedConcurrencyConfig:
         !If
           - AddProvisionedConcurrency
-          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
   IPVUserIdentityFunctionLogGroup:
@@ -711,7 +721,7 @@ Resources:
       ProvisionedConcurrencyConfig:
         !If
           - AddProvisionedConcurrency
-          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
   IPVCredentialIssuerFunctionLogGroup:
@@ -764,7 +774,7 @@ Resources:
       ProvisionedConcurrencyConfig:
         !If
           - AddProvisionedConcurrency
-          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
   IPVIssuedCredentialsFunctionLogGroup:
@@ -829,7 +839,7 @@ Resources:
       ProvisionedConcurrencyConfig:
         !If
           - AddProvisionedConcurrency
-          - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
+          - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
   IPVJourneyEngineFunctionLogGroup:
@@ -879,9 +889,9 @@ Resources:
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
-        - AddProvisionedConcurrency
-        - ProvisionedConcurrentExecutions: !Ref ProvisionedConcurrentExecutions
-        - !Ref AWS::NoValue
+          - AddProvisionedConcurrency
+          - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
+          - !Ref AWS::NoValue
 
   IPVValidateCriCheckFunctionLogGroup:
     Type: AWS::Logs::LogGroup
