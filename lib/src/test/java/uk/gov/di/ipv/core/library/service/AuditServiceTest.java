@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.service;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,7 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.auditing.AuditExtensionParams;
+import uk.gov.di.ipv.core.library.auditing.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,8 +41,7 @@ class AuditServiceTest {
 
     @Test
     void shouldSendMessageToSqsQueue() throws JsonProcessingException, SqsException {
-        auditService.sendAuditEvent(
-                AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED, null);
+        auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, null);
 
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
                 ArgumentCaptor.forClass(SendMessageRequest.class);
@@ -53,22 +53,20 @@ class AuditServiceTest {
         AuditEvent messageBody =
                 objectMapper.readValue(
                         sqsSendMessageRequestCaptor.getValue().getMessageBody(), AuditEvent.class);
-        assertEquals(
-                AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED,
-                messageBody.getEvent());
+        assertEquals(AuditEventTypes.IPV_JOURNEY_START, messageBody.getEventName());
     }
 
     @Test
-    void shouldSendMessageToSqsQueueWithExtensions() throws JsonProcessingException, SqsException {
+    void shouldSendMessageToSqsQueueWithAuditExtensionErrorParams()
+            throws JsonProcessingException, SqsException {
         String errorCode = "server_error";
         String errorDescription = "Test error";
-        AuditExtensionParams extensions =
-                new AuditExtensionParams.Builder()
+        AuditExtensionErrorParams extensions =
+                new AuditExtensionErrorParams.Builder()
                         .setErrorCode(errorCode)
                         .setErrorDescription(errorDescription)
                         .build();
-        auditService.sendAuditEvent(
-                AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED, extensions);
+        auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, extensions);
 
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
                 ArgumentCaptor.forClass(SendMessageRequest.class);
@@ -77,15 +75,16 @@ class AuditServiceTest {
         assertEquals(
                 "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().getQueueUrl());
 
-        AuditEvent messageBody =
-                objectMapper.readValue(
-                        sqsSendMessageRequestCaptor.getValue().getMessageBody(), AuditEvent.class);
+        JsonNode messageBody =
+                objectMapper.readTree(sqsSendMessageRequestCaptor.getValue().getMessageBody());
         assertEquals(
-                AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED,
-                messageBody.getEvent());
-        assertEquals(extensions.getErrorCode(), messageBody.getExtensions().getErrorCode());
+                AuditEventTypes.IPV_JOURNEY_START.toString(),
+                messageBody.get("event_name").asText());
+        JsonNode auditExtensionErrorParams = messageBody.get("extensions");
+        assertEquals(
+                extensions.getErrorCode(), auditExtensionErrorParams.get("error_code").asText());
         assertEquals(
                 extensions.getErrorDescription(),
-                messageBody.getExtensions().getErrorDescription());
+                auditExtensionErrorParams.get("error_description").asText());
     }
 }

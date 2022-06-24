@@ -4,6 +4,9 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.nimbusds.jose.shaded.json.JSONObject;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
@@ -12,7 +15,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.auditing.AuditExtensionsVcEvidence;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -28,7 +35,10 @@ import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 
+import java.text.ParseException;
 import java.util.Optional;
+
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 
 public class CredentialIssuerReturnHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -36,6 +46,7 @@ public class CredentialIssuerReturnHandler
             LoggerFactory.getLogger(CredentialIssuerReturnHandler.class);
     private static final String CRI_VALIDATE_ENDPOINT = "/journey/cri/validate/";
     private static final String JOURNEY_ERROR_ENDPOINT = "/journey/error";
+    public static final String EVIDENCE = "evidence";
 
     private final CredentialIssuerService credentialIssuerService;
     private final ConfigurationService configurationService;
@@ -97,18 +108,21 @@ public class CredentialIssuerReturnHandler
                     credentialIssuerService.getVerifiableCredential(
                             accessToken, credentialIssuerConfig, apiKey);
 
-            verifiableCredentialJwtValidator.validate(
-                    verifiableCredential,
-                    credentialIssuerConfig,
+            String componentId =
+                    configurationService.getSsmParameter(
+                            ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+
+            String userId =
                     ipvSessionService
                             .getIpvSession(request.getIpvSessionId())
                             .getClientSessionDetails()
-                            .getUserId());
+                            .getUserId();
 
-            auditService.sendAuditEvent(
-                    AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED);
+            verifiableCredentialJwtValidator.validate(
+                    verifiableCredential, credentialIssuerConfig, userId);
 
-            auditService.sendAuditEvent(AuditEventTypes.IPV_VC_RECEIVED);
+            sendIpvVcReceivedAuditEvent(
+                    componentId, userId, request.getIpvSessionId(), verifiableCredential);
 
             credentialIssuerService.persistUserCredentials(
                     verifiableCredential.serialize(), request);
@@ -122,12 +136,31 @@ public class CredentialIssuerReturnHandler
             JourneyResponse errorJourneyResponse = new JourneyResponse(JOURNEY_ERROR_ENDPOINT);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, errorJourneyResponse);
-        } catch (SqsException e) {
+        } catch (ParseException | JsonProcessingException | SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
             JourneyResponse errorJourneyResponse = new JourneyResponse(JOURNEY_ERROR_ENDPOINT);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, errorJourneyResponse);
         }
+    }
+
+    @Tracing
+    private void sendIpvVcReceivedAuditEvent(
+            String componentId, String userId, String ipvSessionId, SignedJWT verifiableCredential)
+            throws ParseException, JsonProcessingException, SqsException {
+        JWTClaimsSet jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
+        JSONObject vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
+        String evidence = vc.getAsString(EVIDENCE);
+
+        AuditExtensionsVcEvidence extensions =
+                new AuditExtensionsVcEvidence(jwtClaimsSet.getIssuer(), evidence);
+        AuditEvent auditEvent =
+                new AuditEvent(
+                        AuditEventTypes.IPV_VC_RECEIVED,
+                        extensions,
+                        componentId,
+                        new AuditEventUser(userId, ipvSessionId));
+        auditService.sendAuditEvent(auditEvent);
     }
 
     @Tracing

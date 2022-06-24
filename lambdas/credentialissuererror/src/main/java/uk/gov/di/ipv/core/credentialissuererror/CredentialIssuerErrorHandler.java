@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.auditing.AuditExtensionParams;
+import uk.gov.di.ipv.core.library.auditing.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerErrorDto;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -74,8 +74,8 @@ public class CredentialIssuerErrorHandler
         LOGGER.error(credentialIssuerErrorDto.getErrorDescription());
 
         try {
-            AuditExtensionParams extensions =
-                    new AuditExtensionParams.Builder()
+            AuditExtensionErrorParams extensions =
+                    new AuditExtensionErrorParams.Builder()
                             .setErrorCode(credentialIssuerErrorDto.getError())
                             .setErrorDescription(credentialIssuerErrorDto.getErrorDescription())
                             .build();

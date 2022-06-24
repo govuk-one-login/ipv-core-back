@@ -7,10 +7,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.auditing.AuditExtensionParams;
+import uk.gov.di.ipv.core.library.auditing.AuditExtensions;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
-
-import java.time.Instant;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.SQS_AUDIT_EVENT_QUEUE_URL;
 
@@ -33,25 +31,22 @@ public class AuditService {
         sendAuditEvent(eventType, null);
     }
 
-    public void sendAuditEvent(AuditEventTypes eventType, AuditExtensionParams extensions)
+    public void sendAuditEvent(AuditEventTypes eventType, AuditExtensions extensions)
             throws SqsException {
+        AuditEvent auditEvent = new AuditEvent(eventType, extensions, null, null);
+        sendAuditEvent(auditEvent);
+    }
+
+    public void sendAuditEvent(AuditEvent auditEvent) throws SqsException {
         try {
             SendMessageRequest sendMessageRequest =
                     new SendMessageRequest()
                             .withQueueUrl(queueUrl)
-                            .withMessageBody(generateMessageBody(eventType, extensions));
+                            .withMessageBody(objectMapper.writeValueAsString(auditEvent));
 
             sqs.sendMessage(sendMessageRequest);
         } catch (JsonProcessingException e) {
             throw new SqsException(e);
         }
-    }
-
-    private String generateMessageBody(AuditEventTypes eventType, AuditExtensionParams extensions)
-            throws JsonProcessingException {
-        AuditEvent auditEvent =
-                new AuditEvent((int) Instant.now().getEpochSecond(), eventType, extensions);
-
-        return objectMapper.writeValueAsString(auditEvent);
     }
 }

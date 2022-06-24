@@ -7,7 +7,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 
 @ExcludeFromGeneratedCoverageReport
 @Getter
-public class AuditExtensionParams {
+public class AuditExtensionErrorParams implements AuditExtensions {
     @JsonProperty("error_code")
     private final String errorCode;
 
@@ -15,7 +15,7 @@ public class AuditExtensionParams {
     private final String errorDescription;
 
     @JsonCreator
-    public AuditExtensionParams(
+    public AuditExtensionErrorParams(
             @JsonProperty(value = "error_code", required = false) String errorCode,
             @JsonProperty(value = "error_description", required = false) String errorDescription) {
         this.errorCode = errorCode;
@@ -36,8 +36,8 @@ public class AuditExtensionParams {
             return this;
         }
 
-        public AuditExtensionParams build() {
-            return new AuditExtensionParams(errorCode, errorDescription);
+        public AuditExtensionErrorParams build() {
+            return new AuditExtensionErrorParams(errorCode, errorDescription);
         }
     }
 }

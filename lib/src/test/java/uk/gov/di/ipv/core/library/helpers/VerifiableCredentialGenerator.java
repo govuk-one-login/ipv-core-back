@@ -65,7 +65,18 @@ public class VerifiableCredentialGenerator {
         vc.put(VC_CONTEXT, new String[] {W3_BASE_CONTEXT, DI_CONTEXT});
         vc.put(VC_TYPE, new String[] {VERIFIABLE_CREDENTIAL_TYPE, IDENTITY_CHECK_CREDENTIAL_TYPE});
         vc.put(VC_CREDENTIAL_SUBJECT, attributes);
-        vc.put(VC_EVIDENCE, List.of(Map.of("Gpg45", "Score")));
+        vc.put(
+                VC_EVIDENCE,
+                List.of(
+                        Map.of(
+                                "type",
+                                "IdentityCheck",
+                                "txn",
+                                "DSJJSEE29392",
+                                "verificationScore",
+                                "0",
+                                "ci",
+                                List.of("A02", "A03"))));
         return vc;
     }
 }
