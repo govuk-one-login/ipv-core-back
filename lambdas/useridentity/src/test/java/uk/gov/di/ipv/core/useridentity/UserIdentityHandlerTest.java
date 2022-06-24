@@ -48,7 +48,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.PASSPORT_JSON_1;
 
 @ExtendWith(MockitoExtension.class)
-class AuditEventUserIdentityHandlerTest {
+class UserIdentityHandlerTest {
 
     private static final String TEST_IPV_SESSION_ID = SecureTokenHelper.generate();
     public static final String VTM = "http://www.example.com/vtm";

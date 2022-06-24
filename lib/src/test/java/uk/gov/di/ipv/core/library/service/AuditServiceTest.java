@@ -41,8 +41,7 @@ class AuditServiceTest {
 
     @Test
     void shouldSendMessageToSqsQueue() throws JsonProcessingException, SqsException {
-        auditService.sendAuditEvent(
-                AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED, null);
+        auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, null);
 
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
                 ArgumentCaptor.forClass(SendMessageRequest.class);
@@ -54,9 +53,7 @@ class AuditServiceTest {
         AuditEvent messageBody =
                 objectMapper.readValue(
                         sqsSendMessageRequestCaptor.getValue().getMessageBody(), AuditEvent.class);
-        assertEquals(
-                AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED,
-                messageBody.getEventName());
+        assertEquals(AuditEventTypes.IPV_JOURNEY_START, messageBody.getEventName());
     }
 
     @Test
@@ -69,8 +66,7 @@ class AuditServiceTest {
                         .setErrorCode(errorCode)
                         .setErrorDescription(errorDescription)
                         .build();
-        auditService.sendAuditEvent(
-                AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED, extensions);
+        auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, extensions);
 
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
                 ArgumentCaptor.forClass(SendMessageRequest.class);
@@ -82,7 +78,7 @@ class AuditServiceTest {
         JsonNode messageBody =
                 objectMapper.readTree(sqsSendMessageRequestCaptor.getValue().getMessageBody());
         assertEquals(
-                AuditEventTypes.IPV_CREDENTIAL_RECEIVED_AND_SIGNATURE_CHECKED.toString(),
+                AuditEventTypes.IPV_JOURNEY_START.toString(),
                 messageBody.get("event_name").asText());
         JsonNode auditExtensionErrorParams = messageBody.get("extensions");
         assertEquals(

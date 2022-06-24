@@ -40,7 +40,7 @@ import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.g
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.vcClaim;
 
 @ExtendWith(MockitoExtension.class)
-class AuditEventUserIdentityServiceTest {
+class UserIdentityServiceTest {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
