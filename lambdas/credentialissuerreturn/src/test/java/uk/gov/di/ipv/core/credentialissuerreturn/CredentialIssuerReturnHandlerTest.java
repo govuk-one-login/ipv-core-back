@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -54,6 +55,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRACT_INDICATORS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 
@@ -459,6 +461,53 @@ class CredentialIssuerReturnHandlerTest {
         assertEquals("0", evidenceItem.get("verificationScore").asText());
         assertEquals("[ \"A02\", \"A03\" ]", evidenceItem.get("ci").toPrettyString());
 
+        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+    }
+
+    @Test
+    void shouldReceive200ResponseCodeAndSendIpvVcReceivedAuditEventWhenVcEvidenceIsMissing()
+            throws Exception {
+        BearerAccessToken accessToken = mock(BearerAccessToken.class);
+
+        when(credentialIssuerService.exchangeCodeForToken(
+                        requestDto.capture(), eq(passportIssuer), eq(testApiKey)))
+                .thenReturn(accessToken);
+
+        when(credentialIssuerService.getVerifiableCredential(
+                        accessToken, passportIssuer, testApiKey))
+                .thenReturn(SignedJWT.parse(SIGNED_ADDRESS_VC));
+
+        mockServiceCallsAndSessionItem();
+
+        APIGatewayProxyRequestEvent input =
+                createRequestEvent(
+                        Map.of(
+                                "authorization_code",
+                                authorization_code,
+                                "credential_issuer_id",
+                                passportIssuerId,
+                                "state",
+                                OAUTH_STATE),
+                        Map.of("ipv-session-id", sessionId));
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
+
+        ArgumentCaptor<AuditEvent> argumentCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService).sendAuditEvent(argumentCaptor.capture());
+        assertEquals(AuditEventTypes.IPV_VC_RECEIVED, argumentCaptor.getValue().getEventName());
+
+        assertEquals(testComponentId, argumentCaptor.getValue().getComponentId());
+
+        AuditEventUser auditEventUser = argumentCaptor.getValue().getUser();
+        assertEquals(TEST_USER_ID, auditEventUser.getUserId());
+        assertEquals(sessionId, auditEventUser.getSessionId());
+
+        AuditExtensionsVcEvidence auditExtensionsVcEvidence =
+                (AuditExtensionsVcEvidence) argumentCaptor.getValue().getExtensions();
+        assertEquals(
+                "https://staging-di-ipv-cri-address-front.london.cloudapps.digital",
+                auditExtensionsVcEvidence.getIss());
+        assertNull(auditExtensionsVcEvidence.getEvidence());
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
     }
 
