@@ -63,9 +63,13 @@ jobs:
           ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
         run: sam package --s3-bucket="$ARTIFACT_BUCKET" --s3-prefix "core-back" --output-template-file=cf-template.yaml
 
-      - name: Zip the cloudformation template
+      - name: Write git commit sha to git_commit.txt
         working-directory: ./deploy
-        run: zip template.zip cf-template.yaml
+        run: echo "$GITHUB_SHA" > git_commit.txt
+
+      - name: Zip the cloudformation template and git commit sha
+        working-directory: ./deploy
+        run: zip template.zip cf-template.yaml git_commit.txt
 
       - name: Upload zipped cloudformation artifact to S3
         working-directory: ./deploy
