@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.persistence.item.AccessTokenItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -34,6 +35,7 @@ import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -51,6 +53,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.PASSPORT_JSON_1;
 class UserIdentityHandlerTest {
 
     private static final String TEST_IPV_SESSION_ID = SecureTokenHelper.generate();
+    private static final String TEST_ACCESS_TOKEN = "test-access-token";
     public static final String VTM = "http://www.example.com/vtm";
 
     @Mock private Context mockContext;
@@ -65,6 +68,7 @@ class UserIdentityHandlerTest {
     private UserIdentityHandler userInfoHandler;
     private UserIdentity userIdentity;
     private IpvSessionItem ipvSessionItem;
+    private AccessTokenItem accessTokenItem;
     private Map<String, String> responseBody;
 
     @BeforeEach
@@ -98,6 +102,10 @@ class UserIdentityHandlerTest {
                         "test-user-id",
                         false));
 
+        accessTokenItem = new AccessTokenItem();
+        accessTokenItem.setIpvSessionId(TEST_IPV_SESSION_ID);
+        accessTokenItem.setAccessToken(TEST_ACCESS_TOKEN);
+
         userInfoHandler =
                 new UserIdentityHandler(
                         mockUserIdentityService,
@@ -111,13 +119,12 @@ class UserIdentityHandlerTest {
     void shouldReturn200OnSuccessfulUserIdentityRequest()
             throws HttpResponseExceptionWithErrorBody {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        AccessToken accessToken = new BearerAccessToken();
+        AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
         Map<String, String> headers =
                 Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
         event.setHeaders(headers);
 
-        when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString()))
-                .thenReturn(TEST_IPV_SESSION_ID);
+        when(mockAccessTokenService.getAccessToken(TEST_ACCESS_TOKEN)).thenReturn(accessTokenItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any())).thenReturn(userIdentity);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -130,13 +137,12 @@ class UserIdentityHandlerTest {
     void shouldReturnCredentialsOnSuccessfulUserInfoRequest()
             throws JsonProcessingException, SqsException, HttpResponseExceptionWithErrorBody {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        AccessToken accessToken = new BearerAccessToken();
+        AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
         Map<String, String> headers =
                 Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
         event.setHeaders(headers);
 
-        when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString()))
-                .thenReturn(TEST_IPV_SESSION_ID);
+        when(mockAccessTokenService.getAccessToken(TEST_ACCESS_TOKEN)).thenReturn(accessTokenItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any())).thenReturn(userIdentity);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -157,13 +163,12 @@ class UserIdentityHandlerTest {
     void shouldReturnErrorResponseWhenUserIdentityGenerationFails()
             throws JsonProcessingException, HttpResponseExceptionWithErrorBody {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        AccessToken accessToken = new BearerAccessToken();
+        AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
         Map<String, String> headers =
                 Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
         event.setHeaders(headers);
 
-        when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString()))
-                .thenReturn(TEST_IPV_SESSION_ID);
+        when(mockAccessTokenService.getAccessToken(TEST_ACCESS_TOKEN)).thenReturn(accessTokenItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any()))
                 .thenThrow(
                         new HttpResponseExceptionWithErrorBody(
@@ -233,12 +238,12 @@ class UserIdentityHandlerTest {
     @Test
     void shouldReturnErrorResponseWhenInvalidAccessTokenProvided() throws JsonProcessingException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        AccessToken accessToken = new BearerAccessToken();
+        AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
         Map<String, String> headers =
                 Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
         event.setHeaders(headers);
 
-        when(mockAccessTokenService.getIpvSessionIdByAccessToken(anyString())).thenReturn(null);
+        when(mockAccessTokenService.getAccessToken(TEST_ACCESS_TOKEN)).thenReturn(null);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
         Map<String, Object> responseBody =
@@ -250,6 +255,33 @@ class UserIdentityHandlerTest {
                 OAuth2Error.ACCESS_DENIED
                         .appendDescription(
                                 " - The supplied access token was not found in the database")
+                        .getDescription(),
+                responseBody.get("error_description"));
+    }
+
+    @Test
+    void shouldReturnErrorResponseWhenAccessTokenHasBeenRevoked() throws JsonProcessingException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
+        Map<String, String> headers =
+                Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
+        event.setHeaders(headers);
+
+        AccessTokenItem accessTokenItem = new AccessTokenItem();
+        accessTokenItem.setAccessToken(accessToken.toAuthorizationHeader());
+        accessTokenItem.setRevokedAtDateTime(Instant.now().toString());
+
+        when(mockAccessTokenService.getAccessToken(anyString())).thenReturn(accessTokenItem);
+
+        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(403, response.getStatusCode());
+        assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
+        assertEquals(
+                OAuth2Error.ACCESS_DENIED
+                        .appendDescription(" - The supplied access token has been revoked")
                         .getDescription(),
                 responseBody.get("error_description"));
     }

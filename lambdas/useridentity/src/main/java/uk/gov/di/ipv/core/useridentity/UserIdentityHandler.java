@@ -24,11 +24,14 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.AccessTokenItem;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+
+import java.util.Objects;
 
 public class UserIdentityHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -77,10 +80,10 @@ public class UserIdentityHandler
                                     input.getHeaders(), AUTHORIZATION_HEADER_KEY),
                             AccessTokenType.BEARER);
 
-            String ipvSessionId =
-                    accessTokenService.getIpvSessionIdByAccessToken(accessToken.getValue());
+            AccessTokenItem accessTokenItem =
+                    accessTokenService.getAccessToken(accessToken.getValue());
 
-            if (StringUtils.isBlank(ipvSessionId)) {
+            if (Objects.isNull((accessTokenItem))) {
                 LOGGER.error(
                         "User credential could not be retrieved. The supplied access token was not found in the database.");
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
@@ -90,17 +93,26 @@ public class UserIdentityHandler
                                         " - The supplied access token was not found in the database")
                                 .toJSONObject());
             }
+            String ipvSessionId = accessTokenItem.getIpvSessionId();
             LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
 
+            if (StringUtils.isNotBlank(accessTokenItem.getRevokedAtDateTime())) {
+                LOGGER.error(
+                        "User credential could not be retrieved. The supplied access token has been revoked at: {}",
+                        accessTokenItem.getRevokedAtDateTime());
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(),
+                        OAuth2Error.ACCESS_DENIED
+                                .appendDescription(" - The supplied access token has been revoked")
+                                .toJSONObject());
+            }
+
             ClientSessionDetailsDto clientSessionDetails =
-                    ipvSessionService.getIpvSession(ipvSessionId).getClientSessionDetails();
-
+                    ipvSessionService.getIpvSession(accessTokenItem.getIpvSessionId()).getClientSessionDetails();
             LogHelper.attachClientIdToLogs(clientSessionDetails.getClientId());
-
-            String userId = clientSessionDetails.getUserId();
-
+            
             UserIdentity userIdentity =
-                    userIdentityService.generateUserIdentity(ipvSessionId, userId);
+                    userIdentityService.generateUserIdentity(ipvSessionId, clientSessionDetails.getUserId());
 
             auditService.sendAuditEvent(AuditEventTypes.IPV_IDENTITY_ISSUED);
 
