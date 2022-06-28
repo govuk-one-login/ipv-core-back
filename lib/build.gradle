@@ -27,6 +27,7 @@ dependencies {
 			"org.apache.httpcomponents:httpclient:$rootProject.ext.dependencyVersions.apacheHttpclient",
 			"software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
 			"software.amazon.awssdk:kms:$rootProject.ext.dependencyVersions.kms",
+			"software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters"
 
 	testImplementation "com.github.tomakehurst:wiremock-jre8:2.31.0",

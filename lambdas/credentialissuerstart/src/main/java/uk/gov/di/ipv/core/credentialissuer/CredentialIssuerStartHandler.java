@@ -14,8 +14,9 @@ import com.nimbusds.jose.crypto.RSAEncrypter;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.credentialissuer.domain.CriDetails;
 import uk.gov.di.ipv.core.credentialissuer.domain.CriResponse;
@@ -32,6 +33,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.AuthorizationRequestHelper;
 import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -52,13 +54,8 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 
 public class CredentialIssuerStartHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-
-    private static final Logger LOGGER =
-            LoggerFactory.getLogger(CredentialIssuerStartHandler.class);
-
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final String CRI_ID = "criId";
-    public static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
-    public static final int BAD_REQUEST = 400;
     public static final int OK = 200;
     public static final String SHARED_CLAIMS = "shared_claims";
     public static final JourneyResponse ERROR_JOURNEY = new JourneyResponse("/journey/error");
@@ -96,26 +93,27 @@ public class CredentialIssuerStartHandler
 
     @Override
     @Tracing
+    @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-
-        Map<String, String> pathParameters = input.getPathParameters();
-
-        var errorResponse = validate(pathParameters);
-        if (errorResponse.isPresent()) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
-        }
-
-        CredentialIssuerConfig credentialIssuerConfig =
-                getCredentialIssuerConfig(pathParameters.get(CRI_ID));
-
-        if (credentialIssuerConfig == null) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    400, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
-        }
-
+        LogHelper.attachComponentIdToLogs();
         try {
-            String ipvSessionId = getIpvSessionId(input.getHeaders());
+            String ipvSessionId = RequestHelper.getIpvSessionId(input);
+            Map<String, String> pathParameters = input.getPathParameters();
+
+            var errorResponse = validate(pathParameters);
+            if (errorResponse.isPresent()) {
+                return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
+            }
+
+            CredentialIssuerConfig credentialIssuerConfig =
+                    getCredentialIssuerConfig(pathParameters.get(CRI_ID));
+
+            if (credentialIssuerConfig == null) {
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        400, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
+            }
+
             String oauthState = SecureTokenHelper.generate();
             JWEObject jweObject = signEncryptJar(credentialIssuerConfig, ipvSessionId, oauthState);
 
@@ -126,8 +124,13 @@ public class CredentialIssuerStartHandler
             auditService.sendAuditEvent(AuditEventTypes.IPV_REDIRECT_TO_CRI);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(OK, criResponse);
-        } catch (HttpResponseExceptionWithErrorBody exception) {
-            LOGGER.error("Failed to create cri JAR because: {}", exception.getMessage());
+
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            if (ErrorResponse.MISSING_IPV_SESSION_ID.equals(e.getErrorResponse())) {
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        e.getResponseCode(), e.getErrorBody());
+            }
+            LOGGER.error("Failed to create cri JAR because: {}", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, ERROR_JOURNEY);
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
@@ -174,6 +177,7 @@ public class CredentialIssuerStartHandler
         if (pathParameters == null || StringUtils.isBlank(pathParameters.get(CRI_ID))) {
             return Optional.of(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
         }
+        LogHelper.attachCriIdToLogs(pathParameters.get(CRI_ID));
         return Optional.empty();
     }
 
@@ -212,18 +216,6 @@ public class CredentialIssuerStartHandler
             }
         }
         return SharedClaimsResponse.from(sharedAttributes);
-    }
-
-    @Tracing
-    private String getIpvSessionId(Map<String, String> headers)
-            throws HttpResponseExceptionWithErrorBody {
-        String ipvSessionId = RequestHelper.getHeaderByKey(headers, IPV_SESSION_ID_HEADER_KEY);
-        if (ipvSessionId == null) {
-            LOGGER.error("{} not present in header", IPV_SESSION_ID_HEADER_KEY);
-            throw new HttpResponseExceptionWithErrorBody(
-                    BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
-        }
-        return ipvSessionId;
     }
 
     @Tracing

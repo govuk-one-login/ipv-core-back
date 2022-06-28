@@ -43,14 +43,11 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
-import static java.util.Collections.emptyMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.credentialissuer.CredentialIssuerStartHandler.SHARED_CLAIMS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
@@ -134,7 +131,7 @@ class CredentialIssuerStartHandlerTest {
 
     @Test
     void shouldReceive400ResponseCodeIfCredentialIssuerNotPresent() throws JsonProcessingException {
-        APIGatewayProxyRequestEvent input = createRequestEvent(emptyMap(), emptyMap());
+        APIGatewayProxyRequestEvent input = createRequestEvent();
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
         assert400Response(response, ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
@@ -143,7 +140,7 @@ class CredentialIssuerStartHandlerTest {
     @Test
     void shouldReceive400ResponseCodeIfCredentialIssuerNotInPermittedSet()
             throws JsonProcessingException {
-        APIGatewayProxyRequestEvent input = createRequestEvent(emptyMap(), emptyMap());
+        APIGatewayProxyRequestEvent input = createRequestEvent();
 
         input.setPathParameters(Map.of("criId", "Missing CriId"));
 
@@ -166,7 +163,7 @@ class CredentialIssuerStartHandlerTest {
                                 generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_1)),
                                 generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_2))));
 
-        APIGatewayProxyRequestEvent input = createRequestEvent(emptyMap(), emptyMap());
+        APIGatewayProxyRequestEvent input = createRequestEvent();
 
         input.setPathParameters(Map.of("criId", CRI_ID));
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
@@ -184,21 +181,19 @@ class CredentialIssuerStartHandlerTest {
         jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
         assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
 
-        verifyNoInteractions(context);
         verify(mockAuditService).sendAuditEvent(AuditEventTypes.IPV_REDIRECT_TO_CRI);
     }
 
     @Test
-    void shouldReturnErrorJourneyIfSessionIdIsNotInTheHeader() throws JsonProcessingException {
-        when(configurationService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
+    void shouldReturn400IfSessionIdIsNotInTheHeader() throws JsonProcessingException {
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         input.setPathParameters(Map.of("criId", CRI_ID));
         input.setHeaders(Map.of("not-ipv-session-header", "dummy-value"));
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
-        assertEquals(200, response.getStatusCode());
+        assertEquals(400, response.getStatusCode());
         Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
-        assertEquals("/journey/error", responseBody.get("journey"));
+        assertEquals("Missing ipv session id header", responseBody.get("message"));
     }
 
     private void assertSharedClaimsJWTIsValid(String request)
@@ -258,7 +253,7 @@ class CredentialIssuerStartHandlerTest {
                                 generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_1)),
                                 generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_1))));
 
-        APIGatewayProxyRequestEvent input = createRequestEvent(emptyMap(), emptyMap());
+        APIGatewayProxyRequestEvent input = createRequestEvent();
 
         input.setPathParameters(Map.of("criId", CRI_ID));
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
@@ -292,7 +287,7 @@ class CredentialIssuerStartHandlerTest {
                                 generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_2)),
                                 generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_3))));
 
-        APIGatewayProxyRequestEvent input = createRequestEvent(emptyMap(), emptyMap());
+        APIGatewayProxyRequestEvent input = createRequestEvent();
 
         input.setPathParameters(Map.of("criId", CRI_ID));
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
@@ -315,14 +310,9 @@ class CredentialIssuerStartHandlerTest {
         return objectMapper.readValue(response.getBody(), Map.class);
     }
 
-    private APIGatewayProxyRequestEvent createRequestEvent(
-            Map<String, String> body, Map<String, String> headers) {
+    private APIGatewayProxyRequestEvent createRequestEvent() {
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
-        input.setBody(
-                body.keySet().stream()
-                        .map(key -> key + "=" + body.get(key))
-                        .collect(Collectors.joining("&")));
-        input.setHeaders(headers);
+        input.setHeaders(Map.of("ipv-session-id", "aSessionId"));
         return input;
     }
 

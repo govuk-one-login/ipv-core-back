@@ -7,10 +7,11 @@ import com.nimbusds.oauth2.sdk.auth.PrivateKeyJWT;
 import com.nimbusds.oauth2.sdk.auth.verifier.ClientAuthenticationVerifier;
 import com.nimbusds.oauth2.sdk.auth.verifier.InvalidClientException;
 import com.nimbusds.oauth2.sdk.id.Audience;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ConfigurationServicePublicKeySelector;
 import uk.gov.di.ipv.core.library.exceptions.ClientAuthenticationException;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
@@ -25,7 +26,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWE
 
 public class TokenRequestValidator {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(TokenRequestValidator.class);
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final String CLIENT_ASSERTION_PARAM = "client_assertion";
     private static final String CLIENT_ID_PARAM = "client_id";
     private static final String NONE = "none";
@@ -57,6 +58,8 @@ public class TokenRequestValidator {
             clientJwt = PrivateKeyJWT.parse(requestBody);
 
             clientId = clientJwt.getClientID().getValue();
+
+            LogHelper.attachClientIdToLogs(clientId);
 
             String clientAuthenticationMethod =
                     configurationService.getSsmParameter(CLIENT_AUTHENTICATION_METHOD, clientId);

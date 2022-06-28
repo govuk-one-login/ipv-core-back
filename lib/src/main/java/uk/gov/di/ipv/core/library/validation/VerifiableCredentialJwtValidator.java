@@ -11,8 +11,8 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.jwt.proc.BadJWTException;
 import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -24,8 +24,7 @@ import java.util.HashSet;
 import static com.nimbusds.jose.JWSAlgorithm.ES256;
 
 public class VerifiableCredentialJwtValidator {
-    private static final Logger LOGGER =
-            LoggerFactory.getLogger(VerifiableCredentialJwtValidator.class);
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final String VC_CLAIM_NAME = "vc";
 
     public void validate(

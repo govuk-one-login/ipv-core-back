@@ -62,7 +62,6 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 @ExtendWith(MockitoExtension.class)
 class CredentialIssuerReturnHandlerTest {
 
-    private static final String TEST_VERIFIABLE_CREDENTIAL = "A.VERIFIABLE.CREDENTIAL";
     public static final String OAUTH_STATE = "oauth-state";
     public static final String CREDENTIAL_ISSUER_ID = "PassportIssuer";
     public static final String TEST_USER_ID = "test-user-id";
@@ -303,8 +302,6 @@ class CredentialIssuerReturnHandlerTest {
         assertEquals(SIGNED_VC_1, verifiableCredentialCaptor.getValue());
 
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
-
-        verifyNoInteractions(context);
     }
 
     @Test
@@ -340,7 +337,6 @@ class CredentialIssuerReturnHandlerTest {
         Map responseBody = getResponseBodyAsMap(response);
         assertEquals(HTTPResponse.SC_OK, statusCode);
         assertEquals("/journey/error", responseBody.get("journey"));
-        verifyNoInteractions(context);
     }
 
     @Test
@@ -579,6 +575,6 @@ class CredentialIssuerReturnHandlerTest {
         Map responseBody = getResponseBodyAsMap(response);
         assertEquals(HTTPResponse.SC_BAD_REQUEST, statusCode);
         assertEquals(errorResponse.getCode(), responseBody.get("code"));
-        verifyNoInteractions(context, credentialIssuerService);
+        verifyNoInteractions(credentialIssuerService);
     }
 }

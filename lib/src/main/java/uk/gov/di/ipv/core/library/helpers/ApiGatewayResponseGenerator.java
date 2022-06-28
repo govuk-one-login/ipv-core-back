@@ -4,8 +4,8 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpHeaders;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Collections;
 import java.util.Map;
@@ -14,7 +14,7 @@ public class ApiGatewayResponseGenerator {
 
     private static final String JSON_CONTENT_TYPE_VALUE = "application/json";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ApiGatewayResponseGenerator.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 

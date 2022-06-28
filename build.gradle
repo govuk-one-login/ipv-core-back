@@ -47,26 +47,11 @@ ext {
 		lombok:'1.18.22',
 		nimbusdsOauth2OidcSdk:'9.27',
 		powertoolsParameters:'1.11.0',
-		powertoolsTracing:'1.12.0',
-		slf4j:'1.7.36'
+		powertoolsLogging:'1.12.2',
+		powertoolsTracing:'1.12.0'
 	]
 }
 
 subprojects {
-	configurations {
-		loggingImplementation
-		loggingRunTimeOnly
-	}
-
-	dependencies {
-		loggingImplementation "org.slf4j:slf4j-api:$rootProject.ext.dependencyVersions.slf4j"
-
-		loggingRunTimeOnly "org.apache.logging.log4j:log4j-api:$dependencyVersions.log4j",
-				"org.apache.logging.log4j:log4j-core:$dependencyVersions.log4j",
-				"org.apache.logging.log4j:log4j-layout-template-json:$dependencyVersions.log4j",
-				"org.apache.logging.log4j:log4j-slf4j18-impl:$dependencyVersions.log4j",
-				"com.amazonaws:aws-lambda-java-log4j2:$dependencyVersions.awsLambdaJavaLog4j2"
-	}
-
 	task allDeps(type: DependencyReportTask) {}
 }

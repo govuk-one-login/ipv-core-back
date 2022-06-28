@@ -16,8 +16,8 @@ import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.apache.http.client.utils.URIBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ClientAuthClaims;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
@@ -42,7 +42,7 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_
 
 public class CredentialIssuerService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CredentialIssuerService.class);
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final String API_KEY_HEADER = "x-api-key";
 
     private final DataStore<UserIssuedCredentialsItem> dataStore;

@@ -11,8 +11,9 @@ import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -25,9 +26,11 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -42,8 +45,7 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 
 public class CredentialIssuerReturnHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-    private static final Logger LOGGER =
-            LoggerFactory.getLogger(CredentialIssuerReturnHandler.class);
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final String CRI_VALIDATE_ENDPOINT = "/journey/cri/validate/";
     private static final String JOURNEY_ERROR_ENDPOINT = "/journey/error";
     public static final String EVIDENCE = "evidence";
@@ -82,13 +84,16 @@ public class CredentialIssuerReturnHandler
 
     @Override
     @Tracing
+    @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        CredentialIssuerRequestDto request =
-                RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
-
+        LogHelper.attachComponentIdToLogs();
         try {
             auditService.sendAuditEvent(AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED);
+            RequestHelper.getIpvSessionId(input);
+
+            CredentialIssuerRequestDto request =
+                    RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
 
             var errorResponse = validate(request);
 
@@ -141,6 +146,9 @@ public class CredentialIssuerReturnHandler
             JourneyResponse errorJourneyResponse = new JourneyResponse(JOURNEY_ERROR_ENDPOINT);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, errorJourneyResponse);
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    e.getResponseCode(), e.getErrorBody());
         }
     }
 
@@ -172,6 +180,7 @@ public class CredentialIssuerReturnHandler
         if (StringUtils.isBlank(request.getCredentialIssuerId())) {
             return Optional.of(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
         }
+        LogHelper.attachCriIdToLogs(request.getCredentialIssuerId());
 
         if (StringUtils.isBlank(request.getIpvSessionId())) {
             return Optional.of(ErrorResponse.MISSING_IPV_SESSION_ID);

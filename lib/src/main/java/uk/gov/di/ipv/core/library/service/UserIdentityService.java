@@ -9,8 +9,8 @@ import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.DebugCredentialAttributes;
@@ -38,7 +38,7 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
 public class UserIdentityService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserIdentityService.class);
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final String NAME_PROPERTY_NAME = "name";
     private static final String BIRTH_DATE_PROPERTY_NAME = "birthDate";
     private static final String ADDRESS_PROPERTY_NAME = "address";

@@ -1,8 +1,8 @@
 package uk.gov.di.ipv.core.library.validation;
 
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -19,7 +19,7 @@ public class AuthRequestValidator {
     public static final String REDIRECT_URI_PARAM = "redirect_uri";
     public static final String STATE_PARAM = "state";
     private static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
-    private static final Logger LOGGER = LoggerFactory.getLogger(AuthRequestValidator.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final ConfigurationService configurationService;
 

@@ -3,11 +3,13 @@ package uk.gov.di.ipv.core.validatecricheck;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.google.gson.Gson;
+import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -23,7 +25,6 @@ import static uk.gov.di.ipv.core.validatecricheck.ValidateCriCheckHandler.CRI_ID
 import static uk.gov.di.ipv.core.validatecricheck.ValidateCriCheckHandler.IPV_SESSION_ID_HEADER_KEY;
 import static uk.gov.di.ipv.core.validatecricheck.ValidateCriCheckHandler.JOURNEY_FAIL;
 import static uk.gov.di.ipv.core.validatecricheck.ValidateCriCheckHandler.JOURNEY_NEXT;
-import static uk.gov.di.ipv.core.validatecricheck.ValidateCriCheckHandler.OK;
 
 @ExtendWith(MockitoExtension.class)
 class ValidateCriCheckHandlerTest {
@@ -48,7 +49,7 @@ class ValidateCriCheckHandlerTest {
         var response = validateCriCheckHandler.handleRequest(event, context);
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
-        assertEquals(OK, response.getStatusCode());
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
         assertEquals(JOURNEY_NEXT, journeyResponse.getJourney());
         verify(userIdentityService).getUserIssuedCredential(sessionId, criId);
     }
@@ -64,25 +65,25 @@ class ValidateCriCheckHandlerTest {
         var response = validateCriCheckHandler.handleRequest(event, context);
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
-        assertEquals(OK, response.getStatusCode());
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
         assertEquals(JOURNEY_FAIL, journeyResponse.getJourney());
         verify(userIdentityService).getUserIssuedCredential(sessionId, criId);
     }
 
     @Test
-    void shouldReturnJourneyErrorIfCriIdPathParameterIsNull() {
+    void shouldReturn400IfCriIdPathParameterIsNull() {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setHeaders(Map.of(IPV_SESSION_ID_HEADER_KEY, sessionId));
 
         var response = validateCriCheckHandler.handleRequest(event, context);
         var error = gson.fromJson(response.getBody(), Map.class);
 
-        assertEquals(OK, response.getStatusCode());
-        assertEquals("/journey/error", error.get("journey"));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID.getMessage(), error.get("message"));
     }
 
     @Test
-    void shouldReturnJourneyErrorIfCriIdPathParameterIsEmpty() {
+    void shouldReturn400IfCriIdPathParameterIsEmpty() {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setPathParameters(Map.of(CRI_ID, ""));
         event.setHeaders(Map.of(IPV_SESSION_ID_HEADER_KEY, sessionId));
@@ -90,20 +91,20 @@ class ValidateCriCheckHandlerTest {
         var response = validateCriCheckHandler.handleRequest(event, context);
         var error = gson.fromJson(response.getBody(), Map.class);
 
-        assertEquals(OK, response.getStatusCode());
-        assertEquals("/journey/error", error.get("journey"));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID.getMessage(), error.get("message"));
     }
 
     @Test
-    void shouldReturnJourneyErrorIfIpvSessionIdHeaderIsNull() {
+    void shouldReturn400IfIpvSessionIdHeaderIsNull() {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setPathParameters(Map.of(CRI_ID, criId));
 
         var response = validateCriCheckHandler.handleRequest(event, context);
         var error = gson.fromJson(response.getBody(), Map.class);
 
-        assertEquals(OK, response.getStatusCode());
-        assertEquals("/journey/error", error.get("journey"));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), error.get("message"));
     }
 
     @Test
@@ -115,7 +116,7 @@ class ValidateCriCheckHandlerTest {
         var response = validateCriCheckHandler.handleRequest(event, context);
         var error = gson.fromJson(response.getBody(), Map.class);
 
-        assertEquals(OK, response.getStatusCode());
-        assertEquals("/journey/error", error.get("journey"));
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), error.get("message"));
     }
 }

@@ -2,13 +2,13 @@ package uk.gov.di.ipv.core.validatecricheck.validation;
 
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 public class EvidenceValidator {
-    private static final Logger LOGGER = LoggerFactory.getLogger(EvidenceValidator.class);
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final String EVIDENCE = "evidence";
     public static final int SERVER_ERROR = 500;
     private final CriEvidenceValidator criEvidenceValidator;
