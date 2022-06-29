@@ -13,8 +13,10 @@ import com.nimbusds.oauth2.sdk.token.BearerTokenError;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -91,7 +93,7 @@ class UserIdentityHandlerTest {
                         VTM);
 
         ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId("12345");
+        ipvSessionItem.setIpvSessionId(TEST_IPV_SESSION_ID);
         ipvSessionItem.setUserState("test-state");
         ipvSessionItem.setClientSessionDetails(
                 new ClientSessionDetailsDto(
@@ -125,8 +127,8 @@ class UserIdentityHandlerTest {
         event.setHeaders(headers);
 
         when(mockAccessTokenService.getAccessToken(TEST_ACCESS_TOKEN)).thenReturn(accessTokenItem);
+        when(mockIpvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any())).thenReturn(userIdentity);
-        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
 
@@ -143,8 +145,8 @@ class UserIdentityHandlerTest {
         event.setHeaders(headers);
 
         when(mockAccessTokenService.getAccessToken(TEST_ACCESS_TOKEN)).thenReturn(accessTokenItem);
+        when(mockIpvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any())).thenReturn(userIdentity);
-        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
         UserIdentity responseBody =
@@ -156,8 +158,12 @@ class UserIdentityHandlerTest {
         assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
         assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
 
-        verify(mockAuditService).sendAuditEvent(AuditEventTypes.IPV_IDENTITY_ISSUED);
         verify(mockAccessTokenService).revokeAccessToken(accessTokenItem);
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        assertEquals(
+                AuditEventTypes.IPV_IDENTITY_ISSUED, auditEventCaptor.getValue().getEventName());
     }
 
     @Test
@@ -170,11 +176,11 @@ class UserIdentityHandlerTest {
         event.setHeaders(headers);
 
         when(mockAccessTokenService.getAccessToken(TEST_ACCESS_TOKEN)).thenReturn(accessTokenItem);
+        when(mockIpvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSessionItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any()))
                 .thenThrow(
                         new HttpResponseExceptionWithErrorBody(
                                 500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM));
-        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
 

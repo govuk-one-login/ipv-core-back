@@ -25,13 +25,17 @@ public class AuditEvent {
     @JsonCreator
     public AuditEvent(
             @JsonProperty(value = "event_name", required = true) AuditEventTypes eventName,
-            @JsonProperty(value = "extensions", required = false) AuditExtensions extensions,
             @JsonProperty(value = "component_id", required = false) String componentId,
-            @JsonProperty(value = "user", required = false) AuditEventUser user) {
+            @JsonProperty(value = "user", required = false) AuditEventUser user,
+            @JsonProperty(value = "extensions", required = false) AuditExtensions extensions) {
         this.timestamp = Instant.now().getEpochSecond();
         this.eventName = eventName;
-        this.extensions = extensions;
         this.componentId = componentId;
         this.user = user;
+        this.extensions = extensions;
+    }
+
+    public AuditEvent(AuditEventTypes eventName, String componentId, AuditEventUser user) {
+        this(eventName, componentId, user, null);
     }
 }

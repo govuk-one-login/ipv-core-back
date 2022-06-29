@@ -6,7 +6,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.jose.shaded.json.JSONObject;
-import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
@@ -57,6 +56,8 @@ public class CredentialIssuerReturnHandler
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     private final IpvSessionService ipvSessionService;
 
+    private String componentId;
+
     public CredentialIssuerReturnHandler(
             CredentialIssuerService credentialIssuerService,
             ConfigurationService configurationService,
@@ -90,8 +91,22 @@ public class CredentialIssuerReturnHandler
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
         try {
-            auditService.sendAuditEvent(AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED);
-            RequestHelper.getIpvSessionId(input);
+
+            String ipvSessionId = RequestHelper.getIpvSessionId(input);
+            String userId = ipvSessionService.getUserId(ipvSessionId);
+
+            AuditEventUser auditEventUser = new AuditEventUser(userId, ipvSessionId);
+            this.componentId =
+                    configurationService.getSsmParameter(
+                            ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+
+            var ae =
+                    new AuditEvent(
+                            AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED,
+                            componentId,
+                            auditEventUser);
+
+            auditService.sendAuditEvent(ae);
 
             CredentialIssuerRequestDto request =
                     RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
@@ -110,21 +125,10 @@ public class CredentialIssuerReturnHandler
                     credentialIssuerService.getVerifiableCredential(
                             accessToken, credentialIssuerConfig, apiKey);
 
-            String componentId =
-                    configurationService.getSsmParameter(
-                            ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
-
-            String userId =
-                    ipvSessionService
-                            .getIpvSession(request.getIpvSessionId())
-                            .getClientSessionDetails()
-                            .getUserId();
-
             verifiableCredentialJwtValidator.validate(
                     verifiableCredential, credentialIssuerConfig, userId);
 
-            sendIpvVcReceivedAuditEvent(
-                    componentId, userId, request.getIpvSessionId(), verifiableCredential);
+            sendIpvVcReceivedAuditEvent(auditEventUser, verifiableCredential);
 
             credentialIssuerService.persistUserCredentials(
                     verifiableCredential.serialize(), request);
@@ -154,26 +158,29 @@ public class CredentialIssuerReturnHandler
 
     @Tracing
     private void sendIpvVcReceivedAuditEvent(
-            String componentId, String userId, String ipvSessionId, SignedJWT verifiableCredential)
+            AuditEventUser auditEventUser, SignedJWT verifiableCredential)
             throws ParseException, JsonProcessingException, SqsException {
-        JWTClaimsSet jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
-        JSONObject vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
-        String evidence = vc.getAsString(EVIDENCE);
-
-        AuditExtensionsVcEvidence extensions =
-                new AuditExtensionsVcEvidence(jwtClaimsSet.getIssuer(), evidence);
         AuditEvent auditEvent =
                 new AuditEvent(
                         AuditEventTypes.IPV_VC_RECEIVED,
-                        extensions,
                         componentId,
-                        new AuditEventUser(userId, ipvSessionId));
+                        auditEventUser,
+                        getAuditExtensions(verifiableCredential));
         auditService.sendAuditEvent(auditEvent);
+    }
+
+    private AuditExtensionsVcEvidence getAuditExtensions(SignedJWT verifiableCredential)
+            throws ParseException, JsonProcessingException {
+        var jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
+        var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
+        var evidence = vc.getAsString(EVIDENCE);
+        return new AuditExtensionsVcEvidence(jwtClaimsSet.getIssuer(), evidence);
     }
 
     @Tracing
     private void validate(CredentialIssuerRequestDto request)
             throws HttpResponseExceptionWithErrorBody {
+
         if (StringUtils.isBlank(request.getAuthorizationCode())) {
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_AUTHORIZATION_CODE);

@@ -15,7 +15,10 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -47,6 +50,7 @@ public class SessionEndHandler
     private final ConfigurationService configurationService;
     private final AuthRequestValidator authRequestValidator;
     private final AuditService auditService;
+    private final String componentId;
 
     @ExcludeFromGeneratedCoverageReport
     public SessionEndHandler() {
@@ -56,6 +60,8 @@ public class SessionEndHandler
         this.authRequestValidator = new AuthRequestValidator(configurationService);
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
+        this.componentId =
+                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     public SessionEndHandler(
@@ -69,6 +75,8 @@ public class SessionEndHandler
         this.configurationService = configurationService;
         this.authRequestValidator = authRequestValidator;
         this.auditService = auditService;
+        this.componentId =
+                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @Override
@@ -76,18 +84,22 @@ public class SessionEndHandler
     @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
+
         LogHelper.attachComponentIdToLogs();
+
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
             IpvSessionItem ipvSessionItem = sessionService.getIpvSession(ipvSessionId);
+            String userId = sessionService.getUserId(ipvSessionId);
             LogHelper.attachClientIdToLogs(ipvSessionItem.getClientSessionDetails().getClientId());
+
+            AuditEventUser auditEventUser = new AuditEventUser(userId, ipvSessionId);
 
             ClientResponse clientResponse;
 
             if (ipvSessionItem.getErrorCode() != null) {
                 clientResponse = generateClientErrorResponse(ipvSessionItem);
 
-                auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_END);
             } else {
 
                 Map<String, List<String>> authParameters =
@@ -112,9 +124,9 @@ public class SessionEndHandler
 
                 clientResponse =
                         generateClientSuccessResponse(ipvSessionItem, authorizationCode.getValue());
-
-                auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_END);
             }
+            auditService.sendAuditEvent(
+                    new AuditEvent(AuditEventTypes.IPV_JOURNEY_END, componentId, auditEventUser));
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, clientResponse);
         } catch (ParseException e) {

@@ -21,7 +21,10 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.credentialissuer.domain.CriDetails;
 import uk.gov.di.ipv.core.credentialissuer.domain.CriResponse;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.SharedClaims;
@@ -67,6 +70,7 @@ public class CredentialIssuerStartHandler
     private final JWSSigner signer;
     private final AuditService auditService;
     private final IpvSessionService ipvSessionService;
+    private final String componentId;
 
     public CredentialIssuerStartHandler(
             ConfigurationService configurationService,
@@ -79,6 +83,8 @@ public class CredentialIssuerStartHandler
         this.signer = signer;
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
+        this.componentId =
+                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -89,6 +95,8 @@ public class CredentialIssuerStartHandler
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
         this.ipvSessionService = new IpvSessionService(configurationService);
+        this.componentId =
+                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @Override
@@ -121,7 +129,11 @@ public class CredentialIssuerStartHandler
 
             persistOauthState(ipvSessionId, credentialIssuerConfig.getId(), oauthState);
 
-            auditService.sendAuditEvent(AuditEventTypes.IPV_REDIRECT_TO_CRI);
+            String userId = ipvSessionService.getUserId(ipvSessionId);
+            AuditEventUser auditEventUser = new AuditEventUser(userId, ipvSessionId);
+            auditService.sendAuditEvent(
+                    new AuditEvent(
+                            AuditEventTypes.IPV_REDIRECT_TO_CRI, componentId, auditEventUser));
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(OK, criResponse);
 

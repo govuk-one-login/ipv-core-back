@@ -17,7 +17,10 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.JarValidationException;
@@ -51,6 +54,7 @@ public class IpvSessionStartHandler
     private final KmsRsaDecrypter kmsRsaDecrypter;
     private final JarValidator jarValidator;
     private final AuditService auditService;
+    private final String componentId;
 
     @ExcludeFromGeneratedCoverageReport
     public IpvSessionStartHandler() {
@@ -62,6 +66,8 @@ public class IpvSessionStartHandler
         this.jarValidator = new JarValidator(kmsRsaDecrypter, configurationService);
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
+        this.componentId =
+                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     public IpvSessionStartHandler(
@@ -75,6 +81,8 @@ public class IpvSessionStartHandler
         this.kmsRsaDecrypter = kmsRsaDecrypter;
         this.jarValidator = jarValidator;
         this.auditService = auditService;
+        this.componentId =
+                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @Override
@@ -110,7 +118,11 @@ public class IpvSessionStartHandler
             String ipvSessionId =
                     ipvSessionService.generateIpvSession(clientSessionDetailsDto, null);
 
-            auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START);
+            String userId = ipvSessionService.getUserId(ipvSessionId);
+            AuditEventUser auditEventUser = new AuditEventUser(userId, ipvSessionId);
+
+            auditService.sendAuditEvent(
+                    new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, componentId, auditEventUser));
 
             Map<String, String> response = Map.of(IPV_SESSION_ID_KEY, ipvSessionId);
 

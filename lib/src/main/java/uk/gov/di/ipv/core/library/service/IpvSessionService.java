@@ -40,6 +40,10 @@ public class IpvSessionService {
         return dataStore.getItem(ipvSessionId);
     }
 
+    public String getUserId(String ipvSessionId) {
+        return this.getIpvSession(ipvSessionId).getClientSessionDetails().getUserId();
+    }
+
     public String generateIpvSession(
             ClientSessionDetailsDto clientSessionDetailsDto, ErrorObject errorObject) {
 
