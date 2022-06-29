@@ -196,13 +196,12 @@ class AccessTokenServiceTest {
 
         when(mockDataStore.getItem(accessToken)).thenReturn(null);
 
-        try {
-            accessTokenService.revokeAccessToken(accessToken);
-            fail("Should have thrown an exception");
-        } catch (IllegalArgumentException e) {
-            assertEquals(
-                    "Failed to revoke access token - access token could not be found in DynamoDB",
-                    e.getMessage());
-        }
+        IllegalArgumentException thrown =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> accessTokenService.revokeAccessToken(accessToken));
+        assertEquals(
+                "Failed to revoke access token - access token could not be found in DynamoDB",
+                thrown.getMessage());
     }
 }

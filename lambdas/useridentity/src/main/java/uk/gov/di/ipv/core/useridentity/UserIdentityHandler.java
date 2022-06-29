@@ -108,11 +108,14 @@ public class UserIdentityHandler
             }
 
             ClientSessionDetailsDto clientSessionDetails =
-                    ipvSessionService.getIpvSession(accessTokenItem.getIpvSessionId()).getClientSessionDetails();
+                    ipvSessionService
+                            .getIpvSession(accessTokenItem.getIpvSessionId())
+                            .getClientSessionDetails();
             LogHelper.attachClientIdToLogs(clientSessionDetails.getClientId());
-            
+
             UserIdentity userIdentity =
-                    userIdentityService.generateUserIdentity(ipvSessionId, clientSessionDetails.getUserId());
+                    userIdentityService.generateUserIdentity(
+                            ipvSessionId, clientSessionDetails.getUserId());
 
             auditService.sendAuditEvent(AuditEventTypes.IPV_IDENTITY_ISSUED);
 

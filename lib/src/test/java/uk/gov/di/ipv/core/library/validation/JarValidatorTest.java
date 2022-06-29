@@ -37,8 +37,9 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -98,16 +99,16 @@ class JarValidatorTest {
     }
 
     @Test
-    void shouldThrowExceptionIfDecrptionFails() throws ParseException {
+    void shouldThrowExceptionIfDecryptionFails() throws ParseException {
         String jweObjectString =
                 "eyJ0eXAiOiJKV0UiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiUlNBLU9BRVAtMjU2In0.ZpVOfw61XyBBgsR4CRNRMn2oj_S65pMJO-iaEHpR6QrPcIuD4ysZexolo28vsZyZNR-kfVdw_5CjQanwMS-yw3U3nSUvXUrTs3uco-FSXulIeDYTRbBtQuDyvBMVoos6DyIfC6eBj30GMe5g6DF5KJ1Q0eXQdF0kyM9olg76uYAUqZ5rW52rC_SOHb5_tMj7UbO2IViIStdzLgVfgnJr7Ms4bvG0C8-mk4Otd7m2Km2-DNyGaNuFQSKclAGu7Zgg-qDyhH4V1Z6WUHt79TuG4TxseUr-6oaFFVD23JYSBy7Aypt0321ycq13qcN-PBiOWtumeW5-_CQuHLaPuOc4-w.RO9IB2KcS2hD3dWlKXSreQ.93Ntu3e0vNSYv4hoMwZ3Aw.YRvWo4bwsP_l7dL_29imGg";
-        try {
-            jarValidator.decryptJWE(JWEObject.parse(jweObjectString));
-            fail("Should throw a SharedAttributesValidationException");
-        } catch (JarValidationException e) {
-            assertEquals(
-                    OAuth2Error.INVALID_REQUEST_OBJECT.getCode(), e.getErrorObject().getCode());
-        }
+
+        JarValidationException thrown =
+                assertThrows(
+                        JarValidationException.class,
+                        () -> jarValidator.decryptJWE(JWEObject.parse(jweObjectString)));
+        assertEquals(
+                OAuth2Error.INVALID_REQUEST_OBJECT.getCode(), thrown.getErrorObject().getCode());
     }
 
     @Test
@@ -128,40 +129,31 @@ class JarValidatorTest {
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
-        try {
-            jarValidator.validateRequestJwt(signedJWT, clientIdClaim);
-        } catch (JarValidationException e) {
-            e.printStackTrace();
-            fail();
-        }
+        assertDoesNotThrow(() -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
     }
 
     @Test
     void shouldFailValidationChecksOnInvalidClientId()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
-                    ParseException {
+            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
                 .thenThrow(ParameterNotFoundException.builder().build());
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
-        try {
-            jarValidator.validateRequestJwt(signedJWT, clientIdClaim);
-            fail();
-        } catch (JarValidationException e) {
-            ErrorObject errorObject = e.getErrorObject();
-            assertEquals(
-                    OAuth2Error.INVALID_CLIENT.getHTTPStatusCode(),
-                    errorObject.getHTTPStatusCode());
-            assertEquals(OAuth2Error.INVALID_CLIENT.getCode(), errorObject.getCode());
-            assertEquals("Unknown client id was provided", errorObject.getDescription());
-        }
+        JarValidationException thrown =
+                assertThrows(
+                        JarValidationException.class,
+                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+        ErrorObject errorObject = thrown.getErrorObject();
+        assertEquals(
+                OAuth2Error.INVALID_CLIENT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
+        assertEquals(OAuth2Error.INVALID_CLIENT.getCode(), errorObject.getCode());
+        assertEquals("Unknown client id was provided", errorObject.getDescription());
     }
 
     @Test
     void shouldFailValidationChecksOnValidJWTalgHeader()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
-                    ParseException {
+            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
 
         RSASSASigner signer = new RSASSASigner(getRsaPrivateKey());
 
@@ -171,25 +163,23 @@ class JarValidatorTest {
                         generateClaimsSet(getValidClaimsSetValues()));
         signedJWT.sign(signer);
 
-        try {
-            jarValidator.validateRequestJwt(signedJWT, clientIdClaim);
-            fail();
-        } catch (JarValidationException e) {
-            ErrorObject errorObject = e.getErrorObject();
-            assertEquals(
-                    OAuth2Error.INVALID_REQUEST_OBJECT.getHTTPStatusCode(),
-                    errorObject.getHTTPStatusCode());
-            assertEquals(OAuth2Error.INVALID_REQUEST_OBJECT.getCode(), errorObject.getCode());
-            assertEquals(
-                    "Signing algorithm used does not match required algorithm",
-                    errorObject.getDescription());
-        }
+        JarValidationException thrown =
+                assertThrows(
+                        JarValidationException.class,
+                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+        ErrorObject errorObject = thrown.getErrorObject();
+        assertEquals(
+                OAuth2Error.INVALID_REQUEST_OBJECT.getHTTPStatusCode(),
+                errorObject.getHTTPStatusCode());
+        assertEquals(OAuth2Error.INVALID_REQUEST_OBJECT.getCode(), errorObject.getCode());
+        assertEquals(
+                "Signing algorithm used does not match required algorithm",
+                errorObject.getDescription());
     }
 
     @Test
     void shouldFailValidationChecksOnInvalidJWTSignature()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
-                    ParseException {
+            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK_2);
@@ -198,23 +188,21 @@ class JarValidatorTest {
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
-        try {
-            jarValidator.validateRequestJwt(signedJWT, clientIdClaim);
-            fail();
-        } catch (JarValidationException e) {
-            ErrorObject errorObject = e.getErrorObject();
-            assertEquals(
-                    OAuth2Error.INVALID_REQUEST_OBJECT.getHTTPStatusCode(),
-                    errorObject.getHTTPStatusCode());
-            assertEquals(OAuth2Error.INVALID_REQUEST_OBJECT.getCode(), errorObject.getCode());
-            assertEquals("JWT signature validation failed", errorObject.getDescription());
-        }
+        JarValidationException thrown =
+                assertThrows(
+                        JarValidationException.class,
+                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+        ErrorObject errorObject = thrown.getErrorObject();
+        assertEquals(
+                OAuth2Error.INVALID_REQUEST_OBJECT.getHTTPStatusCode(),
+                errorObject.getHTTPStatusCode());
+        assertEquals(OAuth2Error.INVALID_REQUEST_OBJECT.getCode(), errorObject.getCode());
+        assertEquals("JWT signature validation failed", errorObject.getDescription());
     }
 
     @Test
     void shouldFailValidationChecksOnInvalidPublicJwk()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
-                    ParseException {
+            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn("invalid-jwk");
@@ -222,25 +210,23 @@ class JarValidatorTest {
                 .thenReturn(clientAuthMethod);
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
-        try {
-            jarValidator.validateRequestJwt(signedJWT, clientIdClaim);
-            fail();
-        } catch (JarValidationException e) {
-            ErrorObject errorObject = e.getErrorObject();
-            assertEquals(
-                    OAuth2Error.INVALID_REQUEST_OBJECT.getHTTPStatusCode(),
-                    errorObject.getHTTPStatusCode());
-            assertEquals(OAuth2Error.INVALID_REQUEST_OBJECT.getCode(), errorObject.getCode());
-            assertEquals(
-                    "Failed to parse JWT when attempting signature validation",
-                    errorObject.getDescription());
-        }
+        JarValidationException thrown =
+                assertThrows(
+                        JarValidationException.class,
+                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+        ErrorObject errorObject = thrown.getErrorObject();
+        assertEquals(
+                OAuth2Error.INVALID_REQUEST_OBJECT.getHTTPStatusCode(),
+                errorObject.getHTTPStatusCode());
+        assertEquals(OAuth2Error.INVALID_REQUEST_OBJECT.getCode(), errorObject.getCode());
+        assertEquals(
+                "Failed to parse JWT when attempting signature validation",
+                errorObject.getDescription());
     }
 
     @Test
     void shouldFailValidationChecksOnMissingRequiredClaim()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
-                    ParseException {
+            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
@@ -260,24 +246,22 @@ class JarValidatorTest {
                         claimsSet);
         signedJWT.sign(signer);
 
-        try {
-            jarValidator.validateRequestJwt(signedJWT, clientIdClaim);
-            fail();
-        } catch (JarValidationException e) {
-            ErrorObject errorObject = e.getErrorObject();
-            assertEquals(
-                    OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
-            assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
-            assertEquals(
-                    "Invalid redirct_uri claim provided for configured client",
-                    errorObject.getDescription());
-        }
+        JarValidationException thrown =
+                assertThrows(
+                        JarValidationException.class,
+                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+        ErrorObject errorObject = thrown.getErrorObject();
+        assertEquals(
+                OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
+        assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
+        assertEquals(
+                "Invalid redirct_uri claim provided for configured client",
+                errorObject.getDescription());
     }
 
     @Test
     void shouldFailValidationChecksOnInvalidAudienceClaim()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
-                    ParseException {
+            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
@@ -314,22 +298,20 @@ class JarValidatorTest {
 
         SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
 
-        try {
-            jarValidator.validateRequestJwt(signedJWT, clientIdClaim);
-            fail();
-        } catch (JarValidationException e) {
-            ErrorObject errorObject = e.getErrorObject();
-            assertEquals(
-                    OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
-            assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
-            assertEquals("JWT audience rejected: [invalid-audience]", errorObject.getDescription());
-        }
+        JarValidationException thrown =
+                assertThrows(
+                        JarValidationException.class,
+                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+        ErrorObject errorObject = thrown.getErrorObject();
+        assertEquals(
+                OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
+        assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
+        assertEquals("JWT audience rejected: [invalid-audience]", errorObject.getDescription());
     }
 
     @Test
     void shouldFailValidationChecksOnInvalidIssuerClaim()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
-                    ParseException {
+            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
@@ -366,24 +348,22 @@ class JarValidatorTest {
 
         SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
 
-        try {
-            jarValidator.validateRequestJwt(signedJWT, clientIdClaim);
-            fail();
-        } catch (JarValidationException e) {
-            ErrorObject errorObject = e.getErrorObject();
-            assertEquals(
-                    OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
-            assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
-            assertEquals(
-                    "JWT iss claim has value invalid-issuer, must be test-issuer",
-                    errorObject.getDescription());
-        }
+        JarValidationException thrown =
+                assertThrows(
+                        JarValidationException.class,
+                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+        ErrorObject errorObject = thrown.getErrorObject();
+        assertEquals(
+                OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
+        assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
+        assertEquals(
+                "JWT iss claim has value invalid-issuer, must be test-issuer",
+                errorObject.getDescription());
     }
 
     @Test
     void shouldFailValidationChecksOnInvalidResponseTypeClaim()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
-                    ParseException {
+            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
@@ -420,24 +400,22 @@ class JarValidatorTest {
 
         SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
 
-        try {
-            jarValidator.validateRequestJwt(signedJWT, clientIdClaim);
-            fail();
-        } catch (JarValidationException e) {
-            ErrorObject errorObject = e.getErrorObject();
-            assertEquals(
-                    OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
-            assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
-            assertEquals(
-                    "JWT response_type claim has value invalid-response-type, must be code",
-                    errorObject.getDescription());
-        }
+        JarValidationException thrown =
+                assertThrows(
+                        JarValidationException.class,
+                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+        ErrorObject errorObject = thrown.getErrorObject();
+        assertEquals(
+                OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
+        assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
+        assertEquals(
+                "JWT response_type claim has value invalid-response-type, must be code",
+                errorObject.getDescription());
     }
 
     @Test
     void shouldFailValidationChecksOnExpiredJWT()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
-                    ParseException {
+            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
@@ -474,22 +452,20 @@ class JarValidatorTest {
 
         SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
 
-        try {
-            jarValidator.validateRequestJwt(signedJWT, clientIdClaim);
-            fail();
-        } catch (JarValidationException e) {
-            ErrorObject errorObject = e.getErrorObject();
-            assertEquals(
-                    OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
-            assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
-            assertEquals("Expired JWT", errorObject.getDescription());
-        }
+        JarValidationException thrown =
+                assertThrows(
+                        JarValidationException.class,
+                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+        ErrorObject errorObject = thrown.getErrorObject();
+        assertEquals(
+                OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
+        assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
+        assertEquals("Expired JWT", errorObject.getDescription());
     }
 
     @Test
     void shouldFailValidationChecksOnFutureNbfClaim()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
-                    ParseException {
+            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
@@ -526,22 +502,20 @@ class JarValidatorTest {
 
         SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
 
-        try {
-            jarValidator.validateRequestJwt(signedJWT, clientIdClaim);
-            fail();
-        } catch (JarValidationException e) {
-            ErrorObject errorObject = e.getErrorObject();
-            assertEquals(
-                    OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
-            assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
-            assertEquals("JWT before use time", errorObject.getDescription());
-        }
+        JarValidationException thrown =
+                assertThrows(
+                        JarValidationException.class,
+                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+        ErrorObject errorObject = thrown.getErrorObject();
+        assertEquals(
+                OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
+        assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
+        assertEquals("JWT before use time", errorObject.getDescription());
     }
 
     @Test
     void shouldFailValidationChecksOnExpiryClaimToFarInFuture()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
-                    ParseException {
+            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
@@ -579,24 +553,22 @@ class JarValidatorTest {
 
         SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
 
-        try {
-            jarValidator.validateRequestJwt(signedJWT, clientIdClaim);
-            fail();
-        } catch (JarValidationException e) {
-            ErrorObject errorObject = e.getErrorObject();
-            assertEquals(
-                    OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
-            assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
-            assertEquals(
-                    "The client JWT expiry date has surpassed the maximum allowed ttl value",
-                    errorObject.getDescription());
-        }
+        JarValidationException thrown =
+                assertThrows(
+                        JarValidationException.class,
+                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+        ErrorObject errorObject = thrown.getErrorObject();
+        assertEquals(
+                OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
+        assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
+        assertEquals(
+                "The client JWT expiry date has surpassed the maximum allowed ttl value",
+                errorObject.getDescription());
     }
 
     @Test
     void shouldFailValidationChecksOnInvalidRedirectUriClaim()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
-                    ParseException {
+            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
@@ -607,24 +579,22 @@ class JarValidatorTest {
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
-        try {
-            jarValidator.validateRequestJwt(signedJWT, clientIdClaim);
-            fail();
-        } catch (JarValidationException e) {
-            ErrorObject errorObject = e.getErrorObject();
-            assertEquals(
-                    OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
-            assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
-            assertEquals(
-                    "Invalid redirct_uri claim provided for configured client",
-                    errorObject.getDescription());
-        }
+        JarValidationException thrown =
+                assertThrows(
+                        JarValidationException.class,
+                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+        ErrorObject errorObject = thrown.getErrorObject();
+        assertEquals(
+                OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
+        assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
+        assertEquals(
+                "Invalid redirct_uri claim provided for configured client",
+                errorObject.getDescription());
     }
 
     @Test
     void shouldFailValidationChecksOnParseFailureOfRedirectUri()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException,
-                    ParseException {
+            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
@@ -656,19 +626,18 @@ class JarValidatorTest {
 
         SignedJWT signedJWT = generateJWT(claims);
 
-        try {
-            jarValidator.validateRequestJwt(signedJWT, clientIdClaim);
-            fail();
-        } catch (JarValidationException e) {
-            ErrorObject errorObject = e.getErrorObject();
-            assertEquals(
-                    OAuth2Error.INVALID_REQUEST_OBJECT.getHTTPStatusCode(),
-                    errorObject.getHTTPStatusCode());
-            assertEquals(OAuth2Error.INVALID_REQUEST_OBJECT.getCode(), errorObject.getCode());
-            assertEquals(
-                    "Failed to parse JWT claim set in order to access redirect_uri claim",
-                    errorObject.getDescription());
-        }
+        JarValidationException thrown =
+                assertThrows(
+                        JarValidationException.class,
+                        () -> jarValidator.validateRequestJwt(signedJWT, clientIdClaim));
+        ErrorObject errorObject = thrown.getErrorObject();
+        assertEquals(
+                OAuth2Error.INVALID_REQUEST_OBJECT.getHTTPStatusCode(),
+                errorObject.getHTTPStatusCode());
+        assertEquals(OAuth2Error.INVALID_REQUEST_OBJECT.getCode(), errorObject.getCode());
+        assertEquals(
+                "Failed to parse JWT claim set in order to access redirect_uri claim",
+                errorObject.getDescription());
     }
 
     private SignedJWT generateJWT(Map<String, Object> claimsSetValues)
