@@ -92,7 +92,7 @@ public class AccessTokenHandler
                                     authorizationGrant.getAuthorizationCode().getValue())
                             .orElseThrow();
 
-            LogHelper.attachSessionIdToLogs(authorizationCodeItem.getIpvSessionId());
+            LogHelper.attachIpvSessionIdToLogs(authorizationCodeItem.getIpvSessionId());
 
             if (redirectUrlsDoNotMatch(authorizationCodeItem, authorizationGrant)) {
                 LOGGER.error(

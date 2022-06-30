@@ -13,10 +13,10 @@ public class LogHelper {
         throw new IllegalStateException("Utility class");
     }
 
-    public static final String CLIENT_ID_LOG_FIELD = "client-id";
-    public static final String CRI_ID_LOG_FIELD = "cri-id";
-    public static final String SESSION_ID_LOG_FIELD = "session-id";
-    public static final String COMPONENT_ID_LOG_FIELD = "component-id";
+    public static final String CLIENT_ID_LOG_FIELD = "clientId";
+    public static final String CRI_ID_LOG_FIELD = "criId";
+    public static final String IPV_SESSION_ID_LOG_FIELD = "ipvSessionId";
+    public static final String COMPONENT_ID_LOG_FIELD = "componentId";
     public static final String COMPONENT_ID = "core";
 
     public static void attachComponentIdToLogs() {
@@ -31,8 +31,8 @@ public class LogHelper {
         attachFieldToLogs(CRI_ID_LOG_FIELD, criId);
     }
 
-    public static void attachSessionIdToLogs(String sessionId) {
-        attachFieldToLogs(SESSION_ID_LOG_FIELD, sessionId);
+    public static void attachIpvSessionIdToLogs(String sessionId) {
+        attachFieldToLogs(IPV_SESSION_ID_LOG_FIELD, sessionId);
     }
 
     private static void attachFieldToLogs(String field, String value) {
