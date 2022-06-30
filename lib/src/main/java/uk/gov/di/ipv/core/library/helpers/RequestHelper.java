@@ -3,8 +3,13 @@ package uk.gov.di.ipv.core.library.helpers;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
+import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.nio.charset.Charset;
 import java.util.HashMap;
@@ -17,6 +22,7 @@ public class RequestHelper {
 
     public static final String IPV_SESSION_ID_HEADER = "ipv-session-id";
     private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private RequestHelper() {}
 
@@ -71,5 +77,18 @@ public class RequestHelper {
             }
         }
         return null;
+    }
+
+    public static String getIpvSessionId(APIGatewayProxyRequestEvent event)
+            throws HttpResponseExceptionWithErrorBody {
+        String ipvSessionId =
+                RequestHelper.getHeaderByKey(event.getHeaders(), IPV_SESSION_ID_HEADER);
+        if (ipvSessionId == null) {
+            LOGGER.error("{} not present in header", IPV_SESSION_ID_HEADER);
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
+        }
+        LogHelper.attachSessionIdToLogs(ipvSessionId);
+        return ipvSessionId;
     }
 }

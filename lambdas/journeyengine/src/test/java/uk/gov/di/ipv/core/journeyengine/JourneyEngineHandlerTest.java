@@ -63,6 +63,7 @@ class JourneyEngineHandlerTest {
     void shouldReturn400OnMissingParams() throws IOException {
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        event.setHeaders(Map.of("ipv-session-id", "1234"));
         event.setPathParameters(Collections.emptyMap());
 
         APIGatewayProxyResponseEvent response =
@@ -81,8 +82,8 @@ class JourneyEngineHandlerTest {
 
     @Test
     void shouldReturn400OnMissingJourneyStepParam() throws IOException {
-
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        event.setHeaders(Map.of("ipv-session-id", "1234"));
         event.setPathParameters(Collections.emptyMap());
         event.setPathParameters(Map.of("InvalidStep", "any"));
 

@@ -13,12 +13,14 @@ import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import org.apache.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.exceptions.ClientAuthenticationException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
 import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
@@ -33,7 +35,7 @@ import java.util.Objects;
 public class AccessTokenHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AccessTokenHandler.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final AccessTokenService accessTokenService;
     private final AuthorizationCodeService authorizationCodeService;
@@ -61,8 +63,10 @@ public class AccessTokenHandler
 
     @Override
     @Tracing
+    @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
+        LogHelper.attachComponentIdToLogs();
         try {
             TokenRequest tokenRequest = createTokenRequest(input.getBody());
 
@@ -88,6 +92,8 @@ public class AccessTokenHandler
                                     authorizationGrant.getAuthorizationCode().getValue())
                             .orElseThrow();
 
+            LogHelper.attachSessionIdToLogs(authorizationCodeItem.getIpvSessionId());
+
             if (redirectUrlsDoNotMatch(authorizationCodeItem, authorizationGrant)) {
                 LOGGER.error(
                         "Redirect URL in token request does not match that received in auth code request. Session ID: {}",
@@ -109,7 +115,9 @@ public class AccessTokenHandler
                     HttpStatus.SC_OK, accessTokenResponse.toJSONObject());
         } catch (ParseException e) {
             LOGGER.error(
-                    "Token request could not be parsed: " + e.getErrorObject().getDescription(), e);
+                    "Token request could not be parsed: '{}'",
+                    e.getErrorObject().getDescription(),
+                    e);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     getHttpStatusCodeForErrorResponse(e.getErrorObject()),
                     e.getErrorObject().toJSONObject());

@@ -5,33 +5,33 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import org.apache.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.utils.StringUtils;
+import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator;
 
+import java.util.List;
 import java.util.Map;
 
 public class ValidateCriCheckHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ValidateCriCheckHandler.class);
+    private static final Logger LOGGER = LogManager.getLogger();
     public static final String CRI_ID = "criId";
     public static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
     public static final String JOURNEY_NEXT = "/journey/next";
     public static final String JOURNEY_FAIL = "/journey/fail";
     public static final String JOURNEY_ERROR = "/journey/error";
-    public static final int OK = 200;
-    public static final int BAD_REQUEST = 400;
 
     private final CriCheckValidator criCheckValidator;
     private final UserIdentityService userIdentityService;
@@ -50,12 +50,14 @@ public class ValidateCriCheckHandler
 
     @Override
     @Tracing
+    @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-
+        LogHelper.attachComponentIdToLogs();
         try {
+            String ipvSessionId = RequestHelper.getIpvSessionId(input);
             String criId = getCriId(input.getPathParameters());
-            String ipvSessionId = getIpvSessionId(input.getHeaders());
+            LogHelper.attachCriIdToLogs(criId);
 
             JourneyResponse journeyResponse =
                     criCheckValidator.isSuccess(
@@ -66,11 +68,17 @@ public class ValidateCriCheckHandler
 
             LOGGER.info("VALIDATION RESULT: {}", journeyResponse.getJourney());
 
-            return ApiGatewayResponseGenerator.proxyJsonResponse(OK, journeyResponse);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, journeyResponse);
         } catch (HttpResponseExceptionWithErrorBody e) {
-            JourneyResponse errorJourneyResponse = new JourneyResponse(JOURNEY_ERROR);
+            if (List.of(
+                            ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID,
+                            ErrorResponse.MISSING_IPV_SESSION_ID)
+                    .contains(e.getErrorResponse())) {
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        e.getResponseCode(), e.getErrorBody());
+            }
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, errorJourneyResponse);
+                    HttpStatus.SC_OK, new JourneyResponse(JOURNEY_ERROR));
         }
     }
 
@@ -80,20 +88,8 @@ public class ValidateCriCheckHandler
         if (pathParameters == null || StringUtils.isBlank(pathParameters.get(CRI_ID))) {
             LOGGER.error("Credential issuer ID path parameter missing");
             throw new HttpResponseExceptionWithErrorBody(
-                    BAD_REQUEST, ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
         }
         return pathParameters.get(CRI_ID);
-    }
-
-    @Tracing
-    private String getIpvSessionId(Map<String, String> headers)
-            throws HttpResponseExceptionWithErrorBody {
-        String ipvSessionId = RequestHelper.getHeaderByKey(headers, IPV_SESSION_ID_HEADER_KEY);
-        if (ipvSessionId == null) {
-            LOGGER.error("{} not present in header", IPV_SESSION_ID_HEADER_KEY);
-            throw new HttpResponseExceptionWithErrorBody(
-                    BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
-        }
-        return ipvSessionId;
     }
 }

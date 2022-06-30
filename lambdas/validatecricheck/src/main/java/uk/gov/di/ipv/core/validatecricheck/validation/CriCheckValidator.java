@@ -2,8 +2,8 @@ package uk.gov.di.ipv.core.validatecricheck.validation;
 
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
@@ -23,7 +23,7 @@ public class CriCheckValidator {
     public static final String CRI_ID_KBV = "kbv";
     public static final String CRI_ID_STUB_KBV = "stubKbv";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(CriCheckValidator.class);
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final List<String> ADDRESS_CRI_TYPES =
             List.of(CRI_ID_ADDRESS, CRI_ID_STUB_ADDRESS);
     private static final List<String> PASSPORT_CRI_TYPES =

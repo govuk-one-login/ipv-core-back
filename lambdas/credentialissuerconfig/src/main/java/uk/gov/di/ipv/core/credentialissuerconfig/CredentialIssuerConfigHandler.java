@@ -4,13 +4,15 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.util.List;
@@ -19,8 +21,7 @@ public class CredentialIssuerConfigHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private final ConfigurationService configurationService;
-    private static final Logger LOGGER =
-            LoggerFactory.getLogger(CredentialIssuerConfigHandler.class);
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public CredentialIssuerConfigHandler(ConfigurationService configurationService) {
         this.configurationService = configurationService;
@@ -32,9 +33,10 @@ public class CredentialIssuerConfigHandler
 
     @Override
     @Tracing
+    @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-
+        LogHelper.attachComponentIdToLogs();
         try {
             List<CredentialIssuerConfig> config = configurationService.getCredentialIssuers();
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, config);

@@ -11,15 +11,18 @@ import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -29,8 +32,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 public class UserIdentityHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserIdentityHandler.class);
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final String AUTHORIZATION_HEADER_KEY = "Authorization";
 
     private final UserIdentityService userIdentityService;
@@ -64,8 +66,10 @@ public class UserIdentityHandler
 
     @Override
     @Tracing
+    @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
+        LogHelper.attachComponentIdToLogs();
         try {
             AccessToken accessToken =
                     AccessToken.parse(
@@ -86,12 +90,14 @@ public class UserIdentityHandler
                                         " - The supplied access token was not found in the database")
                                 .toJSONObject());
             }
+            LogHelper.attachSessionIdToLogs(ipvSessionId);
 
-            String userId =
-                    ipvSessionService
-                            .getIpvSession(ipvSessionId)
-                            .getClientSessionDetails()
-                            .getUserId();
+            ClientSessionDetailsDto clientSessionDetails =
+                    ipvSessionService.getIpvSession(ipvSessionId).getClientSessionDetails();
+
+            LogHelper.attachClientIdToLogs(clientSessionDetails.getClientId());
+
+            String userId = clientSessionDetails.getUserId();
 
             UserIdentity userIdentity =
                     userIdentityService.generateUserIdentity(ipvSessionId, userId);

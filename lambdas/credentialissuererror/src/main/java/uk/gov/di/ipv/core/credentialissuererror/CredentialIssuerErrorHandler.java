@@ -5,16 +5,19 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerErrorDto;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -24,12 +27,8 @@ import java.util.List;
 
 public class CredentialIssuerErrorHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-
-    private static final Logger LOGGER =
-            LoggerFactory.getLogger(CredentialIssuerErrorHandler.class.getName());
-
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final String ERROR_JOURNEY_STEP_URI = "/journey/error";
-
     private static final List<String> ALLOWED_OAUTH_ERROR_CODES =
             Arrays.asList(
                     OAuth2Error.INVALID_REQUEST_CODE,
@@ -58,21 +57,38 @@ public class CredentialIssuerErrorHandler
 
     @Override
     @Tracing
+    @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        CredentialIssuerErrorDto credentialIssuerErrorDto =
-                RequestHelper.convertRequest(input, CredentialIssuerErrorDto.class);
+        LogHelper.attachComponentIdToLogs();
+        try {
+            RequestHelper.getIpvSessionId(input);
+            CredentialIssuerErrorDto credentialIssuerErrorDto =
+                    RequestHelper.convertRequest(input, CredentialIssuerErrorDto.class);
+            LogHelper.attachCriIdToLogs(credentialIssuerErrorDto.getCredentialIssuerId());
 
-        LOGGER.error(
-                "An error occurred with the {} cri",
-                credentialIssuerErrorDto.getCredentialIssuerId());
+            LOGGER.error(
+                    "An error occurred with the {} cri",
+                    credentialIssuerErrorDto.getCredentialIssuerId());
 
-        if (!ALLOWED_OAUTH_ERROR_CODES.contains(credentialIssuerErrorDto.getError())) {
-            LOGGER.error("Unknown Oauth error code received");
+            if (!ALLOWED_OAUTH_ERROR_CODES.contains(credentialIssuerErrorDto.getError())) {
+                LOGGER.error("Unknown Oauth error code received");
+            }
+            LOGGER.error("Error code: {}", credentialIssuerErrorDto.getError());
+            LOGGER.error(credentialIssuerErrorDto.getErrorDescription());
+
+            sendAuditEvent(credentialIssuerErrorDto);
+
+            JourneyResponse journeyResponse = new JourneyResponse(ERROR_JOURNEY_STEP_URI);
+
+            return ApiGatewayResponseGenerator.proxyJsonResponse(200, journeyResponse);
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    e.getResponseCode(), e.getErrorBody());
         }
-        LOGGER.error("Error code: {}", credentialIssuerErrorDto.getError());
-        LOGGER.error(credentialIssuerErrorDto.getErrorDescription());
+    }
 
+    private void sendAuditEvent(CredentialIssuerErrorDto credentialIssuerErrorDto) {
         try {
             AuditExtensionErrorParams extensions =
                     new AuditExtensionErrorParams.Builder()
@@ -84,9 +100,5 @@ public class CredentialIssuerErrorHandler
         } catch (SqsException e) {
             LOGGER.error("Failed to write event to audit queue");
         }
-
-        JourneyResponse journeyResponse = new JourneyResponse(ERROR_JOURNEY_STEP_URI);
-
-        return ApiGatewayResponseGenerator.proxyJsonResponse(200, journeyResponse);
     }
 }

@@ -23,7 +23,8 @@ dependencies {
 			"com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$rootProject.ext.dependencyVersions.jackson",
 			"com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson",
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
-			"org.slf4j:slf4j-simple:$rootProject.ext.dependencyVersions.slf4j",
+			"org.apache.logging.log4j:log4j-api:$rootProject.ext.dependencyVersions.log4j",
+			"org.apache.logging.log4j:log4j-core:$rootProject.ext.dependencyVersions.log4j",
 			"software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
 			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters",
 			project(":lib")
