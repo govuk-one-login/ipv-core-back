@@ -88,7 +88,7 @@ public class RequestHelper {
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
         }
-        LogHelper.attachSessionIdToLogs(ipvSessionId);
+        LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
         return ipvSessionId;
     }
 }

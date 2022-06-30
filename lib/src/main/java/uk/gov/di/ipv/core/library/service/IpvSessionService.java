@@ -46,7 +46,7 @@ public class IpvSessionService {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
 
-        LogHelper.attachSessionIdToLogs(ipvSessionItem.getIpvSessionId());
+        LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
 
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);

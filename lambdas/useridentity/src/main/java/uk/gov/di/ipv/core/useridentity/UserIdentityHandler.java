@@ -90,7 +90,7 @@ public class UserIdentityHandler
                                         " - The supplied access token was not found in the database")
                                 .toJSONObject());
             }
-            LogHelper.attachSessionIdToLogs(ipvSessionId);
+            LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
 
             ClientSessionDetailsDto clientSessionDetails =
                     ipvSessionService.getIpvSession(ipvSessionId).getClientSessionDetails();
