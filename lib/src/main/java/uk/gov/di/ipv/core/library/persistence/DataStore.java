@@ -23,10 +23,9 @@ public class DataStore<T extends DynamodbItem> {
     private static final String LOCALHOST_URI = "http://localhost:4567";
     private static boolean isRunningLocally;
 
-    private final DynamoDbEnhancedClient dynamoDbEnhancedClient;
-    private final String tableName;
     private final Class<T> typeParameterClass;
     private final ConfigurationService configurationService;
+    private final DynamoDbTable<T> table;
 
     public DataStore(
             String tableName,
@@ -34,11 +33,12 @@ public class DataStore<T extends DynamodbItem> {
             DynamoDbEnhancedClient dynamoDbEnhancedClient,
             boolean isRunningLocally,
             ConfigurationService configurationService) {
-        this.tableName = tableName;
         this.typeParameterClass = typeParameterClass;
-        this.dynamoDbEnhancedClient = dynamoDbEnhancedClient;
         this.configurationService = configurationService;
         DataStore.isRunningLocally = isRunningLocally;
+        this.table =
+                dynamoDbEnhancedClient.table(
+                        tableName, TableSchema.fromBean(this.typeParameterClass));
     }
 
     public static DynamoDbEnhancedClient getClient(boolean isRunningLocally) {
@@ -59,7 +59,7 @@ public class DataStore<T extends DynamodbItem> {
                                 Long.parseLong(
                                         configurationService.getSsmParameter(BACKEND_SESSION_TTL)))
                         .getEpochSecond());
-        getTable().putItem(item);
+        table.putItem(item);
     }
 
     public T getItem(String partitionValue, String sortValue) {
@@ -72,7 +72,7 @@ public class DataStore<T extends DynamodbItem> {
     }
 
     public List<T> getItems(String partitionValue) {
-        return getTable()
+        return table
                 .query(
                         QueryConditional.keyEqualTo(
                                 Key.builder().partitionValue(partitionValue).build()))
@@ -82,7 +82,7 @@ public class DataStore<T extends DynamodbItem> {
     }
 
     public T update(T item) {
-        return getTable().updateItem(item);
+        return table.updateItem(item);
     }
 
     public T delete(String partitionValue, String sortValue) {
@@ -102,15 +102,10 @@ public class DataStore<T extends DynamodbItem> {
     }
 
     private T getItemByKey(Key key) {
-        return getTable().getItem(key);
+        return table.getItem(key);
     }
 
     private T delete(Key key) {
-        return getTable().deleteItem(key);
-    }
-
-    private DynamoDbTable<T> getTable() {
-        return dynamoDbEnhancedClient.table(
-                tableName, TableSchema.fromBean(this.typeParameterClass));
+        return table.deleteItem(key);
     }
 }
