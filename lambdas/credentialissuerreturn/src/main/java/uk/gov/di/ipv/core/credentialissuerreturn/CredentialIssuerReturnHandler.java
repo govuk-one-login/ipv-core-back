@@ -14,6 +14,7 @@ import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
+import software.amazon.lambda.powertools.logging.LoggingUtils;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -190,7 +191,11 @@ public class CredentialIssuerReturnHandler
             return Optional.of(ErrorResponse.MISSING_OAUTH_STATE);
         }
 
-        if (!request.getState().equals(getPersistedOauthState(request))) {
+        String persistedOauthState = getPersistedOauthState(request);
+        if (!request.getState().equals(persistedOauthState)) {
+            LoggingUtils.appendKey("expected_state", persistedOauthState);
+            LoggingUtils.appendKey("request_state", request.getState());
+            LOGGER.error("state value in request does not match expected state");
             return Optional.of(ErrorResponse.INVALID_OAUTH_STATE);
         }
 
