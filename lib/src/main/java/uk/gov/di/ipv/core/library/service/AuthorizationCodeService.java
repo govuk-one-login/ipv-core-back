@@ -6,6 +6,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 
+import java.time.Instant;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.AUTH_CODES_TABLE_NAME;
@@ -53,7 +54,11 @@ public class AuthorizationCodeService {
         dataStore.create(authorizationCodeItem);
     }
 
-    public void revokeAuthorizationCode(String authorizationCode) {
-        dataStore.delete(DigestUtils.sha256Hex(authorizationCode));
+    public void setIssuedAccessToken(String authorizationCode, String accessToken) {
+        AuthorizationCodeItem authorizationCodeItem = dataStore.getItem(authorizationCode);
+        authorizationCodeItem.setIssuedAccessToken(DigestUtils.sha256Hex(accessToken));
+        authorizationCodeItem.setExchangeDateTime(Instant.now().toString());
+
+        dataStore.update(authorizationCodeItem);
     }
 }

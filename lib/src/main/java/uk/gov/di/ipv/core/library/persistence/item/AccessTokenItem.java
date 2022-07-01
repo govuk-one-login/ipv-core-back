@@ -9,6 +9,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 public class AccessTokenItem implements DynamodbItem {
     private String accessToken;
     private String ipvSessionId;
+    private String revokedAtDateTime;
     private long ttl;
 
     @DynamoDbPartitionKey
@@ -26,6 +27,14 @@ public class AccessTokenItem implements DynamodbItem {
 
     public void setIpvSessionId(String ipvSessionId) {
         this.ipvSessionId = ipvSessionId;
+    }
+
+    public String getRevokedAtDateTime() {
+        return revokedAtDateTime;
+    }
+
+    public void setRevokedAtDateTime(String revokedAtDateTime) {
+        this.revokedAtDateTime = revokedAtDateTime;
     }
 
     public long getTtl() {

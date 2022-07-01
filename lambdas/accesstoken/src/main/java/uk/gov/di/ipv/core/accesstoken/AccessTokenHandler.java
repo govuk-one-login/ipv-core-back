@@ -94,6 +94,16 @@ public class AccessTokenHandler
 
             LogHelper.attachIpvSessionIdToLogs(authorizationCodeItem.getIpvSessionId());
 
+            if (authorizationCodeItem.getIssuedAccessToken() != null) {
+                LOGGER.error(
+                        "Auth code has been used multiple times. Auth code was exchanged for an access token at: {}",
+                        authorizationCodeItem.getExchangeDateTime());
+
+                ErrorObject error = revokeAccessToken(authorizationCodeItem.getIssuedAccessToken());
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        error.getHTTPStatusCode(), error.toJSONObject());
+            }
+
             if (redirectUrlsDoNotMatch(authorizationCodeItem, authorizationGrant)) {
                 LOGGER.error(
                         "Redirect URL in token request does not match that received in auth code request. Session ID: {}",
@@ -109,7 +119,9 @@ public class AccessTokenHandler
             accessTokenService.persistAccessToken(
                     accessTokenResponse, authorizationCodeItem.getIpvSessionId());
 
-            authorizationCodeService.revokeAuthorizationCode(authorizationCodeItem.getAuthCode());
+            authorizationCodeService.setIssuedAccessToken(
+                    authorizationCodeItem.getAuthCode(),
+                    accessTokenResponse.getTokens().getBearerAccessToken().getValue());
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, accessTokenResponse.toJSONObject());
@@ -173,5 +185,16 @@ public class AccessTokenHandler
                 .getRedirectionURI()
                 .toString()
                 .equals(authorizationCodeItem.getRedirectUrl());
+    }
+
+    private ErrorObject revokeAccessToken(String accessToken) {
+        try {
+            accessTokenService.revokeAccessToken(accessToken);
+            return OAuth2Error.INVALID_GRANT.setDescription(
+                    "Authorization code used too many times");
+        } catch (IllegalArgumentException e) {
+            LOGGER.error("Failed to revoke access token because: {}", e.getMessage());
+            return OAuth2Error.INVALID_GRANT.setDescription("Failed to revoke access token");
+        }
     }
 }

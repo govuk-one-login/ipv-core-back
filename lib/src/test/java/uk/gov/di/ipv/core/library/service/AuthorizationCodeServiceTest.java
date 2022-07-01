@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 
+import java.time.Instant;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -91,11 +92,21 @@ class AuthorizationCodeServiceTest {
     }
 
     @Test
-    void shouldCallDeleteWithAuthCode() {
+    void shouldCallUpdateWithIssuedAccessTokenValue() {
         AuthorizationCode testCode = new AuthorizationCode();
+        AuthorizationCodeItem authorizationCodeItem = new AuthorizationCodeItem();
+        authorizationCodeItem.setAuthCode(testCode.getValue());
+        authorizationCodeItem.setIpvSessionId("test-session-id");
+        authorizationCodeItem.setRedirectUrl("http://example.com");
+        authorizationCodeItem.setExchangeDateTime(Instant.now().toString());
 
-        authorizationCodeService.revokeAuthorizationCode(testCode.getValue());
+        when(mockDataStore.getItem(testCode.getValue())).thenReturn(authorizationCodeItem);
+        authorizationCodeService.setIssuedAccessToken(testCode.getValue(), "test-access-token");
 
-        verify(mockDataStore).delete(DigestUtils.sha256Hex(testCode.getValue()));
+        ArgumentCaptor<AuthorizationCodeItem> authorizationCodeItemArgumentCaptor =
+                ArgumentCaptor.forClass(AuthorizationCodeItem.class);
+        verify(mockDataStore).update(authorizationCodeItemArgumentCaptor.capture());
+
+        assertNotNull(authorizationCodeItemArgumentCaptor.getValue().getExchangeDateTime());
     }
 }
