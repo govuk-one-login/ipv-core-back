@@ -67,15 +67,13 @@ public class CredentialIssuerErrorHandler
                     RequestHelper.convertRequest(input, CredentialIssuerErrorDto.class);
             LogHelper.attachCriIdToLogs(credentialIssuerErrorDto.getCredentialIssuerId());
 
-            LOGGER.error(
-                    "An error occurred with the {} cri",
-                    credentialIssuerErrorDto.getCredentialIssuerId());
-
             if (!ALLOWED_OAUTH_ERROR_CODES.contains(credentialIssuerErrorDto.getError())) {
                 LOGGER.error("Unknown Oauth error code received");
             }
-            LOGGER.error("Error code: {}", credentialIssuerErrorDto.getError());
-            LOGGER.error(credentialIssuerErrorDto.getErrorDescription());
+            LogHelper.logOauthError(
+                    "OAuth error received from CRI",
+                    credentialIssuerErrorDto.getError(),
+                    credentialIssuerErrorDto.getErrorDescription());
 
             sendAuditEvent(credentialIssuerErrorDto);
 
