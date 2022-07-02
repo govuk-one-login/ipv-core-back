@@ -7,9 +7,7 @@ import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.RefreshTokenGrant;
 import com.nimbusds.oauth2.sdk.Scope;
-import com.nimbusds.oauth2.sdk.TokenRequest;
 import com.nimbusds.oauth2.sdk.TokenResponse;
-import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.RefreshToken;
@@ -49,19 +47,12 @@ class AccessTokenServiceTest {
     }
 
     @Test
-    void shouldReturnSuccessfulTokenResponseOnSuccessfulExchange() throws Exception {
+    void shouldReturnSuccessfulTokenResponseOnSuccessfulExchange() {
         long testTokenTtl = 2400L;
         Scope testScope = new Scope("test-scope");
-        TokenRequest tokenRequest =
-                new TokenRequest(
-                        null,
-                        new ClientID("test-client-id"),
-                        new AuthorizationCodeGrant(
-                                new AuthorizationCode("123456"), new URI("http://test.com")),
-                        testScope);
         when(mockConfigurationService.getBearerAccessTokenTtl()).thenReturn(testTokenTtl);
 
-        TokenResponse response = accessTokenService.generateAccessToken(tokenRequest);
+        TokenResponse response = accessTokenService.generateAccessToken(testScope);
 
         assertInstanceOf(AccessTokenResponse.class, response);
         assertNotNull(response.toSuccessResponse().getTokens().getAccessToken().getValue());
@@ -75,14 +66,9 @@ class AccessTokenServiceTest {
 
     @Test
     void shouldReturnValidationErrorWhenInvalidGrantTypeProvided() {
-        TokenRequest tokenRequest =
-                new TokenRequest(
-                        null,
-                        new ClientID("test-client-id"),
-                        new RefreshTokenGrant(new RefreshToken()));
-
         ValidationResult<ErrorObject> validationResult =
-                accessTokenService.validateTokenRequest(tokenRequest);
+                accessTokenService.validateAuthorizationGrant(
+                        new RefreshTokenGrant(new RefreshToken()));
 
         assertNotNull(validationResult);
         assertFalse(validationResult.isValid());
@@ -90,20 +76,33 @@ class AccessTokenServiceTest {
     }
 
     @Test
-    void shouldNotReturnValidationErrorWhenAValidTokenRequestIsProvided() {
-        TokenRequest tokenRequest =
-                new TokenRequest(
-                        null,
-                        new ClientID("test-client-id"),
+    void shouldNotReturnValidationErrorWhenAValidAuthGrantIsProvided() {
+        ValidationResult<ErrorObject> validationResult =
+                accessTokenService.validateAuthorizationGrant(
                         new AuthorizationCodeGrant(
                                 new AuthorizationCode(), URI.create("https://test.com")));
-
-        ValidationResult<ErrorObject> validationResult =
-                accessTokenService.validateTokenRequest(tokenRequest);
 
         assertNotNull(validationResult);
         assertTrue(validationResult.isValid());
         assertNull(validationResult.getError());
+    }
+
+    @Test
+    void validateScopeShouldReturnValidationErrorForMissingScope() {
+        ValidationResult<ErrorObject> scopeValidationResult =
+                accessTokenService.validateScope(new Scope());
+
+        assertFalse(scopeValidationResult.isValid());
+        assertEquals(OAuth2Error.INVALID_SCOPE, scopeValidationResult.getError());
+    }
+
+    @Test
+    void validateScopeShouldValidResponseForWhenScopePresent() {
+        ValidationResult<ErrorObject> scopeValidationResult =
+                accessTokenService.validateScope(new Scope("some-scope"));
+
+        assertTrue(scopeValidationResult.isValid());
+        assertNull(scopeValidationResult.getError());
     }
 
     @Test

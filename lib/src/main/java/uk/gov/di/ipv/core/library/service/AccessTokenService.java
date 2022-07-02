@@ -1,10 +1,11 @@
 package uk.gov.di.ipv.core.library.service;
 
 import com.nimbusds.oauth2.sdk.AccessTokenResponse;
+import com.nimbusds.oauth2.sdk.AuthorizationGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GrantType;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
-import com.nimbusds.oauth2.sdk.TokenRequest;
+import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
@@ -44,16 +45,22 @@ public class AccessTokenService {
         this.configurationService = configurationService;
     }
 
-    public TokenResponse generateAccessToken(TokenRequest tokenRequest) {
+    public TokenResponse generateAccessToken(Scope scope) {
         AccessToken accessToken =
-                new BearerAccessToken(
-                        configurationService.getBearerAccessTokenTtl(), tokenRequest.getScope());
+                new BearerAccessToken(configurationService.getBearerAccessTokenTtl(), scope);
         return new AccessTokenResponse(new Tokens(accessToken, null));
     }
 
-    public ValidationResult<ErrorObject> validateTokenRequest(TokenRequest tokenRequest) {
-        if (!tokenRequest.getAuthorizationGrant().getType().equals(GrantType.AUTHORIZATION_CODE)) {
+    public ValidationResult<ErrorObject> validateAuthorizationGrant(AuthorizationGrant authGrant) {
+        if (!authGrant.getType().equals(GrantType.AUTHORIZATION_CODE)) {
             return new ValidationResult<>(false, OAuth2Error.UNSUPPORTED_GRANT_TYPE);
+        }
+        return ValidationResult.createValidResult();
+    }
+
+    public ValidationResult<ErrorObject> validateScope(Scope scope) {
+        if (StringUtils.isBlank(scope.toString())) {
+            return new ValidationResult<>(false, OAuth2Error.INVALID_SCOPE);
         }
         return ValidationResult.createValidResult();
     }
