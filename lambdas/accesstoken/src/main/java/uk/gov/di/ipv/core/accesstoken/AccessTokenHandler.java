@@ -104,8 +104,8 @@ public class AccessTokenHandler
                         "Redirect URL in token request does not match that received in auth code request. Session ID: {}",
                         authorizationCodeItem.getIpvSessionId());
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        OAuth2Error.INVALID_REQUEST.getHTTPStatusCode(),
-                        OAuth2Error.INVALID_REQUEST.toJSONObject());
+                        OAuth2Error.INVALID_GRANT.getHTTPStatusCode(),
+                        OAuth2Error.INVALID_GRANT.toJSONObject());
             }
 
             AccessTokenResponse accessTokenResponse =
