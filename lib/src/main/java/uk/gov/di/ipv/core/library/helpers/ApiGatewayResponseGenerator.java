@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpHeaders;
+import org.apache.http.entity.ContentType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -12,22 +13,16 @@ import java.util.Map;
 
 public class ApiGatewayResponseGenerator {
 
-    private static final String JSON_CONTENT_TYPE_VALUE = "application/json";
-
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private ApiGatewayResponseGenerator() {}
 
-    public static APIGatewayProxyResponseEvent proxyJoseResponse(int statusCode, String payload) {
-        Map<String, String> responseHeaders = Map.of(HttpHeaders.CONTENT_TYPE, "application/jose");
-        return proxyResponse(statusCode, payload, responseHeaders);
-    }
-
     public static <T> APIGatewayProxyResponseEvent proxyJsonResponse(int statusCode, T body) {
+
         Map<String, String> responseHeaders =
-                Map.of(HttpHeaders.CONTENT_TYPE, JSON_CONTENT_TYPE_VALUE);
+                Map.of(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
 
         try {
             return proxyResponse(statusCode, generateResponseBody(body), responseHeaders);
