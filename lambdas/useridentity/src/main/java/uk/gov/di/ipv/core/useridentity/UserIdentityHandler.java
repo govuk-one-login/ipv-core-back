@@ -31,6 +31,7 @@ import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
+import java.time.Instant;
 import java.util.Objects;
 
 public class UserIdentityHandler
@@ -84,28 +85,19 @@ public class UserIdentityHandler
                     accessTokenService.getAccessToken(accessToken.getValue());
 
             if (Objects.isNull((accessTokenItem))) {
-                LOGGER.error(
-                        "User credential could not be retrieved. The supplied access token was not found in the database.");
-                return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(),
-                        OAuth2Error.ACCESS_DENIED
-                                .appendDescription(
-                                        " - The supplied access token was not found in the database")
-                                .toJSONObject());
+                return getUnknownAccessTokenApiGatewayProxyResponseEvent();
             }
-            String ipvSessionId = accessTokenItem.getIpvSessionId();
-            LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
 
             if (StringUtils.isNotBlank(accessTokenItem.getRevokedAtDateTime())) {
-                LOGGER.error(
-                        "User credential could not be retrieved. The supplied access token has been revoked at: {}",
-                        accessTokenItem.getRevokedAtDateTime());
-                return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(),
-                        OAuth2Error.ACCESS_DENIED
-                                .appendDescription(" - The supplied access token has been revoked")
-                                .toJSONObject());
+                return getRevokedAccessTokenApiGatewayProxyResponseEvent(accessTokenItem);
             }
+
+            if (accessTokenHasExpired(accessTokenItem)) {
+                return getExpiredAccessTokenApiGatewayProxyResponseEvent(accessTokenItem);
+            }
+
+            String ipvSessionId = accessTokenItem.getIpvSessionId();
+            LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
 
             ClientSessionDetailsDto clientSessionDetails =
                     ipvSessionService
@@ -134,5 +126,47 @@ public class UserIdentityHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getResponseCode(), e.getErrorBody());
         }
+    }
+
+    private APIGatewayProxyResponseEvent getExpiredAccessTokenApiGatewayProxyResponseEvent(
+            AccessTokenItem accessTokenItem) {
+        LOGGER.error(
+                "User credential could not be retrieved. The supplied access token expired at: {}",
+                accessTokenItem.getExpiryDateTime());
+        return ApiGatewayResponseGenerator.proxyJsonResponse(
+                OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(),
+                OAuth2Error.ACCESS_DENIED
+                        .appendDescription(" - The supplied access token has expired")
+                        .toJSONObject());
+    }
+
+    private APIGatewayProxyResponseEvent getRevokedAccessTokenApiGatewayProxyResponseEvent(
+            AccessTokenItem accessTokenItem) {
+        LOGGER.error(
+                "User credential could not be retrieved. The supplied access token has been revoked at: {}",
+                accessTokenItem.getRevokedAtDateTime());
+        return ApiGatewayResponseGenerator.proxyJsonResponse(
+                OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(),
+                OAuth2Error.ACCESS_DENIED
+                        .appendDescription(" - The supplied access token has been revoked")
+                        .toJSONObject());
+    }
+
+    private APIGatewayProxyResponseEvent getUnknownAccessTokenApiGatewayProxyResponseEvent() {
+        LOGGER.error(
+                "User credential could not be retrieved. The supplied access token was not found in the database.");
+        return ApiGatewayResponseGenerator.proxyJsonResponse(
+                OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(),
+                OAuth2Error.ACCESS_DENIED
+                        .appendDescription(
+                                " - The supplied access token was not found in the database")
+                        .toJSONObject());
+    }
+
+    private boolean accessTokenHasExpired(AccessTokenItem accessTokenItem) {
+        if (StringUtils.isNotBlank(accessTokenItem.getExpiryDateTime())) {
+            return Instant.now().isAfter(Instant.parse(accessTokenItem.getExpiryDateTime()));
+        }
+        return false;
     }
 }
