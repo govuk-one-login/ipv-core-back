@@ -65,9 +65,11 @@ public class AccessTokenHandler
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
         try {
-            var params = URLUtils.parseParameters(input.getBody());
+            tokenRequestValidator.authenticateClient(input.getBody());
+
             AuthorizationCodeGrant authorizationGrant =
-                    (AuthorizationCodeGrant) AuthorizationGrant.parse(params);
+                    (AuthorizationCodeGrant)
+                            AuthorizationGrant.parse(URLUtils.parseParameters(input.getBody()));
             ValidationResult<ErrorObject> validationResult =
                     accessTokenService.validateAuthorizationGrant(authorizationGrant);
             if (!validationResult.isValid()) {
@@ -78,8 +80,6 @@ public class AccessTokenHandler
                         getHttpStatusCodeForErrorResponse(validationResult.getError()),
                         validationResult.getError().toJSONObject());
             }
-
-            tokenRequestValidator.authenticateClient(input.getBody());
 
             AuthorizationCodeItem authorizationCodeItem =
                     authorizationCodeService
