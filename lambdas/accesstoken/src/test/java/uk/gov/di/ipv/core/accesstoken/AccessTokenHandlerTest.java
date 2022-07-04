@@ -57,7 +57,7 @@ class AccessTokenHandlerTest {
         tokenResponse = new AccessTokenResponse(new Tokens(accessToken, null));
 
         mockAccessTokenService = mock(AccessTokenService.class);
-        when(mockAccessTokenService.generateAccessToken(any())).thenReturn(tokenResponse);
+        when(mockAccessTokenService.generateAccessToken()).thenReturn(tokenResponse);
 
         mockAuthorizationCodeService = mock(AuthorizationCodeService.class);
         ConfigurationService mockConfigurationService = mock(ConfigurationService.class);
@@ -89,7 +89,7 @@ class AccessTokenHandlerTest {
 
         when(mockAuthorizationCodeService.getAuthorizationCodeItem(TEST_AUTHORIZATION_CODE))
                 .thenReturn(Optional.of(authorizationCodeItem));
-        when(mockAccessTokenService.validateTokenRequest(any()))
+        when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
@@ -143,8 +143,8 @@ class AccessTokenHandlerTest {
     }
 
     @Test
-    void shouldReturn400IfAccessTokenServiceDeemsRequestInvalid() throws ParseException {
-        when(mockAccessTokenService.validateTokenRequest(any()))
+    void shouldReturn400IfAccessTokenServiceDeemsAuthGrantInvalid() throws ParseException {
+        when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(new ValidationResult<>(false, OAuth2Error.UNSUPPORTED_GRANT_TYPE));
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
@@ -171,8 +171,9 @@ class AccessTokenHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setBody(tokenRequestBody);
 
-        when(mockAccessTokenService.validateTokenRequest(any()))
+        when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
+
         when(mockAuthorizationCodeService.getAuthorizationCodeItem(TEST_AUTHORIZATION_CODE))
                 .thenReturn(Optional.empty());
 
@@ -189,7 +190,7 @@ class AccessTokenHandlerTest {
     void shouldReturn400WhenInvalidJwtProvided() throws Exception {
         authorizationCodeItem.setRedirectUrl("https://different.example.com");
 
-        when(mockAccessTokenService.validateTokenRequest(any()))
+        when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockAuthorizationCodeService.getAuthorizationCodeItem(TEST_AUTHORIZATION_CODE))
                 .thenReturn(Optional.of(authorizationCodeItem));
@@ -199,7 +200,7 @@ class AccessTokenHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setBody(tokenRequestBody);
 
-        when(mockAccessTokenService.validateTokenRequest(any()))
+        when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
 
         doThrow(new ClientAuthenticationException("error"))
@@ -221,7 +222,7 @@ class AccessTokenHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setBody(tokenRequestBody);
 
-        when(mockAccessTokenService.validateTokenRequest(any()))
+        when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
 
         doThrow(new ClientAuthenticationException("error"))
@@ -249,8 +250,9 @@ class AccessTokenHandlerTest {
         when(mockAuthorizationCodeService.getAuthorizationCodeItem(TEST_AUTHORIZATION_CODE))
                 .thenReturn(Optional.of(authorizationCodeItem));
 
-        when(mockAccessTokenService.validateTokenRequest(any()))
+        when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
+
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
         verify(mockAccessTokenService).revokeAccessToken(TEST_ACCESS_TOKEN);
@@ -275,7 +277,7 @@ class AccessTokenHandlerTest {
         when(mockAuthorizationCodeService.getAuthorizationCodeItem(TEST_AUTHORIZATION_CODE))
                 .thenReturn(Optional.of(authorizationCodeItem));
 
-        when(mockAccessTokenService.validateTokenRequest(any()))
+        when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
 
         String errorMessage = "Failed to revoke access token";

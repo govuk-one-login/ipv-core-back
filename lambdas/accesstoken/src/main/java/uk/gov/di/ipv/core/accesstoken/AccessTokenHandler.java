@@ -4,14 +4,13 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.nimbusds.common.contenttype.ContentType;
 import com.nimbusds.oauth2.sdk.AccessTokenResponse;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
+import com.nimbusds.oauth2.sdk.AuthorizationGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
-import com.nimbusds.oauth2.sdk.TokenRequest;
-import com.nimbusds.oauth2.sdk.http.HTTPRequest;
+import com.nimbusds.oauth2.sdk.util.URLUtils;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -28,7 +27,6 @@ import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.validation.TokenRequestValidator;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
-import java.net.URI;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
@@ -36,7 +34,6 @@ public class AccessTokenHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private static final Logger LOGGER = LogManager.getLogger();
-
     private final AccessTokenService accessTokenService;
     private final AuthorizationCodeService authorizationCodeService;
     private final ConfigurationService configurationService;
@@ -68,23 +65,21 @@ public class AccessTokenHandler
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
         try {
-            TokenRequest tokenRequest = createTokenRequest(input.getBody());
-
+            var params = URLUtils.parseParameters(input.getBody());
+            AuthorizationCodeGrant authorizationGrant =
+                    (AuthorizationCodeGrant) AuthorizationGrant.parse(params);
             ValidationResult<ErrorObject> validationResult =
-                    accessTokenService.validateTokenRequest(tokenRequest);
+                    accessTokenService.validateAuthorizationGrant(authorizationGrant);
             if (!validationResult.isValid()) {
-                LOGGER.error(
-                        "Invalid access token request, error description: {}",
-                        validationResult.getError().getDescription());
+                ErrorObject error = validationResult.getError();
+                LogHelper.logOauthError(
+                        "Invalid auth grant received", error.getCode(), error.getDescription());
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         getHttpStatusCodeForErrorResponse(validationResult.getError()),
                         validationResult.getError().toJSONObject());
             }
 
             tokenRequestValidator.authenticateClient(input.getBody());
-
-            AuthorizationCodeGrant authorizationGrant =
-                    (AuthorizationCodeGrant) tokenRequest.getAuthorizationGrant();
 
             AuthorizationCodeItem authorizationCodeItem =
                     authorizationCodeService
@@ -114,7 +109,7 @@ public class AccessTokenHandler
             }
 
             AccessTokenResponse accessTokenResponse =
-                    accessTokenService.generateAccessToken(tokenRequest).toSuccessResponse();
+                    accessTokenService.generateAccessToken().toSuccessResponse();
 
             accessTokenService.persistAccessToken(
                     accessTokenResponse, authorizationCodeItem.getIpvSessionId());
@@ -145,18 +140,6 @@ public class AccessTokenHandler
                     OAuth2Error.INVALID_GRANT.getHTTPStatusCode(),
                     OAuth2Error.INVALID_GRANT.toJSONObject());
         }
-    }
-
-    @Tracing
-    private TokenRequest createTokenRequest(String requestBody) throws ParseException {
-        // The URI is not needed/consumed in the resultant TokenRequest
-        // therefore any value can be passed here to ensure the parse method
-        // successfully materialises a TokenRequest
-        URI arbitraryUri = URI.create("https://gds");
-        HTTPRequest request = new HTTPRequest(HTTPRequest.Method.POST, arbitraryUri);
-        request.setQuery(requestBody);
-        request.setContentType(ContentType.APPLICATION_URLENCODED.getType());
-        return TokenRequest.parse(request);
     }
 
     @Tracing
