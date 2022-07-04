@@ -285,4 +285,31 @@ class UserIdentityHandlerTest {
                         .getDescription(),
                 responseBody.get("error_description"));
     }
+
+    @Test
+    void shouldReturn403ErrorResponseWhenAccessTokenHasExpired() throws JsonProcessingException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
+        Map<String, String> headers =
+                Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
+        event.setHeaders(headers);
+
+        AccessTokenItem accessTokenItem = new AccessTokenItem();
+        accessTokenItem.setAccessToken(accessToken.toAuthorizationHeader());
+        accessTokenItem.setExpiryDateTime(Instant.now().minusSeconds(5).toString());
+
+        when(mockAccessTokenService.getAccessToken(anyString())).thenReturn(accessTokenItem);
+
+        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(403, response.getStatusCode());
+        assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), responseBody.get("error"));
+        assertEquals(
+                OAuth2Error.ACCESS_DENIED
+                        .appendDescription(" - The supplied access token has expired")
+                        .getDescription(),
+                responseBody.get("error_description"));
+    }
 }

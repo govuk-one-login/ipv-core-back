@@ -64,9 +64,10 @@ public class AccessTokenService {
 
     public void persistAccessToken(AccessTokenResponse tokenResponse, String ipvSessionId) {
         AccessTokenItem accessTokenItem = new AccessTokenItem();
-        accessTokenItem.setAccessToken(
-                DigestUtils.sha256Hex(tokenResponse.getTokens().getBearerAccessToken().getValue()));
+        BearerAccessToken accessToken = tokenResponse.getTokens().getBearerAccessToken();
+        accessTokenItem.setAccessToken(DigestUtils.sha256Hex(accessToken.getValue()));
         accessTokenItem.setIpvSessionId(ipvSessionId);
+        accessTokenItem.setExpiryDateTime(toExpiryDateTime(accessToken.getLifetime()));
         dataStore.create(accessTokenItem);
     }
 
@@ -82,5 +83,9 @@ public class AccessTokenService {
             throw new IllegalArgumentException(
                     "Failed to revoke access token - access token could not be found in DynamoDB");
         }
+    }
+
+    private String toExpiryDateTime(long expirySeconds) {
+        return Instant.now().plusSeconds(expirySeconds).toString();
     }
 }

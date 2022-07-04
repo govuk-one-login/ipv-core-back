@@ -11,6 +11,7 @@ public class AccessTokenItem implements DynamodbItem {
     private String ipvSessionId;
     private String revokedAtDateTime;
     private long ttl;
+    private String expiryDateTime;
 
     @DynamoDbPartitionKey
     public String getAccessToken() {
@@ -43,5 +44,13 @@ public class AccessTokenItem implements DynamodbItem {
 
     public void setTtl(long ttl) {
         this.ttl = ttl;
+    }
+
+    public void setExpiryDateTime(String expiryDateTime) {
+        this.expiryDateTime = expiryDateTime;
+    }
+
+    public String getExpiryDateTime() {
+        return expiryDateTime;
     }
 }
