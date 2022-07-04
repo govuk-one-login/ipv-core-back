@@ -5,7 +5,6 @@ import com.nimbusds.oauth2.sdk.AuthorizationGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GrantType;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
-import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
@@ -45,22 +44,15 @@ public class AccessTokenService {
         this.configurationService = configurationService;
     }
 
-    public TokenResponse generateAccessToken(Scope scope) {
+    public TokenResponse generateAccessToken() {
         AccessToken accessToken =
-                new BearerAccessToken(configurationService.getBearerAccessTokenTtl(), scope);
+                new BearerAccessToken(configurationService.getBearerAccessTokenTtl(), null);
         return new AccessTokenResponse(new Tokens(accessToken, null));
     }
 
     public ValidationResult<ErrorObject> validateAuthorizationGrant(AuthorizationGrant authGrant) {
         if (!authGrant.getType().equals(GrantType.AUTHORIZATION_CODE)) {
             return new ValidationResult<>(false, OAuth2Error.UNSUPPORTED_GRANT_TYPE);
-        }
-        return ValidationResult.createValidResult();
-    }
-
-    public ValidationResult<ErrorObject> validateScope(Scope scope) {
-        if (StringUtils.isBlank(scope.toString())) {
-            return new ValidationResult<>(false, OAuth2Error.INVALID_SCOPE);
         }
         return ValidationResult.createValidResult();
     }

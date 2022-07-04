@@ -11,7 +11,6 @@ import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GrantType;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
-import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
@@ -58,8 +57,7 @@ class AccessTokenHandlerTest {
         tokenResponse = new AccessTokenResponse(new Tokens(accessToken, null));
 
         mockAccessTokenService = mock(AccessTokenService.class);
-        when(mockAccessTokenService.generateAccessToken(any(Scope.class)))
-                .thenReturn(tokenResponse);
+        when(mockAccessTokenService.generateAccessToken()).thenReturn(tokenResponse);
 
         mockAuthorizationCodeService = mock(AuthorizationCodeService.class);
         ConfigurationService mockConfigurationService = mock(ConfigurationService.class);
@@ -86,14 +84,12 @@ class AccessTokenHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         String tokenRequestBody =
-                "code=12345&scope=somescope&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0IiwiYXVkIjoiYWRtaW4iLCJpc3MiOiJtYXNvbi5tZXRhbXVnLm5ldCIsImV4cCI6MTU3NDUxMjc2NSwiaWF0IjoxNTY2NzM2NzY1LCJqdGkiOiJmN2JmZTMzZi03YmY3LTRlYjQtOGU1OS05OTE3OTliNWViOGEifQ==.EVcCaSqrSNVs3cWdLt-qkoqUk7rPHEOsDHS8yejwxMw&redirect_uri=https://callback.example.com&grant_type=authorization_code&client_id=test_client_id";
+                "code=12345&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0IiwiYXVkIjoiYWRtaW4iLCJpc3MiOiJtYXNvbi5tZXRhbXVnLm5ldCIsImV4cCI6MTU3NDUxMjc2NSwiaWF0IjoxNTY2NzM2NzY1LCJqdGkiOiJmN2JmZTMzZi03YmY3LTRlYjQtOGU1OS05OTE3OTliNWViOGEifQ==.EVcCaSqrSNVs3cWdLt-qkoqUk7rPHEOsDHS8yejwxMw&redirect_uri=https://callback.example.com&grant_type=authorization_code&client_id=test_client_id";
         event.setBody(tokenRequestBody);
 
         when(mockAuthorizationCodeService.getAuthorizationCodeItem(TEST_AUTHORIZATION_CODE))
                 .thenReturn(Optional.of(authorizationCodeItem));
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
-                .thenReturn(ValidationResult.createValidResult());
-        when(mockAccessTokenService.validateScope(any()))
                 .thenReturn(ValidationResult.createValidResult());
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
@@ -168,27 +164,6 @@ class AccessTokenHandlerTest {
     }
 
     @Test
-    void shouldReturn400IfAccessTokenServiceDeemsScopeInvalid() throws Exception {
-        when(mockAccessTokenService.validateAuthorizationGrant(any()))
-                .thenReturn(ValidationResult.createValidResult());
-        when(mockAccessTokenService.validateScope(any()))
-                .thenReturn(new ValidationResult<>(false, OAuth2Error.INVALID_SCOPE));
-
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        String tokenRequestBody =
-                "code=12345&redirect_uri=http://test.com&grant_type=authorization_code&client_id=test_client_id";
-        event.setBody(tokenRequestBody);
-
-        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
-
-        ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
-
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(OAuth2Error.INVALID_SCOPE.getCode(), errorResponse.getCode());
-        assertEquals(OAuth2Error.INVALID_SCOPE.getDescription(), errorResponse.getDescription());
-    }
-
-    @Test
     void shouldReturn400OWhenInvalidAuthorisationCodeProvided() throws Exception {
         String tokenRequestBody =
                 "code=12345&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0IiwiYXVkIjoiYWRtaW4iLCJpc3MiOiJtYXNvbi5tZXRhbXVnLm5ldCIsImV4cCI6MTU3NDUxMjc2NSwiaWF0IjoxNTY2NzM2NzY1LCJqdGkiOiJmN2JmZTMzZi03YmY3LTRlYjQtOGU1OS05OTE3OTliNWViOGEifQ==.EVcCaSqrSNVs3cWdLt-qkoqUk7rPHEOsDHS8yejwxMw&redirect_uri=http://test.com&grant_type=authorization_code&client_id=test_client_id";
@@ -197,8 +172,6 @@ class AccessTokenHandlerTest {
         event.setBody(tokenRequestBody);
 
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
-                .thenReturn(ValidationResult.createValidResult());
-        when(mockAccessTokenService.validateScope(any()))
                 .thenReturn(ValidationResult.createValidResult());
 
         when(mockAuthorizationCodeService.getAuthorizationCodeItem(TEST_AUTHORIZATION_CODE))
@@ -218,8 +191,6 @@ class AccessTokenHandlerTest {
         authorizationCodeItem.setRedirectUrl("https://different.example.com");
 
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
-                .thenReturn(ValidationResult.createValidResult());
-        when(mockAccessTokenService.validateScope(any()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockAuthorizationCodeService.getAuthorizationCodeItem(TEST_AUTHORIZATION_CODE))
                 .thenReturn(Optional.of(authorizationCodeItem));
@@ -253,8 +224,6 @@ class AccessTokenHandlerTest {
 
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
-        when(mockAccessTokenService.validateScope(any()))
-                .thenReturn(ValidationResult.createValidResult());
 
         doThrow(new ClientAuthenticationException("error"))
                 .when(mockTokenRequestValidator)
@@ -283,8 +252,6 @@ class AccessTokenHandlerTest {
 
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
-        when(mockAccessTokenService.validateScope(any()))
-                .thenReturn(ValidationResult.createValidResult());
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
@@ -311,8 +278,6 @@ class AccessTokenHandlerTest {
                 .thenReturn(Optional.of(authorizationCodeItem));
 
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
-                .thenReturn(ValidationResult.createValidResult());
-        when(mockAccessTokenService.validateScope(any()))
                 .thenReturn(ValidationResult.createValidResult());
 
         String errorMessage = "Failed to revoke access token";

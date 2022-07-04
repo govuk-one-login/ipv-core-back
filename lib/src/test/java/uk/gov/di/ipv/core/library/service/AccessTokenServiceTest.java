@@ -6,7 +6,6 @@ import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.RefreshTokenGrant;
-import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
@@ -49,19 +48,15 @@ class AccessTokenServiceTest {
     @Test
     void shouldReturnSuccessfulTokenResponseOnSuccessfulExchange() {
         long testTokenTtl = 2400L;
-        Scope testScope = new Scope("test-scope");
         when(mockConfigurationService.getBearerAccessTokenTtl()).thenReturn(testTokenTtl);
 
-        TokenResponse response = accessTokenService.generateAccessToken(testScope);
+        TokenResponse response = accessTokenService.generateAccessToken();
 
         assertInstanceOf(AccessTokenResponse.class, response);
         assertNotNull(response.toSuccessResponse().getTokens().getAccessToken().getValue());
         assertEquals(
                 testTokenTtl,
                 response.toSuccessResponse().getTokens().getBearerAccessToken().getLifetime());
-        assertEquals(
-                testScope,
-                response.toSuccessResponse().getTokens().getBearerAccessToken().getScope());
     }
 
     @Test
@@ -85,24 +80,6 @@ class AccessTokenServiceTest {
         assertNotNull(validationResult);
         assertTrue(validationResult.isValid());
         assertNull(validationResult.getError());
-    }
-
-    @Test
-    void validateScopeShouldReturnValidationErrorForMissingScope() {
-        ValidationResult<ErrorObject> scopeValidationResult =
-                accessTokenService.validateScope(new Scope());
-
-        assertFalse(scopeValidationResult.isValid());
-        assertEquals(OAuth2Error.INVALID_SCOPE, scopeValidationResult.getError());
-    }
-
-    @Test
-    void validateScopeShouldValidResponseForWhenScopePresent() {
-        ValidationResult<ErrorObject> scopeValidationResult =
-                accessTokenService.validateScope(new Scope("some-scope"));
-
-        assertTrue(scopeValidationResult.isValid());
-        assertNull(scopeValidationResult.getError());
     }
 
     @Test

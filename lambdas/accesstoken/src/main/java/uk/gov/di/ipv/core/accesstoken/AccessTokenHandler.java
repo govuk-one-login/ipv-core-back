@@ -10,7 +10,6 @@ import com.nimbusds.oauth2.sdk.AuthorizationGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
-import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.util.URLUtils;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
@@ -35,8 +34,6 @@ public class AccessTokenHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final String SCOPE = "scope";
-
     private final AccessTokenService accessTokenService;
     private final AuthorizationCodeService authorizationCodeService;
     private final ConfigurationService configurationService;
@@ -82,18 +79,6 @@ public class AccessTokenHandler
                         validationResult.getError().toJSONObject());
             }
 
-            Scope scope = Scope.parse(params.get(SCOPE));
-            ValidationResult<ErrorObject> scopeValidationResult =
-                    accessTokenService.validateScope(scope);
-            if (!scopeValidationResult.isValid()) {
-                ErrorObject error = scopeValidationResult.getError();
-                LogHelper.logOauthError(
-                        "Invalid scope received", error.getCode(), error.getDescription());
-                return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        getHttpStatusCodeForErrorResponse(scopeValidationResult.getError()),
-                        scopeValidationResult.getError().toJSONObject());
-            }
-
             tokenRequestValidator.authenticateClient(input.getBody());
 
             AuthorizationCodeItem authorizationCodeItem =
@@ -124,7 +109,7 @@ public class AccessTokenHandler
             }
 
             AccessTokenResponse accessTokenResponse =
-                    accessTokenService.generateAccessToken(scope).toSuccessResponse();
+                    accessTokenService.generateAccessToken().toSuccessResponse();
 
             accessTokenService.persistAccessToken(
                     accessTokenResponse, authorizationCodeItem.getIpvSessionId());
