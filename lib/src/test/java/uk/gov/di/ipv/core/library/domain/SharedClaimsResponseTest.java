@@ -28,10 +28,10 @@ class SharedClaimsResponseTest {
         birthDaySet.add(new BirthDate("2020-02-03"));
 
         SharedClaims sharedClaims1 =
-                new SharedClaims.Builder()
-                        .setName(nameSet)
-                        .setAddress(addressSet)
-                        .setBirthDate(birthDaySet)
+                SharedClaims.builder()
+                        .name(nameSet)
+                        .address(addressSet)
+                        .birthDate(birthDaySet)
                         .build();
 
         Set<Name> nameSet2 = new HashSet<>();
@@ -43,10 +43,10 @@ class SharedClaimsResponseTest {
         Set<BirthDate> birthDaySet2 = new HashSet<>();
         birthDaySet2.add(new BirthDate("2021-02-03"));
         SharedClaims sharedClaims2 =
-                new SharedClaims.Builder()
-                        .setName(nameSet2)
-                        .setAddress(addressSet2)
-                        .setBirthDate(birthDaySet2)
+                SharedClaims.builder()
+                        .name(nameSet2)
+                        .address(addressSet2)
+                        .birthDate(birthDaySet2)
                         .build();
 
         Set<SharedClaims> sharedAttributes = Set.of(sharedClaims1, sharedClaims2);

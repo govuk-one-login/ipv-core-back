@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.domain;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 
 import java.util.Optional;
@@ -12,6 +13,7 @@ import java.util.Set;
 @JsonPropertyOrder({"name", "birthDate", "address"})
 @JsonDeserialize(using = SharedClaimsDeserializer.class)
 @EqualsAndHashCode
+@Builder
 public class SharedClaims {
     private Set<Name> name;
 
@@ -40,31 +42,5 @@ public class SharedClaims {
 
     public Optional<Set<Address>> getAddress() {
         return Optional.ofNullable(address);
-    }
-
-    public static class Builder {
-
-        private Set<Name> name;
-        private Set<BirthDate> birthDate;
-        private Set<Address> address;
-
-        public Builder setBirthDate(Set<BirthDate> birthDate) {
-            this.birthDate = birthDate;
-            return this;
-        }
-
-        public Builder setAddress(Set<Address> address) {
-            this.address = address;
-            return this;
-        }
-
-        public Builder setName(Set<Name> name) {
-            this.name = name;
-            return this;
-        }
-
-        public SharedClaims build() {
-            return new SharedClaims(name, birthDate, address);
-        }
     }
 }

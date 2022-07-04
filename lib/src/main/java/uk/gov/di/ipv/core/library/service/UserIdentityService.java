@@ -105,13 +105,13 @@ public class UserIdentityService {
 
         String vtm = configurationService.getSsmParameter(CORE_VTM_CLAIM);
 
-        UserIdentity.Builder userIdentityBuilder =
-                new UserIdentity.Builder().setVcs(vcJwts).setSub(sub).setVot(vot).setVtm(vtm);
+        UserIdentity.UserIdentityBuilder userIdentityBuilder =
+                UserIdentity.builder().vcs(vcJwts).sub(sub).vot(vot).vtm(vtm);
 
         if (vot.equals(VectorOfTrust.P2.toString())) {
-            userIdentityBuilder.setIdentityClaim(generateIdentityClaim(credentialIssuerItems));
-            userIdentityBuilder.setAddressClaim(generateAddressClaim(credentialIssuerItems));
-            userIdentityBuilder.setPassportClaim(generatePassportClaim(credentialIssuerItems));
+            userIdentityBuilder.identityClaim(generateIdentityClaim(credentialIssuerItems));
+            userIdentityBuilder.addressClaim(generateAddressClaim(credentialIssuerItems));
+            userIdentityBuilder.passportClaim(generatePassportClaim(credentialIssuerItems));
         }
 
         return userIdentityBuilder.build();

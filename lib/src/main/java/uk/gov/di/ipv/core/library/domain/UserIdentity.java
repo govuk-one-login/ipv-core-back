@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.domain;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -12,6 +13,7 @@ import java.util.List;
 @Getter
 @Setter
 @ExcludeFromGeneratedCoverageReport
+@Builder
 public class UserIdentity {
 
     public static final String VCS_CLAIM_NAME = "https://vocab.account.gov.uk/v1/credentialJWT";
@@ -53,54 +55,5 @@ public class UserIdentity {
         this.sub = sub;
         this.vot = vot;
         this.vtm = vtm;
-    }
-
-    public static class Builder {
-        private List<String> vcs;
-        private IdentityClaim identityClaim;
-        private JsonNode addressClaim;
-        private JsonNode passportClaim;
-        private String sub;
-        private String vot;
-        private String vtm;
-
-        public Builder setVcs(List<String> vcs) {
-            this.vcs = vcs;
-            return this;
-        }
-
-        public Builder setIdentityClaim(IdentityClaim identityClaim) {
-            this.identityClaim = identityClaim;
-            return this;
-        }
-
-        public Builder setAddressClaim(JsonNode addressClaim) {
-            this.addressClaim = addressClaim;
-            return this;
-        }
-
-        public Builder setPassportClaim(JsonNode passportClaim) {
-            this.passportClaim = passportClaim;
-            return this;
-        }
-
-        public Builder setSub(String sub) {
-            this.sub = sub;
-            return this;
-        }
-
-        public Builder setVot(String vot) {
-            this.vot = vot;
-            return this;
-        }
-
-        public Builder setVtm(String vtm) {
-            this.vtm = vtm;
-            return this;
-        }
-
-        public UserIdentity build() {
-            return new UserIdentity(vcs, identityClaim, addressClaim, passportClaim, sub, vot, vtm);
-        }
     }
 }

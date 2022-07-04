@@ -2,11 +2,13 @@ package uk.gov.di.ipv.core.library.auditing;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Builder;
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 @ExcludeFromGeneratedCoverageReport
 @Getter
+@Builder
 public class AuditExtensionErrorParams implements AuditExtensions {
     @JsonProperty("error_code")
     private final String errorCode;
@@ -20,24 +22,5 @@ public class AuditExtensionErrorParams implements AuditExtensions {
             @JsonProperty(value = "error_description", required = false) String errorDescription) {
         this.errorCode = errorCode;
         this.errorDescription = errorDescription;
-    }
-
-    public static class Builder {
-        private String errorCode;
-        private String errorDescription;
-
-        public Builder setErrorCode(String errorCode) {
-            this.errorCode = errorCode;
-            return this;
-        }
-
-        public Builder setErrorDescription(String errorDescription) {
-            this.errorDescription = errorDescription;
-            return this;
-        }
-
-        public AuditExtensionErrorParams build() {
-            return new AuditExtensionErrorParams(errorCode, errorDescription);
-        }
     }
 }

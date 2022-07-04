@@ -89,9 +89,9 @@ public class CredentialIssuerErrorHandler
     private void sendAuditEvent(CredentialIssuerErrorDto credentialIssuerErrorDto) {
         try {
             AuditExtensionErrorParams extensions =
-                    new AuditExtensionErrorParams.Builder()
-                            .setErrorCode(credentialIssuerErrorDto.getError())
-                            .setErrorDescription(credentialIssuerErrorDto.getErrorDescription())
+                    AuditExtensionErrorParams.builder()
+                            .errorCode(credentialIssuerErrorDto.getError())
+                            .errorDescription(credentialIssuerErrorDto.getErrorDescription())
                             .build();
             this.auditService.sendAuditEvent(
                     AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED, extensions);

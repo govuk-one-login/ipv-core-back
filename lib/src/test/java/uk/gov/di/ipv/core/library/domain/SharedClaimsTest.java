@@ -29,10 +29,10 @@ class SharedClaimsTest {
         birthDaySet.add(birthDate);
 
         SharedClaims response =
-                new SharedClaims.Builder()
-                        .setName(nameSet)
-                        .setAddress(addressSet)
-                        .setBirthDate(birthDaySet)
+                SharedClaims.builder()
+                        .name(nameSet)
+                        .address(addressSet)
+                        .birthDate(birthDaySet)
                         .build();
 
         assertEquals(nameSet, response.getName().get());

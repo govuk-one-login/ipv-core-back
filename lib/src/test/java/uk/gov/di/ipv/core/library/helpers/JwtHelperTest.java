@@ -51,7 +51,7 @@ class JwtHelperTest {
         birthDaySet.add(new BirthDate("2020-02-03"));
 
         SharedClaims sharedClaims =
-                new SharedClaims.Builder().setName(nameSet).setBirthDate(birthDaySet).build();
+                SharedClaims.builder().name(nameSet).birthDate(birthDaySet).build();
 
         SharedClaimsResponse sharedClaimsResponse = SharedClaimsResponse.from(Set.of(sharedClaims));
 

@@ -29,7 +29,7 @@ public class SharedClaimsDeserializer extends StdDeserializer<SharedClaims> {
     @Override
     public SharedClaims deserialize(JsonParser jsonParser, DeserializationContext ctxt)
             throws IOException {
-        SharedClaims.Builder sharedAttributesBuilder = new SharedClaims.Builder();
+        SharedClaims.SharedClaimsBuilder sharedAttributesBuilder = SharedClaims.builder();
 
         JsonNode node = jsonParser.getCodec().readTree(jsonParser);
         if (node.isEmpty()) {
@@ -53,7 +53,7 @@ public class SharedClaimsDeserializer extends StdDeserializer<SharedClaims> {
 
             Name names = new Name(namePartsList);
             nameList.add(names);
-            sharedAttributesBuilder.setName(nameList);
+            sharedAttributesBuilder.name(nameList);
         }
 
         JsonNode dateOfBirth = node.get("birthDate");
@@ -62,7 +62,7 @@ public class SharedClaimsDeserializer extends StdDeserializer<SharedClaims> {
             for (JsonNode jo : dateOfBirth) {
                 dateList.add(objectMapper.convertValue(jo, BirthDate.class));
             }
-            sharedAttributesBuilder.setBirthDate(dateList);
+            sharedAttributesBuilder.birthDate(dateList);
         }
 
         JsonNode address = node.get("address");
@@ -71,7 +71,7 @@ public class SharedClaimsDeserializer extends StdDeserializer<SharedClaims> {
             for (JsonNode jo : address) {
                 addressList.add(objectMapper.convertValue(jo, Address.class));
             }
-            sharedAttributesBuilder.setAddress(addressList);
+            sharedAttributesBuilder.address(addressList);
         }
 
         return sharedAttributesBuilder.build();

@@ -62,9 +62,9 @@ class AuditServiceTest {
         String errorCode = "server_error";
         String errorDescription = "Test error";
         AuditExtensionErrorParams extensions =
-                new AuditExtensionErrorParams.Builder()
-                        .setErrorCode(errorCode)
-                        .setErrorDescription(errorDescription)
+                AuditExtensionErrorParams.builder()
+                        .errorCode(errorCode)
+                        .errorDescription(errorDescription)
                         .build();
         auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, extensions);
 
