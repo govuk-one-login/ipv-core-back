@@ -45,7 +45,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_AUTHENTICATION_METHOD;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
@@ -68,7 +67,6 @@ class JarValidatorTest {
     private final String issuerClaim = "test-issuer";
     private final String subjectClaim = "test-subject";
 
-    private final String clientAuthMethod = "client-auth-method";
     private final String responseTypeClaim = "code";
     private final String clientIdClaim = "test-client-id";
     private final String redirectUriClaim = "https://example.com";
@@ -118,8 +116,6 @@ class JarValidatorTest {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
-                .thenReturn(clientAuthMethod);
         when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
         when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
                 .thenReturn(issuerClaim);
@@ -135,7 +131,7 @@ class JarValidatorTest {
     @Test
     void shouldFailValidationChecksOnInvalidClientId()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
+        when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
                 .thenThrow(ParameterNotFoundException.builder().build());
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
@@ -183,8 +179,8 @@ class JarValidatorTest {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK_2);
-        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
-                .thenReturn(clientAuthMethod);
+        when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+                .thenReturn(issuerClaim);
 
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
@@ -206,8 +202,8 @@ class JarValidatorTest {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn("invalid-jwk");
-        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
-                .thenReturn(clientAuthMethod);
+        when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+                .thenReturn(issuerClaim);
         SignedJWT signedJWT = generateJWT(getValidClaimsSetValues());
 
         JarValidationException thrown =
@@ -230,8 +226,8 @@ class JarValidatorTest {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
-                .thenReturn(clientAuthMethod);
+        when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+                .thenReturn(issuerClaim);
         when(configurationService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
 
@@ -265,8 +261,6 @@ class JarValidatorTest {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
-                .thenReturn(clientAuthMethod);
         when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
         when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
                 .thenReturn(issuerClaim);
@@ -315,8 +309,6 @@ class JarValidatorTest {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
-                .thenReturn(clientAuthMethod);
         when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
         when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
                 .thenReturn(issuerClaim);
@@ -367,8 +359,6 @@ class JarValidatorTest {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
-                .thenReturn(clientAuthMethod);
         when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
         when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
                 .thenReturn(issuerClaim);
@@ -419,8 +409,6 @@ class JarValidatorTest {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
-                .thenReturn(clientAuthMethod);
         when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
         when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
                 .thenReturn(issuerClaim);
@@ -469,8 +457,6 @@ class JarValidatorTest {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
-                .thenReturn(clientAuthMethod);
         when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
         when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
                 .thenReturn(issuerClaim);
@@ -519,8 +505,6 @@ class JarValidatorTest {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
-                .thenReturn(clientAuthMethod);
         when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
         when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
                 .thenReturn(issuerClaim);
@@ -572,8 +556,8 @@ class JarValidatorTest {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
-                .thenReturn(clientAuthMethod);
+        when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+                .thenReturn(issuerClaim);
         when(configurationService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList("test-redirect-uri"));
 
@@ -598,8 +582,8 @@ class JarValidatorTest {
         when(configurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configurationService.getSsmParameter(eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
-                .thenReturn(clientAuthMethod);
+        when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+                .thenReturn(issuerClaim);
 
         Map<String, Object> claims =
                 Map.of(

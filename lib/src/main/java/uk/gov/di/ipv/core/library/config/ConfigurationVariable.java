@@ -5,7 +5,6 @@ public enum ConfigurationVariable {
     AUDIENCE_FOR_CLIENTS("/%s/core/self/audienceForClients"),
     BACKEND_SESSION_TIMEOUT("/%s/core/self/backendSessionTimeout"),
     BACKEND_SESSION_TTL("/%s/core/self/backendSessionTtl"),
-    CLIENT_AUTHENTICATION_METHOD("/%s/core/clients/%s/authenticationMethod"),
     CLIENT_ISSUER("/%s/core/clients/%s/issuer"),
     CORE_FRONT_CALLBACK_URL("/%s/core/self/coreFrontCallbackUrl"),
     CORE_VTM_CLAIM("/%s/core/self/coreVtmClaim"),
