@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.service.AccessTokenService.DEFAULT_SCOPE;
 
 @ExtendWith(MockitoExtension.class)
 class AccessTokenServiceTest {
@@ -57,6 +58,9 @@ class AccessTokenServiceTest {
         assertEquals(
                 testTokenTtl,
                 response.toSuccessResponse().getTokens().getBearerAccessToken().getLifetime());
+        assertEquals(
+                DEFAULT_SCOPE,
+                response.toSuccessResponse().getTokens().getAccessToken().getScope());
     }
 
     @Test
