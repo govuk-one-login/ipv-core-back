@@ -5,6 +5,7 @@ import com.nimbusds.oauth2.sdk.AuthorizationGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GrantType;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
+import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
@@ -22,6 +23,7 @@ import java.util.Objects;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ACCESS_TOKENS_TABLE_NAME;
 
 public class AccessTokenService {
+    protected static final Scope DEFAULT_SCOPE = new Scope("user-credentials");
     private final DataStore<AccessTokenItem> dataStore;
     private final ConfigurationService configurationService;
 
@@ -46,7 +48,8 @@ public class AccessTokenService {
 
     public TokenResponse generateAccessToken() {
         AccessToken accessToken =
-                new BearerAccessToken(configurationService.getBearerAccessTokenTtl(), null);
+                new BearerAccessToken(
+                        configurationService.getBearerAccessTokenTtl(), DEFAULT_SCOPE);
         return new AccessTokenResponse(new Tokens(accessToken, null));
     }
 
