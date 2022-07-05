@@ -6,17 +6,20 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWEObject;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.ECDSASigner;
+import com.nimbusds.jose.crypto.RSAEncrypter;
+import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import org.apache.http.HttpStatus;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -24,6 +27,8 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.JarValidationException;
 import uk.gov.di.ipv.core.library.exceptions.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
+import uk.gov.di.ipv.core.library.helpers.AuthorizationRequestHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -58,22 +63,15 @@ class IpvSessionStartHandlerTest {
     @Mock private KmsRsaDecrypter mockKmsRsaDecrypter;
     @Mock private JarValidator mockJarValidator;
     @Mock private AuditService mockAuditService;
+    @InjectMocks private IpvSessionStartHandler ipvSessionStartHandler;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private IpvSessionStartHandler ipvSessionStartHandler;
-    private SignedJWT signedJWT;
+    private static SignedJWT signedJWT;
+    private static JWEObject signedEncryptedJwt;
 
-    @BeforeEach
-    void setUp() throws InvalidKeySpecException, NoSuchAlgorithmException, JOSEException {
-        ipvSessionStartHandler =
-                new IpvSessionStartHandler(
-                        mockIpvSessionService,
-                        mockConfigurationService,
-                        mockKmsRsaDecrypter,
-                        mockJarValidator,
-                        mockAuditService);
-
+    @BeforeAll
+    static void setUp() throws Exception {
         JWTClaimsSet claimsSet =
                 new JWTClaimsSet.Builder()
                         .expirationTime(new Date(Instant.now().plusSeconds(1000).getEpochSecond()))
@@ -90,6 +88,10 @@ class IpvSessionStartHandlerTest {
 
         signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.ES256), claimsSet);
         signedJWT.sign(new ECDSASigner(getPrivateKey()));
+        signedEncryptedJwt =
+                AuthorizationRequestHelper.createJweObject(
+                        new RSAEncrypter(RSAKey.parse(TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK)),
+                        signedJWT);
     }
 
     @Test
@@ -102,7 +104,7 @@ class IpvSessionStartHandlerTest {
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, Object> sessionParams =
-                Map.of("clientId", "test-client", "request", signedJWT.serialize());
+                Map.of("clientId", "test-client", "request", signedEncryptedJwt.serialize());
         event.setBody(objectMapper.writeValueAsString(sessionParams));
 
         APIGatewayProxyResponseEvent response =
@@ -153,7 +155,7 @@ class IpvSessionStartHandlerTest {
     void shouldReturn400IfMissingClientIdParameter() throws JsonProcessingException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
-        Map<String, Object> sessionParams = Map.of("request", signedJWT.serialize());
+        Map<String, Object> sessionParams = Map.of("request", signedEncryptedJwt.serialize());
 
         event.setBody(objectMapper.writeValueAsString(sessionParams));
 
@@ -190,8 +192,28 @@ class IpvSessionStartHandlerTest {
     }
 
     @Test
+    void shouldReturn400IfRequestObjectNotEncrypted() throws JsonProcessingException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+
+        Map<String, Object> sessionParams =
+                Map.of("clientId", "test-client", "request", signedJWT.serialize());
+        event.setBody(objectMapper.writeValueAsString(sessionParams));
+
+        APIGatewayProxyResponseEvent response =
+                ipvSessionStartHandler.handleRequest(event, mockContext);
+
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
+        assertEquals(
+                ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
+    }
+
+    @Test
     void shouldReturnIpvSessionIdWhenRecoverableErrorFound()
-            throws JsonProcessingException, JarValidationException, ParseException, SqsException {
+            throws JsonProcessingException, JarValidationException, ParseException {
         String ipvSessionId = SecureTokenHelper.generate();
         when(mockIpvSessionService.generateIpvSession(any(), any())).thenReturn(ipvSessionId);
         when(mockJarValidator.validateRequestJwt(any(), any()))
@@ -204,7 +226,7 @@ class IpvSessionStartHandlerTest {
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, Object> sessionParams =
-                Map.of("clientId", "test-client", "request", signedJWT.serialize());
+                Map.of("clientId", "test-client", "request", signedEncryptedJwt.serialize());
         event.setBody(objectMapper.writeValueAsString(sessionParams));
 
         APIGatewayProxyResponseEvent response =
@@ -217,7 +239,8 @@ class IpvSessionStartHandlerTest {
         assertEquals(ipvSessionId, responseBody.get("ipvSessionId"));
     }
 
-    private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
+    private static ECPrivateKey getPrivateKey()
+            throws InvalidKeySpecException, NoSuchAlgorithmException {
         return (ECPrivateKey)
                 KeyFactory.getInstance("EC")
                         .generatePrivate(

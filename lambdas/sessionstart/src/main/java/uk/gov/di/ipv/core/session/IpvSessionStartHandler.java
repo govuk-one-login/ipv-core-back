@@ -86,9 +86,7 @@ public class IpvSessionStartHandler
         try {
             Map<String, String> sessionParams =
                     objectMapper.readValue(input.getBody(), new TypeReference<>() {});
-
             Optional<ErrorResponse> error = validateSessionParams(sessionParams);
-
             if (error.isPresent()) {
                 LOGGER.error(
                         "Validation of the client session params failed because: {}",
@@ -97,7 +95,8 @@ public class IpvSessionStartHandler
                         HttpStatus.SC_BAD_REQUEST, error.get());
             }
 
-            SignedJWT signedJWT = decryptRequest(sessionParams.get(REQUEST_PARAM_KEY));
+            SignedJWT signedJWT =
+                    jarValidator.decryptJWE(JWEObject.parse(sessionParams.get(REQUEST_PARAM_KEY)));
             JWTClaimsSet claimsSet =
                     jarValidator.validateRequestJwt(
                             signedJWT, sessionParams.get(CLIENT_ID_PARAM_KEY));
@@ -188,16 +187,5 @@ public class IpvSessionStartHandler
     private ClientSessionDetailsDto generateErrorClientSessionDetails(
             String redirectUri, String clientId, String state) {
         return new ClientSessionDetailsDto(null, clientId, redirectUri, state, null, false);
-    }
-
-    private SignedJWT decryptRequest(String jarString)
-            throws ParseException, JarValidationException {
-        try {
-            JWEObject jweObject = JWEObject.parse(jarString);
-            return jarValidator.decryptJWE(jweObject);
-        } catch (ParseException e) {
-            LOGGER.info("The JAR is not currently encrypted. Skipping the decryption step.");
-            return SignedJWT.parse(jarString);
-        }
     }
 }
