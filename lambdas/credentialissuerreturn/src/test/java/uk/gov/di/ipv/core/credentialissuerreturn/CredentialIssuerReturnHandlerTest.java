@@ -574,7 +574,7 @@ class CredentialIssuerReturnHandlerTest {
         Integer statusCode = response.getStatusCode();
         Map responseBody = getResponseBodyAsMap(response);
         assertEquals(HTTPResponse.SC_BAD_REQUEST, statusCode);
-        assertEquals(errorResponse.getCode(), responseBody.get("code"));
+        assertEquals(errorResponse.getCode(), responseBody.get("error"));
         verifyNoInteractions(credentialIssuerService);
     }
 }

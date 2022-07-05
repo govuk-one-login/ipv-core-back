@@ -24,7 +24,8 @@ public class HttpResponseExceptionWithErrorBody extends Throwable {
     }
 
     public Map<String, Object> getErrorBody() {
-        return Map.of("code", errorResponse.getCode(), "message", errorResponse.getMessage());
+        return Map.of(
+                "error", errorResponse.getCode(), "error_description", errorResponse.getMessage());
     }
 
     public ErrorResponse getErrorResponse() {

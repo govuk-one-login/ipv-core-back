@@ -193,7 +193,7 @@ class CredentialIssuerStartHandlerTest {
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
         assertEquals(400, response.getStatusCode());
         Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
-        assertEquals("Missing ipv session id header", responseBody.get("message"));
+        assertEquals("Missing ipv session id header", responseBody.get("error_description"));
     }
 
     private void assertSharedClaimsJWTIsValid(String request)
