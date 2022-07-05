@@ -297,6 +297,28 @@ class AccessTokenHandlerTest {
         assertEquals(errorMessage, errorResponse.getDescription());
     }
 
+    @Test
+    void shouldReturn400WhenRedirectURLsDoNotMatch() throws Exception {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+
+        String tokenRequestBody =
+                "redirect_uri=https://different.example.com&code=12345&client_assertion=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0IiwiYXVkIjoiYWRtaW4iLCJpc3MiOiJtYXNvbi5tZXRhbXVnLm5ldCIsImV4cCI6MTU3NDUxMjc2NSwiaWF0IjoxNTY2NzM2NzY1LCJqdGkiOiJmN2JmZTMzZi03YmY3LTRlYjQtOGU1OS05OTE3OTliNWViOGEifQ==.EVcCaSqrSNVs3cWdLt-qkoqUk7rPHEOsDHS8yejwxMw&grant_type=authorization_code&client_id=test_client_id";
+        event.setBody(tokenRequestBody);
+
+        when(mockAuthorizationCodeService.getAuthorizationCodeItem(TEST_AUTHORIZATION_CODE))
+                .thenReturn(Optional.of(authorizationCodeItem));
+        when(mockAccessTokenService.validateAuthorizationGrant(any()))
+                .thenReturn(ValidationResult.createValidResult());
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+
+        ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
+
+        assertEquals(HTTPResponse.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorResponse.getCode());
+        assertEquals(OAuth2Error.INVALID_GRANT.getDescription(), errorResponse.getDescription());
+    }
+
     private ErrorObject createErrorObjectFromResponse(String responseBody) throws ParseException {
         HTTPResponse httpErrorResponse = new HTTPResponse(HttpStatus.SC_BAD_REQUEST);
         httpErrorResponse.setContentType(ContentType.APPLICATION_JSON.getType());

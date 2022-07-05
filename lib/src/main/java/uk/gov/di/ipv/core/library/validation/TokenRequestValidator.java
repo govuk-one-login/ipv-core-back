@@ -116,10 +116,8 @@ public class TokenRequestValidator {
     private ClientAuthenticationVerifier<Object> getClientAuthVerifier(
             ConfigurationService configurationService) {
 
-        ConfigurationServicePublicKeySelector configurationServicePublicKeySelector =
-                new ConfigurationServicePublicKeySelector(configurationService);
         return new ClientAuthenticationVerifier<>(
-                configurationServicePublicKeySelector,
+                new ConfigurationServicePublicKeySelector(configurationService),
                 Set.of(new Audience(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))));
     }
 }
