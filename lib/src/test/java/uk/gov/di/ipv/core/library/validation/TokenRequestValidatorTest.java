@@ -39,7 +39,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_AUTHENTICATION_METHOD;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
@@ -69,9 +68,6 @@ class TokenRequestValidatorTest {
         when(mockConfigurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(RSA_PUBLIC_CERT);
-        when(mockConfigurationService.getSsmParameter(
-                        eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
-                .thenReturn("jwt");
         when(mockConfigurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                 .thenReturn("2400");
 
@@ -86,9 +82,6 @@ class TokenRequestValidatorTest {
         when(mockConfigurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(mockConfigurationService.getSsmParameter(
-                        eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
-                .thenReturn("jwt");
         when(mockConfigurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                 .thenReturn("2400");
 
@@ -102,9 +95,6 @@ class TokenRequestValidatorTest {
         when(mockConfigurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(RSA_PUBLIC_CERT);
-        when(mockConfigurationService.getSsmParameter(
-                        eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
-                .thenReturn("jwt");
 
         var invalidSignatureQueryParams =
                 new HashMap<>(
@@ -150,9 +140,6 @@ class TokenRequestValidatorTest {
     @Test
     void shouldThrowIfWrongAudience()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(mockConfigurationService.getSsmParameter(
-                        eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
-                .thenReturn("jwt");
         var wrongAudienceClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
         wrongAudienceClaimsSetValues.put(
                 JWTClaimNames.AUDIENCE, "NOT_THE_AUDIENCE_YOU_ARE_LOOKING_FOR");
@@ -176,9 +163,6 @@ class TokenRequestValidatorTest {
     @Test
     void shouldThrowIfClaimsSetHasExpired()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(mockConfigurationService.getSsmParameter(
-                        eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
-                .thenReturn("jwt");
         var expiredClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
         expiredClaimsSetValues.put(
                 JWTClaimNames.EXPIRATION_TIME,
@@ -200,9 +184,6 @@ class TokenRequestValidatorTest {
         when(mockConfigurationService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(RSA_PUBLIC_CERT);
-        when(mockConfigurationService.getSsmParameter(
-                        eq(CLIENT_AUTHENTICATION_METHOD), anyString()))
-                .thenReturn("jwt");
         when(mockConfigurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
                 .thenReturn("2400");
         var expiredClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
@@ -224,59 +205,32 @@ class TokenRequestValidatorTest {
     }
 
     @Test
-    void shouldNotThrowIfMissingClientAssertionParamWhenNoneRequired() {
-        when(mockConfigurationService.getSsmParameter(CLIENT_AUTHENTICATION_METHOD, clientId))
-                .thenReturn("none");
-        var params = getValidQueryParamsWithoutClientAuth(clientId);
-
-        assertDoesNotThrow(() -> validator.authenticateClient(queryMapToString(params)));
-    }
-
-    @Test
-    void shouldNotThrowIfContainsClientAssertionParamWhenNoneRequired()
-            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(mockConfigurationService.getSsmParameter(CLIENT_AUTHENTICATION_METHOD, clientId))
-                .thenReturn("none");
-        var validQueryParams =
-                getValidQueryParams(generateClientAssertionWithRS256(getValidClaimsSetValues()));
-
-        assertDoesNotThrow(() -> validator.authenticateClient(queryMapToString(validQueryParams)));
-    }
-
-    @Test
-    void shouldThrowIfMissingClientAssertionParamWhenRequired() {
-        String invalidClientId = "invalid-client";
-        when(mockConfigurationService.getSsmParameter(
-                        CLIENT_AUTHENTICATION_METHOD, invalidClientId))
-                .thenReturn("jwt");
-        var missingClientAssertionParams = getValidQueryParamsWithoutClientAuth(invalidClientId);
-
+    void shouldThrowIfMissingClientAssertionParam() {
+        var queryParamsWithNoClientAssertion = new HashMap<>(getValidQueryParams("to be dropped"));
+        queryParamsWithNoClientAssertion.remove("client_assertion");
         ClientAuthenticationException exception =
                 assertThrows(
                         ClientAuthenticationException.class,
                         () ->
                                 validator.authenticateClient(
-                                        queryMapToString(missingClientAssertionParams)));
+                                        queryMapToString(queryParamsWithNoClientAssertion)));
 
-        assertEquals(
-                "Missing client_assertion jwt for configured client 'invalid-client'",
-                exception.getMessage());
+        assertEquals("Missing client_assertion parameter", exception.getCause().getMessage());
     }
 
     @Test
-    void shouldThrowIfMissingClientAssertionAndClientIdParams() {
-        var missingClientIdParams = getParamsWithoutClientAuthOrClientId();
-
+    void shouldThrowIfMissingClientAssertionTypeParam() {
+        var queryParamsWithNoClientAssertionType =
+                new HashMap<>(getValidQueryParams("to be dropped"));
+        queryParamsWithNoClientAssertionType.remove("client_assertion_type");
         ClientAuthenticationException exception =
                 assertThrows(
                         ClientAuthenticationException.class,
                         () ->
                                 validator.authenticateClient(
-                                        queryMapToString(missingClientIdParams)));
+                                        queryMapToString(queryParamsWithNoClientAssertionType)));
 
-        assertEquals(
-                "Unknown client, no client_id value or client_assertion jwt found in request",
-                exception.getMessage());
+        assertEquals("Missing client_assertion_type parameter", exception.getCause().getMessage());
     }
 
     private RSAPrivateKey getRsaPrivateKey()
@@ -301,25 +255,6 @@ class TokenRequestValidatorTest {
         return Map.of(
                 "client_assertion", clientAssertion,
                 "client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer",
-                "code", ResponseType.Value.CODE.getValue(),
-                "grant_type", "authorization_code",
-                "redirect_uri", "https://test-client.example.com/callback");
-    }
-
-    private Map<String, String> getValidQueryParamsWithoutClientAuth(String clientId) {
-        return Map.of(
-                "client_id",
-                clientId,
-                "code",
-                ResponseType.Value.CODE.getValue(),
-                "grant_type",
-                "authorization_code",
-                "redirect_uri",
-                "https://test-client.example.com/callback");
-    }
-
-    private Map<String, String> getParamsWithoutClientAuthOrClientId() {
-        return Map.of(
                 "code", ResponseType.Value.CODE.getValue(),
                 "grant_type", "authorization_code",
                 "redirect_uri", "https://test-client.example.com/callback");

@@ -12,30 +12,20 @@ import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ConfigurationServicePublicKeySelector;
 import uk.gov.di.ipv.core.library.exceptions.ClientAuthenticationException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
-import java.util.Map;
 import java.util.Set;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_AUTHENTICATION_METHOD;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 
 public class TokenRequestValidator {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String CLIENT_ASSERTION_PARAM = "client_assertion";
-    private static final String CLIENT_ID_PARAM = "client_id";
-    private static final String NONE = "none";
-    private static final String JWT = "jwt";
-
     private final ConfigurationService configurationService;
     private final ClientAuthenticationVerifier<Object> verifier;
-
-    private String clientId;
 
     public TokenRequestValidator(ConfigurationService configurationService) {
         this.configurationService = configurationService;
@@ -43,59 +33,15 @@ public class TokenRequestValidator {
     }
 
     public void authenticateClient(String requestBody) throws ClientAuthenticationException {
-        Map<String, String> queryParams = RequestHelper.parseRequestBody(requestBody);
-        if (queryParams.containsKey(CLIENT_ASSERTION_PARAM)) {
-            authenticateClientWithJwt(requestBody);
-        } else {
-            authenticateClientWithoutJwt(queryParams);
-        }
-    }
-
-    private void authenticateClientWithJwt(String requestBody)
-            throws ClientAuthenticationException {
         PrivateKeyJWT clientJwt;
         try {
             clientJwt = PrivateKeyJWT.parse(requestBody);
-
-            clientId = clientJwt.getClientID().getValue();
-
-            LogHelper.attachClientIdToLogs(clientId);
-
-            String clientAuthenticationMethod =
-                    configurationService.getSsmParameter(CLIENT_AUTHENTICATION_METHOD, clientId);
-
-            if (clientAuthenticationMethod.equals(NONE)) {
-                return;
-            }
-
+            LogHelper.attachClientIdToLogs(clientJwt.getClientID().getValue());
             verifier.verify(clientJwt, null, null);
             validateMaxAllowedAuthClientTtl(clientJwt.getJWTAuthenticationClaimsSet());
         } catch (ParseException | InvalidClientException | JOSEException e) {
             LOGGER.error("Validation of client_assertion jwt failed");
             throw new ClientAuthenticationException(e);
-        }
-    }
-
-    private void authenticateClientWithoutJwt(Map<String, String> queryParams)
-            throws ClientAuthenticationException {
-        if (queryParams.containsKey(CLIENT_ID_PARAM)) {
-            clientId = queryParams.get(CLIENT_ID_PARAM);
-
-            String clientAuthenticationMethod =
-                    configurationService.getSsmParameter(CLIENT_AUTHENTICATION_METHOD, clientId);
-
-            if (clientAuthenticationMethod.equals(JWT)) {
-                LOGGER.error("Missing client_assertion jwt for configured client {}", clientId);
-                throw new ClientAuthenticationException(
-                        String.format(
-                                "Missing client_assertion jwt for configured client '%s'",
-                                clientId));
-            }
-        } else {
-            LOGGER.error(
-                    "Missing either client_assertion or client_id values in request. Failed to establish client_id value.");
-            throw new ClientAuthenticationException(
-                    "Unknown client, no client_id value or client_assertion jwt found in request");
         }
     }
 

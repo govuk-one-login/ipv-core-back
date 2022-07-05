@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Set;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_AUTHENTICATION_METHOD;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
@@ -82,7 +81,7 @@ public class JarValidator {
 
     private void validateClientId(String clientId) throws JarValidationException {
         try {
-            configurationService.getSsmParameter(CLIENT_AUTHENTICATION_METHOD, clientId);
+            configurationService.getSsmParameter(CLIENT_ISSUER, clientId);
             LogHelper.attachClientIdToLogs(clientId);
         } catch (ParameterNotFoundException e) {
             LOGGER.error("Unknown client id provided {}", clientId);
