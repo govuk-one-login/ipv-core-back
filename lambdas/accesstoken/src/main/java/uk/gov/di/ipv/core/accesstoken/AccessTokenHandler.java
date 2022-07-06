@@ -99,6 +99,16 @@ public class AccessTokenHandler
                         error.getHTTPStatusCode(), error.toJSONObject());
             }
 
+            if (authorizationCodeService.isExpired(authorizationCodeItem)) {
+                LOGGER.error(
+                        "Access Token could not be issued. The supplied authorization code has expired. Created at: {}",
+                        authorizationCodeItem.getCreationDateTime());
+                ErrorObject error =
+                        OAuth2Error.INVALID_GRANT.setDescription("Authorization code expired");
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        error.getHTTPStatusCode(), error.toJSONObject());
+            }
+
             if (redirectUrlsDoNotMatch(authorizationCodeItem, authorizationGrant)) {
                 LOGGER.error(
                         "Redirect URL in token request does not match that received in auth code request. Session ID: {}",

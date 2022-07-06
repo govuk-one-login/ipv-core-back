@@ -193,6 +193,8 @@ Resources:
             ParameterName: !Sub ${Environment}/core/self/maxAllowedAuthClientTtl
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/backendSessionTtl
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/authCodeExpirySeconds
       Events:
         IPVCoreExternalAPI:
           Type: Api

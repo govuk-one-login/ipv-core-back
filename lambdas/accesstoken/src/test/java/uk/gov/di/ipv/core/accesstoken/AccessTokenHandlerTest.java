@@ -73,10 +73,12 @@ class AccessTokenHandlerTest {
                         mockConfigurationService,
                         mockTokenRequestValidator);
 
-        authorizationCodeItem = new AuthorizationCodeItem();
-        authorizationCodeItem.setRedirectUrl("https://callback.example.com");
-        authorizationCodeItem.setAuthCode(TEST_AUTHORIZATION_CODE);
-        authorizationCodeItem.setIpvSessionId("12345");
+        authorizationCodeItem =
+                new AuthorizationCodeItem(
+                        TEST_AUTHORIZATION_CODE,
+                        "12345",
+                        "https://callback.example.com",
+                        Instant.now().toString());
     }
 
     @Test
@@ -184,6 +186,29 @@ class AccessTokenHandlerTest {
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorResponse.getCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getDescription(), errorResponse.getDescription());
+    }
+
+    @Test
+    void shouldReturn400OWhenAuthorisationCodeHasExpired() throws Exception {
+        String tokenRequestBody =
+                "code=12345&redirect_uri=http://test.com&grant_type=authorization_code&client_id=test_client_id";
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        event.setBody(tokenRequestBody);
+
+        when(mockAccessTokenService.validateAuthorizationGrant(any()))
+                .thenReturn(ValidationResult.createValidResult());
+
+        when(mockAuthorizationCodeService.getAuthorizationCodeItem("12345"))
+                .thenReturn(Optional.of(authorizationCodeItem));
+        when(mockAuthorizationCodeService.isExpired(authorizationCodeItem)).thenReturn(true);
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+
+        ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorResponse.getCode());
+        assertEquals("Authorization code expired", errorResponse.getDescription());
     }
 
     @Test

@@ -11,11 +11,20 @@ public class AuthorizationCodeItem implements DynamodbItem {
     private String authCode;
     private String ipvSessionId;
     private String redirectUrl;
-
     private String issuedAccessToken;
-
     private String exchangeDateTime;
+    private String creationDateTime;
     private long ttl;
+
+    public AuthorizationCodeItem() {}
+
+    public AuthorizationCodeItem(
+            String authCode, String ipvSessionId, String redirectUrl, String creationDateTime) {
+        this.authCode = authCode;
+        this.ipvSessionId = ipvSessionId;
+        this.redirectUrl = redirectUrl;
+        this.creationDateTime = creationDateTime;
+    }
 
     @DynamoDbPartitionKey
     public String getAuthCode() {
@@ -64,5 +73,13 @@ public class AuthorizationCodeItem implements DynamodbItem {
 
     public void setExchangeDateTime(String exchangeDateTime) {
         this.exchangeDateTime = exchangeDateTime;
+    }
+
+    public String getCreationDateTime() {
+        return creationDateTime;
+    }
+
+    public void setCreationDateTime(String creationDateTime) {
+        this.creationDateTime = creationDateTime;
     }
 }
