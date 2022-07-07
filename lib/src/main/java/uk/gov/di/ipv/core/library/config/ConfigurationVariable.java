@@ -14,6 +14,7 @@ public enum ConfigurationVariable {
     JWT_TTL_SECONDS("/%s/core/self/jwtTtlSeconds"),
     MAX_ALLOWED_AUTH_CLIENT_TTL("/%s/core/self/maxAllowedAuthClientTtl"),
     PASSPORT_CRI_ID("/%s/core/self/journey/passportCriId"),
+    AUTH_CODE_EXPIRY_SECONDS("/%s/core/self/authCodeExpirySeconds"),
     PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY("/%s/core/clients/%s/publicKeyMaterialForCoreToVerify");
 
     private final String value;

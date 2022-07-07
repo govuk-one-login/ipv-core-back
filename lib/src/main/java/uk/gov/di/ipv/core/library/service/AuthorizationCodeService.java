@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.service;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import org.apache.commons.codec.digest.DigestUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 
@@ -46,10 +47,12 @@ public class AuthorizationCodeService {
 
     public void persistAuthorizationCode(
             String authorizationCode, String ipvSessionId, String redirectUrl) {
-        AuthorizationCodeItem authorizationCodeItem = new AuthorizationCodeItem();
-        authorizationCodeItem.setAuthCode(DigestUtils.sha256Hex(authorizationCode));
-        authorizationCodeItem.setIpvSessionId(ipvSessionId);
-        authorizationCodeItem.setRedirectUrl(redirectUrl);
+        AuthorizationCodeItem authorizationCodeItem =
+                new AuthorizationCodeItem(
+                        DigestUtils.sha256Hex(authorizationCode),
+                        ipvSessionId,
+                        redirectUrl,
+                        Instant.now().toString());
 
         dataStore.create(authorizationCodeItem);
     }
@@ -60,5 +63,16 @@ public class AuthorizationCodeService {
         authorizationCodeItem.setExchangeDateTime(Instant.now().toString());
 
         dataStore.update(authorizationCodeItem);
+    }
+
+    public boolean isExpired(AuthorizationCodeItem authCodeItem) {
+        return Instant.parse(authCodeItem.getCreationDateTime())
+                .isBefore(
+                        Instant.now()
+                                .minusSeconds(
+                                        Long.parseLong(
+                                                configurationService.getSsmParameter(
+                                                        ConfigurationVariable
+                                                                .AUTH_CODE_EXPIRY_SECONDS))));
     }
 }

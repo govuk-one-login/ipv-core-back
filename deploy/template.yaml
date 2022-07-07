@@ -163,7 +163,9 @@ Resources:
   IPVAccessTokenFunction:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "ipv-access-token-${Environment}"
       Handler: uk.gov.di.ipv.core.accesstoken.AccessTokenHandler::handleRequest
       Runtime: java11
@@ -193,6 +195,8 @@ Resources:
             ParameterName: !Sub ${Environment}/core/self/maxAllowedAuthClientTtl
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/backendSessionTtl
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/authCodeExpirySeconds
       Events:
         IPVCoreExternalAPI:
           Type: Api
@@ -224,7 +228,9 @@ Resources:
   IPVSessionEndFunction:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "ipv-session-end-${Environment}"
       Handler: uk.gov.di.ipv.core.sessionend.SessionEndHandler::handleRequest
       Runtime: java11
@@ -293,7 +299,9 @@ Resources:
   IPVSessionStartFunction:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "ipv-session-start-${Environment}"
       Handler: uk.gov.di.ipv.core.session.IpvSessionStartHandler::handleRequest
       Runtime: java11
@@ -374,7 +382,9 @@ Resources:
   IPVCriReturnFunction:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "ipv-credential-issuer-return-${Environment}"
       Handler: uk.gov.di.ipv.core.credentialissuerreturn.CredentialIssuerReturnHandler::handleRequest
       Runtime: java11
@@ -465,7 +475,9 @@ Resources:
   IPVCredentialIssuerStartFunction:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "ipv-credential-issuer-start-${Environment}"
       Handler: uk.gov.di.ipv.core.credentialissuer.CredentialIssuerStartHandler::handleRequest
       Runtime: java11
@@ -552,7 +564,9 @@ Resources:
   IPVCredentialIssuerErrorFunction:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "ipv-credential-issuer-error-${Environment}"
       Handler: uk.gov.di.ipv.core.credentialissuererror.CredentialIssuerErrorHandler::handleRequest
       Runtime: java11
@@ -616,7 +630,9 @@ Resources:
   IPVUserIdentityFunction:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "ipv-user-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.useridentity.UserIdentityHandler::handleRequest
       Runtime: java11
@@ -688,7 +704,9 @@ Resources:
   IPVCredentialIssuerConfig:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "credential-issuer-config-${Environment}"
       Handler: uk.gov.di.ipv.core.credentialissuerconfig.CredentialIssuerConfigHandler::handleRequest
       Runtime: java11
@@ -741,7 +759,9 @@ Resources:
   IPVIssuedCredentials:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "issued-credentials-${Environment}"
       Handler: uk.gov.di.ipv.core.issuedcredentials.IssuedCredentialsHandler::handleRequest
       Runtime: java11
@@ -794,7 +814,9 @@ Resources:
   IPVJourneyEngineFunction:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "journey-engine-${Environment}"
       Handler: uk.gov.di.ipv.core.journeyengine.JourneyEngineHandler::handleRequest
       Runtime: java11
@@ -859,7 +881,9 @@ Resources:
   IPVValidateCriCheckFunction:
     Type: AWS::Serverless::Function
     Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "validate-cri-check-${Environment}"
       Handler: uk.gov.di.ipv.core.validatecricheck.ValidateCriCheckHandler::handleRequest
       Runtime: java11

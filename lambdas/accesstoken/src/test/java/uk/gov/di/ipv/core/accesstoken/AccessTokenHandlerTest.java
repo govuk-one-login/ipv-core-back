@@ -73,10 +73,12 @@ class AccessTokenHandlerTest {
                         mockConfigurationService,
                         mockTokenRequestValidator);
 
-        authorizationCodeItem = new AuthorizationCodeItem();
-        authorizationCodeItem.setRedirectUrl("https://callback.example.com");
-        authorizationCodeItem.setAuthCode(TEST_AUTHORIZATION_CODE);
-        authorizationCodeItem.setIpvSessionId("12345");
+        authorizationCodeItem =
+                new AuthorizationCodeItem(
+                        TEST_AUTHORIZATION_CODE,
+                        "12345",
+                        "https://callback.example.com",
+                        Instant.now().toString());
     }
 
     @Test
@@ -183,7 +185,32 @@ class AccessTokenHandlerTest {
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorResponse.getCode());
-        assertEquals(OAuth2Error.INVALID_GRANT.getDescription(), errorResponse.getDescription());
+        assertEquals(
+                "The supplied authorization code was not found in the database",
+                errorResponse.getDescription());
+    }
+
+    @Test
+    void shouldReturn400OWhenAuthorisationCodeHasExpired() throws Exception {
+        String tokenRequestBody =
+                "code=12345&redirect_uri=http://test.com&grant_type=authorization_code&client_id=test_client_id";
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        event.setBody(tokenRequestBody);
+
+        when(mockAccessTokenService.validateAuthorizationGrant(any()))
+                .thenReturn(ValidationResult.createValidResult());
+
+        when(mockAuthorizationCodeService.getAuthorizationCodeItem("12345"))
+                .thenReturn(Optional.of(authorizationCodeItem));
+        when(mockAuthorizationCodeService.isExpired(authorizationCodeItem)).thenReturn(true);
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+
+        ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorResponse.getCode());
+        assertEquals("Authorization code expired", errorResponse.getDescription());
     }
 
     @Test
@@ -211,7 +238,7 @@ class AccessTokenHandlerTest {
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
         assertEquals(HttpStatus.SC_UNAUTHORIZED, response.getStatusCode());
         assertEquals(OAuth2Error.INVALID_CLIENT.getCode(), errorResponse.getCode());
-        assertEquals(OAuth2Error.INVALID_CLIENT.getDescription(), errorResponse.getDescription());
+        assertEquals("error", errorResponse.getDescription());
     }
 
     @Test
@@ -233,7 +260,7 @@ class AccessTokenHandlerTest {
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
         assertEquals(HTTPResponse.SC_UNAUTHORIZED, response.getStatusCode());
         assertEquals(OAuth2Error.INVALID_CLIENT.getCode(), errorResponse.getCode());
-        assertEquals(OAuth2Error.INVALID_CLIENT.getDescription(), errorResponse.getDescription());
+        assertEquals("error", errorResponse.getDescription());
     }
 
     @Test
@@ -316,7 +343,9 @@ class AccessTokenHandlerTest {
 
         assertEquals(HTTPResponse.SC_BAD_REQUEST, response.getStatusCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorResponse.getCode());
-        assertEquals(OAuth2Error.INVALID_GRANT.getDescription(), errorResponse.getDescription());
+        assertEquals(
+                "Redirect URL in token request does not match redirect URL received in auth code request",
+                errorResponse.getDescription());
     }
 
     private ErrorObject createErrorObjectFromResponse(String responseBody) throws ParseException {

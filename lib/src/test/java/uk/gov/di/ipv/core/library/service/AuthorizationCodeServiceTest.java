@@ -15,8 +15,10 @@ import java.time.Instant;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -108,5 +110,31 @@ class AuthorizationCodeServiceTest {
         verify(mockDataStore).update(authorizationCodeItemArgumentCaptor.capture());
 
         assertNotNull(authorizationCodeItemArgumentCaptor.getValue().getExchangeDateTime());
+    }
+
+    @Test
+    void isExpiredReturnsTrueIfAuthCodeItemHasExpired() {
+        when(mockConfigurationService.getSsmParameter(any())).thenReturn("600");
+        AuthorizationCodeItem expiredAuthCodeItem =
+                new AuthorizationCodeItem(
+                        "auth-code",
+                        "ipv-session-id",
+                        "redirect-url",
+                        Instant.now().minusSeconds(601).toString());
+
+        assertTrue(authorizationCodeService.isExpired(expiredAuthCodeItem));
+    }
+
+    @Test
+    void isExpiredReturnsFalseIfAuthCodeItemHasNotExpired() {
+        when(mockConfigurationService.getSsmParameter(any())).thenReturn("600");
+        AuthorizationCodeItem expiredAuthCodeItem =
+                new AuthorizationCodeItem(
+                        "auth-code",
+                        "resource-id",
+                        "redirect-url",
+                        Instant.now().minusSeconds(599).toString());
+
+        assertFalse(authorizationCodeService.isExpired(expiredAuthCodeItem));
     }
 }
