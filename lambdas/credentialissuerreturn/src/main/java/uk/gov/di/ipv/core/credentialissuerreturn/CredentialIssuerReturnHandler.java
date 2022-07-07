@@ -14,7 +14,6 @@ import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
-import software.amazon.lambda.powertools.logging.LoggingUtils;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -40,7 +39,6 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 
 import java.text.ParseException;
-import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 
@@ -49,6 +47,8 @@ public class CredentialIssuerReturnHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String CRI_VALIDATE_ENDPOINT = "/journey/cri/validate/";
     private static final String JOURNEY_ERROR_ENDPOINT = "/journey/error";
+    public static final JourneyResponse ERROR_JOURNEY_RESPONSE =
+            new JourneyResponse(JOURNEY_ERROR_ENDPOINT);
     public static final String EVIDENCE = "evidence";
 
     private final CredentialIssuerService credentialIssuerService;
@@ -96,12 +96,8 @@ public class CredentialIssuerReturnHandler
             CredentialIssuerRequestDto request =
                     RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
 
-            var errorResponse = validate(request);
+            validate(request);
 
-            if (errorResponse.isPresent()) {
-                LOGGER.error("Validation failed: {}", errorResponse.get().getMessage());
-                return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
-            }
             CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request);
 
             String apiKey =
@@ -139,17 +135,20 @@ public class CredentialIssuerReturnHandler
                                     "%s%s", CRI_VALIDATE_ENDPOINT, credentialIssuerConfig.getId()));
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, journeyResponse);
         } catch (CredentialIssuerException e) {
-            JourneyResponse errorJourneyResponse = new JourneyResponse(JOURNEY_ERROR_ENDPOINT);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, errorJourneyResponse);
+                    HttpStatus.SC_OK, ERROR_JOURNEY_RESPONSE);
         } catch (ParseException | JsonProcessingException | SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
-            JourneyResponse errorJourneyResponse = new JourneyResponse(JOURNEY_ERROR_ENDPOINT);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, errorJourneyResponse);
+                    HttpStatus.SC_OK, ERROR_JOURNEY_RESPONSE);
         } catch (HttpResponseExceptionWithErrorBody e) {
+            ErrorResponse errorResponse = e.getErrorResponse();
+            LogHelper.logOauthError(
+                    "Error in credential issuer return lambda",
+                    errorResponse.getCode(),
+                    errorResponse.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getResponseCode(), e.getErrorBody());
+                    HttpStatus.SC_BAD_REQUEST, e.getErrorBody());
         }
     }
 
@@ -173,36 +172,39 @@ public class CredentialIssuerReturnHandler
     }
 
     @Tracing
-    private Optional<ErrorResponse> validate(CredentialIssuerRequestDto request) {
+    private void validate(CredentialIssuerRequestDto request)
+            throws HttpResponseExceptionWithErrorBody {
         if (StringUtils.isBlank(request.getAuthorizationCode())) {
-            return Optional.of(ErrorResponse.MISSING_AUTHORIZATION_CODE);
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_AUTHORIZATION_CODE);
         }
 
         if (StringUtils.isBlank(request.getCredentialIssuerId())) {
-            return Optional.of(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
         }
         LogHelper.attachCriIdToLogs(request.getCredentialIssuerId());
 
         if (StringUtils.isBlank(request.getIpvSessionId())) {
-            return Optional.of(ErrorResponse.MISSING_IPV_SESSION_ID);
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
         }
 
         if (StringUtils.isBlank(request.getState())) {
-            return Optional.of(ErrorResponse.MISSING_OAUTH_STATE);
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_OAUTH_STATE);
         }
 
         String persistedOauthState = getPersistedOauthState(request);
         if (!request.getState().equals(persistedOauthState)) {
-            LoggingUtils.appendKey("expected_state", persistedOauthState);
-            LoggingUtils.appendKey("request_state", request.getState());
-            LOGGER.error("state value in request does not match expected state");
-            return Optional.of(ErrorResponse.INVALID_OAUTH_STATE);
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_OAUTH_STATE);
         }
 
         if (getCredentialIssuerConfig(request) == null) {
-            return Optional.of(ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
         }
-        return Optional.empty();
     }
 
     @Tracing

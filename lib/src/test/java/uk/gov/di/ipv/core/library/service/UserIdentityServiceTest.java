@@ -299,10 +299,10 @@ class UserIdentityServiceTest {
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getCode(),
-                thrownError.getErrorBody().get("code"));
+                thrownError.getErrorBody().get("error"));
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
-                thrownError.getErrorBody().get("message"));
+                thrownError.getErrorBody().get("error_description"));
     }
 
     @Test
@@ -331,10 +331,10 @@ class UserIdentityServiceTest {
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getCode(),
-                thrownError.getErrorBody().get("code"));
+                thrownError.getErrorBody().get("error"));
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
-                thrownError.getErrorBody().get("message"));
+                thrownError.getErrorBody().get("error_description"));
     }
 
     @Test
@@ -406,10 +406,10 @@ class UserIdentityServiceTest {
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM.getCode(),
-                thrownError.getErrorBody().get("code"));
+                thrownError.getErrorBody().get("error"));
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM.getMessage(),
-                thrownError.getErrorBody().get("message"));
+                thrownError.getErrorBody().get("error_description"));
     }
 
     @Test
@@ -516,10 +516,10 @@ class UserIdentityServiceTest {
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM.getCode(),
-                thrownException.getErrorBody().get("code"));
+                thrownException.getErrorBody().get("error"));
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM.getMessage(),
-                thrownException.getErrorBody().get("message"));
+                thrownException.getErrorBody().get("error_description"));
     }
 
     @Test
@@ -547,10 +547,10 @@ class UserIdentityServiceTest {
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM.getCode(),
-                thrownException.getErrorBody().get("code"));
+                thrownException.getErrorBody().get("error"));
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM.getMessage(),
-                thrownException.getErrorBody().get("message"));
+                thrownException.getErrorBody().get("error_description"));
     }
 
     @Test

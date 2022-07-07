@@ -79,7 +79,9 @@ class ValidateCriCheckHandlerTest {
         var error = gson.fromJson(response.getBody(), Map.class);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID.getMessage(), error.get("message"));
+        assertEquals(
+                ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID.getMessage(),
+                error.get("error_description"));
     }
 
     @Test
@@ -92,7 +94,9 @@ class ValidateCriCheckHandlerTest {
         var error = gson.fromJson(response.getBody(), Map.class);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID.getMessage(), error.get("message"));
+        assertEquals(
+                ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID.getMessage(),
+                error.get("error_description"));
     }
 
     @Test
@@ -104,7 +108,8 @@ class ValidateCriCheckHandlerTest {
         var error = gson.fromJson(response.getBody(), Map.class);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), error.get("message"));
+        assertEquals(
+                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), error.get("error_description"));
     }
 
     @Test
@@ -117,6 +122,7 @@ class ValidateCriCheckHandlerTest {
         var error = gson.fromJson(response.getBody(), Map.class);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), error.get("message"));
+        assertEquals(
+                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), error.get("error_description"));
     }
 }

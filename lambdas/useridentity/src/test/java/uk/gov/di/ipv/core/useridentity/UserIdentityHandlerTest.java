@@ -182,10 +182,10 @@ class UserIdentityHandlerTest {
         assertEquals(500, response.getStatusCode());
         assertEquals(
                 String.valueOf(ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getCode()),
-                responseBody.get("code"));
+                responseBody.get("error"));
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
-                responseBody.get("message"));
+                responseBody.get("error_description"));
     }
 
     @Test

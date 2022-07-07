@@ -115,9 +115,10 @@ class JourneyEngineHandlerTest {
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), responseBody.get("code"));
+        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), responseBody.get("error"));
         assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), responseBody.get("message"));
+                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
+                responseBody.get("error_description"));
     }
 
     @Test

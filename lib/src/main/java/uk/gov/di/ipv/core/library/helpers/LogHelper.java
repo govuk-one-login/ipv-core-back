@@ -49,6 +49,10 @@ public class LogHelper {
         attachFieldToLogs(LogField.IPV_SESSION_ID_LOG_FIELD, sessionId);
     }
 
+    public static void logOauthError(String message, int errorCode, String errorDescription) {
+        logOauthError(message, Integer.toString(errorCode), errorDescription);
+    }
+
     public static void logOauthError(String message, String errorCode, String errorDescription) {
         LoggingUtils.appendKey(LogField.ERROR_CODE_LOG_FIELD.getFieldName(), errorCode);
         LoggingUtils.appendKey(
