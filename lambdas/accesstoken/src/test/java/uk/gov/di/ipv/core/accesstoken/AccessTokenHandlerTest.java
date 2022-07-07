@@ -187,7 +187,7 @@ class AccessTokenHandlerTest {
     }
 
     @Test
-    void shouldReturn400WhenInvalidJwtProvided() throws Exception {
+    void shouldReturn401WhenInvalidJwtProvided() throws Exception {
         authorizationCodeItem.setRedirectUrl("https://different.example.com");
 
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
@@ -209,13 +209,13 @@ class AccessTokenHandlerTest {
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorResponse.getCode());
-        assertEquals(OAuth2Error.INVALID_GRANT.getDescription(), errorResponse.getDescription());
+        assertEquals(HttpStatus.SC_UNAUTHORIZED, response.getStatusCode());
+        assertEquals(OAuth2Error.INVALID_CLIENT.getCode(), errorResponse.getCode());
+        assertEquals(OAuth2Error.INVALID_CLIENT.getDescription(), errorResponse.getDescription());
     }
 
     @Test
-    void shouldReturn400WhenJwtMissingFromRequestProvided() throws Exception {
+    void shouldReturn401WhenJwtMissingFromRequestProvided() throws Exception {
         String tokenRequestBody =
                 "code=12345&redirect_uri=http://test.com&grant_type=authorization_code&client_id=test_client_id";
 
@@ -231,9 +231,9 @@ class AccessTokenHandlerTest {
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
-        assertEquals(HTTPResponse.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorResponse.getCode());
-        assertEquals(OAuth2Error.INVALID_GRANT.getDescription(), errorResponse.getDescription());
+        assertEquals(HTTPResponse.SC_UNAUTHORIZED, response.getStatusCode());
+        assertEquals(OAuth2Error.INVALID_CLIENT.getCode(), errorResponse.getCode());
+        assertEquals(OAuth2Error.INVALID_CLIENT.getDescription(), errorResponse.getDescription());
     }
 
     @Test
