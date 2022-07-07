@@ -4,8 +4,7 @@ import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.validatecricheck.CriCheckValidationException;
 
 public class EvidenceValidator {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -17,27 +16,24 @@ public class EvidenceValidator {
         this.criEvidenceValidator = criEvidenceValidator;
     }
 
-    public boolean validate(JSONObject vcClaimJson) throws HttpResponseExceptionWithErrorBody {
+    public boolean validate(JSONObject vcClaimJson) throws CriCheckValidationException {
         JSONArray evidenceArray;
         try {
             evidenceArray = (JSONArray) vcClaimJson.get(EVIDENCE);
         } catch (ClassCastException e) {
             LOGGER.error("Unable to parse evidence JSON array: '{}'", e.getMessage());
-            throw new HttpResponseExceptionWithErrorBody(
-                    SERVER_ERROR, ErrorResponse.EVIDENCE_MISSING_FROM_VC);
+            throw new CriCheckValidationException(SERVER_ERROR);
         }
 
         if (evidenceArray == null) {
             LOGGER.error("Evidence property missing from VC Json");
-            throw new HttpResponseExceptionWithErrorBody(
-                    SERVER_ERROR, ErrorResponse.EVIDENCE_MISSING_FROM_VC);
+            throw new CriCheckValidationException(SERVER_ERROR);
         }
         if (evidenceArray.size() != 1) {
             LOGGER.error(
                     "Evidence array does not have exactly one element. Has: '{}'",
                     evidenceArray.size());
-            throw new HttpResponseExceptionWithErrorBody(
-                    SERVER_ERROR, ErrorResponse.WRONG_NUMBER_OF_ELEMENTS_IN_EVIDENCE);
+            throw new CriCheckValidationException(SERVER_ERROR);
         }
 
         return criEvidenceValidator.validate(evidenceArray);

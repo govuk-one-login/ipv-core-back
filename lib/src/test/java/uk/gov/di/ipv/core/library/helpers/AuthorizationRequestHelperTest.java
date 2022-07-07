@@ -154,7 +154,6 @@ class AuthorizationRequestHelperTest {
                                         OAUTH_STATE,
                                         TEST_USER_ID));
         assertEquals(500, exception.getResponseCode());
-        assertEquals("Failed to sign Shared Attributes", exception.getErrorReason());
     }
 
     @Test
@@ -174,7 +173,6 @@ class AuthorizationRequestHelperTest {
                                         OAUTH_STATE,
                                         TEST_USER_ID));
         assertEquals(500, exception.getResponseCode());
-        assertEquals("Failed to build Core Front Callback Url", exception.getErrorReason());
     }
 
     @Test
@@ -210,7 +208,6 @@ class AuthorizationRequestHelperTest {
                                 AuthorizationRequestHelper.createJweObject(
                                         mock(RSAEncrypter.class), SignedJWT.parse(SIGNED_JWT)));
         assertEquals(500, exception.getResponseCode());
-        assertEquals("Failed to encrypt JWT", exception.getErrorReason());
     }
 
     private void setupCredentialIssuerConfigMock() {

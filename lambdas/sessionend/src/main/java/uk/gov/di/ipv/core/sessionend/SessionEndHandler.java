@@ -16,7 +16,6 @@ import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -96,8 +95,8 @@ public class SessionEndHandler
                 var validationResult =
                         authRequestValidator.validateRequest(authParameters, input.getHeaders());
                 if (!validationResult.isValid()) {
-                    return ApiGatewayResponseGenerator.proxyJsonResponse(
-                            HttpStatus.SC_BAD_REQUEST, validationResult.getError());
+                    return ApiGatewayResponseGenerator.proxyEmptyResponse(
+                            HttpStatus.SC_BAD_REQUEST);
                 }
 
                 AuthorizationRequest authorizationRequest =
@@ -119,9 +118,7 @@ public class SessionEndHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, clientResponse);
         } catch (ParseException e) {
             LOGGER.error("Authentication request could not be parsed", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_BAD_REQUEST,
-                    ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS);
+            return ApiGatewayResponseGenerator.proxyEmptyResponse(HttpStatus.SC_BAD_REQUEST);
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
@@ -131,8 +128,7 @@ public class SessionEndHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } catch (HttpResponseExceptionWithErrorBody e) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getResponseCode(), e.getErrorBody());
+            return ApiGatewayResponseGenerator.proxyEmptyResponse(e.getResponseCode());
         }
     }
 

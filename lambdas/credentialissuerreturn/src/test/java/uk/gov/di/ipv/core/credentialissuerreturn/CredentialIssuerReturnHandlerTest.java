@@ -24,7 +24,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
@@ -171,7 +170,7 @@ class CredentialIssuerReturnHandlerTest {
                 createRequestEvent(
                         Map.of("credential_issuer_id", "foo"), Map.of("ipv-session-id", sessionId));
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
-        assert400Response(response, ErrorResponse.MISSING_AUTHORIZATION_CODE);
+        assert400Response(response);
     }
 
     @Test
@@ -181,7 +180,7 @@ class CredentialIssuerReturnHandlerTest {
                         Map.of("authorization_code", "foo"), Map.of("ipv-session-id", sessionId));
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
-        assert400Response(response, ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
+        assert400Response(response);
     }
 
     @Test
@@ -201,7 +200,7 @@ class CredentialIssuerReturnHandlerTest {
                                 OAUTH_STATE),
                         Map.of("ipv-session-id", sessionId));
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
-        assert400Response(response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
+        assert400Response(response);
     }
 
     @Test
@@ -215,7 +214,7 @@ class CredentialIssuerReturnHandlerTest {
                                 passportIssuerId),
                         Map.of());
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
-        assert400Response(response, ErrorResponse.MISSING_IPV_SESSION_ID);
+        assert400Response(response);
     }
 
     @Test
@@ -236,7 +235,7 @@ class CredentialIssuerReturnHandlerTest {
                                 auditService,
                                 verifiableCredentialJwtValidator)
                         .handleRequest(input, context);
-        assert400Response(response, ErrorResponse.MISSING_OAUTH_STATE);
+        assert400Response(response);
     }
 
     @Test
@@ -262,7 +261,7 @@ class CredentialIssuerReturnHandlerTest {
                                 auditService,
                                 verifiableCredentialJwtValidator)
                         .handleRequest(input, context);
-        assert400Response(response, ErrorResponse.INVALID_OAUTH_STATE);
+        assert400Response(response);
     }
 
     @Test
@@ -320,9 +319,7 @@ class CredentialIssuerReturnHandlerTest {
 
         when(credentialIssuerService.exchangeCodeForToken(
                         requestDto.capture(), eq(passportIssuer), eq(testApiKey)))
-                .thenThrow(
-                        new CredentialIssuerException(
-                                HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST));
+                .thenThrow(new CredentialIssuerException(HTTPResponse.SC_BAD_REQUEST));
 
         when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
                 .thenReturn(passportIssuer);
@@ -345,10 +342,7 @@ class CredentialIssuerReturnHandlerTest {
         when(credentialIssuerService.exchangeCodeForToken(any(), any(), anyString()))
                 .thenReturn(new BearerAccessToken());
         when(credentialIssuerService.getVerifiableCredential(any(), any(), anyString()))
-                .thenThrow(
-                        new CredentialIssuerException(
-                                HTTPResponse.SC_SERVER_ERROR,
-                                ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER));
+                .thenThrow(new CredentialIssuerException(HTTPResponse.SC_SERVER_ERROR));
 
         when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
                 .thenReturn(passportIssuer);
@@ -388,10 +382,7 @@ class CredentialIssuerReturnHandlerTest {
 
         mockServiceCallsAndSessionItem();
 
-        doThrow(
-                        new CredentialIssuerException(
-                                HTTPResponse.SC_SERVER_ERROR,
-                                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL))
+        doThrow(new CredentialIssuerException(HTTPResponse.SC_SERVER_ERROR))
                 .when(verifiableCredentialJwtValidator)
                 .validate(any(), any(), any());
 
@@ -568,13 +559,11 @@ class CredentialIssuerReturnHandlerTest {
         return input;
     }
 
-    private void assert400Response(
-            APIGatewayProxyResponseEvent response, ErrorResponse errorResponse)
+    private void assert400Response(APIGatewayProxyResponseEvent response)
             throws JsonProcessingException {
         Integer statusCode = response.getStatusCode();
         Map responseBody = getResponseBodyAsMap(response);
         assertEquals(HTTPResponse.SC_BAD_REQUEST, statusCode);
-        assertEquals(errorResponse.getCode(), responseBody.get("error"));
         verifyNoInteractions(credentialIssuerService);
     }
 }

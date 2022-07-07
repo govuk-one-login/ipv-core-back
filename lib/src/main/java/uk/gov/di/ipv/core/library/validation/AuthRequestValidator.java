@@ -3,14 +3,12 @@ package uk.gov.di.ipv.core.library.validation;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 public class AuthRequestValidator {
 
@@ -27,22 +25,20 @@ public class AuthRequestValidator {
         this.configurationService = configurationService;
     }
 
-    public ValidationResult<ErrorResponse> validateRequest(
+    public ValidationResult validateRequest(
             Map<String, List<String>> queryStringParameters, Map<String, String> requestHeaders) {
         if (queryStringParamsMissing(queryStringParameters)) {
             LOGGER.error("Missing required query parameters for authorisation request");
-            return new ValidationResult<>(false, ErrorResponse.MISSING_QUERY_PARAMETERS);
+            return new ValidationResult(false);
         }
 
         if (sessionIdMissing(requestHeaders)) {
             LOGGER.error("Missing IPV session ID from headers");
-            return new ValidationResult<>(false, ErrorResponse.MISSING_IPV_SESSION_ID);
+            return new ValidationResult(false);
         }
 
-        var errorResult = validateRedirectUrl(queryStringParameters);
-        return errorResult
-                .map(errorResponse -> new ValidationResult<>(false, errorResponse))
-                .orElseGet(ValidationResult::createValidResult);
+        var valid = validateRedirectUrl(queryStringParameters);
+        return valid ? ValidationResult.createValidResult() : new ValidationResult(false);
     }
 
     private boolean queryStringParamsMissing(Map<String, List<String>> queryStringParameters) {
@@ -54,8 +50,7 @@ public class AuthRequestValidator {
                 RequestHelper.getHeaderByKey(requestHeaders, IPV_SESSION_ID_HEADER_KEY));
     }
 
-    private Optional<ErrorResponse> validateRedirectUrl(
-            Map<String, List<String>> queryStringParameters) {
+    private boolean validateRedirectUrl(Map<String, List<String>> queryStringParameters) {
         try {
             String redirectUrl =
                     getOnlyValueOrThrow(
@@ -67,12 +62,12 @@ public class AuthRequestValidator {
 
             if (!clientRedirectUrls.contains(redirectUrl)) {
                 LOGGER.error("Invalid redirect URL for client_id {}: '{}'", clientId, redirectUrl);
-                return Optional.of(ErrorResponse.INVALID_REDIRECT_URL);
+                return false;
             }
-            return Optional.empty();
+            return true;
         } catch (IllegalArgumentException e) {
             LOGGER.error(e.getMessage());
-            return Optional.of(ErrorResponse.INVALID_REQUEST_PARAM);
+            return false;
         }
     }
 

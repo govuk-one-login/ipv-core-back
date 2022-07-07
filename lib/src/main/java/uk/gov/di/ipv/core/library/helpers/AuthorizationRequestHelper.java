@@ -18,7 +18,6 @@ import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import org.apache.http.client.utils.URIBuilder;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -93,8 +92,7 @@ public class AuthorizationRequestHelper {
         try {
             signedJWT.sign(signer);
         } catch (JOSEException e) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.FAILED_TO_SIGN_SHARED_ATTRIBUTES);
+            throw new HttpResponseExceptionWithErrorBody(500);
         }
 
         return signedJWT;
@@ -113,7 +111,7 @@ public class AuthorizationRequestHelper {
             jweObject.encrypt(rsaEncrypter);
             return jweObject;
         } catch (JOSEException e) {
-            throw new HttpResponseExceptionWithErrorBody(500, ErrorResponse.FAILED_TO_ENCRYPT_JWT);
+            throw new HttpResponseExceptionWithErrorBody(500);
         }
     }
 
@@ -124,8 +122,7 @@ public class AuthorizationRequestHelper {
                     new URIBuilder(coreFrontCallbackUrl).addParameter(PARAM_ID, criId);
             return uriBuilder.build();
         } catch (URISyntaxException e) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.FAILED_TO_BUILD_CORE_FRONT_CALLBACK_URL);
+            throw new HttpResponseExceptionWithErrorBody(500);
         }
     }
 }

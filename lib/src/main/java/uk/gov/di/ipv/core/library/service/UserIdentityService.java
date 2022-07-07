@@ -14,7 +14,6 @@ import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.DebugCredentialAttributes;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
@@ -214,8 +213,7 @@ public class UserIdentityService {
 
                     if (nameNode.isMissingNode()) {
                         LOGGER.error("Name property is missing from passport VC");
-                        throw new HttpResponseExceptionWithErrorBody(
-                                500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+                        throw new HttpResponseExceptionWithErrorBody(500);
                     }
 
                     JsonNode birthDateNode =
@@ -230,8 +228,7 @@ public class UserIdentityService {
 
                     if (birthDateNode.isMissingNode()) {
                         LOGGER.error("BirthDate property is missing from passport VC");
-                        throw new HttpResponseExceptionWithErrorBody(
-                                500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+                        throw new HttpResponseExceptionWithErrorBody(500);
                     }
 
                     List<Name> names =
@@ -250,13 +247,11 @@ public class UserIdentityService {
                     return new IdentityClaim(names, birthDates);
                 } catch (ParseException | JsonProcessingException e) {
                     LOGGER.error("Failed to parse VC JWT because: {}", e.getMessage());
-                    throw new HttpResponseExceptionWithErrorBody(
-                            500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+                    throw new HttpResponseExceptionWithErrorBody(500);
                 }
             }
         }
-        throw new HttpResponseExceptionWithErrorBody(
-                500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+        throw new HttpResponseExceptionWithErrorBody(500);
     }
 
     private JsonNode generateAddressClaim(List<UserIssuedCredentialsItem> credentialIssuerItems)
@@ -272,8 +267,7 @@ public class UserIdentityService {
                                 () -> {
                                     LOGGER.error("Failed to find Address CRI credential");
                                     return new HttpResponseExceptionWithErrorBody(
-                                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                                            ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
+                                            HttpStatus.SC_INTERNAL_SERVER_ERROR);
                                 });
 
         JsonNode addressNode;
@@ -289,14 +283,11 @@ public class UserIdentityService {
                             .path(ADDRESS_PROPERTY_NAME);
             if (addressNode.isMissingNode()) {
                 LOGGER.error("Address property is missing from address VC");
-                throw new HttpResponseExceptionWithErrorBody(
-                        500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
+                throw new HttpResponseExceptionWithErrorBody(500);
             }
         } catch (JsonProcessingException | ParseException e) {
             LOGGER.error("Error while parsing Address CRI credential: '{}'", e.getMessage());
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
+            throw new HttpResponseExceptionWithErrorBody(HttpStatus.SC_INTERNAL_SERVER_ERROR);
         }
 
         return addressNode;
@@ -315,8 +306,7 @@ public class UserIdentityService {
                                 () -> {
                                     LOGGER.error("Failed to find Passport CRI credential");
                                     return new HttpResponseExceptionWithErrorBody(
-                                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                                            ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
+                                            HttpStatus.SC_INTERNAL_SERVER_ERROR);
                                 });
 
         JsonNode passportNode;
@@ -332,14 +322,11 @@ public class UserIdentityService {
                             .path(PASSPORT_PROPERTY_NAME);
             if (passportNode.isMissingNode()) {
                 LOGGER.error("Passport property is missing from passport VC");
-                throw new HttpResponseExceptionWithErrorBody(
-                        500, ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
+                throw new HttpResponseExceptionWithErrorBody(500);
             }
         } catch (JsonProcessingException | ParseException e) {
             LOGGER.error("Error while parsing Passport CRI credential: '{}'", e.getMessage());
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
+            throw new HttpResponseExceptionWithErrorBody(HttpStatus.SC_INTERNAL_SERVER_ERROR);
         }
         return passportNode;
     }

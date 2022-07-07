@@ -21,7 +21,6 @@ import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ClientAuthClaims;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
@@ -130,15 +129,12 @@ public class CredentialIssuerService {
                         errorObject.getCode(),
                         errorObject.getDescription(),
                         errorObject.getHTTPStatusCode());
-                throw new CredentialIssuerException(
-                        HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST);
+                throw new CredentialIssuerException(HTTPResponse.SC_BAD_REQUEST);
             }
             return tokenResponse.toSuccessResponse().getTokens().getBearerAccessToken();
         } catch (IOException | ParseException | JOSEException | URISyntaxException e) {
             LOGGER.error("Error exchanging token: {}", e.getMessage(), e);
-            throw new CredentialIssuerException(
-                    HTTPResponse.SC_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE);
+            throw new CredentialIssuerException(HTTPResponse.SC_SERVER_ERROR);
         }
     }
 
@@ -163,18 +159,14 @@ public class CredentialIssuerService {
                         "Error retrieving credential: {} - {}",
                         response.getStatusCode(),
                         response.getStatusMessage());
-                throw new CredentialIssuerException(
-                        HTTPResponse.SC_SERVER_ERROR,
-                        ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
+                throw new CredentialIssuerException(HTTPResponse.SC_SERVER_ERROR);
             }
 
             return (SignedJWT) response.getContentAsJWT();
 
         } catch (IOException | ParseException e) {
             LOGGER.error("Error retrieving credential: {}", e.getMessage());
-            throw new CredentialIssuerException(
-                    HTTPResponse.SC_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
+            throw new CredentialIssuerException(HTTPResponse.SC_SERVER_ERROR);
         }
     }
 
@@ -188,8 +180,7 @@ public class CredentialIssuerService {
             dataStore.create(userIssuedCredentials);
         } catch (UnsupportedOperationException e) {
             LOGGER.error("Error persisting user credential: {}", e.getMessage(), e);
-            throw new CredentialIssuerException(
-                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
+            throw new CredentialIssuerException(HTTPResponse.SC_SERVER_ERROR);
         }
     }
 

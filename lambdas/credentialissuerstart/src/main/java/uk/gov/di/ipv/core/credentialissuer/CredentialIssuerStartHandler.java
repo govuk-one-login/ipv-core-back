@@ -20,9 +20,9 @@ import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.credentialissuer.domain.CriDetails;
 import uk.gov.di.ipv.core.credentialissuer.domain.CriResponse;
+import uk.gov.di.ipv.core.credentialissuer.exception.JarException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
@@ -46,7 +46,6 @@ import java.text.ParseException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -102,16 +101,15 @@ public class CredentialIssuerStartHandler
             Map<String, String> pathParameters = input.getPathParameters();
 
             var errorResponse = validate(pathParameters);
-            if (errorResponse.isPresent()) {
-                return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
+            if (!validate(pathParameters)) {
+                return ApiGatewayResponseGenerator.proxyEmptyResponse(400);
             }
 
             CredentialIssuerConfig credentialIssuerConfig =
                     getCredentialIssuerConfig(pathParameters.get(CRI_ID));
 
             if (credentialIssuerConfig == null) {
-                return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        400, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
+                return ApiGatewayResponseGenerator.proxyEmptyResponse(400);
             }
 
             String oauthState = SecureTokenHelper.generate();
@@ -126,11 +124,9 @@ public class CredentialIssuerStartHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(OK, criResponse);
 
         } catch (HttpResponseExceptionWithErrorBody e) {
-            if (ErrorResponse.MISSING_IPV_SESSION_ID.equals(e.getErrorResponse())) {
-                return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        e.getResponseCode(), e.getErrorBody());
-            }
-            LOGGER.error("Failed to create cri JAR because: {}", e.getMessage());
+            return ApiGatewayResponseGenerator.proxyEmptyResponse(e.getResponseCode());
+
+        } catch (JarException e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, ERROR_JOURNEY);
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
@@ -153,32 +149,36 @@ public class CredentialIssuerStartHandler
 
     private JWEObject signEncryptJar(
             CredentialIssuerConfig credentialIssuerConfig, String ipvSessionId, String oauthState)
-            throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException {
-        SharedClaimsResponse sharedClaimsResponse = getSharedAttributes(ipvSessionId);
-        SignedJWT signedJWT =
-                AuthorizationRequestHelper.createSignedJWT(
-                        sharedClaimsResponse,
-                        signer,
-                        credentialIssuerConfig,
-                        configurationService,
-                        oauthState,
-                        ipvSessionService
-                                .getIpvSession(ipvSessionId)
-                                .getClientSessionDetails()
-                                .getUserId());
+            throws ParseException, JOSEException, JarException {
+        try {
+            SharedClaimsResponse sharedClaimsResponse = getSharedAttributes(ipvSessionId);
+            SignedJWT signedJWT =
+                    AuthorizationRequestHelper.createSignedJWT(
+                            sharedClaimsResponse,
+                            signer,
+                            credentialIssuerConfig,
+                            configurationService,
+                            oauthState,
+                            ipvSessionService
+                                    .getIpvSession(ipvSessionId)
+                                    .getClientSessionDetails()
+                                    .getUserId());
 
-        RSAEncrypter rsaEncrypter =
-                new RSAEncrypter(credentialIssuerConfig.getJarEncryptionPublicJwk());
-        return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
+            RSAEncrypter rsaEncrypter =
+                    new RSAEncrypter(credentialIssuerConfig.getJarEncryptionPublicJwk());
+            return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            throw new JarException(e.getResponseCode());
+        }
     }
 
     @Tracing
-    private Optional<ErrorResponse> validate(Map<String, String> pathParameters) {
+    private boolean validate(Map<String, String> pathParameters) {
         if (pathParameters == null || StringUtils.isBlank(pathParameters.get(CRI_ID))) {
-            return Optional.of(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
+            return false;
         }
         LogHelper.attachCriIdToLogs(pathParameters.get(CRI_ID));
-        return Optional.empty();
+        return true;
     }
 
     @Tracing
@@ -200,19 +200,16 @@ public class CredentialIssuerStartHandler
                                 .path(VC_CREDENTIAL_SUBJECT);
                 if (credentialSubject.isMissingNode()) {
                     LOGGER.error("Credential subject missing from verified credential");
-                    throw new HttpResponseExceptionWithErrorBody(
-                            500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
+                    throw new HttpResponseExceptionWithErrorBody(500);
                 }
                 sharedAttributes.add(
                         mapper.readValue(credentialSubject.toString(), SharedClaims.class));
             } catch (JsonProcessingException e) {
                 LOGGER.error("Failed to get Shared Attributes: {}", e.getMessage());
-                throw new HttpResponseExceptionWithErrorBody(
-                        500, ErrorResponse.FAILED_TO_GET_SHARED_ATTRIBUTES);
+                throw new HttpResponseExceptionWithErrorBody(500);
             } catch (ParseException e) {
                 LOGGER.error("Failed to parse issued credentials: {}", e.getMessage());
-                throw new HttpResponseExceptionWithErrorBody(
-                        500, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+                throw new HttpResponseExceptionWithErrorBody(500);
             }
         }
         return SharedClaimsResponse.from(sharedAttributes);

@@ -45,8 +45,7 @@ public class IssuedCredentialsHandler
                     userIdentityService.getUserIssuedDebugCredentials(
                             RequestHelper.getIpvSessionId(input)));
         } catch (HttpResponseExceptionWithErrorBody e) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getResponseCode(), e.getErrorBody());
+            return ApiGatewayResponseGenerator.proxyEmptyResponse(e.getResponseCode());
         }
     }
 }

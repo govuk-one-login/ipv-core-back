@@ -17,7 +17,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
@@ -170,9 +169,7 @@ class UserIdentityHandlerTest {
 
         when(mockAccessTokenService.getAccessToken(TEST_ACCESS_TOKEN)).thenReturn(accessTokenItem);
         when(mockUserIdentityService.generateUserIdentity(any(), any()))
-                .thenThrow(
-                        new HttpResponseExceptionWithErrorBody(
-                                500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM));
+                .thenThrow(new HttpResponseExceptionWithErrorBody(500));
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
@@ -180,12 +177,6 @@ class UserIdentityHandlerTest {
         responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(500, response.getStatusCode());
-        assertEquals(
-                String.valueOf(ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getCode()),
-                responseBody.get("error"));
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
-                responseBody.get("error_description"));
     }
 
     @Test

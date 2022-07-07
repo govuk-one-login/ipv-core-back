@@ -13,7 +13,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.journeyengine.domain.PageResponse;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.UserStates;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -72,12 +71,6 @@ class JourneyEngineHandlerTest {
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
         assertEquals(400, response.getStatusCode());
-        assertEquals(
-                ErrorResponse.MISSING_JOURNEY_STEP_URL_PATH_PARAM.getCode(),
-                responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.MISSING_JOURNEY_STEP_URL_PATH_PARAM.getMessage(),
-                responseBody.get("message"));
     }
 
     @Test
@@ -93,12 +86,6 @@ class JourneyEngineHandlerTest {
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
         assertEquals(400, response.getStatusCode());
-        assertEquals(
-                ErrorResponse.MISSING_JOURNEY_STEP_URL_PATH_PARAM.getCode(),
-                responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.MISSING_JOURNEY_STEP_URL_PATH_PARAM.getMessage(),
-                responseBody.get("message"));
     }
 
     @Test
@@ -115,10 +102,6 @@ class JourneyEngineHandlerTest {
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), responseBody.get("error"));
-        assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
-                responseBody.get("error_description"));
     }
 
     @Test
@@ -139,8 +122,6 @@ class JourneyEngineHandlerTest {
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.INVALID_SESSION_ID.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.INVALID_SESSION_ID.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -166,9 +147,6 @@ class JourneyEngineHandlerTest {
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(500, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -195,9 +173,6 @@ class JourneyEngineHandlerTest {
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(500, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), responseBody.get("message"));
     }
 
     @Test

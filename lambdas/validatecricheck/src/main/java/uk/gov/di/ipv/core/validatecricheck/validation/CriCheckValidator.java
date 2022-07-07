@@ -4,9 +4,8 @@ import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
+import uk.gov.di.ipv.core.validatecricheck.CriCheckValidationException;
 
 import java.text.ParseException;
 import java.util.List;
@@ -34,7 +33,7 @@ public class CriCheckValidator {
     public static final int SERVER_ERROR = 500;
 
     public boolean isSuccess(UserIssuedCredentialsItem userIssuedCredentialsItem)
-            throws HttpResponseExceptionWithErrorBody {
+            throws CriCheckValidationException {
         JSONObject vcClaimJson;
         try {
             vcClaimJson =
@@ -44,8 +43,7 @@ public class CriCheckValidator {
                                     .getClaim(VC_CLAIM);
         } catch (ParseException e) {
             LOGGER.error("Failed to parse user issued credential: {}", e.getMessage());
-            throw new HttpResponseExceptionWithErrorBody(
-                    SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+            throw new CriCheckValidationException(SERVER_ERROR);
         }
 
         String credentialIssuerId = userIssuedCredentialsItem.getCredentialIssuer();
@@ -60,8 +58,7 @@ public class CriCheckValidator {
             return true;
         } else {
             LOGGER.error("Credential issuer ID not recognised: '{}'", credentialIssuerId);
-            throw new HttpResponseExceptionWithErrorBody(
-                    SERVER_ERROR, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
+            throw new CriCheckValidationException(SERVER_ERROR);
         }
     }
 }

@@ -1,12 +1,12 @@
-package uk.gov.di.ipv.core.library.exceptions;
+package uk.gov.di.ipv.core.credentialissuer.exception;
 
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 @ExcludeFromGeneratedCoverageReport
-public class HttpResponseExceptionWithErrorBody extends Exception {
+public class JarException extends Exception {
     private final int responseCode;
 
-    public HttpResponseExceptionWithErrorBody(int responseCode) {
+    public JarException(int responseCode) {
         this.responseCode = responseCode;
     }
 

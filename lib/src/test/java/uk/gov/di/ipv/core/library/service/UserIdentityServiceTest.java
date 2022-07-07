@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
@@ -297,12 +296,6 @@ class UserIdentityServiceTest {
                                         "ipv-session-id-1", "test-sub"));
 
         assertEquals(500, thrownError.getResponseCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getCode(),
-                thrownError.getErrorBody().get("error"));
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
-                thrownError.getErrorBody().get("error_description"));
     }
 
     @Test
@@ -329,12 +322,6 @@ class UserIdentityServiceTest {
                                         "ipv-session-id-1", "test-sub"));
 
         assertEquals(500, thrownError.getResponseCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getCode(),
-                thrownError.getErrorBody().get("error"));
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
-                thrownError.getErrorBody().get("error_description"));
     }
 
     @Test
@@ -404,12 +391,6 @@ class UserIdentityServiceTest {
                                         "ipv-session-id-1", "test-sub"));
 
         assertEquals(500, thrownError.getResponseCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM.getCode(),
-                thrownError.getErrorBody().get("error"));
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM.getMessage(),
-                thrownError.getErrorBody().get("error_description"));
     }
 
     @Test
@@ -514,12 +495,6 @@ class UserIdentityServiceTest {
                                         "ipv-session-id-1", "test-sub"));
 
         assertEquals(500, thrownException.getResponseCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM.getCode(),
-                thrownException.getErrorBody().get("error"));
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM.getMessage(),
-                thrownException.getErrorBody().get("error_description"));
     }
 
     @Test
@@ -545,12 +520,6 @@ class UserIdentityServiceTest {
                                         "ipv-session-id-1", "test-sub"));
 
         assertEquals(500, thrownException.getResponseCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM.getCode(),
-                thrownException.getErrorBody().get("error"));
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM.getMessage(),
-                thrownException.getErrorBody().get("error_description"));
     }
 
     @Test

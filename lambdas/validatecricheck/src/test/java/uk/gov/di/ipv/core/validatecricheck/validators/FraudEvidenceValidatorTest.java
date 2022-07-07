@@ -7,7 +7,6 @@ import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.Test;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 import uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator;
 
@@ -30,7 +29,7 @@ class FraudEvidenceValidatorTest {
     private final CriCheckValidator criCheckValidator = new CriCheckValidator();
 
     @Test
-    void returnsTrueForSuccessfulFraudCheck() throws HttpResponseExceptionWithErrorBody {
+    void returnsTrueForSuccessfulFraudCheck() throws Exception {
         UserIssuedCredentialsItem userIssuedCredentialsItem = new UserIssuedCredentialsItem();
         userIssuedCredentialsItem.setCredential(SIGNED_FRAUD_VC_PASSED);
         userIssuedCredentialsItem.setCredentialIssuer(CRI_ID_FRAUD);
@@ -39,7 +38,7 @@ class FraudEvidenceValidatorTest {
     }
 
     @Test
-    void returnsFalseForFraudCheckWithContraIndicator() throws HttpResponseExceptionWithErrorBody {
+    void returnsFalseForFraudCheckWithContraIndicator() throws Exception {
         UserIssuedCredentialsItem userIssuedCredentialsItem = new UserIssuedCredentialsItem();
         userIssuedCredentialsItem.setCredential(SIGNED_FRAUD_VC_WITH_CI);
         userIssuedCredentialsItem.setCredentialIssuer(CRI_ID_FRAUD);
@@ -48,8 +47,7 @@ class FraudEvidenceValidatorTest {
     }
 
     @Test
-    void returnsFalseForFraudCheckWithTooLowScore()
-            throws Exception, HttpResponseExceptionWithErrorBody {
+    void returnsFalseForFraudCheckWithTooLowScore() throws Exception {
         JSONObject evidenceJsonWithLowIdentityFraudScore =
                 new JSONObject(
                         Map.of(
@@ -72,8 +70,7 @@ class FraudEvidenceValidatorTest {
     }
 
     @Test
-    void returnsTrueForSuccessfulFraudCheckWithEmptyListOfContraIndicators()
-            throws Exception, HttpResponseExceptionWithErrorBody {
+    void returnsTrueForSuccessfulFraudCheckWithEmptyListOfContraIndicators() throws Exception {
         JSONObject evidenceJsonWithEmptyCiList =
                 new JSONObject(
                         Map.of(

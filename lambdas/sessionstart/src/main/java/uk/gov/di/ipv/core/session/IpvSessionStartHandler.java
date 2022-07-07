@@ -18,7 +18,6 @@ import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.JarValidationException;
 import uk.gov.di.ipv.core.library.exceptions.RecoverableJarValidationException;
@@ -33,7 +32,6 @@ import uk.gov.di.ipv.core.library.validation.JarValidator;
 
 import java.text.ParseException;
 import java.util.Map;
-import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
 
@@ -86,13 +84,9 @@ public class IpvSessionStartHandler
         try {
             Map<String, String> sessionParams =
                     objectMapper.readValue(input.getBody(), new TypeReference<>() {});
-            Optional<ErrorResponse> error = validateSessionParams(sessionParams);
-            if (error.isPresent()) {
-                LOGGER.error(
-                        "Validation of the client session params failed because: {}",
-                        error.get().getMessage());
-                return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        HttpStatus.SC_BAD_REQUEST, error.get());
+            if (!validateSessionParams(sessionParams)) {
+                LOGGER.error("Validation of the client session params failed");
+                return ApiGatewayResponseGenerator.proxyEmptyResponse(HttpStatus.SC_BAD_REQUEST);
             }
 
             SignedJWT signedJWT =
@@ -133,42 +127,36 @@ public class IpvSessionStartHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
         } catch (ParseException e) {
             LOGGER.error("Failed to parse the decrypted JWE because: {}", e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
+            return ApiGatewayResponseGenerator.proxyEmptyResponse(HttpStatus.SC_BAD_REQUEST);
         } catch (JarValidationException e) {
             LOGGER.error("Jar validation failed because: {}", e.getErrorObject().getDescription());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
+            return ApiGatewayResponseGenerator.proxyEmptyResponse(HttpStatus.SC_BAD_REQUEST);
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } catch (JsonProcessingException | IllegalArgumentException e) {
             LOGGER.error("Failed to parse request body into map because: {}", e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
+            return ApiGatewayResponseGenerator.proxyEmptyResponse(HttpStatus.SC_BAD_REQUEST);
         }
     }
 
     @Tracing
-    private Optional<ErrorResponse> validateSessionParams(Map<String, String> sessionParams) {
-        boolean isInvalid = false;
+    private boolean validateSessionParams(Map<String, String> sessionParams) {
+        boolean valid = true;
 
         if (StringUtils.isBlank(sessionParams.get(CLIENT_ID_PARAM_KEY))) {
             LOGGER.warn("Missing client_id query parameter");
-            isInvalid = true;
+            valid = false;
         }
         LogHelper.attachClientIdToLogs(sessionParams.get(CLIENT_ID_PARAM_KEY));
 
         if (StringUtils.isBlank(sessionParams.get(REQUEST_PARAM_KEY))) {
             LOGGER.warn("Missing request query parameter");
-            isInvalid = true;
+            valid = false;
         }
 
-        if (isInvalid) {
-            return Optional.of(ErrorResponse.INVALID_SESSION_REQUEST);
-        }
-        return Optional.empty();
+        return valid;
     }
 
     @Tracing

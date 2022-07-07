@@ -21,7 +21,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.Address;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -130,22 +129,21 @@ class CredentialIssuerStartHandlerTest {
     }
 
     @Test
-    void shouldReceive400ResponseCodeIfCredentialIssuerNotPresent() throws JsonProcessingException {
+    void shouldReceive400ResponseCodeIfCredentialIssuerNotPresent() {
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
-        assert400Response(response, ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
+        assert400Response(response);
     }
 
     @Test
-    void shouldReceive400ResponseCodeIfCredentialIssuerNotInPermittedSet()
-            throws JsonProcessingException {
+    void shouldReceive400ResponseCodeIfCredentialIssuerNotInPermittedSet() {
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
         input.setPathParameters(Map.of("criId", "Missing CriId"));
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
-        assert400Response(response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
+        assert400Response(response);
     }
 
     @Test
@@ -185,15 +183,13 @@ class CredentialIssuerStartHandlerTest {
     }
 
     @Test
-    void shouldReturn400IfSessionIdIsNotInTheHeader() throws JsonProcessingException {
+    void shouldReturn400IfSessionIdIsNotInTheHeader() {
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         input.setPathParameters(Map.of("criId", CRI_ID));
         input.setHeaders(Map.of("not-ipv-session-header", "dummy-value"));
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
         assertEquals(400, response.getStatusCode());
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
-        assertEquals("Missing ipv session id header", responseBody.get("error_description"));
     }
 
     private void assertSharedClaimsJWTIsValid(String request)
@@ -316,13 +312,8 @@ class CredentialIssuerStartHandlerTest {
         return input;
     }
 
-    private void assert400Response(
-            APIGatewayProxyResponseEvent response, ErrorResponse errorResponse)
-            throws JsonProcessingException {
-        Integer statusCode = response.getStatusCode();
-        Map responseBody = getResponseBodyAsMap(response);
-        assertEquals(HTTPResponse.SC_BAD_REQUEST, statusCode);
-        assertEquals(errorResponse.getCode(), responseBody.get("code"));
+    private void assert400Response(APIGatewayProxyResponseEvent response) {
+        assertEquals(HTTPResponse.SC_BAD_REQUEST, response.getStatusCode());
     }
 
     private ECPrivateKey getSigningPrivateKey()

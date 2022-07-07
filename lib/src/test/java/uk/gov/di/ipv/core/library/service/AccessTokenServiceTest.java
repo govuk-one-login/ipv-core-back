@@ -3,8 +3,6 @@ package uk.gov.di.ipv.core.library.service;
 import com.nimbusds.oauth2.sdk.AccessTokenResponse;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationCodeGrant;
-import com.nimbusds.oauth2.sdk.ErrorObject;
-import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.RefreshTokenGrant;
 import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
@@ -65,25 +63,23 @@ class AccessTokenServiceTest {
 
     @Test
     void shouldReturnValidationErrorWhenInvalidGrantTypeProvided() {
-        ValidationResult<ErrorObject> validationResult =
+        ValidationResult validationResult =
                 accessTokenService.validateAuthorizationGrant(
                         new RefreshTokenGrant(new RefreshToken()));
 
         assertNotNull(validationResult);
         assertFalse(validationResult.isValid());
-        assertEquals(OAuth2Error.UNSUPPORTED_GRANT_TYPE, validationResult.getError());
     }
 
     @Test
     void shouldNotReturnValidationErrorWhenAValidAuthGrantIsProvided() {
-        ValidationResult<ErrorObject> validationResult =
+        ValidationResult validationResult =
                 accessTokenService.validateAuthorizationGrant(
                         new AuthorizationCodeGrant(
                                 new AuthorizationCode(), URI.create("https://test.com")));
 
         assertNotNull(validationResult);
         assertTrue(validationResult.isValid());
-        assertNull(validationResult.getError());
     }
 
     @Test

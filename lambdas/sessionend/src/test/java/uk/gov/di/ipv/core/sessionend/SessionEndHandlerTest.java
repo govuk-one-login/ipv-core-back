@@ -16,7 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -136,7 +135,7 @@ class SessionEndHandlerTest {
     @Test
     void shouldReturn400IfRequestFailsValidation() throws JsonProcessingException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
-                .thenReturn(new ValidationResult<>(false, ErrorResponse.MISSING_QUERY_PARAMETERS));
+                .thenReturn(new ValidationResult(false));
         when(mockSessionService.getIpvSession(anyString())).thenReturn(generateIpvSessionItem());
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
@@ -147,21 +146,12 @@ class SessionEndHandlerTest {
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-
-        Map<String, Object> responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getCode(), responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), responseBody.get("message"));
-
         verify(mockAuthorizationCodeService, never())
                 .persistAuthorizationCode(anyString(), anyString(), anyString());
     }
 
     @Test
-    void shouldReturn400IfCanNotParseAuthRequestFromQueryStringParams()
-            throws JsonProcessingException {
+    void shouldReturn400IfCanNotParseAuthRequestFromQueryStringParams() {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSession(anyString())).thenReturn(generateIpvSessionItem());
@@ -187,15 +177,7 @@ class SessionEndHandlerTest {
 
             APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
-            Map<String, Object> responseBody =
-                    objectMapper.readValue(response.getBody(), new TypeReference<>() {});
             assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-            assertEquals(
-                    ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(),
-                    responseBody.get("code"));
-            assertEquals(
-                    ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
-                    responseBody.get("message"));
             verify(mockAuthorizationCodeService, never())
                     .persistAuthorizationCode(anyString(), anyString(), anyString());
         }

@@ -16,7 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 
 import java.security.KeyFactory;
@@ -94,9 +93,6 @@ class VerifiableCredentialJwtValidatorTest {
                         CredentialIssuerException.class,
                         () -> validator.validate(signedJWT, credentialIssuerConfig, SUBJECT));
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
-                exception.getErrorResponse());
     }
 
     @Test
@@ -113,7 +109,6 @@ class VerifiableCredentialJwtValidatorTest {
                         CredentialIssuerException.class,
                         () -> validator.validate(signedJWT, credentialIssuerConfig, SUBJECT));
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_JWK, exception.getErrorResponse());
     }
 
     @Test
@@ -131,9 +126,6 @@ class VerifiableCredentialJwtValidatorTest {
                         CredentialIssuerException.class,
                         () -> validator.validate(signedJWT, credentialIssuerConfig, SUBJECT));
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
-                exception.getErrorResponse());
     }
 
     @Test
@@ -155,9 +147,6 @@ class VerifiableCredentialJwtValidatorTest {
                                         credentialIssuerConfig,
                                         "THIS IS THE WRONG SUBJECT"));
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
-                exception.getErrorResponse());
     }
 
     @Test
@@ -188,9 +177,6 @@ class VerifiableCredentialJwtValidatorTest {
                         CredentialIssuerException.class,
                         () -> validator.validate(signedJWT, credentialIssuerConfig, SUBJECT));
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
-                exception.getErrorResponse());
     }
 
     @Test
@@ -221,9 +207,6 @@ class VerifiableCredentialJwtValidatorTest {
                         CredentialIssuerException.class,
                         () -> validator.validate(signedJWT, credentialIssuerConfig, SUBJECT));
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
-                exception.getErrorResponse());
     }
 
     @Test
@@ -253,9 +236,6 @@ class VerifiableCredentialJwtValidatorTest {
                         CredentialIssuerException.class,
                         () -> validator.validate(signedJWT, credentialIssuerConfig, SUBJECT));
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
-                exception.getErrorResponse());
     }
 
     private ECDSASigner getSigner() throws Exception {

@@ -121,10 +121,8 @@ public class UserIdentityHandler
                     OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),
                     OAuth2Error.SERVER_ERROR.toJSONObject());
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LOGGER.error(
-                    "Failed to generate the user identity output because: {}", e.getErrorReason());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getResponseCode(), e.getErrorBody());
+            LOGGER.error("Failed to generate the user identity output");
+            return ApiGatewayResponseGenerator.proxyEmptyResponse(e.getResponseCode());
         }
     }
 

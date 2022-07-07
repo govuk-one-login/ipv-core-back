@@ -2,9 +2,7 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.nimbusds.oauth2.sdk.AccessTokenResponse;
 import com.nimbusds.oauth2.sdk.AuthorizationGrant;
-import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.GrantType;
-import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
@@ -53,9 +51,9 @@ public class AccessTokenService {
         return new AccessTokenResponse(new Tokens(accessToken, null));
     }
 
-    public ValidationResult<ErrorObject> validateAuthorizationGrant(AuthorizationGrant authGrant) {
+    public ValidationResult validateAuthorizationGrant(AuthorizationGrant authGrant) {
         if (!authGrant.getType().equals(GrantType.AUTHORIZATION_CODE)) {
-            return new ValidationResult<>(false, OAuth2Error.UNSUPPORTED_GRANT_TYPE);
+            return new ValidationResult(false);
         }
         return ValidationResult.createValidResult();
     }

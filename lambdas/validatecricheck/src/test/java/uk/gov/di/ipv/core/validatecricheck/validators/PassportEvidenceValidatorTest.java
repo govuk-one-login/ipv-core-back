@@ -7,7 +7,6 @@ import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.Test;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 import uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator;
 
@@ -30,7 +29,7 @@ class PassportEvidenceValidatorTest {
     private final CriCheckValidator criCheckValidator = new CriCheckValidator();
 
     @Test
-    void returnsTrueForSuccessfulPassportCheck() throws HttpResponseExceptionWithErrorBody {
+    void returnsTrueForSuccessfulPassportCheck() throws Exception {
         UserIssuedCredentialsItem userIssuedCredentialsItem = new UserIssuedCredentialsItem();
         userIssuedCredentialsItem.setCredential(SIGNED_VC_5);
         userIssuedCredentialsItem.setCredentialIssuer(CRI_ID_UK_PASSPORT);
@@ -39,8 +38,7 @@ class PassportEvidenceValidatorTest {
     }
 
     @Test
-    void returnsFalseForPassportWithLowScore()
-            throws Exception, HttpResponseExceptionWithErrorBody {
+    void returnsFalseForPassportWithLowScore() throws Exception {
         JSONObject evidenceJsonWithLowScore =
                 new JSONObject(
                         Map.of(
@@ -63,8 +61,7 @@ class PassportEvidenceValidatorTest {
     }
 
     @Test
-    void returnsFalseForPassportWithLowValidity()
-            throws Exception, HttpResponseExceptionWithErrorBody {
+    void returnsFalseForPassportWithLowValidity() throws Exception {
         JSONObject evidenceJsonWithLowValidity =
                 new JSONObject(
                         Map.of(
@@ -87,8 +84,7 @@ class PassportEvidenceValidatorTest {
     }
 
     @Test
-    void returnsTrueForSuccessfulPassportCheckWithEmptyListOfContraIndicators()
-            throws Exception, HttpResponseExceptionWithErrorBody {
+    void returnsTrueForSuccessfulPassportCheckWithEmptyListOfContraIndicators() throws Exception {
         JSONObject evidenceJsonWithEmptyCiList =
                 new JSONObject(
                         Map.of(
@@ -113,8 +109,7 @@ class PassportEvidenceValidatorTest {
     }
 
     @Test
-    void returnsFalseForPassportCheckWithContraIndicators()
-            throws Exception, HttpResponseExceptionWithErrorBody {
+    void returnsFalseForPassportCheckWithContraIndicators() throws Exception {
         JSONObject evidenceJsonWithAContraIndicator =
                 new JSONObject(
                         Map.of(

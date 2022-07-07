@@ -8,7 +8,6 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.nio.charset.Charset;
@@ -85,8 +84,7 @@ public class RequestHelper {
                 RequestHelper.getHeaderByKey(event.getHeaders(), IPV_SESSION_ID_HEADER);
         if (ipvSessionId == null) {
             LOGGER.error("{} not present in header", IPV_SESSION_ID_HEADER);
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
+            throw new HttpResponseExceptionWithErrorBody(HttpStatus.SC_BAD_REQUEST);
         }
         LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
         return ipvSessionId;

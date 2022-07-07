@@ -7,8 +7,8 @@ import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.Test;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
+import uk.gov.di.ipv.core.validatecricheck.CriCheckValidationException;
 import uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator;
 
 import java.util.List;
@@ -18,8 +18,6 @@ import static com.nimbusds.jose.JWSAlgorithm.ES256;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_5;
@@ -55,13 +53,12 @@ class CriCheckValidatorTest {
         userIssuedCredentialsItem.setCredential(
                 userIssuedCredentialsItem.getCredential().replaceAll("\\.", "?"));
 
-        HttpResponseExceptionWithErrorBody error =
+        CriCheckValidationException error =
                 assertThrows(
-                        HttpResponseExceptionWithErrorBody.class,
+                        CriCheckValidationException.class,
                         () -> criCheckValidator.isSuccess(userIssuedCredentialsItem));
 
         assertEquals(SERVER_ERROR, error.getResponseCode());
-        assertEquals(FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(), error.getErrorReason());
     }
 
     @Test
@@ -70,17 +67,16 @@ class CriCheckValidatorTest {
         userIssuedCredentialsItem.setCredential(SIGNED_VC_5);
         userIssuedCredentialsItem.setCredentialIssuer("Who's this?");
 
-        HttpResponseExceptionWithErrorBody error =
+        CriCheckValidationException error =
                 assertThrows(
-                        HttpResponseExceptionWithErrorBody.class,
+                        CriCheckValidationException.class,
                         () -> criCheckValidator.isSuccess(userIssuedCredentialsItem));
 
         assertEquals(SERVER_ERROR, error.getResponseCode());
-        assertEquals(INVALID_CREDENTIAL_ISSUER_ID.getMessage(), error.getErrorReason());
     }
 
     @Test
-    void isSuccessReturnsTrueForAddressCri() throws HttpResponseExceptionWithErrorBody {
+    void isSuccessReturnsTrueForAddressCri() throws CriCheckValidationException {
         UserIssuedCredentialsItem userIssuedCredentialsItem = new UserIssuedCredentialsItem();
         userIssuedCredentialsItem.setCredential(SIGNED_VC_5);
         userIssuedCredentialsItem.setCredentialIssuer(CRI_ID_ADDRESS);

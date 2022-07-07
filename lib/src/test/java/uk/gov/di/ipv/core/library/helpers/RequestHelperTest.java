@@ -5,7 +5,6 @@ import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.util.HashMap;
@@ -83,9 +82,6 @@ class RequestHelperTest {
                         () -> RequestHelper.getIpvSessionId(event));
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
-        assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
-                exception.getErrorResponse().getMessage());
     }
 
     @Test
@@ -100,8 +96,5 @@ class RequestHelperTest {
                         () -> RequestHelper.getIpvSessionId(event));
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
-        assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
-                exception.getErrorResponse().getMessage());
     }
 }

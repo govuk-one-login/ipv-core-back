@@ -11,7 +11,6 @@ import software.amazon.awssdk.utils.StringUtils;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -21,7 +20,6 @@ import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator;
 
-import java.util.List;
 import java.util.Map;
 
 public class ValidateCriCheckHandler
@@ -70,13 +68,9 @@ public class ValidateCriCheckHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, journeyResponse);
         } catch (HttpResponseExceptionWithErrorBody e) {
-            if (List.of(
-                            ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID,
-                            ErrorResponse.MISSING_IPV_SESSION_ID)
-                    .contains(e.getErrorResponse())) {
-                return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        e.getResponseCode(), e.getErrorBody());
-            }
+            return ApiGatewayResponseGenerator.proxyEmptyResponse(e.getResponseCode());
+
+        } catch (CriCheckValidationException e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, new JourneyResponse(JOURNEY_ERROR));
         }
@@ -87,8 +81,7 @@ public class ValidateCriCheckHandler
             throws HttpResponseExceptionWithErrorBody {
         if (pathParameters == null || StringUtils.isBlank(pathParameters.get(CRI_ID))) {
             LOGGER.error("Credential issuer ID path parameter missing");
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
+            throw new HttpResponseExceptionWithErrorBody(HttpStatus.SC_BAD_REQUEST);
         }
         return pathParameters.get(CRI_ID);
     }

@@ -15,7 +15,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -171,7 +170,6 @@ class CredentialIssuerServiceTest {
                                         testApiKey));
 
         assertEquals(HTTPResponse.SC_BAD_REQUEST, exception.getHttpStatusCode());
-        assertEquals(ErrorResponse.INVALID_TOKEN_REQUEST, exception.getErrorResponse());
     }
 
     @Test
@@ -206,8 +204,6 @@ class CredentialIssuerServiceTest {
                                         testApiKey));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_EXCHANGE_AUTHORIZATION_CODE, exception.getErrorResponse());
     }
 
     @Test
@@ -258,7 +254,6 @@ class CredentialIssuerServiceTest {
 
         assertNotNull(thrown);
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_SAVE_CREDENTIAL, thrown.getErrorResponse());
     }
 
     @Test
@@ -336,7 +331,6 @@ class CredentialIssuerServiceTest {
                                         accessToken, credentialIssuerConfig, testApiKey));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
     }
 
     @Test
@@ -361,7 +355,6 @@ class CredentialIssuerServiceTest {
                                         accessToken, credentialIssuerConfig, testApiKey));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
     }
 
     private CredentialIssuerConfig getStubCredentialIssuerConfig(

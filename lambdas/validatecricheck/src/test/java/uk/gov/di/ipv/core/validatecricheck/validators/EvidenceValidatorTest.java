@@ -7,8 +7,8 @@ import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.Test;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
+import uk.gov.di.ipv.core.validatecricheck.CriCheckValidationException;
 import uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator;
 
 import java.util.List;
@@ -17,8 +17,6 @@ import java.util.Map;
 import static com.nimbusds.jose.JWSAlgorithm.ES256;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.EVIDENCE_MISSING_FROM_VC;
-import static uk.gov.di.ipv.core.library.domain.ErrorResponse.WRONG_NUMBER_OF_ELEMENTS_IN_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator.CRI_ID_UK_PASSPORT;
@@ -38,13 +36,12 @@ class EvidenceValidatorTest {
         UserIssuedCredentialsItem userIssuedCredentialsItem =
                 getUserIssuedCredentialsItem(evidenceJsonWithNoEvidence);
 
-        HttpResponseExceptionWithErrorBody error =
+        CriCheckValidationException error =
                 assertThrows(
-                        HttpResponseExceptionWithErrorBody.class,
+                        CriCheckValidationException.class,
                         () -> criCheckValidator.isSuccess(userIssuedCredentialsItem));
 
         assertEquals(SERVER_ERROR, error.getResponseCode());
-        assertEquals(WRONG_NUMBER_OF_ELEMENTS_IN_EVIDENCE.getMessage(), error.getErrorReason());
     }
 
     @Test
@@ -54,13 +51,12 @@ class EvidenceValidatorTest {
         UserIssuedCredentialsItem userIssuedCredentialsItem =
                 getUserIssuedCredentialsItem(evidenceJsonWithEvidenceAsStringInsteadOfArray);
 
-        HttpResponseExceptionWithErrorBody error =
+        CriCheckValidationException error =
                 assertThrows(
-                        HttpResponseExceptionWithErrorBody.class,
+                        CriCheckValidationException.class,
                         () -> criCheckValidator.isSuccess(userIssuedCredentialsItem));
 
         assertEquals(SERVER_ERROR, error.getResponseCode());
-        assertEquals(EVIDENCE_MISSING_FROM_VC.getMessage(), error.getErrorReason());
     }
 
     @Test
@@ -70,13 +66,12 @@ class EvidenceValidatorTest {
         UserIssuedCredentialsItem userIssuedCredentialsItem =
                 getUserIssuedCredentialsItem(evidenceJsonWithMissingEvidence);
 
-        HttpResponseExceptionWithErrorBody error =
+        CriCheckValidationException error =
                 assertThrows(
-                        HttpResponseExceptionWithErrorBody.class,
+                        CriCheckValidationException.class,
                         () -> criCheckValidator.isSuccess(userIssuedCredentialsItem));
 
         assertEquals(SERVER_ERROR, error.getResponseCode());
-        assertEquals(EVIDENCE_MISSING_FROM_VC.getMessage(), error.getErrorReason());
     }
 
     @Test
@@ -108,13 +103,12 @@ class EvidenceValidatorTest {
         UserIssuedCredentialsItem userIssuedCredentialsItem =
                 getUserIssuedCredentialsItem(evidenceJsonWithTwoGoodEvidences);
 
-        HttpResponseExceptionWithErrorBody error =
+        CriCheckValidationException error =
                 assertThrows(
-                        HttpResponseExceptionWithErrorBody.class,
+                        CriCheckValidationException.class,
                         () -> criCheckValidator.isSuccess(userIssuedCredentialsItem));
 
         assertEquals(SERVER_ERROR, error.getResponseCode());
-        assertEquals(WRONG_NUMBER_OF_ELEMENTS_IN_EVIDENCE.getMessage(), error.getErrorReason());
     }
 
     private UserIssuedCredentialsItem getUserIssuedCredentialsItem(JSONObject evidence)

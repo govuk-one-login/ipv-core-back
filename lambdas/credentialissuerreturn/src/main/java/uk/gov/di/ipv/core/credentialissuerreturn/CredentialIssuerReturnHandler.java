@@ -22,7 +22,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
@@ -142,13 +141,7 @@ public class CredentialIssuerReturnHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, ERROR_JOURNEY_RESPONSE);
         } catch (HttpResponseExceptionWithErrorBody e) {
-            ErrorResponse errorResponse = e.getErrorResponse();
-            LogHelper.logOauthError(
-                    "Error in credential issuer return lambda",
-                    errorResponse.getCode(),
-                    errorResponse.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_BAD_REQUEST, e.getErrorBody());
+            return ApiGatewayResponseGenerator.proxyEmptyResponse(HttpStatus.SC_BAD_REQUEST);
         }
     }
 
@@ -175,35 +168,29 @@ public class CredentialIssuerReturnHandler
     private void validate(CredentialIssuerRequestDto request)
             throws HttpResponseExceptionWithErrorBody {
         if (StringUtils.isBlank(request.getAuthorizationCode())) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_AUTHORIZATION_CODE);
+            throw new HttpResponseExceptionWithErrorBody(HttpStatus.SC_BAD_REQUEST);
         }
 
         if (StringUtils.isBlank(request.getCredentialIssuerId())) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
+            throw new HttpResponseExceptionWithErrorBody(HttpStatus.SC_BAD_REQUEST);
         }
         LogHelper.attachCriIdToLogs(request.getCredentialIssuerId());
 
         if (StringUtils.isBlank(request.getIpvSessionId())) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
+            throw new HttpResponseExceptionWithErrorBody(HttpStatus.SC_BAD_REQUEST);
         }
 
         if (StringUtils.isBlank(request.getState())) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_OAUTH_STATE);
+            throw new HttpResponseExceptionWithErrorBody(HttpStatus.SC_BAD_REQUEST);
         }
 
         String persistedOauthState = getPersistedOauthState(request);
         if (!request.getState().equals(persistedOauthState)) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_OAUTH_STATE);
+            throw new HttpResponseExceptionWithErrorBody(HttpStatus.SC_BAD_REQUEST);
         }
 
         if (getCredentialIssuerConfig(request) == null) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
+            throw new HttpResponseExceptionWithErrorBody(HttpStatus.SC_BAD_REQUEST);
         }
     }
 

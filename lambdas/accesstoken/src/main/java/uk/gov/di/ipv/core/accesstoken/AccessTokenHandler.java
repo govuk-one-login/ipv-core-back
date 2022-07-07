@@ -70,15 +70,14 @@ public class AccessTokenHandler
             AuthorizationCodeGrant authorizationGrant =
                     (AuthorizationCodeGrant)
                             AuthorizationGrant.parse(URLUtils.parseParameters(input.getBody()));
-            ValidationResult<ErrorObject> validationResult =
+            ValidationResult validationResult =
                     accessTokenService.validateAuthorizationGrant(authorizationGrant);
             if (!validationResult.isValid()) {
-                ErrorObject error = validationResult.getError();
+                ErrorObject error = OAuth2Error.UNSUPPORTED_GRANT_TYPE;
                 LogHelper.logOauthError(
                         "Invalid auth grant received", error.getCode(), error.getDescription());
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        getHttpStatusCodeForErrorResponse(validationResult.getError()),
-                        validationResult.getError().toJSONObject());
+                        error.getHTTPStatusCode(), error.toJSONObject());
             }
 
             AuthorizationCodeItem authorizationCodeItem =

@@ -81,8 +81,7 @@ public class CredentialIssuerErrorHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, journeyResponse);
         } catch (HttpResponseExceptionWithErrorBody e) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getResponseCode(), e.getErrorBody());
+            return ApiGatewayResponseGenerator.proxyEmptyResponse(e.getResponseCode());
         }
     }
 

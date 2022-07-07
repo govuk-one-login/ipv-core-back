@@ -17,7 +17,6 @@ import uk.gov.di.ipv.core.journeyengine.domain.JourneyStep;
 import uk.gov.di.ipv.core.journeyengine.domain.PageResponse;
 import uk.gov.di.ipv.core.journeyengine.exceptions.JourneyEngineException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.UserStates;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -31,7 +30,6 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.Optional;
 
 import static uk.gov.di.ipv.core.journeyengine.domain.JourneyStep.ERROR;
 import static uk.gov.di.ipv.core.journeyengine.domain.JourneyStep.FAIL;
@@ -88,17 +86,15 @@ public class JourneyEngineHandler
             var ipvSessionId = RequestHelper.getIpvSessionId(input);
             Map<String, String> pathParameters = input.getPathParameters();
 
-            var errorResponse = validate(pathParameters);
-            if (errorResponse.isPresent()) {
-                return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
+            if (!validate(pathParameters)) {
+                return ApiGatewayResponseGenerator.proxyEmptyResponse(400);
             }
 
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 
             if (ipvSessionItem == null) {
                 LOGGER.warn("Failed to find ipv-session");
-                return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_ID);
+                return ApiGatewayResponseGenerator.proxyEmptyResponse(HttpStatus.SC_BAD_REQUEST);
             }
 
             JourneyStep journeyStep =
@@ -115,11 +111,10 @@ public class JourneyEngineHandler
                         HttpStatus.SC_OK, journeyEngineResult.getPageResponse());
             }
         } catch (HttpResponseExceptionWithErrorBody e) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getResponseCode(), e.getErrorBody());
+            return ApiGatewayResponseGenerator.proxyEmptyResponse(e.getResponseCode());
         } catch (JourneyEngineException e) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_JOURNEY_ENGINE_STEP);
+            return ApiGatewayResponseGenerator.proxyEmptyResponse(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -342,12 +337,9 @@ public class JourneyEngineHandler
     }
 
     @Tracing
-    private Optional<ErrorResponse> validate(Map<String, String> pathParameters) {
-        if (pathParameters.isEmpty()
-                || StringUtils.isBlank(pathParameters.get(JOURNEY_STEP_PARAM))) {
-            return Optional.of(ErrorResponse.MISSING_JOURNEY_STEP_URL_PATH_PARAM);
-        }
-        return Optional.empty();
+    private boolean validate(Map<String, String> pathParameters) {
+        return !pathParameters.isEmpty()
+                && !StringUtils.isBlank(pathParameters.get(JOURNEY_STEP_PARAM));
     }
 
     @Tracing

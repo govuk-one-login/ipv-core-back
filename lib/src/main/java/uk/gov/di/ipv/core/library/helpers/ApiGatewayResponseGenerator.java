@@ -32,6 +32,10 @@ public class ApiGatewayResponseGenerator {
         }
     }
 
+    public static APIGatewayProxyResponseEvent proxyEmptyResponse(int statusCode) {
+        return proxyJsonResponse(statusCode, null);
+    }
+
     public static APIGatewayProxyResponseEvent proxyResponse(
             int statusCode, String body, Map<String, String> headers) {
         APIGatewayProxyResponseEvent apiGatewayProxyResponseEvent =

@@ -23,7 +23,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.JarValidationException;
 import uk.gov.di.ipv.core.library.exceptions.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -130,9 +129,6 @@ class IpvSessionStartHandlerTest {
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -146,9 +142,6 @@ class IpvSessionStartHandlerTest {
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -166,9 +159,6 @@ class IpvSessionStartHandlerTest {
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -186,9 +176,6 @@ class IpvSessionStartHandlerTest {
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
     }
 
     @Test
@@ -206,9 +193,6 @@ class IpvSessionStartHandlerTest {
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.INVALID_SESSION_REQUEST.getCode(), responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.INVALID_SESSION_REQUEST.getMessage(), responseBody.get("message"));
     }
 
     @Test

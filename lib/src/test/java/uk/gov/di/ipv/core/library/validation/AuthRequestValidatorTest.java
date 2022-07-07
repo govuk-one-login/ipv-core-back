@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.util.Collections;
@@ -13,7 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
@@ -61,12 +59,6 @@ class AuthRequestValidatorTest {
         var validationResult = validator.validateRequest(null, REQUEST_HEADERS);
 
         assertFalse(validationResult.isValid());
-        assertEquals(
-                ErrorResponse.MISSING_QUERY_PARAMETERS.getCode(),
-                validationResult.getError().getCode());
-        assertEquals(
-                ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(),
-                validationResult.getError().getMessage());
     }
 
     @Test
@@ -74,12 +66,6 @@ class AuthRequestValidatorTest {
         var validationResult = validator.validateRequest(Collections.emptyMap(), REQUEST_HEADERS);
 
         assertFalse(validationResult.isValid());
-        assertEquals(
-                ErrorResponse.MISSING_QUERY_PARAMETERS.getCode(),
-                validationResult.getError().getCode());
-        assertEquals(
-                ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(),
-                validationResult.getError().getMessage());
     }
 
     @Test
@@ -88,12 +74,6 @@ class AuthRequestValidatorTest {
                 validator.validateRequest(VALID_QUERY_STRING_PARAMS, Collections.emptyMap());
 
         assertFalse(validationResult.isValid());
-        assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getCode(),
-                validationResult.getError().getCode());
-        assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
-                validationResult.getError().getMessage());
     }
 
     @Test
@@ -103,12 +83,6 @@ class AuthRequestValidatorTest {
                         VALID_QUERY_STRING_PARAMS, Map.of(IPV_SESSION_ID_HEADER, ""));
 
         assertFalse(validationResult.isValid());
-        assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getCode(),
-                validationResult.getError().getCode());
-        assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
-                validationResult.getError().getMessage());
     }
 
     @Test
@@ -118,16 +92,10 @@ class AuthRequestValidatorTest {
             var invalidQueryStringParams = new HashMap<>(VALID_QUERY_STRING_PARAMS);
             invalidQueryStringParams.remove(paramToTest);
 
-            ValidationResult<ErrorResponse> validationResult =
+            ValidationResult validationResult =
                     validator.validateRequest(invalidQueryStringParams, REQUEST_HEADERS);
 
             assertFalse(validationResult.isValid());
-            assertEquals(
-                    ErrorResponse.INVALID_REQUEST_PARAM.getCode(),
-                    validationResult.getError().getCode());
-            assertEquals(
-                    ErrorResponse.INVALID_REQUEST_PARAM.getMessage(),
-                    validationResult.getError().getMessage());
         }
     }
 
@@ -145,11 +113,5 @@ class AuthRequestValidatorTest {
                 validator.validateRequest(VALID_QUERY_STRING_PARAMS, REQUEST_HEADERS);
 
         assertFalse(validationResult.isValid());
-        assertEquals(
-                ErrorResponse.INVALID_REDIRECT_URL.getCode(),
-                validationResult.getError().getCode());
-        assertEquals(
-                ErrorResponse.INVALID_REDIRECT_URL.getMessage(),
-                validationResult.getError().getMessage());
     }
 }

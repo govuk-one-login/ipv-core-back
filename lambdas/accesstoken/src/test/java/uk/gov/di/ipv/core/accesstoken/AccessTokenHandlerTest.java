@@ -147,7 +147,7 @@ class AccessTokenHandlerTest {
     @Test
     void shouldReturn400IfAccessTokenServiceDeemsAuthGrantInvalid() throws ParseException {
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
-                .thenReturn(new ValidationResult<>(false, OAuth2Error.UNSUPPORTED_GRANT_TYPE));
+                .thenReturn(new ValidationResult(false));
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         String tokenRequestBody =
