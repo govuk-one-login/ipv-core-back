@@ -137,8 +137,8 @@ public class AccessTokenHandler
         } catch (ClientAuthenticationException e) {
             LOGGER.error("Client authentication failed: ", e);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    OAuth2Error.INVALID_GRANT.getHTTPStatusCode(),
-                    OAuth2Error.INVALID_GRANT.toJSONObject());
+                    OAuth2Error.INVALID_CLIENT.getHTTPStatusCode(),
+                    OAuth2Error.INVALID_CLIENT.toJSONObject());
         }
     }
 
