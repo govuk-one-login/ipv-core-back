@@ -90,32 +90,42 @@ public class AccessTokenHandler
             LogHelper.attachIpvSessionIdToLogs(authorizationCodeItem.getIpvSessionId());
 
             if (authorizationCodeItem.getIssuedAccessToken() != null) {
-                LOGGER.error(
-                        "Auth code has been used multiple times. Auth code was exchanged for an access token at: {}",
-                        authorizationCodeItem.getExchangeDateTime());
-
                 ErrorObject error = revokeAccessToken(authorizationCodeItem.getIssuedAccessToken());
+                LogHelper.logOauthError(
+                        "Auth code has been used multiple times",
+                        error.getCode(),
+                        error.getDescription());
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         error.getHTTPStatusCode(), error.toJSONObject());
             }
 
             if (authorizationCodeService.isExpired(authorizationCodeItem)) {
-                LOGGER.error(
-                        "Access Token could not be issued. The supplied authorization code has expired. Created at: {}",
-                        authorizationCodeItem.getCreationDateTime());
                 ErrorObject error =
                         OAuth2Error.INVALID_GRANT.setDescription("Authorization code expired");
+                LogHelper.logOauthError(
+                        String.format(
+                                "Access Token could not be issued. The supplied authorization code has expired. Created at: %s",
+                                authorizationCodeItem.getCreationDateTime()),
+                        error.getCode(),
+                        error.getDescription());
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         error.getHTTPStatusCode(), error.toJSONObject());
             }
 
             if (redirectUrlsDoNotMatch(authorizationCodeItem, authorizationGrant)) {
-                LOGGER.error(
-                        "Redirect URL in token request does not match that received in auth code request. Session ID: {}",
-                        authorizationCodeItem.getIpvSessionId());
+                ErrorObject error =
+                        OAuth2Error.INVALID_GRANT.setDescription(
+                                "Redirect URL in token request does not match redirect URL received in auth code request");
+
+                LogHelper.logOauthError(
+                        String.format(
+                                "Invalid redirect URL value received. Session ID: %s",
+                                authorizationCodeItem.getIpvSessionId()),
+                        error.getCode(),
+                        error.getDescription());
+
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        OAuth2Error.INVALID_GRANT.getHTTPStatusCode(),
-                        OAuth2Error.INVALID_GRANT.toJSONObject());
+                        error.getHTTPStatusCode(), error.toJSONObject());
             }
 
             AccessTokenResponse accessTokenResponse =
@@ -131,24 +141,31 @@ public class AccessTokenHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, accessTokenResponse.toJSONObject());
         } catch (ParseException e) {
-            LOGGER.error(
-                    "Token request could not be parsed: '{}'",
-                    e.getErrorObject().getDescription(),
-                    e);
+            LogHelper.logOauthError(
+                    "Token request could not be parsed",
+                    e.getErrorObject().getCode(),
+                    e.getErrorObject().getDescription());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     getHttpStatusCodeForErrorResponse(e.getErrorObject()),
                     e.getErrorObject().toJSONObject());
         } catch (NoSuchElementException e) {
-            LOGGER.error(
-                    "Access Token could not be issued. The supplied authorization code was not found in the database.");
+            ErrorObject error =
+                    OAuth2Error.INVALID_GRANT.setDescription(
+                            "The supplied authorization code was not found in the database");
+
+            LogHelper.logOauthError(
+                    "Access Token could not be issued", error.getCode(), error.getDescription());
+
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    OAuth2Error.INVALID_GRANT.getHTTPStatusCode(),
-                    OAuth2Error.INVALID_GRANT.toJSONObject());
+                    error.getHTTPStatusCode(), error.toJSONObject());
         } catch (ClientAuthenticationException e) {
-            LOGGER.error("Client authentication failed: ", e);
+            ErrorObject error = OAuth2Error.INVALID_CLIENT.setDescription(e.getMessage());
+
+            LogHelper.logOauthError(
+                    "Client authentication failed", error.getCode(), error.getDescription());
+
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    OAuth2Error.INVALID_CLIENT.getHTTPStatusCode(),
-                    OAuth2Error.INVALID_CLIENT.toJSONObject());
+                    error.getHTTPStatusCode(), error.toJSONObject());
         }
     }
 

@@ -185,7 +185,9 @@ class AccessTokenHandlerTest {
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorResponse.getCode());
-        assertEquals(OAuth2Error.INVALID_GRANT.getDescription(), errorResponse.getDescription());
+        assertEquals(
+                "The supplied authorization code was not found in the database",
+                errorResponse.getDescription());
     }
 
     @Test
@@ -236,7 +238,7 @@ class AccessTokenHandlerTest {
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
         assertEquals(HttpStatus.SC_UNAUTHORIZED, response.getStatusCode());
         assertEquals(OAuth2Error.INVALID_CLIENT.getCode(), errorResponse.getCode());
-        assertEquals(OAuth2Error.INVALID_CLIENT.getDescription(), errorResponse.getDescription());
+        assertEquals("error", errorResponse.getDescription());
     }
 
     @Test
@@ -258,7 +260,7 @@ class AccessTokenHandlerTest {
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
         assertEquals(HTTPResponse.SC_UNAUTHORIZED, response.getStatusCode());
         assertEquals(OAuth2Error.INVALID_CLIENT.getCode(), errorResponse.getCode());
-        assertEquals(OAuth2Error.INVALID_CLIENT.getDescription(), errorResponse.getDescription());
+        assertEquals("error", errorResponse.getDescription());
     }
 
     @Test
@@ -341,7 +343,9 @@ class AccessTokenHandlerTest {
 
         assertEquals(HTTPResponse.SC_BAD_REQUEST, response.getStatusCode());
         assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorResponse.getCode());
-        assertEquals(OAuth2Error.INVALID_GRANT.getDescription(), errorResponse.getDescription());
+        assertEquals(
+                "Redirect URL in token request does not match redirect URL received in auth code request",
+                errorResponse.getDescription());
     }
 
     private ErrorObject createErrorObjectFromResponse(String responseBody) throws ParseException {
