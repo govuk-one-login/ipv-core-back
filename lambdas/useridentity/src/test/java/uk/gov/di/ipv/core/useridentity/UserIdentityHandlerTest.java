@@ -157,6 +157,7 @@ class UserIdentityHandlerTest {
         assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
 
         verify(mockAuditService).sendAuditEvent(AuditEventTypes.IPV_IDENTITY_ISSUED);
+        verify(mockAccessTokenService).revokeAccessToken(accessTokenItem);
     }
 
     @Test
