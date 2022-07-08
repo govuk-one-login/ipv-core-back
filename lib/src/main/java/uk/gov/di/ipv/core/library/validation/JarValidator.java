@@ -144,6 +144,7 @@ public class JarValidator {
                 new DefaultJWTClaimsVerifier<>(
                         criAudience,
                         new JWTClaimsSet.Builder()
+                                .claim("client_id", clientId)
                                 .issuer(clientIssuer)
                                 .claim("response_type", "code")
                                 .build(),

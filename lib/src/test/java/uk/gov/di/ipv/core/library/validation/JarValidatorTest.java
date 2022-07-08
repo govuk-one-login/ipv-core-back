@@ -404,6 +404,56 @@ class JarValidatorTest {
     }
 
     @Test
+    void shouldFailValidationChecksIfClientIdClaimDoesNotMatchParam()
+            throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
+        when(configurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+                .thenReturn(EC_PUBLIC_JWK);
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
+        when(configurationService.getSsmParameter(eq(CLIENT_ISSUER), anyString()))
+                .thenReturn(issuerClaim);
+        when(configurationService.getClientRedirectUrls(anyString()))
+                .thenReturn(Collections.singletonList(redirectUriClaim));
+
+        Map<String, Object> invalidAudienceClaims =
+                Map.of(
+                        JWTClaimNames.EXPIRATION_TIME,
+                        fifteenMinutesFromNow(),
+                        JWTClaimNames.ISSUED_AT,
+                        OffsetDateTime.now().toEpochSecond(),
+                        JWTClaimNames.NOT_BEFORE,
+                        OffsetDateTime.now().toEpochSecond(),
+                        JWTClaimNames.AUDIENCE,
+                        audienceClaim,
+                        JWTClaimNames.ISSUER,
+                        issuerClaim,
+                        JWTClaimNames.SUBJECT,
+                        subjectClaim,
+                        "response_type",
+                        "code",
+                        "client_id",
+                        clientIdClaim,
+                        "redirect_uri",
+                        redirectUriClaim,
+                        "state",
+                        stateClaim);
+
+        SignedJWT signedJWT = generateJWT(invalidAudienceClaims);
+
+        JarValidationException thrown =
+                assertThrows(
+                        JarValidationException.class,
+                        () -> jarValidator.validateRequestJwt(signedJWT, "different-client-id"));
+        ErrorObject errorObject = thrown.getErrorObject();
+        assertEquals(
+                OAuth2Error.INVALID_GRANT.getHTTPStatusCode(), errorObject.getHTTPStatusCode());
+        assertEquals(OAuth2Error.INVALID_GRANT.getCode(), errorObject.getCode());
+        assertEquals(
+                "JWT client_id claim has value test-client-id, must be different-client-id",
+                errorObject.getDescription());
+    }
+
+    @Test
     void shouldFailValidationChecksOnExpiredJWT()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configurationService.getSsmParameter(
