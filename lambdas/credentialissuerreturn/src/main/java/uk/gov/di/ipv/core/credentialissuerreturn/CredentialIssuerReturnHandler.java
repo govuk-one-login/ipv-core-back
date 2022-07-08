@@ -100,13 +100,11 @@ public class CredentialIssuerReturnHandler
                     configurationService.getSsmParameter(
                             ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
 
-            var ae =
+            auditService.sendAuditEvent(
                     new AuditEvent(
                             AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED,
                             componentId,
-                            auditEventUser);
-
-            auditService.sendAuditEvent(ae);
+                            auditEventUser));
 
             CredentialIssuerRequestDto request =
                     RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
