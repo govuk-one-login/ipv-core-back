@@ -73,14 +73,18 @@ public class AccessTokenService {
         dataStore.create(accessTokenItem);
     }
 
+    public void revokeAccessToken(AccessTokenItem accessTokenItem) throws IllegalArgumentException {
+        if (StringUtils.isBlank(accessTokenItem.getRevokedAtDateTime())) {
+            accessTokenItem.setRevokedAtDateTime(Instant.now().toString());
+            dataStore.update(accessTokenItem);
+        }
+    }
+
     public void revokeAccessToken(String accessToken) throws IllegalArgumentException {
         AccessTokenItem accessTokenItem = dataStore.getItem(accessToken);
 
         if (Objects.nonNull(accessTokenItem)) {
-            if (StringUtils.isBlank(accessTokenItem.getRevokedAtDateTime())) {
-                accessTokenItem.setRevokedAtDateTime(Instant.now().toString());
-                dataStore.update(accessTokenItem);
-            }
+            revokeAccessToken(accessTokenItem);
         } else {
             throw new IllegalArgumentException(
                     "Failed to revoke access token - access token could not be found in DynamoDB");

@@ -110,6 +110,8 @@ public class UserIdentityHandler
 
             auditService.sendAuditEvent(AuditEventTypes.IPV_IDENTITY_ISSUED);
 
+            accessTokenService.revokeAccessToken(accessTokenItem);
+
             return ApiGatewayResponseGenerator.proxyJsonResponse(HTTPResponse.SC_OK, userIdentity);
         } catch (ParseException e) {
             LOGGER.error("Failed to parse access token");

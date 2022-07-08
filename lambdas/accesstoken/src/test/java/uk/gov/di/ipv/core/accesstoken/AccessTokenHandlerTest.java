@@ -310,7 +310,7 @@ class AccessTokenHandlerTest {
         String errorMessage = "Failed to revoke access token";
         doThrow(new IllegalArgumentException(errorMessage))
                 .when(mockAccessTokenService)
-                .revokeAccessToken(any());
+                .revokeAccessToken(any(String.class));
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
