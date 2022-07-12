@@ -22,7 +22,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionsVcEvidence;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
@@ -51,9 +50,11 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRACT_INDICATORS;
@@ -76,7 +77,7 @@ class CredentialIssuerReturnHandlerTest {
 
     @Mock private AuditService auditService;
 
-    @Mock private ConfigurationService configurationService;
+    @Mock private static ConfigurationService configurationService;
 
     @Mock private SignedJWT signedJWT;
 
@@ -91,14 +92,16 @@ class CredentialIssuerReturnHandlerTest {
     private static CredentialIssuerConfig passportIssuer;
     private static ClientSessionDetailsDto clientSessionDetailsDto;
     private static CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto;
-    private final String authorization_code = "bar";
-    private final String sessionId = SecureTokenHelper.generate();
-    private final String passportIssuerId = CREDENTIAL_ISSUER_ID;
-    private final String testApiKey = "test-api-key";
-    private final String testComponentId = "http://ipv-core-test.example.com";
+    private static AuditEventUser auditEventUser;
+    private static final String authorization_code = "bar";
+    private static final String sessionId = SecureTokenHelper.generate();
+    private static final String passportIssuerId = CREDENTIAL_ISSUER_ID;
+    private static final String testApiKey = "test-api-key";
+    private static final String testComponentId = "http://ipv-core-test.example.com";
 
     @BeforeAll
     static void setUp() throws URISyntaxException {
+
         passportIssuer =
                 new CredentialIssuerConfig(
                         CREDENTIAL_ISSUER_ID,
@@ -122,6 +125,8 @@ class CredentialIssuerReturnHandlerTest {
 
         credentialIssuerSessionDetailsDto =
                 new CredentialIssuerSessionDetailsDto(CREDENTIAL_ISSUER_ID, OAUTH_STATE);
+
+        auditEventUser = new AuditEventUser(TEST_USER_ID, sessionId);
     }
 
     @Test
@@ -153,10 +158,15 @@ class CredentialIssuerReturnHandlerTest {
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
 
-        verify(auditService).sendAuditEvent(AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED);
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+        var auditEvents = auditEventCaptor.getAllValues();
+        assertEquals(
+                AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED, auditEvents.get(0).getEventName());
+        assertEquals(AuditEventTypes.IPV_VC_RECEIVED, auditEvents.get(1).getEventName());
 
         verify(verifiableCredentialJwtValidator)
-                .validate(any(SignedJWT.class), eq(passportIssuer), eq("test-user-id"));
+                .validate(any(SignedJWT.class), eq(passportIssuer), eq(TEST_USER_ID));
 
         Integer statusCode = response.getStatusCode();
         Map responseBody = getResponseBodyAsMap(response);
@@ -438,18 +448,20 @@ class CredentialIssuerReturnHandlerTest {
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
 
-        ArgumentCaptor<AuditEvent> argumentCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditService).sendAuditEvent(argumentCaptor.capture());
-        assertEquals(AuditEventTypes.IPV_VC_RECEIVED, argumentCaptor.getValue().getEventName());
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService, times(2)).sendAuditEvent(auditEventCaptor.capture());
+        var auditEvents = auditEventCaptor.getAllValues();
+        assertEquals(
+                AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED, auditEvents.get(0).getEventName());
+        assertEquals(AuditEventTypes.IPV_VC_RECEIVED, auditEvents.get(1).getEventName());
 
-        assertEquals(testComponentId, argumentCaptor.getValue().getComponentId());
-
-        AuditEventUser auditEventUser = argumentCaptor.getValue().getUser();
+        assertEquals(testComponentId, auditEvents.get(0).getComponentId());
+        AuditEventUser auditEventUser = auditEvents.get(0).getUser();
         assertEquals(TEST_USER_ID, auditEventUser.getUserId());
         assertEquals(sessionId, auditEventUser.getSessionId());
 
         AuditExtensionsVcEvidence auditExtensionsVcEvidence =
-                (AuditExtensionsVcEvidence) argumentCaptor.getValue().getExtensions();
+                (AuditExtensionsVcEvidence) auditEvents.get(1).getExtensions();
         assertEquals("https://issuer.example.com", auditExtensionsVcEvidence.getIss());
         JsonNode evidenceItem = auditExtensionsVcEvidence.getEvidence().get(0);
         assertEquals("IdentityCheck", evidenceItem.get("type").asText());
@@ -489,12 +501,13 @@ class CredentialIssuerReturnHandlerTest {
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
 
         ArgumentCaptor<AuditEvent> argumentCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditService).sendAuditEvent(argumentCaptor.capture());
-        assertEquals(AuditEventTypes.IPV_VC_RECEIVED, argumentCaptor.getValue().getEventName());
+        verify(auditService, times(2)).sendAuditEvent(argumentCaptor.capture());
+        AuditEvent event = argumentCaptor.getAllValues().get(1);
+        assertEquals(AuditEventTypes.IPV_VC_RECEIVED, event.getEventName());
 
-        assertEquals(testComponentId, argumentCaptor.getValue().getComponentId());
+        assertEquals(testComponentId, event.getComponentId());
 
-        AuditEventUser auditEventUser = argumentCaptor.getValue().getUser();
+        AuditEventUser auditEventUser = event.getUser();
         assertEquals(TEST_USER_ID, auditEventUser.getUserId());
         assertEquals(sessionId, auditEventUser.getSessionId());
 
@@ -511,14 +524,13 @@ class CredentialIssuerReturnHandlerTest {
         when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
                 .thenReturn(passportIssuer);
 
-        when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
-
-        when(configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS))
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
                 .thenReturn(testComponentId);
 
-        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
-        when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(ipvSessionService.getUserId(anyString())).thenReturn(TEST_USER_ID);
 
         when(ipvSessionItem.getCredentialIssuerSessionDetails())
                 .thenReturn(credentialIssuerSessionDetailsDto);
@@ -543,7 +555,7 @@ class CredentialIssuerReturnHandlerTest {
 
         doThrow(new SqsException("Test sqs error"))
                 .when(auditService)
-                .sendAuditEvent(any(AuditEventTypes.class));
+                .sendAuditEvent(any(AuditEvent.class));
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
 

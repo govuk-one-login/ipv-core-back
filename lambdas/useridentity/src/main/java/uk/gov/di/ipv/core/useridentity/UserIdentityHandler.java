@@ -15,7 +15,10 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -43,6 +46,7 @@ public class UserIdentityHandler
     private final IpvSessionService ipvSessionService;
     private final ConfigurationService configurationService;
     private final AuditService auditService;
+    private final String componentId;
 
     public UserIdentityHandler(
             UserIdentityService userIdentityService,
@@ -55,6 +59,8 @@ public class UserIdentityHandler
         this.ipvSessionService = ipvSessionService;
         this.configurationService = configurationService;
         this.auditService = auditService;
+        this.componentId =
+                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -65,6 +71,8 @@ public class UserIdentityHandler
         this.ipvSessionService = new IpvSessionService(configurationService);
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
+        this.componentId =
+                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @Override
@@ -104,11 +112,16 @@ public class UserIdentityHandler
                             .getClientSessionDetails();
             LogHelper.attachClientIdToLogs(clientSessionDetails.getClientId());
 
+            String userId = ipvSessionService.getUserId(ipvSessionId);
+            AuditEventUser auditEventUser = new AuditEventUser(userId, ipvSessionId);
+
             UserIdentity userIdentity =
                     userIdentityService.generateUserIdentity(
                             ipvSessionId, clientSessionDetails.getUserId());
 
-            auditService.sendAuditEvent(AuditEventTypes.IPV_IDENTITY_ISSUED);
+            auditService.sendAuditEvent(
+                    new AuditEvent(
+                            AuditEventTypes.IPV_IDENTITY_ISSUED, componentId, auditEventUser));
 
             accessTokenService.revokeAccessToken(accessTokenItem);
 

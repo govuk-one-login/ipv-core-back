@@ -33,7 +33,7 @@ public class AuditService {
 
     public void sendAuditEvent(AuditEventTypes eventType, AuditExtensions extensions)
             throws SqsException {
-        AuditEvent auditEvent = new AuditEvent(eventType, extensions, null, null);
+        AuditEvent auditEvent = new AuditEvent(eventType, null, null, extensions);
         sendAuditEvent(auditEvent);
     }
 

@@ -190,13 +190,7 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/clients/*
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/audienceForClients
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/maxAllowedAuthClientTtl
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/backendSessionTtl
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/authCodeExpirySeconds
+            ParameterName: !Sub ${Environment}/core/self/*
       Events:
         IPVCoreExternalAPI:
           Type: Api
@@ -326,13 +320,7 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/clients/*
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/audienceForClients
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/maxAllowedAuthClientTtl
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/jarKmsEncryptionKeyId
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/backendSessionTtl
+            ParameterName: !Sub ${Environment}/core/self/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -416,15 +404,7 @@ Resources:
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/coreFrontCallbackUrl
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/signingKeyId
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/jwtTtlSeconds
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/audienceForClients
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/backendSessionTtl
+            ParameterName: !Sub ${Environment}/core/self/*
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:${Environment}/credential-issuers/*/api-key-*
         - SQSSendMessagePolicy:
@@ -505,13 +485,7 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/signingKeyId
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/jwtTtlSeconds
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/audienceForClients
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/coreFrontCallbackUrl
+            ParameterName: !Sub ${Environment}/core/self/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
@@ -588,6 +562,8 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -660,6 +636,8 @@ Resources:
             TableName: !Ref AccessTokensTable
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -670,8 +648,6 @@ Resources:
                 - 'kms:GenerateDataKey'
               Resource:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/coreVtmClaim
       Events:
         IPVCoreExternalAPI:
           Type: Api
@@ -782,6 +758,8 @@ Resources:
             TableName: !Ref UserIssuedCredentialsTable
         - DynamoDBWritePolicy:
             TableName: !Ref UserIssuedCredentialsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/*
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -840,15 +818,7 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/backendSessionTimeout
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/journey/passportCriId
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/journey/addressCriId
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/journey/fraudCriId
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/journey/kbvCriId
+            ParameterName: !Sub ${Environment}/core/self/*
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -902,6 +872,8 @@ Resources:
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/*
       Events:
         IPVCorePrivateAPI:
           Type: Api
