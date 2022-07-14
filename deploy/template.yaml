@@ -35,12 +35,13 @@ Conditions:
     - !Equals
       - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
       -  0
-  IsDevelopmentEnvironment: !Not
+  IsDevelopment: !Not
     - !Or
       - !Equals [ !Ref Environment, "build"]
       - !Equals [ !Ref Environment, "staging"]
       - !Equals [ !Ref Environment, "integration"]
       - !Equals [ !Ref Environment, "production"]
+  IsNotDevelopment: !Not [ !Condition IsDevelopment ]
 
 # The AWS Account Id is used in the following mapping section because we have
 # multiple developer environments and it is undesirable to have to keep this
@@ -82,7 +83,7 @@ Resources:
               Condition:
                 StringNotEquals:
                   'aws:SourceVpce': !If
-                    - IsDevelopmentEnvironment
+                    - IsDevelopment
                     - !ImportValue "network-shared-development-ApiGatewayVpcEndpointId"
                     - Fn::ImportValue:
                         !Sub "networking-${Environment}-ApiGatewayVpcEndpointId"
@@ -113,6 +114,7 @@ Resources:
 
   IPVCorePrivateAPILogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
@@ -155,6 +157,7 @@ Resources:
 
   IPVCoreExternalAPILogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
@@ -214,6 +217,7 @@ Resources:
 
   IPVAccessTokenFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
@@ -285,6 +289,7 @@ Resources:
 
   IPVSessionEndFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
@@ -362,6 +367,7 @@ Resources:
 
   IPVSessionStartFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
@@ -447,6 +453,7 @@ Resources:
 
   IPVCriReturnFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
@@ -530,6 +537,7 @@ Resources:
 
   IPVCredentialIssuerStartFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
@@ -598,6 +606,7 @@ Resources:
 
   IPVCredentialIssuerErrorFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
@@ -672,6 +681,7 @@ Resources:
 
   IPVUserIdentityFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
@@ -727,6 +737,7 @@ Resources:
 
   IPVCredentialIssuerFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
@@ -784,6 +795,7 @@ Resources:
 
   IPVIssuedCredentialsFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
@@ -843,6 +855,7 @@ Resources:
 
   IPVJourneyEngineFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
@@ -898,6 +911,7 @@ Resources:
 
   IPVValidateCriCheckFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
