@@ -165,6 +165,8 @@ Resources:
 
   IPVAccessTokenFunction:
     Type: AWS::Serverless::Function
+    DependsOn:
+      - "IPVAccessTokenFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
@@ -212,7 +214,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVAccessTokenFunction}"
+      LogGroupName: !Sub "/aws/lambda/ipv-access-token-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVAccessTokenFunctionLogGroupSubscriptionFilter:
@@ -225,6 +227,8 @@ Resources:
 
   IPVSessionEndFunction:
     Type: AWS::Serverless::Function
+    DependsOn:
+      - "IPVSessionEndFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
@@ -284,7 +288,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVSessionEndFunction}"
+      LogGroupName: !Sub "/aws/lambda/ipv-session-end-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVSessionEndFunctionLogGroupSubscriptionFilter:
@@ -297,6 +301,8 @@ Resources:
 
   IPVSessionStartFunction:
     Type: AWS::Serverless::Function
+    DependsOn:
+      - "IPVSessionStartFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
@@ -362,7 +368,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVSessionStartFunction}"
+      LogGroupName: !Sub "/aws/lambda/ipv-session-start-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVSessionStartFunctionLogGroupSubscriptionFilter:
@@ -375,6 +381,8 @@ Resources:
 
   IPVCriReturnFunction:
     Type: AWS::Serverless::Function
+    DependsOn:
+      - "IPVCriReturnFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
@@ -448,7 +456,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVCriReturnFunction}"
+      LogGroupName: !Sub "/aws/lambda/ipv-credential-issuer-return-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVCriReturnFunctionLogGroupSubscriptionFilter:
@@ -461,6 +469,8 @@ Resources:
 
   IPVCredentialIssuerStartFunction:
     Type: AWS::Serverless::Function
+    DependsOn:
+      - "IPVCredentialIssuerStartFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
@@ -532,7 +542,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVCredentialIssuerStartFunction}"
+      LogGroupName: !Sub "/aws/lambda/ipv-credential-issuer-start-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVCredentialIssuerStartFunctionLogGroupSubscriptionFilter:
@@ -545,6 +555,8 @@ Resources:
 
   IPVCredentialIssuerErrorFunction:
     Type: AWS::Serverless::Function
+    DependsOn:
+      - "IPVCredentialIssuerErrorFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
@@ -601,7 +613,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVCredentialIssuerErrorFunction}"
+      LogGroupName: !Sub "/aws/lambda/ipv-credential-issuer-error-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVCredentialIssuerErrorFunctionLogGroupSubscriptionFilter:
@@ -614,6 +626,8 @@ Resources:
 
   IPVUserIdentityFunction:
     Type: AWS::Serverless::Function
+    DependsOn:
+      - "IPVUserIdentityFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
@@ -676,7 +690,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVUserIdentityFunction}"
+      LogGroupName: !Sub "/aws/lambda/ipv-user-identity-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVUserIdentityFunctionLogGroupSubscriptionFilter:
@@ -689,6 +703,8 @@ Resources:
 
   IPVCredentialIssuerConfig:
     Type: AWS::Serverless::Function
+    DependsOn:
+      - "IPVCredentialIssuerFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
@@ -732,7 +748,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVCredentialIssuerConfig}"
+      LogGroupName: !Sub "/aws/lambda/credential-issuer-config-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVCredentialIssuerFunctionLogGroupSubscriptionFilter:
@@ -745,6 +761,8 @@ Resources:
 
   IPVIssuedCredentials:
     Type: AWS::Serverless::Function
+    DependsOn:
+      - "IPVIssuedCredentialsFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
@@ -790,7 +808,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVIssuedCredentials}"
+      LogGroupName: !Sub "/aws/lambda/issued-credentials-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVIssuedCredentialsFunctionLogGroupSubscriptionFilter:
@@ -803,6 +821,8 @@ Resources:
 
   IPVJourneyEngineFunction:
     Type: AWS::Serverless::Function
+    DependsOn:
+      - "IPVJourneyEngineFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
@@ -850,7 +870,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVJourneyEngineFunction}"
+      LogGroupName: !Sub "/aws/lambda/journey-engine-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVJourneyEngineFunctionLogGroupSubscriptionFilter:
@@ -863,6 +883,8 @@ Resources:
 
   IPVValidateCriCheckFunction:
     Type: AWS::Serverless::Function
+    DependsOn:
+      - "IPVValidateCriCheckFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
@@ -906,7 +928,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/${IPVValidateCriCheckFunction}"
+      LogGroupName: !Sub "/aws/lambda/validate-cri-check-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVValidateCriCheckFunctionLogGroupSubscriptionFilter:
