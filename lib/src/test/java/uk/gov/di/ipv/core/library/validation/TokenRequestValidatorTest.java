@@ -16,6 +16,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.exceptions.ClientAuthenticationException;
+import uk.gov.di.ipv.core.library.persistence.item.ClientAuthJwtIdItem;
+import uk.gov.di.ipv.core.library.service.ClientAuthJwtIdService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.net.URLEncoder;
@@ -26,6 +28,7 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.HashMap;
@@ -51,15 +54,17 @@ class TokenRequestValidatorTest {
 
     private TokenRequestValidator validator;
     @Mock private ConfigurationService mockConfigurationService;
+    @Mock private ClientAuthJwtIdService mockClientAuthJwtIdService;
 
     private final String clientId = "di-ipv-orchestrator-stub";
     private final String audience =
             "https://ea8lfzcdq0.execute-api.eu-west-2.amazonaws.com/dev/token";
+    private final String jti = "test-jti";
 
     @BeforeEach
     void setUp() {
         when(mockConfigurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audience);
-        validator = new TokenRequestValidator(mockConfigurationService);
+        validator = new TokenRequestValidator(mockConfigurationService, mockClientAuthJwtIdService);
     }
 
     @Test
@@ -233,6 +238,53 @@ class TokenRequestValidatorTest {
         assertEquals("Missing client_assertion_type parameter", exception.getCause().getMessage());
     }
 
+    @Test
+    void shouldThrowIfMissingJwtId() throws Exception {
+        when(mockConfigurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+                .thenReturn(RSA_PUBLIC_CERT);
+        when(mockConfigurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                .thenReturn("2400");
+        Map<String, Object> claimsSetValues = getClaimsSetValuesMissingJwtId();
+        String clientAssertion = generateClientAssertionWithRS256(claimsSetValues);
+
+        ClientAuthenticationException exception =
+                assertThrows(
+                        ClientAuthenticationException.class,
+                        () ->
+                                validator.authenticateClient(
+                                        queryMapToString(getValidQueryParams(clientAssertion))));
+
+        assertEquals("The client auth JWT id (jti) is missing", exception.getCause().getMessage());
+    }
+
+    @Test
+    void shouldThrowIfJwtIdHasAlreadyBeenUsed() throws Exception {
+        when(mockConfigurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+                .thenReturn(RSA_PUBLIC_CERT);
+        when(mockConfigurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                .thenReturn("2400");
+        Map<String, Object> claimsSetValues = getValidClaimsSetValues();
+        String clientAssertion = generateClientAssertionWithRS256(claimsSetValues);
+
+        ClientAuthJwtIdItem clientAuthJwtIdItem =
+                new ClientAuthJwtIdItem(jti, Instant.now().toString());
+        when(mockClientAuthJwtIdService.getClientAuthJwtIdItem(jti))
+                .thenReturn(clientAuthJwtIdItem);
+
+        ClientAuthenticationException exception =
+                assertThrows(
+                        ClientAuthenticationException.class,
+                        () ->
+                                validator.authenticateClient(
+                                        queryMapToString(getValidQueryParams(clientAssertion))));
+
+        assertEquals(
+                "The client auth JWT id (jti) has already been used",
+                exception.getCause().getMessage());
+    }
+
     private RSAPrivateKey getRsaPrivateKey()
             throws InvalidKeySpecException, NoSuchAlgorithmException {
         return (RSAPrivateKey)
@@ -285,6 +337,20 @@ class TokenRequestValidatorTest {
                 JWTClaimNames.AUDIENCE,
                 audience,
                 JWTClaimNames.EXPIRATION_TIME,
+                fifteenMinutesFromNow(),
+                JWTClaimNames.JWT_ID,
+                jti);
+    }
+
+    private Map<String, Object> getClaimsSetValuesMissingJwtId() {
+        return Map.of(
+                JWTClaimNames.ISSUER,
+                clientId,
+                JWTClaimNames.SUBJECT,
+                clientId,
+                JWTClaimNames.AUDIENCE,
+                audience,
+                JWTClaimNames.EXPIRATION_TIME,
                 fifteenMinutesFromNow());
     }
 
@@ -326,6 +392,7 @@ class TokenRequestValidatorTest {
                 .claim(
                         JWTClaimNames.EXPIRATION_TIME,
                         claimsSetValues.get(JWTClaimNames.EXPIRATION_TIME))
+                .claim(JWTClaimNames.JWT_ID, claimsSetValues.get(JWTClaimNames.JWT_ID))
                 .build();
     }
 }
