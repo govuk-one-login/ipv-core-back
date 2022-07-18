@@ -75,6 +75,7 @@ public class TokenRequestValidator {
         JWTID jwtId = claimsSet.getJWTID();
         if (jwtId == null || StringUtils.isBlank(jwtId.getValue())) {
             LOGGER.warn("The client auth JWT id (jti) is missing");
+            return;
         }
         ClientAuthJwtIdItem clientAuthJwtIdItem =
                 clientAuthJwtIdService.getClientAuthJwtIdItem(jwtId.getValue());
