@@ -191,8 +191,8 @@ Resources:
             TableName: !Ref AccessTokensTable
         - DynamoDBCrudPolicy:
             TableName: !Ref AuthCodesTable
-       - DynamoDBCrudPolicy:
-           TableName: !Ref ClientAuthJwtIdsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ClientAuthJwtIdsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/clients/*
         - SSMParameterReadPolicy:
