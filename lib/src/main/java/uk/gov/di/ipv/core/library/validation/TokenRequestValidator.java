@@ -71,17 +71,15 @@ public class TokenRequestValidator {
         }
     }
 
-    private void validateJwtId(JWTAuthenticationClaimsSet claimsSet) throws InvalidClientException {
+    private void validateJwtId(JWTAuthenticationClaimsSet claimsSet) {
         JWTID jwtId = claimsSet.getJWTID();
         if (jwtId == null || StringUtils.isBlank(jwtId.getValue())) {
-            LOGGER.error("The client auth JWT id (jti) is missing");
-            throw new InvalidClientException("The client auth JWT id (jti) is missing");
+            LOGGER.warn("The client auth JWT id (jti) is missing");
         }
         ClientAuthJwtIdItem clientAuthJwtIdItem =
                 clientAuthJwtIdService.getClientAuthJwtIdItem(jwtId.getValue());
         if (clientAuthJwtIdItem != null) {
-            logJtiHasAlreadyBeenUsed(clientAuthJwtIdItem);
-            throw new InvalidClientException("The client auth JWT id (jti) has already been used");
+            logWarningJtiHasAlreadyBeenUsed(clientAuthJwtIdItem);
         }
         clientAuthJwtIdService.persistClientAuthJwtId(jwtId.getValue());
     }
@@ -94,13 +92,13 @@ public class TokenRequestValidator {
                 Set.of(new Audience(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))));
     }
 
-    private void logJtiHasAlreadyBeenUsed(ClientAuthJwtIdItem clientAuthJwtIdItem) {
+    private void logWarningJtiHasAlreadyBeenUsed(ClientAuthJwtIdItem clientAuthJwtIdItem) {
         LoggingUtils.appendKey(
                 LogHelper.LogField.JTI_LOG_FIELD.getFieldName(), clientAuthJwtIdItem.getJwtId());
         LoggingUtils.appendKey(
                 LogHelper.LogField.USED_AT_DATE_TIME_LOG_FIELD.getFieldName(),
                 clientAuthJwtIdItem.getUsedAtDateTime());
-        LOGGER.error("The client auth JWT id (jti) has already been used");
+        LOGGER.warn("The client auth JWT id (jti) has already been used");
         LoggingUtils.removeKeys(
                 LogHelper.LogField.JTI_LOG_FIELD.getFieldName(),
                 LogHelper.LogField.USED_AT_DATE_TIME_LOG_FIELD.getFieldName());

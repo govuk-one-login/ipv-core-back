@@ -16,7 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.exceptions.ClientAuthenticationException;
-import uk.gov.di.ipv.core.library.persistence.item.ClientAuthJwtIdItem;
 import uk.gov.di.ipv.core.library.service.ClientAuthJwtIdService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
@@ -28,7 +27,6 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.HashMap;
@@ -236,53 +234,6 @@ class TokenRequestValidatorTest {
                                         queryMapToString(queryParamsWithNoClientAssertionType)));
 
         assertEquals("Missing client_assertion_type parameter", exception.getCause().getMessage());
-    }
-
-    @Test
-    void shouldThrowIfMissingJwtId() throws Exception {
-        when(mockConfigurationService.getSsmParameter(
-                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(RSA_PUBLIC_CERT);
-        when(mockConfigurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
-                .thenReturn("2400");
-        Map<String, Object> claimsSetValues = getClaimsSetValuesMissingJwtId();
-        String clientAssertion = generateClientAssertionWithRS256(claimsSetValues);
-
-        ClientAuthenticationException exception =
-                assertThrows(
-                        ClientAuthenticationException.class,
-                        () ->
-                                validator.authenticateClient(
-                                        queryMapToString(getValidQueryParams(clientAssertion))));
-
-        assertEquals("The client auth JWT id (jti) is missing", exception.getCause().getMessage());
-    }
-
-    @Test
-    void shouldThrowIfJwtIdHasAlreadyBeenUsed() throws Exception {
-        when(mockConfigurationService.getSsmParameter(
-                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
-                .thenReturn(RSA_PUBLIC_CERT);
-        when(mockConfigurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
-                .thenReturn("2400");
-        Map<String, Object> claimsSetValues = getValidClaimsSetValues();
-        String clientAssertion = generateClientAssertionWithRS256(claimsSetValues);
-
-        ClientAuthJwtIdItem clientAuthJwtIdItem =
-                new ClientAuthJwtIdItem(jti, Instant.now().toString());
-        when(mockClientAuthJwtIdService.getClientAuthJwtIdItem(jti))
-                .thenReturn(clientAuthJwtIdItem);
-
-        ClientAuthenticationException exception =
-                assertThrows(
-                        ClientAuthenticationException.class,
-                        () ->
-                                validator.authenticateClient(
-                                        queryMapToString(getValidQueryParams(clientAssertion))));
-
-        assertEquals(
-                "The client auth JWT id (jti) has already been used",
-                exception.getCause().getMessage());
     }
 
     private RSAPrivateKey getRsaPrivateKey()
