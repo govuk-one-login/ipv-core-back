@@ -14,8 +14,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.exceptions.ClientAuthenticationException;
+import uk.gov.di.ipv.core.library.persistence.item.ClientAuthJwtIdItem;
 import uk.gov.di.ipv.core.library.service.ClientAuthJwtIdService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
@@ -27,6 +29,7 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.HashMap;
@@ -38,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
@@ -234,6 +238,41 @@ class TokenRequestValidatorTest {
                                         queryMapToString(queryParamsWithNoClientAssertionType)));
 
         assertEquals("Missing client_assertion_type parameter", exception.getCause().getMessage());
+    }
+
+    @Test
+    void shouldCheckIfJwtIdIsMissingOrEmpty() throws Exception {
+        when(mockConfigurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+                .thenReturn(RSA_PUBLIC_CERT);
+        when(mockConfigurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                .thenReturn("2400");
+        Map<String, Object> claimsSetValues = getClaimsSetValuesMissingJwtId();
+        String clientAssertion = generateClientAssertionWithRS256(claimsSetValues);
+
+        validator.authenticateClient(queryMapToString(getValidQueryParams(clientAssertion)));
+
+        verify(mockClientAuthJwtIdService, Mockito.times(0)).getClientAuthJwtIdItem(anyString());
+    }
+
+    @Test
+    void shouldStoreJwtIdAndCheckItHasNotAlreadyBeenUsed() throws Exception {
+        when(mockConfigurationService.getSsmParameter(
+                        eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
+                .thenReturn(RSA_PUBLIC_CERT);
+        when(mockConfigurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
+                .thenReturn("2400");
+        Map<String, Object> claimsSetValues = getValidClaimsSetValues();
+        String clientAssertion = generateClientAssertionWithRS256(claimsSetValues);
+
+        ClientAuthJwtIdItem clientAuthJwtIdItem =
+                new ClientAuthJwtIdItem(jti, Instant.now().toString());
+        when(mockClientAuthJwtIdService.getClientAuthJwtIdItem(jti))
+                .thenReturn(clientAuthJwtIdItem);
+
+        validator.authenticateClient(queryMapToString(getValidQueryParams(clientAssertion)));
+
+        verify(mockClientAuthJwtIdService).getClientAuthJwtIdItem(jti);
     }
 
     private RSAPrivateKey getRsaPrivateKey()
