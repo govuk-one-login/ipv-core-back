@@ -7,11 +7,16 @@ import com.nimbusds.oauth2.sdk.auth.PrivateKeyJWT;
 import com.nimbusds.oauth2.sdk.auth.verifier.ClientAuthenticationVerifier;
 import com.nimbusds.oauth2.sdk.auth.verifier.InvalidClientException;
 import com.nimbusds.oauth2.sdk.id.Audience;
+import com.nimbusds.oauth2.sdk.id.JWTID;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import software.amazon.lambda.powertools.logging.LoggingUtils;
 import uk.gov.di.ipv.core.library.domain.ConfigurationServicePublicKeySelector;
 import uk.gov.di.ipv.core.library.exceptions.ClientAuthenticationException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientAuthJwtIdItem;
+import uk.gov.di.ipv.core.library.service.ClientAuthJwtIdService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.time.OffsetDateTime;
@@ -25,10 +30,15 @@ public class TokenRequestValidator {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private final ConfigurationService configurationService;
+
+    private final ClientAuthJwtIdService clientAuthJwtIdService;
     private final ClientAuthenticationVerifier<Object> verifier;
 
-    public TokenRequestValidator(ConfigurationService configurationService) {
+    public TokenRequestValidator(
+            ConfigurationService configurationService,
+            ClientAuthJwtIdService clientAuthJwtIdService) {
         this.configurationService = configurationService;
+        this.clientAuthJwtIdService = clientAuthJwtIdService;
         this.verifier = getClientAuthVerifier(configurationService);
     }
 
@@ -38,7 +48,9 @@ public class TokenRequestValidator {
             clientJwt = PrivateKeyJWT.parse(requestBody);
             LogHelper.attachClientIdToLogs(clientJwt.getClientID().getValue());
             verifier.verify(clientJwt, null, null);
-            validateMaxAllowedAuthClientTtl(clientJwt.getJWTAuthenticationClaimsSet());
+            JWTAuthenticationClaimsSet claimsSet = clientJwt.getJWTAuthenticationClaimsSet();
+            validateMaxAllowedAuthClientTtl(claimsSet);
+            validateJwtId(claimsSet);
         } catch (ParseException | InvalidClientException | JOSEException e) {
             LOGGER.error("Validation of client_assertion jwt failed");
             throw new ClientAuthenticationException(e);
@@ -59,11 +71,37 @@ public class TokenRequestValidator {
         }
     }
 
+    private void validateJwtId(JWTAuthenticationClaimsSet claimsSet) {
+        JWTID jwtId = claimsSet.getJWTID();
+        if (jwtId == null || StringUtils.isBlank(jwtId.getValue())) {
+            LOGGER.warn("The client auth JWT id (jti) is missing");
+            return;
+        }
+        ClientAuthJwtIdItem clientAuthJwtIdItem =
+                clientAuthJwtIdService.getClientAuthJwtIdItem(jwtId.getValue());
+        if (clientAuthJwtIdItem != null) {
+            logWarningJtiHasAlreadyBeenUsed(clientAuthJwtIdItem);
+        }
+        clientAuthJwtIdService.persistClientAuthJwtId(jwtId.getValue());
+    }
+
     private ClientAuthenticationVerifier<Object> getClientAuthVerifier(
             ConfigurationService configurationService) {
 
         return new ClientAuthenticationVerifier<>(
                 new ConfigurationServicePublicKeySelector(configurationService),
                 Set.of(new Audience(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))));
+    }
+
+    private void logWarningJtiHasAlreadyBeenUsed(ClientAuthJwtIdItem clientAuthJwtIdItem) {
+        LoggingUtils.appendKey(
+                LogHelper.LogField.JTI_LOG_FIELD.getFieldName(), clientAuthJwtIdItem.getJwtId());
+        LoggingUtils.appendKey(
+                LogHelper.LogField.USED_AT_DATE_TIME_LOG_FIELD.getFieldName(),
+                clientAuthJwtIdItem.getUsedAtDateTime());
+        LOGGER.warn("The client auth JWT id (jti) has already been used");
+        LoggingUtils.removeKeys(
+                LogHelper.LogField.JTI_LOG_FIELD.getFieldName(),
+                LogHelper.LogField.USED_AT_DATE_TIME_LOG_FIELD.getFieldName());
     }
 }

@@ -16,7 +16,9 @@ public class LogHelper {
         ERROR_CODE_LOG_FIELD("errorCode"),
         ERROR_DESCRIPTION_LOG_FIELD("errorDescription"),
         IPV_SESSION_ID_LOG_FIELD("ipvSessionId"),
-        COMPONENT_ID_LOG_FIELD("componentId");
+        COMPONENT_ID_LOG_FIELD("componentId"),
+        JTI_LOG_FIELD("JTI_LOG_FIELD"),
+        USED_AT_DATE_TIME_LOG_FIELD("USED_AT_DATE_TIME_LOG_FIELD");
 
         private final String fieldName;
 
@@ -24,7 +26,7 @@ public class LogHelper {
             this.fieldName = fieldName;
         }
 
-        String getFieldName() {
+        public String getFieldName() {
             return fieldName;
         }
     }
