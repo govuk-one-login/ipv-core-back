@@ -1,5 +1,7 @@
 package uk.gov.di.ipv.core.library.persistence;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
@@ -8,6 +10,8 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.lambda.powertools.logging.LoggingUtils;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.DynamodbItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
@@ -20,6 +24,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SE
 
 public class DataStore<T extends DynamodbItem> {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final String LOCALHOST_URI = "http://localhost:4567";
     private static boolean isRunningLocally;
 
@@ -102,7 +107,20 @@ public class DataStore<T extends DynamodbItem> {
     }
 
     private T getItemByKey(Key key) {
-        return table.getItem(key);
+        T result = table.getItem(key);
+        if (result == null) {
+            LoggingUtils.appendKey(
+                    LogHelper.LogField.DYNAMODB_TABLE_NAME.getFieldName(),
+                    table.describeTable().table().tableName());
+            LoggingUtils.appendKey(
+                    LogHelper.LogField.DYNAMODB_KEY_VALUE.getFieldName(),
+                    key.partitionKeyValue().toString());
+            LOGGER.warn("Null result retrieved out of DynamoDB");
+            LoggingUtils.removeKeys(
+                    LogHelper.LogField.DYNAMODB_TABLE_NAME.getFieldName(),
+                    LogHelper.LogField.DYNAMODB_KEY_VALUE.getFieldName());
+        }
+        return result;
     }
 
     private T delete(Key key) {

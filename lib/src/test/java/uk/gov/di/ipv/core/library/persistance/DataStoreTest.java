@@ -12,8 +12,11 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.model.DescribeTableEnhancedResponse;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
+import software.amazon.awssdk.services.dynamodb.model.DescribeTableResponse;
+import software.amazon.awssdk.services.dynamodb.model.TableDescription;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -90,6 +93,16 @@ class DataStoreTest {
 
     @Test
     void shouldGetItemFromDynamoDbTableViaPartitionKeyAndSortKey() {
+        TableDescription tableDescription =
+                TableDescription.builder().tableName("test-table").build();
+        DescribeTableResponse describeTableResponse =
+                DescribeTableResponse.builder().table(tableDescription).build();
+        when(mockDynamoDbTable.describeTable())
+                .thenReturn(
+                        new DescribeTableEnhancedResponse.Builder()
+                                .response(describeTableResponse)
+                                .build());
+
         dataStore.getItem("partition-key-12345", "sort-key-12345");
 
         ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
@@ -105,6 +118,16 @@ class DataStoreTest {
 
     @Test
     void shouldGetItemFromDynamoDbTableViaPartitionKey() {
+        TableDescription tableDescription =
+                TableDescription.builder().tableName("test-table").build();
+        DescribeTableResponse describeTableResponse =
+                DescribeTableResponse.builder().table(tableDescription).build();
+        when(mockDynamoDbTable.describeTable())
+                .thenReturn(
+                        new DescribeTableEnhancedResponse.Builder()
+                                .response(describeTableResponse)
+                                .build());
+
         dataStore.getItem("partition-key-12345");
 
         ArgumentCaptor<Key> keyCaptor = ArgumentCaptor.forClass(Key.class);
