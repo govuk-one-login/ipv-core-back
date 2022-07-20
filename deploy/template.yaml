@@ -163,6 +163,24 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref IPVCoreExternalAPILogGroup
 
+  JourneyEngineStateMachine:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: journey_engine.asl.json
+      DefinitionSubstitutions:
+        IPVJourneyEngineFunctionArn: !GetAtt IPVJourneyEngineFunction.Arn
+      Events:
+        JourneyEngineFunctionApiEvent:
+          Type: Api
+          Properties:
+            Method: post
+            Path: /hello
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref IPVJourneyEngineFunction
+
   IPVAccessTokenFunction:
     Type: AWS::Serverless::Function
     DependsOn:

@@ -1,0 +1,11 @@
+{
+  "Comment": "A state machine that executes a the journey engine lambda",
+  "StartAt": "CheckProgress",
+  "States": {
+    "CheckProgress": {
+      "Type": "Task",
+      "Resource": "${IPVJourneyEngineFunctionArn}",
+      "End": true
+    }
+  }
+}
