@@ -44,7 +44,7 @@ public class IpvSessionService {
         return this.getIpvSession(ipvSessionId).getClientSessionDetails().getUserId();
     }
 
-    public String generateIpvSession(
+    public IpvSessionItem generateIpvSession(
             ClientSessionDetailsDto clientSessionDetailsDto, ErrorObject errorObject) {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
@@ -66,7 +66,7 @@ public class IpvSessionService {
 
         dataStore.create(ipvSessionItem);
 
-        return ipvSessionItem.getIpvSessionId();
+        return ipvSessionItem;
     }
 
     public void updateIpvSession(IpvSessionItem updatedIpvSessionItem) {

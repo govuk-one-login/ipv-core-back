@@ -52,7 +52,7 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldCreateSessionItem() {
-        String ipvSessionID =
+        IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
                         new ClientSessionDetailsDto(
                                 "jwt",
@@ -69,7 +69,9 @@ class IpvSessionServiceTest {
         assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
         assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
 
-        assertEquals(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(), ipvSessionID);
+        assertEquals(
+                ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
+                ipvSessionItem.getIpvSessionId());
         assertEquals(
                 UserStates.INITIAL_IPV_JOURNEY.toString(),
                 ipvSessionItemArgumentCaptor.getValue().getUserState());
@@ -77,7 +79,7 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldCreateSessionItemForDebugJourney() {
-        String ipvSessionID =
+        IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
                         new ClientSessionDetailsDto(
                                 "jwt",
@@ -94,7 +96,9 @@ class IpvSessionServiceTest {
         assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
         assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
 
-        assertEquals(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(), ipvSessionID);
+        assertEquals(
+                ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
+                ipvSessionItem.getIpvSessionId());
         assertEquals(
                 UserStates.DEBUG_PAGE.toString(),
                 ipvSessionItemArgumentCaptor.getValue().getUserState());
@@ -103,7 +107,7 @@ class IpvSessionServiceTest {
     @Test
     void shouldCreateSessionItemWithErrorObject() {
         ErrorObject testErrorObject = new ErrorObject("server_error", "Test error");
-        String ipvSessionID =
+        IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
                         new ClientSessionDetailsDto(
                                 "jwt",
@@ -119,7 +123,9 @@ class IpvSessionServiceTest {
         verify(mockDataStore).create(ipvSessionItemArgumentCaptor.capture());
         assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
         assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
-        assertEquals(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(), ipvSessionID);
+        assertEquals(
+                ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
+                ipvSessionItem.getIpvSessionId());
         assertEquals(
                 UserStates.FAILED_CLIENT_JAR.toString(),
                 ipvSessionItemArgumentCaptor.getValue().getUserState());
