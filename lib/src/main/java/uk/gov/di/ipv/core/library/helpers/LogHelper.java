@@ -18,8 +18,9 @@ public class LogHelper {
         IPV_SESSION_ID_LOG_FIELD("ipvSessionId"),
         COMPONENT_ID_LOG_FIELD("componentId"),
         JTI_LOG_FIELD("JTI_LOG_FIELD"),
-        USED_AT_DATE_TIME_LOG_FIELD("USED_AT_DATE_TIME_LOG_FIELD");
-
+        USED_AT_DATE_TIME_LOG_FIELD("USED_AT_DATE_TIME_LOG_FIELD"),
+        DYNAMODB_TABLE_NAME("dynamoDbTableName"),
+        DYNAMODB_KEY_VALUE("dynamoDbKeyValue");
         private final String fieldName;
 
         LogField(String fieldName) {

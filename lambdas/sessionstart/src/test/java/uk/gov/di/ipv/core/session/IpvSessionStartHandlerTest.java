@@ -26,12 +26,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.JarValidationException;
 import uk.gov.di.ipv.core.library.exceptions.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.helpers.AuthorizationRequestHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -71,6 +73,7 @@ class IpvSessionStartHandlerTest {
 
     private static SignedJWT signedJWT;
     private static JWEObject signedEncryptedJwt;
+    private static IpvSessionItem ipvSessionItem;
 
     @BeforeAll
     static void setUp() throws Exception {
@@ -94,13 +97,26 @@ class IpvSessionStartHandlerTest {
                 AuthorizationRequestHelper.createJweObject(
                         new RSAEncrypter(RSAKey.parse(TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK)),
                         signedJWT);
+
+        ClientSessionDetailsDto clientSessionDetailsDto =
+                new ClientSessionDetailsDto(
+                        "code",
+                        "test-client",
+                        "http://example.com",
+                        "test-state",
+                        "test-user-id",
+                        false);
+
+        ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setCreationDateTime(Instant.now().toString());
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
     }
 
     @Test
     void shouldReturnIpvSessionIdWhenProvidedValidRequest()
             throws JsonProcessingException, JarValidationException, ParseException, SqsException {
-        String ipvSessionId = SecureTokenHelper.generate();
-        when(mockIpvSessionService.generateIpvSession(any(), any())).thenReturn(ipvSessionId);
+        when(mockIpvSessionService.generateIpvSession(any(), any())).thenReturn(ipvSessionItem);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(signedJWT.getJWTClaimsSet());
 
@@ -116,7 +132,7 @@ class IpvSessionStartHandlerTest {
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals(ipvSessionId, responseBody.get("ipvSessionId"));
+        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
@@ -218,8 +234,7 @@ class IpvSessionStartHandlerTest {
     @Test
     void shouldReturnIpvSessionIdWhenRecoverableErrorFound()
             throws JsonProcessingException, JarValidationException, ParseException {
-        String ipvSessionId = SecureTokenHelper.generate();
-        when(mockIpvSessionService.generateIpvSession(any(), any())).thenReturn(ipvSessionId);
+        when(mockIpvSessionService.generateIpvSession(any(), any())).thenReturn(ipvSessionItem);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenThrow(
                         new RecoverableJarValidationException(
@@ -240,7 +255,7 @@ class IpvSessionStartHandlerTest {
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals(ipvSessionId, responseBody.get("ipvSessionId"));
+        assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
     }
 
     private static ECPrivateKey getPrivateKey()

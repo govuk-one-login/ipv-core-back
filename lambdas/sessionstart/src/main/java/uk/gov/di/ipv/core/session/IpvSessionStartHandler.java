@@ -28,6 +28,7 @@ import uk.gov.di.ipv.core.library.exceptions.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -115,16 +116,19 @@ public class IpvSessionStartHandler
                             sessionParams.get(CLIENT_ID_PARAM_KEY),
                             Boolean.parseBoolean(sessionParams.get(IS_DEBUG_JOURNEY_PARAM_KEY)));
 
-            String ipvSessionId =
+            IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(clientSessionDetailsDto, null);
 
-            String userId = ipvSessionService.getUserId(ipvSessionId);
-            AuditEventUser auditEventUser = new AuditEventUser(userId, ipvSessionId);
+            AuditEventUser auditEventUser =
+                    new AuditEventUser(
+                            ipvSessionItem.getClientSessionDetails().getUserId(),
+                            ipvSessionItem.getIpvSessionId());
 
             auditService.sendAuditEvent(
                     new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, componentId, auditEventUser));
 
-            Map<String, String> response = Map.of(IPV_SESSION_ID_KEY, ipvSessionId);
+            Map<String, String> response =
+                    Map.of(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
         } catch (RecoverableJarValidationException e) {
@@ -136,11 +140,12 @@ public class IpvSessionStartHandler
                     generateErrorClientSessionDetails(
                             e.getRedirectUri(), e.getClientId(), e.getState());
 
-            String ipvSessionId =
+            IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
                             clientSessionDetailsDto, e.getErrorObject());
 
-            Map<String, String> response = Map.of(IPV_SESSION_ID_KEY, ipvSessionId);
+            Map<String, String> response =
+                    Map.of(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
         } catch (ParseException e) {
