@@ -95,6 +95,30 @@ class FraudEvidenceValidatorTest {
         assertTrue(criCheckValidator.isSuccess(userIssuedCredentialsItem));
     }
 
+    @Test
+    void returnsTrueForSuccessfulFraudCheckWithSingleA01ContraIndicators()
+            throws Exception, HttpResponseExceptionWithErrorBody {
+        JSONObject evidenceJsonWithEmptyCiList =
+                new JSONObject(
+                        Map.of(
+                                EVIDENCE,
+                                List.of(
+                                        Map.of(
+                                                "type",
+                                                "IdentityCheck",
+                                                "txn",
+                                                "a-random-uuid",
+                                                "identityFraudScore",
+                                                "2",
+                                                "ci",
+                                                List.of("A01")))));
+
+        UserIssuedCredentialsItem userIssuedCredentialsItem =
+                getUserIssuedCredentialsItem(evidenceJsonWithEmptyCiList);
+
+        assertTrue(criCheckValidator.isSuccess(userIssuedCredentialsItem));
+    }
+
     private UserIssuedCredentialsItem getUserIssuedCredentialsItem(JSONObject evidence)
             throws Exception {
         JWTClaimsSet claimsSet = new JWTClaimsSet.Builder().claim(VC_CLAIM, evidence).build();
