@@ -1,0 +1,22 @@
+INIT:
+  name: INIT
+  parent: null
+  events:
+    NEXT:
+      type: basic
+      name: NEXT
+      targetState: PAGE_IPV_START
+      response:
+        type: journey
+        journeyStepId: journey-hello
+PAGE_IPV_START:
+  name: PAGE_IPV_START
+  parent: null
+  events:
+    NEXT:
+      type: basic
+      name: NEXT
+      targetState: HELLO
+      response:
+        type: journey
+        journeyStepId: hello

@@ -2,9 +2,19 @@ package uk.gov.di.ipv.core.statemachine;
 
 public class PageResponse implements JourneyStepResponse{
 
-    private final String pageId;
+    private String pageId;
+
+    public PageResponse() {}
 
     public PageResponse(String pageId){
+        this.pageId = pageId;
+    }
+
+    public String getPageId() {
+        return pageId;
+    }
+
+    public void setPageId(String pageId) {
         this.pageId = pageId;
     }
 

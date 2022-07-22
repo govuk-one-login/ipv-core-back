@@ -27,7 +27,10 @@ import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.statemachine.StateMachine;
+import uk.gov.di.ipv.core.statemachine.StateMachineInitializer;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Map;
@@ -63,17 +66,20 @@ public class JourneyEngineHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String JOURNEY_STEP_PARAM = "journeyStep";
 
+    private final StateMachine stateMachine;
     private final IpvSessionService ipvSessionService;
     private final ConfigurationService configurationService;
 
     public JourneyEngineHandler(
-            IpvSessionService ipvSessionService, ConfigurationService configurationService) {
+            StateMachine stateMachine, IpvSessionService ipvSessionService, ConfigurationService configurationService) {
+        this.stateMachine = stateMachine;
         this.ipvSessionService = ipvSessionService;
         this.configurationService = configurationService;
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public JourneyEngineHandler() {
+    public JourneyEngineHandler() throws IOException {
+        this.stateMachine = new StateMachine(new StateMachineInitializer());
         this.configurationService = new ConfigurationService();
         this.ipvSessionService = new IpvSessionService(configurationService);
     }

@@ -20,6 +20,8 @@ import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.statemachine.StateMachine;
+import uk.gov.di.ipv.core.statemachine.StateMachineInitializer;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -54,9 +56,10 @@ class JourneyEngineHandlerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
+        StateMachine stateMachine = new StateMachine(new StateMachineInitializer());
         journeyEngineHandler =
-                new JourneyEngineHandler(mockIpvSessionService, mockConfigurationService);
+                new JourneyEngineHandler(stateMachine, mockIpvSessionService, mockConfigurationService);
     }
 
     @Test

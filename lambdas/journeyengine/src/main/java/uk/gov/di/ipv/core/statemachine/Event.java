@@ -1,8 +1,15 @@
 package uk.gov.di.ipv.core.statemachine;
 
-public interface Event {
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-    //State resolve();
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = BasicEvent.class, name = "basic") })
+public interface Event {
     StateMachineResult resolve(Context context);
 
 }

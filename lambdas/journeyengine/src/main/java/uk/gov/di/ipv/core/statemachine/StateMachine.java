@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.statemachine;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -8,7 +9,7 @@ public class StateMachine {
     private State initialState;
     private Map<String, State> states = new HashMap<>();
 
-    public StateMachine(StateMachineInitializer initializer){
+    public StateMachine(StateMachineInitializer initializer) throws IOException {
         this.states = initializer.initialize();
     }
 
