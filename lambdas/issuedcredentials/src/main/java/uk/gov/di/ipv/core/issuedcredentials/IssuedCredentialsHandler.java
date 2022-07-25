@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 public class IssuedCredentialsHandler
@@ -20,17 +21,22 @@ public class IssuedCredentialsHandler
 
     private final UserIdentityService userIdentityService;
     private final ConfigurationService configurationService;
+    private final IpvSessionService ipvSessionService;
 
     public IssuedCredentialsHandler(
-            UserIdentityService userIdentityService, ConfigurationService configurationService) {
+            UserIdentityService userIdentityService,
+            ConfigurationService configurationService,
+            IpvSessionService ipvSessionService) {
         this.userIdentityService = userIdentityService;
         this.configurationService = configurationService;
+        this.ipvSessionService = ipvSessionService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public IssuedCredentialsHandler() {
         this.configurationService = new ConfigurationService();
         this.userIdentityService = new UserIdentityService(configurationService);
+        this.ipvSessionService = new IpvSessionService(configurationService);
     }
 
     @Override
@@ -40,10 +46,10 @@ public class IssuedCredentialsHandler
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
         try {
+            String ipvSessionId = RequestHelper.getIpvSessionId(input);
+            String userId = ipvSessionService.getUserId(ipvSessionId);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK,
-                    userIdentityService.getUserIssuedDebugCredentials(
-                            RequestHelper.getIpvSessionId(input)));
+                    HttpStatus.SC_OK, userIdentityService.getUserIssuedDebugCredentials(userId));
         } catch (HttpResponseExceptionWithErrorBody e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getResponseCode(), e.getErrorBody());

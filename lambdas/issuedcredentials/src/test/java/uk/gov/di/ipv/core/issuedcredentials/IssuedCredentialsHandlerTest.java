@@ -10,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.util.Map;
@@ -23,6 +24,7 @@ public class IssuedCredentialsHandlerTest {
     @Mock private Context mockContext;
     @Mock private UserIdentityService mockUserIdentityService;
     @Mock private ConfigurationService mockConfigurationService;
+    @Mock private IpvSessionService mockIpvSessionService;
 
     private final Gson gson = new Gson();
 
@@ -30,17 +32,20 @@ public class IssuedCredentialsHandlerTest {
     void shouldReturn200OnSuccessfulRequest() {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         String ipvSessionId = "a-session-id";
+        String userId = "a-user-id";
         event.setHeaders(Map.of(RequestHelper.IPV_SESSION_ID_HEADER, ipvSessionId));
 
+        when(mockIpvSessionService.getUserId(ipvSessionId)).thenReturn(userId);
         Map<String, String> userIssuedCredentials =
                 Map.of(
                         "criOne", "credential issued by criOne",
                         "criTwo", "credential issued by criTwo",
                         "criThree", "credential issued by criThree");
-        when(mockUserIdentityService.getUserIssuedDebugCredentials(ipvSessionId))
+        when(mockUserIdentityService.getUserIssuedDebugCredentials(userId))
                 .thenReturn(userIssuedCredentials);
         IssuedCredentialsHandler issuedCredentialsHandler =
-                new IssuedCredentialsHandler(mockUserIdentityService, mockConfigurationService);
+                new IssuedCredentialsHandler(
+                        mockUserIdentityService, mockConfigurationService, mockIpvSessionService);
 
         APIGatewayProxyResponseEvent response =
                 issuedCredentialsHandler.handleRequest(event, mockContext);
@@ -54,7 +59,8 @@ public class IssuedCredentialsHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setHeaders(Map.of());
         IssuedCredentialsHandler issuedCredentialsHandler =
-                new IssuedCredentialsHandler(mockUserIdentityService, mockConfigurationService);
+                new IssuedCredentialsHandler(
+                        mockUserIdentityService, mockConfigurationService, mockIpvSessionService);
 
         APIGatewayProxyResponseEvent response =
                 issuedCredentialsHandler.handleRequest(event, mockContext);
@@ -67,7 +73,8 @@ public class IssuedCredentialsHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setHeaders(Map.of(RequestHelper.IPV_SESSION_ID_HEADER, ""));
         IssuedCredentialsHandler issuedCredentialsHandler =
-                new IssuedCredentialsHandler(mockUserIdentityService, mockConfigurationService);
+                new IssuedCredentialsHandler(
+                        mockUserIdentityService, mockConfigurationService, mockIpvSessionService);
 
         APIGatewayProxyResponseEvent response =
                 issuedCredentialsHandler.handleRequest(event, mockContext);

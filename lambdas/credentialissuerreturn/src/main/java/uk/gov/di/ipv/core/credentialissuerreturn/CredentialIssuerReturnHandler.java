@@ -133,10 +133,7 @@ public class CredentialIssuerReturnHandler
 
             sendIpvVcReceivedAuditEvent(auditEventUser, verifiableCredential);
 
-            credentialIssuerService.persistUserCredentials(
-                    verifiableCredential.serialize(), request);
-            credentialIssuerV2Service.persistUserCredentials(
-                    verifiableCredential.serialize(), request.getCredentialIssuerId(), userId);
+            credentialIssuerService.persistUserCredentials(verifiableCredential.serialize(), request.getCredentialIssuerId(), userId);
 
             JourneyResponse journeyResponse =
                     new JourneyResponse(

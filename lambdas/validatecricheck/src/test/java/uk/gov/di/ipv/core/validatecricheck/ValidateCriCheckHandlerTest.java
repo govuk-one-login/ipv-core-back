@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator;
 
@@ -32,10 +33,12 @@ class ValidateCriCheckHandlerTest {
     private final Gson gson = new Gson();
     private final String criId = "testCriId";
     private final String sessionId = "testSessionId";
+    private final String userId = "testUserId";
 
     @Mock private Context context;
     @Mock private CriCheckValidator mockCriCheckValidator;
     @Mock private UserIdentityService userIdentityService;
+    @Mock private IpvSessionService ipvSessionService;
     @InjectMocks private ValidateCriCheckHandler validateCriCheckHandler;
 
     @Test
@@ -45,13 +48,14 @@ class ValidateCriCheckHandlerTest {
         event.setHeaders(Map.of(IPV_SESSION_ID_HEADER_KEY, sessionId));
 
         when(mockCriCheckValidator.isSuccess(any())).thenReturn(true);
+        when(ipvSessionService.getUserId(sessionId)).thenReturn(userId);
 
         var response = validateCriCheckHandler.handleRequest(event, context);
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
         assertEquals(JOURNEY_NEXT, journeyResponse.getJourney());
-        verify(userIdentityService).getUserIssuedCredential(sessionId, criId);
+        verify(userIdentityService).getUserIssuedCredential(userId, criId);
     }
 
     @Test
@@ -61,13 +65,14 @@ class ValidateCriCheckHandlerTest {
         event.setHeaders(Map.of(IPV_SESSION_ID_HEADER_KEY, sessionId));
 
         when(mockCriCheckValidator.isSuccess(any())).thenReturn(false);
+        when(ipvSessionService.getUserId(sessionId)).thenReturn(userId);
 
         var response = validateCriCheckHandler.handleRequest(event, context);
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
         assertEquals(JOURNEY_FAIL, journeyResponse.getJourney());
-        verify(userIdentityService).getUserIssuedCredential(sessionId, criId);
+        verify(userIdentityService).getUserIssuedCredential(userId, criId);
     }
 
     @Test

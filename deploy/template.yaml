@@ -1034,12 +1034,12 @@ Resources:
       TableName: !Sub "user-issued-credentials-${Environment}"
       BillingMode: "PAY_PER_REQUEST"
       AttributeDefinitions:
-        - AttributeName: "ipvSessionId"
+        - AttributeName: "userId"
           AttributeType: "S"
         - AttributeName: "credentialIssuer"
           AttributeType: "S"
       KeySchema:
-        - AttributeName: "ipvSessionId"
+        - AttributeName: "userId"
           KeyType: "HASH"
         - AttributeName: "credentialIssuer"
           KeyType: "RANGE"

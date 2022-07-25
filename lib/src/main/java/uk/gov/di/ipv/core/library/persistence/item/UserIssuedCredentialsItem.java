@@ -11,19 +11,19 @@ import java.time.LocalDateTime;
 @ExcludeFromGeneratedCoverageReport
 public class UserIssuedCredentialsItem implements DynamodbItem {
 
-    private String ipvSessionId;
+    private String userId;
     private String credentialIssuer;
     private String credential;
     private LocalDateTime dateCreated;
     private long ttl;
 
     @DynamoDbPartitionKey
-    public String getIpvSessionId() {
-        return ipvSessionId;
+    public String getUserId() {
+        return userId;
     }
 
-    public void setIpvSessionId(String ipvSessionId) {
-        this.ipvSessionId = ipvSessionId;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     @DynamoDbSortKey
