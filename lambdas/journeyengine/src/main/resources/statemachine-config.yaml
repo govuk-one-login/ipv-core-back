@@ -1,22 +1,144 @@
-INIT:
+#parent states
+CRI_STATE:
+  name: CRI_STATE
+  parent: null
+  events:
+    ERROR:
+      type: basic
+      name: error
+      targetState: CRI_ERROR
+      response:
+        type: page
+        pageId: pyi-technical
+    FAIL:
+      type: basic
+      name: fail
+      targetState: PYI_NO_MATCH
+      response:
+        type: page
+        pageId: pyi-no-match
+END_JOURNEY:
+  name: END_JOURNEY
+  parent: null
+  events:
+    NEXT:
+      type: basic
+      name: next
+      targetState: END
+      response:
+        type: journey
+        journeyStepId: /journey/session/end
+
+#child states
+INITIAL_IPV_JOURNEY:
   name: INIT
   parent: null
   events:
     NEXT:
       type: basic
-      name: NEXT
-      targetState: PAGE_IPV_START
+      name: next
+      targetState: IPV_IDENTITY_START_PAGE
       response:
-        type: journey
-        journeyStepId: journey-hello
-PAGE_IPV_START:
-  name: PAGE_IPV_START
+        type: page
+        pageId: page-ipv-identity-start
+IPV_IDENTITY_START_PAGE:
+  name: IPV_IDENTITY_START_PAGE
   parent: null
   events:
     NEXT:
       type: basic
       name: NEXT
-      targetState: HELLO
+      targetState: CRI_UK_PASSPORT
       response:
-        type: journey
-        journeyStepId: hello
+        type: cri
+        criId: PASSPORT_CRI_ID
+CRI_UK_PASSPORT:
+  name: CRI_UK_PASSPORT
+  parent: CRI_STATE
+  events:
+    NEXT:
+      type: basic
+      name: NEXT
+      targetState: CRI_ADDRESS
+      response:
+        type: cri
+        criId: ADDRESS_CRI_ID
+CRI_ADDRESS:
+  name: CRI_ADDRESS
+  parent: CRI_STATE
+  events:
+    NEXT:
+      type: basic
+      name: NEXT
+      targetState: CRI_FRAUD
+      response:
+        type: cri
+        criId: FRAUD_CRI_ID
+CRI_FRAUD:
+  name: CRI_FRAUD
+  parent: CRI_STATE
+  events:
+    NEXT:
+      type: basic
+      name: NEXT
+      targetState: PRE_KBV_TRANSITION_PAGE
+      response:
+        type: page
+        pageId: page-pre-kbv-transition
+PRE_KBV_TRANSITION_PAGE:
+  name: PRE_KBV_TRANSITION_PAGE
+  parent: null
+  events:
+    NEXT:
+      type: basic
+      name: NEXT
+      targetState: CRI_KBV
+      response:
+        type: cri
+        criId: KBV_CRI_ID
+CRI_KBV:
+  name: CRI_KBV
+  parent: CRI_STATE
+  events:
+    NEXT:
+      type: basic
+      name: NEXT
+      targetState: IPV_SUCCESS_PAGE
+      response:
+        type: page
+        pageId: page-ipv-success
+    FAIL:
+      type: basic
+      name: fail
+      targetState: PYI_KBV_FAIL
+      response:
+        type: page
+        pageId: pyi-kbv-fail
+IPV_SUCCESS_PAGE:
+  name: IPV_SUCCESS_PAGE
+  parent: END_JOURNEY
+PYI_NO_MATCH:
+  name: PYI_NO_MATCH
+  parent: END_JOURNEY
+PYI_KBV_FAIL:
+  name: PYI_KBV_FAIL
+  parent: END_JOURNEY
+CRI_ERROR:
+  name: CRI_ERROR
+  parent: END_JOURNEY
+CORE_SESSION_TIMEOUT:
+  name: CORE_SESSION_TIMEOUT
+  parent: END_JOURNEY
+
+#debug page state
+DEBUG_PAGE:
+  name: DEBUG_PAGE
+  parent: CRI_STATE
+  events:
+    NEXT:
+      type: basic
+      name: NEXT
+      targetState: DEBUG_PAGE
+      response:
+        type: page
+        pageId: page-ipv-debug

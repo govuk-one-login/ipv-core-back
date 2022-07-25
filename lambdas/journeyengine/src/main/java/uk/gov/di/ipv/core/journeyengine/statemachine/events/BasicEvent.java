@@ -1,20 +1,19 @@
-package uk.gov.di.ipv.core.statemachine;
+package uk.gov.di.ipv.core.journeyengine.statemachine.events;
 
+import uk.gov.di.ipv.core.journeyengine.statemachine.State;
+import uk.gov.di.ipv.core.journeyengine.statemachine.StateMachineResult;
+import uk.gov.di.ipv.core.journeyengine.statemachine.responses.Context;
+import uk.gov.di.ipv.core.journeyengine.statemachine.responses.JourneyStepResponse;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+
+@ExcludeFromGeneratedCoverageReport
 public class BasicEvent implements Event {
 
     private String name;
     private State targetState;
     private JourneyStepResponse response;
 
-    public BasicEvent() {}
-
-    public BasicEvent(String name, State targetState, JourneyStepResponse response){
-        this.name = name;
-        this.targetState = targetState;
-        this.response = response;
-    }
-
-    public StateMachineResult resolve(Context context){
+    public StateMachineResult resolve(Context context) {
         return new StateMachineResult(targetState, response);
     }
 

@@ -12,7 +12,7 @@ repositories {
 dependencies {
 	implementation "com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
 			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
-            "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$rootProject.ext.dependencyVersions.jackson",
+			"com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$rootProject.ext.dependencyVersions.jackson",
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			project(":lib")
 

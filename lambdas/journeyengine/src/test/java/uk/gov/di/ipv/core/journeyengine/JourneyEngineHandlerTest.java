@@ -12,16 +12,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.journeyengine.domain.PageResponse;
+import uk.gov.di.ipv.core.journeyengine.statemachine.StateMachine;
+import uk.gov.di.ipv.core.journeyengine.statemachine.StateMachineInitializer;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.UserStates;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.statemachine.StateMachine;
-import uk.gov.di.ipv.core.statemachine.StateMachineInitializer;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -33,13 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CRI_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_JOURNEY_CRI_START_URI;
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_JOURNEY_SESSION_END_URI;
 
 @ExtendWith(MockitoExtension.class)
 class JourneyEngineHandlerTest {
@@ -59,7 +52,8 @@ class JourneyEngineHandlerTest {
     void setUp() throws IOException {
         StateMachine stateMachine = new StateMachine(new StateMachineInitializer());
         journeyEngineHandler =
-                new JourneyEngineHandler(stateMachine, mockIpvSessionService, mockConfigurationService);
+                new JourneyEngineHandler(
+                        stateMachine, mockIpvSessionService, mockConfigurationService);
     }
 
     @Test
@@ -219,11 +213,13 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setUserState(UserStates.INITIAL_IPV_JOURNEY.toString());
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        PageResponse pageResponse = objectMapper.readValue(response.getBody(), PageResponse.class);
+        Map<String, String> pageResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -233,7 +229,7 @@ class JourneyEngineHandlerTest {
                 sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(UserStates.IPV_IDENTITY_START_PAGE.value, pageResponse.getPage());
+        assertEquals(UserStates.IPV_IDENTITY_START_PAGE.value, pageResponse.get("page"));
     }
 
     @Test
@@ -251,15 +247,15 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.IPV_IDENTITY_START_PAGE.toString());
 
-        mockEnvironmentVariables();
+        when(mockConfigurationService.getSsmParameter(ConfigurationVariable.PASSPORT_CRI_ID))
+                .thenReturn("ukPassport");
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
-        when(mockConfigurationService.getSsmParameter(PASSPORT_CRI_ID)).thenReturn("ukPassport");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        JourneyResponse journeyResponse =
-                objectMapper.readValue(response.getBody(), JourneyResponse.class);
+        Map<String, String> criResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -269,7 +265,7 @@ class JourneyEngineHandlerTest {
                 sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/cri/start/ukPassport", journeyResponse.getJourney());
+        assertEquals("/journey/cri/start/ukPassport", criResponse.get("journey"));
     }
 
     @Test
@@ -287,15 +283,15 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_UK_PASSPORT.toString());
 
-        mockEnvironmentVariables();
+        when(mockConfigurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
+                .thenReturn("address");
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
-        when(mockConfigurationService.getSsmParameter(ADDRESS_CRI_ID)).thenReturn("address");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        JourneyResponse journeyResponse =
-                objectMapper.readValue(response.getBody(), JourneyResponse.class);
+        Map<String, String> criResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -304,7 +300,7 @@ class JourneyEngineHandlerTest {
                 UserStates.CRI_ADDRESS.toString(), sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/cri/start/address", journeyResponse.getJourney());
+        assertEquals("/journey/cri/start/address", criResponse.get("journey"));
     }
 
     @Test
@@ -327,7 +323,8 @@ class JourneyEngineHandlerTest {
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        PageResponse pageResponse = objectMapper.readValue(response.getBody(), PageResponse.class);
+        Map<String, String> pageResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -336,7 +333,7 @@ class JourneyEngineHandlerTest {
                 UserStates.CRI_ERROR.toString(), sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(UserStates.PYI_TECHNICAL_ERROR_PAGE.value, pageResponse.getPage());
+        assertEquals(UserStates.PYI_TECHNICAL_ERROR_PAGE.value, pageResponse.get("page"));
     }
 
     @Test
@@ -354,15 +351,15 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_ADDRESS.toString());
 
-        mockEnvironmentVariables();
+        when(mockConfigurationService.getSsmParameter(ConfigurationVariable.FRAUD_CRI_ID))
+                .thenReturn("fraud");
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
-        when(mockConfigurationService.getSsmParameter(FRAUD_CRI_ID)).thenReturn("fraud");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        JourneyResponse journeyResponse =
-                objectMapper.readValue(response.getBody(), JourneyResponse.class);
+        Map<String, String> criResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -371,7 +368,7 @@ class JourneyEngineHandlerTest {
                 UserStates.CRI_FRAUD.toString(), sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/cri/start/fraud", journeyResponse.getJourney());
+        assertEquals("/journey/cri/start/fraud", criResponse.get("journey"));
     }
 
     @Test
@@ -394,7 +391,8 @@ class JourneyEngineHandlerTest {
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        PageResponse pageResponse = objectMapper.readValue(response.getBody(), PageResponse.class);
+        Map<String, String> pageResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -403,7 +401,7 @@ class JourneyEngineHandlerTest {
                 UserStates.CRI_ERROR.toString(), sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(UserStates.PYI_TECHNICAL_ERROR_PAGE.value, pageResponse.getPage());
+        assertEquals(UserStates.PYI_TECHNICAL_ERROR_PAGE.value, pageResponse.get("page"));
     }
 
     @Test
@@ -426,7 +424,8 @@ class JourneyEngineHandlerTest {
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        PageResponse pageResponse = objectMapper.readValue(response.getBody(), PageResponse.class);
+        Map<String, String> pageResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -436,7 +435,7 @@ class JourneyEngineHandlerTest {
                 sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(UserStates.PRE_KBV_TRANSITION_PAGE.value, pageResponse.getPage());
+        assertEquals(UserStates.PRE_KBV_TRANSITION_PAGE.value, pageResponse.get("page"));
     }
 
     @Test
@@ -454,15 +453,15 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.PRE_KBV_TRANSITION_PAGE.toString());
 
-        mockEnvironmentVariables();
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
-        when(mockConfigurationService.getSsmParameter(KBV_CRI_ID)).thenReturn("kbv");
+        when(mockConfigurationService.getSsmParameter(ConfigurationVariable.KBV_CRI_ID))
+                .thenReturn("kbv");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        JourneyResponse journeyResponse =
-                objectMapper.readValue(response.getBody(), JourneyResponse.class);
+        Map<String, String> criResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -471,7 +470,7 @@ class JourneyEngineHandlerTest {
                 UserStates.CRI_KBV.toString(), sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/cri/start/kbv", journeyResponse.getJourney());
+        assertEquals("/journey/cri/start/kbv", criResponse.get("journey"));
     }
 
     @Test
@@ -494,7 +493,8 @@ class JourneyEngineHandlerTest {
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        PageResponse pageResponse = objectMapper.readValue(response.getBody(), PageResponse.class);
+        Map<String, String> pageResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -503,7 +503,7 @@ class JourneyEngineHandlerTest {
                 UserStates.CRI_ERROR.toString(), sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(UserStates.PYI_TECHNICAL_ERROR_PAGE.value, pageResponse.getPage());
+        assertEquals(UserStates.PYI_TECHNICAL_ERROR_PAGE.value, pageResponse.get("page"));
     }
 
     @Test
@@ -521,13 +521,13 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_KBV.toString());
 
-        mockEnvironmentVariables();
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        PageResponse pageResponse = objectMapper.readValue(response.getBody(), PageResponse.class);
+        Map<String, String> pageResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -538,7 +538,7 @@ class JourneyEngineHandlerTest {
                 sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(UserStates.IPV_SUCCESS_PAGE.value, pageResponse.getPage());
+        assertEquals(UserStates.IPV_SUCCESS_PAGE.value, pageResponse.get("page"));
     }
 
     @Test
@@ -561,7 +561,8 @@ class JourneyEngineHandlerTest {
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        PageResponse pageResponse = objectMapper.readValue(response.getBody(), PageResponse.class);
+        Map<String, String> pageResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -570,7 +571,7 @@ class JourneyEngineHandlerTest {
                 UserStates.CRI_ERROR.toString(), sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(UserStates.PYI_TECHNICAL_ERROR_PAGE.value, pageResponse.getPage());
+        assertEquals(UserStates.PYI_TECHNICAL_ERROR_PAGE.value, pageResponse.get("page"));
     }
 
     @Test
@@ -588,17 +589,16 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.IPV_SUCCESS_PAGE.toString());
 
-        mockEnvironmentVariables();
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        JourneyResponse journeyResponse =
-                objectMapper.readValue(response.getBody(), JourneyResponse.class);
+        Map<String, String> journeyResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/session/end", journeyResponse.getJourney());
+        assertEquals("/journey/session/end", journeyResponse.get("journey"));
     }
 
     @Test
@@ -621,10 +621,11 @@ class JourneyEngineHandlerTest {
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        PageResponse pageResponse = objectMapper.readValue(response.getBody(), PageResponse.class);
+        Map<String, String> pageResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(UserStates.DEBUG_PAGE.value, pageResponse.getPage());
+        assertEquals(UserStates.DEBUG_PAGE.value, pageResponse.get("page"));
     }
 
     @Test
@@ -647,7 +648,8 @@ class JourneyEngineHandlerTest {
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        PageResponse pageResponse = objectMapper.readValue(response.getBody(), PageResponse.class);
+        Map<String, String> pageResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -656,7 +658,7 @@ class JourneyEngineHandlerTest {
                 UserStates.CRI_ERROR.toString(), sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(UserStates.PYI_TECHNICAL_ERROR_PAGE.value, pageResponse.getPage());
+        assertEquals(UserStates.PYI_TECHNICAL_ERROR_PAGE.value, pageResponse.get("page"));
     }
 
     @Test
@@ -679,7 +681,8 @@ class JourneyEngineHandlerTest {
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        PageResponse pageResponse = objectMapper.readValue(response.getBody(), PageResponse.class);
+        Map<String, String> pageResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -689,7 +692,7 @@ class JourneyEngineHandlerTest {
                 sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(UserStates.PYI_NO_MATCH.value, pageResponse.getPage());
+        assertEquals(UserStates.PYI_NO_MATCH.value, pageResponse.get("page"));
     }
 
     @Test
@@ -707,17 +710,16 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_ERROR.toString());
 
-        mockEnvironmentVariables();
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        JourneyResponse journeyResponse =
-                objectMapper.readValue(response.getBody(), JourneyResponse.class);
+        Map<String, String> journeyResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/session/end", journeyResponse.getJourney());
+        assertEquals("/journey/session/end", journeyResponse.get("journey"));
     }
 
     @Test
@@ -740,7 +742,8 @@ class JourneyEngineHandlerTest {
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        PageResponse pageResponse = objectMapper.readValue(response.getBody(), PageResponse.class);
+        Map<String, String> pageResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -750,7 +753,7 @@ class JourneyEngineHandlerTest {
                 sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(UserStates.PYI_NO_MATCH.value, pageResponse.getPage());
+        assertEquals(UserStates.PYI_NO_MATCH.value, pageResponse.get("page"));
     }
 
     @Test
@@ -773,7 +776,8 @@ class JourneyEngineHandlerTest {
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        PageResponse pageResponse = objectMapper.readValue(response.getBody(), PageResponse.class);
+        Map<String, String> pageResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -783,7 +787,7 @@ class JourneyEngineHandlerTest {
                 sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(UserStates.PYI_NO_MATCH.value, pageResponse.getPage());
+        assertEquals(UserStates.PYI_NO_MATCH.value, pageResponse.get("page"));
     }
 
     @Test
@@ -801,13 +805,13 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_KBV.toString());
 
-        mockEnvironmentVariables();
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        PageResponse pageResponse = objectMapper.readValue(response.getBody(), PageResponse.class);
+        Map<String, String> pageResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -818,7 +822,7 @@ class JourneyEngineHandlerTest {
                 sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(UserStates.PYI_KBV_FAIL.value, pageResponse.getPage());
+        assertEquals(UserStates.PYI_KBV_FAIL.value, pageResponse.get("page"));
     }
 
     @Test
@@ -841,7 +845,8 @@ class JourneyEngineHandlerTest {
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        PageResponse pageResponse = objectMapper.readValue(response.getBody(), PageResponse.class);
+        Map<String, String> pageResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -856,7 +861,7 @@ class JourneyEngineHandlerTest {
                 capturedIpvSessionItem.getErrorDescription());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(UserStates.PYI_TECHNICAL_ERROR_PAGE.value, pageResponse.getPage());
+        assertEquals(UserStates.PYI_TECHNICAL_ERROR_PAGE.value, pageResponse.get("page"));
     }
 
     @Test
@@ -874,25 +879,14 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
         ipvSessionItem.setUserState(UserStates.CORE_SESSION_TIMEOUT.toString());
 
-        when(mockConfigurationService.getEnvironmentVariable(IPV_JOURNEY_CRI_START_URI))
-                .thenReturn("/journey/session/start");
-        when(mockConfigurationService.getEnvironmentVariable(IPV_JOURNEY_SESSION_END_URI))
-                .thenReturn("/journey/session/end");
         when(mockIpvSessionService.getIpvSession("1234")).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);
-        JourneyResponse journeyResponse =
-                objectMapper.readValue(response.getBody(), JourneyResponse.class);
+        Map<String, String> journeyResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/session/end", journeyResponse.getJourney());
-    }
-
-    private void mockEnvironmentVariables() {
-        when(mockConfigurationService.getEnvironmentVariable(IPV_JOURNEY_CRI_START_URI))
-                .thenReturn("/journey/cri/start/");
-        when(mockConfigurationService.getEnvironmentVariable(IPV_JOURNEY_SESSION_END_URI))
-                .thenReturn("/journey/session/end");
+        assertEquals("/journey/session/end", journeyResponse.get("journey"));
     }
 }

@@ -1,6 +1,9 @@
-package uk.gov.di.ipv.core.statemachine;
+package uk.gov.di.ipv.core.journeyengine.statemachine.exceptions;
 
-public class UnknownEventException extends Throwable {
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+
+@ExcludeFromGeneratedCoverageReport
+public class UnknownEventException extends Exception {
 
     public UnknownEventException() {
         super();

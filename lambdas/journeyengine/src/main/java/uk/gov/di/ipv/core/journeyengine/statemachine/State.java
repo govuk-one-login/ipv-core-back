@@ -1,48 +1,38 @@
-package uk.gov.di.ipv.core.statemachine;
+package uk.gov.di.ipv.core.journeyengine.statemachine;
+
+import uk.gov.di.ipv.core.journeyengine.statemachine.events.Event;
+import uk.gov.di.ipv.core.journeyengine.statemachine.exceptions.UnknownEventException;
+import uk.gov.di.ipv.core.journeyengine.statemachine.responses.Context;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+@ExcludeFromGeneratedCoverageReport
 public class State {
-
     private String name;
     private State parent;
     private Map<String, Event> events = new HashMap<>();
 
     public State() {}
 
-    public State(String name){
+    public State(String name) {
         this.name = name;
     }
 
-//    public State(String name, String parent, Map<String, Event> events) {
-//        this.name = name;
-//        this.parent = new State(parent);
-//        this.events = events;
-//    }
-
-    public State withEvent(BasicEvent basicEvent){
-        events.put(basicEvent.getName(), basicEvent);
-        return this;
-    }
-
-    public State withParent(State parent){
-        this.parent = parent;
-        return this;
-    }
-
-    public StateMachineResult transition(String eventName, Context context) throws UnknownEventException {
+    public StateMachineResult transition(String eventName, Context context)
+            throws UnknownEventException {
         var event = getEvent(eventName);
-        if (event.isPresent()){
+        if (event.isPresent()) {
             return event.get().resolve(context);
         }
         throw new UnknownEventException(eventName);
     }
 
-    private Optional<Event> getEvent(String eventName){
+    private Optional<Event> getEvent(String eventName) {
         var event = events.get(eventName);
-        if (event == null && parent != null){
+        if (event == null && parent != null) {
             return parent.getEvent(eventName);
         }
         return Optional.ofNullable(event);

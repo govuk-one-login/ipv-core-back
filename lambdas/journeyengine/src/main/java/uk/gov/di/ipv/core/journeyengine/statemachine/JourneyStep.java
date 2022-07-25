@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.journeyengine.domain;
+package uk.gov.di.ipv.core.journeyengine.statemachine;
 
 public enum JourneyStep {
     NEXT("next"),
