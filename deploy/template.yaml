@@ -822,19 +822,19 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref IPVIssuedCredentialsFunctionLogGroup
 
-  IPVJourneyEngineFunction:
+  IPVProcessJourneyStepFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - "IPVJourneyEngineFunctionLogGroup"
+      - "IPVProcessJourneyStepFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "journey-engine-${Environment}"
-      Handler: uk.gov.di.ipv.core.journeyengine.JourneyEngineHandler::handleRequest
+      FunctionName: !Sub "process-journey-step-${Environment}"
+      Handler: uk.gov.di.ipv.core.processjourneystep.ProcessJourneyStepHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/journeyengine
+      CodeUri: ../lambdas/process-journey-step
       Architectures:
         - arm64
       MemorySize: 2048
@@ -869,20 +869,20 @@ Resources:
           - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
-  IPVJourneyEngineFunctionLogGroup:
+  IPVProcessJourneyStepFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/journey-engine-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/process-journey-step-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
-  IPVJourneyEngineFunctionLogGroupSubscriptionFilter:
+  IPVProcessJourneyStepFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
-      LogGroupName: !Ref IPVJourneyEngineFunctionLogGroup
+      LogGroupName: !Ref IPVProcessJourneyStepFunctionLogGroup
 
   IPVValidateCriCheckFunction:
     Type: AWS::Serverless::Function
