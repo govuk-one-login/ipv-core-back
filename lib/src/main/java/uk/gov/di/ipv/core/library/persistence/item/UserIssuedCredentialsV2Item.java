@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 
 @DynamoDbBean
 @ExcludeFromGeneratedCoverageReport
+@SuppressWarnings("common-java:DuplicatedBlocks")
 public class UserIssuedCredentialsV2Item implements DynamodbItem {
 
     private String userId;
