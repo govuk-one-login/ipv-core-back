@@ -3,14 +3,14 @@ CRI_STATE:
   name: CRI_STATE
   parent: null
   events:
-    ERROR:
+    error:
       type: basic
       name: error
       targetState: CRI_ERROR
       response:
         type: page
         pageId: pyi-technical
-    FAIL:
+    fail:
       type: basic
       name: fail
       targetState: PYI_NO_MATCH
@@ -21,7 +21,7 @@ END_JOURNEY:
   name: END_JOURNEY
   parent: null
   events:
-    NEXT:
+    next:
       type: basic
       name: next
       targetState: END
@@ -34,7 +34,7 @@ INITIAL_IPV_JOURNEY:
   name: INIT
   parent: null
   events:
-    NEXT:
+    next:
       type: basic
       name: next
       targetState: IPV_IDENTITY_START_PAGE
@@ -45,9 +45,9 @@ IPV_IDENTITY_START_PAGE:
   name: IPV_IDENTITY_START_PAGE
   parent: null
   events:
-    NEXT:
+    next:
       type: basic
-      name: NEXT
+      name: next
       targetState: CRI_UK_PASSPORT
       response:
         type: cri
@@ -56,9 +56,9 @@ CRI_UK_PASSPORT:
   name: CRI_UK_PASSPORT
   parent: CRI_STATE
   events:
-    NEXT:
+    next:
       type: basic
-      name: NEXT
+      name: next
       targetState: CRI_ADDRESS
       response:
         type: cri
@@ -67,9 +67,9 @@ CRI_ADDRESS:
   name: CRI_ADDRESS
   parent: CRI_STATE
   events:
-    NEXT:
+    next:
       type: basic
-      name: NEXT
+      name: next
       targetState: CRI_FRAUD
       response:
         type: cri
@@ -78,9 +78,9 @@ CRI_FRAUD:
   name: CRI_FRAUD
   parent: CRI_STATE
   events:
-    NEXT:
+    next:
       type: basic
-      name: NEXT
+      name: next
       targetState: PRE_KBV_TRANSITION_PAGE
       response:
         type: page
@@ -89,9 +89,9 @@ PRE_KBV_TRANSITION_PAGE:
   name: PRE_KBV_TRANSITION_PAGE
   parent: null
   events:
-    NEXT:
+    next:
       type: basic
-      name: NEXT
+      name: next
       targetState: CRI_KBV
       response:
         type: cri
@@ -100,14 +100,14 @@ CRI_KBV:
   name: CRI_KBV
   parent: CRI_STATE
   events:
-    NEXT:
+    next:
       type: basic
-      name: NEXT
+      name: next
       targetState: IPV_SUCCESS_PAGE
       response:
         type: page
         pageId: page-ipv-success
-    FAIL:
+    fail:
       type: basic
       name: fail
       targetState: PYI_KBV_FAIL
@@ -135,9 +135,9 @@ DEBUG_PAGE:
   name: DEBUG_PAGE
   parent: CRI_STATE
   events:
-    NEXT:
+    next:
       type: basic
-      name: NEXT
+      name: next
       targetState: DEBUG_PAGE
       response:
         type: page

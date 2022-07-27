@@ -13,12 +13,12 @@ import software.amazon.awssdk.utils.StringUtils;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.journeyengine.exceptions.JourneyEngineException;
-import uk.gov.di.ipv.core.journeyengine.statemachine.JourneyStep;
 import uk.gov.di.ipv.core.journeyengine.statemachine.StateMachine;
 import uk.gov.di.ipv.core.journeyengine.statemachine.StateMachineInitializer;
 import uk.gov.di.ipv.core.journeyengine.statemachine.StateMachineResult;
 import uk.gov.di.ipv.core.journeyengine.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.journeyengine.statemachine.exceptions.UnknownStateException;
+import uk.gov.di.ipv.core.journeyengine.statemachine.responses.JourneyContext;
 import uk.gov.di.ipv.core.journeyengine.statemachine.responses.PageResponse;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -32,7 +32,6 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 
@@ -88,8 +87,7 @@ public class JourneyEngineHandler
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_ID);
             }
 
-            JourneyStep journeyStep =
-                    getJourneyStep(input.getPathParameters().get(JOURNEY_STEP_PARAM));
+            String journeyStep = input.getPathParameters().get(JOURNEY_STEP_PARAM);
 
             Map<String, String> journeyStepResponse =
                     executeJourneyEvent(journeyStep, ipvSessionItem);
@@ -107,7 +105,7 @@ public class JourneyEngineHandler
 
     @Tracing
     private Map<String, String> executeJourneyEvent(
-            JourneyStep journeyStep, IpvSessionItem ipvSessionItem) throws JourneyEngineException {
+            String journeyStep, IpvSessionItem ipvSessionItem) throws JourneyEngineException {
         String currentUserState = ipvSessionItem.getUserState();
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(currentUserState, ipvSessionItem);
@@ -118,9 +116,8 @@ public class JourneyEngineHandler
             StateMachineResult stateMachineResult =
                     stateMachine.transition(
                             ipvSessionItem.getUserState(),
-                            journeyStep.name(),
-                            uk.gov.di.ipv.core.journeyengine.statemachine.responses.Context
-                                    .emptyContext());
+                            journeyStep,
+                            JourneyContext.emptyContext());
 
             updateUserState(
                     ipvSessionItem.getUserState(),
@@ -134,29 +131,17 @@ public class JourneyEngineHandler
             throw new JourneyEngineException(
                     "Invalid journey state encountered, failed to execute journey engine step.");
         } catch (UnknownEventException e) {
-            LOGGER.warn("Unknown journey event: {}", journeyStep.name());
+            LOGGER.warn("Unknown journey event: {}", journeyStep);
             throw new JourneyEngineException(
                     "Invalid journey event provided, failed to execute journey engine step.");
         }
-    }
-
-    private JourneyStep getJourneyStep(String journeyStep) throws JourneyEngineException {
-        return Arrays.stream(JourneyStep.values())
-                .filter(step -> step.toString().equalsIgnoreCase(journeyStep))
-                .findFirst()
-                .orElseThrow(
-                        () -> {
-                            LOGGER.warn("Unknown journey step: {}", journeyStep);
-                            return new JourneyEngineException(
-                                    "Invalid journey step provided, failed to execute journey engine step.");
-                        });
     }
 
     @Tracing
     private void updateUserState(
             String oldState,
             String updatedStateValue,
-            JourneyStep journeyStep,
+            String journeyStep,
             IpvSessionItem ipvSessionItem) {
         ipvSessionItem.setUserState(updatedStateValue);
         ipvSessionService.updateIpvSession(ipvSessionItem);

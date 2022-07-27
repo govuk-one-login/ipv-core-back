@@ -156,6 +156,7 @@ class JourneyEngineHandlerTest {
         ipvSessionItem.setUserState(UserStates.INITIAL_IPV_JOURNEY.toString());
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
         APIGatewayProxyResponseEvent response =
                 journeyEngineHandler.handleRequest(event, mockContext);

@@ -2,7 +2,7 @@ package uk.gov.di.ipv.core.journeyengine.statemachine.events;
 
 import uk.gov.di.ipv.core.journeyengine.statemachine.State;
 import uk.gov.di.ipv.core.journeyengine.statemachine.StateMachineResult;
-import uk.gov.di.ipv.core.journeyengine.statemachine.responses.Context;
+import uk.gov.di.ipv.core.journeyengine.statemachine.responses.JourneyContext;
 import uk.gov.di.ipv.core.journeyengine.statemachine.responses.JourneyStepResponse;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
@@ -13,7 +13,7 @@ public class BasicEvent implements Event {
     private State targetState;
     private JourneyStepResponse response;
 
-    public StateMachineResult resolve(Context context) {
+    public StateMachineResult resolve(JourneyContext journeyContext) {
         return new StateMachineResult(targetState, response);
     }
 

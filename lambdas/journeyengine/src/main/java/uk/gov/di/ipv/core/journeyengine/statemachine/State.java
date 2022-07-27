@@ -2,7 +2,7 @@ package uk.gov.di.ipv.core.journeyengine.statemachine;
 
 import uk.gov.di.ipv.core.journeyengine.statemachine.events.Event;
 import uk.gov.di.ipv.core.journeyengine.statemachine.exceptions.UnknownEventException;
-import uk.gov.di.ipv.core.journeyengine.statemachine.responses.Context;
+import uk.gov.di.ipv.core.journeyengine.statemachine.responses.JourneyContext;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.util.HashMap;
@@ -21,11 +21,11 @@ public class State {
         this.name = name;
     }
 
-    public StateMachineResult transition(String eventName, Context context)
+    public StateMachineResult transition(String eventName, JourneyContext journeyContext)
             throws UnknownEventException {
         var event = getEvent(eventName);
         if (event.isPresent()) {
-            return event.get().resolve(context);
+            return event.get().resolve(journeyContext);
         }
         throw new UnknownEventException(eventName);
     }

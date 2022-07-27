@@ -2,7 +2,7 @@ package uk.gov.di.ipv.core.journeyengine.statemachine;
 
 import uk.gov.di.ipv.core.journeyengine.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.journeyengine.statemachine.exceptions.UnknownStateException;
-import uk.gov.di.ipv.core.journeyengine.statemachine.responses.Context;
+import uk.gov.di.ipv.core.journeyengine.statemachine.responses.JourneyContext;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -16,7 +16,8 @@ public class StateMachine {
         this.states = initializer.initialize();
     }
 
-    public StateMachineResult transition(String startState, String event, Context context)
+    public StateMachineResult transition(
+            String startState, String event, JourneyContext journeyContext)
             throws UnknownEventException, UnknownStateException {
         var state = states.get(startState);
 
@@ -25,6 +26,6 @@ public class StateMachine {
                     String.format("Unknown state provided to state machine: %s", startState));
         }
 
-        return state.transition(event, context);
+        return state.transition(event, journeyContext);
     }
 }
