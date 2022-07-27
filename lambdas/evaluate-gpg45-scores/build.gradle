@@ -13,10 +13,15 @@ dependencies {
 
 	implementation "com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
 			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
+			"com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson",
+			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			project(":lib")
 
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
+
+	compileOnly "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
+	annotationProcessor "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
 
 	testImplementation "org.junit.jupiter:junit-jupiter:5.8.2",
 			"org.mockito:mockito-junit-jupiter:4.2.0"
