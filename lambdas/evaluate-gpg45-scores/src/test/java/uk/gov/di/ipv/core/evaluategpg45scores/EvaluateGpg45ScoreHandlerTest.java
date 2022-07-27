@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.JOURNEY_ERROR;
+import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.JOURNEY_FAIL;
 import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.JOURNEY_NEXT;
 import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.JOURNEY_SESSION_END;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
@@ -59,6 +60,20 @@ public class EvaluateGpg45ScoreHandlerTest {
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
         assertEquals(JOURNEY_SESSION_END, journeyResponse.getJourney());
+        verify(userIdentityService).getUserIssuedCredentials(TEST_SESSION_ID);
+    }
+
+    @Test
+    void shouldReturnJourneyFailIfAnyCredentialsAreNotEnoughForM1A() throws Exception {
+        when(userIdentityService.getUserIssuedCredentials(TEST_SESSION_ID)).thenReturn(CREDENTIALS);
+        when(gpg45ProfileEvaluator.anyCredentialsGatheredDoNotMeetM1A(CREDENTIALS))
+                .thenReturn(true);
+
+        var response = evaluateGpg45ScoresHandler.handleRequest(event, context);
+        JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(JOURNEY_FAIL, journeyResponse.getJourney());
         verify(userIdentityService).getUserIssuedCredentials(TEST_SESSION_ID);
     }
 

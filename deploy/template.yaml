@@ -983,6 +983,13 @@ Resources:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub evaluate-gpg45-scores-${Environment}
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsTable
+          USER_ISSUED_CREDENTIALS_V2_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsV2Table
       Events:
         IPVCorePrivateAPI:
           Type: Api

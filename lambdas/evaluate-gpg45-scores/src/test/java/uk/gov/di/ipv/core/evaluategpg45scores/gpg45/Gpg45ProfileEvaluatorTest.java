@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.evaluategpg45scores.exception.UnknownEvidenceTypeException;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -32,7 +33,7 @@ public class Gpg45ProfileEvaluatorTest {
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJpc3MiOiJodHRwczpcL1wvcmV2aWV3LWYuaW50ZWdyYXRpb24uYWNjb3VudC5nb3YudWsiLCJzdWIiOiJ1cm46dXVpZDplNmUyZTMyNC01YjY2LTRhZDYtODMzOC04M2Y5ZjgzN2UzNDUiLCJuYmYiOjE2NTg4Mjk3NTgsImV4cCI6MTY1ODgzNjk1OCwidmMiOnsiY3JlZGVudGlhbFN1YmplY3QiOnsibmFtZSI6W3sibmFtZVBhcnRzIjpbeyJ0eXBlIjoiR2l2ZW5OYW1lIiwidmFsdWUiOiJLRU5ORVRIIn0seyJ0eXBlIjoiRmFtaWx5TmFtZSIsInZhbHVlIjoiREVDRVJRVUVJUkEifV19XSwiYWRkcmVzcyI6W3siYWRkcmVzc0NvdW50cnkiOiJHQiIsImJ1aWxkaW5nTmFtZSI6IiIsInN0cmVldE5hbWUiOiJIQURMRVkgUk9BRCIsInBvQm94TnVtYmVyIjpudWxsLCJwb3N0YWxDb2RlIjoiQkEyIDVBQSIsImJ1aWxkaW5nTnVtYmVyIjoiOCIsImlkIjpudWxsLCJhZGRyZXNzTG9jYWxpdHkiOiJCQVRIIiwic3ViQnVpbGRpbmdOYW1lIjpudWxsfV0sImJpcnRoRGF0ZSI6W3sidmFsdWUiOiIxOTU5LTA4LTIzIn1dfSwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIklkZW50aXR5Q2hlY2tDcmVkZW50aWFsIl0sImV2aWRlbmNlIjpbeyJ0eXBlIjoiSWRlbnRpdHlDaGVjayIsInR4biI6IlJCMDAwMTAzNDkwMDg3IiwidGhpc0RvZXNOb3RNYWtlU2Vuc2VTY29yZSI6MSwiY2kiOltdfV19fQo.MEUCIHoe7TsSTTORaj2X5cpv7Fpg1gVenFwEhYL4tf6zt3eJAiEAiwqUTOROjTB-Gyxt-IEwUQNndj_L43dMAnrPRaWnzNE";
 
     @Test
-    void shouldReturnTrueIfCredentialsSatisfyProfile() throws Exception {
+    void credentialsSatisfyProfileShouldReturnTrueIfCredentialsSatisfyProfile() throws Exception {
         assertTrue(
                 evaluator.credentialsSatisfyProfile(
                         List.of(M1A_PASSPORT_VC, M1A_ADDRESS_VC, M1A_FRAUD_VC, M1A_KBV_VC),
@@ -40,32 +41,34 @@ public class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void shouldReturnFalseIfNoCredentialsFound() throws Exception {
+    void credentialsSatisfyProfileShouldReturnFalseIfNoCredentialsFound() throws Exception {
         assertFalse(evaluator.credentialsSatisfyProfile(List.of(), Gpg45Profile.M1A));
     }
 
     @Test
-    void shouldReturnFalseIfOnlyPassportCredential() throws Exception {
+    void credentialsSatisfyProfileShouldReturnFalseIfOnlyPassportCredential() throws Exception {
         assertFalse(
                 evaluator.credentialsSatisfyProfile(List.of(M1A_PASSPORT_VC), Gpg45Profile.M1A));
     }
 
     @Test
-    void shouldReturnFalseIfOnlyOnlyPassportAndAddressCredential() throws Exception {
+    void credentialsSatisfyProfileShouldReturnFalseIfOnlyOnlyPassportAndAddressCredential()
+            throws Exception {
         assertFalse(
                 evaluator.credentialsSatisfyProfile(
                         List.of(M1A_PASSPORT_VC, M1A_ADDRESS_VC), Gpg45Profile.M1A));
     }
 
     @Test
-    void shouldReturnFalseIfOnlyOnlyPassportAndAddressAndFraudCredential() throws Exception {
+    void credentialsSatisfyProfileShouldReturnFalseIfOnlyOnlyPassportAndAddressAndFraudCredential()
+            throws Exception {
         assertFalse(
                 evaluator.credentialsSatisfyProfile(
                         List.of(M1A_PASSPORT_VC, M1A_ADDRESS_VC, M1A_FRAUD_VC), Gpg45Profile.M1A));
     }
 
     @Test
-    void shouldReturnFalseIfFailedPassportCredential() throws Exception {
+    void credentialsSatisfyProfileShouldReturnFalseIfFailedPassportCredential() throws Exception {
         assertFalse(
                 evaluator.credentialsSatisfyProfile(
                         List.of(PASSPORT_VC_FAILED, M1A_ADDRESS_VC, M1A_FRAUD_VC, M1A_KBV_VC),
@@ -73,7 +76,7 @@ public class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void shouldReturnFalseIfFailedFraudCredential() throws Exception {
+    void credentialsSatisfyProfileShouldReturnFalseIfFailedFraudCredential() throws Exception {
         assertFalse(
                 evaluator.credentialsSatisfyProfile(
                         List.of(M1A_PASSPORT_VC, M1A_ADDRESS_VC, FRAUD_VC_FAILED, M1A_KBV_VC),
@@ -81,7 +84,7 @@ public class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void shouldReturnFalseIfFailedKbvCredential() throws Exception {
+    void credentialsSatisfyProfileShouldReturnFalseIfFailedKbvCredential() throws Exception {
         assertFalse(
                 evaluator.credentialsSatisfyProfile(
                         List.of(M1A_PASSPORT_VC, M1A_ADDRESS_VC, M1A_FRAUD_VC, KBV_VC_FAILED),
@@ -89,7 +92,7 @@ public class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void shouldUseHighestScoringValuesForCredentials() throws Exception {
+    void credentialsSatisfyProfileShouldUseHighestScoringValuesForCredentials() throws Exception {
         assertTrue(
                 evaluator.credentialsSatisfyProfile(
                         List.of(
@@ -103,7 +106,7 @@ public class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void shouldThrowIfCredentialsCanNotBeParse() {
+    void credentialsSatisfyProfileShouldThrowIfCredentialsCanNotBeParse() {
         assertThrows(
                 ParseException.class,
                 () ->
@@ -112,11 +115,40 @@ public class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void shouldThrowIfUnrecognisedEvidenceType() {
+    void credentialsSatisfyProfileShouldThrowIfUnrecognisedEvidenceType() {
         assertThrows(
                 UnknownEvidenceTypeException.class,
                 () ->
                         evaluator.credentialsSatisfyProfile(
                                 List.of(VC_WITH_BAD_EVIDENCE_BLOB), Gpg45Profile.M1A));
+    }
+
+    @Test
+    void anyCredentialsGatheredDoNotMeetM1AShouldReturnFalseForGoodCredentials() throws Exception {
+        List<String> goodCredentials =
+                List.of(M1A_PASSPORT_VC, M1A_ADDRESS_VC, M1A_FRAUD_VC, M1A_KBV_VC);
+        List<String> gatheredCredentials = new ArrayList<>();
+        assertFalse(evaluator.anyCredentialsGatheredDoNotMeetM1A(gatheredCredentials));
+        for (String credential : goodCredentials) {
+            gatheredCredentials.add(credential);
+            assertFalse(evaluator.anyCredentialsGatheredDoNotMeetM1A(gatheredCredentials));
+        }
+    }
+
+    @Test
+    void anyCredentialsGatheredDoNotMeetM1AShouldReturnTrueForBadPassportCredential()
+            throws Exception {
+        assertTrue(evaluator.anyCredentialsGatheredDoNotMeetM1A(List.of(PASSPORT_VC_FAILED)));
+    }
+
+    @Test
+    void anyCredentialsGatheredDoNotMeetM1AShouldReturnTrueForBadFraudCredential()
+            throws Exception {
+        assertTrue(evaluator.anyCredentialsGatheredDoNotMeetM1A(List.of(FRAUD_VC_FAILED)));
+    }
+
+    @Test
+    void anyCredentialsGatheredDoNotMeetM1AShouldReturnTrueForBadKbvCredential() throws Exception {
+        assertTrue(evaluator.anyCredentialsGatheredDoNotMeetM1A(List.of(KBV_VC_FAILED)));
     }
 }

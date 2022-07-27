@@ -10,6 +10,10 @@ import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.evaluategpg45scores.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.evaluategpg45scores.domain.CredentialEvidenceItem.EvidenceType;
 import uk.gov.di.ipv.core.evaluategpg45scores.exception.UnknownEvidenceTypeException;
+import uk.gov.di.ipv.core.evaluategpg45scores.validation.FraudEvidenceValidator;
+import uk.gov.di.ipv.core.evaluategpg45scores.validation.KbvEvidenceValidator;
+import uk.gov.di.ipv.core.evaluategpg45scores.validation.PassportEvidenceValidator;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -25,6 +29,22 @@ public class Gpg45ProfileEvaluator {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson gson = new Gson();
     private static final int NO_SCORE = 0;
+
+    public boolean anyCredentialsGatheredDoNotMeetM1A(List<String> credentials)
+            throws UnknownEvidenceTypeException, ParseException {
+        var evidenceMap = parseGpg45ScoresFromCredentials(credentials);
+
+        for (EvidenceType evidenceType : EvidenceType.values()) {
+            if (anyCredentialsDoNotMeetM1A(evidenceType, evidenceMap.get(evidenceType))) {
+                LogHelper.logInfoMessageWithFieldAndValue(
+                        "Credential does not meet M1A profile",
+                        LogHelper.LogField.EVIDENCE_TYPE,
+                        evidenceType.name());
+                return true;
+            }
+        }
+        return false;
+    }
 
     public boolean credentialsSatisfyProfile(List<String> credentials, Gpg45Profile profile)
             throws ParseException, UnknownEvidenceTypeException {
@@ -108,5 +128,22 @@ public class Gpg45ProfileEvaluator {
             }
         }
         return false;
+    }
+
+    private boolean anyCredentialsDoNotMeetM1A(
+            EvidenceType evidenceType, List<CredentialEvidenceItem> credentialEvidenceItems) {
+        switch (evidenceType) {
+            case EVIDENCE:
+                return !credentialEvidenceItems.stream()
+                        .allMatch(PassportEvidenceValidator::validate);
+            case IDENTITY_FRAUD:
+                return !credentialEvidenceItems.stream().allMatch(FraudEvidenceValidator::validate);
+            case VERIFICATION:
+                return !credentialEvidenceItems.stream().allMatch(KbvEvidenceValidator::validate);
+            case ACTIVITY:
+                return false;
+            default:
+                throw new RuntimeException("What");
+        }
     }
 }
