@@ -121,6 +121,10 @@ public class SessionEndHandler
                         authorizationCode.getValue(),
                         ipvSessionId,
                         authorizationRequest.getRedirectionURI().toString());
+                sessionService.setAuthorizationCode(
+                        ipvSessionItem,
+                        authorizationCode.getValue(),
+                        authorizationRequest.getRedirectionURI().toString());
 
                 clientResponse =
                         generateClientSuccessResponse(ipvSessionItem, authorizationCode.getValue());

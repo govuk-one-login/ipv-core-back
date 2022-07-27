@@ -1,8 +1,12 @@
 package uk.gov.di.ipv.core.library.service;
 
 import com.nimbusds.oauth2.sdk.ErrorObject;
+import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import org.apache.commons.codec.digest.DigestUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.UserStates;
+import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
+import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -69,6 +73,26 @@ public class IpvSessionService {
         return ipvSessionItem;
     }
 
+    public void setAuthorizationCode(
+            IpvSessionItem ipvSessionItem, String authorizationCode, String redirectUrl) {
+        AuthorizationCodeMetadata authorizationCodeMetadata =
+                new AuthorizationCodeMetadata(redirectUrl, Instant.now().toString(), null);
+        ipvSessionItem.setAuthorizationCode(DigestUtils.sha256Hex(authorizationCode));
+        ipvSessionItem.setAuthorizationCodeMetadata(authorizationCodeMetadata);
+        updateIpvSession(ipvSessionItem);
+    }
+
+    public void setAccessToken(IpvSessionItem ipvSessionItem, BearerAccessToken accessToken) {
+        AccessTokenMetadata accessTokenMetadata =
+                new AccessTokenMetadata(
+                        Instant.now().toString(),
+                        toExpiryDateTime(accessToken.getLifetime()),
+                        null);
+        ipvSessionItem.setAccessToken(DigestUtils.sha256Hex(accessToken.getValue()));
+        ipvSessionItem.setAccessTokenMetadata(accessTokenMetadata);
+        updateIpvSession(ipvSessionItem);
+    }
+
     public void updateIpvSession(IpvSessionItem updatedIpvSessionItem) {
         dataStore.update(updatedIpvSessionItem);
     }
@@ -81,5 +105,9 @@ public class IpvSessionService {
                     ? UserStates.DEBUG_PAGE.toString()
                     : UserStates.INITIAL_IPV_JOURNEY.toString();
         }
+    }
+
+    private String toExpiryDateTime(long expirySeconds) {
+        return Instant.now().plusSeconds(expirySeconds).toString();
     }
 }
