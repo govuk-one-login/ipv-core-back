@@ -59,8 +59,8 @@ public class ProcessJourneyStepHandler
 
     @ExcludeFromGeneratedCoverageReport
     public ProcessJourneyStepHandler() throws IOException {
-        this.stateMachine = new StateMachine(new StateMachineInitializer());
         this.configurationService = new ConfigurationService();
+        this.stateMachine = new StateMachine(new StateMachineInitializer(configurationService));
         this.ipvSessionService = new IpvSessionService(configurationService);
     }
 
