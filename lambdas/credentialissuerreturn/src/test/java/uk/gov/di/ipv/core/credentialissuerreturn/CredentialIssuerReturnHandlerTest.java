@@ -34,6 +34,7 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
+import uk.gov.di.ipv.core.library.service.CredentialIssuerV2Service;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 
@@ -74,6 +75,8 @@ class CredentialIssuerReturnHandlerTest {
     @Captor private ArgumentCaptor<String> verifiableCredentialCaptor;
 
     @Mock private CredentialIssuerService credentialIssuerService;
+
+    @Mock private CredentialIssuerV2Service credentialIssuerV2Service;
 
     @Mock private AuditService auditService;
 
@@ -241,6 +244,7 @@ class CredentialIssuerReturnHandlerTest {
         APIGatewayProxyResponseEvent response =
                 new CredentialIssuerReturnHandler(
                                 credentialIssuerService,
+                                credentialIssuerV2Service,
                                 configurationService,
                                 ipvSessionService,
                                 auditService,
@@ -267,6 +271,7 @@ class CredentialIssuerReturnHandlerTest {
         APIGatewayProxyResponseEvent response =
                 new CredentialIssuerReturnHandler(
                                 credentialIssuerService,
+                                credentialIssuerV2Service,
                                 configurationService,
                                 ipvSessionService,
                                 auditService,
@@ -282,6 +287,8 @@ class CredentialIssuerReturnHandlerTest {
         when(credentialIssuerService.exchangeCodeForToken(
                         requestDto.capture(), eq(passportIssuer), eq(testApiKey)))
                 .thenReturn(accessToken);
+
+        when(ipvSessionService.getUserId(anyString())).thenReturn(TEST_USER_ID);
 
         when(credentialIssuerService.getVerifiableCredential(
                         accessToken, passportIssuer, testApiKey))
@@ -309,6 +316,12 @@ class CredentialIssuerReturnHandlerTest {
 
         verify(credentialIssuerService)
                 .persistUserCredentials(verifiableCredentialCaptor.capture(), any());
+        assertEquals(SIGNED_VC_1, verifiableCredentialCaptor.getValue());
+        verify(credentialIssuerV2Service)
+                .persistUserCredentials(
+                        verifiableCredentialCaptor.capture(),
+                        eq(passportIssuerId),
+                        eq(TEST_USER_ID));
         assertEquals(SIGNED_VC_1, verifiableCredentialCaptor.getValue());
 
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
