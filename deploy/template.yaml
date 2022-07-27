@@ -189,6 +189,8 @@ Resources:
           ACCESS_TOKENS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AccessTokensTable.Arn]]
           CLIENT_AUTH_JWT_IDS_TABLE_NAME: !Ref ClientAuthJwtIdsTable
       Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionsTable
         - DynamoDBCrudPolicy:
             TableName: !Ref AccessTokensTable
         - DynamoDBCrudPolicy:
@@ -258,6 +260,8 @@ Resources:
             TableName: !Ref AuthCodesTable
         - DynamoDBReadPolicy:
             TableName: !Ref AuthCodesTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
         - SSMParameterReadPolicy:
