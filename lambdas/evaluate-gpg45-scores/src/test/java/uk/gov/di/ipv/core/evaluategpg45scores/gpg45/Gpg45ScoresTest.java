@@ -2,13 +2,15 @@ package uk.gov.di.ipv.core.evaluategpg45scores.gpg45;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45Profile.H2D;
 import static uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45Scores.EV_32;
 import static uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45Scores.EV_33;
 
-public class Gpg45ScoresTest {
+class Gpg45ScoresTest {
 
     @Test
     void shouldOrderEvidenceOnScoreAndValidity() {
@@ -20,7 +22,7 @@ public class Gpg45ScoresTest {
     }
 
     @Test
-    public void shouldBuild() {
+    void shouldBuild() {
         var scores =
                 new Gpg45Scores.Builder()
                         .withEvidence(new Gpg45Scores.Evidence(2, 2))
@@ -32,7 +34,7 @@ public class Gpg45ScoresTest {
     }
 
     @Test
-    public void shouldProduceReadableToString() {
+    void shouldProduceReadableToString() {
         var scores =
                 new Gpg45Scores.Builder()
                         .withEvidence(new Gpg45Scores.Evidence(2, 2))
@@ -43,5 +45,35 @@ public class Gpg45ScoresTest {
                         .build();
 
         assertEquals("[[32, 22], 1, 2, 3]", scores.toString());
+    }
+
+    @Test
+    void getEvidenceShouldReturnEvidenceWithZeroScoresWhenNoEvidences() {
+        Gpg45Scores gpg45Scores = new Gpg45Scores(List.of(), 0, 1, 3);
+        assertEquals(new Gpg45Scores.Evidence(0, 0), gpg45Scores.getEvidence(1));
+    }
+
+    @Test
+    void compareToShouldReturnNegativeIfOtherHasALowerScore() {
+        Gpg45Scores score1 = new Gpg45Scores(EV_33, EV_32, 0, 1, 3);
+        Gpg45Scores score2 = new Gpg45Scores(EV_33, EV_32, 0, 1, 1);
+
+        assertTrue(score1.compareTo(score2) < 0);
+    }
+
+    @Test
+    void compareToShouldReturnPositiveIfOtherHasAHigherScore() {
+        Gpg45Scores score1 = new Gpg45Scores(EV_33, EV_32, 0, 1, 1);
+        Gpg45Scores score2 = new Gpg45Scores(EV_33, EV_32, 0, 1, 3);
+
+        assertTrue(score1.compareTo(score2) > 0);
+    }
+
+    @Test
+    void compareToShouldReturnZeroIfOtherHasSameScore() {
+        Gpg45Scores score1 = new Gpg45Scores(EV_33, EV_32, 0, 1, 3);
+        Gpg45Scores score2 = new Gpg45Scores(EV_33, EV_32, 0, 1, 3);
+
+        assertEquals(0, score1.compareTo(score2));
     }
 }

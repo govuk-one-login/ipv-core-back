@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class Gpg45ProfileEvaluatorTest {
+class Gpg45ProfileEvaluatorTest {
 
     private final Gpg45ProfileEvaluator evaluator = new Gpg45ProfileEvaluator();
     private final String M1A_PASSPORT_VC =

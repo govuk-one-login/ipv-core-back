@@ -31,7 +31,7 @@ import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
 
 @ExtendWith(MockitoExtension.class)
-public class EvaluateGpg45ScoreHandlerTest {
+class EvaluateGpg45ScoreHandlerTest {
 
     private static final String TEST_SESSION_ID = "test-session-id";
     private static final APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();

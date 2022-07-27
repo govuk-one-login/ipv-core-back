@@ -5,8 +5,6 @@ import com.google.gson.reflect.TypeToken;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.evaluategpg45scores.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.evaluategpg45scores.domain.CredentialEvidenceItem.EvidenceType;
 import uk.gov.di.ipv.core.evaluategpg45scores.exception.UnknownEvidenceTypeException;
@@ -26,7 +24,6 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 
 public class Gpg45ProfileEvaluator {
 
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson gson = new Gson();
     private static final int NO_SCORE = 0;
 
@@ -131,7 +128,8 @@ public class Gpg45ProfileEvaluator {
     }
 
     private boolean anyCredentialsDoNotMeetM1A(
-            EvidenceType evidenceType, List<CredentialEvidenceItem> credentialEvidenceItems) {
+            EvidenceType evidenceType, List<CredentialEvidenceItem> credentialEvidenceItems)
+            throws UnknownEvidenceTypeException {
         switch (evidenceType) {
             case EVIDENCE:
                 return !credentialEvidenceItems.stream()
@@ -143,7 +141,7 @@ public class Gpg45ProfileEvaluator {
             case ACTIVITY:
                 return false;
             default:
-                throw new RuntimeException("What");
+                throw new UnknownEvidenceTypeException();
         }
     }
 }
