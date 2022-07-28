@@ -12,7 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.UserStates;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -41,6 +40,7 @@ class ProcessJourneyStepHandlerTest {
     private static final String NEXT = "next";
     private static final String ERROR = "error";
     private static final String INVALID_STEP = "invalid-step";
+
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ConfigurationService mockConfigurationService;
@@ -49,8 +49,8 @@ class ProcessJourneyStepHandlerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
-    void setUp() throws IOException {
-        StateMachine stateMachine = new StateMachine(new StateMachineInitializer());
+    void setUp() throws Exception {
+        StateMachine stateMachine = new StateMachine(new StateMachineInitializer("production"));
         processJourneyStepHandler =
                 new ProcessJourneyStepHandler(
                         stateMachine, mockIpvSessionService, mockConfigurationService);
@@ -248,8 +248,6 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.IPV_IDENTITY_START_PAGE.toString());
 
-        when(mockConfigurationService.getSsmParameter(ConfigurationVariable.PASSPORT_CRI_ID))
-                .thenReturn("ukPassport");
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -284,8 +282,6 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_UK_PASSPORT.toString());
 
-        when(mockConfigurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn("address");
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -352,8 +348,6 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(UserStates.CRI_ADDRESS.toString());
 
-        when(mockConfigurationService.getSsmParameter(ConfigurationVariable.FRAUD_CRI_ID))
-                .thenReturn("fraud");
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -455,8 +449,6 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setUserState(UserStates.PRE_KBV_TRANSITION_PAGE.toString());
 
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
-        when(mockConfigurationService.getSsmParameter(ConfigurationVariable.KBV_CRI_ID))
-                .thenReturn("kbv");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =

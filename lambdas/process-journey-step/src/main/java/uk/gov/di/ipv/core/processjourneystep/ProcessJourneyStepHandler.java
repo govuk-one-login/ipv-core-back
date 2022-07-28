@@ -13,6 +13,7 @@ import software.amazon.awssdk.utils.StringUtils;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -59,8 +60,12 @@ public class ProcessJourneyStepHandler
 
     @ExcludeFromGeneratedCoverageReport
     public ProcessJourneyStepHandler() throws IOException {
-        this.stateMachine = new StateMachine(new StateMachineInitializer());
         this.configurationService = new ConfigurationService();
+        this.stateMachine =
+                new StateMachine(
+                        new StateMachineInitializer(
+                                configurationService.getEnvironmentVariable(
+                                        EnvironmentVariable.ENVIRONMENT)));
         this.ipvSessionService = new IpvSessionService(configurationService);
     }
 
