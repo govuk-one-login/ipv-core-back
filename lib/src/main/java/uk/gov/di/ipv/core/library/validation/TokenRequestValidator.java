@@ -97,11 +97,11 @@ public class TokenRequestValidator {
         LoggingUtils.appendKey(
                 LogHelper.LogField.JTI_LOG_FIELD.getFieldName(), clientAuthJwtIdItem.getJwtId());
         LoggingUtils.appendKey(
-                LogHelper.LogField.USED_AT_DATE_TIME_LOG_FIELD.getFieldName(),
+                LogHelper.LogField.JTI_USED_AT_LOG_FIELD.getFieldName(),
                 clientAuthJwtIdItem.getUsedAtDateTime());
         LOGGER.warn("The client auth JWT id (jti) has already been used");
         LoggingUtils.removeKeys(
                 LogHelper.LogField.JTI_LOG_FIELD.getFieldName(),
-                LogHelper.LogField.USED_AT_DATE_TIME_LOG_FIELD.getFieldName());
+                LogHelper.LogField.JTI_USED_AT_LOG_FIELD.getFieldName());
     }
 }

@@ -17,10 +17,11 @@ public class LogHelper {
         ERROR_DESCRIPTION_LOG_FIELD("errorDescription"),
         IPV_SESSION_ID_LOG_FIELD("ipvSessionId"),
         COMPONENT_ID_LOG_FIELD("componentId"),
-        JTI_LOG_FIELD("JTI_LOG_FIELD"),
-        USED_AT_DATE_TIME_LOG_FIELD("USED_AT_DATE_TIME_LOG_FIELD"),
+        JTI_LOG_FIELD("jti"),
+        JTI_USED_AT_LOG_FIELD("jtiUsedAt"),
         DYNAMODB_TABLE_NAME("dynamoDbTableName"),
-        DYNAMODB_KEY_VALUE("dynamoDbKeyValue");
+        DYNAMODB_KEY_VALUE("dynamoDbKeyValue"),
+        EVIDENCE_TYPE("evidenceType");
         private final String fieldName;
 
         LogField(String fieldName) {
@@ -64,6 +65,13 @@ public class LogHelper {
         LoggingUtils.removeKeys(
                 LogField.ERROR_CODE_LOG_FIELD.getFieldName(),
                 LogField.ERROR_DESCRIPTION_LOG_FIELD.getFieldName());
+    }
+
+    public static void logInfoMessageWithFieldAndValue(
+            String message, LogField logField, String logFieldValue) {
+        LoggingUtils.appendKey(logField.getFieldName(), logFieldValue);
+        LOGGER.info(message);
+        LoggingUtils.removeKey(logField.getFieldName());
     }
 
     private static void attachFieldToLogs(LogField field, String value) {
