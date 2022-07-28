@@ -9,7 +9,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.domain.UserStates;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -24,6 +23,10 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class IpvSessionServiceTest {
+    private static final String INITIAL_IPV_JOURNEY_STATE = "INITIAL_IPV_JOURNEY";
+    private static final String DEBUG_PAGE_STATE = "DEBUG_PAGE";
+    private static final String FAILED_CLIENT_JAR_STATE = "FAILED_CLIENT_JAR";
+    private static final String IPV_SUCCESS_PAGE_STATE = "IPV_SUCCESS_PAGE";
 
     @Mock private DataStore<IpvSessionItem> mockDataStore;
 
@@ -37,7 +40,7 @@ class IpvSessionServiceTest {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(ipvSessionID);
-        ipvSessionItem.setUserState(UserStates.INITIAL_IPV_JOURNEY.toString());
+        ipvSessionItem.setUserState(INITIAL_IPV_JOURNEY_STATE);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
         when(mockDataStore.getItem(ipvSessionID)).thenReturn(ipvSessionItem);
@@ -75,8 +78,7 @@ class IpvSessionServiceTest {
                 ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
                 ipvSessionItem.getIpvSessionId());
         assertEquals(
-                UserStates.INITIAL_IPV_JOURNEY.toString(),
-                ipvSessionItemArgumentCaptor.getValue().getUserState());
+                INITIAL_IPV_JOURNEY_STATE, ipvSessionItemArgumentCaptor.getValue().getUserState());
     }
 
     @Test
@@ -101,9 +103,7 @@ class IpvSessionServiceTest {
         assertEquals(
                 ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
                 ipvSessionItem.getIpvSessionId());
-        assertEquals(
-                UserStates.DEBUG_PAGE.toString(),
-                ipvSessionItemArgumentCaptor.getValue().getUserState());
+        assertEquals(DEBUG_PAGE_STATE, ipvSessionItemArgumentCaptor.getValue().getUserState());
     }
 
     @Test
@@ -129,8 +129,7 @@ class IpvSessionServiceTest {
                 ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
                 ipvSessionItem.getIpvSessionId());
         assertEquals(
-                UserStates.FAILED_CLIENT_JAR.toString(),
-                ipvSessionItemArgumentCaptor.getValue().getUserState());
+                FAILED_CLIENT_JAR_STATE, ipvSessionItemArgumentCaptor.getValue().getUserState());
         assertEquals(
                 testErrorObject.getCode(), ipvSessionItemArgumentCaptor.getValue().getErrorCode());
         assertEquals(
@@ -142,7 +141,7 @@ class IpvSessionServiceTest {
     void shouldUpdateSessionItem() {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
-        ipvSessionItem.setUserState(UserStates.INITIAL_IPV_JOURNEY.toString());
+        ipvSessionItem.setUserState(INITIAL_IPV_JOURNEY_STATE);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
         ipvSessionService.updateIpvSession(ipvSessionItem);
@@ -155,7 +154,7 @@ class IpvSessionServiceTest {
         AuthorizationCode testCode = new AuthorizationCode();
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
-        ipvSessionItem.setUserState(UserStates.IPV_SUCCESS_PAGE.toString());
+        ipvSessionItem.setUserState(IPV_SUCCESS_PAGE_STATE);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
         ipvSessionService.setAuthorizationCode(
@@ -173,7 +172,7 @@ class IpvSessionServiceTest {
         BearerAccessToken accessToken = new BearerAccessToken("test-access-token");
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
-        ipvSessionItem.setUserState(UserStates.IPV_SUCCESS_PAGE.toString());
+        ipvSessionItem.setUserState(IPV_SUCCESS_PAGE_STATE);
         ipvSessionItem.setCreationDateTime(new Date().toString());
 
         ipvSessionService.setAccessToken(ipvSessionItem, accessToken);

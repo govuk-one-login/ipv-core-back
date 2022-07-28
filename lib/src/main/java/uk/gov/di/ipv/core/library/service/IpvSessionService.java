@@ -4,7 +4,6 @@ import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.apache.commons.codec.digest.DigestUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.domain.UserStates;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
@@ -18,6 +17,10 @@ import java.time.Instant;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_SESSIONS_TABLE_NAME;
 
 public class IpvSessionService {
+    private static final String INITIAL_IPV_JOURNEY_STATE = "INITIAL_IPV_JOURNEY";
+    private static final String FAILED_CLIENT_JAR_STATE = "FAILED_CLIENT_JAR";
+    private static final String DEBUG_PAGE_STATE = "DEBUG_PAGE";
+
     private final DataStore<IpvSessionItem> dataStore;
     private final ConfigurationService configurationService;
 
@@ -98,11 +101,9 @@ public class IpvSessionService {
 
     private String generateStartingState(boolean isDebugJourney, ErrorObject errorObject) {
         if (errorObject != null) {
-            return UserStates.FAILED_CLIENT_JAR.toString();
+            return FAILED_CLIENT_JAR_STATE;
         } else {
-            return isDebugJourney
-                    ? UserStates.DEBUG_PAGE.toString()
-                    : UserStates.INITIAL_IPV_JOURNEY.toString();
+            return isDebugJourney ? DEBUG_PAGE_STATE : INITIAL_IPV_JOURNEY_STATE;
         }
     }
 

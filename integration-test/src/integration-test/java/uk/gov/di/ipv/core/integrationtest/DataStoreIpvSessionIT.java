@@ -14,7 +14,6 @@ import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import uk.gov.di.ipv.core.library.domain.UserStates;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -42,6 +41,8 @@ public class DataStoreIpvSessionIT {
     private static final List<String> createdItemIds = new ArrayList<>();
     private static final String CRI_ID = "criId";
     private static final String OAUTH_STATE = SecureTokenHelper.generate();
+    private static final String INITIAL_IPV_JOURNEY_STATE = "INITIAL_IPV_JOURNEY";
+    private static final String DEBUG_PAGE_STATE = "DEBUG_PAGE";
 
     private static DataStore<IpvSessionItem> ipvSessionItemDataStore;
     private static Table tableTestHarness;
@@ -89,7 +90,7 @@ public class DataStoreIpvSessionIT {
     void shouldPutIpvSessionIntoTable() {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
-        ipvSessionItem.setUserState(UserStates.INITIAL_IPV_JOURNEY.toString());
+        ipvSessionItem.setUserState(INITIAL_IPV_JOURNEY_STATE);
         ipvSessionItem.setCreationDateTime(new Date().toString());
         ipvSessionItem.setClientSessionDetails(generateClientSessionDetails());
         ipvSessionItem.setCredentialIssuerSessionDetails(generateCredentialIssuerSessionDetails());
@@ -136,7 +137,7 @@ public class DataStoreIpvSessionIT {
     void shouldReadIpvSessionFromTable() throws JsonProcessingException {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
-        ipvSessionItem.setUserState(UserStates.INITIAL_IPV_JOURNEY.toString());
+        ipvSessionItem.setUserState(INITIAL_IPV_JOURNEY_STATE);
         ipvSessionItem.setCreationDateTime(new Date().toString());
         ipvSessionItem.setClientSessionDetails(generateClientSessionDetails());
         ipvSessionItem.setCredentialIssuerSessionDetails(generateCredentialIssuerSessionDetails());
@@ -173,7 +174,7 @@ public class DataStoreIpvSessionIT {
     void shouldUpdateIpvSessionInTable() throws JsonProcessingException {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
-        ipvSessionItem.setUserState(UserStates.INITIAL_IPV_JOURNEY.toString());
+        ipvSessionItem.setUserState(INITIAL_IPV_JOURNEY_STATE);
         ipvSessionItem.setCreationDateTime(new Date().toString());
         ipvSessionItem.setClientSessionDetails(generateClientSessionDetails());
         ipvSessionItem.setCredentialIssuerSessionDetails(generateCredentialIssuerSessionDetails());
@@ -184,7 +185,7 @@ public class DataStoreIpvSessionIT {
         IpvSessionItem updatedIpvSessionItem = new IpvSessionItem();
         updatedIpvSessionItem.setIpvSessionId(ipvSessionItem.getIpvSessionId());
         updatedIpvSessionItem.setCreationDateTime(ipvSessionItem.getCreationDateTime());
-        updatedIpvSessionItem.setUserState(UserStates.DEBUG_PAGE.toString());
+        updatedIpvSessionItem.setUserState(DEBUG_PAGE_STATE);
         updatedIpvSessionItem.setClientSessionDetails(ipvSessionItem.getClientSessionDetails());
         updatedIpvSessionItem.setCredentialIssuerSessionDetails(
                 ipvSessionItem.getCredentialIssuerSessionDetails());
