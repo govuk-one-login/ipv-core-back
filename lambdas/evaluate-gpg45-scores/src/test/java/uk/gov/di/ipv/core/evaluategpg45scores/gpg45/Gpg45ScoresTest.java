@@ -17,8 +17,8 @@ class Gpg45ScoresTest {
         Gpg45Scores score1 = new Gpg45Scores(EV_33, EV_32, 0, 1, 3);
         Gpg45Scores score2 = new Gpg45Scores(EV_32, EV_33, 0, 1, 3);
 
-        assertTrue(H2D.satisfiedBy(score1));
-        assertTrue(H2D.satisfiedBy(score2));
+        assertTrue(H2D.isSatisfiedBy(score1));
+        assertTrue(H2D.isSatisfiedBy(score2));
     }
 
     @Test

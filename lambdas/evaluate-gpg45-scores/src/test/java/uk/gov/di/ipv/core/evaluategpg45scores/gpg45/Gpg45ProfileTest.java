@@ -24,40 +24,40 @@ class Gpg45ProfileTest {
     @Test
     void shouldMatchExact() {
         for (Gpg45Profile profile : Gpg45Profile.values()) {
-            assertTrue(profile.satisfiedBy(profile.getScores()));
+            assertTrue(profile.isSatisfiedBy(profile.getScores()));
         }
     }
 
     @Test
     void shouldMatchHigher() {
-        assertTrue(Gpg45Profile.L1A.satisfiedBy(new Gpg45Scores(EV_22, 0, 1, 2)));
-        assertTrue(Gpg45Profile.L1A.satisfiedBy(new Gpg45Scores(EV_32, 1, 1, 1)));
-        assertTrue(Gpg45Profile.L1A.satisfiedBy(new Gpg45Scores(EV_33, 0, 1, 1)));
-        assertTrue(Gpg45Profile.L1A.satisfiedBy(new Gpg45Scores(EV_22, 1, 1, 1)));
-        assertTrue(Gpg45Profile.L1A.satisfiedBy(new Gpg45Scores(EV_22, 1, 2, 1)));
-        assertTrue(Gpg45Profile.L1A.satisfiedBy(new Gpg45Scores(EV_44, 4, 4, 4)));
-        assertTrue(Gpg45Profile.L1A.satisfiedBy(new Gpg45Scores(EV_22, EV_11, 0, 1, 2)));
+        assertTrue(Gpg45Profile.L1A.isSatisfiedBy(new Gpg45Scores(EV_22, 0, 1, 2)));
+        assertTrue(Gpg45Profile.L1A.isSatisfiedBy(new Gpg45Scores(EV_32, 1, 1, 1)));
+        assertTrue(Gpg45Profile.L1A.isSatisfiedBy(new Gpg45Scores(EV_33, 0, 1, 1)));
+        assertTrue(Gpg45Profile.L1A.isSatisfiedBy(new Gpg45Scores(EV_22, 1, 1, 1)));
+        assertTrue(Gpg45Profile.L1A.isSatisfiedBy(new Gpg45Scores(EV_22, 1, 2, 1)));
+        assertTrue(Gpg45Profile.L1A.isSatisfiedBy(new Gpg45Scores(EV_44, 4, 4, 4)));
+        assertTrue(Gpg45Profile.L1A.isSatisfiedBy(new Gpg45Scores(EV_22, EV_11, 0, 1, 2)));
     }
 
     @Test
     void shouldMatchExtraEvidence() {
         Gpg45Scores target = new Gpg45Scores(EV_22, EV_11, 0, 1, 1);
-        assertTrue(Gpg45Profile.L1A.satisfiedBy(target));
+        assertTrue(Gpg45Profile.L1A.isSatisfiedBy(target));
     }
 
     @Test
     void shouldNotMatchLower() {
-        assertFalse(Gpg45Profile.V1C.satisfiedBy(new Gpg45Scores(EV_43, 1, 1, 3)));
-        assertFalse(Gpg45Profile.V1C.satisfiedBy(new Gpg45Scores(EV_43, 1, 0, 4)));
-        assertFalse(Gpg45Profile.V1C.satisfiedBy(new Gpg45Scores(EV_43, 0, 1, 4)));
-        assertFalse(Gpg45Profile.V1C.satisfiedBy(new Gpg45Scores(EV_42, 1, 1, 4)));
-        assertFalse(Gpg45Profile.V1C.satisfiedBy(new Gpg45Scores(EV_33, 1, 1, 4)));
-        assertFalse(Gpg45Profile.V1C.satisfiedBy(new Gpg45Scores(EV_32, 0, 0, 3)));
+        assertFalse(Gpg45Profile.V1C.isSatisfiedBy(new Gpg45Scores(EV_43, 1, 1, 3)));
+        assertFalse(Gpg45Profile.V1C.isSatisfiedBy(new Gpg45Scores(EV_43, 1, 0, 4)));
+        assertFalse(Gpg45Profile.V1C.isSatisfiedBy(new Gpg45Scores(EV_43, 0, 1, 4)));
+        assertFalse(Gpg45Profile.V1C.isSatisfiedBy(new Gpg45Scores(EV_42, 1, 1, 4)));
+        assertFalse(Gpg45Profile.V1C.isSatisfiedBy(new Gpg45Scores(EV_33, 1, 1, 4)));
+        assertFalse(Gpg45Profile.V1C.isSatisfiedBy(new Gpg45Scores(EV_32, 0, 0, 3)));
     }
 
     @Test
     void shouldNotMatchMissingEvidence() {
-        assertFalse(Gpg45Profile.V2A.satisfiedBy(new Gpg45Scores(EV_33, 3, 2, 3)));
+        assertFalse(Gpg45Profile.V2A.isSatisfiedBy(new Gpg45Scores(EV_33, 3, 2, 3)));
     }
 
     @Test
@@ -110,7 +110,7 @@ class Gpg45ProfileTest {
                                             System.out.println(scores);
                                             var matches = new ArrayList<Gpg45Profile>();
                                             for (Gpg45Profile profile : Gpg45Profile.values()) {
-                                                if (profile.satisfiedBy(scores)) {
+                                                if (profile.isSatisfiedBy(scores)) {
                                                     matches.add(profile);
                                                     System.out.println(profile.code());
                                                 }

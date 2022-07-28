@@ -148,10 +148,12 @@ public class Gpg45Scores implements Comparable<Gpg45Scores> {
 
     /**
      * Compares the score to another. A negative value indicates that there is some negative value
-     * in the {@code difference} between this score and the other.
+     * in the {@code difference} between this score and the other. A positive value indicates that
+     * there is some positive value in the {@code difference}. A value of zero indicates that there
+     * is no difference.
      *
      * @param other
-     * @return
+     * @return integer
      */
     @Override
     public int compareTo(Gpg45Scores other) {

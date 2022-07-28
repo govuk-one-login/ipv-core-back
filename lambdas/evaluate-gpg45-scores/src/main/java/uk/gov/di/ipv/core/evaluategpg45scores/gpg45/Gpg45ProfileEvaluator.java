@@ -46,7 +46,7 @@ public class Gpg45ProfileEvaluator {
     public boolean credentialsSatisfyProfile(List<String> credentials, Gpg45Profile profile)
             throws ParseException, UnknownEvidenceTypeException {
         var evidenceMap = parseGpg45ScoresFromCredentials(credentials);
-        return profile.satisfiedBy(buildScore(evidenceMap))
+        return profile.isSatisfiedBy(buildScore(evidenceMap))
                 && !contraIndicatorsPresent(evidenceMap);
     }
 

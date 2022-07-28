@@ -75,7 +75,7 @@ public enum Gpg45Profile {
      * @return {@code true} if the elements in the provided {@code Gpg45Scores} are all equal or
      *     greater than the profile's `{@code Gpg45Scores}.
      */
-    public boolean satisfiedBy(Gpg45Scores target) {
+    public boolean isSatisfiedBy(Gpg45Scores target) {
         return satisfactoryEvidence(target)
                 && (scores.activity() <= target.activity())
                 && (scores.fraud() <= target.fraud())
