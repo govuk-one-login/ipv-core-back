@@ -75,19 +75,18 @@ public class IpvSessionService {
 
     public void setAuthorizationCode(
             IpvSessionItem ipvSessionItem, String authorizationCode, String redirectUrl) {
-        AuthorizationCodeMetadata authorizationCodeMetadata =
-                new AuthorizationCodeMetadata(redirectUrl, Instant.now().toString(), null);
+        AuthorizationCodeMetadata authorizationCodeMetadata = new AuthorizationCodeMetadata();
+        authorizationCodeMetadata.setCreationDateTime(Instant.now().toString());
+        authorizationCodeMetadata.setRedirectUrl(redirectUrl);
         ipvSessionItem.setAuthorizationCode(DigestUtils.sha256Hex(authorizationCode));
         ipvSessionItem.setAuthorizationCodeMetadata(authorizationCodeMetadata);
         updateIpvSession(ipvSessionItem);
     }
 
     public void setAccessToken(IpvSessionItem ipvSessionItem, BearerAccessToken accessToken) {
-        AccessTokenMetadata accessTokenMetadata =
-                new AccessTokenMetadata(
-                        Instant.now().toString(),
-                        toExpiryDateTime(accessToken.getLifetime()),
-                        null);
+        AccessTokenMetadata accessTokenMetadata = new AccessTokenMetadata();
+        accessTokenMetadata.setCreationDateTime(Instant.now().toString());
+        accessTokenMetadata.setExpiryDateTime(toExpiryDateTime(accessToken.getLifetime()));
         ipvSessionItem.setAccessToken(DigestUtils.sha256Hex(accessToken.getValue()));
         ipvSessionItem.setAccessTokenMetadata(accessTokenMetadata);
         updateIpvSession(ipvSessionItem);

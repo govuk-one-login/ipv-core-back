@@ -10,14 +10,11 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 public class AuthorizationCodeMetadata {
     private String redirectUrl;
     private String creationDateTime;
-    private String exchangeDateTime;
 
     public AuthorizationCodeMetadata() {}
 
-    public AuthorizationCodeMetadata(
-            String redirectUrl, String creationDateTime, String exchangeDateTime) {
+    public AuthorizationCodeMetadata(String redirectUrl, String creationDateTime) {
         this.redirectUrl = redirectUrl;
         this.creationDateTime = creationDateTime;
-        this.exchangeDateTime = exchangeDateTime;
     }
 }
