@@ -12,7 +12,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.UserStates;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -51,11 +50,7 @@ class ProcessJourneyStepHandlerTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        when(mockConfigurationService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
-                .thenReturn("production");
-
-        StateMachine stateMachine =
-                new StateMachine(new StateMachineInitializer(mockConfigurationService));
+        StateMachine stateMachine = new StateMachine(new StateMachineInitializer("production"));
         processJourneyStepHandler =
                 new ProcessJourneyStepHandler(
                         stateMachine, mockIpvSessionService, mockConfigurationService);
