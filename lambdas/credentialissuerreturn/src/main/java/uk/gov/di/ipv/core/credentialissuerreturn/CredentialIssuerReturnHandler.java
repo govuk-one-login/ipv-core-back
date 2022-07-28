@@ -34,7 +34,6 @@ import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
-import uk.gov.di.ipv.core.library.service.CredentialIssuerV2Service;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 
@@ -52,7 +51,6 @@ public class CredentialIssuerReturnHandler
     public static final String EVIDENCE = "evidence";
 
     private final CredentialIssuerService credentialIssuerService;
-    private final CredentialIssuerV2Service credentialIssuerV2Service;
     private final ConfigurationService configurationService;
     private final AuditService auditService;
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
@@ -62,13 +60,11 @@ public class CredentialIssuerReturnHandler
 
     public CredentialIssuerReturnHandler(
             CredentialIssuerService credentialIssuerService,
-            CredentialIssuerV2Service credentialIssuerV2Service,
             ConfigurationService configurationService,
             IpvSessionService ipvSessionService,
             AuditService auditService,
             VerifiableCredentialJwtValidator verifiableCredentialJwtValidator) {
         this.credentialIssuerService = credentialIssuerService;
-        this.credentialIssuerV2Service = credentialIssuerV2Service;
         this.configurationService = configurationService;
         this.auditService = auditService;
         this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
@@ -82,7 +78,6 @@ public class CredentialIssuerReturnHandler
                 new CredentialIssuerService(
                         configurationService,
                         new KmsEs256Signer(configurationService.getSigningKeyId()));
-        this.credentialIssuerV2Service = new CredentialIssuerV2Service(configurationService);
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
         this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator();
@@ -133,7 +128,8 @@ public class CredentialIssuerReturnHandler
 
             sendIpvVcReceivedAuditEvent(auditEventUser, verifiableCredential);
 
-            credentialIssuerService.persistUserCredentials(verifiableCredential.serialize(), request.getCredentialIssuerId(), userId);
+            credentialIssuerService.persistUserCredentials(
+                    verifiableCredential.serialize(), request.getCredentialIssuerId(), userId);
 
             JourneyResponse journeyResponse =
                     new JourneyResponse(

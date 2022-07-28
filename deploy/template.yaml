@@ -411,7 +411,6 @@ Resources:
         Variables:
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
-          USER_ISSUED_CREDENTIALS_V2_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsV2Table.Arn]]
           SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub cri-return-${Environment}
@@ -420,8 +419,6 @@ Resources:
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UserIssuedCredentialsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
         - DynamoDBWritePolicy:
@@ -504,15 +501,12 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-start-${Environment}
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsTable.Arn ] ]
-          USER_ISSUED_CREDENTIALS_V2_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsV2Table.Arn ] ]
           SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
         - DynamoDBWritePolicy:
@@ -664,7 +658,6 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub user-identity-${Environment}
           ACCESS_TOKENS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AccessTokensTable.Arn]]
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
-          USER_ISSUED_CREDENTIALS_V2_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsV2Table.Arn]]
           IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       Policies:
@@ -672,10 +665,6 @@ Resources:
             TableName: !Ref UserIssuedCredentialsTable
         - DynamoDBWritePolicy:
             TableName: !Ref UserIssuedCredentialsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
-        - DynamoDBWritePolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
         - DynamoDBCrudPolicy:
             TableName: !Ref AccessTokensTable
         - DynamoDBReadPolicy:
@@ -803,16 +792,11 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub issued-credentials-${Environment}
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsTable.Arn]]
-          USER_ISSUED_CREDENTIALS_V2_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsV2Table.Arn]]
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsTable
         - DynamoDBWritePolicy:
             TableName: !Ref UserIssuedCredentialsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
-        - DynamoDBWritePolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/*
       Events:
@@ -930,12 +914,9 @@ Resources:
           ENVIRONMENT: !Ref Environment
           POWERTOOLS_SERVICE_NAME: !Sub validate-cri-check-${Environment}
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsTable
-          USER_ISSUED_CREDENTIALS_V2_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/*
       Events:
@@ -1028,30 +1009,6 @@ Resources:
       LogGroupName: !Ref EvaluateGpg45ScoresFunctionLogGroup
 
   UserIssuedCredentialsTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
-      TableName: !Sub "user-issued-credentials-${Environment}"
-      BillingMode: "PAY_PER_REQUEST"
-      AttributeDefinitions:
-        - AttributeName: "userId"
-          AttributeType: "S"
-        - AttributeName: "credentialIssuer"
-          AttributeType: "S"
-      KeySchema:
-        - AttributeName: "userId"
-          KeyType: "HASH"
-        - AttributeName: "credentialIssuer"
-          KeyType: "RANGE"
-      TimeToLiveSpecification:
-        AttributeName: "ttl"
-        Enabled: true
-      SSESpecification:
-        # checkov:skip=CKV_AWS_119: Implement Customer Managed Keys in PYIC-1391
-        SSEEnabled: true
-        SSEType: KMS
-
-  UserIssuedCredentialsV2Table:
     Type: AWS::DynamoDB::Table
     Properties:
       # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
