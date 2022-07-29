@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
@@ -84,7 +85,8 @@ class SessionEndHandlerTest {
                 .thenReturn(authorizationCode);
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
-        when(mockSessionService.getIpvSession(anyString())).thenReturn(generateIpvSessionItem());
+        IpvSessionItem ipvSessionItem = generateIpvSessionItem();
+        when(mockSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setQueryStringParameters(VALID_QUERY_PARAMS);
@@ -97,9 +99,9 @@ class SessionEndHandlerTest {
         ClientResponse responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
-        verify(mockAuthorizationCodeService)
-                .persistAuthorizationCode(
-                        authorizationCode.getValue(), "12345", "https://example.com");
+        verify(mockSessionService)
+                .setAuthorizationCode(
+                        ipvSessionItem, authorizationCode.getValue(), "https://example.com");
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
@@ -159,8 +161,7 @@ class SessionEndHandlerTest {
         assertEquals(
                 ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), responseBody.get("message"));
 
-        verify(mockAuthorizationCodeService, never())
-                .persistAuthorizationCode(anyString(), anyString(), anyString());
+        verify(mockSessionService, never()).setAuthorizationCode(any(), anyString(), anyString());
     }
 
     @Test
@@ -200,8 +201,8 @@ class SessionEndHandlerTest {
             assertEquals(
                     ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
                     responseBody.get("message"));
-            verify(mockAuthorizationCodeService, never())
-                    .persistAuthorizationCode(anyString(), anyString(), anyString());
+            verify(mockSessionService, never())
+                    .setAuthorizationCode(any(), anyString(), anyString());
         }
     }
 

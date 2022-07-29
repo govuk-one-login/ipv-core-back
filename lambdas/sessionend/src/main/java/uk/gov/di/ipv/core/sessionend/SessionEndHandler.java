@@ -117,10 +117,6 @@ public class SessionEndHandler
                 AuthorizationCode authorizationCode =
                         authorizationCodeService.generateAuthorizationCode();
 
-                authorizationCodeService.persistAuthorizationCode(
-                        authorizationCode.getValue(),
-                        ipvSessionId,
-                        authorizationRequest.getRedirectionURI().toString());
                 sessionService.setAuthorizationCode(
                         ipvSessionItem,
                         authorizationCode.getValue(),

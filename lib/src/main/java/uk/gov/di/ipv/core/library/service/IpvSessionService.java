@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.commons.codec.digest.DigestUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
@@ -13,6 +14,7 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 
 import java.time.Instant;
+import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_SESSIONS_TABLE_NAME;
 
@@ -45,6 +47,19 @@ public class IpvSessionService {
 
     public IpvSessionItem getIpvSession(String ipvSessionId) {
         return dataStore.getItem(ipvSessionId);
+    }
+
+    public Optional<IpvSessionItem> getIpvSessionByAuthorizationCode(String authorizationCode) {
+        IpvSessionItem ipvSessionItem =
+                dataStore.getItemByIndex(
+                        "authorizationCode-index", DigestUtils.sha256Hex(authorizationCode));
+        return Optional.ofNullable(ipvSessionItem);
+    }
+
+    public Optional<IpvSessionItem> getIpvSessionByAccessToken(String accessToken) {
+        IpvSessionItem ipvSessionItem =
+                dataStore.getItemByIndex("accessToken-index", DigestUtils.sha256Hex(accessToken));
+        return Optional.ofNullable(ipvSessionItem);
     }
 
     public String getUserId(String ipvSessionId) {
@@ -93,6 +108,15 @@ public class IpvSessionService {
         ipvSessionItem.setAccessToken(DigestUtils.sha256Hex(accessToken.getValue()));
         ipvSessionItem.setAccessTokenMetadata(accessTokenMetadata);
         updateIpvSession(ipvSessionItem);
+    }
+
+    public void revokeAccessToken(IpvSessionItem ipvSessionItem) throws IllegalArgumentException {
+        AccessTokenMetadata accessTokenMetadata = ipvSessionItem.getAccessTokenMetadata();
+        if (StringUtils.isBlank(accessTokenMetadata.getRevokedAtDateTime())) {
+            accessTokenMetadata.setRevokedAtDateTime(Instant.now().toString());
+            ipvSessionItem.setAccessTokenMetadata(accessTokenMetadata);
+            updateIpvSession(ipvSessionItem);
+        }
     }
 
     public void updateIpvSession(IpvSessionItem updatedIpvSessionItem) {

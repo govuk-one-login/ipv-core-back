@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.persistence.item;
 
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
@@ -66,6 +67,7 @@ public class IpvSessionItem implements DynamodbItem {
         return credentialIssuerSessionDetails;
     }
 
+    @DynamoDbSecondaryPartitionKey(indexNames = "authorizationCode-index")
     public String getAuthorizationCode() {
         return authorizationCode;
     }
@@ -82,6 +84,7 @@ public class IpvSessionItem implements DynamodbItem {
         this.authorizationCodeMetadata = authorizationCodeMetadata;
     }
 
+    @DynamoDbSecondaryPartitionKey(indexNames = "accessToken-index")
     public String getAccessToken() {
         return accessToken;
     }

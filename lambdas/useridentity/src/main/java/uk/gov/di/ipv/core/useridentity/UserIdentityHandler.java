@@ -20,14 +20,14 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
+import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
-import uk.gov.di.ipv.core.library.persistence.item.AccessTokenItem;
-import uk.gov.di.ipv.core.library.service.AccessTokenService;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -42,7 +42,6 @@ public class UserIdentityHandler
     private static final String AUTHORIZATION_HEADER_KEY = "Authorization";
 
     private final UserIdentityService userIdentityService;
-    private final AccessTokenService accessTokenService;
     private final IpvSessionService ipvSessionService;
     private final ConfigurationService configurationService;
     private final AuditService auditService;
@@ -50,12 +49,10 @@ public class UserIdentityHandler
 
     public UserIdentityHandler(
             UserIdentityService userIdentityService,
-            AccessTokenService accessTokenService,
             IpvSessionService ipvSessionService,
             ConfigurationService configurationService,
             AuditService auditService) {
         this.userIdentityService = userIdentityService;
-        this.accessTokenService = accessTokenService;
         this.ipvSessionService = ipvSessionService;
         this.configurationService = configurationService;
         this.auditService = auditService;
@@ -67,7 +64,6 @@ public class UserIdentityHandler
     public UserIdentityHandler() {
         this.configurationService = new ConfigurationService();
         this.userIdentityService = new UserIdentityService(configurationService);
-        this.accessTokenService = new AccessTokenService(configurationService);
         this.ipvSessionService = new IpvSessionService(configurationService);
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
@@ -88,28 +84,29 @@ public class UserIdentityHandler
                                     input.getHeaders(), AUTHORIZATION_HEADER_KEY),
                             AccessTokenType.BEARER);
 
-            AccessTokenItem accessTokenItem =
-                    accessTokenService.getAccessToken(accessToken.getValue());
+            IpvSessionItem ipvSessionItem =
+                    ipvSessionService
+                            .getIpvSessionByAccessToken(accessToken.getValue())
+                            .orElse(null);
 
-            if (Objects.isNull((accessTokenItem))) {
+            if (Objects.isNull((ipvSessionItem))) {
                 return getUnknownAccessTokenApiGatewayProxyResponseEvent();
             }
 
-            if (StringUtils.isNotBlank(accessTokenItem.getRevokedAtDateTime())) {
-                return getRevokedAccessTokenApiGatewayProxyResponseEvent(accessTokenItem);
+            AccessTokenMetadata accessTokenMetadata = ipvSessionItem.getAccessTokenMetadata();
+
+            if (StringUtils.isNotBlank(accessTokenMetadata.getRevokedAtDateTime())) {
+                return getRevokedAccessTokenApiGatewayProxyResponseEvent(accessTokenMetadata);
             }
 
-            if (accessTokenHasExpired(accessTokenItem)) {
-                return getExpiredAccessTokenApiGatewayProxyResponseEvent(accessTokenItem);
+            if (accessTokenHasExpired(accessTokenMetadata)) {
+                return getExpiredAccessTokenApiGatewayProxyResponseEvent(accessTokenMetadata);
             }
 
-            String ipvSessionId = accessTokenItem.getIpvSessionId();
+            String ipvSessionId = ipvSessionItem.getIpvSessionId();
             LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
 
-            ClientSessionDetailsDto clientSessionDetails =
-                    ipvSessionService
-                            .getIpvSession(accessTokenItem.getIpvSessionId())
-                            .getClientSessionDetails();
+            ClientSessionDetailsDto clientSessionDetails = ipvSessionItem.getClientSessionDetails();
             LogHelper.attachClientIdToLogs(clientSessionDetails.getClientId());
 
             String userId = clientSessionDetails.getUserId();
@@ -122,7 +119,7 @@ public class UserIdentityHandler
                     new AuditEvent(
                             AuditEventTypes.IPV_IDENTITY_ISSUED, componentId, auditEventUser));
 
-            accessTokenService.revokeAccessToken(accessTokenItem);
+            ipvSessionService.revokeAccessToken(ipvSessionItem);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HTTPResponse.SC_OK, userIdentity);
         } catch (ParseException e) {
@@ -143,10 +140,10 @@ public class UserIdentityHandler
     }
 
     private APIGatewayProxyResponseEvent getExpiredAccessTokenApiGatewayProxyResponseEvent(
-            AccessTokenItem accessTokenItem) {
+            AccessTokenMetadata accessTokenMetadata) {
         LOGGER.error(
                 "User credential could not be retrieved. The supplied access token expired at: {}",
-                accessTokenItem.getExpiryDateTime());
+                accessTokenMetadata.getExpiryDateTime());
         return ApiGatewayResponseGenerator.proxyJsonResponse(
                 OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(),
                 OAuth2Error.ACCESS_DENIED
@@ -155,10 +152,10 @@ public class UserIdentityHandler
     }
 
     private APIGatewayProxyResponseEvent getRevokedAccessTokenApiGatewayProxyResponseEvent(
-            AccessTokenItem accessTokenItem) {
+            AccessTokenMetadata accessTokenMetadata) {
         LOGGER.error(
                 "User credential could not be retrieved. The supplied access token has been revoked at: {}",
-                accessTokenItem.getRevokedAtDateTime());
+                accessTokenMetadata.getRevokedAtDateTime());
         return ApiGatewayResponseGenerator.proxyJsonResponse(
                 OAuth2Error.ACCESS_DENIED.getHTTPStatusCode(),
                 OAuth2Error.ACCESS_DENIED
@@ -177,9 +174,9 @@ public class UserIdentityHandler
                         .toJSONObject());
     }
 
-    private boolean accessTokenHasExpired(AccessTokenItem accessTokenItem) {
-        if (StringUtils.isNotBlank(accessTokenItem.getExpiryDateTime())) {
-            return Instant.now().isAfter(Instant.parse(accessTokenItem.getExpiryDateTime()));
+    private boolean accessTokenHasExpired(AccessTokenMetadata accessTokenMetadata) {
+        if (StringUtils.isNotBlank(accessTokenMetadata.getExpiryDateTime())) {
+            return Instant.now().isAfter(Instant.parse(accessTokenMetadata.getExpiryDateTime()));
         }
         return false;
     }
