@@ -1,6 +1,8 @@
 package uk.gov.di.ipv.core.library.service;
 
+import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.ErrorObject;
+import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -146,5 +148,40 @@ class IpvSessionServiceTest {
         ipvSessionService.updateIpvSession(ipvSessionItem);
 
         verify(mockDataStore).update(ipvSessionItem);
+    }
+
+    @Test
+    void shouldSetAuthorizationCodeAndMetadataOnSessionItem() {
+        AuthorizationCode testCode = new AuthorizationCode();
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setUserState(UserStates.IPV_SUCCESS_PAGE.toString());
+        ipvSessionItem.setCreationDateTime(new Date().toString());
+
+        ipvSessionService.setAuthorizationCode(
+                ipvSessionItem, testCode.getValue(), "http://example.com");
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockDataStore).update(ipvSessionItemArgumentCaptor.capture());
+        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getAuthorizationCode());
+        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getAuthorizationCodeMetadata());
+    }
+
+    @Test
+    void shouldSetAccessTokenAndMetadataOnSessionItem() {
+        BearerAccessToken accessToken = new BearerAccessToken("test-access-token");
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setUserState(UserStates.IPV_SUCCESS_PAGE.toString());
+        ipvSessionItem.setCreationDateTime(new Date().toString());
+
+        ipvSessionService.setAccessToken(ipvSessionItem, accessToken);
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockDataStore).update(ipvSessionItemArgumentCaptor.capture());
+        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getAccessToken());
+        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getAccessTokenMetadata());
     }
 }

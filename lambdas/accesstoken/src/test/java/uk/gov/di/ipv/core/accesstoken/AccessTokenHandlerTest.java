@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
 import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.TokenRequestValidator;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
@@ -46,6 +47,7 @@ class AccessTokenHandlerTest {
     private Context context;
     private AccessTokenService mockAccessTokenService;
     private AuthorizationCodeService mockAuthorizationCodeService;
+    private IpvSessionService mockSessionService;
     private TokenRequestValidator mockTokenRequestValidator;
 
     private AccessTokenHandler handler;
@@ -62,6 +64,8 @@ class AccessTokenHandlerTest {
         mockAuthorizationCodeService = mock(AuthorizationCodeService.class);
         ConfigurationService mockConfigurationService = mock(ConfigurationService.class);
 
+        mockSessionService = mock(IpvSessionService.class);
+
         mockTokenRequestValidator = mock(TokenRequestValidator.class);
 
         context = mock(Context.class);
@@ -70,6 +74,7 @@ class AccessTokenHandlerTest {
                 new AccessTokenHandler(
                         mockAccessTokenService,
                         mockAuthorizationCodeService,
+                        mockSessionService,
                         mockConfigurationService,
                         mockTokenRequestValidator);
 

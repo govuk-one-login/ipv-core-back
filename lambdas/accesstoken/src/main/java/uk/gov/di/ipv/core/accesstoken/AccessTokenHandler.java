@@ -21,10 +21,12 @@ import uk.gov.di.ipv.core.library.exceptions.ClientAuthenticationException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
 import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
 import uk.gov.di.ipv.core.library.service.ClientAuthJwtIdService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.TokenRequestValidator;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
@@ -37,16 +39,19 @@ public class AccessTokenHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private final AccessTokenService accessTokenService;
     private final AuthorizationCodeService authorizationCodeService;
+    private final IpvSessionService sessionService;
     private final ConfigurationService configurationService;
     private final TokenRequestValidator tokenRequestValidator;
 
     public AccessTokenHandler(
             AccessTokenService accessTokenService,
             AuthorizationCodeService authorizationCodeService,
+            IpvSessionService sessionService,
             ConfigurationService configurationService,
             TokenRequestValidator tokenRequestValidator) {
         this.accessTokenService = accessTokenService;
         this.authorizationCodeService = authorizationCodeService;
+        this.sessionService = sessionService;
         this.configurationService = configurationService;
         this.tokenRequestValidator = tokenRequestValidator;
     }
@@ -56,6 +61,7 @@ public class AccessTokenHandler
         this.configurationService = new ConfigurationService();
         this.accessTokenService = new AccessTokenService(configurationService);
         this.authorizationCodeService = new AuthorizationCodeService(configurationService);
+        this.sessionService = new IpvSessionService(configurationService);
         this.tokenRequestValidator =
                 new TokenRequestValidator(
                         configurationService, new ClientAuthJwtIdService(configurationService));
@@ -134,8 +140,11 @@ public class AccessTokenHandler
             AccessTokenResponse accessTokenResponse =
                     accessTokenService.generateAccessToken().toSuccessResponse();
 
-            accessTokenService.persistAccessToken(
-                    accessTokenResponse, authorizationCodeItem.getIpvSessionId());
+            String sessionId = authorizationCodeItem.getIpvSessionId();
+            accessTokenService.persistAccessToken(accessTokenResponse, sessionId);
+            IpvSessionItem ipvSessionItem = sessionService.getIpvSession(sessionId);
+            sessionService.setAccessToken(
+                    ipvSessionItem, accessTokenResponse.getTokens().getBearerAccessToken());
 
             authorizationCodeService.setIssuedAccessToken(
                     authorizationCodeItem.getAuthCode(),

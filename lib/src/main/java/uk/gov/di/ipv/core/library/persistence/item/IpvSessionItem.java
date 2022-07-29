@@ -3,6 +3,8 @@ package uk.gov.di.ipv.core.library.persistence.item;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
+import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 
@@ -14,6 +16,10 @@ public class IpvSessionItem implements DynamodbItem {
     private String creationDateTime;
     private ClientSessionDetailsDto clientSessionDetails;
     private CredentialIssuerSessionDetailsDto credentialIssuerSessionDetails;
+    private String authorizationCode;
+    private AuthorizationCodeMetadata authorizationCodeMetadata;
+    private String accessToken;
+    private AccessTokenMetadata accessTokenMetadata;
     private String errorCode;
     private String errorDescription;
     private long ttl;
@@ -58,6 +64,38 @@ public class IpvSessionItem implements DynamodbItem {
 
     public CredentialIssuerSessionDetailsDto getCredentialIssuerSessionDetails() {
         return credentialIssuerSessionDetails;
+    }
+
+    public String getAuthorizationCode() {
+        return authorizationCode;
+    }
+
+    public void setAuthorizationCode(String authorizationCode) {
+        this.authorizationCode = authorizationCode;
+    }
+
+    public AuthorizationCodeMetadata getAuthorizationCodeMetadata() {
+        return authorizationCodeMetadata;
+    }
+
+    public void setAuthorizationCodeMetadata(AuthorizationCodeMetadata authorizationCodeMetadata) {
+        this.authorizationCodeMetadata = authorizationCodeMetadata;
+    }
+
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        this.accessToken = accessToken;
+    }
+
+    public AccessTokenMetadata getAccessTokenMetadata() {
+        return accessTokenMetadata;
+    }
+
+    public void setAccessTokenMetadata(AccessTokenMetadata accessTokenMetadata) {
+        this.accessTokenMetadata = accessTokenMetadata;
     }
 
     public String getErrorCode() {
