@@ -17,6 +17,8 @@ public class FraudEvidenceValidator implements CriEvidenceValidator {
         if (evidence.getIdentityFraudScore() < GPG_45_M1A_FRAUD_SCORE) {
             return false;
         }
-        return evidence.getCi() == null || evidence.getCi().isEmpty();
+
+        var ci = evidence.getCi();
+        return ci == null || ci.isEmpty() || (ci.size() == 1 && ci.get(0).equals("A01"));
     }
 }
