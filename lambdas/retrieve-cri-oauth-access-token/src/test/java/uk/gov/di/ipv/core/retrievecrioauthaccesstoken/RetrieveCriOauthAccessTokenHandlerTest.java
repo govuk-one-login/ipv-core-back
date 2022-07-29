@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.credentialissuerreturn;
+package uk.gov.di.ipv.core.retrievecrioauthaccesstoken;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -61,7 +61,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRACT_I
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 
 @ExtendWith(MockitoExtension.class)
-class CredentialIssuerReturnHandlerTest {
+class RetrieveCriOauthAccessTokenHandlerTest {
 
     public static final String OAUTH_STATE = "oauth-state";
     public static final String CREDENTIAL_ISSUER_ID = "PassportIssuer";
@@ -87,7 +87,7 @@ class CredentialIssuerReturnHandlerTest {
 
     @Mock private IpvSessionItem ipvSessionItem;
 
-    @InjectMocks private CredentialIssuerReturnHandler handler;
+    @InjectMocks private RetrieveCriOauthAccessTokenHandler handler;
 
     private static CredentialIssuerConfig passportIssuer;
     private static ClientSessionDetailsDto clientSessionDetailsDto;
@@ -239,7 +239,7 @@ class CredentialIssuerReturnHandlerTest {
                                 passportIssuerId),
                         Map.of("ipv-session-id", sessionId));
         APIGatewayProxyResponseEvent response =
-                new CredentialIssuerReturnHandler(
+                new RetrieveCriOauthAccessTokenHandler(
                                 credentialIssuerService,
                                 configurationService,
                                 ipvSessionService,
@@ -265,7 +265,7 @@ class CredentialIssuerReturnHandlerTest {
                                 "not-correct-state"),
                         Map.of("ipv-session-id", sessionId));
         APIGatewayProxyResponseEvent response =
-                new CredentialIssuerReturnHandler(
+                new RetrieveCriOauthAccessTokenHandler(
                                 credentialIssuerService,
                                 configurationService,
                                 ipvSessionService,

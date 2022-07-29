@@ -378,19 +378,20 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref IPVSessionStartFunctionLogGroup
 
-  IPVCriReturnFunction:
+# TODO: Remove this lambda after front-end swaps to using new endpoint
+  RetrieveCriOauthAccessTokenFunctionToBeRemoved:
     Type: AWS::Serverless::Function
     DependsOn:
-      - "IPVCriReturnFunctionLogGroup"
+      - "RetrieveCriOauthAccessTokenFunctionToBeRemovedLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "ipv-credential-issuer-return-${Environment}"
-      Handler: uk.gov.di.ipv.core.credentialissuerreturn.CredentialIssuerReturnHandler::handleRequest
+      FunctionName: !Sub "retrieve-cri-oauth-access-token-TO-BE-REMOVED-${Environment}"
+      Handler: uk.gov.di.ipv.core.retrievecrioauthaccesstoken.RetrieveCriOauthAccessTokenHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/credentialissuerreturn
+      CodeUri: ../lambdas/retrieve-cri-oauth-access-token
       Architectures:
         - arm64
       MemorySize: 2048
@@ -402,7 +403,7 @@ Resources:
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsV2Table.Arn]]
           SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub cri-return-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub retrieve-cri-oauth-access-token-${Environment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
       Policies:
@@ -451,20 +452,112 @@ Resources:
           - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
-  IPVCriReturnFunctionLogGroup:
+  RetrieveCriOauthAccessTokenFunctionToBeRemovedLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/ipv-credential-issuer-return-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/retrieve-cri-oauth-access-token-TO-BE-REMOVED-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
-  IPVCriReturnFunctionLogGroupSubscriptionFilter:
+  RetrieveCriOauthAccessTokenFunctionToBeRemovedLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
-      LogGroupName: !Ref IPVCriReturnFunctionLogGroup
+      LogGroupName: !Ref RetrieveCriOauthAccessTokenFunctionToBeRemovedLogGroup
+
+
+  RetrieveCriOauthAccessTokenFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - "RetrieveCriOauthAccessTokenFunctionLogGroup"
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "retrieve-cri-oauth-access-token-${Environment}"
+      Handler: uk.gov.di.ipv.core.retrievecrioauthaccesstoken.RetrieveCriOauthAccessTokenHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/retrieve-cri-oauth-access-token
+      Architectures:
+        - arm64
+      MemorySize: 2048
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsTable.Arn ] ]
+          USER_ISSUED_CREDENTIALS_V2_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsV2Table.Arn ] ]
+          SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub retrieve-cri-oauth-access-token-${Environment}
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserIssuedCredentialsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserIssuedCredentialsV2Table
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/credentialIssuers
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:${Environment}/credential-issuers/*/api-key-*
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
+        - Statement:
+            - Sid: kmsSigningKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:sign'
+              Resource:
+                - !ImportValue SigningKeyArn
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
+      Events:
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+            Path: /journey/cri/access-token
+            Method: POST
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+        - AddProvisionedConcurrency
+        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
+        - !Ref AWS::NoValue
+
+  RetrieveCriOauthAccessTokenFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+      LogGroupName: !Sub "/aws/lambda/retrieve-cri-oauth-access-token-${Environment}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  RetrieveCriOauthAccessTokenFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
+      FilterPattern: ""
+      LogGroupName: !Ref RetrieveCriOauthAccessTokenFunctionLogGroup
 
   IPVCredentialIssuerStartFunction:
     Type: AWS::Serverless::Function
