@@ -29,6 +29,7 @@ public class CredentialIssuerErrorHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String ERROR_JOURNEY_STEP_URI = "/journey/error";
+    private static final String ACCESS_DENIED_JOURNEY_STEP_URI = "/journey/access-denied";
     private static final List<String> ALLOWED_OAUTH_ERROR_CODES =
             Arrays.asList(
                     OAuth2Error.INVALID_REQUEST_CODE,
@@ -68,16 +69,23 @@ public class CredentialIssuerErrorHandler
             LogHelper.attachCriIdToLogs(credentialIssuerErrorDto.getCredentialIssuerId());
 
             if (!ALLOWED_OAUTH_ERROR_CODES.contains(credentialIssuerErrorDto.getError())) {
-                LOGGER.error("Unknown Oauth error code received");
+                LOGGER.warn("Unknown Oauth error code received");
             }
-            LogHelper.logOauthError(
-                    "OAuth error received from CRI",
-                    credentialIssuerErrorDto.getError(),
-                    credentialIssuerErrorDto.getErrorDescription());
+
+            JourneyResponse journeyResponse = null;
+
+            if (OAuth2Error.ACCESS_DENIED_CODE.equals(credentialIssuerErrorDto.getError())) {
+                LOGGER.info("OAuth access_denied");
+                journeyResponse = new JourneyResponse(ACCESS_DENIED_JOURNEY_STEP_URI);
+            } else {
+                LogHelper.logOauthError(
+                        "OAuth error received from CRI",
+                        credentialIssuerErrorDto.getError(),
+                        credentialIssuerErrorDto.getErrorDescription());
+                journeyResponse = new JourneyResponse(ERROR_JOURNEY_STEP_URI);
+            }
 
             sendAuditEvent(credentialIssuerErrorDto);
-
-            JourneyResponse journeyResponse = new JourneyResponse(ERROR_JOURNEY_STEP_URI);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, journeyResponse);
         } catch (HttpResponseExceptionWithErrorBody e) {
