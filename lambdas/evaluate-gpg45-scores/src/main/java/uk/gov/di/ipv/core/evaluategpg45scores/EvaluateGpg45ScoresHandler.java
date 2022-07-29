@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.text.ParseException;
@@ -32,16 +33,22 @@ public class EvaluateGpg45ScoresHandler
     public static final String JOURNEY_ERROR = "/journey/error";
     public static final String JOURNEY_FAIL = "/journey/fail";
     private final UserIdentityService userIdentityService;
+    private final IpvSessionService ipvSessionService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
 
     public EvaluateGpg45ScoresHandler(
-            UserIdentityService userIdentityService, Gpg45ProfileEvaluator gpg45ProfileEvaluator) {
+            UserIdentityService userIdentityService,
+            IpvSessionService ipvSessionService,
+            Gpg45ProfileEvaluator gpg45ProfileEvaluator) {
         this.userIdentityService = userIdentityService;
+        this.ipvSessionService = ipvSessionService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
     }
 
     public EvaluateGpg45ScoresHandler() {
-        this.userIdentityService = new UserIdentityService(new ConfigurationService());
+        ConfigurationService configurationService = new ConfigurationService();
+        this.userIdentityService = new UserIdentityService(configurationService);
+        this.ipvSessionService = new IpvSessionService(configurationService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
     }
 
@@ -53,7 +60,8 @@ public class EvaluateGpg45ScoresHandler
         LogHelper.attachComponentIdToLogs();
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(event);
-            List<String> credentials = userIdentityService.getUserIssuedCredentials(ipvSessionId);
+            String userId = ipvSessionService.getUserId(ipvSessionId);
+            List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
             JourneyResponse journeyResponse;
             if (gpg45ProfileEvaluator.anyCredentialsGatheredDoNotMeetM1A(credentials)) {
