@@ -17,6 +17,13 @@ CRI_STATE:
       response:
         type: page
         pageId: pyi-no-match
+    access-denied:
+      type: basic
+      name: access-denied
+      targetState: PYI_NO_MATCH
+      response:
+        type: page
+        pageId: pyi-no-match
 END_JOURNEY:
   name: END_JOURNEY
   parent: null
