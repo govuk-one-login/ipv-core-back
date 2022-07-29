@@ -112,12 +112,11 @@ public class UserIdentityHandler
                             .getClientSessionDetails();
             LogHelper.attachClientIdToLogs(clientSessionDetails.getClientId());
 
-            String userId = ipvSessionService.getUserId(ipvSessionId);
+            String userId = clientSessionDetails.getUserId();
             AuditEventUser auditEventUser = new AuditEventUser(userId, ipvSessionId);
 
-            UserIdentity userIdentity =
-                    userIdentityService.generateUserIdentity(
-                            ipvSessionId, clientSessionDetails.getUserId());
+            String sub = userId;
+            UserIdentity userIdentity = userIdentityService.generateUserIdentity(userId, sub);
 
             auditService.sendAuditEvent(
                     new AuditEvent(

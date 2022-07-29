@@ -6,11 +6,11 @@ import lombok.Setter;
 @Getter
 @Setter
 public class DebugCredentialAttributes {
-    private String ipvSessionId;
+    private String userId;
     private String dateCreated;
 
     public DebugCredentialAttributes(String ipvSessionId, String dateCreated) {
-        this.ipvSessionId = ipvSessionId;
+        this.userId = ipvSessionId;
         this.dateCreated = dateCreated;
     }
 }

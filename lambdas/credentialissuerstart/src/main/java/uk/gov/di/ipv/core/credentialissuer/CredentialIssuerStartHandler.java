@@ -122,14 +122,14 @@ public class CredentialIssuerStartHandler
                         400, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
             }
 
+            String userId = ipvSessionService.getUserId(ipvSessionId);
             String oauthState = SecureTokenHelper.generate();
-            JWEObject jweObject = signEncryptJar(credentialIssuerConfig, ipvSessionId, oauthState);
+            JWEObject jweObject = signEncryptJar(credentialIssuerConfig, userId, oauthState);
 
             CriResponse criResponse = getCriResponse(credentialIssuerConfig, jweObject);
 
             persistOauthState(ipvSessionId, credentialIssuerConfig.getId(), oauthState);
 
-            String userId = ipvSessionService.getUserId(ipvSessionId);
             AuditEventUser auditEventUser = new AuditEventUser(userId, ipvSessionId);
             auditService.sendAuditEvent(
                     new AuditEvent(
@@ -164,9 +164,9 @@ public class CredentialIssuerStartHandler
     }
 
     private JWEObject signEncryptJar(
-            CredentialIssuerConfig credentialIssuerConfig, String ipvSessionId, String oauthState)
+            CredentialIssuerConfig credentialIssuerConfig, String userId, String oauthState)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException {
-        SharedClaimsResponse sharedClaimsResponse = getSharedAttributes(ipvSessionId);
+        SharedClaimsResponse sharedClaimsResponse = getSharedAttributes(userId);
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
                         sharedClaimsResponse,
@@ -174,10 +174,7 @@ public class CredentialIssuerStartHandler
                         credentialIssuerConfig,
                         configurationService,
                         oauthState,
-                        ipvSessionService
-                                .getIpvSession(ipvSessionId)
-                                .getClientSessionDetails()
-                                .getUserId());
+                        userId);
 
         RSAEncrypter rsaEncrypter =
                 new RSAEncrypter(credentialIssuerConfig.getJarEncryptionPublicJwk());
@@ -199,9 +196,9 @@ public class CredentialIssuerStartHandler
     }
 
     @Tracing
-    private SharedClaimsResponse getSharedAttributes(String ipvSessionId)
+    private SharedClaimsResponse getSharedAttributes(String userId)
             throws HttpResponseExceptionWithErrorBody {
-        List<String> credentials = userIdentityService.getUserIssuedCredentials(ipvSessionId);
+        List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
         Set<SharedClaims> sharedAttributes = new HashSet<>();
         for (String credential : credentials) {

@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.validatecricheck.validation.CriCheckValidator;
 
@@ -35,17 +36,23 @@ public class ValidateCriCheckHandler
 
     private final CriCheckValidator criCheckValidator;
     private final UserIdentityService userIdentityService;
+    private final IpvSessionService ipvSessionService;
 
     public ValidateCriCheckHandler(
-            CriCheckValidator criCheckValidator, UserIdentityService userIdentityService) {
+            CriCheckValidator criCheckValidator,
+            UserIdentityService userIdentityService,
+            IpvSessionService ipvSessionService) {
         this.criCheckValidator = criCheckValidator;
         this.userIdentityService = userIdentityService;
+        this.ipvSessionService = ipvSessionService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public ValidateCriCheckHandler() {
         this.criCheckValidator = new CriCheckValidator();
-        this.userIdentityService = new UserIdentityService(new ConfigurationService());
+        ConfigurationService configurationService = new ConfigurationService();
+        this.userIdentityService = new UserIdentityService(configurationService);
+        this.ipvSessionService = new IpvSessionService(configurationService);
     }
 
     @Override
@@ -56,13 +63,13 @@ public class ValidateCriCheckHandler
         LogHelper.attachComponentIdToLogs();
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
+            String userId = ipvSessionService.getUserId(ipvSessionId);
             String criId = getCriId(input.getPathParameters());
             LogHelper.attachCriIdToLogs(criId);
 
             JourneyResponse journeyResponse =
                     criCheckValidator.isSuccess(
-                                    userIdentityService.getUserIssuedCredential(
-                                            ipvSessionId, criId))
+                                    userIdentityService.getUserIssuedCredential(userId, criId))
                             ? new JourneyResponse(JOURNEY_NEXT)
                             : new JourneyResponse(JOURNEY_FAIL);
 

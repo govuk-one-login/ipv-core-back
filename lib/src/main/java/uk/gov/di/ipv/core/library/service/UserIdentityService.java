@@ -80,21 +80,21 @@ public class UserIdentityService {
         this.dataStore = dataStore;
     }
 
-    public List<String> getUserIssuedCredentials(String ipvSessionId) {
-        List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(ipvSessionId);
+    public List<String> getUserIssuedCredentials(String userId) {
+        List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(userId);
 
         return credentialIssuerItems.stream()
                 .map(UserIssuedCredentialsItem::getCredential)
                 .collect(Collectors.toList());
     }
 
-    public UserIssuedCredentialsItem getUserIssuedCredential(String ipvSessionId, String criId) {
-        return dataStore.getItem(ipvSessionId, criId);
+    public UserIssuedCredentialsItem getUserIssuedCredential(String userId, String criId) {
+        return dataStore.getItem(userId, criId);
     }
 
-    public UserIdentity generateUserIdentity(String ipvSessionId, String sub)
+    public UserIdentity generateUserIdentity(String userId, String sub)
             throws HttpResponseExceptionWithErrorBody {
-        List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(ipvSessionId);
+        List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(userId);
 
         List<String> vcJwts =
                 credentialIssuerItems.stream()
@@ -117,8 +117,8 @@ public class UserIdentityService {
         return userIdentityBuilder.build();
     }
 
-    public Map<String, String> getUserIssuedDebugCredentials(String ipvSessionId) {
-        List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(ipvSessionId);
+    public Map<String, String> getUserIssuedDebugCredentials(String userId) {
+        List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(userId);
         Map<String, String> userIssuedDebugCredentials = new HashMap<>();
         Gson gson = new Gson();
 
@@ -126,7 +126,7 @@ public class UserIdentityService {
                 criItem -> {
                     DebugCredentialAttributes attributes =
                             new DebugCredentialAttributes(
-                                    criItem.getIpvSessionId(), criItem.getDateCreated().toString());
+                                    criItem.getUserId(), criItem.getDateCreated().toString());
                     UserIssuedDebugCredential debugCredential =
                             new UserIssuedDebugCredential(attributes);
 

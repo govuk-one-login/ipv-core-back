@@ -215,37 +215,25 @@ class CredentialIssuerServiceTest {
         ArgumentCaptor<UserIssuedCredentialsItem> userIssuedCredentialsItemCaptor =
                 ArgumentCaptor.forClass(UserIssuedCredentialsItem.class);
 
-        CredentialIssuerRequestDto credentialIssuerRequestDto =
-                new CredentialIssuerRequestDto(
-                        "1234",
-                        "cred_issuer_id_1",
-                        TEST_IPV_SESSION_ID,
-                        "http://www.example.com/redirect",
-                        OAUTH_STATE);
+        String credentialIssuerId = "cred_issuer_id_1";
+        String userId = "user-id-1";
 
-        credentialIssuerService.persistUserCredentials(SIGNED_VC_1, credentialIssuerRequestDto);
+        credentialIssuerService.persistUserCredentials(SIGNED_VC_1, credentialIssuerId, userId);
         verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture());
+        assertEquals(userId, userIssuedCredentialsItemCaptor.getValue().getUserId());
         assertEquals(
-                credentialIssuerRequestDto.getIpvSessionId(),
-                userIssuedCredentialsItemCaptor.getValue().getIpvSessionId());
-        assertEquals(
-                credentialIssuerRequestDto.getCredentialIssuerId(),
+                credentialIssuerId,
                 userIssuedCredentialsItemCaptor.getValue().getCredentialIssuer());
         assertEquals(
-                credentialIssuerRequestDto.getCredentialIssuerId(),
+                credentialIssuerId,
                 userIssuedCredentialsItemCaptor.getValue().getCredentialIssuer());
         assertEquals(SIGNED_VC_1, userIssuedCredentialsItemCaptor.getValue().getCredential());
     }
 
     @Test
     void expectedExceptionWhenSaveCredentials() {
-        CredentialIssuerRequestDto credentialIssuerRequestDto =
-                new CredentialIssuerRequestDto(
-                        "1234",
-                        "cred_issuer_id_1",
-                        TEST_IPV_SESSION_ID,
-                        "http://www.example.com/redirect",
-                        OAUTH_STATE);
+        String credentialIssuerId = "cred_issuer_id_1";
+        String userId = "user-id-1";
 
         doThrow(new UnsupportedOperationException()).when(mockDataStore).create(any());
 
@@ -254,7 +242,7 @@ class CredentialIssuerServiceTest {
                         CredentialIssuerException.class,
                         () ->
                                 credentialIssuerService.persistUserCredentials(
-                                        SIGNED_VC_1, credentialIssuerRequestDto));
+                                        SIGNED_VC_1, credentialIssuerId, userId));
 
         assertNotNull(thrown);
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());

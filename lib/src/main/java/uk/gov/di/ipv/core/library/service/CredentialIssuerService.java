@@ -178,10 +178,11 @@ public class CredentialIssuerService {
         }
     }
 
-    public void persistUserCredentials(String credential, CredentialIssuerRequestDto request) {
+    public void persistUserCredentials(
+            String credential, String credentialIssuerId, String userId) {
         UserIssuedCredentialsItem userIssuedCredentials = new UserIssuedCredentialsItem();
-        userIssuedCredentials.setIpvSessionId(request.getIpvSessionId());
-        userIssuedCredentials.setCredentialIssuer(request.getCredentialIssuerId());
+        userIssuedCredentials.setUserId(userId);
+        userIssuedCredentials.setCredentialIssuer(credentialIssuerId);
         userIssuedCredentials.setCredential(credential);
         userIssuedCredentials.setDateCreated(LocalDateTime.now());
         try {

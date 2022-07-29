@@ -60,14 +60,14 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
 
         assertEquals(SIGNED_VC_1, credentials.getVcs().get(0));
         assertEquals(SIGNED_VC_2, credentials.getVcs().get(1));
@@ -80,7 +80,7 @@ class UserIdentityServiceTest {
         String criId = "criId";
         UserIssuedCredentialsItem credentialItem =
                 createUserIssuedCredentialsItem(
-                        "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now());
+                        "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now());
 
         when(mockDataStore.getItem(ipvSessionId, criId)).thenReturn(credentialItem);
 
@@ -95,12 +95,12 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1",
+                                "user-id-1",
                                 "ukPassport",
                                 SIGNED_VC_1,
                                 LocalDateTime.parse("2022-01-25T12:28:56.414849")),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1",
+                                "user-id-1",
                                 "fraud",
                                 SIGNED_VC_2,
                                 LocalDateTime.parse("2022-01-25T12:28:56.414849")));
@@ -108,13 +108,13 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         Map<String, String> credentials =
-                userIdentityService.getUserIssuedDebugCredentials("ipv-session-id-1");
+                userIdentityService.getUserIssuedDebugCredentials("user-id-1");
 
         assertEquals(
-                "{\"attributes\":{\"ipvSessionId\":\"ipv-session-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"},\"evidence\":{\"validityScore\":2,\"strengthScore\":4,\"txn\":\"1e0f28c5-6329-46f0-bf0e-833cb9b58c9e\",\"type\":\"IdentityCheck\"}}",
+                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"},\"evidence\":{\"validityScore\":2,\"strengthScore\":4,\"txn\":\"1e0f28c5-6329-46f0-bf0e-833cb9b58c9e\",\"type\":\"IdentityCheck\"}}",
                 credentials.get("ukPassport"));
         assertEquals(
-                "{\"attributes\":{\"ipvSessionId\":\"ipv-session-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"},\"evidence\":{\"txn\":\"some-uuid\",\"identityFraudScore\":1,\"type\":\"CriStubCheck\"}}",
+                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"},\"evidence\":{\"txn\":\"some-uuid\",\"identityFraudScore\":1,\"type\":\"CriStubCheck\"}}",
                 credentials.get("fraud"));
     }
 
@@ -125,12 +125,12 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1",
+                                "user-id-1",
                                 "ukPassport",
                                 generateVerifiableCredential(credentialVcClaim),
                                 LocalDateTime.parse("2022-01-25T12:28:56.414849")),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1",
+                                "user-id-1",
                                 "fraud",
                                 generateVerifiableCredential(credentialVcClaim),
                                 LocalDateTime.parse("2022-01-25T12:28:56.414849")));
@@ -138,13 +138,13 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         Map<String, String> credentials =
-                userIdentityService.getUserIssuedDebugCredentials("ipv-session-id-1");
+                userIdentityService.getUserIssuedDebugCredentials("user-id-1");
 
         assertEquals(
-                "{\"attributes\":{\"ipvSessionId\":\"ipv-session-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"}}",
+                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"}}",
                 credentials.get("ukPassport"));
         assertEquals(
-                "{\"attributes\":{\"ipvSessionId\":\"ipv-session-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"}}",
+                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"}}",
                 credentials.get("fraud"));
     }
 
@@ -153,7 +153,7 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1",
+                                "user-id-1",
                                 "ukPassport",
                                 "invalid-verifiable-credential",
                                 LocalDateTime.parse("2022-01-25T12:28:56.414849")));
@@ -161,10 +161,10 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         Map<String, String> credentials =
-                userIdentityService.getUserIssuedDebugCredentials("ipv-session-id-1");
+                userIdentityService.getUserIssuedDebugCredentials("user-id-1");
 
         assertEquals(
-                "{\"attributes\":{\"ipvSessionId\":\"ipv-session-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"}}",
+                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"}}",
                 credentials.get("ukPassport"));
     }
 
@@ -176,7 +176,7 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1",
+                                "user-id-1",
                                 "ukPassport",
                                 generateVerifiableCredential(credentialVcClaim),
                                 LocalDateTime.parse("2022-01-25T12:28:56.414849")));
@@ -184,10 +184,10 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         Map<String, String> credentials =
-                userIdentityService.getUserIssuedDebugCredentials("ipv-session-id-1");
+                userIdentityService.getUserIssuedDebugCredentials("user-id-1");
 
         assertEquals(
-                "{\"attributes\":{\"ipvSessionId\":\"ipv-session-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"}}",
+                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"}}",
                 credentials.get("ukPassport"));
     }
 
@@ -197,18 +197,18 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
+                                "user-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
 
         assertEquals(VectorOfTrust.P2.toString(), credentials.getVot());
     }
@@ -218,14 +218,14 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
 
         assertEquals(VectorOfTrust.P0.toString(), credentials.getVot());
     }
@@ -235,18 +235,18 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
+                                "user-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
 
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
@@ -261,14 +261,14 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
 
         assertNull(credentials.getIdentityClaim());
     }
@@ -278,23 +278,21 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1",
+                                "user-id-1",
                                 "ukPassport",
                                 SIGNED_PASSPORT_VC_MISSING_NAME,
                                 LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()));
+                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () ->
-                                userIdentityService.generateUserIdentity(
-                                        "ipv-session-id-1", "test-sub"));
+                        () -> userIdentityService.generateUserIdentity("user-id-1", "test-sub"));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -310,23 +308,21 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1",
+                                "user-id-1",
                                 "ukPassport",
                                 SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE,
                                 LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()));
+                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () ->
-                                userIdentityService.generateUserIdentity(
-                                        "ipv-session-id-1", "test-sub"));
+                        () -> userIdentityService.generateUserIdentity("user-id-1", "test-sub"));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -342,18 +338,18 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
+                                "user-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
 
         JsonNode passportClaim = credentials.getPassportClaim();
 
@@ -366,14 +362,14 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
 
         assertNull(credentials.getPassportClaim());
     }
@@ -383,25 +379,23 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1",
+                                "user-id-1",
                                 "ukPassport",
                                 SIGNED_PASSPORT_VC_MISSING_PASSPORT,
                                 LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
+                                "user-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () ->
-                                userIdentityService.generateUserIdentity(
-                                        "ipv-session-id-1", "test-sub"));
+                        () -> userIdentityService.generateUserIdentity("user-id-1", "test-sub"));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -417,7 +411,7 @@ class UserIdentityServiceTest {
         when(mockConfigurationService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
 
         assertEquals("test-sub", credentials.getSub());
     }
@@ -427,16 +421,16 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "kbv", SIGNED_VC_4, LocalDateTime.now()));
+                                "user-id-1", "kbv", SIGNED_VC_4, LocalDateTime.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
 
         assertEquals(VectorOfTrust.P0.toString(), credentials.getVot());
     }
@@ -446,7 +440,7 @@ class UserIdentityServiceTest {
         when(mockConfigurationService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
 
         assertEquals("mock-vtm-claim", credentials.getVtm());
     }
@@ -457,21 +451,18 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1",
-                                "address",
-                                SIGNED_ADDRESS_VC,
-                                LocalDateTime.now()));
+                                "user-id-1", "address", SIGNED_ADDRESS_VC, LocalDateTime.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity userIdentity =
-                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
 
         JsonNode userIdentityJsonNode =
                 objectMapper.readTree(objectMapper.writeValueAsString(userIdentity));
@@ -493,13 +484,13 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1",
+                                "user-id-1",
                                 "address",
                                 SIGNED_ADDRESS_VC_MISSING_ADDRESS_PROPERTY,
                                 LocalDateTime.now()));
@@ -509,9 +500,7 @@ class UserIdentityServiceTest {
         HttpResponseExceptionWithErrorBody thrownException =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () ->
-                                userIdentityService.generateUserIdentity(
-                                        "ipv-session-id-1", "test-sub"));
+                        () -> userIdentityService.generateUserIdentity("user-id-1", "test-sub"));
 
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
@@ -527,22 +516,20 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "address", "GARBAGE", LocalDateTime.now()));
+                                "user-id-1", "address", "GARBAGE", LocalDateTime.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         HttpResponseExceptionWithErrorBody thrownException =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () ->
-                                userIdentityService.generateUserIdentity(
-                                        "ipv-session-id-1", "test-sub"));
+                        () -> userIdentityService.generateUserIdentity("user-id-1", "test-sub"));
 
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
@@ -558,19 +545,16 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1",
-                                "address",
-                                SIGNED_ADDRESS_VC,
-                                LocalDateTime.now()));
+                                "user-id-1", "address", SIGNED_ADDRESS_VC, LocalDateTime.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("ipv-session-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
 
         assertNull(credentials.getAddressClaim());
     }
@@ -580,25 +564,22 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
                         createUserIssuedCredentialsItem(
-                                "ipv-session-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
-        List<String> vcList = userIdentityService.getUserIssuedCredentials("ipv-session-id-1");
+        List<String> vcList = userIdentityService.getUserIssuedCredentials("user-id-1");
 
         assertEquals(SIGNED_VC_1, vcList.get(0));
         assertEquals(SIGNED_VC_2, vcList.get(1));
     }
 
     private UserIssuedCredentialsItem createUserIssuedCredentialsItem(
-            String ipvSessionId,
-            String credentialIssuer,
-            String credential,
-            LocalDateTime dateCreated) {
+            String userId, String credentialIssuer, String credential, LocalDateTime dateCreated) {
         UserIssuedCredentialsItem userIssuedCredentialsItem = new UserIssuedCredentialsItem();
-        userIssuedCredentialsItem.setIpvSessionId(ipvSessionId);
+        userIssuedCredentialsItem.setUserId(userId);
         userIssuedCredentialsItem.setCredentialIssuer(credentialIssuer);
         userIssuedCredentialsItem.setCredential(credential);
         userIssuedCredentialsItem.setDateCreated(dateCreated);
