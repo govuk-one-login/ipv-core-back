@@ -37,13 +37,13 @@ import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
-import static uk.gov.di.ipv.core.library.domain.UserStates.CORE_SESSION_TIMEOUT;
-import static uk.gov.di.ipv.core.library.domain.UserStates.PYI_TECHNICAL_ERROR_PAGE;
 
 public class ProcessJourneyStepHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String JOURNEY_STEP_PARAM = "journeyStep";
+    private static final String PYIC_TECHNICAL_ERROR_PAGE_ID = "pyi-technical";
+    private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
 
     private final StateMachine stateMachine;
     private final IpvSessionService ipvSessionService;
@@ -114,7 +114,7 @@ public class ProcessJourneyStepHandler
         String currentUserState = ipvSessionItem.getUserState();
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(currentUserState, ipvSessionItem);
-            return new PageResponse(PYI_TECHNICAL_ERROR_PAGE.value).value(configurationService);
+            return new PageResponse(PYIC_TECHNICAL_ERROR_PAGE_ID).value(configurationService);
         }
 
         try {
@@ -163,14 +163,14 @@ public class ProcessJourneyStepHandler
     private void updateUserSessionForTimeout(String oldState, IpvSessionItem ipvSessionItem) {
         ipvSessionItem.setErrorCode(OAuth2Error.ACCESS_DENIED.getCode());
         ipvSessionItem.setErrorDescription(OAuth2Error.ACCESS_DENIED.getDescription());
-        ipvSessionItem.setUserState(CORE_SESSION_TIMEOUT.toString());
+        ipvSessionItem.setUserState(CORE_SESSION_TIMEOUT_STATE);
         ipvSessionService.updateIpvSession(ipvSessionItem);
         var message =
                 new MapMessage()
                         .with("journeyEngine", "State transition")
                         .with("event", "timeout")
                         .with("from", oldState)
-                        .with("to", CORE_SESSION_TIMEOUT.value);
+                        .with("to", CORE_SESSION_TIMEOUT_STATE);
         LOGGER.info(message);
     }
 
@@ -185,7 +185,7 @@ public class ProcessJourneyStepHandler
 
     @Tracing
     private boolean sessionIsNewlyExpired(IpvSessionItem ipvSessionItem) {
-        return (!CORE_SESSION_TIMEOUT.toString().equals(ipvSessionItem.getUserState()))
+        return (!CORE_SESSION_TIMEOUT_STATE.equals(ipvSessionItem.getUserState()))
                 && Instant.parse(ipvSessionItem.getCreationDateTime())
                         .isBefore(
                                 Instant.now()
