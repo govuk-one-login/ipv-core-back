@@ -184,7 +184,7 @@ Resources:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub access-token-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub issue-client-access-token-${Environment}
           CLIENT_AUTH_JWT_IDS_TABLE_NAME: !Ref ClientAuthJwtIdsTable
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
       Policies:
@@ -699,19 +699,19 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref IPVUserIdentityFunctionLogGroup
 
-  IPVCredentialIssuerConfig:
+  GetCredentialIssuerConfig:
     Type: AWS::Serverless::Function
     DependsOn:
-      - "IPVCredentialIssuerFunctionLogGroup"
+      - "GetCredentialIssuerFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "credential-issuer-config-${Environment}"
-      Handler: uk.gov.di.ipv.core.credentialissuerconfig.CredentialIssuerConfigHandler::handleRequest
+      FunctionName: !Sub "get-credential-issuer-config-${Environment}"
+      Handler: uk.gov.di.ipv.core.getcredentialissuerconfig.GetCredentialIssuerConfigHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/credentialissuerconfig
+      CodeUri: ../lambdas/get-credential-issuer-config
       Architectures:
         - arm64
       MemorySize: 2048
@@ -720,7 +720,7 @@ Resources:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-config-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub get-credential-issuer-config-${Environment}
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
       Policies:
         - SSMParameterReadPolicy:
@@ -742,20 +742,20 @@ Resources:
           - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
-  IPVCredentialIssuerFunctionLogGroup:
+  GetCredentialIssuerFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/credential-issuer-config-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/get-credential-issuer-config-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
-  IPVCredentialIssuerFunctionLogGroupSubscriptionFilter:
+  GetCredentialIssuerFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
-      LogGroupName: !Ref IPVCredentialIssuerFunctionLogGroup
+      LogGroupName: !Ref GetCredentialIssuerFunctionLogGroup
 
   IPVIssuedCredentials:
     Type: AWS::Serverless::Function

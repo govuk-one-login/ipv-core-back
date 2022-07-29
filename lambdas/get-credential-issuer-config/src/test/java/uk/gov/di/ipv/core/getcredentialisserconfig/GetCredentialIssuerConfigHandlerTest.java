@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.credentialisserconfig;
+package uk.gov.di.ipv.core.getcredentialisserconfig;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.credentialissuerconfig.CredentialIssuerConfigHandler;
+import uk.gov.di.ipv.core.getcredentialissuerconfig.GetCredentialIssuerConfigHandler;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
@@ -27,7 +27,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
 @ExtendWith(MockitoExtension.class)
-class CredentialIssuerConfigHandlerTest {
+class GetCredentialIssuerConfigHandlerTest {
 
     private final List<CredentialIssuerConfig> credentialIssuerConfigList =
             List.of(
@@ -63,8 +63,8 @@ class CredentialIssuerConfigHandlerTest {
             throws JsonProcessingException, ParseCredentialIssuerConfigException {
         when(configurationService.getCredentialIssuers()).thenReturn(credentialIssuerConfigList);
 
-        CredentialIssuerConfigHandler underTest =
-                new CredentialIssuerConfigHandler(configurationService);
+        GetCredentialIssuerConfigHandler underTest =
+                new GetCredentialIssuerConfigHandler(configurationService);
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
 
@@ -82,8 +82,8 @@ class CredentialIssuerConfigHandlerTest {
         when(configurationService.getCredentialIssuers())
                 .thenThrow(new ParseCredentialIssuerConfigException("Something went wrong"));
 
-        CredentialIssuerConfigHandler underTest =
-                new CredentialIssuerConfigHandler(configurationService);
+        GetCredentialIssuerConfigHandler underTest =
+                new GetCredentialIssuerConfigHandler(configurationService);
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);

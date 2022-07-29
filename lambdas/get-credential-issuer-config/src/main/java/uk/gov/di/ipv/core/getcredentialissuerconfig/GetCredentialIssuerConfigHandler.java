@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.credentialissuerconfig;
+package uk.gov.di.ipv.core.getcredentialissuerconfig;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -17,17 +17,17 @@ import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.util.List;
 
-public class CredentialIssuerConfigHandler
+public class GetCredentialIssuerConfigHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private final ConfigurationService configurationService;
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public CredentialIssuerConfigHandler(ConfigurationService configurationService) {
+    public GetCredentialIssuerConfigHandler(ConfigurationService configurationService) {
         this.configurationService = configurationService;
     }
 
-    public CredentialIssuerConfigHandler() {
+    public GetCredentialIssuerConfigHandler() {
         configurationService = new ConfigurationService();
     }
 
