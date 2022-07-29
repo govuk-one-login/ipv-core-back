@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.accesstoken;
+package uk.gov.di.ipv.core.issueclientaccesstoken;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -40,7 +40,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUTH_CODE_EXPIRY_SECONDS;
 
-class AccessTokenHandlerTest {
+class IssueClientAccessTokenHandlerTest {
     private final String TEST_AUTHORIZATION_CODE = "12345";
     private final String TEST_ACCESS_TOKEN = "98765";
     private final String TEST_REDIRECT_URL = "https://callback.example.com";
@@ -53,7 +53,7 @@ class AccessTokenHandlerTest {
     private IpvSessionService mockSessionService;
     private TokenRequestValidator mockTokenRequestValidator;
 
-    private AccessTokenHandler handler;
+    private IssueClientAccessTokenHandler handler;
     private TokenResponse tokenResponse;
 
     @BeforeEach
@@ -74,7 +74,7 @@ class AccessTokenHandlerTest {
         context = mock(Context.class);
 
         handler =
-                new AccessTokenHandler(
+                new IssueClientAccessTokenHandler(
                         mockAccessTokenService,
                         mockSessionService,
                         mockConfigurationService,

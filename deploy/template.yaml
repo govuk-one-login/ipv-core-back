@@ -163,19 +163,19 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref IPVCoreExternalAPILogGroup
 
-  IPVAccessTokenFunction:
+  IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - "IPVAccessTokenFunctionLogGroup"
+      - "IssueClientAccessTokenFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "ipv-access-token-${Environment}"
-      Handler: uk.gov.di.ipv.core.accesstoken.AccessTokenHandler::handleRequest
+      FunctionName: !Sub "issue-client-access-token-${Environment}"
+      Handler: uk.gov.di.ipv.core.issueclientaccesstoken.IssueClientAccessTokenHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/accesstoken
+      CodeUri: ../lambdas/issue-client-access-token
       Architectures:
         - arm64
       MemorySize: 2048
@@ -212,20 +212,20 @@ Resources:
           - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
-  IPVAccessTokenFunctionLogGroup:
+  IssueClientAccessTokenFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/ipv-access-token-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/issue-client-access-token-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
-  IPVAccessTokenFunctionLogGroupSubscriptionFilter:
+  IssueClientAccessTokenFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
-      LogGroupName: !Ref IPVAccessTokenFunctionLogGroup
+      LogGroupName: !Ref IssueClientAccessTokenFunctionLogGroup
 
   IPVSessionEndFunction:
     Type: AWS::Serverless::Function

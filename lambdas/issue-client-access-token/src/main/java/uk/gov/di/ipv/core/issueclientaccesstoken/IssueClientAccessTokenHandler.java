@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.accesstoken;
+package uk.gov.di.ipv.core.issueclientaccesstoken;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -33,7 +33,7 @@ import uk.gov.di.ipv.core.library.validation.ValidationResult;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
-public class AccessTokenHandler
+public class IssueClientAccessTokenHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -42,7 +42,7 @@ public class AccessTokenHandler
     private final ConfigurationService configurationService;
     private final TokenRequestValidator tokenRequestValidator;
 
-    public AccessTokenHandler(
+    public IssueClientAccessTokenHandler(
             AccessTokenService accessTokenService,
             IpvSessionService sessionService,
             ConfigurationService configurationService,
@@ -54,7 +54,7 @@ public class AccessTokenHandler
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public AccessTokenHandler() {
+    public IssueClientAccessTokenHandler() {
         this.configurationService = new ConfigurationService();
         this.accessTokenService = new AccessTokenService(configurationService);
         this.sessionService = new IpvSessionService(configurationService);
