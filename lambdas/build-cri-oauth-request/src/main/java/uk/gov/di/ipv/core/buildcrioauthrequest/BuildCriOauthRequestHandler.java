@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.credentialissuer;
+package uk.gov.di.ipv.core.buildcrioauthrequest;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -18,8 +18,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
-import uk.gov.di.ipv.core.credentialissuer.domain.CriDetails;
-import uk.gov.di.ipv.core.credentialissuer.domain.CriResponse;
+import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriDetails;
+import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriResponse;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -55,7 +55,7 @@ import java.util.Set;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 
-public class CredentialIssuerStartHandler
+public class BuildCriOauthRequestHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
     public static final String CRI_ID = "criId";
@@ -72,7 +72,7 @@ public class CredentialIssuerStartHandler
     private final IpvSessionService ipvSessionService;
     private final String componentId;
 
-    public CredentialIssuerStartHandler(
+    public BuildCriOauthRequestHandler(
             ConfigurationService configurationService,
             UserIdentityService userIdentityService,
             JWSSigner signer,
@@ -88,7 +88,7 @@ public class CredentialIssuerStartHandler
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public CredentialIssuerStartHandler() {
+    public BuildCriOauthRequestHandler() {
         this.configurationService = new ConfigurationService();
         this.userIdentityService = new UserIdentityService(configurationService);
         this.signer = new KmsEs256Signer(configurationService.getSigningKeyId());

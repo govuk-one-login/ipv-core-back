@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.credentialissuer.domain;
+package uk.gov.di.ipv.core.buildcrioauthrequest.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

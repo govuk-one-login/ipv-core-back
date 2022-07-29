@@ -559,19 +559,19 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref RetrieveCriOauthAccessTokenFunctionLogGroup
 
-  IPVCredentialIssuerStartFunction:
+  BuildCriOauthRequestToBeRemovedFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - "IPVCredentialIssuerStartFunctionLogGroup"
+      - "BuildCriOauthRequestToBeRemovedFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "ipv-credential-issuer-start-${Environment}"
-      Handler: uk.gov.di.ipv.core.credentialissuer.CredentialIssuerStartHandler::handleRequest
+      FunctionName: !Sub "build-cri-oauth-request-TO-BE-REMOVED-${Environment}"
+      Handler: uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/credentialissuerstart
+      CodeUri: ../lambdas/build-cri-oauth-request
       Architectures:
         - arm64
       MemorySize: 3008
@@ -581,7 +581,7 @@ Resources:
         Variables:
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-start-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub build-cri-oauth-request-TO-BE-REMOVED-${Environment}
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsV2Table.Arn ] ]
           SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
@@ -630,20 +630,109 @@ Resources:
           - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
-  IPVCredentialIssuerStartFunctionLogGroup:
+  BuildCriOauthRequestToBeRemovedFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/ipv-credential-issuer-start-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/build-cri-oauth-request-TO-BE-REMOVED-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
-  IPVCredentialIssuerStartFunctionLogGroupSubscriptionFilter:
+  BuildCriOauthRequestToBeRemovedFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
-      LogGroupName: !Ref IPVCredentialIssuerStartFunctionLogGroup
+      LogGroupName: !Ref BuildCriOauthRequestToBeRemovedFunctionLogGroup
+
+  BuildCriOauthRequestFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - "BuildCriOauthRequestFunctionLogGroup"
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "build-cri-oauth-request-${Environment}"
+      Handler: uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/build-cri-oauth-request
+      Architectures:
+        - arm64
+      MemorySize: 3008
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub build-cri-oauth-request-${Environment}
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsTable.Arn ] ]
+          USER_ISSUED_CREDENTIALS_V2_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsV2Table.Arn ] ]
+          SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsV2Table
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/credentialIssuers
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
+        - Statement:
+            - Sid: kmsSigningKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:sign'
+              Resource:
+                - !ImportValue SigningKeyArn
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
+      Events:
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+            Path: /journey/cri/build-oauth-request/{criId}
+            Method: POST
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+        - AddProvisionedConcurrency
+        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
+        - !Ref AWS::NoValue
+
+  BuildCriOauthRequestFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+      LogGroupName: !Sub "/aws/lambda/build-cri-oauth-request-${Environment}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  BuildCriOauthRequestFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
+      FilterPattern: ""
+      LogGroupName: !Ref BuildCriOauthRequestFunctionLogGroup
 
   IPVCredentialIssuerErrorFunction:
     Type: AWS::Serverless::Function

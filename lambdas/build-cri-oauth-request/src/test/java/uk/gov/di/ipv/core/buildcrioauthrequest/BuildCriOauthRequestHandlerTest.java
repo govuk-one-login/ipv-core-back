@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.credentialissuer;
+package uk.gov.di.ipv.core.buildcrioauthrequest;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -50,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.credentialissuer.CredentialIssuerStartHandler.SHARED_CLAIMS;
+import static uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler.SHARED_CLAIMS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_FRONT_CALLBACK_URL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
@@ -65,7 +65,7 @@ import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.g
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.vcClaim;
 
 @ExtendWith(MockitoExtension.class)
-class CredentialIssuerStartHandlerTest {
+class BuildCriOauthRequestHandlerTest {
 
     public static final String CRI_ID = "PassportIssuer";
     public static final String CRI_NAME = "any";
@@ -91,7 +91,7 @@ class CredentialIssuerStartHandlerTest {
 
     private CredentialIssuerConfig credentialIssuerConfig;
 
-    private CredentialIssuerStartHandler underTest;
+    private BuildCriOauthRequestHandler underTest;
 
     @BeforeEach
     void setUp()
@@ -100,7 +100,7 @@ class CredentialIssuerStartHandlerTest {
         ECDSASigner signer = new ECDSASigner(getSigningPrivateKey());
 
         underTest =
-                new CredentialIssuerStartHandler(
+                new BuildCriOauthRequestHandler(
                         configurationService,
                         userIdentityService,
                         signer,
