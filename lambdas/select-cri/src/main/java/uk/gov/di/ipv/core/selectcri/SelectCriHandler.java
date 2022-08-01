@@ -69,19 +69,19 @@ public class SelectCriHandler
             String addressCriId = configurationService.getSsmParameter(KBV_CRI_ID);
 
             if (userHasNotVisited(visitedCredentialIssuers, passportCriId)) {
-                return getApiGatewayProxyResponseEventJourneyResponse(passportCriId);
+                return getJourneyResponse(passportCriId);
             }
 
             if (userHasNotVisited(visitedCredentialIssuers, fraudCriId)) {
-                return getApiGatewayProxyResponseEventJourneyResponse(fraudCriId);
+                return getJourneyResponse(fraudCriId);
             }
 
             if (userHasNotVisited(visitedCredentialIssuers, kbvCriId)) {
-                return getApiGatewayProxyResponseEventJourneyResponse(kbvCriId);
+                return getJourneyResponse(kbvCriId);
             }
 
             if (userHasNotVisited(visitedCredentialIssuers, addressCriId)) {
-                return getApiGatewayProxyResponseEventJourneyResponse(addressCriId);
+                return getJourneyResponse(addressCriId);
             }
 
             LOGGER.info("Unable to determine next credential issuer");
@@ -94,8 +94,7 @@ public class SelectCriHandler
         }
     }
 
-    private APIGatewayProxyResponseEvent getApiGatewayProxyResponseEventJourneyResponse(
-            String passportCriId) {
+    private APIGatewayProxyResponseEvent getJourneyResponse(String passportCriId) {
         return ApiGatewayResponseGenerator.proxyJsonResponse(
                 HttpStatus.SC_OK,
                 new JourneyResponse(String.format(CRI_START_JOURNEY, passportCriId)));
