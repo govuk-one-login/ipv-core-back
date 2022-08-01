@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.sessionend;
+package uk.gov.di.ipv.core.buildclientoauthresponse;
 
 class OAuth2RequestParams {
     static final String REDIRECT_URI = "redirect_uri";

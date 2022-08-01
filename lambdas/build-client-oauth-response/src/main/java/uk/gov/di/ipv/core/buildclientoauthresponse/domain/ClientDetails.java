@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.sessionend.domain;
+package uk.gov.di.ipv.core.buildclientoauthresponse.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;

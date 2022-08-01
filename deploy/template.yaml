@@ -227,19 +227,19 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref IssueClientAccessTokenFunctionLogGroup
 
-  IPVSessionEndFunction:
+  BuildClientOauthResponseToBeRemovedFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - "IPVSessionEndFunctionLogGroup"
+      - "BuildClientOauthResponseToBeRemovedFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "ipv-session-end-${Environment}"
-      Handler: uk.gov.di.ipv.core.sessionend.SessionEndHandler::handleRequest
+      FunctionName: !Sub "build-client-oauth-response-TO-BE-REMOVED-${Environment}"
+      Handler: uk.gov.di.ipv.core.buildclientoauthresponse.BuildClientOauthResponseHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/sessionend
+      CodeUri: ../lambdas/build-client-oauth-response
       Architectures:
         - arm64
       MemorySize: 2048
@@ -248,7 +248,7 @@ Resources:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub session-end-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub build-client-oauth-response-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       Policies:
@@ -283,20 +283,91 @@ Resources:
           - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
-  IPVSessionEndFunctionLogGroup:
+  BuildClientOauthResponseToBeRemoveFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/ipv-session-end-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/build-client-oauth-response-TO-BE-REMOVED-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
-  IPVSessionEndFunctionLogGroupSubscriptionFilter:
+  BuildClientOauthResponseToBeRemovedFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
-      LogGroupName: !Ref IPVSessionEndFunctionLogGroup
+      LogGroupName: !Ref BuildClientOauthResponseToBeRemovedFunctionLogGroup
+
+  BuildClientOauthResponseFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - "BuildClientOauthResponseFunctionLogGroup"
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "build-client-oauth-response-${Environment}"
+      Handler: uk.gov.di.ipv.core.buildclientoauthresponse.BuildClientOauthResponseHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/build-client-oauth-response
+      Architectures:
+        - arm64
+      MemorySize: 2048
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub build-client-oauth-response-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+      Policies:
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/*
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
+        - Statement:
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
+      Events:
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+            Path: /journey/build-client-oauth-response
+            Method: POST
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+        - AddProvisionedConcurrency
+        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
+        - !Ref AWS::NoValue
+
+  BuildClientOauthResponseFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+      LogGroupName: !Sub "/aws/lambda/build-client-oauth-response-${Environment}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  BuildClientOauthResponseFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
+      FilterPattern: ""
+      LogGroupName: !Ref BuildClientOauthResponseFunctionLogGroup
 
   IPVSessionStartFunction:
     Type: AWS::Serverless::Function

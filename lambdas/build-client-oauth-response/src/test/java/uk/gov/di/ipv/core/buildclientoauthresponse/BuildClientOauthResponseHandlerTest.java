@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.sessionend;
+package uk.gov.di.ipv.core.buildclientoauthresponse;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -18,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.buildclientoauthresponse.domain.ClientResponse;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -30,7 +31,6 @@ import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.AuthRequestValidator;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
-import uk.gov.di.ipv.core.sessionend.domain.ClientResponse;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -51,7 +51,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class SessionEndHandlerTest {
+class BuildClientOauthResponseHandlerTest {
     private static final Map<String, String> TEST_EVENT_HEADERS = Map.of("ipv-session-id", "12345");
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Map<String, String> VALID_QUERY_PARAMS =
@@ -67,14 +67,14 @@ class SessionEndHandlerTest {
     @Mock private AuthRequestValidator mockAuthRequestValidator;
     @Mock private AuditService mockAuditService;
 
-    private SessionEndHandler handler;
+    private BuildClientOauthResponseHandler handler;
     private String authorizationCode;
 
     @BeforeEach
     void setUp() {
         authorizationCode = new AuthorizationCode().getValue();
         handler =
-                new SessionEndHandler(
+                new BuildClientOauthResponseHandler(
                         mockSessionService,
                         mockConfigurationService,
                         mockAuthRequestValidator,

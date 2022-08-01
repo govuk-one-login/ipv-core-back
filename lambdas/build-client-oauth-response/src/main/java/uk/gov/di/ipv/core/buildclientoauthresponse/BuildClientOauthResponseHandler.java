@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.sessionend;
+package uk.gov.di.ipv.core.buildclientoauthresponse;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -14,6 +14,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
+import uk.gov.di.ipv.core.buildclientoauthresponse.domain.ClientDetails;
+import uk.gov.di.ipv.core.buildclientoauthresponse.domain.ClientResponse;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
@@ -31,8 +33,6 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.AuthRequestValidator;
-import uk.gov.di.ipv.core.sessionend.domain.ClientDetails;
-import uk.gov.di.ipv.core.sessionend.domain.ClientResponse;
 
 import java.net.URISyntaxException;
 import java.util.Collections;
@@ -40,7 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SessionEndHandler
+public class BuildClientOauthResponseHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
     private final IpvSessionService sessionService;
@@ -50,7 +50,7 @@ public class SessionEndHandler
     private final String componentId;
 
     @ExcludeFromGeneratedCoverageReport
-    public SessionEndHandler() {
+    public BuildClientOauthResponseHandler() {
         this.configurationService = new ConfigurationService();
         this.sessionService = new IpvSessionService(configurationService);
         this.authRequestValidator = new AuthRequestValidator(configurationService);
@@ -60,7 +60,7 @@ public class SessionEndHandler
                 configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
-    public SessionEndHandler(
+    public BuildClientOauthResponseHandler(
             IpvSessionService sessionService,
             ConfigurationService configurationService,
             AuthRequestValidator authRequestValidator,
