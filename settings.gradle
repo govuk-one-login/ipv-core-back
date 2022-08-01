@@ -13,4 +13,5 @@ include "lib",
 		"lambdas:build-cri-oauth-request",
 		"lambdas:credentialissuererror",
 		"lambdas:validate-cri-credential",
+		"lambdas:select-cri",
 		"integration-test"
