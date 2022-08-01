@@ -283,7 +283,7 @@ Resources:
           - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
-  BuildClientOauthResponseToBeRemoveFunctionLogGroup:
+  BuildClientOauthResponseToBeRemovedFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
