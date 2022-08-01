@@ -956,19 +956,19 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref IPVCredentialIssuerErrorFunctionLogGroup
 
-  IPVUserIdentityFunction:
+  BuildUserIdentityFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - "IPVUserIdentityFunctionLogGroup"
+      - "BuildUserIdentityFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "ipv-user-identity-${Environment}"
-      Handler: uk.gov.di.ipv.core.useridentity.UserIdentityHandler::handleRequest
+      FunctionName: !Sub "build-user-identity-${Environment}"
+      Handler: uk.gov.di.ipv.core.builduseridentity.BuildUserIdentityHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/useridentity
+      CodeUri: ../lambdas/build-user-identity
       Architectures:
         - arm64
       MemorySize: 2048
@@ -977,7 +977,7 @@ Resources:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub user-identity-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub build-user-identity-${Environment}
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsV2Table.Arn]]
           IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
@@ -1017,20 +1017,20 @@ Resources:
           - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
-  IPVUserIdentityFunctionLogGroup:
+  BuildUserIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/ipv-user-identity-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/build-user-identity-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
-  IPVUserIdentityFunctionLogGroupSubscriptionFilter:
+  BuildUserIdentityFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
-      LogGroupName: !Ref IPVUserIdentityFunctionLogGroup
+      LogGroupName: !Ref BuildUserIdentityFunctionLogGroup
 
   GetCredentialIssuerConfig:
     Type: AWS::Serverless::Function

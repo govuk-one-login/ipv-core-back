@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.useridentity;
+package uk.gov.di.ipv.core.builduseridentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -51,7 +51,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.PASSPORT_JSON_1;
 
 @ExtendWith(MockitoExtension.class)
-class UserIdentityHandlerTest {
+class BuildUserIdentityHandlerTest {
 
     private static final String TEST_IPV_SESSION_ID = SecureTokenHelper.generate();
     private static final String TEST_ACCESS_TOKEN = "test-access-token";
@@ -65,7 +65,7 @@ class UserIdentityHandlerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private UserIdentityHandler userInfoHandler;
+    private BuildUserIdentityHandler userInfoHandler;
     private UserIdentity userIdentity;
     private IpvSessionItem ipvSessionItem;
     private Map<String, String> responseBody;
@@ -104,7 +104,7 @@ class UserIdentityHandlerTest {
         ipvSessionItem.setAccessTokenMetadata(new AccessTokenMetadata());
 
         userInfoHandler =
-                new UserIdentityHandler(
+                new BuildUserIdentityHandler(
                         mockUserIdentityService,
                         mockIpvSessionService,
                         mockConfigurationService,

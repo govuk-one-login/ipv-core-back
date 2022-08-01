@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.useridentity;
+package uk.gov.di.ipv.core.builduseridentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -36,7 +36,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import java.time.Instant;
 import java.util.Objects;
 
-public class UserIdentityHandler
+public class BuildUserIdentityHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String AUTHORIZATION_HEADER_KEY = "Authorization";
@@ -47,7 +47,7 @@ public class UserIdentityHandler
     private final AuditService auditService;
     private final String componentId;
 
-    public UserIdentityHandler(
+    public BuildUserIdentityHandler(
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
             ConfigurationService configurationService,
@@ -61,7 +61,7 @@ public class UserIdentityHandler
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public UserIdentityHandler() {
+    public BuildUserIdentityHandler() {
         this.configurationService = new ConfigurationService();
         this.userIdentityService = new UserIdentityService(configurationService);
         this.ipvSessionService = new IpvSessionService(configurationService);
