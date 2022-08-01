@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.issuedcredentials;
+package uk.gov.di.ipv.core.builddebugcredentialdata;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class IssuedCredentialsHandlerTest {
+public class BuildDebugCredentialDataHandlerTest {
 
     @Mock private Context mockContext;
     @Mock private UserIdentityService mockUserIdentityService;
@@ -43,12 +43,12 @@ public class IssuedCredentialsHandlerTest {
                         "criThree", "credential issued by criThree");
         when(mockUserIdentityService.getUserIssuedDebugCredentials(userId))
                 .thenReturn(userIssuedCredentials);
-        IssuedCredentialsHandler issuedCredentialsHandler =
-                new IssuedCredentialsHandler(
+        BuildDebugCredentialDataHandler buildDebugCredentialDataHandler =
+                new BuildDebugCredentialDataHandler(
                         mockUserIdentityService, mockConfigurationService, mockIpvSessionService);
 
         APIGatewayProxyResponseEvent response =
-                issuedCredentialsHandler.handleRequest(event, mockContext);
+                buildDebugCredentialDataHandler.handleRequest(event, mockContext);
 
         assertEquals(200, response.getStatusCode());
         assertEquals(gson.toJson(userIssuedCredentials), response.getBody());
@@ -58,12 +58,12 @@ public class IssuedCredentialsHandlerTest {
     void shouldReturn400IfNoSessionId() {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setHeaders(Map.of());
-        IssuedCredentialsHandler issuedCredentialsHandler =
-                new IssuedCredentialsHandler(
+        BuildDebugCredentialDataHandler buildDebugCredentialDataHandler =
+                new BuildDebugCredentialDataHandler(
                         mockUserIdentityService, mockConfigurationService, mockIpvSessionService);
 
         APIGatewayProxyResponseEvent response =
-                issuedCredentialsHandler.handleRequest(event, mockContext);
+                buildDebugCredentialDataHandler.handleRequest(event, mockContext);
 
         assertEquals(400, response.getStatusCode());
     }
@@ -72,12 +72,12 @@ public class IssuedCredentialsHandlerTest {
     void shouldReturn400IfSessionIdIsEmptyString() {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setHeaders(Map.of(RequestHelper.IPV_SESSION_ID_HEADER, ""));
-        IssuedCredentialsHandler issuedCredentialsHandler =
-                new IssuedCredentialsHandler(
+        BuildDebugCredentialDataHandler buildDebugCredentialDataHandler =
+                new BuildDebugCredentialDataHandler(
                         mockUserIdentityService, mockConfigurationService, mockIpvSessionService);
 
         APIGatewayProxyResponseEvent response =
-                issuedCredentialsHandler.handleRequest(event, mockContext);
+                buildDebugCredentialDataHandler.handleRequest(event, mockContext);
 
         assertEquals(400, response.getStatusCode());
     }

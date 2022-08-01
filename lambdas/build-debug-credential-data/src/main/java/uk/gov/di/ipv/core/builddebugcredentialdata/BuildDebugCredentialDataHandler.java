@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.issuedcredentials;
+package uk.gov.di.ipv.core.builddebugcredentialdata;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -16,14 +16,14 @@ import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
-public class IssuedCredentialsHandler
+public class BuildDebugCredentialDataHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private final UserIdentityService userIdentityService;
     private final ConfigurationService configurationService;
     private final IpvSessionService ipvSessionService;
 
-    public IssuedCredentialsHandler(
+    public BuildDebugCredentialDataHandler(
             UserIdentityService userIdentityService,
             ConfigurationService configurationService,
             IpvSessionService ipvSessionService) {
@@ -33,7 +33,7 @@ public class IssuedCredentialsHandler
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public IssuedCredentialsHandler() {
+    public BuildDebugCredentialDataHandler() {
         this.configurationService = new ConfigurationService();
         this.userIdentityService = new UserIdentityService(configurationService);
         this.ipvSessionService = new IpvSessionService(configurationService);
