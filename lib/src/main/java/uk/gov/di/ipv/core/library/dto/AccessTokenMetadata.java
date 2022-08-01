@@ -10,11 +10,14 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 public class AccessTokenMetadata {
     private String creationDateTime;
     private String expiryDateTime;
+    private String revokedAtDateTime;
 
     public AccessTokenMetadata() {}
 
-    public AccessTokenMetadata(String creationDateTime, String expiryDateTime) {
+    public AccessTokenMetadata(
+            String creationDateTime, String expiryDateTime, String revokedAtDateTime) {
         this.creationDateTime = creationDateTime;
         this.expiryDateTime = expiryDateTime;
+        this.revokedAtDateTime = revokedAtDateTime;
     }
 }

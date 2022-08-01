@@ -84,6 +84,7 @@ public class IpvSessionItem implements DynamodbItem {
         this.authorizationCodeMetadata = authorizationCodeMetadata;
     }
 
+    @DynamoDbSecondaryPartitionKey(indexNames = "accessToken")
     public String getAccessToken() {
         return accessToken;
     }

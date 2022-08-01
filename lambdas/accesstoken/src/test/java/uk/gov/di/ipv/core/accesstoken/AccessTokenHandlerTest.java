@@ -283,7 +283,7 @@ class AccessTokenHandlerTest {
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
-        verify(mockAccessTokenService).revokeAccessToken(TEST_ACCESS_TOKEN);
+        verify(mockSessionService).revokeAccessToken(mockSessionItem);
 
         ErrorObject errorResponse = createErrorObjectFromResponse(response.getBody());
         assertEquals(HTTPResponse.SC_BAD_REQUEST, response.getStatusCode());
@@ -308,8 +308,8 @@ class AccessTokenHandlerTest {
 
         String errorMessage = "Failed to revoke access token";
         doThrow(new IllegalArgumentException(errorMessage))
-                .when(mockAccessTokenService)
-                .revokeAccessToken(any(String.class));
+                .when(mockSessionService)
+                .revokeAccessToken(mockSessionItem);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
