@@ -388,4 +388,12 @@ public class UserIdentityService {
                 || ((JSONArray) input).isEmpty()
                 || !(((JSONArray) input).get(0) instanceof JSONObject);
     }
+
+    public List<String> getUserIssuedCredentialIssuers(String userId) {
+        List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(userId);
+
+        return credentialIssuerItems.stream()
+                .map(UserIssuedCredentialsItem::getCredentialIssuer)
+                .collect(Collectors.toList());
+    }
 }
