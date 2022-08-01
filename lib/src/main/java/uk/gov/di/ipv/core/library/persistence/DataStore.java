@@ -3,13 +3,17 @@ package uk.gov.di.ipv.core.library.persistence;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
+import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.lambda.powertools.logging.LoggingUtils;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.DynamodbItem;
@@ -18,6 +22,7 @@ import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import java.net.URI;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
@@ -74,6 +79,25 @@ public class DataStore<T extends DynamodbItem> {
 
     public T getItem(String partitionValue) {
         return getItemByKey(Key.builder().partitionValue(partitionValue).build());
+    }
+
+    public T getItemByIndex(String indexName, String value) throws DynamoDbException {
+        DynamoDbIndex<T> index = table.index(indexName);
+        var attVal = AttributeValue.builder().s(value).build();
+        var queryConditional =
+                QueryConditional.keyEqualTo(Key.builder().partitionValue(attVal).build());
+        var queryEnhancedRequest =
+                QueryEnhancedRequest.builder().queryConditional(queryConditional).build();
+
+        List<T> results =
+                index.query(queryEnhancedRequest).stream()
+                        .flatMap(page -> page.items().stream())
+                        .collect(Collectors.toList());
+
+        if (Objects.isNull(results) || results.isEmpty()) {
+            return null;
+        }
+        return results.get(0);
     }
 
     public List<T> getItems(String partitionValue) {

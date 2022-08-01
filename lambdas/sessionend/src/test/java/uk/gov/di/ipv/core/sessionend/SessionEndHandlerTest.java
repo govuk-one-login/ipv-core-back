@@ -9,7 +9,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import org.apache.http.HttpStatus;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.client.utils.URLEncodedUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,22 +26,26 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.AuthRequestValidator;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 import uk.gov.di.ipv.core.sessionend.domain.ClientResponse;
 
+import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -56,21 +62,19 @@ class SessionEndHandlerTest {
                     OAuth2RequestParams.SCOPE, "openid");
 
     @Mock private Context context;
-    @Mock private AuthorizationCodeService mockAuthorizationCodeService;
     @Mock private IpvSessionService mockSessionService;
     @Mock private ConfigurationService mockConfigurationService;
     @Mock private AuthRequestValidator mockAuthRequestValidator;
     @Mock private AuditService mockAuditService;
 
     private SessionEndHandler handler;
-    private AuthorizationCode authorizationCode;
+    private String authorizationCode;
 
     @BeforeEach
     void setUp() {
-        authorizationCode = new AuthorizationCode();
+        authorizationCode = new AuthorizationCode().getValue();
         handler =
                 new SessionEndHandler(
-                        mockAuthorizationCodeService,
                         mockSessionService,
                         mockConfigurationService,
                         mockAuthRequestValidator,
@@ -80,11 +84,10 @@ class SessionEndHandlerTest {
     @Test
     void shouldReturn200OnSuccessfulOauthRequest()
             throws JsonProcessingException, SqsException, URISyntaxException {
-        when(mockAuthorizationCodeService.generateAuthorizationCode())
-                .thenReturn(authorizationCode);
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
-        when(mockSessionService.getIpvSession(anyString())).thenReturn(generateIpvSessionItem());
+        IpvSessionItem ipvSessionItem = generateIpvSessionItem();
+        when(mockSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setQueryStringParameters(VALID_QUERY_PARAMS);
@@ -97,28 +100,29 @@ class SessionEndHandlerTest {
         ClientResponse responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
-        verify(mockAuthorizationCodeService)
-                .persistAuthorizationCode(
-                        authorizationCode.getValue(), "12345", "https://example.com");
+        verify(mockSessionService)
+                .setAuthorizationCode(eq(ipvSessionItem), anyString(), eq("https://example.com"));
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         assertEquals(AuditEventTypes.IPV_JOURNEY_END, auditEventCaptor.getValue().getEventName());
 
-        String expectedRedirectUrl =
+        URI expectedRedirectUrl =
                 new URIBuilder("https://example.com")
-                        .addParameter("code", authorizationCode.toString())
+                        .addParameter("code", authorizationCode)
                         .addParameter("state", "test-state")
-                        .build()
-                        .toString();
+                        .build();
 
-        assertEquals(expectedRedirectUrl, responseBody.getClient().getRedirectUrl());
+        URI actualRedirectUrl = new URI(responseBody.getClient().getRedirectUrl());
+        List<NameValuePair> params =
+                URLEncodedUtils.parse(actualRedirectUrl, StandardCharsets.UTF_8);
+        assertEquals(expectedRedirectUrl.getHost(), actualRedirectUrl.getHost());
+        assertNotNull(params.get(0).getValue());
+        assertEquals("test-state", params.get(1).getValue());
     }
 
     @Test
     void shouldReturn200WhenStateNotInSession() throws Exception {
-        when(mockAuthorizationCodeService.generateAuthorizationCode())
-                .thenReturn(authorizationCode);
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
         IpvSessionItem ipvSessionItemWithoutState = generateIpvSessionItem();
@@ -159,8 +163,7 @@ class SessionEndHandlerTest {
         assertEquals(
                 ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), responseBody.get("message"));
 
-        verify(mockAuthorizationCodeService, never())
-                .persistAuthorizationCode(anyString(), anyString(), anyString());
+        verify(mockSessionService, never()).setAuthorizationCode(any(), anyString(), anyString());
     }
 
     @Test
@@ -200,8 +203,8 @@ class SessionEndHandlerTest {
             assertEquals(
                     ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
                     responseBody.get("message"));
-            verify(mockAuthorizationCodeService, never())
-                    .persistAuthorizationCode(anyString(), anyString(), anyString());
+            verify(mockSessionService, never())
+                    .setAuthorizationCode(any(), anyString(), anyString());
         }
     }
 

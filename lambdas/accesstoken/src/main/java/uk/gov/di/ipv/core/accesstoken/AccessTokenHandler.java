@@ -17,13 +17,13 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.exceptions.ClientAuthenticationException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
-import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
 import uk.gov.di.ipv.core.library.service.ClientAuthJwtIdService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -38,19 +38,16 @@ public class AccessTokenHandler
 
     private static final Logger LOGGER = LogManager.getLogger();
     private final AccessTokenService accessTokenService;
-    private final AuthorizationCodeService authorizationCodeService;
     private final IpvSessionService sessionService;
     private final ConfigurationService configurationService;
     private final TokenRequestValidator tokenRequestValidator;
 
     public AccessTokenHandler(
             AccessTokenService accessTokenService,
-            AuthorizationCodeService authorizationCodeService,
             IpvSessionService sessionService,
             ConfigurationService configurationService,
             TokenRequestValidator tokenRequestValidator) {
         this.accessTokenService = accessTokenService;
-        this.authorizationCodeService = authorizationCodeService;
         this.sessionService = sessionService;
         this.configurationService = configurationService;
         this.tokenRequestValidator = tokenRequestValidator;
@@ -60,7 +57,6 @@ public class AccessTokenHandler
     public AccessTokenHandler() {
         this.configurationService = new ConfigurationService();
         this.accessTokenService = new AccessTokenService(configurationService);
-        this.authorizationCodeService = new AuthorizationCodeService(configurationService);
         this.sessionService = new IpvSessionService(configurationService);
         this.tokenRequestValidator =
                 new TokenRequestValidator(
@@ -90,16 +86,16 @@ public class AccessTokenHandler
                         validationResult.getError().toJSONObject());
             }
 
-            AuthorizationCodeItem authorizationCodeItem =
-                    authorizationCodeService
-                            .getAuthorizationCodeItem(
+            IpvSessionItem ipvSessionItem =
+                    sessionService
+                            .getIpvSessionByAuthorizationCode(
                                     authorizationGrant.getAuthorizationCode().getValue())
                             .orElseThrow();
 
-            LogHelper.attachIpvSessionIdToLogs(authorizationCodeItem.getIpvSessionId());
+            LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
 
-            if (authorizationCodeItem.getIssuedAccessToken() != null) {
-                ErrorObject error = revokeAccessToken(authorizationCodeItem.getIssuedAccessToken());
+            if (ipvSessionItem.getAccessToken() != null) {
+                ErrorObject error = revokeAccessToken(ipvSessionItem.getAccessToken());
                 LogHelper.logOauthError(
                         "Auth code has been used multiple times",
                         error.getCode(),
@@ -108,20 +104,28 @@ public class AccessTokenHandler
                         error.getHTTPStatusCode(), error.toJSONObject());
             }
 
-            if (authorizationCodeService.isExpired(authorizationCodeItem)) {
+            AuthorizationCodeMetadata authorizationCodeMetadata =
+                    ipvSessionItem.getAuthorizationCodeMetadata();
+
+            if (authorizationCodeMetadata.isExpired(
+                    Long.parseLong(
+                            configurationService.getSsmParameter(
+                                    ConfigurationVariable.AUTH_CODE_EXPIRY_SECONDS)))) {
                 ErrorObject error =
                         OAuth2Error.INVALID_GRANT.setDescription("Authorization code expired");
                 LogHelper.logOauthError(
                         String.format(
                                 "Access Token could not be issued. The supplied authorization code has expired. Created at: %s",
-                                authorizationCodeItem.getCreationDateTime()),
+                                ipvSessionItem
+                                        .getAuthorizationCodeMetadata()
+                                        .getCreationDateTime()),
                         error.getCode(),
                         error.getDescription());
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         error.getHTTPStatusCode(), error.toJSONObject());
             }
 
-            if (redirectUrlsDoNotMatch(authorizationCodeItem, authorizationGrant)) {
+            if (redirectUrlsDoNotMatch(authorizationCodeMetadata, authorizationGrant)) {
                 ErrorObject error =
                         OAuth2Error.INVALID_GRANT.setDescription(
                                 "Redirect URL in token request does not match redirect URL received in auth code request");
@@ -129,7 +133,7 @@ public class AccessTokenHandler
                 LogHelper.logOauthError(
                         String.format(
                                 "Invalid redirect URL value received. Session ID: %s",
-                                authorizationCodeItem.getIpvSessionId()),
+                                ipvSessionItem.getIpvSessionId()),
                         error.getCode(),
                         error.getDescription());
 
@@ -140,15 +144,10 @@ public class AccessTokenHandler
             AccessTokenResponse accessTokenResponse =
                     accessTokenService.generateAccessToken().toSuccessResponse();
 
-            String sessionId = authorizationCodeItem.getIpvSessionId();
+            String sessionId = ipvSessionItem.getIpvSessionId();
             accessTokenService.persistAccessToken(accessTokenResponse, sessionId);
-            IpvSessionItem ipvSessionItem = sessionService.getIpvSession(sessionId);
             sessionService.setAccessToken(
                     ipvSessionItem, accessTokenResponse.getTokens().getBearerAccessToken());
-
-            authorizationCodeService.setIssuedAccessToken(
-                    authorizationCodeItem.getAuthCode(),
-                    accessTokenResponse.getTokens().getBearerAccessToken().getValue());
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, accessTokenResponse.toJSONObject());
@@ -190,15 +189,15 @@ public class AccessTokenHandler
 
     @Tracing
     private boolean redirectUrlsDoNotMatch(
-            AuthorizationCodeItem authorizationCodeItem,
+            AuthorizationCodeMetadata authorizationCodeMetadata,
             AuthorizationCodeGrant authorizationGrant) {
 
-        if (Objects.isNull(authorizationCodeItem.getRedirectUrl())
+        if (Objects.isNull(authorizationCodeMetadata.getRedirectUrl())
                 && Objects.isNull(authorizationGrant.getRedirectionURI())) {
             return false;
         }
 
-        if (Objects.isNull(authorizationCodeItem.getRedirectUrl())
+        if (Objects.isNull(authorizationCodeMetadata.getRedirectUrl())
                 || Objects.isNull(authorizationGrant.getRedirectionURI())) {
             return true;
         }
@@ -206,7 +205,7 @@ public class AccessTokenHandler
         return !authorizationGrant
                 .getRedirectionURI()
                 .toString()
-                .equals(authorizationCodeItem.getRedirectUrl());
+                .equals(authorizationCodeMetadata.getRedirectUrl());
     }
 
     private ErrorObject revokeAccessToken(String accessToken) {

@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 
 import java.time.Instant;
+import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_SESSIONS_TABLE_NAME;
 
@@ -45,6 +46,13 @@ public class IpvSessionService {
 
     public IpvSessionItem getIpvSession(String ipvSessionId) {
         return dataStore.getItem(ipvSessionId);
+    }
+
+    public Optional<IpvSessionItem> getIpvSessionByAuthorizationCode(String authorizationCode) {
+        IpvSessionItem ipvSessionItem =
+                dataStore.getItemByIndex(
+                        "authorizationCode", DigestUtils.sha256Hex(authorizationCode));
+        return Optional.ofNullable(ipvSessionItem);
     }
 
     public String getUserId(String ipvSessionId) {
