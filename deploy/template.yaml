@@ -369,19 +369,19 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref BuildClientOauthResponseFunctionLogGroup
 
-  IPVSessionStartFunction:
+  InitialiseIpvSessionToBeRemovedFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - "IPVSessionStartFunctionLogGroup"
+      - "InitialiseIpvSessionFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "ipv-session-start-${Environment}"
-      Handler: uk.gov.di.ipv.core.session.IpvSessionStartHandler::handleRequest
+      FunctionName: !Sub "initialise-ipv-session-TO-BE-REMOVED-${Environment}"
+      Handler: uk.gov.di.ipv.core.initialiseipvsession.InitialiseIpvSessionHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/sessionstart
+      CodeUri: ../lambdas/initialise-ipv-session
       Architectures:
         - arm64
       MemorySize: 2048
@@ -390,7 +390,7 @@ Resources:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub session-start-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub initialise-ipv-session-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt SessionsTable.Arn]]
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       Policies:
@@ -434,20 +434,100 @@ Resources:
           - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
-  IPVSessionStartFunctionLogGroup:
+  InitialiseIpvSessionToBeRemovedFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/ipv-session-start-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/initialise-ipv-session-TO-BE-REMOVED-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
-  IPVSessionStartFunctionLogGroupSubscriptionFilter:
+  InitialiseIpvSessionToBeRemovedFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
-      LogGroupName: !Ref IPVSessionStartFunctionLogGroup
+      LogGroupName: !Ref InitialiseIpvSessionToBeRemovedFunctionLogGroup
+
+  InitialiseIpvSessionFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - "InitialiseIpvSessionFunctionLogGroup"
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "initialise-ipv-session-${Environment}"
+      Handler: uk.gov.di.ipv.core.initialiseipvsession.InitialiseIpvSessionHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/initialise-ipv-session
+      Architectures:
+        - arm64
+      MemorySize: 2048
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub initialise-ipv-session-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/clients/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/*
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
+        - Statement:
+            - Sid: jarKmsEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue CoreEncryptionKeyArn
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
+      Events:
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+            Path: /session/initialise
+            Method: POST
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+        - AddProvisionedConcurrency
+        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
+        - !Ref AWS::NoValue
+
+  InitialiseIpvSessionFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+      LogGroupName: !Sub "/aws/lambda/initialise-ipv-session-${Environment}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  InitialiseIpvSessionFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
+      FilterPattern: ""
+      LogGroupName: !Ref InitialiseIpvSessionFunctionLogGroup
 
 # TODO: Remove this lambda after front-end swaps to using new endpoint
   RetrieveCriOauthAccessTokenFunctionToBeRemoved:

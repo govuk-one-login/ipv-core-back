@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.session;
+package uk.gov.di.ipv.core.initialiseipvsession;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -41,7 +41,7 @@ import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
 
-public class IpvSessionStartHandler
+public class InitialiseIpvSessionHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -58,7 +58,7 @@ public class IpvSessionStartHandler
     private final String componentId;
 
     @ExcludeFromGeneratedCoverageReport
-    public IpvSessionStartHandler() {
+    public InitialiseIpvSessionHandler() {
         this.configurationService = new ConfigurationService();
         this.ipvSessionService = new IpvSessionService(configurationService);
         this.kmsRsaDecrypter =
@@ -71,7 +71,7 @@ public class IpvSessionStartHandler
                 configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
-    public IpvSessionStartHandler(
+    public InitialiseIpvSessionHandler(
             IpvSessionService ipvSessionService,
             ConfigurationService configurationService,
             KmsRsaDecrypter kmsRsaDecrypter,

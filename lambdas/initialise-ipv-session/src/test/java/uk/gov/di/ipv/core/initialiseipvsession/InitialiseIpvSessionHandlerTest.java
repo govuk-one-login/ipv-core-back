@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.session;
+package uk.gov.di.ipv.core.initialiseipvsession;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -58,7 +58,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 
 @ExtendWith(MockitoExtension.class)
-class IpvSessionStartHandlerTest {
+class InitialiseIpvSessionHandlerTest {
 
     @Mock private Context mockContext;
 
@@ -67,7 +67,7 @@ class IpvSessionStartHandlerTest {
     @Mock private KmsRsaDecrypter mockKmsRsaDecrypter;
     @Mock private JarValidator mockJarValidator;
     @Mock private AuditService mockAuditService;
-    @InjectMocks private IpvSessionStartHandler ipvSessionStartHandler;
+    @InjectMocks private InitialiseIpvSessionHandler initialiseIpvSessionHandler;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -126,7 +126,7 @@ class IpvSessionStartHandlerTest {
         event.setBody(objectMapper.writeValueAsString(sessionParams));
 
         APIGatewayProxyResponseEvent response =
-                ipvSessionStartHandler.handleRequest(event, mockContext);
+                initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
@@ -144,7 +144,7 @@ class IpvSessionStartHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         APIGatewayProxyResponseEvent response =
-                ipvSessionStartHandler.handleRequest(event, mockContext);
+                initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
@@ -161,7 +161,7 @@ class IpvSessionStartHandlerTest {
         event.setBody("invalid-body");
 
         APIGatewayProxyResponseEvent response =
-                ipvSessionStartHandler.handleRequest(event, mockContext);
+                initialiseIpvSessionHandler.handleRequest(event, mockContext);
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
@@ -180,7 +180,7 @@ class IpvSessionStartHandlerTest {
         event.setBody(objectMapper.writeValueAsString(sessionParams));
 
         APIGatewayProxyResponseEvent response =
-                ipvSessionStartHandler.handleRequest(event, mockContext);
+                initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
@@ -200,7 +200,7 @@ class IpvSessionStartHandlerTest {
         event.setBody(objectMapper.writeValueAsString(sessionParams));
 
         APIGatewayProxyResponseEvent response =
-                ipvSessionStartHandler.handleRequest(event, mockContext);
+                initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
@@ -220,7 +220,7 @@ class IpvSessionStartHandlerTest {
         event.setBody(objectMapper.writeValueAsString(sessionParams));
 
         APIGatewayProxyResponseEvent response =
-                ipvSessionStartHandler.handleRequest(event, mockContext);
+                initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
@@ -249,7 +249,7 @@ class IpvSessionStartHandlerTest {
         event.setBody(objectMapper.writeValueAsString(sessionParams));
 
         APIGatewayProxyResponseEvent response =
-                ipvSessionStartHandler.handleRequest(event, mockContext);
+                initialiseIpvSessionHandler.handleRequest(event, mockContext);
 
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
