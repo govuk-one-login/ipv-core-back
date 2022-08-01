@@ -34,6 +34,7 @@ public class VerifiableCredentialJwtValidator {
             throws CredentialIssuerException {
         validateSignature(verifiableCredential, credentialIssuerConfig);
         validateClaimsSet(verifiableCredential, credentialIssuerConfig, userId);
+        LOGGER.info("Verifiable Credential validated");
     }
 
     private void validateSignature(

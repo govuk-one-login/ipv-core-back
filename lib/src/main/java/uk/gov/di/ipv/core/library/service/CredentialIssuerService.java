@@ -133,7 +133,12 @@ public class CredentialIssuerService {
                 throw new CredentialIssuerException(
                         HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST);
             }
-            return tokenResponse.toSuccessResponse().getTokens().getBearerAccessToken();
+
+            BearerAccessToken token =
+                    tokenResponse.toSuccessResponse().getTokens().getBearerAccessToken();
+            LOGGER.info("Auth Code exchanged for Access Token");
+            return token;
+
         } catch (IOException | ParseException | JOSEException | URISyntaxException e) {
             LOGGER.error("Error exchanging token: {}", e.getMessage(), e);
             throw new CredentialIssuerException(
@@ -168,7 +173,9 @@ public class CredentialIssuerService {
                         ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
             }
 
-            return (SignedJWT) response.getContentAsJWT();
+            SignedJWT vcJwt = (SignedJWT) response.getContentAsJWT();
+            LOGGER.info("Verifiable Credential retrieved");
+            return vcJwt;
 
         } catch (IOException | ParseException e) {
             LOGGER.error("Error retrieving credential: {}", e.getMessage());
