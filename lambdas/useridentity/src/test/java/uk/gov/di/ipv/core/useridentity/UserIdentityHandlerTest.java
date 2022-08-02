@@ -25,13 +25,12 @@ import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
+import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.persistence.item.AccessTokenItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.AccessTokenService;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -42,10 +41,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
@@ -60,7 +59,6 @@ class UserIdentityHandlerTest {
 
     @Mock private Context mockContext;
     @Mock private UserIdentityService mockUserIdentityService;
-    @Mock private AccessTokenService mockAccessTokenService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ConfigurationService mockConfigurationService;
     @Mock private AuditService mockAuditService;
@@ -70,7 +68,6 @@ class UserIdentityHandlerTest {
     private UserIdentityHandler userInfoHandler;
     private UserIdentity userIdentity;
     private IpvSessionItem ipvSessionItem;
-    private AccessTokenItem accessTokenItem;
     private Map<String, String> responseBody;
 
     @BeforeEach
@@ -103,15 +100,12 @@ class UserIdentityHandlerTest {
                         "test-state",
                         "test-user-id",
                         false));
-
-        accessTokenItem = new AccessTokenItem();
-        accessTokenItem.setIpvSessionId(TEST_IPV_SESSION_ID);
-        accessTokenItem.setAccessToken(TEST_ACCESS_TOKEN);
+        ipvSessionItem.setAccessToken(TEST_ACCESS_TOKEN);
+        ipvSessionItem.setAccessTokenMetadata(new AccessTokenMetadata());
 
         userInfoHandler =
                 new UserIdentityHandler(
                         mockUserIdentityService,
-                        mockAccessTokenService,
                         mockIpvSessionService,
                         mockConfigurationService,
                         mockAuditService);
@@ -126,8 +120,8 @@ class UserIdentityHandlerTest {
                 Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
         event.setHeaders(headers);
 
-        when(mockAccessTokenService.getAccessToken(TEST_ACCESS_TOKEN)).thenReturn(accessTokenItem);
-        when(mockIpvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
         when(mockUserIdentityService.generateUserIdentity(any(), any())).thenReturn(userIdentity);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
@@ -144,8 +138,8 @@ class UserIdentityHandlerTest {
                 Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
         event.setHeaders(headers);
 
-        when(mockAccessTokenService.getAccessToken(TEST_ACCESS_TOKEN)).thenReturn(accessTokenItem);
-        when(mockIpvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
         when(mockUserIdentityService.generateUserIdentity(any(), any())).thenReturn(userIdentity);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
@@ -158,7 +152,7 @@ class UserIdentityHandlerTest {
         assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
         assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
 
-        verify(mockAccessTokenService).revokeAccessToken(accessTokenItem);
+        verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
@@ -175,8 +169,8 @@ class UserIdentityHandlerTest {
                 Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
         event.setHeaders(headers);
 
-        when(mockAccessTokenService.getAccessToken(TEST_ACCESS_TOKEN)).thenReturn(accessTokenItem);
-        when(mockIpvSessionService.getIpvSession(TEST_IPV_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
         when(mockUserIdentityService.generateUserIdentity(any(), any()))
                 .thenThrow(
                         new HttpResponseExceptionWithErrorBody(
@@ -250,7 +244,8 @@ class UserIdentityHandlerTest {
                 Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
         event.setHeaders(headers);
 
-        when(mockAccessTokenService.getAccessToken(TEST_ACCESS_TOKEN)).thenReturn(null);
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(null));
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
         Map<String, Object> responseBody =
@@ -274,11 +269,11 @@ class UserIdentityHandlerTest {
                 Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
         event.setHeaders(headers);
 
-        AccessTokenItem accessTokenItem = new AccessTokenItem();
-        accessTokenItem.setAccessToken(accessToken.toAuthorizationHeader());
-        accessTokenItem.setRevokedAtDateTime(Instant.now().toString());
-
-        when(mockAccessTokenService.getAccessToken(anyString())).thenReturn(accessTokenItem);
+        AccessTokenMetadata revokedAccessTokenMetadata = new AccessTokenMetadata();
+        revokedAccessTokenMetadata.setRevokedAtDateTime(Instant.now().toString());
+        ipvSessionItem.setAccessTokenMetadata(revokedAccessTokenMetadata);
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
         Map<String, Object> responseBody =
@@ -301,11 +296,11 @@ class UserIdentityHandlerTest {
                 Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
         event.setHeaders(headers);
 
-        AccessTokenItem accessTokenItem = new AccessTokenItem();
-        accessTokenItem.setAccessToken(accessToken.toAuthorizationHeader());
-        accessTokenItem.setExpiryDateTime(Instant.now().minusSeconds(5).toString());
-
-        when(mockAccessTokenService.getAccessToken(anyString())).thenReturn(accessTokenItem);
+        AccessTokenMetadata expiredAccessTokenMetadata = new AccessTokenMetadata();
+        expiredAccessTokenMetadata.setExpiryDateTime(Instant.now().minusSeconds(5).toString());
+        ipvSessionItem.setAccessTokenMetadata(expiredAccessTokenMetadata);
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
         Map<String, Object> responseBody =

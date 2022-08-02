@@ -185,7 +185,6 @@ Resources:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub access-token-${Environment}
-          ACCESS_TOKENS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AccessTokensTable.Arn]]
           CLIENT_AUTH_JWT_IDS_TABLE_NAME: !Ref ClientAuthJwtIdsTable
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
       Policies:
@@ -193,8 +192,6 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
-        - DynamoDBCrudPolicy:
-            TableName: !Ref AccessTokensTable
         - DynamoDBCrudPolicy:
             TableName: !Ref ClientAuthJwtIdsTable
         - SSMParameterReadPolicy:
@@ -648,7 +645,6 @@ Resources:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub user-identity-${Environment}
-          ACCESS_TOKENS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt AccessTokensTable.Arn]]
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsV2Table.Arn]]
           IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
@@ -657,9 +653,9 @@ Resources:
             TableName: !Ref UserIssuedCredentialsV2Table
         - DynamoDBWritePolicy:
             TableName: !Ref UserIssuedCredentialsV2Table
-        - DynamoDBCrudPolicy:
-            TableName: !Ref AccessTokensTable
         - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/*
@@ -1030,26 +1026,6 @@ Resources:
         SSEEnabled: true
         SSEType: KMS
 
-  AccessTokensTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
-      TableName: !Sub "access-tokens-${Environment}"
-      BillingMode: "PAY_PER_REQUEST"
-      AttributeDefinitions:
-        - AttributeName: "accessToken"
-          AttributeType: "S"
-      KeySchema:
-        - AttributeName: "accessToken"
-          KeyType: "HASH"
-      TimeToLiveSpecification:
-        AttributeName: "ttl"
-        Enabled: true
-      SSESpecification:
-        # checkov:skip=CKV_AWS_119: Implement Customer Managed Keys in PYIC-1391
-        SSEEnabled: true
-        SSEType: KMS
-
   SessionsTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -1061,6 +1037,8 @@ Resources:
           AttributeType: "S"
         - AttributeName: "authorizationCode"
           AttributeType: "S"
+        - AttributeName: "accessToken"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "ipvSessionId"
           KeyType: "HASH"
@@ -1068,6 +1046,12 @@ Resources:
         - IndexName: "authorizationCode"
           KeySchema:
             - AttributeName: "authorizationCode"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+        - IndexName: "accessToken"
+          KeySchema:
+            - AttributeName: "accessToken"
               KeyType: "HASH"
           Projection:
             ProjectionType: "ALL"

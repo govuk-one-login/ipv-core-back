@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.commons.codec.digest.DigestUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
@@ -55,6 +56,12 @@ public class IpvSessionService {
         return Optional.ofNullable(ipvSessionItem);
     }
 
+    public Optional<IpvSessionItem> getIpvSessionByAccessToken(String accessToken) {
+        IpvSessionItem ipvSessionItem =
+                dataStore.getItemByIndex("accessToken", DigestUtils.sha256Hex(accessToken));
+        return Optional.ofNullable(ipvSessionItem);
+    }
+
     public String getUserId(String ipvSessionId) {
         return this.getIpvSession(ipvSessionId).getClientSessionDetails().getUserId();
     }
@@ -101,6 +108,15 @@ public class IpvSessionService {
         ipvSessionItem.setAccessToken(DigestUtils.sha256Hex(accessToken.getValue()));
         ipvSessionItem.setAccessTokenMetadata(accessTokenMetadata);
         updateIpvSession(ipvSessionItem);
+    }
+
+    public void revokeAccessToken(IpvSessionItem ipvSessionItem) throws IllegalArgumentException {
+        AccessTokenMetadata accessTokenMetadata = ipvSessionItem.getAccessTokenMetadata();
+        if (StringUtils.isBlank(accessTokenMetadata.getRevokedAtDateTime())) {
+            accessTokenMetadata.setRevokedAtDateTime(Instant.now().toString());
+            ipvSessionItem.setAccessTokenMetadata(accessTokenMetadata);
+            updateIpvSession(ipvSessionItem);
+        }
     }
 
     public void updateIpvSession(IpvSessionItem updatedIpvSessionItem) {

@@ -95,7 +95,7 @@ public class AccessTokenHandler
             LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
 
             if (ipvSessionItem.getAccessToken() != null) {
-                ErrorObject error = revokeAccessToken(ipvSessionItem.getAccessToken());
+                ErrorObject error = revokeAccessToken(ipvSessionItem);
                 LogHelper.logOauthError(
                         "Auth code has been used multiple times",
                         error.getCode(),
@@ -143,9 +143,6 @@ public class AccessTokenHandler
 
             AccessTokenResponse accessTokenResponse =
                     accessTokenService.generateAccessToken().toSuccessResponse();
-
-            String sessionId = ipvSessionItem.getIpvSessionId();
-            accessTokenService.persistAccessToken(accessTokenResponse, sessionId);
             sessionService.setAccessToken(
                     ipvSessionItem, accessTokenResponse.getTokens().getBearerAccessToken());
 
@@ -208,9 +205,9 @@ public class AccessTokenHandler
                 .equals(authorizationCodeMetadata.getRedirectUrl());
     }
 
-    private ErrorObject revokeAccessToken(String accessToken) {
+    private ErrorObject revokeAccessToken(IpvSessionItem ipvSessionItem) {
         try {
-            accessTokenService.revokeAccessToken(accessToken);
+            sessionService.revokeAccessToken(ipvSessionItem);
             return OAuth2Error.INVALID_GRANT.setDescription(
                     "Authorization code used too many times");
         } catch (IllegalArgumentException e) {
