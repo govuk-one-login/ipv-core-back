@@ -18,6 +18,8 @@ import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -53,6 +55,23 @@ class IpvSessionServiceTest {
         assertEquals(ipvSessionItem.getIpvSessionId(), result.getIpvSessionId());
         assertEquals(ipvSessionItem.getUserState(), result.getUserState());
         assertEquals(ipvSessionItem.getCreationDateTime(), result.getCreationDateTime());
+    }
+
+    @Test
+    void shouldReturnSessionItemByAuthorizationCode() {
+        String ipvSessionID = SecureTokenHelper.generate();
+        String authorizationCode = "12345";
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(ipvSessionID);
+
+        when(mockDataStore.getItemByIndex(eq("authorizationCode"), anyString()))
+                .thenReturn(ipvSessionItem);
+
+        IpvSessionItem result =
+                ipvSessionService.getIpvSessionByAuthorizationCode(authorizationCode).orElseThrow();
+
+        assertEquals(result, ipvSessionItem);
     }
 
     @Test

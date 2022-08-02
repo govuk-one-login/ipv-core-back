@@ -28,7 +28,6 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.AuthorizationCodeService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.AuthRequestValidator;
@@ -44,8 +43,6 @@ import java.util.Map;
 public class SessionEndHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
-
-    private final AuthorizationCodeService authorizationCodeService;
     private final IpvSessionService sessionService;
     private final ConfigurationService configurationService;
     private final AuthRequestValidator authRequestValidator;
@@ -55,7 +52,6 @@ public class SessionEndHandler
     @ExcludeFromGeneratedCoverageReport
     public SessionEndHandler() {
         this.configurationService = new ConfigurationService();
-        this.authorizationCodeService = new AuthorizationCodeService(configurationService);
         this.sessionService = new IpvSessionService(configurationService);
         this.authRequestValidator = new AuthRequestValidator(configurationService);
         this.auditService =
@@ -65,12 +61,10 @@ public class SessionEndHandler
     }
 
     public SessionEndHandler(
-            AuthorizationCodeService authorizationCodeService,
             IpvSessionService sessionService,
             ConfigurationService configurationService,
             AuthRequestValidator authRequestValidator,
             AuditService auditService) {
-        this.authorizationCodeService = authorizationCodeService;
         this.sessionService = sessionService;
         this.configurationService = configurationService;
         this.authRequestValidator = authRequestValidator;
@@ -114,13 +108,8 @@ public class SessionEndHandler
 
                 AuthorizationRequest authorizationRequest =
                         AuthorizationRequest.parse(authParameters);
-                AuthorizationCode authorizationCode =
-                        authorizationCodeService.generateAuthorizationCode();
+                AuthorizationCode authorizationCode = new AuthorizationCode();
 
-                authorizationCodeService.persistAuthorizationCode(
-                        authorizationCode.getValue(),
-                        ipvSessionId,
-                        authorizationRequest.getRedirectionURI().toString());
                 sessionService.setAuthorizationCode(
                         ipvSessionItem,
                         authorizationCode.getValue(),
