@@ -163,19 +163,19 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref IPVCoreExternalAPILogGroup
 
-  IssueClientAccessTokenFunction:
+  IPVAccessTokenFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - "IssueClientAccessTokenFunctionLogGroup"
+      - "IPVAccessTokenFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "issue-client-access-token-${Environment}"
-      Handler: uk.gov.di.ipv.core.issueclientaccesstoken.IssueClientAccessTokenHandler::handleRequest
+      FunctionName: !Sub "ipv-access-token-${Environment}"
+      Handler: uk.gov.di.ipv.core.accesstoken.AccessTokenHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/issue-client-access-token
+      CodeUri: ../lambdas/accesstoken
       Architectures:
         - arm64
       MemorySize: 2048
@@ -184,7 +184,7 @@ Resources:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub issue-client-access-token-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub access-token-${Environment}
           CLIENT_AUTH_JWT_IDS_TABLE_NAME: !Ref ClientAuthJwtIdsTable
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
       Policies:
@@ -212,34 +212,34 @@ Resources:
           - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
-  IssueClientAccessTokenFunctionLogGroup:
+  IPVAccessTokenFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/issue-client-access-token-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/ipv-access-token-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
-  IssueClientAccessTokenFunctionLogGroupSubscriptionFilter:
+  IPVAccessTokenFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
-      LogGroupName: !Ref IssueClientAccessTokenFunctionLogGroup
+      LogGroupName: !Ref IPVAccessTokenFunctionLogGroup
 
-  BuildClientOauthResponseToBeRemovedFunction:
+  IPVSessionEndFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - "BuildClientOauthResponseToBeRemovedFunctionLogGroup"
+      - "IPVSessionEndFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "build-client-oauth-response-TO-BE-REMOVED-${Environment}"
-      Handler: uk.gov.di.ipv.core.buildclientoauthresponse.BuildClientOauthResponseHandler::handleRequest
+      FunctionName: !Sub "ipv-session-end-${Environment}"
+      Handler: uk.gov.di.ipv.core.sessionend.SessionEndHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/build-client-oauth-response
+      CodeUri: ../lambdas/sessionend
       Architectures:
         - arm64
       MemorySize: 2048
@@ -248,7 +248,7 @@ Resources:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub build-client-oauth-response-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub session-end-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       Policies:
@@ -283,34 +283,34 @@ Resources:
           - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
-  BuildClientOauthResponseToBeRemovedFunctionLogGroup:
+  IPVSessionEndFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/build-client-oauth-response-TO-BE-REMOVED-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/ipv-session-end-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
-  BuildClientOauthResponseToBeRemovedFunctionLogGroupSubscriptionFilter:
+  IPVSessionEndFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
-      LogGroupName: !Ref BuildClientOauthResponseToBeRemovedFunctionLogGroup
+      LogGroupName: !Ref IPVSessionEndFunctionLogGroup
 
-  BuildClientOauthResponseFunction:
+  IPVSessionStartFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - "BuildClientOauthResponseFunctionLogGroup"
+      - "IPVSessionStartFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "build-client-oauth-response-${Environment}"
-      Handler: uk.gov.di.ipv.core.buildclientoauthresponse.BuildClientOauthResponseHandler::handleRequest
+      FunctionName: !Sub "ipv-session-start-${Environment}"
+      Handler: uk.gov.di.ipv.core.session.IpvSessionStartHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/build-client-oauth-response
+      CodeUri: ../lambdas/sessionstart
       Architectures:
         - arm64
       MemorySize: 2048
@@ -319,78 +319,7 @@ Resources:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub build-client-oauth-response-${Environment}
-          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
-          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-      Policies:
-        - DynamoDBWritePolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionsTable
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/*
-        - SQSSendMessagePolicy:
-            QueueName: !ImportValue AuditEventQueueName
-        - Statement:
-            - Sid: kmsAuditEventQueueEncryptionKeyPermission
-              Effect: Allow
-              Action:
-                - 'kms:Decrypt'
-                - 'kms:GenerateDataKey'
-              Resource:
-                - !ImportValue AuditEventQueueEncryptionKeyArn
-      Events:
-        IPVCorePrivateAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCorePrivateAPI
-            Path: /journey/build-client-oauth-response
-            Method: POST
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        !If
-        - AddProvisionedConcurrency
-        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
-        - !Ref AWS::NoValue
-
-  BuildClientOauthResponseFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/build-client-oauth-response-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
-
-  BuildClientOauthResponseFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref BuildClientOauthResponseFunctionLogGroup
-
-  InitialiseIpvSessionToBeRemovedFunction:
-    Type: AWS::Serverless::Function
-    DependsOn:
-      - "InitialiseIpvSessionFunctionLogGroup"
-    Properties:
-      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
-      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
-      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "initialise-ipv-session-TO-BE-REMOVED-${Environment}"
-      Handler: uk.gov.di.ipv.core.initialiseipvsession.InitialiseIpvSessionHandler::handleRequest
-      Runtime: java11
-      PackageType: Zip
-      CodeUri: ../lambdas/initialise-ipv-session
-      Architectures:
-        - arm64
-      MemorySize: 2048
-      Tracing: Active
-      Environment:
-        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
-        Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub initialise-ipv-session-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub session-start-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt SessionsTable.Arn]]
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       Policies:
@@ -434,115 +363,34 @@ Resources:
           - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
-  InitialiseIpvSessionToBeRemovedFunctionLogGroup:
+  IPVSessionStartFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/initialise-ipv-session-TO-BE-REMOVED-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/ipv-session-start-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
-  InitialiseIpvSessionToBeRemovedFunctionLogGroupSubscriptionFilter:
+  IPVSessionStartFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
-      LogGroupName: !Ref InitialiseIpvSessionToBeRemovedFunctionLogGroup
+      LogGroupName: !Ref IPVSessionStartFunctionLogGroup
 
-  InitialiseIpvSessionFunction:
+  IPVCriReturnFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - "InitialiseIpvSessionFunctionLogGroup"
+      - "IPVCriReturnFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "initialise-ipv-session-${Environment}"
-      Handler: uk.gov.di.ipv.core.initialiseipvsession.InitialiseIpvSessionHandler::handleRequest
+      FunctionName: !Sub "ipv-credential-issuer-return-${Environment}"
+      Handler: uk.gov.di.ipv.core.credentialissuerreturn.CredentialIssuerReturnHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/initialise-ipv-session
-      Architectures:
-        - arm64
-      MemorySize: 2048
-      Tracing: Active
-      Environment:
-        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
-        Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub initialise-ipv-session-${Environment}
-          IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
-          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBWritePolicy:
-            TableName: !Ref SessionsTable
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/clients/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/*
-        - SQSSendMessagePolicy:
-            QueueName: !ImportValue AuditEventQueueName
-        - Statement:
-            - Sid: jarKmsEncryptionKeyPermission
-              Effect: Allow
-              Action:
-                - 'kms:Decrypt'
-                - 'kms:GenerateDataKey'
-              Resource:
-                - !ImportValue CoreEncryptionKeyArn
-            - Sid: kmsAuditEventQueueEncryptionKeyPermission
-              Effect: Allow
-              Action:
-                - 'kms:Decrypt'
-                - 'kms:GenerateDataKey'
-              Resource:
-                - !ImportValue AuditEventQueueEncryptionKeyArn
-      Events:
-        IPVCorePrivateAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCorePrivateAPI
-            Path: /session/initialise
-            Method: POST
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        !If
-        - AddProvisionedConcurrency
-        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
-        - !Ref AWS::NoValue
-
-  InitialiseIpvSessionFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/initialise-ipv-session-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
-
-  InitialiseIpvSessionFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref InitialiseIpvSessionFunctionLogGroup
-
-# TODO: Remove this lambda after front-end swaps to using new endpoint
-  RetrieveCriOauthAccessTokenFunctionToBeRemoved:
-    Type: AWS::Serverless::Function
-    DependsOn:
-      - "RetrieveCriOauthAccessTokenFunctionToBeRemovedLogGroup"
-    Properties:
-      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
-      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
-      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "retrieve-cri-oauth-access-token-TO-BE-REMOVED-${Environment}"
-      Handler: uk.gov.di.ipv.core.retrievecrioauthaccesstoken.RetrieveCriOauthAccessTokenHandler::handleRequest
-      Runtime: java11
-      PackageType: Zip
-      CodeUri: ../lambdas/retrieve-cri-oauth-access-token
+      CodeUri: ../lambdas/credentialissuerreturn
       Architectures:
         - arm64
       MemorySize: 2048
@@ -554,7 +402,7 @@ Resources:
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsV2Table.Arn]]
           SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub retrieve-cri-oauth-access-token-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub cri-return-${Environment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
       Policies:
@@ -603,123 +451,34 @@ Resources:
           - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
-  RetrieveCriOauthAccessTokenFunctionToBeRemovedLogGroup:
+  IPVCriReturnFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/retrieve-cri-oauth-access-token-TO-BE-REMOVED-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/ipv-credential-issuer-return-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
-  RetrieveCriOauthAccessTokenFunctionToBeRemovedLogGroupSubscriptionFilter:
+  IPVCriReturnFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
-      LogGroupName: !Ref RetrieveCriOauthAccessTokenFunctionToBeRemovedLogGroup
+      LogGroupName: !Ref IPVCriReturnFunctionLogGroup
 
-
-  RetrieveCriOauthAccessTokenFunction:
+  IPVCredentialIssuerStartFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - "RetrieveCriOauthAccessTokenFunctionLogGroup"
+      - "IPVCredentialIssuerStartFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "retrieve-cri-oauth-access-token-${Environment}"
-      Handler: uk.gov.di.ipv.core.retrievecrioauthaccesstoken.RetrieveCriOauthAccessTokenHandler::handleRequest
+      FunctionName: !Sub "ipv-credential-issuer-start-${Environment}"
+      Handler: uk.gov.di.ipv.core.credentialissuer.CredentialIssuerStartHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/retrieve-cri-oauth-access-token
-      Architectures:
-        - arm64
-      MemorySize: 2048
-      Tracing: Active
-      Environment:
-        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
-        Variables:
-          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
-          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsV2Table.Arn ] ]
-          SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub retrieve-cri-oauth-access-token-${Environment}
-          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBWritePolicy:
-            TableName: !Ref SessionsTable
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/credentialIssuers
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/*
-        - AWSSecretsManagerGetSecretValuePolicy:
-            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:${Environment}/credential-issuers/*/api-key-*
-        - SQSSendMessagePolicy:
-            QueueName: !ImportValue AuditEventQueueName
-        - Statement:
-            - Sid: kmsSigningKeyPermission
-              Effect: Allow
-              Action:
-                - 'kms:sign'
-              Resource:
-                - !ImportValue SigningKeyArn
-            - Sid: kmsAuditEventQueueEncryptionKeyPermission
-              Effect: Allow
-              Action:
-                - 'kms:Decrypt'
-                - 'kms:GenerateDataKey'
-              Resource:
-                - !ImportValue AuditEventQueueEncryptionKeyArn
-      Events:
-        IPVCorePrivateAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCorePrivateAPI
-            Path: /journey/cri/access-token
-            Method: POST
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        !If
-        - AddProvisionedConcurrency
-        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
-        - !Ref AWS::NoValue
-
-  RetrieveCriOauthAccessTokenFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/retrieve-cri-oauth-access-token-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
-
-  RetrieveCriOauthAccessTokenFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref RetrieveCriOauthAccessTokenFunctionLogGroup
-
-  BuildCriOauthRequestToBeRemovedFunction:
-    Type: AWS::Serverless::Function
-    DependsOn:
-      - "BuildCriOauthRequestToBeRemovedFunctionLogGroup"
-    Properties:
-      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
-      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
-      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "build-cri-oauth-request-TO-BE-REMOVED-${Environment}"
-      Handler: uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler::handleRequest
-      Runtime: java11
-      PackageType: Zip
-      CodeUri: ../lambdas/build-cri-oauth-request
+      CodeUri: ../lambdas/credentialissuerstart
       Architectures:
         - arm64
       MemorySize: 3008
@@ -729,7 +488,7 @@ Resources:
         Variables:
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub build-cri-oauth-request-TO-BE-REMOVED-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-start-${Environment}
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsV2Table.Arn ] ]
           SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
@@ -778,106 +537,20 @@ Resources:
           - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
-  BuildCriOauthRequestToBeRemovedFunctionLogGroup:
+  IPVCredentialIssuerStartFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/build-cri-oauth-request-TO-BE-REMOVED-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/ipv-credential-issuer-start-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
-  BuildCriOauthRequestToBeRemovedFunctionLogGroupSubscriptionFilter:
+  IPVCredentialIssuerStartFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
-      LogGroupName: !Ref BuildCriOauthRequestToBeRemovedFunctionLogGroup
-
-  BuildCriOauthRequestFunction:
-    Type: AWS::Serverless::Function
-    DependsOn:
-      - "BuildCriOauthRequestFunctionLogGroup"
-    Properties:
-      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
-      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
-      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "build-cri-oauth-request-${Environment}"
-      Handler: uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler::handleRequest
-      Runtime: java11
-      PackageType: Zip
-      CodeUri: ../lambdas/build-cri-oauth-request
-      Architectures:
-        - arm64
-      MemorySize: 3008
-      Tracing: Active
-      Environment:
-        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
-        Variables:
-          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub build-cri-oauth-request-${Environment}
-          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsV2Table.Arn ] ]
-          SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
-          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBWritePolicy:
-            TableName: !Ref SessionsTable
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/credentialIssuers
-        - SQSSendMessagePolicy:
-            QueueName: !ImportValue AuditEventQueueName
-        - Statement:
-            - Sid: kmsSigningKeyPermission
-              Effect: Allow
-              Action:
-                - 'kms:sign'
-              Resource:
-                - !ImportValue SigningKeyArn
-            - Sid: kmsAuditEventQueueEncryptionKeyPermission
-              Effect: Allow
-              Action:
-                - 'kms:Decrypt'
-                - 'kms:GenerateDataKey'
-              Resource:
-                - !ImportValue AuditEventQueueEncryptionKeyArn
-      Events:
-        IPVCorePrivateAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCorePrivateAPI
-            Path: /journey/cri/build-oauth-request/{criId}
-            Method: POST
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        !If
-        - AddProvisionedConcurrency
-        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
-        - !Ref AWS::NoValue
-
-  BuildCriOauthRequestFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/build-cri-oauth-request-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
-
-  BuildCriOauthRequestFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref BuildCriOauthRequestFunctionLogGroup
+      LogGroupName: !Ref IPVCredentialIssuerStartFunctionLogGroup
 
   IPVCredentialIssuerErrorFunction:
     Type: AWS::Serverless::Function
@@ -950,19 +623,19 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref IPVCredentialIssuerErrorFunctionLogGroup
 
-  BuildUserIdentityFunction:
+  IPVUserIdentityFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - "BuildUserIdentityFunctionLogGroup"
+      - "IPVUserIdentityFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "build-user-identity-${Environment}"
-      Handler: uk.gov.di.ipv.core.builduseridentity.BuildUserIdentityHandler::handleRequest
+      FunctionName: !Sub "ipv-user-identity-${Environment}"
+      Handler: uk.gov.di.ipv.core.useridentity.UserIdentityHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/build-user-identity
+      CodeUri: ../lambdas/useridentity
       Architectures:
         - arm64
       MemorySize: 2048
@@ -971,7 +644,7 @@ Resources:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub build-user-identity-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub user-identity-${Environment}
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsV2Table.Arn]]
           IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
@@ -1011,34 +684,34 @@ Resources:
           - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
-  BuildUserIdentityFunctionLogGroup:
+  IPVUserIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/build-user-identity-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/ipv-user-identity-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
-  BuildUserIdentityFunctionLogGroupSubscriptionFilter:
+  IPVUserIdentityFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
-      LogGroupName: !Ref BuildUserIdentityFunctionLogGroup
+      LogGroupName: !Ref IPVUserIdentityFunctionLogGroup
 
-  GetCredentialIssuerConfig:
+  IPVCredentialIssuerConfig:
     Type: AWS::Serverless::Function
     DependsOn:
-      - "GetCredentialIssuerFunctionLogGroup"
+      - "IPVCredentialIssuerFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "get-credential-issuer-config-${Environment}"
-      Handler: uk.gov.di.ipv.core.getcredentialissuerconfig.GetCredentialIssuerConfigHandler::handleRequest
+      FunctionName: !Sub "credential-issuer-config-${Environment}"
+      Handler: uk.gov.di.ipv.core.credentialissuerconfig.CredentialIssuerConfigHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/get-credential-issuer-config
+      CodeUri: ../lambdas/credentialissuerconfig
       Architectures:
         - arm64
       MemorySize: 2048
@@ -1047,7 +720,7 @@ Resources:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub get-credential-issuer-config-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub credential-issuer-config-${Environment}
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
       Policies:
         - SSMParameterReadPolicy:
@@ -1069,34 +742,34 @@ Resources:
           - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
-  GetCredentialIssuerFunctionLogGroup:
+  IPVCredentialIssuerFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/get-credential-issuer-config-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/credential-issuer-config-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
-  GetCredentialIssuerFunctionLogGroupSubscriptionFilter:
+  IPVCredentialIssuerFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
-      LogGroupName: !Ref GetCredentialIssuerFunctionLogGroup
+      LogGroupName: !Ref IPVCredentialIssuerFunctionLogGroup
 
-  BuildDebugCredentialDataToBeRemovedFunction:
+  IPVIssuedCredentials:
     Type: AWS::Serverless::Function
     DependsOn:
-      - "BuildDebugCredentialDataToBeRemovedFunctionLogGroup"
+      - "IPVIssuedCredentialsFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "build-debug-credential-data-TO-BE-REMOVED-${Environment}"
-      Handler: uk.gov.di.ipv.core.builddebugcredentialdata.BuildDebugCredentialDataHandler::handleRequest
+      FunctionName: !Sub "issued-credentials-${Environment}"
+      Handler: uk.gov.di.ipv.core.issuedcredentials.IssuedCredentialsHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/build-debug-credential-data
+      CodeUri: ../lambdas/issuedcredentials
       Architectures:
         - arm64
       MemorySize: 2048
@@ -1105,7 +778,7 @@ Resources:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub build-debug-credential-data-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub issued-credentials-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsV2Table.Arn]]
       Policies:
@@ -1132,83 +805,20 @@ Resources:
           - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
-  BuildDebugCredentialDataToBeRemovedFunctionLogGroup:
+  IPVIssuedCredentialsFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/build-debug-credential-data-TO-BE-REMOVED-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/issued-credentials-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
-  BuildDebugCredentialDataToBeRemovedFunctionLogGroupSubscriptionFilter:
+  IPVIssuedCredentialsFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
-      LogGroupName: !Ref BuildDebugCredentialDataToBeRemovedFunctionLogGroup
-
-  BuildDebugCredentialDataFunction:
-    Type: AWS::Serverless::Function
-    DependsOn:
-      - "BuildDebugCredentialDataFunctionLogGroup"
-    Properties:
-      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
-      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
-      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "build-debug-credential-data-${Environment}"
-      Handler: uk.gov.di.ipv.core.builddebugcredentialdata.BuildDebugCredentialDataHandler::handleRequest
-      Runtime: java11
-      PackageType: Zip
-      CodeUri: ../lambdas/build-debug-credential-data
-      Architectures:
-        - arm64
-      MemorySize: 2048
-      Tracing: Active
-      Environment:
-        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
-        Variables:
-          ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub build-debug-credential-data-${Environment}
-          IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
-          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsV2Table.Arn ] ]
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
-        - DynamoDBWritePolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/*
-      Events:
-        IPVCorePrivateAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCorePrivateAPI
-            Path: /debug-credential-data
-            Method: GET
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        !If
-        - AddProvisionedConcurrency
-        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
-        - !Ref AWS::NoValue
-
-  BuildDebugCredentialDataFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/build-debug-credential-data-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
-
-  BuildDebugCredentialDataFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref BuildDebugCredentialDataFunctionLogGroup
+      LogGroupName: !Ref IPVIssuedCredentialsFunctionLogGroup
 
   IPVProcessJourneyStepFunction:
     Type: AWS::Serverless::Function
@@ -1272,19 +882,19 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref IPVProcessJourneyStepFunctionLogGroup
 
-  ValidateCriCredentialFunction:
+  IPVValidateCriCheckFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - "ValidateCriCredentialFunctionLogGroup"
+      - "IPVValidateCriCheckFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "validate-cri-credential-${Environment}"
-      Handler: uk.gov.di.ipv.core.validatecricredential.ValidateCriCredentialHandler::handleRequest
+      FunctionName: !Sub "validate-cri-check-${Environment}"
+      Handler: uk.gov.di.ipv.core.validatecricheck.ValidateCriCheckHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/validate-cri-credential
+      CodeUri: ../lambdas/validatecricheck
       Architectures:
         - arm64
       MemorySize: 2048
@@ -1293,7 +903,7 @@ Resources:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Ref Environment
-          POWERTOOLS_SERVICE_NAME: !Sub validate-cri-credential-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub validate-cri-check-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
       Policies:
@@ -1318,20 +928,20 @@ Resources:
           - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
-  ValidateCriCredentialFunctionLogGroup:
+  IPVValidateCriCheckFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/validate-cri-credential-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/validate-cri-check-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
-  ValidateCriCredentialFunctionLogGroupSubscriptionFilter:
+  IPVValidateCriCheckFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
-      LogGroupName: !Ref ValidateCriCredentialFunctionLogGroup
+      LogGroupName: !Ref IPVValidateCriCheckFunctionLogGroup
 
   EvaluateGpg45ScoresFunction:
     Type: AWS::Serverless::Function
