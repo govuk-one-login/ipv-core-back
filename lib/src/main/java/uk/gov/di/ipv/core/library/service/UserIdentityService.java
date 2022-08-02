@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.UserIssuedDebugCredential;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 
@@ -86,6 +87,19 @@ public class UserIdentityService {
         return credentialIssuerItems.stream()
                 .map(UserIssuedCredentialsItem::getCredential)
                 .collect(Collectors.toList());
+    }
+
+    public void deleteUserIssuedCredentials(String userId) {
+        List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(userId);
+        if (!credentialIssuerItems.isEmpty()) {
+            LogHelper.logInfoMessageWithFieldAndValue(
+                    "Deleting existing issued VCs",
+                    LogHelper.LogField.NUMBER_OF_VCS,
+                    String.valueOf(credentialIssuerItems.size()));
+        }
+        for (UserIssuedCredentialsItem item : credentialIssuerItems) {
+            dataStore.delete(item.getUserId(), item.getCredentialIssuer());
+        }
     }
 
     public UserIssuedCredentialsItem getUserIssuedCredential(String userId, String criId) {

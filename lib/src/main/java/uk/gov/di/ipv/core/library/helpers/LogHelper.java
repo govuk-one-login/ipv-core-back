@@ -12,16 +12,17 @@ public class LogHelper {
 
     public enum LogField {
         CLIENT_ID_LOG_FIELD("clientId"),
+        COMPONENT_ID_LOG_FIELD("componentId"),
         CRI_ID_LOG_FIELD("criId"),
+        DYNAMODB_TABLE_NAME("dynamoDbTableName"),
+        DYNAMODB_KEY_VALUE("dynamoDbKeyValue"),
+        EVIDENCE_TYPE("evidenceType"),
         ERROR_CODE_LOG_FIELD("errorCode"),
         ERROR_DESCRIPTION_LOG_FIELD("errorDescription"),
         IPV_SESSION_ID_LOG_FIELD("ipvSessionId"),
-        COMPONENT_ID_LOG_FIELD("componentId"),
         JTI_LOG_FIELD("jti"),
         JTI_USED_AT_LOG_FIELD("jtiUsedAt"),
-        DYNAMODB_TABLE_NAME("dynamoDbTableName"),
-        DYNAMODB_KEY_VALUE("dynamoDbKeyValue"),
-        EVIDENCE_TYPE("evidenceType");
+        NUMBER_OF_VCS("numberOfVCs");
         private final String fieldName;
 
         LogField(String fieldName) {

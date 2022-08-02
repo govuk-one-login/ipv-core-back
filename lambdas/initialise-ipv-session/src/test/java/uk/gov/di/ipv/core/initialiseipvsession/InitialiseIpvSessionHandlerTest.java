@@ -38,6 +38,7 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.KmsRsaDecrypter;
+import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.validation.JarValidator;
 
 import java.security.KeyFactory;
@@ -67,6 +68,7 @@ class InitialiseIpvSessionHandlerTest {
     @Mock private KmsRsaDecrypter mockKmsRsaDecrypter;
     @Mock private JarValidator mockJarValidator;
     @Mock private AuditService mockAuditService;
+    @Mock private UserIdentityService mockUserIdentityService;
     @InjectMocks private InitialiseIpvSessionHandler initialiseIpvSessionHandler;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -137,6 +139,8 @@ class InitialiseIpvSessionHandlerTest {
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         assertEquals(AuditEventTypes.IPV_JOURNEY_START, auditEventCaptor.getValue().getEventName());
+
+        verify(mockUserIdentityService).deleteUserIssuedCredentials("test-user-id");
     }
 
     @Test

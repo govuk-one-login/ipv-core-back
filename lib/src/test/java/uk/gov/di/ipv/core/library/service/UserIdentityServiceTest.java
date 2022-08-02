@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
@@ -574,6 +575,26 @@ class UserIdentityServiceTest {
 
         assertEquals(SIGNED_VC_1, vcList.get(0));
         assertEquals(SIGNED_VC_2, vcList.get(1));
+    }
+
+    @Test
+    void shouldDeleteAllExistingVCs() {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "a-users-id", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "a-users-id", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "a-users-id", "sausages", SIGNED_VC_3, LocalDateTime.now()));
+
+        when(mockDataStore.getItems("a-users-id")).thenReturn(userIssuedCredentialsItemList);
+
+        userIdentityService.deleteUserIssuedCredentials("a-users-id");
+
+        verify(mockDataStore).delete("a-users-id", "ukPassport");
+        verify(mockDataStore).delete("a-users-id", "fraud");
+        verify(mockDataStore).delete("a-users-id", "sausages");
     }
 
     private UserIssuedCredentialsItem createUserIssuedCredentialsItem(
