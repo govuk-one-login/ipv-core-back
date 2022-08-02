@@ -1,12 +1,17 @@
 package uk.gov.di.ipv.core.library.domain;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.MapMessage;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 @JsonPropertyOrder({"name", "birthDate", "address"})
 public class SharedClaimsResponse {
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final Set<Name> name;
     private final Set<BirthDate> birthDate;
@@ -41,6 +46,14 @@ public class SharedClaimsResponse {
                     sharedAttribute.getBirthDate().ifPresent(birthDateSet::addAll);
                     sharedAttribute.getAddress().ifPresent(addressSet::addAll);
                 });
+
+        var message =
+                new MapMessage()
+                        .with("sharedClaims", "built")
+                        .with("names", nameSet.size())
+                        .with("birthDates", birthDateSet.size())
+                        .with("addresses", addressSet.size());
+        LOGGER.info(message);
 
         return new SharedClaimsResponse(nameSet, birthDateSet, addressSet);
     }

@@ -5,7 +5,7 @@ Configuration:
       name: JsonAppender
       target: SYSTEM_OUT
       JsonTemplateLayout:
-        eventTemplateUri: "classpath:LambdaJsonLayout.json"
+        eventTemplateUri: "classpath:IpvLambdaJsonLayout.json"
   Loggers:
     logger:
       - name: JsonLogger
