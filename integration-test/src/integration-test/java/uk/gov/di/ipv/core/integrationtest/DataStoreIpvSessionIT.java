@@ -94,6 +94,8 @@ public class DataStoreIpvSessionIT {
         ipvSessionItem.setCreationDateTime(new Date().toString());
         ipvSessionItem.setClientSessionDetails(generateClientSessionDetails());
         ipvSessionItem.setCredentialIssuerSessionDetails(generateCredentialIssuerSessionDetails());
+        ipvSessionItem.setAuthorizationCode("12345");
+        ipvSessionItem.setAccessToken("12345");
 
         ipvSessionItemDataStore.create(ipvSessionItem);
 
@@ -141,6 +143,8 @@ public class DataStoreIpvSessionIT {
         ipvSessionItem.setCreationDateTime(new Date().toString());
         ipvSessionItem.setClientSessionDetails(generateClientSessionDetails());
         ipvSessionItem.setCredentialIssuerSessionDetails(generateCredentialIssuerSessionDetails());
+        ipvSessionItem.setAuthorizationCode("12345");
+        ipvSessionItem.setAccessToken("12345");
 
         Item item = Item.fromJSON(OBJECT_MAPPER.writeValueAsString(ipvSessionItem));
         tableTestHarness.putItem(item);
@@ -178,6 +182,8 @@ public class DataStoreIpvSessionIT {
         ipvSessionItem.setCreationDateTime(new Date().toString());
         ipvSessionItem.setClientSessionDetails(generateClientSessionDetails());
         ipvSessionItem.setCredentialIssuerSessionDetails(generateCredentialIssuerSessionDetails());
+        ipvSessionItem.setAuthorizationCode("12345");
+        ipvSessionItem.setAccessToken("12345");
 
         Item item = Item.fromJSON(OBJECT_MAPPER.writeValueAsString(ipvSessionItem));
         tableTestHarness.putItem(item);
