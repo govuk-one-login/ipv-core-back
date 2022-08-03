@@ -832,7 +832,7 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref BuildDebugCredentialDataFunctionLogGroup
 
-  JourneyEngineStateMachine:
+  JourneyEngineStepFunction:
     Type: AWS::Serverless::StateMachine
     Properties:
       DefinitionUri: journey_engine.asl.json
@@ -849,7 +849,7 @@ Resources:
       Logging:
         Destinations:
            - CloudWatchLogsLogGroup:
-               LogGroupArn: !GetAtt JourneyEngineStateMachineLogGroup.Arn
+               LogGroupArn: !GetAtt JourneyEngineStepFunctionLogGroup.Arn
         IncludeExecutionData: true
         Level: ALL
       Policies:
@@ -873,7 +873,7 @@ Resources:
         Enabled: true
       Type: EXPRESS
 
-  JourneyEngineStateMachineApiGateWayIamRole:
+  JourneyEngineStepFunctionApiGateWayIamRole:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -892,22 +892,22 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: 'states:StartSyncExecution'
-                Resource: !Ref JourneyEngineStateMachine
+                Resource: !Ref JourneyEngineStepFunction
 
-  JourneyEngineStateMachineLogGroup:
+  JourneyEngineStepFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/states/journey-engine-state-machine-${Environment}"
+      LogGroupName: !Sub "/aws/states/journey-engine-step-function-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
-  JourneyEngineStateMachineLogGroupSubscriptionFilter:
+  JourneyEngineStepFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
-      LogGroupName: !Ref JourneyEngineStateMachineLogGroup
+      LogGroupName: !Ref JourneyEngineStepFunctionLogGroup
 
   IPVProcessJourneyStepFunction:
     Type: AWS::Serverless::Function
