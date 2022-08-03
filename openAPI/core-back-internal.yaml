@@ -19,12 +19,12 @@ paths:
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCredentialIssuerConfig.Arn}:live/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetCredentialIssuerConfig.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
   /issued-credentials:
     get:
-      description: "Debug endpoint - only used by core-front debug page to get a list of current retrieved crdentials for users journey"
+      description: "Debug endpoint - only used by core-front debug page to get a list of current retrieved credentials for users journey"
       responses:
         200:
           description: "Map of retrieved cri credentials"
@@ -35,7 +35,23 @@ paths:
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVIssuedCredentials.Arn}:live/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildDebugCredentialDataToBeRemovedFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
+  /debug-credential-data:
+    get:
+      description: "Debug endpoint - only used by core-front debug page to get a list of current retrieved credentials for users journey"
+      responses:
+        200:
+          description: "Map of retrieved cri credentials"
+          content:
+            application/json:
+              schema:
+                type: "object"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildDebugCredentialDataFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
   /session/start:
@@ -51,7 +67,23 @@ paths:
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVSessionStartFunction.Arn}:live/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${InitialiseIpvSessionToBeRemovedFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
+  /session/initialise:
+    post:
+      description: "Creates a new ipv core-back session"
+      responses:
+        200:
+          description: "The ipv sessionId"
+          content:
+            application/json:
+              schema:
+                type: "object"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${InitialiseIpvSessionFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
   /journey/cri/return:
@@ -63,11 +95,27 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/journeyResponse"
+                $ref: "#/components/schemas/journeyType"
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCriReturnFunction.Arn}:live/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RetrieveCriOauthAccessTokenFunctionToBeRemoved.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
+  /journey/cri/access-token:
+    post:
+      description: "Called when a user returns from a CRI and will be responsible for completing the OAuth Requests with the cri and retrieveing the verifiable credential"
+      responses:
+        200:
+          description: "Returns a redirect journeyResponse of '/journey/next'"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/journeyType"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RetrieveCriOauthAccessTokenFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
   /journey/cri/error:
@@ -79,7 +127,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/journeyResponse"
+                $ref: "#/components/schemas/journeyType"
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
@@ -95,16 +143,32 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/journeyResponse"
+                $ref: "#/components/schemas/journeyType"
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVSessionEndFunction.Arn}:live/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildClientOauthResponseToBeRemovedFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
+  /journey/build-client-oauth-response:
+    post:
+      description: "Called when the user has completed their user journey in IPV Core"
+      responses:
+        200:
+          description: "Authorization Code and details"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/journeyType"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildClientOauthResponseFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
   /journey/{journeyStep}:
     post:
-      description: Called when the user selects a journey event.
+      description: Called when the user selects a journey event. Triggers an express step function
       responses:
         200:
           description: "Returns either a redirect journey eventResponse or a page eventResponse "
@@ -113,11 +177,43 @@ paths:
               schema:
                 $ref: "#/components/schemas/journeyType"
       x-amazon-apigateway-integration:
+        type: "aws"
+        credentials:
+          Fn::GetAtt: JourneyEngineStateMachineApiGateWayIamRole.Arn
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVJourneyEngineFunction.Arn}:live/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:states:action/StartSyncExecution
         passthroughBehavior: "when_no_match"
-        type: "aws_proxy"
+        requestTemplates:
+          application/x-www-form-urlencoded:
+            Fn::Sub: |
+              {
+                "input": "{\"body\": $util.escapeJavaScript($input.json('$')), \"headers\": {#foreach($header in $input.params().header.keySet())\"$header\": \"$util.escapeJavaScript($input.params().header.get($header))\"#if($foreach.hasNext),#end#end},\"params\": {#foreach($param in $input.params().path.keySet())\"$param\": \"$util.escapeJavaScript($input.params().path.get($param))\"#if($foreach.hasNext),#end#end},\"query\": {#foreach($queryParam in $input.params().querystring.keySet())\"$queryParam\": \"$util.escapeJavaScript($input.params().querystring.get($queryParam))\"#if($foreach.hasNext),#end#end}}",
+                "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${JourneyEngineStateMachine.Name}"
+              }
+        responses:
+          default:
+            statusCode: 200
+            responseTemplates:
+              application/json: |
+                #set ($bodyObj = $util.parseJson($input.body))
+    
+                #if ($bodyObj.status == "SUCCEEDED")
+                  #set($lambdaOutput = $util.parseJson($bodyObj.output))
+                  #set($context.responseOverride.status = $lambdaOutput.statusCode)
+                  $lambdaOutput.body
+                
+                #elseif ($bodyObj.status == "FAILED")
+                  #set($context.responseOverride.status = 500)
+                  {
+                    "cause": "$bodyObj.cause",
+                    "error": "$bodyObj.error"
+                  }
+                #else
+                  #set($context.responseOverride.status = 500)
+                  $bodyObj
+                #end
+
   /journey/cri/start/{criId}:
     post:
       description: Called when the frontend begins the CRI journey.
@@ -131,9 +227,26 @@ paths:
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCredentialIssuerStartFunction.Arn}:live/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildCriOauthRequestToBeRemovedFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
+  /journey/cri/build-oauth-request/{criId}:
+    post:
+      description: Called when the frontend begins the CRI journey.
+      responses:
+        200:
+          description: "Returns the id, ipvClientId and authorizationUrl for a CRI."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/journeyType"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildCriOauthRequestFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
+
   /journey/cri/validate/{criId}:
     get:
       description: "Returns a next or fail journey step, depending on if a CRI check meets requirements to continue the journey"
@@ -145,9 +258,26 @@ paths:
               schema:
                 $ref: "#/components/schemas/journeyType"
       x-amazon-apigateway-integration:
-        httpMethod: "GET"
+        httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVValidateCriCheckFunction.Arn}:live/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ValidateCriCredentialFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
+
+  /journey/evaluate-gpg45-scores:
+    get:
+      description: "Evaludate the gathered credentials against a desired GPG45 profile. Returns journey response or session end"
+      responses:
+        200:
+          description: "Returns a journeyResponse or session end"
+          content:
+            application/json:
+              schema:
+                type: "object"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${EvaluateGpg45ScoresFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
 
