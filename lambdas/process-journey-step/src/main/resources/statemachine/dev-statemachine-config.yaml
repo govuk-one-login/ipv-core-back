@@ -34,7 +34,7 @@ END_JOURNEY:
       targetState: END
       response:
         type: journey
-        journeyStepId: /journey/session/end
+        journeyStepId: /journey/build-client-oauth-response
 
 #child states
 INITIAL_IPV_JOURNEY:
@@ -58,7 +58,7 @@ IPV_IDENTITY_START_PAGE:
       targetState: CRI_UK_PASSPORT
       response:
         type: journey
-        journeyStepId: /journey/cri/start/stubUkPassport
+        journeyStepId: /journey/cri/build-oauth-request/stubUkPassport
 CRI_UK_PASSPORT:
   name: CRI_UK_PASSPORT
   parent: CRI_STATE
@@ -69,7 +69,7 @@ CRI_UK_PASSPORT:
       targetState: CRI_ADDRESS
       response:
         type: journey
-        journeyStepId: /journey/cri/start/stubAddress
+        journeyStepId: /journey/cri/build-oauth-request/stubAddress
 CRI_ADDRESS:
   name: CRI_ADDRESS
   parent: CRI_STATE
@@ -80,7 +80,7 @@ CRI_ADDRESS:
       targetState: CRI_FRAUD
       response:
         type: journey
-        journeyStepId: /journey/cri/start/stubFraud
+        journeyStepId: /journey/cri/build-oauth-request/stubFraud
 CRI_FRAUD:
   name: CRI_FRAUD
   parent: CRI_STATE
@@ -102,7 +102,7 @@ PRE_KBV_TRANSITION_PAGE:
       targetState: CRI_KBV
       response:
         type: journey
-        journeyStepId: /journey/cri/start/stubKbv
+        journeyStepId: /journey/cri/build-oauth-request/stubKbv
 CRI_KBV:
   name: CRI_KBV
   parent: CRI_STATE

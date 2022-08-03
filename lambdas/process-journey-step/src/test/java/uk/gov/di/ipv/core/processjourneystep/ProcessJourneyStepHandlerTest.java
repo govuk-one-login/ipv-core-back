@@ -282,7 +282,7 @@ class ProcessJourneyStepHandlerTest {
         assertEquals(CRI_UK_PASSPORT_STATE, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/cri/start/ukPassport", criResponse.get("journey"));
+        assertEquals("/journey/cri/build-oauth-request/ukPassport", criResponse.get("journey"));
     }
 
     @Test
@@ -314,7 +314,7 @@ class ProcessJourneyStepHandlerTest {
         assertEquals(CRI_ADDRESS_STATE, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/cri/start/address", criResponse.get("journey"));
+        assertEquals("/journey/cri/build-oauth-request/address", criResponse.get("journey"));
     }
 
     @Test
@@ -378,7 +378,7 @@ class ProcessJourneyStepHandlerTest {
         assertEquals(CRI_FRAUD_STATE, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/cri/start/fraud", criResponse.get("journey"));
+        assertEquals("/journey/cri/build-oauth-request/fraud", criResponse.get("journey"));
     }
 
     @Test
@@ -475,7 +475,7 @@ class ProcessJourneyStepHandlerTest {
         assertEquals(CRI_KBV_STATE, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/cri/start/kbv", criResponse.get("journey"));
+        assertEquals("/journey/cri/build-oauth-request/kbv", criResponse.get("journey"));
     }
 
     @Test
@@ -599,7 +599,7 @@ class ProcessJourneyStepHandlerTest {
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/session/end", journeyResponse.get("journey"));
+        assertEquals("/journey/build-client-oauth-response", journeyResponse.get("journey"));
     }
 
     @Test
@@ -717,7 +717,7 @@ class ProcessJourneyStepHandlerTest {
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/session/end", journeyResponse.get("journey"));
+        assertEquals("/journey/build-client-oauth-response", journeyResponse.get("journey"));
     }
 
     @Test
@@ -878,6 +878,6 @@ class ProcessJourneyStepHandlerTest {
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/session/end", journeyResponse.get("journey"));
+        assertEquals("/journey/build-client-oauth-response", journeyResponse.get("journey"));
     }
 }
