@@ -2,8 +2,10 @@ package uk.gov.di.ipv.core.library.domain;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
+@ExcludeFromGeneratedCoverageReport
 public enum ErrorResponse {
     MISSING_QUERY_PARAMETERS(1000, "Missing query parameters for auth request"),
     MISSING_AUTHORIZATION_CODE(1003, "Missing authorization code"),
@@ -58,6 +60,10 @@ public enum ErrorResponse {
 
     public int getCode() {
         return code;
+    }
+
+    public String toJsonString() {
+        return String.format("{\"code\":%d,\"message\":\"%s\"}", code, message);
     }
 
     public String getMessage() {

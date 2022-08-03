@@ -1,8 +1,6 @@
 package uk.gov.di.ipv.core.processjourneystep;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
@@ -12,6 +10,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.ApiGatewayTemplateMappingInput;
+import uk.gov.di.ipv.core.library.domain.ApiGatewayTemplateMappingOutput;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -20,10 +20,12 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.StateMachine;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.StateMachineInitializer;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,6 +55,7 @@ class ProcessJourneyStepHandlerTest {
     private static final String PYI_NO_MATCH_STATE = "PYI_NO_MATCH";
     private static final String PYI_KBV_FAIL_STATE = "PYI_KBV_FAIL";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
+    private static final String END_STATE = "END";
 
     private static final String IPV_IDENTITY_START_PAGE = "page-ipv-identity-start";
     private static final String PYI_TECHNICAL_ERROR_PAGE = "pyi-technical";
@@ -79,155 +82,186 @@ class ProcessJourneyStepHandlerTest {
 
     @Test
     void shouldReturn400OnMissingParams() throws IOException {
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Collections.emptyMap(),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
-        event.setPathParameters(Collections.emptyMap());
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
 
-        Map<String, Object> responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-        assertEquals(400, response.getStatusCode());
+        assertEquals(400, lambdaOutput.getStatusCode());
         assertEquals(
                 ErrorResponse.MISSING_JOURNEY_STEP_URL_PATH_PARAM.getCode(),
-                responseBody.get("code"));
+                outputBody.get("code"));
         assertEquals(
                 ErrorResponse.MISSING_JOURNEY_STEP_URL_PATH_PARAM.getMessage(),
-                responseBody.get("message"));
+                outputBody.get("message"));
     }
 
     @Test
     void shouldReturn400OnMissingJourneyStepParam() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
-        event.setPathParameters(Collections.emptyMap());
-        event.setPathParameters(Map.of("InvalidStep", "any"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of("InvalidStep", "any"),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
 
-        Map<String, Object> responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-        assertEquals(400, response.getStatusCode());
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
+
+        assertEquals(400, lambdaOutput.getStatusCode());
         assertEquals(
                 ErrorResponse.MISSING_JOURNEY_STEP_URL_PATH_PARAM.getCode(),
-                responseBody.get("code"));
+                outputBody.get("code"));
         assertEquals(
                 ErrorResponse.MISSING_JOURNEY_STEP_URL_PATH_PARAM.getMessage(),
-                responseBody.get("message"));
+                outputBody.get("message"));
     }
 
     @Test
     void shouldReturn400OnMissingIpvSessionIdHeader() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Collections.emptyMap(),
+                        Map.of(JOURNEY_STEP, NEXT),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, NEXT);
-        event.setPathParameters(pathParameters);
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, Object> responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
 
-        assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), responseBody.get("error"));
+        assertEquals(400, lambdaOutput.getStatusCode());
+        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), outputBody.get("error"));
         assertEquals(
                 ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
-                responseBody.get("error_description"));
+                outputBody.get("error_description"));
     }
 
     @Test
     void shouldReturn400WhenInvalidSessionIdProvided() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, NEXT),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, NEXT);
-        event.setPathParameters(pathParameters);
+        when(mockIpvSessionService.getIpvSession("1234")).thenReturn(null);
 
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
 
-        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(null);
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, Object> responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(400, response.getStatusCode());
-        assertEquals(ErrorResponse.INVALID_SESSION_ID.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.INVALID_SESSION_ID.getMessage(), responseBody.get("message"));
+        assertEquals(400, lambdaOutput.getStatusCode());
+        assertEquals(ErrorResponse.INVALID_SESSION_ID.getCode(), outputBody.get("code"));
+        assertEquals(ErrorResponse.INVALID_SESSION_ID.getMessage(), outputBody.get("message"));
     }
 
     @Test
     void shouldReturn500WhenUnknownJourneyEngineStepProvided() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, INVALID_STEP);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, INVALID_STEP),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(INITIAL_IPV_JOURNEY_STATE);
-
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, Object> responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
 
-        assertEquals(500, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), responseBody.get("code"));
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
+
+        assertEquals(500, lambdaOutput.getStatusCode());
+        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), outputBody.get("code"));
         assertEquals(
-                ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), responseBody.get("message"));
+                ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), outputBody.get("message"));
     }
 
     @Test
     void shouldReturn500WhenUserIsInUnknownState() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, NEXT);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, NEXT),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState("INVALID-STATE");
-
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, Object> responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
 
-        assertEquals(500, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), responseBody.get("code"));
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
+
+        assertEquals(500, lambdaOutput.getStatusCode());
+        assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), outputBody.get("code"));
         assertEquals(
-                ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), responseBody.get("message"));
+                ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getMessage(), outputBody.get("message"));
     }
 
     @Test
     void shouldReturnIdentityStartPageResponseWhenRequired() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, NEXT);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, NEXT),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
@@ -235,206 +269,226 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setUserState(INITIAL_IPV_JOURNEY_STATE);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> pageResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
+
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
+
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals(IPV_IDENTITY_START_PAGE, outputBody.get("page"));
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(
                 IPV_IDENTITY_START_PAGE_STATE, sessionArgumentCaptor.getValue().getUserState());
-
-        assertEquals(200, response.getStatusCode());
-        assertEquals(IPV_IDENTITY_START_PAGE, pageResponse.get("page"));
     }
 
     @Test
     void shouldReturnCriUkPassportJourneyResponseWhenRequired() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, NEXT);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, NEXT),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(IPV_IDENTITY_START_PAGE_STATE);
-
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> criResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
+
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(CRI_UK_PASSPORT_STATE, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/cri/build-oauth-request/ukPassport", criResponse.get("journey"));
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals("/journey/cri/build-oauth-request/ukPassport", outputBody.get("journey"));
     }
 
     @Test
     void shouldReturnCriAddressJourneyResponseWhenRequired() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, NEXT);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, NEXT),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_UK_PASSPORT_STATE);
-
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> criResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
+
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(CRI_ADDRESS_STATE, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/cri/build-oauth-request/address", criResponse.get("journey"));
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals("/journey/cri/build-oauth-request/address", outputBody.get("journey"));
     }
 
     @Test
     void shouldReturnCriErrorPageResponseIfPassportCriFails() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, ERROR);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, ERROR),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_UK_PASSPORT_STATE);
-
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> pageResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
+
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, pageResponse.get("page"));
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals(PYI_TECHNICAL_ERROR_PAGE, outputBody.get("page"));
     }
 
     @Test
     void shouldReturnCriFraudJourneyResponseWhenRequired() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, NEXT);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, NEXT),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_ADDRESS_STATE);
-
-        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> criResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
+
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(CRI_FRAUD_STATE, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/cri/build-oauth-request/fraud", criResponse.get("journey"));
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals("/journey/cri/build-oauth-request/fraud", outputBody.get("journey"));
     }
 
     @Test
     void shouldReturnCriErrorPageResponseIfAddressCriFails() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, ERROR);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, ERROR),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_ADDRESS_STATE);
-
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> pageResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
+
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, pageResponse.get("page"));
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals(PYI_TECHNICAL_ERROR_PAGE, outputBody.get("page"));
     }
 
     @Test
     void shouldReturnPreKbvTransitionPageResponseWhenRequired() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, NEXT);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, NEXT),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_FRAUD_STATE);
-
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> pageResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
+
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -442,403 +496,445 @@ class ProcessJourneyStepHandlerTest {
         assertEquals(
                 PRE_KBV_TRANSITION_PAGE_STATE, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals(PRE_KBV_TRANSITION_PAGE, pageResponse.get("page"));
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals(PRE_KBV_TRANSITION_PAGE, outputBody.get("page"));
     }
 
     @Test
     void shouldReturnCriKbvJourneyResponseWhenRequired() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, NEXT);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, NEXT),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(PRE_KBV_TRANSITION_PAGE_STATE);
-
-        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> criResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
+
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(CRI_KBV_STATE, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/cri/build-oauth-request/kbv", criResponse.get("journey"));
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals("/journey/cri/build-oauth-request/kbv", outputBody.get("journey"));
     }
 
     @Test
     void shouldReturnCriErrorPageResponseIfFraudCriFails() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, ERROR);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, ERROR),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_FRAUD_STATE);
-
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> pageResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
+
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, pageResponse.get("page"));
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals(PYI_TECHNICAL_ERROR_PAGE, outputBody.get("page"));
     }
 
     @Test
     void shouldReturnIpvSuccessPageResponseWhenRequired() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, NEXT);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, NEXT),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_KBV_STATE);
-
-        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> pageResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
+
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-
         assertEquals(IPV_SUCCESS_PAGE_STATE, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals(IPV_SUCCESS_PAGE, pageResponse.get("page"));
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals(IPV_SUCCESS_PAGE, outputBody.get("page"));
     }
 
     @Test
     void shouldReturnCriErrorPageResponseIfKbvCriFails() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, ERROR);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, ERROR),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_KBV_STATE);
-
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> pageResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
+
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, pageResponse.get("page"));
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals(PYI_TECHNICAL_ERROR_PAGE, outputBody.get("page"));
     }
 
     @Test
     void shouldReturnEndSessionJourneyResponseWhenRequired() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, NEXT);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, NEXT),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(IPV_SUCCESS_PAGE_STATE);
-
-        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> journeyResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/build-client-oauth-response", journeyResponse.get("journey"));
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
+
+        ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
+        assertEquals(END_STATE, sessionArgumentCaptor.getValue().getUserState());
+
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals("/journey/build-client-oauth-response", outputBody.get("journey"));
     }
 
     @Test
     void shouldReturnDebugPageResponseWhenRequired() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, NEXT);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, NEXT),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(DEBUG_PAGE_STATE);
-
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> pageResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals(DEBUG_PAGE, pageResponse.get("page"));
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
+
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals(DEBUG_PAGE, outputBody.get("page"));
     }
 
     @Test
     void shouldReturnPYITechnicalPageIfErrorOccursOnDebugJourney() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, ERROR);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, ERROR),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(DEBUG_PAGE_STATE);
-
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> pageResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
+
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, pageResponse.get("page"));
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals(PYI_TECHNICAL_ERROR_PAGE, outputBody.get("page"));
     }
 
     @Test
     void shouldReturnPYINoMatchPageIfErrorOccursOnDebugJourney() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, FAIL);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, FAIL),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(DEBUG_PAGE_STATE);
-
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> pageResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
+
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(PYI_NO_MATCH_STATE, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals(PYI_NO_MATCH_PAGE, pageResponse.get("page"));
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals(PYI_NO_MATCH_PAGE, outputBody.get("page"));
     }
 
     @Test
     void shouldReturnErrorPageResponseWhenRequired() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, NEXT);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, NEXT),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_ERROR_STATE);
-
-        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> journeyResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/build-client-oauth-response", journeyResponse.get("journey"));
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
+
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals("/journey/build-client-oauth-response", outputBody.get("journey"));
     }
 
     @Test
     void shouldReturnPYINoMatchPageIfPassportCriVCValidationReturnsFail() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, FAIL);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, FAIL),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_UK_PASSPORT_STATE);
-
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> pageResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
+
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(PYI_NO_MATCH_STATE, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals(PYI_NO_MATCH_PAGE, pageResponse.get("page"));
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals(PYI_NO_MATCH_PAGE, outputBody.get("page"));
     }
 
     @Test
     void shouldReturnPYINoMatchPageIfFraudCriVCValidationReturnsFail() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, FAIL);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, FAIL),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_FRAUD_STATE);
-
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> pageResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
+
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(PYI_NO_MATCH_STATE, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals(PYI_NO_MATCH_PAGE, pageResponse.get("page"));
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals(PYI_NO_MATCH_PAGE, outputBody.get("page"));
     }
 
     @Test
     void shouldReturnPYIKbvFailPageIfKbvCriVCValidationReturnsFail() throws IOException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, FAIL);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, FAIL),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_KBV_STATE);
-
-        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> pageResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
+
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-
         assertEquals(PYI_KBV_FAIL_STATE, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals(PYI_KBV_FAIL_PAGE, pageResponse.get("page"));
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals(PYI_KBV_FAIL_PAGE, outputBody.get("page"));
     }
 
     @Test
     void shouldReturnErrorPageIfSessionHasExpired() throws Exception {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, NEXT);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, NEXT),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
         ipvSessionItem.setUserState(CRI_UK_PASSPORT_STATE);
-
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("99");
-        when(mockIpvSessionService.getIpvSession("1234")).thenReturn(ipvSessionItem);
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> pageResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
+
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -851,33 +947,36 @@ class ProcessJourneyStepHandlerTest {
                 OAuth2Error.ACCESS_DENIED.getDescription(),
                 capturedIpvSessionItem.getErrorDescription());
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, pageResponse.get("page"));
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals(PYI_TECHNICAL_ERROR_PAGE, outputBody.get("page"));
     }
 
     @Test
     void shouldReturnSessionEndJourneyIfStateIsSessionTimeout() throws Exception {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-
-        Map<String, String> pathParameters = new HashMap<>();
-        pathParameters.put(JOURNEY_STEP, NEXT);
-        event.setPathParameters(pathParameters);
-
-        event.setHeaders(Map.of("ipv-session-id", "1234"));
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, NEXT),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
-        ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
+        ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CORE_SESSION_TIMEOUT_STATE);
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
-        when(mockIpvSessionService.getIpvSession("1234")).thenReturn(ipvSessionItem);
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
 
-        APIGatewayProxyResponseEvent response =
-                processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> journeyResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
 
-        assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/build-client-oauth-response", journeyResponse.get("journey"));
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals("/journey/build-client-oauth-response", outputBody.get("journey"));
     }
 }
