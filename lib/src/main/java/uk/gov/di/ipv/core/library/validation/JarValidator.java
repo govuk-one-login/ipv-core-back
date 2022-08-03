@@ -75,7 +75,8 @@ public class JarValidator {
                     e.getErrorObject(),
                     redirectUri.toString(),
                     clientId,
-                    jwtClaimsSet.getStringClaim("state"));
+                    jwtClaimsSet.getStringClaim("state"),
+                    jwtClaimsSet.getStringClaim("govuk_signin_journey_id"));
         }
     }
 

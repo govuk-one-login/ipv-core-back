@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -93,6 +94,8 @@ class BuildCriOauthRequestHandlerTest {
 
     private BuildCriOauthRequestHandler underTest;
 
+    private ClientSessionDetailsDto clientSessionDetailsDto;
+
     @BeforeEach
     void setUp()
             throws URISyntaxException, InvalidKeySpecException, NoSuchAlgorithmException,
@@ -117,6 +120,10 @@ class BuildCriOauthRequestHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "http://www.example.com/audience");
+
+        clientSessionDetailsDto = new ClientSessionDetailsDto();
+        clientSessionDetailsDto.setUserId(TEST_USER_ID);
+        clientSessionDetailsDto.setGovukSigninJourneyId("test-journey-id");
     }
 
     @Test
@@ -146,7 +153,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn("callbackUrl");
         when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionService.getUserId(SESSION_ID)).thenReturn(TEST_USER_ID);
+        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
                 .thenReturn(
                         List.of(
@@ -239,7 +246,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn("callbackUrl");
         when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionService.getUserId(SESSION_ID)).thenReturn(TEST_USER_ID);
+        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
                 .thenReturn(
                         List.of(
@@ -273,7 +280,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn("callbackUrl");
         when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionService.getUserId(SESSION_ID)).thenReturn(TEST_USER_ID);
+        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
                 .thenReturn(
                         List.of(

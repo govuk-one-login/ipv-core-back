@@ -85,9 +85,18 @@ public class BuildClientOauthResponseHandler
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
             IpvSessionItem ipvSessionItem = sessionService.getIpvSession(ipvSessionId);
             String userId = sessionService.getUserId(ipvSessionId);
-            LogHelper.attachClientIdToLogs(ipvSessionItem.getClientSessionDetails().getClientId());
+            ClientSessionDetailsDto clientSessionDetailsDto =
+                    ipvSessionItem.getClientSessionDetails();
 
-            AuditEventUser auditEventUser = new AuditEventUser(userId, ipvSessionId);
+            LogHelper.attachClientIdToLogs(clientSessionDetailsDto.getClientId());
+            LogHelper.attachGovukSigninJourneyIdToLogs(
+                    clientSessionDetailsDto.getGovukSigninJourneyId());
+
+            AuditEventUser auditEventUser =
+                    new AuditEventUser(
+                            userId,
+                            ipvSessionId,
+                            clientSessionDetailsDto.getGovukSigninJourneyId());
 
             ClientResponse clientResponse;
 

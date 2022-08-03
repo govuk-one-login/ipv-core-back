@@ -276,6 +276,7 @@ class BuildClientOauthResponseHandlerTest {
                         "https://example.com",
                         "test-state",
                         "test-user-id",
+                        "test-journey-id",
                         false);
         item.setClientSessionDetails(clientSessionDetailsDto);
 
@@ -288,6 +289,7 @@ class BuildClientOauthResponseHandlerTest {
                 "test-client-id",
                 "https://example.com",
                 "test-state",
+                "test-journey-id",
                 "test-user-id",
                 false);
     }

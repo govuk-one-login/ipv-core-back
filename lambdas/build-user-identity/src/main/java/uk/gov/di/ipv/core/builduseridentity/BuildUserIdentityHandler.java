@@ -108,9 +108,13 @@ public class BuildUserIdentityHandler
 
             ClientSessionDetailsDto clientSessionDetails = ipvSessionItem.getClientSessionDetails();
             LogHelper.attachClientIdToLogs(clientSessionDetails.getClientId());
+            LogHelper.attachGovukSigninJourneyIdToLogs(
+                    clientSessionDetails.getGovukSigninJourneyId());
 
             String userId = clientSessionDetails.getUserId();
-            AuditEventUser auditEventUser = new AuditEventUser(userId, ipvSessionId);
+            AuditEventUser auditEventUser =
+                    new AuditEventUser(
+                            userId, ipvSessionId, clientSessionDetails.getGovukSigninJourneyId());
 
             String sub = userId;
             UserIdentity userIdentity = userIdentityService.generateUserIdentity(userId, sub);

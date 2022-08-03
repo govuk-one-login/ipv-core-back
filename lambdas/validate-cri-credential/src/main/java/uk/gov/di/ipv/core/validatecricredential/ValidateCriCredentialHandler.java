@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -63,8 +64,12 @@ public class ValidateCriCredentialHandler
         LogHelper.attachComponentIdToLogs();
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
-            String userId = ipvSessionService.getUserId(ipvSessionId);
+            IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+            String userId = ipvSessionItem.getClientSessionDetails().getUserId();
             String criId = getCriId(input.getPathParameters());
+
+            LogHelper.attachGovukSigninJourneyIdToLogs(
+                    ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId());
             LogHelper.attachCriIdToLogs(criId);
 
             JourneyResponse journeyResponse =

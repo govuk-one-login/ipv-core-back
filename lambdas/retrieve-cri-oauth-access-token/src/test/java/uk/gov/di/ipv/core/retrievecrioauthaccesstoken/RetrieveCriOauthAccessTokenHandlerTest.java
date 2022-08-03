@@ -121,12 +121,13 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                         "https://example.com/redirect",
                         "test-state",
                         TEST_USER_ID,
+                        "test-journey-id",
                         false);
 
         credentialIssuerSessionDetailsDto =
                 new CredentialIssuerSessionDetailsDto(CREDENTIAL_ISSUER_ID, OAUTH_STATE);
 
-        auditEventUser = new AuditEventUser(TEST_USER_ID, sessionId);
+        auditEventUser = new AuditEventUser(TEST_USER_ID, sessionId, "test-journey-id");
     }
 
     @Test
@@ -177,15 +178,20 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     @Test
     void shouldReceive400ResponseCodeIfAuthorizationCodeNotPresent()
             throws JsonProcessingException {
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
                         Map.of("credential_issuer_id", "foo"), Map.of("ipv-session-id", sessionId));
+
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
         assert400Response(response, ErrorResponse.MISSING_AUTHORIZATION_CODE);
     }
 
     @Test
     void shouldReceive400ResponseCodeIfCredentialIssuerNotPresent() throws JsonProcessingException {
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
                         Map.of("authorization_code", "foo"), Map.of("ipv-session-id", sessionId));
@@ -198,6 +204,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     void shouldReceive400ResponseCodeIfCredentialIssuerNotInPermittedSet()
             throws JsonProcessingException {
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(ipvSessionItem.getCredentialIssuerSessionDetails())
                 .thenReturn(credentialIssuerSessionDetailsDto);
         APIGatewayProxyRequestEvent input =
@@ -230,6 +237,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
     @Test
     void shouldReceive400ResponseCodeIfOAuthStateNotPresent() throws JsonProcessingException {
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
                         Map.of(
@@ -251,6 +260,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
     @Test
     void shouldReceive400ResponseCodeIfOAuthStateNotValid() throws JsonProcessingException {
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(ipvSessionItem.getCredentialIssuerSessionDetails())
                 .thenReturn(credentialIssuerSessionDetailsDto);
@@ -283,13 +294,9 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                         requestDto.capture(), eq(passportIssuer), eq(testApiKey)))
                 .thenReturn(accessToken);
 
-        when(ipvSessionService.getUserId(anyString())).thenReturn(TEST_USER_ID);
-
         when(credentialIssuerService.getVerifiableCredential(
                         accessToken, passportIssuer, testApiKey))
                 .thenReturn(SignedJWT.parse(SIGNED_VC_1));
-
-        when(ipvSessionService.getUserId(anyString())).thenReturn(TEST_USER_ID);
 
         mockServiceCallsAndSessionItem();
 
@@ -346,6 +353,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(ipvSessionItem.getCredentialIssuerSessionDetails())
                 .thenReturn(credentialIssuerSessionDetailsDto);
 
@@ -372,6 +380,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(ipvSessionItem.getCredentialIssuerSessionDetails())
                 .thenReturn(credentialIssuerSessionDetailsDto);
 
@@ -537,7 +546,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(ipvSessionService.getUserId(anyString())).thenReturn(TEST_USER_ID);
+
+        when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
 
         when(ipvSessionItem.getCredentialIssuerSessionDetails())
                 .thenReturn(credentialIssuerSessionDetailsDto);
@@ -560,6 +570,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         JSONObject testCredential = new JSONObject();
         testCredential.appendField("foo", "bar");
 
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         doThrow(new SqsException("Test sqs error"))
                 .when(auditService)
                 .sendAuditEvent(any(AuditEvent.class));

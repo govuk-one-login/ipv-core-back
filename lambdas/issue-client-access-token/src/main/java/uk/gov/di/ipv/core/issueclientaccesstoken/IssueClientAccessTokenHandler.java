@@ -93,6 +93,8 @@ public class IssueClientAccessTokenHandler
                             .orElseThrow();
 
             LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
+            LogHelper.attachGovukSigninJourneyIdToLogs(
+                    ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId());
 
             if (ipvSessionItem.getAccessToken() != null) {
                 ErrorObject error = revokeAccessToken(ipvSessionItem);

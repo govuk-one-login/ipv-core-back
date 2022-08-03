@@ -99,6 +99,7 @@ class BuildUserIdentityHandlerTest {
                         "http://example.com",
                         "test-state",
                         "test-user-id",
+                        "test-journey-id",
                         false));
         ipvSessionItem.setAccessToken(TEST_ACCESS_TOKEN);
         ipvSessionItem.setAccessTokenMetadata(new AccessTokenMetadata());

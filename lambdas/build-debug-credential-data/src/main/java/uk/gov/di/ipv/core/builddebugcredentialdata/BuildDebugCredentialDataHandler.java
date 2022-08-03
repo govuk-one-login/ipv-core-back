@@ -8,10 +8,12 @@ import org.apache.http.HttpStatus;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -47,9 +49,15 @@ public class BuildDebugCredentialDataHandler
         LogHelper.attachComponentIdToLogs();
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
-            String userId = ipvSessionService.getUserId(ipvSessionId);
+            IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+            ClientSessionDetailsDto clientSessionDetailsDto =
+                    ipvSessionItem.getClientSessionDetails();
+            LogHelper.attachGovukSigninJourneyIdToLogs(
+                    clientSessionDetailsDto.getGovukSigninJourneyId());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, userIdentityService.getUserIssuedDebugCredentials(userId));
+                    HttpStatus.SC_OK,
+                    userIdentityService.getUserIssuedDebugCredentials(
+                            clientSessionDetailsDto.getUserId()));
         } catch (HttpResponseExceptionWithErrorBody e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getResponseCode(), e.getErrorBody());

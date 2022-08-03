@@ -20,6 +20,7 @@ import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.ClientAuthenticationException;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AccessTokenService;
@@ -88,6 +89,8 @@ class IssueClientAccessTokenHandlerTest {
         mockSessionItem.setIpvSessionId(TEST_SESSION_ID);
         mockSessionItem.setAuthorizationCode(TEST_AUTHORIZATION_CODE);
         mockSessionItem.setAuthorizationCodeMetadata(mockAuthorizationCodeMetadata);
+        ClientSessionDetailsDto clientSessionDetailsDto = new ClientSessionDetailsDto();
+        mockSessionItem.setClientSessionDetails(clientSessionDetailsDto);
     }
 
     @Test

@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.google.gson.Gson;
 import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -11,7 +12,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.validatecricredential.validation.CriCheckValidator;
@@ -41,6 +44,16 @@ class ValidateCriCredentialHandlerTest {
     @Mock private IpvSessionService ipvSessionService;
     @InjectMocks private ValidateCriCredentialHandler validateCriCredentialHandler;
 
+    private IpvSessionItem ipvSessionItem;
+
+    @BeforeEach
+    void setUpEach() {
+        ipvSessionItem = new IpvSessionItem();
+        ClientSessionDetailsDto clientSessionDetailsDto = new ClientSessionDetailsDto();
+        clientSessionDetailsDto.setUserId(userId);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+    }
+
     @Test
     void shouldReturnJourneyNextForSuccessfulCheck() throws HttpResponseExceptionWithErrorBody {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
@@ -48,7 +61,7 @@ class ValidateCriCredentialHandlerTest {
         event.setHeaders(Map.of(IPV_SESSION_ID_HEADER_KEY, sessionId));
 
         when(mockCriCheckValidator.isSuccess(any())).thenReturn(true);
-        when(ipvSessionService.getUserId(sessionId)).thenReturn(userId);
+        when(ipvSessionService.getIpvSession(sessionId)).thenReturn(ipvSessionItem);
 
         var response = validateCriCredentialHandler.handleRequest(event, context);
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
@@ -65,7 +78,7 @@ class ValidateCriCredentialHandlerTest {
         event.setHeaders(Map.of(IPV_SESSION_ID_HEADER_KEY, sessionId));
 
         when(mockCriCheckValidator.isSuccess(any())).thenReturn(false);
-        when(ipvSessionService.getUserId(sessionId)).thenReturn(userId);
+        when(ipvSessionService.getIpvSession(sessionId)).thenReturn(ipvSessionItem);
 
         var response = validateCriCredentialHandler.handleRequest(event, context);
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
@@ -79,6 +92,8 @@ class ValidateCriCredentialHandlerTest {
     void shouldReturn400IfCriIdPathParameterIsNull() {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setHeaders(Map.of(IPV_SESSION_ID_HEADER_KEY, sessionId));
+
+        when(ipvSessionService.getIpvSession(sessionId)).thenReturn(ipvSessionItem);
 
         var response = validateCriCredentialHandler.handleRequest(event, context);
         var error = gson.fromJson(response.getBody(), Map.class);
@@ -94,6 +109,8 @@ class ValidateCriCredentialHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setPathParameters(Map.of(CRI_ID, ""));
         event.setHeaders(Map.of(IPV_SESSION_ID_HEADER_KEY, sessionId));
+
+        when(ipvSessionService.getIpvSession(sessionId)).thenReturn(ipvSessionItem);
 
         var response = validateCriCredentialHandler.handleRequest(event, context);
         var error = gson.fromJson(response.getBody(), Map.class);
