@@ -168,7 +168,7 @@ paths:
         type: "aws_proxy"
 
   /journey/cri/validate/{criId}:
-    get:
+    post:
       description: "Returns a next or fail journey step, depending on if a CRI check meets requirements to continue the journey"
       responses:
         200:
@@ -185,7 +185,7 @@ paths:
         type: "aws_proxy"
 
   /journey/evaluate-gpg45-scores:
-    get:
+    post:
       description: "Evaludate the gathered credentials against a desired GPG45 profile. Returns journey response or session end"
       responses:
         200:
