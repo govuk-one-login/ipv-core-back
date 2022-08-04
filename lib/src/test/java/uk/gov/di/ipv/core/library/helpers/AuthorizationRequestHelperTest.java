@@ -65,6 +65,7 @@ class AuthorizationRequestHelperTest {
     public static final String MOCK_CORE_FRONT_CALLBACK_URL = "callbackUri";
     public static final String CRI_ID = "cri_id";
     public static final String TEST_USER_ID = "test-user-id";
+    public static final String TEST_JOURNEY_ID = "test-journey-id";
     public static final String OAUTH_STATE = SecureTokenHelper.generate();
 
     private final SharedClaimsResponse sharedClaims =
@@ -105,10 +106,14 @@ class AuthorizationRequestHelperTest {
                         credentialIssuerConfig,
                         configurationService,
                         OAUTH_STATE,
-                        TEST_USER_ID);
+                        TEST_USER_ID,
+                        TEST_JOURNEY_ID);
 
         assertEquals(IPV_ISSUER, result.getJWTClaimsSet().getIssuer());
         assertEquals(TEST_USER_ID, result.getJWTClaimsSet().getSubject());
+        assertEquals(
+                TEST_JOURNEY_ID,
+                result.getJWTClaimsSet().getStringClaim("govuk_signin_journey_id"));
         assertEquals(AUDIENCE, result.getJWTClaimsSet().getAudience().get(0));
         assertEquals(sharedClaims, result.getJWTClaimsSet().getClaims().get(SHARED_CLAIMS));
         assertEquals(OAUTH_STATE.toString(), result.getJWTClaimsSet().getClaim("state"));
@@ -133,7 +138,8 @@ class AuthorizationRequestHelperTest {
                         credentialIssuerConfig,
                         configurationService,
                         OAUTH_STATE,
-                        TEST_USER_ID);
+                        TEST_USER_ID,
+                        TEST_JOURNEY_ID);
         assertNull(result.getJWTClaimsSet().getClaims().get(SHARED_CLAIMS));
     }
 
@@ -152,7 +158,8 @@ class AuthorizationRequestHelperTest {
                                         credentialIssuerConfig,
                                         configurationService,
                                         OAUTH_STATE,
-                                        TEST_USER_ID));
+                                        TEST_USER_ID,
+                                        TEST_JOURNEY_ID));
         assertEquals(500, exception.getResponseCode());
         assertEquals("Failed to sign Shared Attributes", exception.getErrorReason());
     }
@@ -172,7 +179,8 @@ class AuthorizationRequestHelperTest {
                                         credentialIssuerConfig,
                                         configurationService,
                                         OAUTH_STATE,
-                                        TEST_USER_ID));
+                                        TEST_USER_ID,
+                                        TEST_JOURNEY_ID));
         assertEquals(500, exception.getResponseCode());
         assertEquals("Failed to build Core Front Callback Url", exception.getErrorReason());
     }
