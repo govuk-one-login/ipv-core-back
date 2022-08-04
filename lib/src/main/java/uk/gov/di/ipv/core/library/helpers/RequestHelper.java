@@ -81,12 +81,8 @@ public class RequestHelper {
 
     public static String getIpvSessionId(APIGatewayProxyRequestEvent event)
             throws HttpResponseExceptionWithErrorBody {
-        return getIpvSessionId(event.getHeaders());
-    }
-
-    public static String getIpvSessionId(Map<String, String> headers)
-            throws HttpResponseExceptionWithErrorBody {
-        String ipvSessionId = RequestHelper.getHeaderByKey(headers, IPV_SESSION_ID_HEADER);
+        String ipvSessionId =
+                RequestHelper.getHeaderByKey(event.getHeaders(), IPV_SESSION_ID_HEADER);
         if (ipvSessionId == null) {
             LOGGER.error("{} not present in header", IPV_SESSION_ID_HEADER);
             throw new HttpResponseExceptionWithErrorBody(
