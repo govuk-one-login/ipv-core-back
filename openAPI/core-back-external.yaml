@@ -21,7 +21,6 @@ paths:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IssueClientAccessTokenFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
 
-
   /user-identity:
     get:
       description: "Returns a list of Verifiable Credentials representig the users identity"
@@ -40,3 +39,23 @@ paths:
         uri:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildUserIdentityFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
+
+  /healthcheck:
+    get:
+      description: "returns a 200 for Route53 health checks to use"
+      responses:
+        200:
+          description: "A healthcheck response"
+          content:
+            application/json:
+              schema:
+                type: "object"
+      x-amazon-apigateway-integration:
+        type: "MOCK"
+        requestTemplates:
+          application/json: "{\"statusCode\":200}"
+        responses:
+          200:
+            statusCode: 200
+            responseTemplates:
+              application/json: "{\"healthcheck\": \"ok\"}"
