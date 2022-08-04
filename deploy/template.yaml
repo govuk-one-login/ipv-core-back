@@ -67,6 +67,15 @@ Resources:
       Name: !Sub IPV Core Private API Gateway ${Environment}
       EndpointConfiguration:
         Type: PRIVATE
+      DefinitionBody:
+        openapi: "3.0.3" # workaround to get `sam validate` to work
+        paths: # workaround to get `sam validate` to work
+          /foo:
+            bar: baz # workaround to get `sam validate` to work
+        Fn::Transform:
+          Name: "AWS::Include"
+          Parameters:
+            Location: "../openAPI/core-back-internal.yaml"
       Auth:
         ResourcePolicy:
           CustomStatements:
@@ -823,6 +832,83 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref BuildDebugCredentialDataFunctionLogGroup
 
+  JourneyEngineStepFunction:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: journey_engine.asl.json
+      DefinitionSubstitutions:
+        IPVProcessJourneyStepFunctionArn: !GetAtt IPVProcessJourneyStepFunction.Arn
+      Events:
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+            Path: /journey/{journeyStep}
+            Method: POST
+      Logging:
+        Destinations:
+           - CloudWatchLogsLogGroup:
+               LogGroupArn: !GetAtt JourneyEngineStepFunctionLogGroup.Arn
+        IncludeExecutionData: true
+        Level: ALL
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref IPVProcessJourneyStepFunction
+        - Statement:
+            - Sid: CloudWatchLogsAccess
+              Effect: Allow
+              Action:
+                - "logs:CreateLogDelivery"
+                - "logs:GetLogDelivery"
+                - "logs:UpdateLogDelivery"
+                - "logs:DeleteLogDelivery"
+                - "logs:ListLogDeliveries"
+                - "logs:PutLogEvents"
+                - "logs:PutResourcePolicy"
+                - "logs:DescribeResourcePolicies"
+                - "logs:DescribeLogGroups"
+              Resource: "*"
+      Tracing:
+        Enabled: true
+      Type: EXPRESS
+
+  JourneyEngineStepFunctionApiGateWayIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: AllowApiGatewayToInvokeStartSyncExecution
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: 'states:StartSyncExecution'
+                Resource: !Ref JourneyEngineStepFunction
+
+  JourneyEngineStepFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+      LogGroupName: !Sub "/aws/states/journey-engine-step-function-${Environment}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  JourneyEngineStepFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
+      FilterPattern: ""
+      LogGroupName: !Ref JourneyEngineStepFunctionLogGroup
+
   IPVProcessJourneyStepFunction:
     Type: AWS::Serverless::Function
     DependsOn:
@@ -846,8 +932,6 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub session-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
-          IPV_JOURNEY_CRI_START_URI: "/journey/cri/start/"
-          IPV_JOURNEY_SESSION_END_URI: "/journey/session/end"
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
@@ -855,14 +939,6 @@ Resources:
             TableName: !Ref SessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/*
-      Events:
-        IPVCorePrivateAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCorePrivateAPI
-            Path: /journey/{journeyStep}
-            Method: POST
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
