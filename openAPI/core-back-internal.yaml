@@ -115,7 +115,7 @@ paths:
       x-amazon-apigateway-integration:
         type: "aws"
         credentials:
-          Fn::GetAtt: JourneyEngineStateMachineApiGateWayIamRole.Arn
+          Fn::GetAtt: JourneyEngineStepFunctionApiGateWayIamRole.Arn
         httpMethod: "POST"
         uri:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:states:action/StartSyncExecution
@@ -125,7 +125,7 @@ paths:
             Fn::Sub: |
               {
                 "input": "{\"body\": $util.escapeJavaScript($input.json('$')), \"headers\": {#foreach($header in $input.params().header.keySet())\"$header\": \"$util.escapeJavaScript($input.params().header.get($header))\"#if($foreach.hasNext),#end#end},\"params\": {#foreach($param in $input.params().path.keySet())\"$param\": \"$util.escapeJavaScript($input.params().path.get($param))\"#if($foreach.hasNext),#end#end},\"query\": {#foreach($queryParam in $input.params().querystring.keySet())\"$queryParam\": \"$util.escapeJavaScript($input.params().querystring.get($queryParam))\"#if($foreach.hasNext),#end#end}}",
-                "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${JourneyEngineStateMachine.Name}"
+                "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${JourneyEngineStepFunction.Name}"
               }
         responses:
           default:
