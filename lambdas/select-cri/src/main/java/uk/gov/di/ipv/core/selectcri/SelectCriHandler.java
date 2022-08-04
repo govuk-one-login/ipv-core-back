@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.util.List;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
@@ -29,7 +30,7 @@ public class SelectCriHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String CRI_START_JOURNEY = "/journey/%s";
-    public static final String JOURNEY_ERROR = "/journey/error";
+    public static final String JOURNEY_FAIL = "/journey/fail";
 
     private final ConfigurationService configurationService;
     private final UserIdentityService userIdentityService;
@@ -66,7 +67,7 @@ public class SelectCriHandler
             String passportCriId = configurationService.getSsmParameter(PASSPORT_CRI_ID);
             String fraudCriId = configurationService.getSsmParameter(FRAUD_CRI_ID);
             String kbvCriId = configurationService.getSsmParameter(KBV_CRI_ID);
-            String addressCriId = configurationService.getSsmParameter(KBV_CRI_ID);
+            String addressCriId = configurationService.getSsmParameter(ADDRESS_CRI_ID);
 
             if (userHasNotVisited(visitedCredentialIssuers, passportCriId)) {
                 return getJourneyResponse(passportCriId);
@@ -86,7 +87,7 @@ public class SelectCriHandler
 
             LOGGER.info("Unable to determine next credential issuer");
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, new JourneyResponse(JOURNEY_ERROR));
+                    HttpStatus.SC_OK, new JourneyResponse(JOURNEY_FAIL));
 
         } catch (HttpResponseExceptionWithErrorBody e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
