@@ -469,6 +469,58 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref RetrieveCriOauthAccessTokenFunctionLogGroup
 
+  RetrieveCriCredentialFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - "RetrieveCriCredentialFunctionLogGroup"
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "retrieve-cri-credential-${Environment}"
+      Handler: uk.gov.di.ipv.core.retrievecricredential.RetrieveCriCredentialHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/retrieve-cri-credential
+      Architectures:
+        - arm64
+      MemorySize: 2048
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub retrieve-cri-credential-${Environment}
+      Events:
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+            Path: /journey/cri/credential
+            Method: POST
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+        - AddProvisionedConcurrency
+        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
+        - !Ref AWS::NoValue
+
+  RetrieveCriCredentialFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+      LogGroupName: !Sub "/aws/lambda/retrieve-cri-credential-${Environment}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  RetrieveCriCredentialFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
+      FilterPattern: ""
+      LogGroupName: !Ref RetrieveCriCredentialFunctionLogGroup
+
   BuildCriOauthRequestFunction:
     Type: AWS::Serverless::Function
     DependsOn:

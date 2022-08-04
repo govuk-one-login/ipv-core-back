@@ -19,10 +19,73 @@ paths:
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCredentialIssuerConfig.Arn}:live/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetCredentialIssuerConfig.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
-
+  /debug-credential-data:
+    get:
+      description: "Debug endpoint - only used by core-front debug page to get a list of current retrieved credentials for users journey"
+      responses:
+        200:
+          description: "Map of retrieved cri credentials"
+          content:
+            application/json:
+              schema:
+                type: "object"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildDebugCredentialDataFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
+  /session/initialise:
+    post:
+      description: "Creates a new ipv core-back session"
+      responses:
+        200:
+          description: "The ipv sessionId"
+          content:
+            application/json:
+              schema:
+                type: "object"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${InitialiseIpvSessionFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
+  /journey/cri/access-token:
+    post:
+      description: "Called when a user returns from a CRI and will be responsible for exchanging the CRI auth code for an access token"
+      responses:
+        200:
+          description: "Returns a redirect journeyResponse of '/journey/next'"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/journeyType"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RetrieveCriOauthAccessTokenFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
+  /journey/cri/credential:
+    post:
+      description: "Called when a user returns from a CRI and will be responsible for exchanging the access token for a verifiable credential"
+      responses:
+        200:
+          description: "Returns a redirect journeyResponse of '/journey/next'"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/journeyType"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RetrieveCriCredentialFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
   /journey/cri/error:
     post:
       description: "Called when a user returns from a CRI with an error"
