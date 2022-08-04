@@ -28,7 +28,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_C
 public class SelectCriHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String CRI_START_JOURNEY = "/journey/cri/start/%s";
+    private static final String CRI_START_JOURNEY = "/journey/%s";
     public static final String JOURNEY_ERROR = "/journey/error";
 
     private final ConfigurationService configurationService;
@@ -72,16 +72,16 @@ public class SelectCriHandler
                 return getJourneyResponse(passportCriId);
             }
 
+            if (userHasNotVisited(visitedCredentialIssuers, addressCriId)) {
+                return getJourneyResponse(addressCriId);
+            }
+
             if (userHasNotVisited(visitedCredentialIssuers, fraudCriId)) {
                 return getJourneyResponse(fraudCriId);
             }
 
             if (userHasNotVisited(visitedCredentialIssuers, kbvCriId)) {
                 return getJourneyResponse(kbvCriId);
-            }
-
-            if (userHasNotVisited(visitedCredentialIssuers, addressCriId)) {
-                return getJourneyResponse(addressCriId);
             }
 
             LOGGER.info("Unable to determine next credential issuer");
