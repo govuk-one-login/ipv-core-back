@@ -953,7 +953,7 @@ Resources:
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "evaluate-gpg45-scores-${Environment}"
-      Handler: uk.gov.di.ipv.core.evaluategpg45scores::handleRequest
+      Handler: uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler::handleRequest
       Runtime: java11
       PackageType: Zip
       CodeUri: ../lambdas/evaluate-gpg45-scores
