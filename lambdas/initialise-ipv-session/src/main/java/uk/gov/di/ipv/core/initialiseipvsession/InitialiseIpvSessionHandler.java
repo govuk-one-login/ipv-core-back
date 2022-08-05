@@ -121,6 +121,9 @@ public class InitialiseIpvSessionHandler
                             sessionParams.get(CLIENT_ID_PARAM_KEY),
                             Boolean.parseBoolean(sessionParams.get(IS_DEBUG_JOURNEY_PARAM_KEY)));
 
+            LogHelper.attachGovukSigninJourneyIdToLogs(
+                    clientSessionDetailsDto.getGovukSigninJourneyId());
+
             userIdentityService.deleteUserIssuedCredentials(clientSessionDetailsDto.getUserId());
 
             IpvSessionItem ipvSessionItem =
@@ -129,7 +132,8 @@ public class InitialiseIpvSessionHandler
             AuditEventUser auditEventUser =
                     new AuditEventUser(
                             ipvSessionItem.getClientSessionDetails().getUserId(),
-                            ipvSessionItem.getIpvSessionId());
+                            ipvSessionItem.getIpvSessionId(),
+                            clientSessionDetailsDto.getGovukSigninJourneyId());
 
             auditService.sendAuditEvent(
                     new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, componentId, auditEventUser));
@@ -145,7 +149,10 @@ public class InitialiseIpvSessionHandler
 
             ClientSessionDetailsDto clientSessionDetailsDto =
                     generateErrorClientSessionDetails(
-                            e.getRedirectUri(), e.getClientId(), e.getState());
+                            e.getRedirectUri(),
+                            e.getClientId(),
+                            e.getState(),
+                            e.getGovukSigninJourneyId());
 
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
@@ -204,12 +211,14 @@ public class InitialiseIpvSessionHandler
                 claimsSet.getStringClaim("redirect_uri"),
                 claimsSet.getStringClaim("state"),
                 claimsSet.getSubject(),
+                claimsSet.getStringClaim("govuk_signin_journey_id"),
                 isDebugJourney);
     }
 
     @Tracing
     private ClientSessionDetailsDto generateErrorClientSessionDetails(
-            String redirectUri, String clientId, String state) {
-        return new ClientSessionDetailsDto(null, clientId, redirectUri, state, null, false);
+            String redirectUri, String clientId, String state, String govukSigninJourneyId) {
+        return new ClientSessionDetailsDto(
+                null, clientId, redirectUri, state, null, govukSigninJourneyId, false);
     }
 }

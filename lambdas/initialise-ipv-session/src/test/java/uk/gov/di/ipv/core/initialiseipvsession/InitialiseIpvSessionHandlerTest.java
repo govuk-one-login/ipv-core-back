@@ -107,6 +107,7 @@ class InitialiseIpvSessionHandlerTest {
                         "http://example.com",
                         "test-state",
                         "test-user-id",
+                        "test-journey-id",
                         false);
 
         ipvSessionItem = new IpvSessionItem();
@@ -245,7 +246,8 @@ class InitialiseIpvSessionHandlerTest {
                                 new ErrorObject("server_error", "test error"),
                                 "http://example.com",
                                 "test-client",
-                                "test-state"));
+                                "test-state",
+                                "test-journey-id"));
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         Map<String, Object> sessionParams =

@@ -8,7 +8,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -35,7 +37,11 @@ public class BuildDebugCredentialDataHandlerTest {
         String userId = "a-user-id";
         event.setHeaders(Map.of(RequestHelper.IPV_SESSION_ID_HEADER, ipvSessionId));
 
-        when(mockIpvSessionService.getUserId(ipvSessionId)).thenReturn(userId);
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ClientSessionDetailsDto clientSessionDetailsDto = new ClientSessionDetailsDto();
+        clientSessionDetailsDto.setUserId(userId);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+        when(mockIpvSessionService.getIpvSession(ipvSessionId)).thenReturn(ipvSessionItem);
         Map<String, String> userIssuedCredentials =
                 Map.of(
                         "criOne", "credential issued by criOne",

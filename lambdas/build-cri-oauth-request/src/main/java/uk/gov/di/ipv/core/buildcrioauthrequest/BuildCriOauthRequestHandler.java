@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -122,15 +123,25 @@ public class BuildCriOauthRequestHandler
                         400, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
             }
 
-            String userId = ipvSessionService.getUserId(ipvSessionId);
+            IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+            ClientSessionDetailsDto clientSessionDetailsDto =
+                    ipvSessionItem.getClientSessionDetails();
+            String userId = clientSessionDetailsDto.getUserId();
+
+            String govukSigninJourneyId = clientSessionDetailsDto.getGovukSigninJourneyId();
+            LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
+
             String oauthState = SecureTokenHelper.generate();
-            JWEObject jweObject = signEncryptJar(credentialIssuerConfig, userId, oauthState);
+            JWEObject jweObject =
+                    signEncryptJar(
+                            credentialIssuerConfig, userId, oauthState, govukSigninJourneyId);
 
             CriResponse criResponse = getCriResponse(credentialIssuerConfig, jweObject);
 
-            persistOauthState(ipvSessionId, credentialIssuerConfig.getId(), oauthState);
+            persistOauthState(ipvSessionItem, credentialIssuerConfig.getId(), oauthState);
 
-            AuditEventUser auditEventUser = new AuditEventUser(userId, ipvSessionId);
+            AuditEventUser auditEventUser =
+                    new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId);
             auditService.sendAuditEvent(
                     new AuditEvent(
                             AuditEventTypes.IPV_REDIRECT_TO_CRI, componentId, auditEventUser));
@@ -164,7 +175,10 @@ public class BuildCriOauthRequestHandler
     }
 
     private JWEObject signEncryptJar(
-            CredentialIssuerConfig credentialIssuerConfig, String userId, String oauthState)
+            CredentialIssuerConfig credentialIssuerConfig,
+            String userId,
+            String oauthState,
+            String govukSigninJourneyId)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException {
         SharedClaimsResponse sharedClaimsResponse = getSharedAttributes(userId);
         SignedJWT signedJWT =
@@ -174,7 +188,8 @@ public class BuildCriOauthRequestHandler
                         credentialIssuerConfig,
                         configurationService,
                         oauthState,
-                        userId);
+                        userId,
+                        govukSigninJourneyId);
 
         RSAEncrypter rsaEncrypter =
                 new RSAEncrypter(credentialIssuerConfig.getJarEncryptionPublicJwk());
@@ -228,8 +243,7 @@ public class BuildCriOauthRequestHandler
     }
 
     @Tracing
-    private void persistOauthState(String ipvSessionId, String criId, String oauthState) {
-        IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+    private void persistOauthState(IpvSessionItem ipvSessionItem, String criId, String oauthState) {
         CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto =
                 new CredentialIssuerSessionDetailsDto(criId, oauthState);
         ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);

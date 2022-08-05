@@ -48,7 +48,8 @@ public class AuthorizationRequestHelper {
             CredentialIssuerConfig credentialIssuerConfig,
             ConfigurationService configurationService,
             String oauthState,
-            String userId)
+            String userId,
+            String govukSigninJourneyId)
             throws HttpResponseExceptionWithErrorBody {
         Instant now = Instant.now();
 
@@ -83,7 +84,8 @@ public class AuthorizationRequestHelper {
                                                                 JWT_TTL_SECONDS)),
                                                 ChronoUnit.SECONDS)))
                         .notBeforeTime(Date.from(now))
-                        .subject(userId);
+                        .subject(userId)
+                        .claim("govuk_signin_journey_id", govukSigninJourneyId);
 
         if (Objects.nonNull(sharedClaims)) {
             claimsSetBuilder.claim(SHARED_CLAIMS, sharedClaims);

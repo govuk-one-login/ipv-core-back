@@ -13,6 +13,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -69,12 +70,15 @@ class ProcessJourneyStepHandlerTest {
     private ProcessJourneyStepHandler processJourneyStepHandler;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    private ClientSessionDetailsDto clientSessionDetailsDto;
+
     @BeforeEach
     void setUp() throws Exception {
         StateMachine stateMachine = new StateMachine(new StateMachineInitializer("production"));
         processJourneyStepHandler =
                 new ProcessJourneyStepHandler(
                         stateMachine, mockIpvSessionService, mockConfigurationService);
+        clientSessionDetailsDto = new ClientSessionDetailsDto();
     }
 
     @Test
@@ -175,6 +179,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(INITIAL_IPV_JOURNEY_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
@@ -204,6 +209,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState("INVALID-STATE");
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
@@ -233,6 +239,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(INITIAL_IPV_JOURNEY_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -267,6 +274,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(IPV_IDENTITY_START_PAGE_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
@@ -299,6 +307,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_UK_PASSPORT_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
@@ -331,6 +340,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_UK_PASSPORT_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
@@ -363,6 +373,11 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_ADDRESS_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
@@ -395,6 +410,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_ADDRESS_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
@@ -427,6 +443,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_FRAUD_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
@@ -460,7 +477,11 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(PRE_KBV_TRANSITION_PAGE_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -492,6 +513,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_FRAUD_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
@@ -524,7 +546,11 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_KBV_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -557,6 +583,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_KBV_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
@@ -589,7 +616,11 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(IPV_SUCCESS_PAGE_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -616,6 +647,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(DEBUG_PAGE_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
@@ -643,6 +675,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(DEBUG_PAGE_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
@@ -675,6 +708,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(DEBUG_PAGE_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
@@ -707,6 +741,11 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_ERROR_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
@@ -734,6 +773,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_UK_PASSPORT_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
@@ -766,6 +806,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_FRAUD_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
@@ -798,7 +839,11 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_KBV_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -831,7 +876,10 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
         ipvSessionItem.setUserState(CRI_UK_PASSPORT_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("99");
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("99");
         when(mockIpvSessionService.getIpvSession("1234")).thenReturn(ipvSessionItem);
 
@@ -869,7 +917,9 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
         ipvSessionItem.setUserState(CORE_SESSION_TIMEOUT_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockIpvSessionService.getIpvSession("1234")).thenReturn(ipvSessionItem);
 
         APIGatewayProxyResponseEvent response =

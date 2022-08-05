@@ -13,6 +13,7 @@ public class ClientSessionDetailsDto {
     private String redirectUri;
     private String state;
     private String userId;
+    private String govukSigninJourneyId;
     private boolean debugJourney;
 
     public ClientSessionDetailsDto() {}
@@ -23,12 +24,14 @@ public class ClientSessionDetailsDto {
             String redirectUri,
             String state,
             String userId,
+            String govukSigninJourneyId,
             boolean debugJourney) {
         this.responseType = responseType;
         this.clientId = clientId;
         this.redirectUri = redirectUri;
         this.state = state;
         this.userId = userId;
+        this.govukSigninJourneyId = govukSigninJourneyId;
         this.debugJourney = debugJourney;
     }
 }

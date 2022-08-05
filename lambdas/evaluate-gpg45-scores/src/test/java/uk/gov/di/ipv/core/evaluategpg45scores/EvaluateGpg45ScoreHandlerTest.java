@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.google.gson.Gson;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,6 +16,8 @@ import uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -47,14 +50,24 @@ class EvaluateGpg45ScoreHandlerTest {
 
     private final Gson gson = new Gson();
 
+    private IpvSessionItem ipvSessionItem;
+
     @BeforeAll
     static void setUp() {
         event.setHeaders(Map.of(IPV_SESSION_ID_HEADER, TEST_SESSION_ID));
     }
 
+    @BeforeEach
+    void setUpEach() {
+        ipvSessionItem = new IpvSessionItem();
+        ClientSessionDetailsDto clientSessionDetailsDto = new ClientSessionDetailsDto();
+        clientSessionDetailsDto.setUserId(TEST_USER_ID);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+    }
+
     @Test
     void shouldReturnJourneySessionEndIfScoresSatisfyM1AGpg45Profile() throws Exception {
-        when(ipvSessionService.getUserId(TEST_SESSION_ID)).thenReturn(TEST_USER_ID);
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.credentialsSatisfyProfile(CREDENTIALS, Gpg45Profile.M1A))
                 .thenReturn(true);
@@ -69,7 +82,7 @@ class EvaluateGpg45ScoreHandlerTest {
 
     @Test
     void shouldReturnJourneyFailIfAnyCredentialsAreNotEnoughForM1A() throws Exception {
-        when(ipvSessionService.getUserId(TEST_SESSION_ID)).thenReturn(TEST_USER_ID);
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.anyCredentialsGatheredDoNotMeetM1A(CREDENTIALS))
                 .thenReturn(true);
@@ -84,7 +97,7 @@ class EvaluateGpg45ScoreHandlerTest {
 
     @Test
     void shouldReturnJourneyNextIfScoresDoNotSatisfyM1AGpg45Profile() throws Exception {
-        when(ipvSessionService.getUserId(TEST_SESSION_ID)).thenReturn(TEST_USER_ID);
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.credentialsSatisfyProfile(CREDENTIALS, Gpg45Profile.M1A))
                 .thenReturn(false);
@@ -111,7 +124,7 @@ class EvaluateGpg45ScoreHandlerTest {
 
     @Test
     void shouldReturnJourneyErrorIfFailedToParseCredentials() throws Exception {
-        when(ipvSessionService.getUserId(TEST_SESSION_ID)).thenReturn(TEST_USER_ID);
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.credentialsSatisfyProfile(CREDENTIALS, Gpg45Profile.M1A))
                 .thenThrow(new ParseException("Whoops", 0));
@@ -126,7 +139,7 @@ class EvaluateGpg45ScoreHandlerTest {
 
     @Test
     void shouldReturnJourneyErrorIfCredentialOfUnknownType() throws Exception {
-        when(ipvSessionService.getUserId(TEST_SESSION_ID)).thenReturn(TEST_USER_ID);
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.credentialsSatisfyProfile(CREDENTIALS, Gpg45Profile.M1A))
                 .thenThrow(new UnknownEvidenceTypeException());

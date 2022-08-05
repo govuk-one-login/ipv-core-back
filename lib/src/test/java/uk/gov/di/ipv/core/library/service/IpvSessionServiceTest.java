@@ -102,6 +102,7 @@ class IpvSessionServiceTest {
                                 "http://example.come",
                                 "test-state",
                                 "test-user-id",
+                                "test-journey-id",
                                 false),
                         null);
 
@@ -128,6 +129,7 @@ class IpvSessionServiceTest {
                                 "http://example.come",
                                 "test-state",
                                 "test-user-id",
+                                "test-journey-id",
                                 true),
                         null);
 
@@ -154,6 +156,7 @@ class IpvSessionServiceTest {
                                 "http://example.come",
                                 "test-state",
                                 "test-user-id",
+                                "test-journey-id",
                                 false),
                         testErrorObject);
 

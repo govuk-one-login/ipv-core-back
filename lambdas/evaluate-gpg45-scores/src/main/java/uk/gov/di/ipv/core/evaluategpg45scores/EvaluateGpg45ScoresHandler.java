@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.evaluategpg45scores.exception.UnknownEvidenceTypeExcep
 import uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -60,7 +61,13 @@ public class EvaluateGpg45ScoresHandler
         LogHelper.attachComponentIdToLogs();
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(event);
-            String userId = ipvSessionService.getUserId(ipvSessionId);
+            ClientSessionDetailsDto clientSessionDetailsDto =
+                    ipvSessionService.getIpvSession(ipvSessionId).getClientSessionDetails();
+            String userId = clientSessionDetailsDto.getUserId();
+
+            LogHelper.attachGovukSigninJourneyIdToLogs(
+                    clientSessionDetailsDto.getGovukSigninJourneyId());
+
             List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
             JourneyResponse journeyResponse;

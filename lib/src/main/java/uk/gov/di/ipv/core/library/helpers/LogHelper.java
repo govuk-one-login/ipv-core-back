@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.helpers;
 
+import com.amazonaws.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.LoggingUtils;
@@ -10,6 +11,8 @@ public class LogHelper {
     private static final Logger LOGGER = LogManager.getLogger();
     public static final String CORE_COMPONENT_ID = "core";
 
+    public static final String GOVUK_SIGNIN_JOURNEY_ID_DEFAULT_VALUE = "unknown";
+
     public enum LogField {
         CLIENT_ID_LOG_FIELD("clientId"),
         COMPONENT_ID_LOG_FIELD("componentId"),
@@ -19,6 +22,7 @@ public class LogHelper {
         EVIDENCE_TYPE("evidenceType"),
         ERROR_CODE_LOG_FIELD("errorCode"),
         ERROR_DESCRIPTION_LOG_FIELD("errorDescription"),
+        GOVUK_SIGNIN_JOURNEY_ID_FIELD("govuk_signin_journey_id"),
         IPV_SESSION_ID_LOG_FIELD("ipvSessionId"),
         JTI_LOG_FIELD("jti"),
         JTI_USED_AT_LOG_FIELD("jtiUsedAt"),
@@ -52,6 +56,15 @@ public class LogHelper {
 
     public static void attachIpvSessionIdToLogs(String sessionId) {
         attachFieldToLogs(LogField.IPV_SESSION_ID_LOG_FIELD, sessionId);
+    }
+
+    public static void attachGovukSigninJourneyIdToLogs(String govukSigninJourneyId) {
+        if (StringUtils.isNullOrEmpty(govukSigninJourneyId)) {
+            attachFieldToLogs(
+                    LogField.GOVUK_SIGNIN_JOURNEY_ID_FIELD, GOVUK_SIGNIN_JOURNEY_ID_DEFAULT_VALUE);
+        } else {
+            attachFieldToLogs(LogField.GOVUK_SIGNIN_JOURNEY_ID_FIELD, govukSigninJourneyId);
+        }
     }
 
     public static void logOauthError(String message, int errorCode, String errorDescription) {

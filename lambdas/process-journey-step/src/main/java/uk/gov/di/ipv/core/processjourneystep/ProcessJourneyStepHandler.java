@@ -92,6 +92,9 @@ public class ProcessJourneyStepHandler
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_ID);
             }
 
+            LogHelper.attachGovukSigninJourneyIdToLogs(
+                    ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId());
+
             String journeyStep = input.getPathParameters().get(JOURNEY_STEP_PARAM);
 
             Map<String, String> journeyStepResponse =

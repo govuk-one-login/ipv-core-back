@@ -23,6 +23,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -31,6 +32,7 @@ import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
@@ -93,9 +95,19 @@ public class RetrieveCriOauthAccessTokenHandler
         try {
 
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
-            String userId = ipvSessionService.getUserId(ipvSessionId);
+            IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+            ClientSessionDetailsDto clientSessionDetailsDto =
+                    ipvSessionItem.getClientSessionDetails();
+            String userId = clientSessionDetailsDto.getUserId();
 
-            AuditEventUser auditEventUser = new AuditEventUser(userId, ipvSessionId);
+            LogHelper.attachGovukSigninJourneyIdToLogs(
+                    clientSessionDetailsDto.getGovukSigninJourneyId());
+
+            AuditEventUser auditEventUser =
+                    new AuditEventUser(
+                            userId,
+                            ipvSessionId,
+                            clientSessionDetailsDto.getGovukSigninJourneyId());
             this.componentId =
                     configurationService.getSsmParameter(
                             ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
