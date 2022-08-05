@@ -201,6 +201,23 @@ paths:
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
 
+  /journey/select-cri:
+    post:
+      description: "Selects a CRI based on which CRIs the user has not visited. Returns journey response or journey fail"
+      responses:
+        200:
+          description: "Returns a journeyResponse or journeyFail"
+          content:
+            application/json:
+              schema:
+                type: "object"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SelectCriFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
+
 components:
   schemas:
     journeyType:
