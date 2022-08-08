@@ -59,6 +59,77 @@ IPV_IDENTITY_START_PAGE:
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/stubUkPassport
+EVALUATE_GPG45_SCORES:
+  name: EVALUATE_GPG45_SCORES
+  parent: null
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: SELECT_CRI
+      response:
+        type: journey
+        journeyStepId: /journey/select-cri
+    end:
+      type: basic
+      name: end
+        targetState: IPV_SUCCESS_PAGE
+        response:
+          type: page
+          pageId: page-ipv-success
+    pyi-no-match:
+      type: basic
+      name: pyi-no-match
+      targetState: PYI_NO_MATCH
+      response:
+        type: page
+        pageId: pyi-no-match
+    pyi-kbv-fail:
+      type: basic
+      name: pyi-kbv-fail
+      targetState: PYI_KBV_FAIL
+      response:
+        type: page
+        pageId: pyi-kbv-fail
+SELECT_CRI:
+  name: SELECT_CRI
+  parent: null
+  events:
+    ukPassport:
+      type: basic
+      name: next
+      targetState: CRI_UK_PASSPORT
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/ukPassport
+    address:
+      type: basic
+      name: address
+      targetState: CRI_ADDRESS
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/address
+    fraud:
+      type: basic
+      name: fraud
+      targetState: CRI_FRAUD
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/fraud
+    kbv:
+      type: basic
+      name: kbv
+      targetState: CRI_KBV
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/kbv
+    fail:
+      type: basic
+      name: fail
+      targetState: SELECT_CRI_ERROR
+      response:
+        type: page
+        pageId: pyi-technical
 CRI_UK_PASSPORT:
   name: CRI_UK_PASSPORT
   parent: CRI_STATE
