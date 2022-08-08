@@ -80,10 +80,10 @@ EVALUATE_GPG45_SCORES:
     end:
       type: basic
       name: end
-        targetState: IPV_SUCCESS_PAGE
-        response:
-          type: page
-          pageId: page-ipv-success
+      targetState: IPV_SUCCESS_PAGE
+      response:
+        type: page
+        pageId: page-ipv-success
     pyi-no-match:
       type: basic
       name: pyi-no-match
