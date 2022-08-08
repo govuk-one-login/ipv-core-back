@@ -3,6 +3,13 @@ CRI_STATE:
   name: CRI_STATE
   parent: null
   events:
+    next:
+      type: basic
+      name: next
+      targetState: EVALUATE_GPG45_SCORES
+      response:
+        type: journey
+        journeyStepId: /journey/journey/evaluate-gpg45-scores
     error:
       type: basic
       name: error
@@ -55,10 +62,10 @@ IPV_IDENTITY_START_PAGE:
     next:
       type: basic
       name: next
-      targetState: CRI_UK_PASSPORT
+      targetState: EVALUATE_GPG45_SCORE
       response:
         type: journey
-        journeyStepId: /journey/cri/build-oauth-request/stubUkPassport
+        journeyStepId: /journey/evaluate-gpg45-scores
 EVALUATE_GPG45_SCORES:
   name: EVALUATE_GPG45_SCORES
   parent: null
@@ -95,34 +102,34 @@ SELECT_CRI:
   name: SELECT_CRI
   parent: null
   events:
-    ukPassport:
+    stubUkPassport:
       type: basic
       name: next
       targetState: CRI_UK_PASSPORT
       response:
         type: journey
-        journeyStepId: /journey/cri/build-oauth-request/ukPassport
-    address:
+        journeyStepId: /journey/cri/build-oauth-request/stubUkPassport
+    stubAddress:
       type: basic
       name: address
       targetState: CRI_ADDRESS
       response:
         type: journey
-        journeyStepId: /journey/cri/build-oauth-request/address
-    fraud:
+        journeyStepId: /journey/cri/build-oauth-request/stubAddress
+    stubFraud:
       type: basic
       name: fraud
       targetState: CRI_FRAUD
       response:
         type: journey
-        journeyStepId: /journey/cri/build-oauth-request/fraud
-    kbv:
+        journeyStepId: /journey/cri/build-oauth-request/stubFraud
+    stubKbv:
       type: basic
       name: kbv
       targetState: CRI_KBV
       response:
         type: journey
-        journeyStepId: /journey/cri/build-oauth-request/kbv
+        journeyStepId: /journey/cri/build-oauth-request/stubKbv
     fail:
       type: basic
       name: fail
@@ -133,36 +140,12 @@ SELECT_CRI:
 CRI_UK_PASSPORT:
   name: CRI_UK_PASSPORT
   parent: CRI_STATE
-  events:
-    next:
-      type: basic
-      name: next
-      targetState: CRI_ADDRESS
-      response:
-        type: journey
-        journeyStepId: /journey/cri/build-oauth-request/stubAddress
 CRI_ADDRESS:
   name: CRI_ADDRESS
   parent: CRI_STATE
-  events:
-    next:
-      type: basic
-      name: next
-      targetState: CRI_FRAUD
-      response:
-        type: journey
-        journeyStepId: /journey/cri/build-oauth-request/stubFraud
 CRI_FRAUD:
   name: CRI_FRAUD
   parent: CRI_STATE
-  events:
-    next:
-      type: basic
-      name: next
-      targetState: PRE_KBV_TRANSITION_PAGE
-      response:
-        type: page
-        pageId: page-pre-kbv-transition
 PRE_KBV_TRANSITION_PAGE:
   name: PRE_KBV_TRANSITION_PAGE
   parent: null
@@ -178,13 +161,6 @@ CRI_KBV:
   name: CRI_KBV
   parent: CRI_STATE
   events:
-    next:
-      type: basic
-      name: next
-      targetState: IPV_SUCCESS_PAGE
-      response:
-        type: page
-        pageId: page-ipv-success
     fail:
       type: basic
       name: fail
@@ -203,6 +179,9 @@ PYI_KBV_FAIL:
   parent: END_JOURNEY
 CRI_ERROR:
   name: CRI_ERROR
+  parent: END_JOURNEY
+SELECT_CRI_ERROR:
+  name: SELECT_CRI_ERROR
   parent: END_JOURNEY
 CORE_SESSION_TIMEOUT:
   name: CORE_SESSION_TIMEOUT
