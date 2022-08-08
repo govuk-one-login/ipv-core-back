@@ -95,13 +95,12 @@ public class SelectCriHandler
         }
     }
 
-    private APIGatewayProxyResponseEvent getJourneyResponse(String passportCriId) {
+    private APIGatewayProxyResponseEvent getJourneyResponse(String criId) {
         return ApiGatewayResponseGenerator.proxyJsonResponse(
-                HttpStatus.SC_OK,
-                new JourneyResponse(String.format(CRI_START_JOURNEY, passportCriId)));
+                HttpStatus.SC_OK, new JourneyResponse(String.format(CRI_START_JOURNEY, criId)));
     }
 
-    private boolean userHasNotVisited(List<String> visitedCredentialIssuers, String passportCriId) {
-        return visitedCredentialIssuers.stream().noneMatch(passportCriId::equals);
+    private boolean userHasNotVisited(List<String> visitedCredentialIssuers, String criId) {
+        return visitedCredentialIssuers.stream().noneMatch(criId::equals);
     }
 }

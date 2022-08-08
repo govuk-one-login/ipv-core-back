@@ -210,7 +210,7 @@ paths:
           content:
             application/json:
               schema:
-                type: "object"
+                $ref: "#/components/schemas/journeyType"
       x-amazon-apigateway-integration:
         httpMethod: "POST"
         uri:

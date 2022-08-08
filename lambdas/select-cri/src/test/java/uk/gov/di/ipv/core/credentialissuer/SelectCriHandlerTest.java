@@ -6,12 +6,11 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -37,21 +36,13 @@ class SelectCriHandlerTest {
     public static final String CRI_FRAUD = "fraudCri";
     public static final String CRI_KBV = "kbv";
     public static final String CRI_ADDRESS = "address";
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock private Context context;
     @Mock private ConfigurationService mockConfigurationService;
     @Mock private UserIdentityService mockUserIdentityService;
     @Mock private IpvSessionService mockIpvSessionService;
-    @Mock private IpvSessionItem mockIpvSessionItem;
-
-    private SelectCriHandler underTest;
-
-    @BeforeEach
-    void setupUp() {
-        underTest =
-                new SelectCriHandler(
-                        mockConfigurationService, mockUserIdentityService, mockIpvSessionService);
-    }
+    @InjectMocks private SelectCriHandler underTest;
 
     @Test
     void shouldReturnPassportCriJourneyResponse() throws JsonProcessingException {
@@ -62,8 +53,6 @@ class SelectCriHandlerTest {
         mockConfigurationServiceMethodCalls();
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
-
-        input.setHeaders(Map.of("ipv-session-id", TEST_SESSION_ID));
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
 
@@ -83,8 +72,6 @@ class SelectCriHandlerTest {
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
-        input.setHeaders(Map.of("ipv-session-id", TEST_SESSION_ID));
-
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
 
         Map<String, String> responseBody = getResponseBodyAsMap(response);
@@ -102,8 +89,6 @@ class SelectCriHandlerTest {
         mockConfigurationServiceMethodCalls();
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
-
-        input.setHeaders(Map.of("ipv-session-id", TEST_SESSION_ID));
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
 
@@ -123,8 +108,6 @@ class SelectCriHandlerTest {
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
-        input.setHeaders(Map.of("ipv-session-id", TEST_SESSION_ID));
-
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
 
         Map<String, String> responseBody = getResponseBodyAsMap(response);
@@ -143,8 +126,6 @@ class SelectCriHandlerTest {
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
-        input.setHeaders(Map.of("ipv-session-id", TEST_SESSION_ID));
-
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
 
         Map<String, String> responseBody = getResponseBodyAsMap(response);
@@ -162,13 +143,12 @@ class SelectCriHandlerTest {
 
     private APIGatewayProxyRequestEvent createRequestEvent() {
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
-        input.setHeaders(Map.of("ipv-session-id", "aSessionId"));
+        input.setHeaders(Map.of("ipv-session-id", TEST_SESSION_ID));
         return input;
     }
 
     private Map<String, String> getResponseBodyAsMap(APIGatewayProxyResponseEvent response)
             throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
         return objectMapper.readValue(response.getBody(), Map.class);
     }
 }
