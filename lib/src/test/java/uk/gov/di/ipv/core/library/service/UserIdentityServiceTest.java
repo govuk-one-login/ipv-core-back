@@ -22,6 +22,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -595,6 +596,28 @@ class UserIdentityServiceTest {
         verify(mockDataStore).delete("a-users-id", "ukPassport");
         verify(mockDataStore).delete("a-users-id", "fraud");
         verify(mockDataStore).delete("a-users-id", "sausages");
+    }
+
+    @Test
+    void shouldReturnCredentialIssuersFromDataStoreForSpecificUserId() {
+        String userId = "userId";
+        String testCredentialIssuer = "ukPassport";
+        List<UserIssuedCredentialsItem> credentialItem =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "user-id-1",
+                                testCredentialIssuer,
+                                SIGNED_VC_1,
+                                LocalDateTime.now()));
+
+        when(mockDataStore.getItems(userId)).thenReturn(credentialItem);
+
+        List<String> retrievedCredentialItem =
+                userIdentityService.getUserIssuedCredentialIssuers(userId);
+
+        assertTrue(
+                retrievedCredentialItem.stream()
+                        .anyMatch(item -> testCredentialIssuer.equals(item)));
     }
 
     private UserIssuedCredentialsItem createUserIssuedCredentialsItem(

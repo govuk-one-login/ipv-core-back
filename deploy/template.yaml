@@ -1055,6 +1055,65 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref EvaluateGpg45ScoresFunctionLogGroup
 
+  SelectCriFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - SelectCriFunctionLogGroup
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "select-cri-${Environment}"
+      Handler: uk.gov.di.ipv.core.selectcri.SelectCriHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/select-cri
+      Architectures:
+        - arm64
+      MemorySize: 2048
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub select-cri-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsV2Table
+      Events:
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+            Path: /journey/select-cri
+            Method: POST
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+        - AddProvisionedConcurrency
+        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
+        - !Ref AWS::NoValue
+
+  SelectCriFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+      LogGroupName: !Sub "/aws/lambda/select-cri-${Environment}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  SelectCriFunctionFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
+      FilterPattern: ""
+      LogGroupName: !Ref SelectCriFunctionLogGroup
+
   UserIssuedCredentialsV2Table:
     Type: AWS::DynamoDB::Table
     Properties:
