@@ -439,6 +439,14 @@ Resources:
                 - 'kms:GenerateDataKey'
               Resource:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
+        - Statement:
+            - Sid: invokePutCiFunction
+              Effect: Allow
+              Action:
+                - 'lambda:InvokeFunction'
+              Resource:
+                - arn:aws:lambda:eu-west-2:322814139578:function:putCI
+
       Events:
         IPVCorePrivateAPI:
           Type: Api

@@ -1,5 +1,9 @@
 package uk.gov.di.ipv.core.retrievecrioauthaccesstoken;
 
+import com.amazonaws.services.lambda.AWSLambda;
+import com.amazonaws.services.lambda.AWSLambdaClientBuilder;
+import com.amazonaws.services.lambda.model.InvokeRequest;
+import com.amazonaws.services.lambda.model.InvokeResult;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -57,6 +61,7 @@ public class RetrieveCriOauthAccessTokenHandler
     private final AuditService auditService;
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     private final IpvSessionService ipvSessionService;
+    private final AWSLambda lambdaClient;
 
     private String componentId;
 
@@ -65,12 +70,14 @@ public class RetrieveCriOauthAccessTokenHandler
             ConfigurationService configurationService,
             IpvSessionService ipvSessionService,
             AuditService auditService,
-            VerifiableCredentialJwtValidator verifiableCredentialJwtValidator) {
+            VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
+            AWSLambda lambdaClient) {
         this.credentialIssuerService = credentialIssuerService;
         this.configurationService = configurationService;
         this.auditService = auditService;
         this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
         this.ipvSessionService = ipvSessionService;
+        this.lambdaClient = lambdaClient;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -84,6 +91,7 @@ public class RetrieveCriOauthAccessTokenHandler
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
         this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator();
         this.ipvSessionService = new IpvSessionService(configurationService);
+        this.lambdaClient = AWSLambdaClientBuilder.defaultClient();
     }
 
     @Override
@@ -139,6 +147,24 @@ public class RetrieveCriOauthAccessTokenHandler
                     verifiableCredential, credentialIssuerConfig, userId);
 
             sendIpvVcReceivedAuditEvent(auditEventUser, verifiableCredential);
+
+            InvokeRequest lambdaRequest =
+                    new InvokeRequest()
+                            .withFunctionName(
+                                    "arn:aws:lambda:eu-west-2:322814139578:function:putCI")
+                            .withPayload(verifiableCredential.getPayload().toString());
+
+            InvokeResult lambdaResponse = lambdaClient.invoke(lambdaRequest);
+            if (lambdaResponse.getStatusCode() != HttpStatus.SC_OK) {
+                LOGGER.error("Lambda execution failed");
+                LOGGER.error(lambdaResponse.getStatusCode());
+                LOGGER.error(lambdaResponse.getFunctionError());
+                LOGGER.error(lambdaResponse.getPayload());
+            } else {
+                LOGGER.info("Lambda execution succeeded");
+                LOGGER.info(lambdaResponse.getStatusCode());
+                LOGGER.info(String.valueOf(lambdaResponse.getPayload()));
+            }
 
             credentialIssuerService.persistUserCredentials(
                     verifiableCredential.serialize(), request.getCredentialIssuerId(), userId);

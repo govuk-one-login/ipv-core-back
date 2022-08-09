@@ -1,5 +1,7 @@
 package uk.gov.di.ipv.core.retrievecrioauthaccesstoken;
 
+import com.amazonaws.services.lambda.AWSLambda;
+import com.amazonaws.services.lambda.model.InvokeResult;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
@@ -87,6 +89,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
     @Mock private IpvSessionItem ipvSessionItem;
 
+    @Mock private AWSLambda lambdaClient;
+
     @InjectMocks private RetrieveCriOauthAccessTokenHandler handler;
 
     private static CredentialIssuerConfig passportIssuer;
@@ -154,6 +158,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
         when(credentialIssuerService.getVerifiableCredential(any(), any(), anyString()))
                 .thenReturn(SignedJWT.parse(SIGNED_VC_1));
+
+        when(lambdaClient.invoke(any())).thenReturn(new InvokeResult().withStatusCode(200));
 
         mockServiceCallsAndSessionItem();
 
@@ -253,7 +259,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                                 configurationService,
                                 ipvSessionService,
                                 auditService,
-                                verifiableCredentialJwtValidator)
+                                verifiableCredentialJwtValidator,
+                                lambdaClient)
                         .handleRequest(input, context);
         assert400Response(response, ErrorResponse.MISSING_OAUTH_STATE);
     }
@@ -281,7 +288,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                                 configurationService,
                                 ipvSessionService,
                                 auditService,
-                                verifiableCredentialJwtValidator)
+                                verifiableCredentialJwtValidator,
+                                lambdaClient)
                         .handleRequest(input, context);
         assert400Response(response, ErrorResponse.INVALID_OAUTH_STATE);
     }
@@ -297,6 +305,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         when(credentialIssuerService.getVerifiableCredential(
                         accessToken, passportIssuer, testApiKey))
                 .thenReturn(SignedJWT.parse(SIGNED_VC_1));
+
+        when(lambdaClient.invoke(any())).thenReturn(new InvokeResult().withStatusCode(200));
 
         mockServiceCallsAndSessionItem();
 
@@ -449,6 +459,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                         accessToken, passportIssuer, testApiKey))
                 .thenReturn(SignedJWT.parse(SIGNED_CONTRACT_INDICATORS));
 
+        when(lambdaClient.invoke(any())).thenReturn(new InvokeResult().withStatusCode(200));
+
         mockServiceCallsAndSessionItem();
 
         APIGatewayProxyRequestEvent input =
@@ -500,6 +512,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         when(credentialIssuerService.getVerifiableCredential(
                         accessToken, passportIssuer, testApiKey))
                 .thenReturn(SignedJWT.parse(SIGNED_ADDRESS_VC));
+
+        when(lambdaClient.invoke(any())).thenReturn(new InvokeResult().withStatusCode(200));
 
         mockServiceCallsAndSessionItem();
 
