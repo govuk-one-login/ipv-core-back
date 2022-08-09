@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensions;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 
@@ -28,12 +29,18 @@ public class AuditService {
     }
 
     public void sendAuditEvent(AuditEventTypes eventType) throws SqsException {
-        sendAuditEvent(eventType, null);
+        sendAuditEvent(eventType, null, null);
     }
 
     public void sendAuditEvent(AuditEventTypes eventType, AuditExtensions extensions)
             throws SqsException {
-        AuditEvent auditEvent = new AuditEvent(eventType, null, null, extensions);
+        sendAuditEvent(eventType, extensions, null);
+    }
+
+    public void sendAuditEvent(
+            AuditEventTypes eventType, AuditExtensions extensions, AuditEventUser user)
+            throws SqsException {
+        AuditEvent auditEvent = new AuditEvent(eventType, null, user, extensions);
         sendAuditEvent(auditEvent);
     }
 

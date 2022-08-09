@@ -11,6 +11,7 @@ import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerErrorDto;
@@ -19,8 +20,10 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.util.Arrays;
 import java.util.List;
@@ -42,11 +45,15 @@ public class CredentialIssuerErrorHandler
 
     private final ConfigurationService configurationService;
     private final AuditService auditService;
+    private final IpvSessionService sessionService;
 
     public CredentialIssuerErrorHandler(
-            ConfigurationService configurationService, AuditService auditService) {
+            ConfigurationService configurationService,
+            AuditService auditService,
+            IpvSessionService sessionService) {
         this.configurationService = configurationService;
         this.auditService = auditService;
+        this.sessionService = sessionService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -54,6 +61,7 @@ public class CredentialIssuerErrorHandler
         this.configurationService = new ConfigurationService();
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
+        this.sessionService = new IpvSessionService(configurationService);
     }
 
     @Override
@@ -63,7 +71,11 @@ public class CredentialIssuerErrorHandler
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
         try {
-            RequestHelper.getIpvSessionId(input);
+            IpvSessionItem ipvSessionItem =
+                    sessionService.getIpvSession(RequestHelper.getIpvSessionId(input));
+            LogHelper.attachGovukSigninJourneyIdToLogs(
+                    ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId());
+
             CredentialIssuerErrorDto credentialIssuerErrorDto =
                     RequestHelper.convertRequest(input, CredentialIssuerErrorDto.class);
             LogHelper.attachCriIdToLogs(credentialIssuerErrorDto.getCredentialIssuerId());
@@ -72,7 +84,7 @@ public class CredentialIssuerErrorHandler
                 LOGGER.warn("Unknown Oauth error code received");
             }
 
-            JourneyResponse journeyResponse = null;
+            JourneyResponse journeyResponse;
 
             if (OAuth2Error.ACCESS_DENIED_CODE.equals(credentialIssuerErrorDto.getError())) {
                 LOGGER.info("OAuth access_denied");
@@ -85,7 +97,7 @@ public class CredentialIssuerErrorHandler
                 journeyResponse = new JourneyResponse(ERROR_JOURNEY_STEP_URI);
             }
 
-            sendAuditEvent(credentialIssuerErrorDto);
+            sendAuditEvent(credentialIssuerErrorDto, ipvSessionItem);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, journeyResponse);
         } catch (HttpResponseExceptionWithErrorBody e) {
@@ -94,15 +106,22 @@ public class CredentialIssuerErrorHandler
         }
     }
 
-    private void sendAuditEvent(CredentialIssuerErrorDto credentialIssuerErrorDto) {
+    private void sendAuditEvent(
+            CredentialIssuerErrorDto credentialIssuerErrorDto, IpvSessionItem ipvSessionItem) {
         try {
+            AuditEventUser auditEventUser =
+                    new AuditEventUser(
+                            ipvSessionItem.getClientSessionDetails().getUserId(),
+                            ipvSessionItem.getIpvSessionId(),
+                            ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId());
+
             AuditExtensionErrorParams extensions =
                     new AuditExtensionErrorParams.Builder()
                             .setErrorCode(credentialIssuerErrorDto.getError())
                             .setErrorDescription(credentialIssuerErrorDto.getErrorDescription())
                             .build();
             this.auditService.sendAuditEvent(
-                    AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED, extensions);
+                    AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED, extensions, auditEventUser);
         } catch (SqsException e) {
             LOGGER.error("Failed to write event to audit queue");
         }

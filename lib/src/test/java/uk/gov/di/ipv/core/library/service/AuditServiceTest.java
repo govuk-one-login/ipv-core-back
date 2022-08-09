@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 
@@ -86,5 +87,45 @@ class AuditServiceTest {
         assertEquals(
                 extensions.getErrorDescription(),
                 auditExtensionErrorParams.get("error_description").asText());
+    }
+
+    @Test
+    void shouldSendMessageToQueueWithExtensionsAndUser() throws Exception {
+        String errorCode = "server_error";
+        String errorDescription = "Test error";
+        AuditExtensionErrorParams extensions =
+                new AuditExtensionErrorParams.Builder()
+                        .setErrorCode(errorCode)
+                        .setErrorDescription(errorDescription)
+                        .build();
+
+        AuditEventUser auditEventUser =
+                new AuditEventUser("someUserId", "someSessionId", "someGovukSigninJourneyId");
+
+        auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, extensions, auditEventUser);
+
+        ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
+                ArgumentCaptor.forClass(SendMessageRequest.class);
+        verify(mockSqs).sendMessage(sqsSendMessageRequestCaptor.capture());
+
+        assertEquals(
+                "https://example-queue-url", sqsSendMessageRequestCaptor.getValue().getQueueUrl());
+
+        JsonNode messageBody =
+                objectMapper.readTree(sqsSendMessageRequestCaptor.getValue().getMessageBody());
+        assertEquals(
+                AuditEventTypes.IPV_JOURNEY_START.toString(),
+                messageBody.get("event_name").asText());
+        JsonNode auditExtensionErrorParams = messageBody.get("extensions");
+        assertEquals(
+                extensions.getErrorCode(), auditExtensionErrorParams.get("error_code").asText());
+        assertEquals(
+                extensions.getErrorDescription(),
+                auditExtensionErrorParams.get("error_description").asText());
+        assertEquals("someUserId", messageBody.get("user").get("user_id").asText());
+        assertEquals("someSessionId", messageBody.get("user").get("session_id").asText());
+        assertEquals(
+                "someGovukSigninJourneyId",
+                messageBody.get("user").get("govuk_signin_journey_id").asText());
     }
 }
