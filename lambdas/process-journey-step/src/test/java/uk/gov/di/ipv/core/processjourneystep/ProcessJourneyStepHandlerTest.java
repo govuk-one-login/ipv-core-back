@@ -48,6 +48,7 @@ class ProcessJourneyStepHandlerTest {
     private static final String CRI_FRAUD_STATE = "CRI_FRAUD";
     private static final String CRI_KBV_STATE = "CRI_KBV";
     private static final String CRI_ERROR_STATE = "CRI_ERROR";
+    private static final String EVALUATE_GPG45_SCORES = "EVALUATE_GPG45_SCORES";
     private static final String PRE_KBV_TRANSITION_PAGE_STATE = "PRE_KBV_TRANSITION_PAGE";
     private static final String IPV_SUCCESS_PAGE_STATE = "IPV_SUCCESS_PAGE";
     private static final String DEBUG_PAGE_STATE = "DEBUG_PAGE";
@@ -261,7 +262,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @Test
-    void shouldReturnCriUkPassportJourneyResponseWhenRequired() throws IOException {
+    void shouldReturnEvaluateGpg45ScoresWhenIpvIdentityStartPageState() throws IOException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
@@ -287,14 +288,14 @@ class ProcessJourneyStepHandlerTest {
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(CRI_UK_PASSPORT_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/cri/build-oauth-request/ukPassport", criResponse.get("journey"));
+        assertEquals("/journey/evaluate-gpg45-scores", criResponse.get("journey"));
     }
 
     @Test
-    void shouldReturnCriAddressJourneyResponseWhenRequired() throws IOException {
+    void shouldReturnEvaluateGpg45ScoresWhenCriUkPassportState() throws IOException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
@@ -320,10 +321,10 @@ class ProcessJourneyStepHandlerTest {
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(CRI_ADDRESS_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/cri/build-oauth-request/address", criResponse.get("journey"));
+        assertEquals("/journey/evaluate-gpg45-scores", criResponse.get("journey"));
     }
 
     @Test
@@ -360,7 +361,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @Test
-    void shouldReturnCriFraudJourneyResponseWhenRequired() throws IOException {
+    void shouldReturnEvaluateGpg45ScoresWhenCriAddressState() throws IOException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
@@ -390,10 +391,10 @@ class ProcessJourneyStepHandlerTest {
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(CRI_FRAUD_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/cri/build-oauth-request/fraud", criResponse.get("journey"));
+        assertEquals("/journey/evaluate-gpg45-scores", criResponse.get("journey"));
     }
 
     @Test
@@ -430,7 +431,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @Test
-    void shouldReturnPreKbvTransitionPageResponseWhenRequired() throws IOException {
+    void shouldReturnEvaluateGpg45ScoresWhenCriFraudState() throws IOException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
@@ -456,11 +457,10 @@ class ProcessJourneyStepHandlerTest {
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(
-                PRE_KBV_TRANSITION_PAGE_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(PRE_KBV_TRANSITION_PAGE, pageResponse.get("page"));
+        assertEquals("/journey/evaluate-gpg45-scores", pageResponse.get("journey"));
     }
 
     @Test
@@ -533,7 +533,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @Test
-    void shouldReturnIpvSuccessPageResponseWhenRequired() throws IOException {
+    void shouldReturnEvaluateGpg45ScoresWhenCriKbvState() throws IOException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
 
         Map<String, String> pathParameters = new HashMap<>();
@@ -563,10 +563,10 @@ class ProcessJourneyStepHandlerTest {
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
 
-        assertEquals(IPV_SUCCESS_PAGE_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(IPV_SUCCESS_PAGE, pageResponse.get("page"));
+        assertEquals("/journey/evaluate-gpg45-scores", pageResponse.get("journey"));
     }
 
     @Test

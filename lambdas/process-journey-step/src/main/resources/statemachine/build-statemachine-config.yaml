@@ -62,7 +62,7 @@ IPV_IDENTITY_START_PAGE:
     next:
       type: basic
       name: next
-      targetState: EVALUATE_GPG45_SCORE
+      targetState: EVALUATE_GPG45_SCORES
       response:
         type: journey
         journeyStepId: /journey/evaluate-gpg45-scores
