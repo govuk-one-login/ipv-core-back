@@ -2,6 +2,8 @@ package uk.gov.di.ipv.core.evaluategpg45scores;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeAll;
@@ -24,14 +26,15 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.JOURNEY_ERROR;
-import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.JOURNEY_FAIL;
+import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.JOURNEY_END;
 import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.JOURNEY_NEXT;
-import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.JOURNEY_SESSION_END;
+import static uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45ProfileEvaluator.JOURNEY_PYI_KBV_FAIL;
+import static uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45ProfileEvaluator.JOURNEY_PYI_NO_MATCH;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
 
 @ExtendWith(MockitoExtension.class)
@@ -41,6 +44,7 @@ class EvaluateGpg45ScoreHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
     public static final List<String> CREDENTIALS = List.of("Some", "gathered", "credentials");
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock private Context context;
     @Mock private UserIdentityService userIdentityService;
@@ -76,22 +80,37 @@ class EvaluateGpg45ScoreHandlerTest {
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals(JOURNEY_SESSION_END, journeyResponse.getJourney());
+        assertEquals(JOURNEY_END, journeyResponse.getJourney());
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
     }
 
     @Test
-    void shouldReturnJourneyFailIfAnyCredentialsAreNotEnoughForM1A() throws Exception {
+    void shouldReturnJourneyPyiNoMatchIfEvaluatorReturnsPyiNoMatch() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(gpg45ProfileEvaluator.anyCredentialsGatheredDoNotMeetM1A(CREDENTIALS))
-                .thenReturn(true);
+        when(gpg45ProfileEvaluator.getFailedJourneyResponse(CREDENTIALS))
+                .thenReturn(Optional.of(new JourneyResponse(JOURNEY_PYI_NO_MATCH)));
 
         var response = evaluateGpg45ScoresHandler.handleRequest(event, context);
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals(JOURNEY_FAIL, journeyResponse.getJourney());
+        assertEquals(JOURNEY_PYI_NO_MATCH, journeyResponse.getJourney());
+        verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
+    }
+
+    @Test
+    void shouldReturnJourneyPyiKbvFailIfEvaluatorReturnsPyiKbvFail() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(gpg45ProfileEvaluator.getFailedJourneyResponse(CREDENTIALS))
+                .thenReturn(Optional.of(new JourneyResponse(JOURNEY_PYI_KBV_FAIL)));
+
+        var response = evaluateGpg45ScoresHandler.handleRequest(event, context);
+        JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(JOURNEY_PYI_KBV_FAIL, journeyResponse.getJourney());
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
     }
 
@@ -123,32 +142,44 @@ class EvaluateGpg45ScoreHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyErrorIfFailedToParseCredentials() throws Exception {
+    void shouldReturn500IfFailedToParseCredentials() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.credentialsSatisfyProfile(CREDENTIALS, Gpg45Profile.M1A))
                 .thenThrow(new ParseException("Whoops", 0));
 
         var response = evaluateGpg45ScoresHandler.handleRequest(event, context);
-        JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
+        Map<String, Object> responseMap =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals(JOURNEY_ERROR, journeyResponse.getJourney());
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getCode(),
+                responseMap.get("code"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(),
+                responseMap.get("message"));
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
     }
 
     @Test
-    void shouldReturnJourneyErrorIfCredentialOfUnknownType() throws Exception {
+    void shouldReturn500IfCredentialOfUnknownType() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.credentialsSatisfyProfile(CREDENTIALS, Gpg45Profile.M1A))
                 .thenThrow(new UnknownEvidenceTypeException());
 
         var response = evaluateGpg45ScoresHandler.handleRequest(event, context);
-        JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
+        Map<String, Object> responseMap =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals(JOURNEY_ERROR, journeyResponse.getJourney());
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE.getCode(),
+                responseMap.get("code"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE.getMessage(),
+                responseMap.get("message"));
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
     }
 }

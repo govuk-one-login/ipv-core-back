@@ -63,6 +63,7 @@ class ProcessJourneyStepHandlerTest {
     private static final String PRE_KBV_TRANSITION_PAGE = "page-pre-kbv-transition";
     private static final String IPV_SUCCESS_PAGE = "page-ipv-success";
     private static final String DEBUG_PAGE = "page-ipv-debug";
+    public static final String JOURNEY_EVALUATE_GPG_45_SCORES = "/journey/evaluate-gpg45-scores";
 
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
@@ -291,7 +292,7 @@ class ProcessJourneyStepHandlerTest {
         assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/evaluate-gpg45-scores", criResponse.get("journey"));
+        assertEquals(JOURNEY_EVALUATE_GPG_45_SCORES, criResponse.get("journey"));
     }
 
     @Test
@@ -324,7 +325,7 @@ class ProcessJourneyStepHandlerTest {
         assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/evaluate-gpg45-scores", criResponse.get("journey"));
+        assertEquals(JOURNEY_EVALUATE_GPG_45_SCORES, criResponse.get("journey"));
     }
 
     @Test
@@ -394,7 +395,7 @@ class ProcessJourneyStepHandlerTest {
         assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/evaluate-gpg45-scores", criResponse.get("journey"));
+        assertEquals(JOURNEY_EVALUATE_GPG_45_SCORES, criResponse.get("journey"));
     }
 
     @Test
@@ -460,7 +461,7 @@ class ProcessJourneyStepHandlerTest {
         assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/evaluate-gpg45-scores", pageResponse.get("journey"));
+        assertEquals(JOURNEY_EVALUATE_GPG_45_SCORES, pageResponse.get("journey"));
     }
 
     @Test
@@ -566,7 +567,7 @@ class ProcessJourneyStepHandlerTest {
         assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals("/journey/evaluate-gpg45-scores", pageResponse.get("journey"));
+        assertEquals(JOURNEY_EVALUATE_GPG_45_SCORES, pageResponse.get("journey"));
     }
 
     @Test
