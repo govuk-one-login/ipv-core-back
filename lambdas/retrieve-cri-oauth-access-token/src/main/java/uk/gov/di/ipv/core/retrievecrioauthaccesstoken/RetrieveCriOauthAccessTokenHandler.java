@@ -9,6 +9,7 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.gson.Gson;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
@@ -42,7 +43,9 @@ import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
+import uk.gov.di.ipv.core.retrievecrioauthaccesstoken.domain.PutCiRequest;
 
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -62,6 +65,7 @@ public class RetrieveCriOauthAccessTokenHandler
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     private final IpvSessionService ipvSessionService;
     private final AWSLambda lambdaClient;
+    private final Gson gson = new Gson();
 
     private String componentId;
 
@@ -148,22 +152,27 @@ public class RetrieveCriOauthAccessTokenHandler
 
             sendIpvVcReceivedAuditEvent(auditEventUser, verifiableCredential);
 
+            PutCiRequest putCiRequest = new PutCiRequest(
+                    userId,
+                    verifiableCredential.serialize());
+            String payload = gson.toJson(putCiRequest);
             InvokeRequest lambdaRequest =
                     new InvokeRequest()
                             .withFunctionName(
                                     "arn:aws:lambda:eu-west-2:322814139578:function:putCI")
-                            .withPayload(verifiableCredential.getPayload().toString());
+                            .withPayload(payload);
 
             InvokeResult lambdaResponse = lambdaClient.invoke(lambdaRequest);
-            if (lambdaResponse.getStatusCode() != HttpStatus.SC_OK) {
+            if (lambdaResponse.getStatusCode() != HttpStatus.SC_OK || lambdaResponse.getFunctionError() != null) {
                 LOGGER.error("Lambda execution failed");
                 LOGGER.error(lambdaResponse.getStatusCode());
                 LOGGER.error(lambdaResponse.getFunctionError());
-                LOGGER.error(lambdaResponse.getPayload());
+                LOGGER.error(new String(lambdaResponse.getPayload().array(), StandardCharsets.UTF_8));
             } else {
                 LOGGER.info("Lambda execution succeeded");
                 LOGGER.info(lambdaResponse.getStatusCode());
-                LOGGER.info(String.valueOf(lambdaResponse.getPayload()));
+                LOGGER.info(
+                        new String(lambdaResponse.getPayload().array(), StandardCharsets.UTF_8));
             }
 
             credentialIssuerService.persistUserCredentials(

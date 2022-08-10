@@ -41,6 +41,7 @@ import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
 import java.text.ParseException;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -159,7 +160,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         when(credentialIssuerService.getVerifiableCredential(any(), any(), anyString()))
                 .thenReturn(SignedJWT.parse(SIGNED_VC_1));
 
-        when(lambdaClient.invoke(any())).thenReturn(new InvokeResult().withStatusCode(200));
+        when(lambdaClient.invoke(any())).thenReturn(new InvokeResult().withStatusCode(200).withPayload(ByteBuffer.allocate(1)));
 
         mockServiceCallsAndSessionItem();
 
@@ -306,7 +307,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                         accessToken, passportIssuer, testApiKey))
                 .thenReturn(SignedJWT.parse(SIGNED_VC_1));
 
-        when(lambdaClient.invoke(any())).thenReturn(new InvokeResult().withStatusCode(200));
+        when(lambdaClient.invoke(any())).thenReturn(new InvokeResult().withStatusCode(200).withPayload(ByteBuffer.allocate(1)));
 
         mockServiceCallsAndSessionItem();
 
@@ -459,7 +460,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                         accessToken, passportIssuer, testApiKey))
                 .thenReturn(SignedJWT.parse(SIGNED_CONTRACT_INDICATORS));
 
-        when(lambdaClient.invoke(any())).thenReturn(new InvokeResult().withStatusCode(200));
+        when(lambdaClient.invoke(any())).thenReturn(new InvokeResult().withStatusCode(200).withPayload(ByteBuffer.allocate(1)));
 
         mockServiceCallsAndSessionItem();
 
@@ -513,7 +514,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                         accessToken, passportIssuer, testApiKey))
                 .thenReturn(SignedJWT.parse(SIGNED_ADDRESS_VC));
 
-        when(lambdaClient.invoke(any())).thenReturn(new InvokeResult().withStatusCode(200));
+        when(lambdaClient.invoke(any())).thenReturn(new InvokeResult().withStatusCode(200).withPayload(ByteBuffer.allocate(1)));
 
         mockServiceCallsAndSessionItem();
 
