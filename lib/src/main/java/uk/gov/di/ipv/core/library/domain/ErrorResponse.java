@@ -42,7 +42,6 @@ public enum ErrorResponse {
     FAILED_TO_GENERATE_IDENTIY_CLAIM(1034, "Failed to generate the identity claim"),
     FAILED_TO_GENERATE_ADDRESS_CLAIM(1035, "Failed to generate the address claim"),
     FAILED_TO_GENERATE_PASSPORT_CLAIM(1036, "Failed to generate the passport claim"),
-
     FAILED_TO_DETERMINE_CREDENTIAL_TYPE(1037, "Failed to determine type of credential");
 
     @JsonProperty("code")

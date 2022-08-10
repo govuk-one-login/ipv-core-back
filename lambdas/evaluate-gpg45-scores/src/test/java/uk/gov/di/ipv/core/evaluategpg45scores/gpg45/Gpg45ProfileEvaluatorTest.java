@@ -150,14 +150,17 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void anyCredentialsGatheredDoNotMeetM1AShouldReturnFalseForFraudCredentialWithOnlyA01()
+    void anyCredentialsGatheredDoNotMeetM1AShouldReturnEmptyOptionalForFraudCredentialWithOnlyA01()
             throws Exception {
-        assertFalse(evaluator.anyCredentialsGatheredDoNotMeetM1A(List.of(M1A_FRAUD_VC_WITH_A01)));
+        assertEquals(
+                Optional.empty(),
+                evaluator.getFailedJourneyResponse(List.of(M1A_FRAUD_VC_WITH_A01)));
     }
 
     @Test
-    void anyCredentialsGatheredDoNotMeetM1AShouldReturnTrueForBadPassportCredential()
-            throws Exception {
+    void
+            anyCredentialsGatheredDoNotMeetM1AShouldReturnPyiNoMatchJourneyResponseForBadPassportCredential()
+                    throws Exception {
         Optional<JourneyResponse> journeyResponse =
                 Optional.of(new JourneyResponse("/journey/pyi-no-match"));
         assertEquals(
@@ -165,15 +168,18 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void anyCredentialsGatheredDoNotMeetM1AShouldReturnTrueForBadFraudCredential()
-            throws Exception {
+    void
+            anyCredentialsGatheredDoNotMeetM1AShouldReturnPyiNoMatchJourneyResponseForBadFraudCredential()
+                    throws Exception {
         Optional<JourneyResponse> journeyResponse =
                 Optional.of(new JourneyResponse("/journey/pyi-no-match"));
         assertEquals(journeyResponse, evaluator.getFailedJourneyResponse(List.of(FRAUD_VC_FAILED)));
     }
 
     @Test
-    void anyCredentialsGatheredDoNotMeetM1AShouldReturnTrueForBadKbvCredential() throws Exception {
+    void
+            anyCredentialsGatheredDoNotMeetM1AShouldReturnPyiKbvFailJourneyResponseForBadKbvCredential()
+                    throws Exception {
         Optional<JourneyResponse> journeyResponse =
                 Optional.of(new JourneyResponse("/journey/pyi-kbv-fail"));
         assertEquals(journeyResponse, evaluator.getFailedJourneyResponse(List.of(KBV_VC_FAILED)));
