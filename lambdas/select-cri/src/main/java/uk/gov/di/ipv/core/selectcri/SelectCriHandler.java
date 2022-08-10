@@ -11,10 +11,12 @@ import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -61,6 +63,9 @@ public class SelectCriHandler
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(event);
             String userId = ipvSessionService.getUserId(ipvSessionId);
+
+            logGovUkSignInJourneyId(ipvSessionId);
+
             List<String> visitedCredentialIssuers =
                     userIdentityService.getUserIssuedCredentialIssuers(userId);
 
@@ -93,6 +98,13 @@ public class SelectCriHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getResponseCode(), e.getErrorBody());
         }
+    }
+
+    private void logGovUkSignInJourneyId(String ipvSessionId) {
+        IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+        ClientSessionDetailsDto clientSessionDetailsDto = ipvSessionItem.getClientSessionDetails();
+        LogHelper.attachGovukSigninJourneyIdToLogs(
+                clientSessionDetailsDto.getGovukSigninJourneyId());
     }
 
     private APIGatewayProxyResponseEvent getJourneyResponse(String criId) {

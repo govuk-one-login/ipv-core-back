@@ -11,6 +11,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -42,11 +44,13 @@ class SelectCriHandlerTest {
     @Mock private ConfigurationService mockConfigurationService;
     @Mock private UserIdentityService mockUserIdentityService;
     @Mock private IpvSessionService mockIpvSessionService;
+    @Mock private IpvSessionItem mockIpvSessionItem;
+    @Mock private ClientSessionDetailsDto mockClientSessionDetailsDto;
     @InjectMocks private SelectCriHandler underTest;
 
     @Test
     void shouldReturnPassportCriJourneyResponse() throws JsonProcessingException {
-        when(mockIpvSessionService.getUserId(TEST_SESSION_ID)).thenReturn(TEST_USER_ID);
+        mockIpvSessionService();
         when(mockUserIdentityService.getUserIssuedCredentialIssuers(TEST_USER_ID))
                 .thenReturn(Collections.emptyList());
 
@@ -62,9 +66,15 @@ class SelectCriHandlerTest {
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
     }
 
+    private void mockIpvSessionService() {
+        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(mockClientSessionDetailsDto);
+        when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionService.getUserId(TEST_SESSION_ID)).thenReturn(TEST_USER_ID);
+    }
+
     @Test
     void shouldReturnAddressCriJourneyResponse() throws JsonProcessingException {
-        when(mockIpvSessionService.getUserId(TEST_SESSION_ID)).thenReturn(TEST_USER_ID);
+        mockIpvSessionService();
         when(mockUserIdentityService.getUserIssuedCredentialIssuers(TEST_USER_ID))
                 .thenReturn(List.of(CRI_PASSPORT));
 
@@ -82,7 +92,7 @@ class SelectCriHandlerTest {
 
     @Test
     void shouldReturnFraudCriJourneyResponse() throws JsonProcessingException {
-        when(mockIpvSessionService.getUserId(TEST_SESSION_ID)).thenReturn(TEST_USER_ID);
+        mockIpvSessionService();
         when(mockUserIdentityService.getUserIssuedCredentialIssuers(TEST_USER_ID))
                 .thenReturn(List.of(CRI_PASSPORT, CRI_ADDRESS));
 
@@ -100,7 +110,7 @@ class SelectCriHandlerTest {
 
     @Test
     void shouldReturnKBVCriJourneyResponse() throws JsonProcessingException {
-        when(mockIpvSessionService.getUserId(TEST_SESSION_ID)).thenReturn(TEST_USER_ID);
+        mockIpvSessionService();
         when(mockUserIdentityService.getUserIssuedCredentialIssuers(TEST_USER_ID))
                 .thenReturn(List.of(CRI_PASSPORT, CRI_ADDRESS, CRI_FRAUD));
 
@@ -118,7 +128,7 @@ class SelectCriHandlerTest {
 
     @Test
     void shouldReturnJourneyFailedIfAllCriVisited() throws JsonProcessingException {
-        when(mockIpvSessionService.getUserId(TEST_SESSION_ID)).thenReturn(TEST_USER_ID);
+        mockIpvSessionService();
         when(mockUserIdentityService.getUserIssuedCredentialIssuers(TEST_USER_ID))
                 .thenReturn(List.of(CRI_PASSPORT, CRI_ADDRESS, CRI_FRAUD, CRI_KBV));
 

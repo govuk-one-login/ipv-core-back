@@ -2,11 +2,14 @@ package uk.gov.di.ipv.core.evaluategpg45scores.gpg45;
 
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.evaluategpg45scores.exception.UnknownEvidenceTypeException;
+import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -139,33 +142,43 @@ class Gpg45ProfileEvaluatorTest {
         List<String> goodCredentials =
                 List.of(M1A_PASSPORT_VC, M1A_ADDRESS_VC, M1A_FRAUD_VC, M1A_KBV_VC);
         List<String> gatheredCredentials = new ArrayList<>();
-        assertFalse(evaluator.anyCredentialsGatheredDoNotMeetM1A(gatheredCredentials));
+        assertEquals(Optional.empty(), evaluator.getFailedJourneyResponse(gatheredCredentials));
         for (String credential : goodCredentials) {
             gatheredCredentials.add(credential);
-            assertFalse(evaluator.anyCredentialsGatheredDoNotMeetM1A(gatheredCredentials));
+            assertEquals(Optional.empty(), evaluator.getFailedJourneyResponse(gatheredCredentials));
         }
     }
 
     @Test
-    void anyCredentialsGatheredDoNotMeetM1AShouldReturnFalseForFraudCredentialWithOnlyA01()
+    void getFailedJourneyResponseShouldReturnEmptyOptionalForFraudCredentialWithOnlyA01()
             throws Exception {
-        assertFalse(evaluator.anyCredentialsGatheredDoNotMeetM1A(List.of(M1A_FRAUD_VC_WITH_A01)));
+        assertEquals(
+                Optional.empty(),
+                evaluator.getFailedJourneyResponse(List.of(M1A_FRAUD_VC_WITH_A01)));
     }
 
     @Test
-    void anyCredentialsGatheredDoNotMeetM1AShouldReturnTrueForBadPassportCredential()
+    void getFailedJourneyResponseShouldReturnPyiNoMatchJourneyResponseForBadPassportCredential()
             throws Exception {
-        assertTrue(evaluator.anyCredentialsGatheredDoNotMeetM1A(List.of(PASSPORT_VC_FAILED)));
+        Optional<JourneyResponse> journeyResponse =
+                Optional.of(new JourneyResponse("/journey/pyi-no-match"));
+        assertEquals(
+                journeyResponse, evaluator.getFailedJourneyResponse(List.of(PASSPORT_VC_FAILED)));
     }
 
     @Test
-    void anyCredentialsGatheredDoNotMeetM1AShouldReturnTrueForBadFraudCredential()
+    void getFailedJourneyResponseShouldReturnPyiNoMatchJourneyResponseForBadFraudCredential()
             throws Exception {
-        assertTrue(evaluator.anyCredentialsGatheredDoNotMeetM1A(List.of(FRAUD_VC_FAILED)));
+        Optional<JourneyResponse> journeyResponse =
+                Optional.of(new JourneyResponse("/journey/pyi-no-match"));
+        assertEquals(journeyResponse, evaluator.getFailedJourneyResponse(List.of(FRAUD_VC_FAILED)));
     }
 
     @Test
-    void anyCredentialsGatheredDoNotMeetM1AShouldReturnTrueForBadKbvCredential() throws Exception {
-        assertTrue(evaluator.anyCredentialsGatheredDoNotMeetM1A(List.of(KBV_VC_FAILED)));
+    void getFailedJourneyResponseShouldReturnPyiKbvFailJourneyResponseForBadKbvCredential()
+            throws Exception {
+        Optional<JourneyResponse> journeyResponse =
+                Optional.of(new JourneyResponse("/journey/pyi-kbv-fail"));
+        assertEquals(journeyResponse, evaluator.getFailedJourneyResponse(List.of(KBV_VC_FAILED)));
     }
 }

@@ -12,6 +12,7 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.evaluategpg45scores.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -24,12 +25,13 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.text.ParseException;
 import java.util.List;
+import java.util.Optional;
 
 public class EvaluateGpg45ScoresHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final String JOURNEY_SESSION_END = "/journey/session/end";
+    public static final String JOURNEY_END = "/journey/end";
     public static final String JOURNEY_NEXT = "/journey/next";
     public static final String JOURNEY_ERROR = "/journey/error";
     public static final String JOURNEY_FAIL = "/journey/fail";
@@ -71,16 +73,18 @@ public class EvaluateGpg45ScoresHandler
             List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
             JourneyResponse journeyResponse;
-            if (gpg45ProfileEvaluator.anyCredentialsGatheredDoNotMeetM1A(credentials)) {
+            Optional<JourneyResponse> failedJourneyResponse =
+                    gpg45ProfileEvaluator.getFailedJourneyResponse(credentials);
+            if (failedJourneyResponse.isPresent()) {
                 // This will eventually be handled by the CRI select lambda. We are only
                 // failing the journey here for temporary convenience. This lambda should
                 // only have responsibility for ending the journey if we have met a profile.
-                journeyResponse = new JourneyResponse(JOURNEY_FAIL);
+                journeyResponse = failedJourneyResponse.get();
             } else {
                 journeyResponse =
                         gpg45ProfileEvaluator.credentialsSatisfyProfile(
                                         credentials, Gpg45Profile.M1A)
-                                ? new JourneyResponse(JOURNEY_SESSION_END)
+                                ? new JourneyResponse(JOURNEY_END)
                                 : new JourneyResponse(JOURNEY_NEXT);
             }
 
@@ -91,11 +95,13 @@ public class EvaluateGpg45ScoresHandler
         } catch (ParseException e) {
             LOGGER.error("Unable to parse GPG45 scores from existing credentials", e);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, new JourneyResponse(JOURNEY_ERROR));
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (UnknownEvidenceTypeException e) {
             LOGGER.error("Unable to determine type of credential", e);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, new JourneyResponse(JOURNEY_ERROR));
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
         }
     }
 }
