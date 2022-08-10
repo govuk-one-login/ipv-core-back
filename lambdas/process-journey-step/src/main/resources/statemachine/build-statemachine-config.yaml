@@ -9,7 +9,7 @@ CRI_STATE:
       targetState: EVALUATE_GPG45_SCORES
       response:
         type: journey
-        journeyStepId: /journey/journey/evaluate-gpg45-scores
+        journeyStepId: /journey/evaluate-gpg45-scores
     error:
       type: basic
       name: error
