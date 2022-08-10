@@ -172,7 +172,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         Integer statusCode = response.getStatusCode();
         Map responseBody = getResponseBodyAsMap(response);
         assertEquals(HTTPResponse.SC_OK, statusCode);
-        assertEquals("/journey/cri/validate/" + CREDENTIAL_ISSUER_ID, responseBody.get("journey"));
+        assertEquals("/journey/next", responseBody.get("journey"));
     }
 
     @Test
