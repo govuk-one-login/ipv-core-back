@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
+import static uk.gov.di.ipv.core.evaluategpg45scores.validation.FraudEvidenceValidator.A01;
+
 @Getter
 public class CredentialEvidenceItem {
     private Integer activityScore;
@@ -37,6 +39,9 @@ public class CredentialEvidenceItem {
     }
 
     public boolean hasContraIndicators() {
+        if (isIdentityFraud()) {
+            return ci != null && !ci.isEmpty() && !(ci.size() == 1 && ci.get(0).equals(A01));
+        }
         return ci != null && !ci.isEmpty();
     }
 
