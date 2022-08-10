@@ -150,7 +150,7 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void anyCredentialsGatheredDoNotMeetM1AShouldReturnEmptyOptionalForFraudCredentialWithOnlyA01()
+    void getFailedJourneyResponseShouldReturnEmptyOptionalForFraudCredentialWithOnlyA01()
             throws Exception {
         assertEquals(
                 Optional.empty(),
@@ -158,9 +158,8 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void
-            anyCredentialsGatheredDoNotMeetM1AShouldReturnPyiNoMatchJourneyResponseForBadPassportCredential()
-                    throws Exception {
+    void getFailedJourneyResponseShouldReturnPyiNoMatchJourneyResponseForBadPassportCredential()
+            throws Exception {
         Optional<JourneyResponse> journeyResponse =
                 Optional.of(new JourneyResponse("/journey/pyi-no-match"));
         assertEquals(
@@ -168,18 +167,16 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void
-            anyCredentialsGatheredDoNotMeetM1AShouldReturnPyiNoMatchJourneyResponseForBadFraudCredential()
-                    throws Exception {
+    void getFailedJourneyResponseShouldReturnPyiNoMatchJourneyResponseForBadFraudCredential()
+            throws Exception {
         Optional<JourneyResponse> journeyResponse =
                 Optional.of(new JourneyResponse("/journey/pyi-no-match"));
         assertEquals(journeyResponse, evaluator.getFailedJourneyResponse(List.of(FRAUD_VC_FAILED)));
     }
 
     @Test
-    void
-            anyCredentialsGatheredDoNotMeetM1AShouldReturnPyiKbvFailJourneyResponseForBadKbvCredential()
-                    throws Exception {
+    void getFailedJourneyResponseShouldReturnPyiKbvFailJourneyResponseForBadKbvCredential()
+            throws Exception {
         Optional<JourneyResponse> journeyResponse =
                 Optional.of(new JourneyResponse("/journey/pyi-kbv-fail"));
         assertEquals(journeyResponse, evaluator.getFailedJourneyResponse(List.of(KBV_VC_FAILED)));
