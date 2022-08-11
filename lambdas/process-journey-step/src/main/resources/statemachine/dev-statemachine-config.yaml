@@ -126,10 +126,10 @@ SELECT_CRI:
     stubKbv:
       type: basic
       name: kbv
-      targetState: CRI_KBV
+      targetState: PRE_KBV_TRANSITION_PAGE
       response:
-        type: journey
-        journeyStepId: /journey/cri/build-oauth-request/stubKbv
+        type: page
+        pageId: page-pre-kbv-transition
     fail:
       type: basic
       name: fail

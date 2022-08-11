@@ -43,6 +43,7 @@ class ProcessJourneyStepHandlerTest {
 
     private static final String INITIAL_IPV_JOURNEY_STATE = "INITIAL_IPV_JOURNEY";
     private static final String IPV_IDENTITY_START_PAGE_STATE = "IPV_IDENTITY_START_PAGE";
+    private static final String SELECT_CRI_STATE = "SELECT_CRI";
     private static final String CRI_UK_PASSPORT_STATE = "CRI_UK_PASSPORT";
     private static final String CRI_ADDRESS_STATE = "CRI_ADDRESS";
     private static final String CRI_FRAUD_STATE = "CRI_FRAUD";
@@ -452,7 +453,7 @@ class ProcessJourneyStepHandlerTest {
 
         APIGatewayProxyResponseEvent response =
                 processJourneyStepHandler.handleRequest(event, mockContext);
-        Map<String, String> pageResponse =
+        Map<String, String> journeyResponse =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
@@ -461,7 +462,44 @@ class ProcessJourneyStepHandlerTest {
         assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(JOURNEY_EVALUATE_GPG_45_SCORES, pageResponse.get("journey"));
+        assertEquals(JOURNEY_EVALUATE_GPG_45_SCORES, journeyResponse.get("journey"));
+    }
+
+    @Test
+    void shouldReturnPreKbvTransitionPageResponseWhenRequired() throws IOException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+
+        Map<String, String> pathParameters = new HashMap<>();
+        pathParameters.put(JOURNEY_STEP, "kbv");
+        event.setPathParameters(pathParameters);
+
+        event.setHeaders(Map.of("ipv-session-id", "1234"));
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setCreationDateTime(Instant.now().toString());
+        ipvSessionItem.setUserState(SELECT_CRI_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
+        APIGatewayProxyResponseEvent response =
+                processJourneyStepHandler.handleRequest(event, mockContext);
+        Map<String, String> pageResponse =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
+        assertEquals(
+                PRE_KBV_TRANSITION_PAGE_STATE, sessionArgumentCaptor.getValue().getUserState());
+
+        assertEquals(200, response.getStatusCode());
+        assertEquals(PRE_KBV_TRANSITION_PAGE, pageResponse.get("page"));
     }
 
     @Test
