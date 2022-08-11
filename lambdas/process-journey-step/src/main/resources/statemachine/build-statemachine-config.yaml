@@ -102,34 +102,34 @@ SELECT_CRI:
   name: SELECT_CRI
   parent: null
   events:
-    ukPassport:
+    stubUkPassport:
       type: basic
       name: next
       targetState: CRI_UK_PASSPORT
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/stubUkPassport
-    address:
+    stubAddress:
       type: basic
       name: address
       targetState: CRI_ADDRESS
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/stubAddress
-    fraud:
+    stubFraud:
       type: basic
       name: fraud
       targetState: CRI_FRAUD
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/stubFraud
-    kbv:
+    stubKbv:
       type: basic
       name: kbv
-      targetState: CRI_KBV
+      targetState: PRE_KBV_TRANSITION_PAGE
       response:
-        type: journey
-        journeyStepId: /journey/cri/build-oauth-request/stubKbv
+        type: page
+        pageId: page-pre-kbv-transition
     fail:
       type: basic
       name: fail
