@@ -40,6 +40,30 @@ paths:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildUserIdentityFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
 
+  /.well-known/jwks.json:
+    get:
+      description: "returns JWKS Json"
+      responses:
+        200:
+          description: "The list of public keys"
+          content:
+            application/json:
+              schema:
+                type: "object"
+      x-amazon-apigateway-integration:
+        type: "aws"
+        httpMethod: "GET"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:ssm:action/GetParameter&Name=/core/outputs/jwks
+        credentials:
+          Fn::GetAtt: ["JWKSParamRole", "Arn"]
+        responses:
+          default:
+            statusCode: "200"
+            responseTemplates:
+              application/json: "$util.parseJson($input.json('$.GetParameterResponse.GetParameterResult.Parameter.Value'))"
+        passthroughBehavior: "when_no_match"
+
   /healthcheck:
     get:
       description: "returns a 200 for Route53 health checks to use"
