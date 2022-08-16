@@ -1006,7 +1006,7 @@ Resources:
             Resource: "*"
           - Effect: Allow
             Principal:
-              Service: !Sub "dynamodb.${AWS::Region}.amazonaws.com"
+              Service: "dynamodb.amazonaws.com"
             Action:
               - "kms:Encrypt*"
               - "kms:Decrypt*"
@@ -1017,7 +1017,7 @@ Resources:
             Condition:
               StringEquals:
                 "kms:CallerAccount": !Sub "${AWS::AccountId}"
-                "kms:ViaService": !Sub "dynamodb.${AWS::Region}.amazonaws.com"
+                "kms:ViaService": "dynamodb.amazonaws.com"
 
 Outputs:
   IPVCorePrivateAPIGatewayID:
