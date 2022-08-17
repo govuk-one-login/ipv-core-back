@@ -61,7 +61,7 @@ paths:
           default:
             statusCode: "200"
             responseTemplates:
-              application/json: "#set($inputRoot = $input.path('$')){\"keys\":[#foreach($elem in $inputRoot.GetParametersByPathResponse.GetParametersByPathResult.Parameters)$util.parseJson($elem.Value)#if($foreach.hasNext),#end#end]}"
+              application/json: "#set($inputRoot = $input.path('$')){\"keys\":[#foreach($elem in $inputRoot.GetParametersByPathResponse.GetParametersByPathResult.Parameters)$elem.Value#if($foreach.hasNext),#end#end]}"
         passthroughBehavior: "when_no_match"
 
   /healthcheck:
