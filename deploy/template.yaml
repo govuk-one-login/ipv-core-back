@@ -77,9 +77,9 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - "ssm:GetParameter"
+                  - "ssm:GetParametersByPath"
                 Resource:
-                  - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/core/outputs/jwks'
+                  - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Environment}/deploy/core/outputs/*'
 
   IPVCorePrivateAPI:
     Type: AWS::Serverless::Api
@@ -143,6 +143,8 @@ Resources:
 
   IPVCoreExternalAPI:
     Type: AWS::Serverless::Api
+    DependsOn:
+      - "JWKSParamRole"
     Properties:
       # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
       Name: !Sub IPV Core External API Gateway ${Environment}

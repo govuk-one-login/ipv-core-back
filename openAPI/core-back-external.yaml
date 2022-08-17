@@ -54,14 +54,14 @@ paths:
         type: "aws"
         httpMethod: "GET"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:ssm:action/GetParameter&Name=/core/outputs/jwks
+          Fn::Sub: 'arn:aws:apigateway:${AWS::Region}:ssm:action/GetParametersByPath&Path=/${Environment}/deploy/core/outputs/'
         credentials:
           Fn::GetAtt: ["JWKSParamRole", "Arn"]
         responses:
           default:
             statusCode: "200"
             responseTemplates:
-              application/json: "$util.parseJson($input.json('$.GetParameterResponse.GetParameterResult.Parameter.Value'))"
+              application/json: "#set($inputRoot = $input.path('$')){\"keys\":[#foreach($elem in $inputRoot.GetParametersByPathResponse.GetParametersByPathResult.Parameters)$util.parseJson($elem.Value)#if($foreach.hasNext),#end#end]}"
         passthroughBehavior: "when_no_match"
 
   /healthcheck:
