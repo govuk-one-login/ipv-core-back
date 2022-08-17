@@ -14,15 +14,19 @@ public class CriDetails {
 
     @JsonProperty private final String request;
 
+    @JsonProperty private final String redirectUrl;
+
     @JsonCreator
     public CriDetails(
             @JsonProperty(value = "id", required = true) String id,
             @JsonProperty(value = "ipvClientId", required = true) String ipvClientId,
             @JsonProperty(value = "authorizeUrl", required = true) String authorizeUrl,
-            @JsonProperty(value = "request", required = true) String request) {
+            @JsonProperty(value = "request", required = true) String request,
+            @JsonProperty(value = "redirectUrl", required = true) String redirectUrl) {
         this.id = id;
         this.ipvClientId = ipvClientId;
         this.authorizeUrl = authorizeUrl;
         this.request = request;
+        this.redirectUrl = redirectUrl;
     }
 }

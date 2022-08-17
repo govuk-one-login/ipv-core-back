@@ -14,6 +14,8 @@ import com.nimbusds.jose.crypto.RSADecrypter;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URIBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,6 +47,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -69,6 +72,7 @@ import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.v
 class BuildCriOauthRequestHandlerTest {
 
     public static final String CRI_ID = "PassportIssuer";
+    public static final String DCMAW_CRI_ID = "dcmaw";
     public static final String CRI_NAME = "any";
     public static final String CRI_TOKEN_URL = "http://www.example.com";
     public static final String CRI_CREDENTIAL_URL = "http://www.example.com/credential";
@@ -91,6 +95,7 @@ class BuildCriOauthRequestHandlerTest {
     @Mock private IpvSessionItem mockIpvSessionItem;
 
     private CredentialIssuerConfig credentialIssuerConfig;
+    private CredentialIssuerConfig dcmawCredentialIssuerConfig;
 
     private BuildCriOauthRequestHandler underTest;
 
@@ -112,6 +117,18 @@ class BuildCriOauthRequestHandlerTest {
         credentialIssuerConfig =
                 new CredentialIssuerConfig(
                         CRI_ID,
+                        CRI_NAME,
+                        new URI(CRI_TOKEN_URL),
+                        new URI(CRI_CREDENTIAL_URL),
+                        new URI(CRI_AUTHORIZE_URL),
+                        IPV_CLIENT_ID,
+                        "{}",
+                        RSA_ENCRYPTION_PUBLIC_JWK,
+                        "http://www.example.com/audience");
+
+        dcmawCredentialIssuerConfig =
+                new CredentialIssuerConfig(
+                        DCMAW_CRI_ID,
                         CRI_NAME,
                         new URI(CRI_TOKEN_URL),
                         new URI(CRI_CREDENTIAL_URL),
@@ -146,7 +163,8 @@ class BuildCriOauthRequestHandlerTest {
     }
 
     @Test
-    void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponse() throws Exception {
+    void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithoutResponseTypeParam()
+            throws Exception {
         when(configurationService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
         when(configurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
@@ -169,14 +187,100 @@ class BuildCriOauthRequestHandlerTest {
 
         Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
 
+        URIBuilder redirectUri = new URIBuilder(responseBody.get("redirectUrl"));
+        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+
         assertEquals(CRI_ID, responseBody.get("id"));
         assertEquals(IPV_CLIENT_ID, responseBody.get("ipvClientId"));
-        assertEquals(CRI_AUTHORIZE_URL, responseBody.get("authorizeUrl"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
 
-        JWEObject jweObject = JWEObject.parse(responseBody.get("request"));
+        Optional<NameValuePair> client_id =
+                queryParams.stream()
+                        .filter(param -> param.getName().equals("client_id"))
+                        .findFirst();
+        assertTrue(client_id.isPresent());
+        assertEquals(IPV_CLIENT_ID, client_id.get().getValue());
+
+        Optional<NameValuePair> response_type =
+                queryParams.stream()
+                        .filter(param -> param.getName().equals("response_type"))
+                        .findFirst();
+        assertFalse(response_type.isPresent());
+
+        Optional<NameValuePair> request =
+                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
+        assertTrue(request.isPresent());
+        JWEObject jweObject = JWEObject.parse(request.get().getValue());
         jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
         assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
+
+        assertEquals(CRI_AUTHORIZE_URL, responseBody.get("authorizeUrl"));
+        assertEquals(CRI_AUTHORIZE_URL, redirectUri.removeQuery().build().toString());
+
+        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        assertEquals(
+                AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
+    }
+
+    @Test
+    void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithResponseTypeParam()
+            throws Exception {
+        when(configurationService.getCredentialIssuer(DCMAW_CRI_ID))
+                .thenReturn(dcmawCredentialIssuerConfig);
+        when(configurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
+                .thenReturn("callbackUrl");
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_1)),
+                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_2))));
+
+        APIGatewayProxyRequestEvent input = createRequestEvent();
+
+        input.setPathParameters(Map.of("criId", DCMAW_CRI_ID));
+        input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
+
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+
+        Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
+
+        URIBuilder redirectUri = new URIBuilder(responseBody.get("redirectUrl"));
+        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+
+        assertEquals(DCMAW_CRI_ID, responseBody.get("id"));
+        assertEquals(IPV_CLIENT_ID, responseBody.get("ipvClientId"));
+
+        Optional<NameValuePair> client_id =
+                queryParams.stream()
+                        .filter(param -> param.getName().equals("client_id"))
+                        .findFirst();
+        assertTrue(client_id.isPresent());
+        assertEquals(IPV_CLIENT_ID, client_id.get().getValue());
+
+        Optional<NameValuePair> response_type =
+                queryParams.stream()
+                        .filter(param -> param.getName().equals("response_type"))
+                        .findFirst();
+        assertTrue(response_type.isPresent());
+        assertEquals("code", response_type.get().getValue());
+
+        Optional<NameValuePair> request =
+                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
+        assertTrue(request.isPresent());
+        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+        assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
+
+        assertEquals(CRI_AUTHORIZE_URL, responseBody.get("authorizeUrl"));
+        assertEquals(CRI_AUTHORIZE_URL, redirectUri.removeQuery().build().toString());
+
+        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());

@@ -14,6 +14,7 @@ import com.nimbusds.jose.crypto.RSAEncrypter;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
@@ -46,6 +47,7 @@ import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
+import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.HashSet;
 import java.util.List;
@@ -62,6 +64,8 @@ public class BuildCriOauthRequestHandler
     public static final String CRI_ID = "criId";
     public static final int OK = 200;
     public static final String SHARED_CLAIMS = "shared_claims";
+    public static final String DCMAW_CRI_ID = "dcmaw";
+    public static final String STUB_DCMAW_CRI_ID = "stubDcmaw";
     public static final JourneyResponse ERROR_JOURNEY = new JourneyResponse("/journey/error");
 
     private final ObjectMapper mapper = new ObjectMapper();
@@ -161,17 +165,34 @@ public class BuildCriOauthRequestHandler
         } catch (ParseException | JOSEException e) {
             LOGGER.error("Failed to parse encryption public JWK: {}", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, ERROR_JOURNEY);
+        } catch (URISyntaxException e) {
+            LOGGER.error("Failed to construct redirect uri because: {}", e.getMessage());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
     private CriResponse getCriResponse(
-            CredentialIssuerConfig credentialIssuerConfig, JWEObject jweObject) {
+            CredentialIssuerConfig credentialIssuerConfig, JWEObject jweObject)
+            throws URISyntaxException {
+
+        URIBuilder redirectUri =
+                new URIBuilder(credentialIssuerConfig.getAuthorizeUrl())
+                        .addParameter("client_id", credentialIssuerConfig.getIpvClientId())
+                        .addParameter("request", jweObject.serialize());
+
+        if (credentialIssuerConfig.getId().equals(DCMAW_CRI_ID)
+                || credentialIssuerConfig.getId().equals(STUB_DCMAW_CRI_ID)) {
+            redirectUri.addParameter("response_type", "code");
+        }
+
         return new CriResponse(
                 new CriDetails(
                         credentialIssuerConfig.getId(),
                         credentialIssuerConfig.getIpvClientId(),
                         credentialIssuerConfig.getAuthorizeUrl().toString(),
-                        jweObject.serialize()));
+                        jweObject.serialize(),
+                        redirectUri.build().toString()));
     }
 
     private JWEObject signEncryptJar(
