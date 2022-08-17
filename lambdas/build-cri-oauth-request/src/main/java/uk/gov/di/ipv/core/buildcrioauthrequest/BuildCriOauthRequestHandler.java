@@ -187,12 +187,7 @@ public class BuildCriOauthRequestHandler
         }
 
         return new CriResponse(
-                new CriDetails(
-                        credentialIssuerConfig.getId(),
-                        credentialIssuerConfig.getIpvClientId(),
-                        credentialIssuerConfig.getAuthorizeUrl().toString(),
-                        jweObject.serialize(),
-                        redirectUri.build().toString()));
+                new CriDetails(credentialIssuerConfig.getId(), redirectUri.build().toString()));
     }
 
     private JWEObject signEncryptJar(
