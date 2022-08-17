@@ -60,6 +60,27 @@ Mappings:
       provisionedConcurrency: 1
 
 Resources:
+  JWKSParamRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+        Version: 2012-10-17
+      Policies:
+        - PolicyName: AccessJWKSjson
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ssm:GetParametersByPath"
+                Resource:
+                  - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Environment}/deploy/core/outputs/*'
+
   IPVCorePrivateAPI:
     Type: AWS::Serverless::Api
     Properties:
@@ -122,6 +143,8 @@ Resources:
 
   IPVCoreExternalAPI:
     Type: AWS::Serverless::Api
+    DependsOn:
+      - "JWKSParamRole"
     Properties:
       # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
       Name: !Sub IPV Core External API Gateway ${Environment}
