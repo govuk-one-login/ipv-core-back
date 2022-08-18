@@ -191,7 +191,6 @@ class BuildCriOauthRequestHandlerTest {
         List<NameValuePair> queryParams = redirectUri.getQueryParams();
 
         assertEquals(CRI_ID, responseBody.get("id"));
-        assertEquals(IPV_CLIENT_ID, responseBody.get("ipvClientId"));
 
         Optional<NameValuePair> client_id =
                 queryParams.stream()
@@ -213,7 +212,6 @@ class BuildCriOauthRequestHandlerTest {
         jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
         assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
 
-        assertEquals(CRI_AUTHORIZE_URL, responseBody.get("authorizeUrl"));
         assertEquals(CRI_AUTHORIZE_URL, redirectUri.removeQuery().build().toString());
 
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
@@ -254,7 +252,6 @@ class BuildCriOauthRequestHandlerTest {
         List<NameValuePair> queryParams = redirectUri.getQueryParams();
 
         assertEquals(DCMAW_CRI_ID, responseBody.get("id"));
-        assertEquals(IPV_CLIENT_ID, responseBody.get("ipvClientId"));
 
         Optional<NameValuePair> client_id =
                 queryParams.stream()
@@ -277,7 +274,6 @@ class BuildCriOauthRequestHandlerTest {
         jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
         assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
 
-        assertEquals(CRI_AUTHORIZE_URL, responseBody.get("authorizeUrl"));
         assertEquals(CRI_AUTHORIZE_URL, redirectUri.removeQuery().build().toString());
 
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
@@ -364,7 +360,15 @@ class BuildCriOauthRequestHandlerTest {
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
         Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
-        JWEObject jweObject = JWEObject.parse(responseBody.get("request"));
+
+        URIBuilder redirectUri = new URIBuilder(responseBody.get("redirectUrl"));
+        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+
+        Optional<NameValuePair> request =
+                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
+
+        assertTrue(request.isPresent());
+        JWEObject jweObject = JWEObject.parse(request.get().getValue());
         jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
 
         SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
@@ -398,7 +402,15 @@ class BuildCriOauthRequestHandlerTest {
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
         Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
-        JWEObject jweObject = JWEObject.parse(responseBody.get("request"));
+
+        URIBuilder redirectUri = new URIBuilder(responseBody.get("redirectUrl"));
+        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+
+        Optional<NameValuePair> request =
+                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
+
+        assertTrue(request.isPresent());
+        JWEObject jweObject = JWEObject.parse(request.get().getValue());
         jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
 
         SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
