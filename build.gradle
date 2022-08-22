@@ -35,6 +35,7 @@ ext {
 	dependencyVersions = [
 		apacheHttpclient:'4.5.13',
 		awsJavaSdkDynamodb:'1.12.167',
+		awsJavaSdkLambda:'1.12.197',
 		awsJavaSdkSqs:'1.12.197',
 		awsLambdaJavaCore:'1.2.1',
 		awsLambdaJavaEvents:'3.11.0',

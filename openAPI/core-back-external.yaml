@@ -83,3 +83,31 @@ paths:
             statusCode: 200
             responseTemplates:
               application/json: "{\"healthcheck\": \"ok\"}"
+
+  /contra-indicator-storage-core-stub:
+    get:
+      description: "Get the contra-indicator-storage core stub"
+      responses:
+        200:
+          description: "The html"
+          content:
+            text/html:
+              schema:
+                type: "string"
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CIStorageCoreStubFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
+    post:
+      description: "Store a new contra-indicator"
+      responses:
+        302:
+          description: "Redirect back to the get page"
+      x-amazon-apigateway-integration:
+        type: "aws_proxy"
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CIStorageCoreStubFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
