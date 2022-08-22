@@ -206,7 +206,7 @@ public class ContraIndicatorStorageCoreStubHandler
                         .audience(AUDIENCE)
                         .notBeforeTime(new Date(now.toEpochMilli()))
                         .expirationTime(new Date(now.plusSeconds(7200L).toEpochMilli()))
-                        .claim(VC, Map.of(EVIDENCE, evidence))
+                        .claim(VC, Map.of(EVIDENCE, List.of(evidence)))
                         .build();
 
         JWSHeader header =
