@@ -15,4 +15,5 @@ include "lib",
 		"lambdas:credentialissuererror",
 		"lambdas:validate-cri-credential",
 		"lambdas:select-cri",
+		"lambdas:contra-indicator-storage-core-stub",
 		"integration-test"
