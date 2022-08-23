@@ -40,6 +40,7 @@ import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -153,7 +154,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                 .thenReturn(new BearerAccessToken());
 
         when(credentialIssuerService.getVerifiableCredential(any(), any(), anyString()))
-                .thenReturn(SignedJWT.parse(SIGNED_VC_1));
+                .thenReturn(Collections.singletonList(SignedJWT.parse(SIGNED_VC_1)));
 
         mockServiceCallsAndSessionItem();
 
@@ -296,7 +297,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
         when(credentialIssuerService.getVerifiableCredential(
                         accessToken, passportIssuer, testApiKey))
-                .thenReturn(SignedJWT.parse(SIGNED_VC_1));
+                .thenReturn(Collections.singletonList(SignedJWT.parse(SIGNED_VC_1)));
 
         mockServiceCallsAndSessionItem();
 
@@ -410,7 +411,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
         when(credentialIssuerService.getVerifiableCredential(
                         accessToken, passportIssuer, testApiKey))
-                .thenReturn(SignedJWT.parse(SIGNED_VC_1));
+                .thenReturn(Collections.singletonList(SignedJWT.parse(SIGNED_VC_1)));
 
         mockServiceCallsAndSessionItem();
 
@@ -447,7 +448,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
         when(credentialIssuerService.getVerifiableCredential(
                         accessToken, passportIssuer, testApiKey))
-                .thenReturn(SignedJWT.parse(SIGNED_CONTRACT_INDICATORS));
+                .thenReturn(Collections.singletonList(SignedJWT.parse(SIGNED_CONTRACT_INDICATORS)));
 
         mockServiceCallsAndSessionItem();
 
@@ -499,7 +500,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
         when(credentialIssuerService.getVerifiableCredential(
                         accessToken, passportIssuer, testApiKey))
-                .thenReturn(SignedJWT.parse(SIGNED_ADDRESS_VC));
+                .thenReturn(Collections.singletonList(SignedJWT.parse(SIGNED_ADDRESS_VC)));
 
         mockServiceCallsAndSessionItem();
 

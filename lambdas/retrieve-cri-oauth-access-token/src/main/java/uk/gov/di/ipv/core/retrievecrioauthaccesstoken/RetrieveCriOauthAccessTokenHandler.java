@@ -40,6 +40,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 
 import java.text.ParseException;
+import java.util.List;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 
@@ -131,17 +132,18 @@ public class RetrieveCriOauthAccessTokenHandler
             BearerAccessToken accessToken =
                     credentialIssuerService.exchangeCodeForToken(
                             request, credentialIssuerConfig, apiKey);
-            SignedJWT verifiableCredential =
+            List<SignedJWT> verifiableCredentials =
                     credentialIssuerService.getVerifiableCredential(
                             accessToken, credentialIssuerConfig, apiKey);
 
-            verifiableCredentialJwtValidator.validate(
-                    verifiableCredential, credentialIssuerConfig, userId);
+            for (SignedJWT vc : verifiableCredentials) {
+                verifiableCredentialJwtValidator.validate(vc, credentialIssuerConfig, userId);
 
-            sendIpvVcReceivedAuditEvent(auditEventUser, verifiableCredential);
+                sendIpvVcReceivedAuditEvent(auditEventUser, vc);
 
-            credentialIssuerService.persistUserCredentials(
-                    verifiableCredential.serialize(), request.getCredentialIssuerId(), userId);
+                credentialIssuerService.persistUserCredentials(
+                        vc.serialize(), request.getCredentialIssuerId(), userId);
+            }
 
             JourneyResponse journeyResponse =
                     new JourneyResponse(

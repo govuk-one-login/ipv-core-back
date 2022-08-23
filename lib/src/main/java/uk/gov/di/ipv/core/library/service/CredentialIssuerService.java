@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.service;
 
+import com.nimbusds.common.contenttype.ContentType;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jwt.SignedJWT;
@@ -15,6 +16,9 @@ import com.nimbusds.oauth2.sdk.auth.PrivateKeyJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
+import net.minidev.json.JSONArray;
+import net.minidev.json.JSONObject;
+import org.apache.http.HttpHeaders;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,11 +38,15 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_FRONT_CALLBACK_URL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
+import static uk.gov.di.ipv.core.library.domain.UserIdentity.VCS_CLAIM_NAME;
 
 public class CredentialIssuerService {
 
@@ -147,7 +155,7 @@ public class CredentialIssuerService {
         }
     }
 
-    public SignedJWT getVerifiableCredential(
+    public List<SignedJWT> getVerifiableCredential(
             BearerAccessToken accessToken, CredentialIssuerConfig config, String apiKey) {
         HTTPRequest credentialRequest =
                 new HTTPRequest(HTTPRequest.Method.POST, config.getCredentialUrl());
@@ -173,11 +181,32 @@ public class CredentialIssuerService {
                         ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
             }
 
-            SignedJWT vcJwt = (SignedJWT) response.getContentAsJWT();
-            LOGGER.info("Verifiable Credential retrieved");
-            return vcJwt;
+            String responseContentType = response.getHeaderValue(HttpHeaders.CONTENT_TYPE);
+            if (ContentType.APPLICATION_JWT.matches(ContentType.parse(responseContentType))) {
+                SignedJWT vcJwt = (SignedJWT) response.getContentAsJWT();
+                LOGGER.info("Verifiable Credential retrieved");
+                return Collections.singletonList(vcJwt);
+            } else if (ContentType.APPLICATION_JSON.matches(
+                    ContentType.parse(responseContentType))) {
+                JSONObject vcJson = response.getContentAsJSONObject();
 
-        } catch (IOException | ParseException e) {
+                JSONArray vcArray = (JSONArray) vcJson.get(VCS_CLAIM_NAME);
+                List<SignedJWT> vcJwts = new ArrayList<>();
+                for (Object vc : vcArray) {
+                    vcJwts.add(SignedJWT.parse(vc.toString()));
+                }
+
+                LOGGER.info("Verifiable Credential retrieved");
+                return vcJwts;
+            } else {
+                LOGGER.error(
+                        "Error retrieving credential: Unknown response type recieved from CRI - {}",
+                        responseContentType);
+                throw new CredentialIssuerException(
+                        HTTPResponse.SC_SERVER_ERROR,
+                        ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
+            }
+        } catch (IOException | ParseException | java.text.ParseException e) {
             LOGGER.error("Error retrieving credential: {}", e.getMessage());
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR,

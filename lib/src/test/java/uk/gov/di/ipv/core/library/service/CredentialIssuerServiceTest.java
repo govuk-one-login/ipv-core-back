@@ -1,5 +1,7 @@
 package uk.gov.di.ipv.core.library.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.nimbusds.jose.crypto.ECDSASigner;
@@ -29,6 +31,7 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
+import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -46,6 +49,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_FRONT_CALLBACK_URL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DCMAW_SUCCESS_RESPONSE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
@@ -81,7 +85,8 @@ class CredentialIssuerServiceTest {
                 post("/token")
                         .willReturn(
                                 aResponse()
-                                        .withHeader("Content-Type", "application/json")
+                                        .withHeader(
+                                                "Content-Type", "application/json;charset=utf-8")
                                         .withBody(
                                                 "{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n")));
 
@@ -113,7 +118,8 @@ class CredentialIssuerServiceTest {
                 post("/token")
                         .willReturn(
                                 aResponse()
-                                        .withHeader("Content-Type", "application/json")
+                                        .withHeader(
+                                                "Content-Type", "application/json;charset=utf-8")
                                         .withBody(
                                                 "{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n")));
 
@@ -148,7 +154,8 @@ class CredentialIssuerServiceTest {
                         .willReturn(
                                 aResponse()
                                         .withStatus(400)
-                                        .withHeader("Content-Type", "application/json")
+                                        .withHeader(
+                                                "Content-Type", "application/json;charset=utf-8")
                                         .withBody(errorJson)));
 
         CredentialIssuerRequestDto credentialIssuerRequestDto =
@@ -183,7 +190,7 @@ class CredentialIssuerServiceTest {
                 post("/token")
                         .willReturn(
                                 aResponse()
-                                        .withHeader("Content-Type", "application/xml")
+                                        .withHeader("Content-Type", "application/xml;charset=utf-8")
                                         .withBody(
                                                 "{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n")));
 
@@ -255,7 +262,7 @@ class CredentialIssuerServiceTest {
                 post("/credentials/issue")
                         .willReturn(
                                 aResponse()
-                                        .withHeader("Content-Type", "application/jwt;charset=UTF-8")
+                                        .withHeader("Content-Type", "application/jwt;charset=utf-8")
                                         .withBody(SIGNED_VC_1)));
 
         CredentialIssuerConfig credentialIssuerConfig =
@@ -263,11 +270,11 @@ class CredentialIssuerServiceTest {
 
         BearerAccessToken accessToken = new BearerAccessToken();
 
-        SignedJWT credential =
+        List<SignedJWT> credentials =
                 credentialIssuerService.getVerifiableCredential(
                         accessToken, credentialIssuerConfig, testApiKey);
 
-        assertEquals(SIGNED_VC_1, credential.serialize());
+        assertEquals(SIGNED_VC_1, credentials.get(0).serialize());
 
         verify(
                 postRequestedFor(urlEqualTo("/credentials/issue"))
@@ -281,7 +288,7 @@ class CredentialIssuerServiceTest {
                 post("/credentials/issue")
                         .willReturn(
                                 aResponse()
-                                        .withHeader("Content-Type", "application/jwt;charset=UTF-8")
+                                        .withHeader("Content-Type", "application/jwt;charset=utf-8")
                                         .withBody(SIGNED_VC_1)));
 
         CredentialIssuerConfig credentialIssuerConfig =
@@ -289,11 +296,41 @@ class CredentialIssuerServiceTest {
 
         BearerAccessToken accessToken = new BearerAccessToken();
 
-        SignedJWT credential =
+        List<SignedJWT> credentials =
                 credentialIssuerService.getVerifiableCredential(
                         accessToken, credentialIssuerConfig, null);
 
-        assertEquals(SIGNED_VC_1, credential.serialize());
+        assertEquals(SIGNED_VC_1, credentials.get(0).serialize());
+
+        verify(
+                postRequestedFor(urlEqualTo("/credentials/issue"))
+                        .withHeader("Authorization", equalTo("Bearer " + accessToken.getValue())));
+    }
+
+    @Test
+    void getVerifiableCredentialCorrectlyCallsCriAndCanHandleJsonResponse(
+            WireMockRuntimeInfo wmRuntimeInfo) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        stubFor(
+                post("/credentials/issue")
+                        .willReturn(
+                                aResponse()
+                                        .withHeader(
+                                                "Content-Type", "application/json;charset=utf-8")
+                                        .withBody(
+                                                objectMapper.writeValueAsString(
+                                                        DCMAW_SUCCESS_RESPONSE))));
+
+        CredentialIssuerConfig credentialIssuerConfig =
+                getStubCredentialIssuerConfig(wmRuntimeInfo);
+
+        BearerAccessToken accessToken = new BearerAccessToken();
+
+        List<SignedJWT> credentials =
+                credentialIssuerService.getVerifiableCredential(
+                        accessToken, credentialIssuerConfig, null);
+
+        assertEquals(SIGNED_VC_1, credentials.get(0).serialize());
 
         verify(
                 postRequestedFor(urlEqualTo("/credentials/issue"))
@@ -333,8 +370,7 @@ class CredentialIssuerServiceTest {
                 post("/credentials/issue")
                         .willReturn(
                                 aResponse()
-                                        .withHeader(
-                                                "Content-Type", "application/json;charset=UTF-8")
+                                        .withHeader("Content-Type", "application/xml;charset=utf-8")
                                         .withBody(SIGNED_VC_1)));
 
         CredentialIssuerConfig credentialIssuerConfig =
