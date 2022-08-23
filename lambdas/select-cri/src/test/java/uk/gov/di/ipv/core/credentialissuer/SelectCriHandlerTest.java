@@ -6,9 +6,9 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
@@ -25,6 +25,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ENABLED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
@@ -46,15 +47,23 @@ class SelectCriHandlerTest {
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private IpvSessionItem mockIpvSessionItem;
     @Mock private ClientSessionDetailsDto mockClientSessionDetailsDto;
-    @InjectMocks private SelectCriHandler underTest;
+
+    private SelectCriHandler underTest;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        mockConfigurationServiceMethodCalls();
+
+        underTest =
+                new SelectCriHandler(
+                        mockConfigurationService, mockUserIdentityService, mockIpvSessionService);
+    }
 
     @Test
     void shouldReturnPassportCriJourneyResponse() throws JsonProcessingException {
         mockIpvSessionService();
         when(mockUserIdentityService.getUserIssuedCredentialIssuers(TEST_USER_ID))
                 .thenReturn(Collections.emptyList());
-
-        mockConfigurationServiceMethodCalls();
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -78,8 +87,6 @@ class SelectCriHandlerTest {
         when(mockUserIdentityService.getUserIssuedCredentialIssuers(TEST_USER_ID))
                 .thenReturn(List.of(CRI_PASSPORT));
 
-        mockConfigurationServiceMethodCalls();
-
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
@@ -95,8 +102,6 @@ class SelectCriHandlerTest {
         mockIpvSessionService();
         when(mockUserIdentityService.getUserIssuedCredentialIssuers(TEST_USER_ID))
                 .thenReturn(List.of(CRI_PASSPORT, CRI_ADDRESS));
-
-        mockConfigurationServiceMethodCalls();
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -114,8 +119,6 @@ class SelectCriHandlerTest {
         when(mockUserIdentityService.getUserIssuedCredentialIssuers(TEST_USER_ID))
                 .thenReturn(List.of(CRI_PASSPORT, CRI_ADDRESS, CRI_FRAUD));
 
-        mockConfigurationServiceMethodCalls();
-
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
@@ -132,8 +135,6 @@ class SelectCriHandlerTest {
         when(mockUserIdentityService.getUserIssuedCredentialIssuers(TEST_USER_ID))
                 .thenReturn(List.of(CRI_PASSPORT, CRI_ADDRESS, CRI_FRAUD, CRI_KBV));
 
-        mockConfigurationServiceMethodCalls();
-
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
@@ -149,6 +150,7 @@ class SelectCriHandlerTest {
         when(mockConfigurationService.getSsmParameter(FRAUD_CRI_ID)).thenReturn(CRI_FRAUD);
         when(mockConfigurationService.getSsmParameter(KBV_CRI_ID)).thenReturn(CRI_KBV);
         when(mockConfigurationService.getSsmParameter(ADDRESS_CRI_ID)).thenReturn(CRI_ADDRESS);
+        when(mockConfigurationService.getSsmParameter(DCMAW_ENABLED)).thenReturn("false");
     }
 
     private APIGatewayProxyRequestEvent createRequestEvent() {

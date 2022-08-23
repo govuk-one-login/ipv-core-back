@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ENABLED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
@@ -37,6 +38,10 @@ public class SelectCriHandler
     private final ConfigurationService configurationService;
     private final UserIdentityService userIdentityService;
     private final IpvSessionService ipvSessionService;
+    private final String passportCriId;
+    private final String fraudCriId;
+    private final String kbvCriId;
+    private final String addressCriId;
 
     public SelectCriHandler(
             ConfigurationService configurationService,
@@ -45,6 +50,11 @@ public class SelectCriHandler
         this.configurationService = configurationService;
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
+
+        passportCriId = configurationService.getSsmParameter(PASSPORT_CRI_ID);
+        fraudCriId = configurationService.getSsmParameter(FRAUD_CRI_ID);
+        kbvCriId = configurationService.getSsmParameter(KBV_CRI_ID);
+        addressCriId = configurationService.getSsmParameter(ADDRESS_CRI_ID);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -52,6 +62,11 @@ public class SelectCriHandler
         this.configurationService = new ConfigurationService();
         this.userIdentityService = new UserIdentityService(configurationService);
         this.ipvSessionService = new IpvSessionService(configurationService);
+
+        passportCriId = configurationService.getSsmParameter(PASSPORT_CRI_ID);
+        fraudCriId = configurationService.getSsmParameter(FRAUD_CRI_ID);
+        kbvCriId = configurationService.getSsmParameter(KBV_CRI_ID);
+        addressCriId = configurationService.getSsmParameter(ADDRESS_CRI_ID);
     }
 
     @Override
@@ -69,35 +84,47 @@ public class SelectCriHandler
             List<String> visitedCredentialIssuers =
                     userIdentityService.getUserIssuedCredentialIssuers(userId);
 
-            String passportCriId = configurationService.getSsmParameter(PASSPORT_CRI_ID);
-            String fraudCriId = configurationService.getSsmParameter(FRAUD_CRI_ID);
-            String kbvCriId = configurationService.getSsmParameter(KBV_CRI_ID);
-            String addressCriId = configurationService.getSsmParameter(ADDRESS_CRI_ID);
+            boolean dcmawEnabled =
+                    Boolean.parseBoolean(configurationService.getSsmParameter(DCMAW_ENABLED));
 
-            if (userHasNotVisited(visitedCredentialIssuers, passportCriId)) {
-                return getJourneyResponse(passportCriId);
+            if (dcmawEnabled) {
+                return getNextAppJourneyCri(visitedCredentialIssuers);
+            } else {
+                return getNextWebJourneyCri(visitedCredentialIssuers);
             }
-
-            if (userHasNotVisited(visitedCredentialIssuers, addressCriId)) {
-                return getJourneyResponse(addressCriId);
-            }
-
-            if (userHasNotVisited(visitedCredentialIssuers, fraudCriId)) {
-                return getJourneyResponse(fraudCriId);
-            }
-
-            if (userHasNotVisited(visitedCredentialIssuers, kbvCriId)) {
-                return getJourneyResponse(kbvCriId);
-            }
-
-            LOGGER.info("Unable to determine next credential issuer");
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, new JourneyResponse(JOURNEY_FAIL));
-
         } catch (HttpResponseExceptionWithErrorBody e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getResponseCode(), e.getErrorBody());
         }
+    }
+
+    private APIGatewayProxyResponseEvent getNextWebJourneyCri(
+            List<String> visitedCredentialIssuers) {
+        if (userHasNotVisited(visitedCredentialIssuers, passportCriId)) {
+            return getJourneyResponse(passportCriId);
+        }
+
+        if (userHasNotVisited(visitedCredentialIssuers, addressCriId)) {
+            return getJourneyResponse(addressCriId);
+        }
+
+        if (userHasNotVisited(visitedCredentialIssuers, fraudCriId)) {
+            return getJourneyResponse(fraudCriId);
+        }
+
+        if (userHasNotVisited(visitedCredentialIssuers, kbvCriId)) {
+            return getJourneyResponse(kbvCriId);
+        }
+
+        LOGGER.info("Unable to determine next credential issuer");
+        return ApiGatewayResponseGenerator.proxyJsonResponse(
+                HttpStatus.SC_OK, new JourneyResponse(JOURNEY_FAIL));
+    }
+
+    private APIGatewayProxyResponseEvent getNextAppJourneyCri(
+            List<String> visitedCredentialIssuers) {
+        // This is just temporary. This functionality will be expanded upon within a different PR
+        return getNextWebJourneyCri(visitedCredentialIssuers);
     }
 
     private void logGovUkSignInJourneyId(String ipvSessionId) {
