@@ -1,0 +1,129 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: A stack for the CI storage systems core stub
+Globals:
+  Function:
+    Environment:
+      Variables:
+        JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+    CodeSigningConfigArn: !If
+      - UseCodeSigning
+      - !Ref CodeSigningConfigArn
+      - !Ref AWS::NoValue
+    PermissionsBoundary: !If
+      - UsePermissionsBoundary
+      - !Ref PermissionsBoundary
+      - !Ref AWS::NoValue
+
+Parameters:
+  Environment:
+    Type: String
+
+  CodeSigningConfigArn:
+    Type: String
+    Description: >
+      The ARN of the Code Signing Config to use, provided by the deployment pipeline
+    Default: "none"
+
+  PermissionsBoundary:
+    Type: String
+    Description: >
+      The ARN of the permissions boundary to apply to any role created by the template
+    Default: "none"
+
+Conditions:
+  UseCodeSigning:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref CodeSigningConfigArn
+          - "none"
+
+  UsePermissionsBoundary:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref PermissionsBoundary
+          - "none"
+
+Mappings:
+  CIStorageCoreStubAccountMappings:
+    "130355686670": # di-ipv-dev
+      ciStorageAccountId: 322814139578 # di-ipv-cri-dev
+    "457601271792": # di-ipv-core-build
+      ciStorageAccountId: 755415363251 # di-ipv-contra-indicators-build
+
+Resources:
+  CIStorageCoreStubAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
+      StageName: !Sub ${Environment}
+
+  CIStorageCoreStubFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "ci-storage-core-stub-${Environment}"
+      Handler: uk.gov.di.ipv.core.contraindicatorstoragecorestub.ContraIndicatorStorageCoreStubHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ./
+      Architectures:
+        - arm64
+      MemorySize: 2048
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub contra-indicator-storage-core-stub-${Environment}
+          CI_STORAGE_GET_LAMBDA_ARN: !Sub
+            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraindicators-${env}"
+            - contra_indicator_storage_account_id: !FindInMap
+                - CIStorageCoreStubAccountMappings
+                - !Ref AWS::AccountId
+                - ciStorageAccountId
+              env: !Ref Environment
+          CI_STORAGE_PUT_LAMBDA_ARN: !Sub
+            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraindicators-${env}"
+            - contra_indicator_storage_account_id: !FindInMap
+                - CIStorageCoreStubAccountMappings
+                - !Ref AWS::AccountId
+                - ciStorageAccountId
+              env: !Ref Environment
+      Policies:
+        - Statement:
+            - Sid: invokeInvokeCiSystemFunctions
+              Effect: Allow
+              Action:
+                - 'lambda:InvokeFunction'
+              Resource:
+                - !Sub
+                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraindicators-${env}"
+                  - contra_indicator_storage_account_id: !FindInMap
+                      - CIStorageCoreStubAccountMappings
+                      - !Ref AWS::AccountId
+                      - ciStorageAccountId
+                    env: !Ref Environment
+                - !Sub
+                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraindicators-${env}"
+                  - contra_indicator_storage_account_id: !FindInMap
+                      - CIStorageCoreStubAccountMappings
+                      - !Ref AWS::AccountId
+                      - ciStorageAccountId
+                    env: !Ref Environment
+      Events:
+        Get:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CIStorageCoreStubAPI
+            Path: /contra-indicator-storage-core-stub
+            Method: GET
+        Post:
+          Type: Api
+          Properties:
+            RestApiId: !Ref CIStorageCoreStubAPI
+            Path: /contra-indicator-storage-core-stub
+            Method: POST
+      AutoPublishAlias: live

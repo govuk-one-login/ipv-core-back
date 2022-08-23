@@ -1,0 +1,110 @@
+version = 0.1
+
+[dev.deploy.parameters]
+stack_name = "ci-storage-core-stub-development"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
+s3_prefix = "ci-storage-core-stub-development"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev\""
+parallel = "true"
+
+[dev-danh.deploy.parameters]
+stack_name = "ci-storage-core-stub-dev-danh"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
+s3_prefix = "ci-storage-core-stub-danh"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev-danh\""
+parallel = "true"
+
+[dev-danp.deploy.parameters]
+stack_name = "ci-storage-core-stub-dev-danp"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
+s3_prefix = "ci-storage-core-stub-danp"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev-danp\""
+parallel = "true"
+
+[dev-chrisw.deploy.parameters]
+stack_name = "ci-storage-core-stub-dev-chrisw"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
+s3_prefix = "ci-storage-core-stub-chrisw"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev-chrisw\""
+parallel = "true"
+
+[dev-amrits.deploy.parameters]
+stack_name = "ci-storage-core-stub-dev-amrits"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
+s3_prefix = "ci-storage-core-stub-amrits"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev-amrits\""
+parallel = "true"
+
+[dev-lait.deploy.parameters]
+stack_name = "ci-storage-core-stub-dev-lait"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
+s3_prefix = "ci-storage-core-stub-lait"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev-lait\""
+parallel = "true"
+
+[dev-kerrr.deploy.parameters]
+stack_name = "ci-storage-core-stub-dev-kerrr"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
+s3_prefix = "ci-storage-core-stub-kerrr"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev-kerrr\""
+parallel = "true"
+
+[dev-derrenw.deploy.parameters]
+stack_name = "ci-storage-core-stub-dev-derrenw"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
+s3_prefix = "ci-storage-core-stub-derrenw"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev-derrenw\""
+parallel = "true"
+
+[dev-patrickb.deploy.parameters]
+stack_name = "ci-storage-core-stub-dev-patrickb"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
+s3_prefix = "ci-storage-core-stub-patrickb"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev-patrickb\""
+parallel = "true"
+
+[dev-vamh.deploy.parameters]
+stack_name = "ci-storage-core-stub-dev-vamh"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
+s3_prefix = "ci-storage-core-stub-vamh"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev-vamh\""
+parallel = "true"
+
+[dev-wojciecho.deploy.parameters]
+stack_name = "ci-storage-core-stub-dev-wojciecho"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
+s3_prefix = "ci-storage-core-stub-wojciecho"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev-wojciecho\""
+parallel = "true"
+
+[dev-aprilm.deploy.parameters]
+stack_name = "ci-storage-core-stub-dev-aprilm"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
+s3_prefix = "ci-storage-core-stub-aprilm"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev-aprilm\""
+parallel = "true"
+
