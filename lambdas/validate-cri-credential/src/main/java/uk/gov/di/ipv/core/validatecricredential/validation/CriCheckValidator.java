@@ -22,6 +22,8 @@ public class CriCheckValidator {
     public static final String CRI_ID_STUB_FRAUD = "stubFraud";
     public static final String CRI_ID_KBV = "kbv";
     public static final String CRI_ID_STUB_KBV = "stubKbv";
+    public static final String CRI_ID_DCMAW = "dcmaw";
+    public static final String CRI_ID_STUB_DCMAW = "stubDcmaw";
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final List<String> ADDRESS_CRI_TYPES =
@@ -30,6 +32,7 @@ public class CriCheckValidator {
             List.of(CRI_ID_UK_PASSPORT, CRI_ID_STUB_UK_PASSPORT);
     private static final List<String> FRAUD_CRI_TYPES = List.of(CRI_ID_FRAUD, CRI_ID_STUB_FRAUD);
     private static final List<String> KBV_CRI_TYPES = List.of(CRI_ID_KBV, CRI_ID_STUB_KBV);
+    private static final List<String> DCMAW_CRI_TYPES = List.of(CRI_ID_DCMAW, CRI_ID_STUB_DCMAW);
     public static final String EVIDENCE = "evidence";
     public static final int SERVER_ERROR = 500;
 
@@ -57,6 +60,8 @@ public class CriCheckValidator {
         } else if (FRAUD_CRI_TYPES.contains(credentialIssuerId)) {
             return new EvidenceValidator(new FraudEvidenceValidator()).validate(vcClaimJson);
         } else if (ADDRESS_CRI_TYPES.contains(credentialIssuerId)) {
+            return true;
+        } else if (DCMAW_CRI_TYPES.contains(credentialIssuerId)) {
             return true;
         } else {
             LOGGER.error("Credential issuer ID not recognised: '{}'", credentialIssuerId);
