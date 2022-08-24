@@ -105,7 +105,7 @@ paths:
 
   /journey/{journeyStep}:
     post:
-      description: Called when the user selects a journey event.
+      description: Called when the user selects a journey event. Triggers an express step function
       responses:
         200:
           description: "Returns either a redirect journey eventResponse or a page eventResponse "
@@ -114,9 +114,57 @@ paths:
               schema:
                 $ref: "#/components/schemas/journeyType"
       x-amazon-apigateway-integration:
+        type: "aws"
+        credentials:
+          Fn::GetAtt: JourneyEngineStepFunctionApiGateWayIamRole.Arn
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVJourneyEngineFunction.Arn}:live/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:states:action/StartSyncExecution
+        passthroughBehavior: "when_no_match"
+        requestTemplates:
+          application/x-www-form-urlencoded:
+            Fn::Sub: |
+              {
+                "input": "{\"body\": $util.escapeJavaScript($input.json('$')), \"headers\": {#foreach($header in $input.params().header.keySet())\"$header\": \"$util.escapeJavaScript($input.params().header.get($header))\"#if($foreach.hasNext),#end#end},\"params\": {#foreach($param in $input.params().path.keySet())\"$param\": \"$util.escapeJavaScript($input.params().path.get($param))\"#if($foreach.hasNext),#end#end},\"query\": {#foreach($queryParam in $input.params().querystring.keySet())\"$queryParam\": \"$util.escapeJavaScript($input.params().querystring.get($queryParam))\"#if($foreach.hasNext),#end#end}}",
+                "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${JourneyEngineStepFunction.Name}"
+              }
+        responses:
+          default:
+            statusCode: 200
+            responseTemplates:
+              application/json: |
+                #set ($bodyObj = $util.parseJson($input.body))
+                
+                #if ($bodyObj.status == "SUCCEEDED")
+                  #set($lambdaOutput = $util.parseJson($bodyObj.output))
+                  #set($context.responseOverride.status = $lambdaOutput.statusCode)
+                  $lambdaOutput.body
+                
+                #elseif ($bodyObj.status == "FAILED")
+                  #set($context.responseOverride.status = 500)
+                  {
+                    "cause": "$bodyObj.cause",
+                    "error": "$bodyObj.error"
+                  }
+                #else
+                  #set($context.responseOverride.status = 500)
+                  $bodyObj
+                #end
+
+  /journey/cri/build-oauth-request/{criId}:
+    post:
+      description: Called when the frontend begins the CRI journey.
+      responses:
+        200:
+          description: "Returns the id, ipvClientId and authorizationUrl for a CRI."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/journeyType"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildCriOauthRequestFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
 
@@ -131,7 +179,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/journeyType"
       x-amazon-apigateway-integration:
-        httpMethod: "GET"
+        httpMethod: "POST"
         uri:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ValidateCriCredentialFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
