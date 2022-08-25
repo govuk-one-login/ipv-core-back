@@ -56,12 +56,12 @@ jobs:
       - name: Assume AWS role for build account
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          role-to-assume: ${{ secrets.BUILD_CI_STORAGE_CORE_STUB_GH_ACTIONS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.ACTIONS_ROLE_ARN }}
           aws-region: eu-west-2
 
       - name: Deploy to build environment
         uses: alphagov/di-devplatform-upload-action@v3
         with:
-          artifact-bucket-name: ${{ secrets.BUILD_CI_STORAGE_CORE_STUB_ARTIFACT_BUCKET_NAME }}
+          artifact-bucket-name: ci-core-stub-pipeline-githubartifactsourcebucket-concourse
           signing-profile-name: ${{ secrets.BUILD_SIGNING_PROFILE_NAME }}
           working-directory: ./lambdas/contra-indicator-storage-core-stub
