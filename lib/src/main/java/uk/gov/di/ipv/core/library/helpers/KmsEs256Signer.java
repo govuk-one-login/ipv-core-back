@@ -10,6 +10,7 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
+import com.nimbusds.jose.crypto.impl.ECDSA;
 import com.nimbusds.jose.jca.JCAContext;
 import com.nimbusds.jose.util.Base64URL;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -61,7 +62,12 @@ public class KmsEs256Signer implements JWSSigner {
 
         SignResult signResult = kmsClient.sign(signRequest);
 
-        return new Base64URL(b64UrlEncoder.encodeToString(signResult.getSignature().array()));
+        byte[] concatSignature =
+                ECDSA.transcodeSignatureToConcat(
+                        signResult.getSignature().array(),
+                        ECDSA.getSignatureByteArrayLength(ES256));
+
+        return new Base64URL(b64UrlEncoder.encodeToString(concatSignature));
     }
 
     @Override

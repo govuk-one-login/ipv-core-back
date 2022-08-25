@@ -9,6 +9,7 @@ import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSObject;
 import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.shaded.json.JSONObject;
+import com.nimbusds.jose.util.Base64URL;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -20,6 +21,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DER_SIGNATURE;
 
 @ExtendWith(MockitoExtension.class)
 class KmsEs256SignerTest {
@@ -33,7 +35,7 @@ class KmsEs256SignerTest {
     void shouldSignJWSObject() throws JOSEException {
         when(kmsClient.sign(any(SignRequest.class))).thenReturn(signResult);
 
-        byte[] bytes = new byte[10];
+        byte[] bytes = Base64URL.from(DER_SIGNATURE).decode();
         when(signResult.getSignature()).thenReturn(ByteBuffer.wrap(bytes));
         KmsEs256Signer kmsSigner = new KmsEs256Signer(KEY_ID, kmsClient);
 
