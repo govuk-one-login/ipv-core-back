@@ -14,6 +14,7 @@ public class ContraIndicatorItem {
     private String iss;
     private String recordedAt;
     private String ci;
+    private String ttl;
 
     @Override
     public String toString() {
