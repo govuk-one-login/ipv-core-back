@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - lambdas/contra-indicator-storage-core-stub/**
+      - .github/workflows/deploy-ci-storage-core-stub.yaml
 
 jobs:
   deploy:
@@ -59,9 +60,14 @@ jobs:
           role-to-assume: ${{ secrets.ACTIONS_ROLE_ARN }}
           aws-region: eu-west-2
 
-      - name: Deploy to build environment
-        uses: alphagov/di-devplatform-upload-action@v3
-        with:
-          artifact-bucket-name: ci-core-stub-pipeline-githubartifactsourcebucket-concourse
-          signing-profile-name: ${{ secrets.BUILD_SIGNING_PROFILE_NAME }}
-          working-directory: ./lambdas/contra-indicator-storage-core-stub
+      - name: Upload lambdas to S3
+        working-directory: ./lambdas/contra-indicator-storage-core-stub
+        env:
+          ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
+        run: sam package --s3-bucket="$ARTIFACT_BUCKET" --s3-prefix "ci-storage-core-stub" --output-template-file=cf-template.yaml
+
+      - name: Upload cloudformation template to S3
+        working-directory: ./lambdas/contra-indicator-storage-core-stub
+        env:
+          ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
+        run: aws s3 cp cf-template.yaml "s3://$ARTIFACT_BUCKET/ci-storage-core-stub/template.yaml"
