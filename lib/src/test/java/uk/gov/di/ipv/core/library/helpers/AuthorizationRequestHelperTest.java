@@ -126,6 +126,40 @@ class AuthorizationRequestHelperTest {
     }
 
     @Test
+    void shouldCreateSignedJWTWithCorrectRedirectUriForApp()
+            throws JOSEException, ParseException, HttpResponseExceptionWithErrorBody {
+        setupConfigurationServiceMock();
+        when(credentialIssuerConfig.getId()).thenReturn("dcmaw");
+        when(credentialIssuerConfig.getIpvClientId()).thenReturn(IPV_CLIENT_ID_VALUE);
+        when(credentialIssuerConfig.getAudienceForClients()).thenReturn(AUDIENCE);
+
+        SignedJWT result =
+                AuthorizationRequestHelper.createSignedJWT(
+                        sharedClaims,
+                        signer,
+                        credentialIssuerConfig,
+                        configurationService,
+                        OAUTH_STATE,
+                        TEST_USER_ID,
+                        TEST_JOURNEY_ID);
+
+        assertEquals(IPV_ISSUER, result.getJWTClaimsSet().getIssuer());
+        assertEquals(TEST_USER_ID, result.getJWTClaimsSet().getSubject());
+        assertEquals(
+                TEST_JOURNEY_ID,
+                result.getJWTClaimsSet().getStringClaim("govuk_signin_journey_id"));
+        assertEquals(AUDIENCE, result.getJWTClaimsSet().getAudience().get(0));
+        assertEquals(sharedClaims, result.getJWTClaimsSet().getClaims().get(SHARED_CLAIMS));
+        assertEquals(OAUTH_STATE.toString(), result.getJWTClaimsSet().getClaim("state"));
+        assertEquals(
+                IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getClaims().get(CLIENT_ID_FIELD));
+        assertEquals(
+                String.format("%s/%s", MOCK_CORE_FRONT_CALLBACK_URL, "dcmaw"),
+                result.getJWTClaimsSet().getClaims().get("redirect_uri"));
+        assertTrue(result.verify(new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK))));
+    }
+
+    @Test
     void shouldNotReturnSharedClaimsIfSharedClaimsMapIsEmpty()
             throws ParseException, HttpResponseExceptionWithErrorBody {
         setupCredentialIssuerConfigMock();

@@ -29,6 +29,7 @@ import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
@@ -39,6 +40,7 @@ public class AuthorizationRequestHelper {
 
     public static final String SHARED_CLAIMS = "shared_claims";
     public static final String PARAM_ID = "id";
+    public static final List<String> DCMAW_CRI_IDS = List.of("dcmaw", "stubDcmaw");
 
     private AuthorizationRequestHelper() {}
 
@@ -55,9 +57,16 @@ public class AuthorizationRequestHelper {
 
         String criId = credentialIssuerConfig.getId();
 
-        URI redirectionURI =
-                getRedirectionURI(
-                        criId, configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL));
+        URI redirectionURI;
+        if (DCMAW_CRI_IDS.contains(criId)) {
+            redirectionURI =
+                    getAppRedirectionURI(
+                            criId, configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL));
+        } else {
+            redirectionURI =
+                    getRedirectionURI(
+                            criId, configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL));
+        }
 
         JWSHeader header =
                 new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build();
@@ -124,6 +133,18 @@ public class AuthorizationRequestHelper {
         try {
             URIBuilder uriBuilder =
                     new URIBuilder(coreFrontCallbackUrl).addParameter(PARAM_ID, criId);
+            return uriBuilder.build();
+        } catch (URISyntaxException e) {
+            throw new HttpResponseExceptionWithErrorBody(
+                    500, ErrorResponse.FAILED_TO_BUILD_CORE_FRONT_CALLBACK_URL);
+        }
+    }
+
+    private static URI getAppRedirectionURI(String criId, String coreFrontCallbackUrl)
+            throws HttpResponseExceptionWithErrorBody {
+        try {
+            URIBuilder uriBuilder =
+                    new URIBuilder(String.format("%s/%s", coreFrontCallbackUrl, criId));
             return uriBuilder.build();
         } catch (URISyntaxException e) {
             throw new HttpResponseExceptionWithErrorBody(

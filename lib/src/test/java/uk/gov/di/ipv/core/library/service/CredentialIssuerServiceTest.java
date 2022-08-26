@@ -110,6 +110,39 @@ class CredentialIssuerServiceTest {
     }
 
     @Test
+    void validTokenResponseForAppJourney(WireMockRuntimeInfo wmRuntimeInfo) {
+        when(mockConfigurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
+                .thenReturn("http://www.example.com/redirect");
+        stubFor(
+                post("/token")
+                        .willReturn(
+                                aResponse()
+                                        .withHeader(
+                                                "Content-Type", "application/json;charset=utf-8")
+                                        .withBody(
+                                                "{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n")));
+
+        CredentialIssuerRequestDto credentialIssuerRequestDto =
+                new CredentialIssuerRequestDto(
+                        "1234",
+                        "dcmaw",
+                        TEST_IPV_SESSION_ID,
+                        "http://www.example.com/redirect",
+                        OAUTH_STATE);
+        CredentialIssuerConfig credentialIssuerConfig =
+                getStubCredentialIssuerConfig(wmRuntimeInfo);
+
+        AccessToken accessToken =
+                credentialIssuerService.exchangeCodeForToken(
+                        credentialIssuerRequestDto, credentialIssuerConfig, testApiKey);
+        AccessTokenType type = accessToken.getType();
+        assertEquals("Bearer", type.toString());
+        assertEquals(3600, accessToken.getLifetime());
+        assertEquals("d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4", accessToken.getValue());
+    }
+
+    @Test
     void validTokenResponseWithoutApiKey(WireMockRuntimeInfo wmRuntimeInfo) {
         when(mockConfigurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(mockConfigurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))

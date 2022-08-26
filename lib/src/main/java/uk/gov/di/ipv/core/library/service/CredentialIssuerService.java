@@ -47,6 +47,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_FRONT
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.VCS_CLAIM_NAME;
+import static uk.gov.di.ipv.core.library.helpers.AuthorizationRequestHelper.DCMAW_CRI_IDS;
 
 public class CredentialIssuerService {
 
@@ -106,13 +107,20 @@ public class CredentialIssuerService {
             String coreFrontCallbackUrl =
                     configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL);
 
+            URI redirectionUri;
+            if (DCMAW_CRI_IDS.contains(request.getCredentialIssuerId())) {
+                redirectionUri =
+                        getAppRedirectionUri(request.getCredentialIssuerId(), coreFrontCallbackUrl);
+            } else {
+                redirectionUri =
+                        getRedirectionUri(request.getCredentialIssuerId(), coreFrontCallbackUrl);
+            }
+
             TokenRequest tokenRequest =
                     new TokenRequest(
                             config.getTokenUrl(),
                             clientAuthentication,
-                            new AuthorizationCodeGrant(
-                                    authorizationCode,
-                                    getRedirectionUri(config.getId(), coreFrontCallbackUrl)));
+                            new AuthorizationCodeGrant(authorizationCode, redirectionUri));
 
             HTTPRequest httpRequest = tokenRequest.toHTTPRequest();
             if (apiKey != null) {
@@ -228,6 +236,12 @@ public class CredentialIssuerService {
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
         }
+    }
+
+    private static URI getAppRedirectionUri(String criId, String coreFrontCallbackUrl)
+            throws URISyntaxException {
+        URIBuilder uriBuilder = new URIBuilder(String.format("%s/%s", coreFrontCallbackUrl, criId));
+        return uriBuilder.build();
     }
 
     private static URI getRedirectionUri(String criId, String coreFrontCallbackUrl)
