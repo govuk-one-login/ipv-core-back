@@ -54,6 +54,7 @@ public class Gpg45ProfileEvaluator {
     public boolean credentialsSatisfyProfile(List<String> credentials, Gpg45Profile profile)
             throws ParseException, UnknownEvidenceTypeException {
         var evidenceMap = parseGpg45ScoresFromCredentials(credentials);
+
         return profile.isSatisfiedBy(buildScore(evidenceMap))
                 && !contraIndicatorsPresent(evidenceMap);
     }
@@ -80,11 +81,40 @@ public class Gpg45ProfileEvaluator {
                             evidenceArray.toJSONString(),
                             new TypeToken<List<CredentialEvidenceItem>>() {}.getType());
             for (CredentialEvidenceItem evidenceItem : credentialEvidenceList) {
-                evidenceMap.get(evidenceItem.getType()).add(evidenceItem);
+                if (evidenceItem.getCheckDetails() != null
+                        || evidenceItem.getFailedCheckDetails() != null) {
+                    List<CredentialEvidenceItem> dcmawEvidenceItems =
+                            convertDcmawEvidenceToGpg45EvidenceItems(evidenceItem);
+                    for (CredentialEvidenceItem gpg45EvidenceItem : dcmawEvidenceItems) {
+                        evidenceMap.get(gpg45EvidenceItem.getType()).add(gpg45EvidenceItem);
+                    }
+                } else {
+                    evidenceMap.get(evidenceItem.getType()).add(evidenceItem);
+                }
             }
         }
 
         return evidenceMap;
+    }
+
+    private List<CredentialEvidenceItem> convertDcmawEvidenceToGpg45EvidenceItems(
+            CredentialEvidenceItem dcmawEvidenceItem) {
+        List<CredentialEvidenceItem> gpg45CredentialItems = new ArrayList<>();
+
+        gpg45CredentialItems.add(
+                new CredentialEvidenceItem(
+                        dcmawEvidenceItem.getStrengthScore(),
+                        dcmawEvidenceItem.getValidityScore()));
+
+        gpg45CredentialItems.add(
+                new CredentialEvidenceItem(
+                        EvidenceType.ACTIVITY, dcmawEvidenceItem.getActivityHistoryScore()));
+
+        int dcmawVerificationScore = dcmawEvidenceItem.getCheckDetails() == null ? 0 : 2;
+        gpg45CredentialItems.add(
+                new CredentialEvidenceItem(EvidenceType.VERIFICATION, dcmawVerificationScore));
+
+        return gpg45CredentialItems;
     }
 
     private Gpg45Scores buildScore(Map<EvidenceType, List<CredentialEvidenceItem>> evidenceMap) {
