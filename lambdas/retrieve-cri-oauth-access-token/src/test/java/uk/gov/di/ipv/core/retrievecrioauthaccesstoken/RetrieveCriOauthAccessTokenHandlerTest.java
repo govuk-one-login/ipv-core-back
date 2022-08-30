@@ -113,7 +113,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                         "ipv-core",
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
-                        "test-audience");
+                        "test-audience",
+                        new URI("http://www.example.com/credential-issuers/callback/criId"));
 
         clientSessionDetailsDto =
                 new ClientSessionDetailsDto(

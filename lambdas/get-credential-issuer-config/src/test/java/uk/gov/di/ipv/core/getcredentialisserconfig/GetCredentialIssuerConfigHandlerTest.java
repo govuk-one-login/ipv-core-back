@@ -40,7 +40,8 @@ class GetCredentialIssuerConfigHandlerTest {
                             "ipv-core",
                             EC_PUBLIC_JWK,
                             RSA_ENCRYPTION_PUBLIC_JWK,
-                            "test-audience"),
+                            "test-audience",
+                            URI.create("testRedirectUrl")),
                     new CredentialIssuerConfig(
                             "test2",
                             "Any",
@@ -50,7 +51,8 @@ class GetCredentialIssuerConfigHandlerTest {
                             "ipv-core",
                             EC_PUBLIC_JWK,
                             RSA_ENCRYPTION_PUBLIC_JWK,
-                            "test-audience"));
+                            "test-audience",
+                            URI.create("test2RedirectUrl")));
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

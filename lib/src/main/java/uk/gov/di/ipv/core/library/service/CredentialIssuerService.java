@@ -19,7 +19,6 @@ import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
 import org.apache.http.HttpHeaders;
-import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -35,7 +34,6 @@ import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -43,7 +41,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_FRONT_CALLBACK_URL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.VCS_CLAIM_NAME;
@@ -103,16 +100,13 @@ public class CredentialIssuerService {
 
             ClientAuthentication clientAuthentication = new PrivateKeyJWT(signedClientJwt);
 
-            String coreFrontCallbackUrl =
-                    configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL);
+            URI redirectionUri = config.getIpvCoreRedirectUrl();
 
             TokenRequest tokenRequest =
                     new TokenRequest(
                             config.getTokenUrl(),
                             clientAuthentication,
-                            new AuthorizationCodeGrant(
-                                    authorizationCode,
-                                    getRedirectionUri(config.getId(), coreFrontCallbackUrl)));
+                            new AuthorizationCodeGrant(authorizationCode, redirectionUri));
 
             HTTPRequest httpRequest = tokenRequest.toHTTPRequest();
             if (apiKey != null) {
@@ -147,7 +141,7 @@ public class CredentialIssuerService {
             LOGGER.info("Auth Code exchanged for Access Token");
             return token;
 
-        } catch (IOException | ParseException | JOSEException | URISyntaxException e) {
+        } catch (IOException | ParseException | JOSEException e) {
             LOGGER.error("Error exchanging token: {}", e.getMessage(), e);
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR,
@@ -228,11 +222,5 @@ public class CredentialIssuerService {
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
         }
-    }
-
-    private static URI getRedirectionUri(String criId, String coreFrontCallbackUrl)
-            throws URISyntaxException {
-        URIBuilder uriBuilder = new URIBuilder(coreFrontCallbackUrl).addParameter("id", criId);
-        return uriBuilder.build();
     }
 }
