@@ -5,12 +5,11 @@ import uk.gov.di.ipv.core.processjourneystep.statemachine.exceptions.UnknownStat
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyContext;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 public class StateMachine {
 
-    private Map<String, State> states = new HashMap<>();
+    private Map<String, State> states;
 
     public StateMachine(StateMachineInitializer initializer) throws IOException {
         this.states = initializer.initialize();

@@ -55,6 +55,7 @@ class ProcessJourneyStepHandlerTest {
     private static final String PRE_KBV_TRANSITION_PAGE_STATE = "PRE_KBV_TRANSITION_PAGE";
     private static final String IPV_SUCCESS_PAGE_STATE = "IPV_SUCCESS_PAGE";
     private static final String DEBUG_PAGE_STATE = "DEBUG_PAGE";
+    private static final String DEBUG_EVALUATE_GPG45_SCORES = "DEBUG_EVALUATE_GPG45_SCORES";
     private static final String PYI_NO_MATCH_STATE = "PYI_NO_MATCH";
     private static final String PYI_KBV_FAIL_STATE = "PYI_KBV_FAIL";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
@@ -761,7 +762,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @Test
-    void shouldReturnDebugPageResponseWhenRequired() throws IOException {
+    void shouldReturnDebugEvaluateGpg45ScoresJourneyWhenRequired() throws IOException {
         var input =
                 new ApiGatewayTemplateMappingInput(
                         Map.of("input", "body"),
@@ -791,10 +792,10 @@ class ProcessJourneyStepHandlerTest {
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(DEBUG_PAGE_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(DEBUG_EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(200, lambdaOutput.getStatusCode());
-        assertEquals(DEBUG_PAGE, outputBody.get("page"));
+        assertEquals("/journey/evaluate-gpg45-scores", outputBody.get("journey"));
     }
 
     @Test
