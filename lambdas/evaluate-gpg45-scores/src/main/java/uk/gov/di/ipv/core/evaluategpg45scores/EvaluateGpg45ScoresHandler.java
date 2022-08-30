@@ -33,8 +33,6 @@ public class EvaluateGpg45ScoresHandler
     private static final Logger LOGGER = LogManager.getLogger();
     public static final String JOURNEY_END = "/journey/end";
     public static final String JOURNEY_NEXT = "/journey/next";
-    public static final String JOURNEY_ERROR = "/journey/error";
-    public static final String JOURNEY_FAIL = "/journey/fail";
     private final UserIdentityService userIdentityService;
     private final IpvSessionService ipvSessionService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
@@ -74,7 +72,7 @@ public class EvaluateGpg45ScoresHandler
 
             JourneyResponse journeyResponse;
             Optional<JourneyResponse> failedJourneyResponse =
-                    gpg45ProfileEvaluator.getFailedJourneyResponse(credentials);
+                    gpg45ProfileEvaluator.getJourneyResponseIfAnyCredsFailM1A(credentials);
             if (failedJourneyResponse.isPresent()) {
                 // This will eventually be handled by the CRI select lambda. We are only
                 // failing the journey here for temporary convenience. This lambda should

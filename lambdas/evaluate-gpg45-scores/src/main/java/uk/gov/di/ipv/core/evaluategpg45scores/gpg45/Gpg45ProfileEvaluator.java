@@ -32,7 +32,7 @@ public class Gpg45ProfileEvaluator {
     public static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
     public static final String JOURNEY_PYI_KBV_FAIL = "/journey/pyi-kbv-fail";
 
-    public Optional<JourneyResponse> getFailedJourneyResponse(List<String> credentials)
+    public Optional<JourneyResponse> getJourneyResponseIfAnyCredsFailM1A(List<String> credentials)
             throws UnknownEvidenceTypeException, ParseException {
         var evidenceMap = parseGpg45ScoresFromCredentials(credentials);
 
