@@ -23,6 +23,7 @@ public class CredentialIssuerConfig {
     private String vcVerifyingPublicJwk;
     private String jarEncryptionPublicJwk;
     private String audienceForClients;
+    private URI ipvCoreRedirectUrl;
 
     public CredentialIssuerConfig() {}
 
@@ -36,7 +37,8 @@ public class CredentialIssuerConfig {
             String ipvClientId,
             String vcVerifyingPublicJwk,
             String jarEncryptionPublicJwk,
-            String audienceForClients) {
+            String audienceForClients,
+            URI ipvCoreRedirectUrl) {
         this.id = id;
         this.name = name;
         this.tokenUrl = tokenUrl;
@@ -46,6 +48,7 @@ public class CredentialIssuerConfig {
         this.vcVerifyingPublicJwk = vcVerifyingPublicJwk;
         this.jarEncryptionPublicJwk = jarEncryptionPublicJwk;
         this.audienceForClients = audienceForClients;
+        this.ipvCoreRedirectUrl = ipvCoreRedirectUrl;
     }
 
     public String getId() {
@@ -92,6 +95,10 @@ public class CredentialIssuerConfig {
 
     public String getAudienceForClients() {
         return audienceForClients;
+    }
+
+    public URI getIpvCoreRedirectUrl() {
+        return ipvCoreRedirectUrl;
     }
 
     @Override

@@ -125,6 +125,7 @@ public class ConfigurationService {
                                 "%s/%s",
                                 getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
                                 credentialIssuerId));
+
         return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
     }
 

@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
+import java.net.URI;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -45,7 +46,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_FRONT_CALLBACK_URL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
@@ -63,6 +63,7 @@ class AuthorizationRequestHelperTest {
     public static final String AUDIENCE = "Audience";
     public static final String IPV_TOKEN_TTL = "900";
     public static final String MOCK_CORE_FRONT_CALLBACK_URL = "callbackUri";
+    public static final String TEST_REDIRECT_URI = "http:example.com/callback/criId";
     public static final String CRI_ID = "cri_id";
     public static final String TEST_USER_ID = "test-user-id";
     public static final String TEST_JOURNEY_ID = "test-journey-id";
@@ -98,6 +99,8 @@ class AuthorizationRequestHelperTest {
         setupCredentialIssuerConfigMock();
         setupConfigurationServiceMock();
         when(credentialIssuerConfig.getAudienceForClients()).thenReturn(AUDIENCE);
+        when(credentialIssuerConfig.getIpvCoreRedirectUrl())
+                .thenReturn(URI.create(TEST_REDIRECT_URI));
 
         SignedJWT result =
                 AuthorizationRequestHelper.createSignedJWT(
@@ -119,43 +122,7 @@ class AuthorizationRequestHelperTest {
         assertEquals(OAUTH_STATE.toString(), result.getJWTClaimsSet().getClaim("state"));
         assertEquals(
                 IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getClaims().get(CLIENT_ID_FIELD));
-        assertEquals(
-                String.format("%s?id=%s", MOCK_CORE_FRONT_CALLBACK_URL, CRI_ID),
-                result.getJWTClaimsSet().getClaims().get("redirect_uri"));
-        assertTrue(result.verify(new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK))));
-    }
-
-    @Test
-    void shouldCreateSignedJWTWithCorrectRedirectUriForApp()
-            throws JOSEException, ParseException, HttpResponseExceptionWithErrorBody {
-        setupConfigurationServiceMock();
-        when(credentialIssuerConfig.getId()).thenReturn("dcmaw");
-        when(credentialIssuerConfig.getIpvClientId()).thenReturn(IPV_CLIENT_ID_VALUE);
-        when(credentialIssuerConfig.getAudienceForClients()).thenReturn(AUDIENCE);
-
-        SignedJWT result =
-                AuthorizationRequestHelper.createSignedJWT(
-                        sharedClaims,
-                        signer,
-                        credentialIssuerConfig,
-                        configurationService,
-                        OAUTH_STATE,
-                        TEST_USER_ID,
-                        TEST_JOURNEY_ID);
-
-        assertEquals(IPV_ISSUER, result.getJWTClaimsSet().getIssuer());
-        assertEquals(TEST_USER_ID, result.getJWTClaimsSet().getSubject());
-        assertEquals(
-                TEST_JOURNEY_ID,
-                result.getJWTClaimsSet().getStringClaim("govuk_signin_journey_id"));
-        assertEquals(AUDIENCE, result.getJWTClaimsSet().getAudience().get(0));
-        assertEquals(sharedClaims, result.getJWTClaimsSet().getClaims().get(SHARED_CLAIMS));
-        assertEquals(OAUTH_STATE.toString(), result.getJWTClaimsSet().getClaim("state"));
-        assertEquals(
-                IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getClaims().get(CLIENT_ID_FIELD));
-        assertEquals(
-                String.format("%s/%s", MOCK_CORE_FRONT_CALLBACK_URL, "dcmaw"),
-                result.getJWTClaimsSet().getClaims().get("redirect_uri"));
+        assertEquals(TEST_REDIRECT_URI, result.getJWTClaimsSet().getClaims().get("redirect_uri"));
         assertTrue(result.verify(new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK))));
     }
 
@@ -199,27 +166,6 @@ class AuthorizationRequestHelperTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenUnableToBuildRedirectionUri() {
-        when(credentialIssuerConfig.getId()).thenReturn(CRI_ID);
-        when(configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL)).thenReturn("[[]]]][[[");
-
-        HttpResponseExceptionWithErrorBody exception =
-                assertThrows(
-                        HttpResponseExceptionWithErrorBody.class,
-                        () ->
-                                AuthorizationRequestHelper.createSignedJWT(
-                                        null,
-                                        jwsSigner,
-                                        credentialIssuerConfig,
-                                        configurationService,
-                                        OAUTH_STATE,
-                                        TEST_USER_ID,
-                                        TEST_JOURNEY_ID));
-        assertEquals(500, exception.getResponseCode());
-        assertEquals("Failed to build Core Front Callback Url", exception.getErrorReason());
-    }
-
-    @Test
     void shouldCreateJWEObject()
             throws ParseException, JOSEException, NoSuchAlgorithmException, InvalidKeySpecException,
                     HttpResponseExceptionWithErrorBody {
@@ -256,13 +202,10 @@ class AuthorizationRequestHelperTest {
     }
 
     private void setupCredentialIssuerConfigMock() {
-        when(credentialIssuerConfig.getId()).thenReturn(CRI_ID);
         when(credentialIssuerConfig.getIpvClientId()).thenReturn(IPV_CLIENT_ID_VALUE);
     }
 
     private void setupConfigurationServiceMock() {
-        when(configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
-                .thenReturn(MOCK_CORE_FRONT_CALLBACK_URL);
         when(configurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn(IPV_TOKEN_TTL);
         when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
     }

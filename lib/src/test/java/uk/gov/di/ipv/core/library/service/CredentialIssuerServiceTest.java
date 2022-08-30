@@ -47,7 +47,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_FRONT_CALLBACK_URL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DCMAW_SUCCESS_RESPONSE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
@@ -79,8 +78,6 @@ class CredentialIssuerServiceTest {
     @Test
     void validTokenResponse(WireMockRuntimeInfo wmRuntimeInfo) {
         when(mockConfigurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(mockConfigurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
-                .thenReturn("http://www.example.com/redirect");
         stubFor(
                 post("/token")
                         .willReturn(
@@ -112,8 +109,6 @@ class CredentialIssuerServiceTest {
     @Test
     void validTokenResponseForAppJourney(WireMockRuntimeInfo wmRuntimeInfo) {
         when(mockConfigurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(mockConfigurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
-                .thenReturn("http://www.example.com/redirect");
         stubFor(
                 post("/token")
                         .willReturn(
@@ -145,8 +140,6 @@ class CredentialIssuerServiceTest {
     @Test
     void validTokenResponseWithoutApiKey(WireMockRuntimeInfo wmRuntimeInfo) {
         when(mockConfigurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(mockConfigurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
-                .thenReturn("http://www.example.com/redirect");
         stubFor(
                 post("/token")
                         .willReturn(
@@ -178,8 +171,6 @@ class CredentialIssuerServiceTest {
     @Test
     void tokenErrorResponse(WireMockRuntimeInfo wmRuntimeInfo) {
         when(mockConfigurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(mockConfigurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
-                .thenReturn("http://www.example.com/redirect");
         var errorJson =
                 "{ \"error\": \"invalid_request\", \"error_description\": \"Request was missing the 'redirect_uri' parameter.\", \"error_uri\": \"See the full API docs at https://authorization-server.com/docs/access_token\"}";
         stubFor(
@@ -217,8 +208,6 @@ class CredentialIssuerServiceTest {
     @Test
     void invalidHeaderThrowsCredentialIssuerException(WireMockRuntimeInfo wmRuntimeInfo) {
         when(mockConfigurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(mockConfigurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL))
-                .thenReturn("http://www.example.com/redirect");
         stubFor(
                 post("/token")
                         .willReturn(
@@ -433,7 +422,11 @@ class CredentialIssuerServiceTest {
                 "ipv-core",
                 EC_PUBLIC_JWK,
                 RSA_ENCRYPTION_PUBLIC_JWK,
-                "test-audience");
+                "test-audience",
+                URI.create(
+                        "http://localhost:"
+                                + wmRuntimeInfo.getHttpPort()
+                                + "/credential-issuer/callback?id=StubPassport"));
     }
 
     private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {

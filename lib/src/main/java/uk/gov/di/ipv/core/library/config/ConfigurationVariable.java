@@ -16,7 +16,8 @@ public enum ConfigurationVariable {
     PASSPORT_CRI_ID("/%s/core/self/journey/passportCriId"),
     DCMAW_ENABLED("/%s/core/self/journey/dcmawEnabled"),
     AUTH_CODE_EXPIRY_SECONDS("/%s/core/self/authCodeExpirySeconds"),
-    PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY("/%s/core/clients/%s/publicKeyMaterialForCoreToVerify");
+    PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY("/%s/core/clients/%s/publicKeyMaterialForCoreToVerify"),
+    CRI_REDIRECT_URL("/%s/core/credentialIssuers/%s/ipvCoreRedirectUrl");
 
     private final String value;
 

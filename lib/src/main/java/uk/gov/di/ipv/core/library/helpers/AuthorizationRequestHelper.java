@@ -17,15 +17,12 @@ import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
-import org.apache.http.client.utils.URIBuilder;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
@@ -33,7 +30,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_FRONT_CALLBACK_URL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 
 public class AuthorizationRequestHelper {
@@ -55,19 +51,6 @@ public class AuthorizationRequestHelper {
             throws HttpResponseExceptionWithErrorBody {
         Instant now = Instant.now();
 
-        String criId = credentialIssuerConfig.getId();
-
-        URI redirectionURI;
-        if (DCMAW_CRI_IDS.contains(criId)) {
-            redirectionURI =
-                    getAppRedirectionURI(
-                            criId, configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL));
-        } else {
-            redirectionURI =
-                    getRedirectionURI(
-                            criId, configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL));
-        }
-
         JWSHeader header =
                 new JWSHeader.Builder(JWSAlgorithm.ES256).type(JOSEObjectType.JWT).build();
 
@@ -75,7 +58,7 @@ public class AuthorizationRequestHelper {
                 new AuthorizationRequest.Builder(
                                 ResponseType.CODE,
                                 new ClientID(credentialIssuerConfig.getIpvClientId()))
-                        .redirectionURI(redirectionURI)
+                        .redirectionURI(credentialIssuerConfig.getIpvCoreRedirectUrl())
                         .state(new State(oauthState))
                         .build()
                         .toJWTClaimsSet();
@@ -125,30 +108,6 @@ public class AuthorizationRequestHelper {
             return jweObject;
         } catch (JOSEException e) {
             throw new HttpResponseExceptionWithErrorBody(500, ErrorResponse.FAILED_TO_ENCRYPT_JWT);
-        }
-    }
-
-    private static URI getRedirectionURI(String criId, String coreFrontCallbackUrl)
-            throws HttpResponseExceptionWithErrorBody {
-        try {
-            URIBuilder uriBuilder =
-                    new URIBuilder(coreFrontCallbackUrl).addParameter(PARAM_ID, criId);
-            return uriBuilder.build();
-        } catch (URISyntaxException e) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.FAILED_TO_BUILD_CORE_FRONT_CALLBACK_URL);
-        }
-    }
-
-    private static URI getAppRedirectionURI(String criId, String coreFrontCallbackUrl)
-            throws HttpResponseExceptionWithErrorBody {
-        try {
-            URIBuilder uriBuilder =
-                    new URIBuilder(String.format("%s/%s", coreFrontCallbackUrl, criId));
-            return uriBuilder.build();
-        } catch (URISyntaxException e) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.FAILED_TO_BUILD_CORE_FRONT_CALLBACK_URL);
         }
     }
 }
