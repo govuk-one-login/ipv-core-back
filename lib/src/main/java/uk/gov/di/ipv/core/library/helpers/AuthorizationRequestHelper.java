@@ -26,7 +26,6 @@ import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import java.util.List;
 import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
@@ -35,8 +34,6 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SE
 public class AuthorizationRequestHelper {
 
     public static final String SHARED_CLAIMS = "shared_claims";
-    public static final String PARAM_ID = "id";
-    public static final List<String> DCMAW_CRI_IDS = List.of("dcmaw", "stubDcmaw");
 
     private AuthorizationRequestHelper() {}
 
