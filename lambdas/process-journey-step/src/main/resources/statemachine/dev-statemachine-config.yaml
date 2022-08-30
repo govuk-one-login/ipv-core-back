@@ -195,6 +195,60 @@ DEBUG_PAGE:
     next:
       type: basic
       name: next
+      targetState: DEBUG_EVALUATE_GPG45_SCORES
+      response:
+        type: journey
+        journeyStepId: /journey/evaluate-gpg45-scores
+DEBUG_EVALUATE_GPG45_SCORES:
+  name: DEBUG_EVALUATE_GPG45_SCORES
+  parent: null
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: DEBUG_PAGE
+      response:
+        type: page
+        pageId: page-ipv-debug
+    end:
+      type: basic
+      name: next
+      targetState: DEBUG_PAGE
+      response:
+        type: page
+        pageId: page-ipv-debug
+    pyi-no-match:
+      type: basic
+      name: pyi-no-match
+      targetState: DEBUG_PYI_NO_MATCH
+      response:
+        type: page
+        pageId: pyi-no-match
+    pyi-kbv-fail:
+      type: basic
+      name: pyi-kbv-fail
+      targetState: DEBUG_PYI_KBV_FAIL
+      response:
+        type: page
+        pageId: pyi-kbv-fail
+DEBUG_PYI_NO_MATCH:
+  name: DEBUG_PYI_NO_MATCH
+  parent: null
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: DEBUG_PAGE
+      response:
+        type: page
+        pageId: page-ipv-debug
+DEBUG_PYI_KBV_FAIL:
+  name: DEBUG_PYI_KBV_FAIL
+  parent: null
+  events:
+    next:
+      type: basic
+      name: next
       targetState: DEBUG_PAGE
       response:
         type: page
