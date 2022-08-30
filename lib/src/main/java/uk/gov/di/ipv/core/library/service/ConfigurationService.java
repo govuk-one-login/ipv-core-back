@@ -46,6 +46,7 @@ public class ConfigurationService {
     private static final String CLIENT_REDIRECT_URL_SEPARATOR = ",";
     private static final String API_KEY = "apiKey";
     private static final Logger LOGGER = LogManager.getLogger();
+    public static final String PRODUCTION_ENV = "production";
     private final SSMProvider ssmProvider;
     private final SecretsManagerClient secretsManagerClient;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -110,6 +111,10 @@ public class ConfigurationService {
 
     public boolean isRunningLocally() {
         return Boolean.parseBoolean(getEnvironmentVariable(IS_LOCAL));
+    }
+
+    public boolean isNotRunningInProd() {
+        return PRODUCTION_ENV.equals(getEnvironmentVariable(ENVIRONMENT));
     }
 
     public long getBearerAccessTokenTtl() {

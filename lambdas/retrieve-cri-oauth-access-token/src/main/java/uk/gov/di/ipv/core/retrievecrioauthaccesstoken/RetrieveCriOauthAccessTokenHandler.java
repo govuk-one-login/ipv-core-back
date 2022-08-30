@@ -141,6 +141,10 @@ public class RetrieveCriOauthAccessTokenHandler
 
                 sendIpvVcReceivedAuditEvent(auditEventUser, vc);
 
+                if (configurationService.isNotRunningInProd()) {
+                    LOGGER.info("Not running in production");
+                }
+
                 credentialIssuerService.persistUserCredentials(
                         vc.serialize(), request.getCredentialIssuerId(), userId);
             }
