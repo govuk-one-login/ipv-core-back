@@ -142,10 +142,14 @@ class Gpg45ProfileEvaluatorTest {
         List<String> goodCredentials =
                 List.of(M1A_PASSPORT_VC, M1A_ADDRESS_VC, M1A_FRAUD_VC, M1A_KBV_VC);
         List<String> gatheredCredentials = new ArrayList<>();
-        assertEquals(Optional.empty(), evaluator.getFailedJourneyResponse(gatheredCredentials));
+        assertEquals(
+                Optional.empty(),
+                evaluator.getJourneyResponseIfAnyCredsFailM1A(gatheredCredentials));
         for (String credential : goodCredentials) {
             gatheredCredentials.add(credential);
-            assertEquals(Optional.empty(), evaluator.getFailedJourneyResponse(gatheredCredentials));
+            assertEquals(
+                    Optional.empty(),
+                    evaluator.getJourneyResponseIfAnyCredsFailM1A(gatheredCredentials));
         }
     }
 
@@ -154,7 +158,7 @@ class Gpg45ProfileEvaluatorTest {
             throws Exception {
         assertEquals(
                 Optional.empty(),
-                evaluator.getFailedJourneyResponse(List.of(M1A_FRAUD_VC_WITH_A01)));
+                evaluator.getJourneyResponseIfAnyCredsFailM1A(List.of(M1A_FRAUD_VC_WITH_A01)));
     }
 
     @Test
@@ -163,7 +167,8 @@ class Gpg45ProfileEvaluatorTest {
         Optional<JourneyResponse> journeyResponse =
                 Optional.of(new JourneyResponse("/journey/pyi-no-match"));
         assertEquals(
-                journeyResponse, evaluator.getFailedJourneyResponse(List.of(PASSPORT_VC_FAILED)));
+                journeyResponse,
+                evaluator.getJourneyResponseIfAnyCredsFailM1A(List.of(PASSPORT_VC_FAILED)));
     }
 
     @Test
@@ -171,7 +176,9 @@ class Gpg45ProfileEvaluatorTest {
             throws Exception {
         Optional<JourneyResponse> journeyResponse =
                 Optional.of(new JourneyResponse("/journey/pyi-no-match"));
-        assertEquals(journeyResponse, evaluator.getFailedJourneyResponse(List.of(FRAUD_VC_FAILED)));
+        assertEquals(
+                journeyResponse,
+                evaluator.getJourneyResponseIfAnyCredsFailM1A(List.of(FRAUD_VC_FAILED)));
     }
 
     @Test
@@ -179,6 +186,8 @@ class Gpg45ProfileEvaluatorTest {
             throws Exception {
         Optional<JourneyResponse> journeyResponse =
                 Optional.of(new JourneyResponse("/journey/pyi-kbv-fail"));
-        assertEquals(journeyResponse, evaluator.getFailedJourneyResponse(List.of(KBV_VC_FAILED)));
+        assertEquals(
+                journeyResponse,
+                evaluator.getJourneyResponseIfAnyCredsFailM1A(List.of(KBV_VC_FAILED)));
     }
 }

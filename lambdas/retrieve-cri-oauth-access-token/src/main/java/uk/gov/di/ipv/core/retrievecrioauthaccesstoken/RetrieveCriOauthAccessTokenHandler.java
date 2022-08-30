@@ -47,10 +47,10 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 public class RetrieveCriOauthAccessTokenHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String CRI_VALIDATE_ENDPOINT = "/journey/cri/validate/";
-    private static final String JOURNEY_ERROR_ENDPOINT = "/journey/error";
-    public static final JourneyResponse ERROR_JOURNEY_RESPONSE =
-            new JourneyResponse(JOURNEY_ERROR_ENDPOINT);
+    private static final JourneyResponse JOURNEY_NEXT_RESPONSE =
+            new JourneyResponse("/journey/next");
+    private static final JourneyResponse JOURNEY_ERROR_RESPONSE =
+            new JourneyResponse("/journey/error");
     public static final String EVIDENCE = "evidence";
 
     private final CredentialIssuerService credentialIssuerService;
@@ -145,18 +145,15 @@ public class RetrieveCriOauthAccessTokenHandler
                         vc.serialize(), request.getCredentialIssuerId(), userId);
             }
 
-            JourneyResponse journeyResponse =
-                    new JourneyResponse(
-                            String.format(
-                                    "%s%s", CRI_VALIDATE_ENDPOINT, credentialIssuerConfig.getId()));
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, journeyResponse);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_OK, JOURNEY_NEXT_RESPONSE);
         } catch (CredentialIssuerException e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, ERROR_JOURNEY_RESPONSE);
+                    HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
         } catch (ParseException | JsonProcessingException | SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, ERROR_JOURNEY_RESPONSE);
+                    HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
         } catch (HttpResponseExceptionWithErrorBody e) {
             ErrorResponse errorResponse = e.getErrorResponse();
             LogHelper.logOauthError(

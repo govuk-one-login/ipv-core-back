@@ -88,7 +88,7 @@ class EvaluateGpg45ScoreHandlerTest {
     void shouldReturnJourneyPyiNoMatchIfEvaluatorReturnsPyiNoMatch() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(gpg45ProfileEvaluator.getFailedJourneyResponse(CREDENTIALS))
+        when(gpg45ProfileEvaluator.getJourneyResponseIfAnyCredsFailM1A(CREDENTIALS))
                 .thenReturn(Optional.of(new JourneyResponse(JOURNEY_PYI_NO_MATCH)));
 
         var response = evaluateGpg45ScoresHandler.handleRequest(event, context);
@@ -103,7 +103,7 @@ class EvaluateGpg45ScoreHandlerTest {
     void shouldReturnJourneyPyiKbvFailIfEvaluatorReturnsPyiKbvFail() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(gpg45ProfileEvaluator.getFailedJourneyResponse(CREDENTIALS))
+        when(gpg45ProfileEvaluator.getJourneyResponseIfAnyCredsFailM1A(CREDENTIALS))
                 .thenReturn(Optional.of(new JourneyResponse(JOURNEY_PYI_KBV_FAIL)));
 
         var response = evaluateGpg45ScoresHandler.handleRequest(event, context);
