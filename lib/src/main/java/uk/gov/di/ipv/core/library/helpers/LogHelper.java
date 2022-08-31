@@ -92,6 +92,7 @@ public class LogHelper {
         LoggingUtils.removeKey(logField.getFieldName());
     }
 
+    @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public static void logMessageWithFieldsAndValues(
             Level logLevel,
             String message,
