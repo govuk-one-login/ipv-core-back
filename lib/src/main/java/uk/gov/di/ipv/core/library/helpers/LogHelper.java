@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.helpers;
 
 import com.amazonaws.util.StringUtils;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.LoggingUtils;
@@ -26,7 +27,10 @@ public class LogHelper {
         IPV_SESSION_ID_LOG_FIELD("ipvSessionId"),
         JTI_LOG_FIELD("jti"),
         JTI_USED_AT_LOG_FIELD("jtiUsedAt"),
-        NUMBER_OF_VCS("numberOfVCs");
+        NUMBER_OF_VCS("numberOfVCs"),
+        ERROR("error"),
+        PAYLOAD("payload"),
+        STATUS_CODE("statusCode");
         private final String fieldName;
 
         LogField(String fieldName) {
@@ -86,6 +90,22 @@ public class LogHelper {
         LoggingUtils.appendKey(logField.getFieldName(), logFieldValue);
         LOGGER.info(message);
         LoggingUtils.removeKey(logField.getFieldName());
+    }
+
+    public static void logMessageWithFieldsAndValues(
+            Level logLevel,
+            String message,
+            LogField logField1,
+            String logFieldValue1,
+            LogField logField2,
+            String logFieldValue2,
+            LogField logField3,
+            String logFieldValue3) {
+        LoggingUtils.appendKey(logField1.getFieldName(), logFieldValue1);
+        LoggingUtils.appendKey(logField2.getFieldName(), logFieldValue2);
+        LoggingUtils.appendKey(logField3.getFieldName(), logFieldValue3);
+        LOGGER.log(logLevel, message);
+        LoggingUtils.removeKeys(logField1.getFieldName(), logField2.getFieldName(), logFieldValue3);
     }
 
     private static void attachFieldToLogs(LogField field, String value) {

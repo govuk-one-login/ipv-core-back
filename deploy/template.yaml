@@ -51,14 +51,24 @@ Mappings:
   EnvironmentConfiguration:
     "130355686670": # Development
       provisionedConcurrency: 0
+      ciStorageAccountId: 322814139578 # di-ipv-cri-dev
+      environment: dev
     "457601271792": # Build
       provisionedConcurrency: 0
+      ciStorageAccountId: 755415363251 # di-ipv-contra-indicators-build
+      environment: build
     "335257547869": # Staging
       provisionedConcurrency: 1
+      ciStorageAccountId: 265689800486 # di-ipv-contra-indicators-staging
+      environment: staging
     "991138514218": # Integration
       provisionedConcurrency: 1
+      ciStorageAccountId: 697519714716 # di-ipv-contra-indicators-integration
+      environment: integration
     "075701497069": # Production
       provisionedConcurrency: 1
+      ciStorageAccountId: 442136572379 # di-ipv-contra-indicators-prod
+      environment: prod
 
 Resources:
   JWKSParamRole:
@@ -441,6 +451,16 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub retrieve-cri-oauth-access-token-${Environment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          CI_STORAGE_PUT_LAMBDA_ARN: !Sub
+            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraindicators-${env}"
+            - contra_indicator_storage_account_id: !FindInMap
+                - EnvironmentConfiguration
+                - !Ref AWS::AccountId
+                - ciStorageAccountId
+              env: !FindInMap
+                - EnvironmentConfiguration
+                - !Ref AWS::AccountId
+                - environment
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UserIssuedCredentialsV2Table
@@ -472,6 +492,21 @@ Resources:
                 - 'kms:GenerateDataKey'
               Resource:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
+            - Sid: invokePutCiFunction
+              Effect: Allow
+              Action:
+                - 'lambda:InvokeFunction'
+              Resource:
+                - !Sub
+                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraindicators-${env}"
+                  - contra_indicator_storage_account_id: !FindInMap
+                      - EnvironmentConfiguration
+                      - !Ref AWS::AccountId
+                      - ciStorageAccountId
+                    env: !FindInMap
+                      - EnvironmentConfiguration
+                      - !Ref AWS::AccountId
+                      - environment
       Events:
         IPVCorePrivateAPI:
           Type: Api
