@@ -32,6 +32,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.CIStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -44,6 +45,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -51,6 +53,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -87,6 +90,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     @Mock private IpvSessionService ipvSessionService;
 
     @Mock private IpvSessionItem ipvSessionItem;
+
+    @Mock private CIStorageService ciStorageService;
 
     @InjectMocks private RetrieveCriOauthAccessTokenHandler handler;
 
@@ -255,7 +260,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                                 configurationService,
                                 ipvSessionService,
                                 auditService,
-                                verifiableCredentialJwtValidator)
+                                verifiableCredentialJwtValidator,
+                                ciStorageService)
                         .handleRequest(input, context);
         assert400Response(response, ErrorResponse.MISSING_OAUTH_STATE);
     }
@@ -283,7 +289,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                                 configurationService,
                                 ipvSessionService,
                                 auditService,
-                                verifiableCredentialJwtValidator)
+                                verifiableCredentialJwtValidator,
+                                ciStorageService)
                         .handleRequest(input, context);
         assert400Response(response, ErrorResponse.INVALID_OAUTH_STATE);
     }
@@ -582,6 +589,93 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
         assertEquals("/journey/error", getResponseBodyAsMap(response).get("journey"));
+    }
+
+    @Test
+    void shouldNotCallCIStorageSystemIfEnvIsProd() throws Exception {
+        APIGatewayProxyRequestEvent input =
+                createRequestEvent(
+                        Map.of(
+                                "authorization_code",
+                                "foo",
+                                "credential_issuer_id",
+                                passportIssuerId,
+                                "state",
+                                OAUTH_STATE),
+                        Map.of("ipv-session-id", sessionId));
+
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+        when(ipvSessionItem.getCredentialIssuerSessionDetails())
+                .thenReturn(credentialIssuerSessionDetailsDto);
+        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
+                .thenReturn(passportIssuer);
+        when(configurationService.isNotRunningInProd()).thenReturn(false);
+        when(credentialIssuerService.getVerifiableCredential(any(), any(), any()))
+                .thenReturn(Collections.singletonList(SignedJWT.parse(SIGNED_VC_1)));
+
+        handler.handleRequest(input, context);
+
+        verify(ciStorageService, never()).submitVC(any(SignedJWT.class), anyString());
+    }
+
+    @Test
+    void shouldCallCIStorageSystemIfEnvIsNotProd() throws Exception {
+        APIGatewayProxyRequestEvent input =
+                createRequestEvent(
+                        Map.of(
+                                "authorization_code",
+                                "foo",
+                                "credential_issuer_id",
+                                passportIssuerId,
+                                "state",
+                                OAUTH_STATE),
+                        Map.of("ipv-session-id", sessionId));
+
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+        when(ipvSessionItem.getCredentialIssuerSessionDetails())
+                .thenReturn(credentialIssuerSessionDetailsDto);
+        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
+                .thenReturn(passportIssuer);
+        when(configurationService.isNotRunningInProd()).thenReturn(true);
+        SignedJWT signedJwt = SignedJWT.parse(SIGNED_VC_1);
+        when(credentialIssuerService.getVerifiableCredential(any(), any(), any()))
+                .thenReturn(Collections.singletonList(signedJwt));
+
+        handler.handleRequest(input, context);
+
+        verify(ciStorageService).submitVC(signedJwt, "test-journey-id");
+    }
+
+    @Test
+    void shouldNotThrowIfSubmittingVCThrows() throws Exception {
+        APIGatewayProxyRequestEvent input =
+                createRequestEvent(
+                        Map.of(
+                                "authorization_code",
+                                "foo",
+                                "credential_issuer_id",
+                                passportIssuerId,
+                                "state",
+                                OAUTH_STATE),
+                        Map.of("ipv-session-id", sessionId));
+
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+        when(ipvSessionItem.getCredentialIssuerSessionDetails())
+                .thenReturn(credentialIssuerSessionDetailsDto);
+        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
+                .thenReturn(passportIssuer);
+        when(configurationService.isNotRunningInProd()).thenReturn(true);
+        SignedJWT signedJwt = SignedJWT.parse(SIGNED_VC_1);
+        when(credentialIssuerService.getVerifiableCredential(any(), any(), any()))
+                .thenReturn(Collections.singletonList(signedJwt));
+        doThrow(new RuntimeException("Ruh'oh")).when(ciStorageService).submitVC(any(), any());
+
+        assertDoesNotThrow(() -> handler.handleRequest(input, context));
+
+        verify(ciStorageService).submitVC(signedJwt, "test-journey-id");
     }
 
     private Map getResponseBodyAsMap(APIGatewayProxyResponseEvent response)
