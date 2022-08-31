@@ -7,30 +7,30 @@ import com.amazonaws.services.lambda.model.InvokeResult;
 import com.google.gson.Gson;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.domain.PutCiRequest;
-import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.helpers.LogHelper.LogField;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.HashMap;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_PUT_LAMBDA_ARN;
 
-public class CIStorageService {
+public class CiStorageService {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson gson = new Gson();
     private final AWSLambda lambdaClient;
     private final ConfigurationService configurationService;
 
-    public CIStorageService(ConfigurationService configurationService) {
+    public CiStorageService(ConfigurationService configurationService) {
         this.lambdaClient = AWSLambdaClientBuilder.defaultClient();
         this.configurationService = configurationService;
     }
 
-    public CIStorageService(AWSLambda lambdaClient, ConfigurationService configurationService) {
+    public CiStorageService(AWSLambda lambdaClient, ConfigurationService configurationService) {
         this.lambdaClient = lambdaClient;
         this.configurationService = configurationService;
     }
@@ -47,19 +47,17 @@ public class CIStorageService {
                                                 govukSigninJourneyId,
                                                 verifiableCredential.serialize())));
 
-        LOGGER.info("Sending VC to CI storage");
+        LOGGER.info("Sending VC to CI storage system");
         InvokeResult result = lambdaClient.invoke(request);
 
         if (lambdaExecutionFailed(result)) {
-            LogHelper.logMessageWithFieldsAndValues(
-                    Level.ERROR,
-                    "CI storage lambda execution failed",
-                    LogField.ERROR,
-                    result.getFunctionError(),
-                    LogField.STATUS_CODE,
-                    String.valueOf(result.getStatusCode()),
-                    LogField.PAYLOAD,
-                    getPayloadOrNone(result));
+            HashMap<String, String> message = new HashMap<>();
+            message.put("message", "CI storage lambda execution failed");
+            message.put("error", result.getFunctionError());
+            message.put("statusCode", String.valueOf(result.getStatusCode()));
+            message.put("payload", getPayloadOrNull(result));
+            message.values().removeAll(Collections.singleton(null));
+            LOGGER.error(new StringMapMessage(message));
         }
     }
 
@@ -67,8 +65,8 @@ public class CIStorageService {
         return result.getStatusCode() != HttpStatus.SC_OK || result.getFunctionError() != null;
     }
 
-    private String getPayloadOrNone(InvokeResult result) {
+    private String getPayloadOrNull(InvokeResult result) {
         ByteBuffer payload = result.getPayload();
-        return payload == null ? "none" : new String(payload.array(), StandardCharsets.UTF_8);
+        return payload == null ? null : new String(payload.array(), StandardCharsets.UTF_8);
     }
 }

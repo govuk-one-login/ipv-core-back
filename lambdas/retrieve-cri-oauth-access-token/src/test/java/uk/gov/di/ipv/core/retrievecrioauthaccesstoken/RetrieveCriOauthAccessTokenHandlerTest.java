@@ -32,7 +32,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CIStorageService;
+import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -91,7 +91,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
     @Mock private IpvSessionItem ipvSessionItem;
 
-    @Mock private CIStorageService ciStorageService;
+    @Mock private CiStorageService ciStorageService;
 
     @InjectMocks private RetrieveCriOauthAccessTokenHandler handler;
 

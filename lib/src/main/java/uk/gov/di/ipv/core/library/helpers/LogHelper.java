@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.library.helpers;
 
 import com.amazonaws.util.StringUtils;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.LoggingUtils;
@@ -90,23 +89,6 @@ public class LogHelper {
         LoggingUtils.appendKey(logField.getFieldName(), logFieldValue);
         LOGGER.info(message);
         LoggingUtils.removeKey(logField.getFieldName());
-    }
-
-    @SuppressWarnings("java:S107") // Methods should not have too many parameters
-    public static void logMessageWithFieldsAndValues(
-            Level logLevel,
-            String message,
-            LogField logField1,
-            String logFieldValue1,
-            LogField logField2,
-            String logFieldValue2,
-            LogField logField3,
-            String logFieldValue3) {
-        LoggingUtils.appendKey(logField1.getFieldName(), logFieldValue1);
-        LoggingUtils.appendKey(logField2.getFieldName(), logFieldValue2);
-        LoggingUtils.appendKey(logField3.getFieldName(), logFieldValue3);
-        LOGGER.log(logLevel, message);
-        LoggingUtils.removeKeys(logField1.getFieldName(), logField2.getFieldName(), logFieldValue3);
     }
 
     private static void attachFieldToLogs(LogField field, String value) {
