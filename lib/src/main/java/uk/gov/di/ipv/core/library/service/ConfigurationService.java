@@ -114,7 +114,7 @@ public class ConfigurationService {
     }
 
     public boolean isNotRunningInProd() {
-        return PRODUCTION_ENV.equals(getEnvironmentVariable(ENVIRONMENT));
+        return !PRODUCTION_ENV.equals(getEnvironmentVariable(ENVIRONMENT));
     }
 
     public long getBearerAccessTokenTtl() {
