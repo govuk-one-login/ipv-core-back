@@ -148,12 +148,7 @@ public class RetrieveCriOauthAccessTokenHandler
 
                 if (configurationService.isNotRunningInProd()) {
                     LOGGER.info("Submitting VC to CI storage system");
-                    try {
-                        ciStorageService.submitVC(
-                                vc, clientSessionDetailsDto.getGovukSigninJourneyId());
-                    } catch (Throwable e) {
-                        LOGGER.info("Exception thrown when calling CI storage system", e);
-                    }
+                    submitVCAndSwallowErrors(vc, clientSessionDetailsDto.getGovukSigninJourneyId());
                 }
 
                 credentialIssuerService.persistUserCredentials(
@@ -249,5 +244,14 @@ public class RetrieveCriOauthAccessTokenHandler
     @Tracing
     private CredentialIssuerConfig getCredentialIssuerConfig(CredentialIssuerRequestDto request) {
         return configurationService.getCredentialIssuer(request.getCredentialIssuerId());
+    }
+
+    @Tracing
+    private void submitVCAndSwallowErrors(SignedJWT vc, String govukSigninJourneyId) {
+        try {
+            ciStorageService.submitVC(vc, govukSigninJourneyId);
+        } catch (Exception e) {
+            LOGGER.info("Exception thrown when calling CI storage system", e);
+        }
     }
 }
