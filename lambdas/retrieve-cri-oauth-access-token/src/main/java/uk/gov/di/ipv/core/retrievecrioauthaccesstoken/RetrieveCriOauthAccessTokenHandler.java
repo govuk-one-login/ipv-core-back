@@ -34,7 +34,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CIStorageService;
+import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -59,7 +59,7 @@ public class RetrieveCriOauthAccessTokenHandler
     private final AuditService auditService;
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     private final IpvSessionService ipvSessionService;
-    private final CIStorageService ciStorageService;
+    private final CiStorageService ciStorageService;
 
     private String componentId;
 
@@ -69,7 +69,7 @@ public class RetrieveCriOauthAccessTokenHandler
             IpvSessionService ipvSessionService,
             AuditService auditService,
             VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
-            CIStorageService ciStorageService) {
+            CiStorageService ciStorageService) {
         this.credentialIssuerService = credentialIssuerService;
         this.configurationService = configurationService;
         this.auditService = auditService;
@@ -89,7 +89,7 @@ public class RetrieveCriOauthAccessTokenHandler
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
         this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator();
         this.ipvSessionService = new IpvSessionService(configurationService);
-        this.ciStorageService = new CIStorageService(configurationService);
+        this.ciStorageService = new CiStorageService(configurationService);
     }
 
     @Override

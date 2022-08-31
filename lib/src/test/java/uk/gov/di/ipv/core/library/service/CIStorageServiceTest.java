@@ -22,7 +22,7 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_P
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 
 @ExtendWith(MockitoExtension.class)
-class CIStorageServiceTest {
+class CiStorageServiceTest {
 
     public static final String THE_ARN_OF_THE_PUT_LAMBDA = "the:arn:of:the:put:lambda";
     public static final String GOVUK_SIGNIN_JOURNEY_ID = "a-journey-id";
@@ -30,7 +30,7 @@ class CIStorageServiceTest {
 
     @Mock AWSLambda lambdaClient;
     @Mock ConfigurationService configurationService;
-    @InjectMocks CIStorageService ciStorageService;
+    @InjectMocks CiStorageService ciStorageService;
 
     @Test
     void submitVCInvokesTheLambdaClient() throws Exception {
