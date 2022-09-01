@@ -130,6 +130,13 @@ SELECT_CRI:
       response:
         type: page
         pageId: page-pre-kbv-transition
+    dcmaw:
+      type: basic
+      name: dcmaw
+      targetState: CRI_DCMAW
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/dcmaw
     fail:
       type: basic
       name: fail
@@ -137,6 +144,13 @@ SELECT_CRI:
       response:
         type: page
         pageId: pyi-technical
+    pyi-no-match:
+      type: basic
+      name: pyi-no-match
+      targetState: PYI_NO_MATCH
+      response:
+        type: page
+        pageId: pyi-no-match
 CRI_UK_PASSPORT:
   name: CRI_UK_PASSPORT
   parent: CRI_STATE
@@ -168,6 +182,17 @@ CRI_KBV:
       response:
         type: page
         pageId: pyi-kbv-fail
+CRI_DCMAW:
+  name: CRI_DCMAW
+  parent: CRI_STATE
+  events:
+    access-denied:
+      type: basic
+      name: access-denied
+      targetState: EVALUATE_GPG45_SCORES
+      response:
+        type: journey
+        journeyStepId: /journey/evaluate-gpg45-scores
 IPV_SUCCESS_PAGE:
   name: IPV_SUCCESS_PAGE
   parent: END_JOURNEY

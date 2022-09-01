@@ -3,7 +3,7 @@ package uk.gov.di.ipv.core.library.domain.gpg45.domain;
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.library.domain.gpg45.validation.FraudEvidenceValidator;
+import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45FraudValidator;
 
 import java.util.Comparator;
 import java.util.List;
@@ -21,7 +21,7 @@ public class CredentialEvidenceItem {
     private List<DcmawCheckMethod> failedCheckDetails;
     private List<String> ci;
 
-    public CredentialEvidenceItem(EvidenceType evidenceType, int score) {
+    public CredentialEvidenceItem(EvidenceType evidenceType, int score, List<String> ci) {
         if (EvidenceType.ACTIVITY.equals(evidenceType)) {
             this.activityHistoryScore = score;
         } else if (EvidenceType.IDENTITY_FRAUD.equals(evidenceType)) {
@@ -29,11 +29,13 @@ public class CredentialEvidenceItem {
         } else if (EvidenceType.VERIFICATION.equals(evidenceType)) {
             this.verificationScore = score;
         }
+        this.ci = ci;
     }
 
-    public CredentialEvidenceItem(int strengthScore, int validityScore) {
+    public CredentialEvidenceItem(int strengthScore, int validityScore, List<String> ci) {
         this.strengthScore = strengthScore;
         this.validityScore = validityScore;
+        this.ci = ci;
     }
 
     public EvidenceType getType() throws UnknownEvidenceTypeException {
@@ -58,7 +60,7 @@ public class CredentialEvidenceItem {
         if (isIdentityFraud()) {
             return ci != null
                     && !ci.isEmpty()
-                    && !(ci.size() == 1 && ci.get(0).equals(FraudEvidenceValidator.A01));
+                    && !(ci.size() == 1 && ci.get(0).equals(Gpg45FraudValidator.A01));
         }
         return ci != null && !ci.isEmpty();
     }

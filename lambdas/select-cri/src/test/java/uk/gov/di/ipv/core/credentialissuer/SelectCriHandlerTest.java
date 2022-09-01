@@ -36,6 +36,9 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_DCMAW_FAILED_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_DCMAW_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_FRAUD_VC_PASSED;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_KBV_VC_PASSED;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 
 @ExtendWith(MockitoExtension.class)
 class SelectCriHandlerTest {
@@ -84,20 +87,23 @@ class SelectCriHandlerTest {
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
     }
 
-    private void mockIpvSessionService() {
-        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(mockClientSessionDetailsDto);
-        when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(mockIpvSessionItem);
-    }
-
     @Test
     void shouldReturnAddressCriJourneyResponse() throws JsonProcessingException {
         mockIpvSessionService();
+
+        String userId = "test-user-id";
+        when(mockClientSessionDetailsDto.getUserId()).thenReturn(userId);
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(new VisitedCredentialIssuerDetailsDto(CRI_PASSPORT, true, null));
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
+
+        when(mockUserIdentityService.getUserIssuedCredential(userId, CRI_PASSPORT))
+                .thenReturn(
+                        createUserIssuedCredentialsItem(
+                                userId, CRI_PASSPORT, SIGNED_VC_1, LocalDateTime.now()));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -110,8 +116,42 @@ class SelectCriHandlerTest {
     }
 
     @Test
+    void shouldReturnPyiNoMatchErrorResponseIfAddressCriHasPreviouslyFailed()
+            throws JsonProcessingException {
+        mockIpvSessionService();
+
+        String userId = "test-user-id";
+        when(mockClientSessionDetailsDto.getUserId()).thenReturn(userId);
+
+        List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
+                List.of(
+                        new VisitedCredentialIssuerDetailsDto(CRI_PASSPORT, true, null),
+                        new VisitedCredentialIssuerDetailsDto(CRI_ADDRESS, false, "access_denied"));
+
+        when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
+                .thenReturn(visitedCredentialIssuerDetails);
+
+        when(mockUserIdentityService.getUserIssuedCredential(userId, CRI_PASSPORT))
+                .thenReturn(
+                        createUserIssuedCredentialsItem(
+                                userId, CRI_PASSPORT, SIGNED_VC_1, LocalDateTime.now()));
+
+        APIGatewayProxyRequestEvent input = createRequestEvent();
+
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+
+        Map<String, String> responseBody = getResponseBodyAsMap(response);
+
+        assertEquals("/journey/pyi-no-match", responseBody.get("journey"));
+        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+    }
+
+    @Test
     void shouldReturnFraudCriJourneyResponse() throws JsonProcessingException {
         mockIpvSessionService();
+
+        String userId = "test-user-id";
+        when(mockClientSessionDetailsDto.getUserId()).thenReturn(userId);
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(
@@ -120,6 +160,11 @@ class SelectCriHandlerTest {
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
+
+        when(mockUserIdentityService.getUserIssuedCredential(userId, CRI_PASSPORT))
+                .thenReturn(
+                        createUserIssuedCredentialsItem(
+                                userId, CRI_PASSPORT, SIGNED_VC_1, LocalDateTime.now()));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -135,6 +180,9 @@ class SelectCriHandlerTest {
     void shouldReturnKBVCriJourneyResponse() throws JsonProcessingException {
         mockIpvSessionService();
 
+        String userId = "test-user-id";
+        when(mockClientSessionDetailsDto.getUserId()).thenReturn(userId);
+
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(
                         new VisitedCredentialIssuerDetailsDto(CRI_PASSPORT, true, null),
@@ -143,6 +191,16 @@ class SelectCriHandlerTest {
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
+
+        when(mockUserIdentityService.getUserIssuedCredential(userId, CRI_PASSPORT))
+                .thenReturn(
+                        createUserIssuedCredentialsItem(
+                                userId, CRI_PASSPORT, SIGNED_VC_1, LocalDateTime.now()));
+
+        when(mockUserIdentityService.getUserIssuedCredential(userId, CRI_FRAUD))
+                .thenReturn(
+                        createUserIssuedCredentialsItem(
+                                userId, CRI_FRAUD, SIGNED_FRAUD_VC_PASSED, LocalDateTime.now()));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -158,6 +216,9 @@ class SelectCriHandlerTest {
     void shouldReturnJourneyFailedIfAllCriVisited() throws JsonProcessingException {
         mockIpvSessionService();
 
+        String userId = "test-user-id";
+        when(mockClientSessionDetailsDto.getUserId()).thenReturn(userId);
+
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(
                         new VisitedCredentialIssuerDetailsDto(CRI_PASSPORT, true, null),
@@ -167,6 +228,21 @@ class SelectCriHandlerTest {
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
+
+        when(mockUserIdentityService.getUserIssuedCredential(userId, CRI_PASSPORT))
+                .thenReturn(
+                        createUserIssuedCredentialsItem(
+                                userId, CRI_PASSPORT, SIGNED_VC_1, LocalDateTime.now()));
+
+        when(mockUserIdentityService.getUserIssuedCredential(userId, CRI_FRAUD))
+                .thenReturn(
+                        createUserIssuedCredentialsItem(
+                                userId, CRI_FRAUD, SIGNED_FRAUD_VC_PASSED, LocalDateTime.now()));
+
+        when(mockUserIdentityService.getUserIssuedCredential(userId, CRI_KBV))
+                .thenReturn(
+                        createUserIssuedCredentialsItem(
+                                userId, CRI_KBV, SIGNED_KBV_VC_PASSED, LocalDateTime.now()));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -255,11 +331,12 @@ class SelectCriHandlerTest {
     }
 
     @Test
-    void shouldReturFailJourneyResponseIfUserHasVisitedDcmawAndAddressAndFraudSuccessfully()
+    void shouldReturnPyiNoMatchJourneyResponseIfUserHasVisitedDcmawAndAddressAndFraudSuccessfully()
             throws JsonProcessingException {
         mockIpvSessionService();
 
-        when(mockClientSessionDetailsDto.getUserId()).thenReturn("test-user-id");
+        String userId = "test-user-id";
+        when(mockClientSessionDetailsDto.getUserId()).thenReturn(userId);
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(
@@ -270,10 +347,15 @@ class SelectCriHandlerTest {
 
         when(mockConfigurationService.getSsmParameter(DCMAW_ENABLED)).thenReturn("true");
 
-        when(mockUserIdentityService.getUserIssuedCredential("test-user-id", CRI_DCMAW))
+        when(mockUserIdentityService.getUserIssuedCredential(userId, CRI_DCMAW))
                 .thenReturn(
                         createUserIssuedCredentialsItem(
-                                "test-user-id", "dcmaw", SIGNED_DCMAW_VC, LocalDateTime.now()));
+                                userId, CRI_DCMAW, SIGNED_DCMAW_VC, LocalDateTime.now()));
+
+        when(mockUserIdentityService.getUserIssuedCredential(userId, CRI_FRAUD))
+                .thenReturn(
+                        createUserIssuedCredentialsItem(
+                                userId, CRI_FRAUD, SIGNED_FRAUD_VC_PASSED, LocalDateTime.now()));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -335,6 +417,11 @@ class SelectCriHandlerTest {
 
         assertEquals("/journey/ukPassport", responseBody.get("journey"));
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+    }
+
+    private void mockIpvSessionService() {
+        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(mockClientSessionDetailsDto);
+        when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(mockIpvSessionItem);
     }
 
     private void mockConfigurationServiceMethodCalls() {
