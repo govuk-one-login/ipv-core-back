@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.evaluategpg45scores.gpg45;
+package uk.gov.di.ipv.core.library.domain.gpg45;
 
 import org.junit.jupiter.api.Test;
 
@@ -11,13 +11,13 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45Scores.EV_11;
-import static uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45Scores.EV_22;
-import static uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45Scores.EV_32;
-import static uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45Scores.EV_33;
-import static uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45Scores.EV_42;
-import static uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45Scores.EV_43;
-import static uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45Scores.EV_44;
+import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores.EV_11;
+import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores.EV_22;
+import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores.EV_32;
+import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores.EV_33;
+import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores.EV_42;
+import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores.EV_43;
+import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores.EV_44;
 
 class Gpg45ProfileTest {
 

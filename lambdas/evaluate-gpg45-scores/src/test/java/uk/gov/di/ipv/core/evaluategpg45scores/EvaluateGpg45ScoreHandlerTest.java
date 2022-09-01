@@ -13,11 +13,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.evaluategpg45scores.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45Profile;
-import uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
+import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
@@ -37,8 +37,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.JOURNEY_END;
 import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.JOURNEY_NEXT;
-import static uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45ProfileEvaluator.JOURNEY_PYI_KBV_FAIL;
-import static uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45ProfileEvaluator.JOURNEY_PYI_NO_MATCH;
+import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator.JOURNEY_PYI_KBV_FAIL;
+import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator.JOURNEY_PYI_NO_MATCH;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
 
 @ExtendWith(MockitoExtension.class)

@@ -1,6 +1,6 @@
-package uk.gov.di.ipv.core.evaluategpg45scores.validation;
+package uk.gov.di.ipv.core.library.domain.gpg45.validation;
 
-import uk.gov.di.ipv.core.evaluategpg45scores.domain.CredentialEvidenceItem;
+import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 
 public class KbvEvidenceValidator {
     public static final int GPG_45_M1A_VERIFICATION_SCORE = 2;

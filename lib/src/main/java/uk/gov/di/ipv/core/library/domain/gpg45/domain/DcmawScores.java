@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.evaluategpg45scores.domain;
+package uk.gov.di.ipv.core.library.domain.gpg45.domain;
 
 import lombok.Getter;
 import lombok.Setter;
