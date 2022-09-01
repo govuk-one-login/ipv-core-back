@@ -1,12 +1,21 @@
 version = 0.1
 
 [dev.deploy.parameters]
-stack_name = "ci-storage-core-stub-development"
+stack_name = "ci-storage-core-stub-dev"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "ci-storage-core-stub-development"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev\""
+parallel = "true"
+
+[build.deploy.parameters]
+stack_name = "ci-storage-core-stub-build"
+s3_bucket = "di-ipv-core-build-artifacts"
+s3_prefix = "ci-storage-core-stub-build"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"build\""
 parallel = "true"
 
 [dev-danh.deploy.parameters]
