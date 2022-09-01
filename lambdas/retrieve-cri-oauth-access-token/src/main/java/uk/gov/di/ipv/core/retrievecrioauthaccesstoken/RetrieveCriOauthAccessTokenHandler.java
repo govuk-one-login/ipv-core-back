@@ -34,6 +34,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -58,6 +59,7 @@ public class RetrieveCriOauthAccessTokenHandler
     private final AuditService auditService;
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     private final IpvSessionService ipvSessionService;
+    private final CiStorageService ciStorageService;
 
     private String componentId;
 
@@ -66,12 +68,14 @@ public class RetrieveCriOauthAccessTokenHandler
             ConfigurationService configurationService,
             IpvSessionService ipvSessionService,
             AuditService auditService,
-            VerifiableCredentialJwtValidator verifiableCredentialJwtValidator) {
+            VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
+            CiStorageService ciStorageService) {
         this.credentialIssuerService = credentialIssuerService;
         this.configurationService = configurationService;
         this.auditService = auditService;
         this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
         this.ipvSessionService = ipvSessionService;
+        this.ciStorageService = ciStorageService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -85,6 +89,7 @@ public class RetrieveCriOauthAccessTokenHandler
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
         this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator();
         this.ipvSessionService = new IpvSessionService(configurationService);
+        this.ciStorageService = new CiStorageService(configurationService);
     }
 
     @Override
@@ -142,7 +147,8 @@ public class RetrieveCriOauthAccessTokenHandler
                 sendIpvVcReceivedAuditEvent(auditEventUser, vc);
 
                 if (configurationService.isNotRunningInProd()) {
-                    LOGGER.info("Not running in production");
+                    LOGGER.info("Submitting VC to CI storage system");
+                    submitVCAndSwallowErrors(vc, clientSessionDetailsDto.getGovukSigninJourneyId());
                 }
 
                 credentialIssuerService.persistUserCredentials(
@@ -238,5 +244,14 @@ public class RetrieveCriOauthAccessTokenHandler
     @Tracing
     private CredentialIssuerConfig getCredentialIssuerConfig(CredentialIssuerRequestDto request) {
         return configurationService.getCredentialIssuer(request.getCredentialIssuerId());
+    }
+
+    @Tracing
+    private void submitVCAndSwallowErrors(SignedJWT vc, String govukSigninJourneyId) {
+        try {
+            ciStorageService.submitVC(vc, govukSigninJourneyId);
+        } catch (Exception e) {
+            LOGGER.info("Exception thrown when calling CI storage system", e);
+        }
     }
 }

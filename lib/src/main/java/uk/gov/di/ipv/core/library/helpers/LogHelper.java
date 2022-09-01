@@ -26,7 +26,10 @@ public class LogHelper {
         IPV_SESSION_ID_LOG_FIELD("ipvSessionId"),
         JTI_LOG_FIELD("jti"),
         JTI_USED_AT_LOG_FIELD("jtiUsedAt"),
-        NUMBER_OF_VCS("numberOfVCs");
+        NUMBER_OF_VCS("numberOfVCs"),
+        ERROR("error"),
+        PAYLOAD("payload"),
+        STATUS_CODE("statusCode");
         private final String fieldName;
 
         LogField(String fieldName) {
