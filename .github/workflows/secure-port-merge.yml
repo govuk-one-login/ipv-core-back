@@ -1,4 +1,4 @@
-name: Test, Build, Package & Ship Core Back
+name: Secure Pipeline: Test, Build, Package & Ship Core Back
 
 on:
   push:
@@ -7,7 +7,11 @@ on:
 
 jobs:
   deploy:
+    name: Secure Pipeline package for build
     runs-on: ubuntu-latest
+    env:
+      AWS_REGION: eu-west-2
+      ENVIRONMENT: build
     permissions:
       id-token: write
       contents: read
@@ -49,19 +53,30 @@ jobs:
           ENVIRONMENT: build
         run: ./gradlew intTest
 
+      - name: Generate code signing config
+        id: signing
+        uses: rusty-actions/sam-code-signing-config@39f63740a9f8622eb9b6755413a31a6013a62a86
+        with:
+          template: ./deploy-sp/template.yaml
+          profile: ${{ secrets.SIGNING_PROFILE_NAME }}
+
       - name: SAM validate
         working-directory: ./deploy-sp
-        run: sam validate
+        run: sam validate --region ${{ env.AWS_REGION }
 
       - name: SAM build and test
         working-directory: ./deploy-sp
         run: sam build
 
-      - name: Upload lambdas to S3
+      - name: SAM package
         working-directory: ./deploy-sp
         env:
           ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_BUCKET_NAME }}
-        run: sam package --s3-bucket="$ARTIFACT_BUCKET" --s3-prefix "core-back" --output-template-file=cf-template.yaml
+        run: |
+          sam package .yaml  \
+            ${{ steps.signing.outputs.signing_config }} \
+            --s3-bucket=$ARTIFACT_BUCKET \
+            --region=${{ env.AWS_REGION }} --output-template-file=cf-template.yaml
 
       - name: Write git commit sha to git_commit.txt
         working-directory: ./deploy-sp
