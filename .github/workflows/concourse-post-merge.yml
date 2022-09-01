@@ -75,4 +75,6 @@ jobs:
         working-directory: ./deploy-sp
         env:
           ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
-        run: aws s3 cp template.zip "s3://$ARTIFACT_BUCKET/core-back/template.zip"
+        run: |
+          sleep 600 ## Adding a 10 minute sleep to stop the pipelines from interfering with each other
+          aws s3 cp template.zip "s3://$ARTIFACT_BUCKET/core-back/template.zip"
