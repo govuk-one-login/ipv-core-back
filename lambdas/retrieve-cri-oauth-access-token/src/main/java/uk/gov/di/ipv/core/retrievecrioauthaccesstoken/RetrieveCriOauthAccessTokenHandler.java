@@ -7,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
@@ -26,6 +27,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
+import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -98,10 +100,14 @@ public class RetrieveCriOauthAccessTokenHandler
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
-        try {
+        IpvSessionItem ipvSessionItem = null;
 
+        CredentialIssuerRequestDto request =
+                RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
+
+        try {
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
-            IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+            ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             ClientSessionDetailsDto clientSessionDetailsDto =
                     ipvSessionItem.getClientSessionDetails();
             String userId = clientSessionDetailsDto.getUserId();
@@ -118,18 +124,15 @@ public class RetrieveCriOauthAccessTokenHandler
                     configurationService.getSsmParameter(
                             ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
 
+            CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request);
+
             auditService.sendAuditEvent(
                     new AuditEvent(
                             AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED,
                             componentId,
                             auditEventUser));
 
-            CredentialIssuerRequestDto request =
-                    RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
-
             validate(request);
-
-            CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(request);
 
             String apiKey =
                     configurationService.getCriPrivateApiKey(credentialIssuerConfig.getId());
@@ -155,13 +158,32 @@ public class RetrieveCriOauthAccessTokenHandler
                         vc.serialize(), request.getCredentialIssuerId(), userId);
             }
 
+            updateVisitedCredentials(ipvSessionItem, request.getCredentialIssuerId(), true, null);
+
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, JOURNEY_NEXT_RESPONSE);
         } catch (CredentialIssuerException e) {
+            if (ipvSessionItem != null) {
+                updateVisitedCredentials(
+                        ipvSessionItem,
+                        request.getCredentialIssuerId(),
+                        false,
+                        OAuth2Error.SERVER_ERROR_CODE);
+            }
+
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
         } catch (ParseException | JsonProcessingException | SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
+
+            if (ipvSessionItem != null) {
+                updateVisitedCredentials(
+                        ipvSessionItem,
+                        request.getCredentialIssuerId(),
+                        false,
+                        OAuth2Error.SERVER_ERROR_CODE);
+            }
+
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
         } catch (HttpResponseExceptionWithErrorBody e) {
@@ -253,5 +275,16 @@ public class RetrieveCriOauthAccessTokenHandler
         } catch (Exception e) {
             LOGGER.info("Exception thrown when calling CI storage system", e);
         }
+    }
+
+    @Tracing
+    private void updateVisitedCredentials(
+            IpvSessionItem ipvSessionItem,
+            String criId,
+            boolean returnedWithVc,
+            String oauthError) {
+        ipvSessionItem.addVisistedCredentialIssuerDetails(
+                new VisitedCredentialIssuerDetailsDto(criId, returnedWithVc, oauthError));
+        ipvSessionService.updateIpvSession(ipvSessionItem);
     }
 }

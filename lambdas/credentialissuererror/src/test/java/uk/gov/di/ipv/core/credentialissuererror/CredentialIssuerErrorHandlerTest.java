@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -88,6 +89,46 @@ class CredentialIssuerErrorHandlerTest {
         assertEquals("someIpvSessionId", auditEventUser.getValue().getSessionId());
         assertEquals(
                 "someGovUkSigninJourneyId", auditEventUser.getValue().getGovukSigninJourneyId());
+    }
+
+    @Test
+    void shouldUpdateSessionWithDetailsOfVisitedCri() {
+        String errorCode = "server_error";
+        String errorDescription = "User is not allowed!";
+        APIGatewayProxyRequestEvent event =
+                createRequestEvent(
+                        Map.of(
+                                "error", errorCode,
+                                "error_description", errorDescription,
+                                "credential_issuer_id", "ukPassport"),
+                        Map.of("ipv-session-id", SecureTokenHelper.generate()));
+
+        ClientSessionDetailsDto clientSessionDetailsDto = new ClientSessionDetailsDto();
+        clientSessionDetailsDto.setGovukSigninJourneyId("someGovUkSigninJourneyId");
+        clientSessionDetailsDto.setUserId("someUserId");
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId("someIpvSessionId");
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
+        credentialIssuerErrorHandler.handleRequest(event, mockContext);
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+
+        verify(mockIpvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+
+        IpvSessionItem updatedSessionItem = ipvSessionItemArgumentCaptor.getValue();
+
+        assertEquals(1, updatedSessionItem.getVisitedCredentialIssuerDetails().size());
+        assertEquals(
+                "ukPassport",
+                updatedSessionItem.getVisitedCredentialIssuerDetails().get(0).getCriId());
+        assertFalse(
+                updatedSessionItem.getVisitedCredentialIssuerDetails().get(0).isReturnedWithVc());
+        assertEquals(
+                errorCode,
+                updatedSessionItem.getVisitedCredentialIssuerDetails().get(0).getOauthError());
     }
 
     private APIGatewayProxyRequestEvent createRequestEvent(

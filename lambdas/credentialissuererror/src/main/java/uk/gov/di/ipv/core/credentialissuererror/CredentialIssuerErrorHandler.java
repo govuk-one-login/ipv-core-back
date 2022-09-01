@@ -15,6 +15,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerErrorDto;
+import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -98,6 +99,14 @@ public class CredentialIssuerErrorHandler
             }
 
             sendAuditEvent(credentialIssuerErrorDto, ipvSessionItem);
+
+            ipvSessionItem.addVisistedCredentialIssuerDetails(
+                    new VisitedCredentialIssuerDetailsDto(
+                            credentialIssuerErrorDto.getCredentialIssuerId(),
+                            false,
+                            credentialIssuerErrorDto.getError()));
+
+            sessionService.updateIpvSession(ipvSessionItem);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, journeyResponse);
         } catch (HttpResponseExceptionWithErrorBody e) {
