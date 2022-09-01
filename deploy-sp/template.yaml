@@ -58,6 +58,31 @@ Mappings:
       provisionedConcurrency: 1
 
 Resources:
+  JWKSParamRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+        Version: 2012-10-17
+      Policies:
+        - PolicyName: AccessJWKSjson
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ssm:GetParametersByPath"
+                Resource:
+                  - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Environment}/deploy/core/outputs/*'
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+
   IPVCorePrivateAPI:
     Type: AWS::Serverless::Api
     Properties:
@@ -65,6 +90,15 @@ Resources:
       Name: !Sub IPV Core Private API Gateway ${Environment}
       EndpointConfiguration:
         Type: PRIVATE
+      DefinitionBody:
+        openapi: "3.0.3" # workaround to get `sam validate` to work
+        paths: # workaround to get `sam validate` to work
+          /foo:
+            bar: baz # workaround to get `sam validate` to work
+        Fn::Transform:
+          Name: "AWS::Include"
+          Parameters:
+            Location: "../openAPI/core-back-internal.yaml"
       Auth:
         ResourcePolicy:
           CustomStatements:
@@ -84,7 +118,7 @@ Resources:
                     - IsDevelopment
                     - !ImportValue "network-shared-development-ApiGatewayVpcEndpointId"
                     - Fn::ImportValue:
-                        !Sub "networking-${Environment}-ApiGatewayVpcEndpointId"
+                        !Sub "${VpcStackName}-ApiGatewayVpcEndpointId"
       StageName: !Sub ${Environment}
       TracingEnabled: true
       AccessLogSetting:
@@ -120,6 +154,8 @@ Resources:
 
   IPVCoreExternalAPI:
     Type: AWS::Serverless::Api
+    DependsOn:
+      - "JWKSParamRole"
     Properties:
       # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
       Name: !Sub IPV Core External API Gateway ${Environment}
@@ -466,6 +502,58 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
       LogGroupName: !Ref RetrieveCriOauthAccessTokenFunctionLogGroup
+
+  RetrieveCriCredentialFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - "RetrieveCriCredentialFunctionLogGroup"
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "retrieve-cri-credential-${Environment}"
+      Handler: uk.gov.di.ipv.core.retrievecricredential.RetrieveCriCredentialHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/retrieve-cri-credential
+      Architectures:
+        - arm64
+      MemorySize: 2048
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub retrieve-cri-credential-${Environment}
+      Events:
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+            Path: /journey/cri/credential
+            Method: POST
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+        - AddProvisionedConcurrency
+        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
+        - !Ref AWS::NoValue
+
+  RetrieveCriCredentialFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+      LogGroupName: !Sub "/aws/lambda/retrieve-cri-credential-${Environment}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  RetrieveCriCredentialFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
+      FilterPattern: ""
+      LogGroupName: !Ref RetrieveCriCredentialFunctionLogGroup
 
   BuildCriOauthRequestFunction:
     Type: AWS::Serverless::Function
@@ -821,6 +909,87 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref BuildDebugCredentialDataFunctionLogGroup
 
+  JourneyEngineStepFunction:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: journey_engine.asl.json
+      DefinitionSubstitutions:
+        IPVProcessJourneyStepFunctionArn: !GetAtt IPVProcessJourneyStepFunction.Arn
+      Events:
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+            Path: /journey/{journeyStep}
+            Method: POST
+      Logging:
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt JourneyEngineStepFunctionLogGroup.Arn
+        IncludeExecutionData: true
+        Level: ALL
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref IPVProcessJourneyStepFunction
+        - Statement:
+            - Sid: CloudWatchLogsAccess
+              Effect: Allow
+              Action:
+                - "logs:CreateLogDelivery"
+                - "logs:GetLogDelivery"
+                - "logs:UpdateLogDelivery"
+                - "logs:DeleteLogDelivery"
+                - "logs:ListLogDeliveries"
+                - "logs:PutLogEvents"
+                - "logs:PutResourcePolicy"
+                - "logs:DescribeResourcePolicies"
+                - "logs:DescribeLogGroups"
+              Resource: "*"
+      Tracing:
+        Enabled: true
+      Type: EXPRESS
+
+  JourneyEngineStepFunctionApiGateWayIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: AllowApiGatewayToInvokeStartSyncExecution
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: 'states:StartSyncExecution'
+                Resource: !Ref JourneyEngineStepFunction
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+
+  JourneyEngineStepFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+      LogGroupName: !Sub "/aws/states/journey-engine-step-function-${Environment}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  JourneyEngineStepFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
+      FilterPattern: ""
+      LogGroupName: !Ref JourneyEngineStepFunctionLogGroup
+
   IPVProcessJourneyStepFunction:
     Type: AWS::Serverless::Function
     DependsOn:
@@ -851,14 +1020,6 @@ Resources:
             TableName: !Ref SessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/*
-      Events:
-        IPVCorePrivateAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCorePrivateAPI
-            Path: /journey/{journeyStep}
-            Method: POST
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
@@ -880,67 +1041,6 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
       LogGroupName: !Ref IPVProcessJourneyStepFunctionLogGroup
-
-  ValidateCriCredentialFunction:
-    Type: AWS::Serverless::Function
-    DependsOn:
-      - "ValidateCriCredentialFunctionLogGroup"
-    Properties:
-      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
-      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
-      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "validate-cri-credential-${Environment}"
-      Handler: uk.gov.di.ipv.core.validatecricredential.ValidateCriCredentialHandler::handleRequest
-      Runtime: java11
-      PackageType: Zip
-      CodeUri: ../lambdas/validate-cri-credential
-      Architectures:
-        - arm64
-      MemorySize: 2048
-      Tracing: Active
-      Environment:
-        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
-        Variables:
-          ENVIRONMENT: !Ref Environment
-          POWERTOOLS_SERVICE_NAME: !Sub validate-cri-credential-${Environment}
-          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
-          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref SessionsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref UserIssuedCredentialsV2Table
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/*
-      Events:
-        IPVCorePrivateAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCorePrivateAPI
-            Path: /journey/cri/validate/{criId}
-            Method: POST
-      AutoPublishAlias: live
-      ProvisionedConcurrencyConfig:
-        !If
-          - AddProvisionedConcurrency
-          - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
-          - !Ref AWS::NoValue
-
-  ValidateCriCredentialFunctionLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/validate-cri-credential-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
-
-  ValidateCriCredentialFunctionLogGroupSubscriptionFilter:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref ValidateCriCredentialFunctionLogGroup
 
   EvaluateGpg45ScoresFunction:
     Type: AWS::Serverless::Function
@@ -1000,6 +1100,67 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
       LogGroupName: !Ref EvaluateGpg45ScoresFunctionLogGroup
+
+  SelectCriFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - SelectCriFunctionLogGroup
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "select-cri-${Environment}"
+      Handler: uk.gov.di.ipv.core.selectcri.SelectCriHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/select-cri
+      Architectures:
+        - arm64
+      MemorySize: 2048
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub select-cri-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsV2Table
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/*
+      Events:
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+            Path: /journey/select-cri
+            Method: POST
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+        - AddProvisionedConcurrency
+        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
+        - !Ref AWS::NoValue
+
+  SelectCriFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+      LogGroupName: !Sub "/aws/lambda/select-cri-${Environment}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  SelectCriFunctionFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
+      FilterPattern: ""
+      LogGroupName: !Ref SelectCriFunctionLogGroup
 
   UserIssuedCredentialsV2Table:
     Type: AWS::DynamoDB::Table
