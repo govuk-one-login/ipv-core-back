@@ -20,6 +20,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -28,7 +29,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.JOURNEY_END;
@@ -42,6 +46,7 @@ class EvaluateGpg45ScoreHandlerTest {
 
     private static final String TEST_SESSION_ID = "test-session-id";
     private static final String TEST_USER_ID = "test-user-id";
+    private static final String TEST_JOURNEY_ID = "test-journey-id";
     private static final APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
     public static final List<String> CREDENTIALS = List.of("Some", "gathered", "credentials");
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -50,6 +55,7 @@ class EvaluateGpg45ScoreHandlerTest {
     @Mock private UserIdentityService userIdentityService;
     @Mock private IpvSessionService ipvSessionService;
     @Mock private Gpg45ProfileEvaluator gpg45ProfileEvaluator;
+    @Mock private CiStorageService ciStorageService;
     @InjectMocks private EvaluateGpg45ScoresHandler evaluateGpg45ScoresHandler;
 
     private final Gson gson = new Gson();
@@ -66,6 +72,7 @@ class EvaluateGpg45ScoreHandlerTest {
         ipvSessionItem = new IpvSessionItem();
         ClientSessionDetailsDto clientSessionDetailsDto = new ClientSessionDetailsDto();
         clientSessionDetailsDto.setUserId(TEST_USER_ID);
+        clientSessionDetailsDto.setGovukSigninJourneyId(TEST_JOURNEY_ID);
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
     }
 
@@ -204,5 +211,34 @@ class EvaluateGpg45ScoreHandlerTest {
                 ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE.getMessage(),
                 responseMap.get("message"));
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
+    }
+
+    @Test
+    void shouldCallCIStorageSystemToGetCIs() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(gpg45ProfileEvaluator.credentialsSatisfyProfile(CREDENTIALS, Gpg45Profile.M1B))
+                .thenReturn(false);
+        when(gpg45ProfileEvaluator.credentialsSatisfyProfile(CREDENTIALS, Gpg45Profile.M1A))
+                .thenReturn(true);
+
+        evaluateGpg45ScoresHandler.handleRequest(event, context);
+
+        verify(ciStorageService).getCIs(TEST_USER_ID, TEST_JOURNEY_ID);
+    }
+
+    @Test
+    void shouldNotThrowIfGetCIsThrows() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(gpg45ProfileEvaluator.credentialsSatisfyProfile(CREDENTIALS, Gpg45Profile.M1B))
+                .thenReturn(false);
+        when(gpg45ProfileEvaluator.credentialsSatisfyProfile(CREDENTIALS, Gpg45Profile.M1A))
+                .thenReturn(true);
+        doThrow(new RuntimeException("Ruh'oh")).when(ciStorageService).getCIs(any(), any());
+
+        assertDoesNotThrow(() -> evaluateGpg45ScoresHandler.handleRequest(event, context));
+
+        verify(ciStorageService).getCIs(TEST_USER_ID, TEST_JOURNEY_ID);
     }
 }
