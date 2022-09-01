@@ -8,17 +8,15 @@ import com.nimbusds.jwt.SignedJWT;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.library.domain.gpg45.validation.FraudEvidenceValidator;
-import uk.gov.di.ipv.core.library.domain.gpg45.validation.KbvEvidenceValidator;
-import uk.gov.di.ipv.core.library.domain.gpg45.validation.PassportEvidenceValidator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+
+import javax.swing.*;
 
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -31,32 +29,11 @@ public class Gpg45ProfileEvaluator {
     public static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
     public static final String JOURNEY_PYI_KBV_FAIL = "/journey/pyi-kbv-fail";
 
-    public Optional<JourneyResponse> getJourneyResponseIfAnyCredsFailM1A(List<String> credentials)
-            throws UnknownEvidenceTypeException, ParseException {
-        var evidenceMap = parseGpg45ScoresFromCredentials(credentials);
-
-        for (CredentialEvidenceItem.EvidenceType evidenceType :
-                CredentialEvidenceItem.EvidenceType.values()) {
-            Optional<JourneyResponse> failedResponse =
-                    getJourneyResponseIfAnyCredentialsDoNotMeetM1A(
-                            evidenceType, evidenceMap.get(evidenceType));
-            if (failedResponse.isPresent()) {
-                LogHelper.logInfoMessageWithFieldAndValue(
-                        "Credential does not meet M1A profile",
-                        LogHelper.LogField.EVIDENCE_TYPE,
-                        evidenceType.name());
-                return failedResponse;
-            }
-        }
-        return Optional.empty();
-    }
-
     public boolean credentialsSatisfyProfile(List<String> credentials, Gpg45Profile profile)
             throws ParseException, UnknownEvidenceTypeException {
         var evidenceMap = parseGpg45ScoresFromCredentials(credentials);
 
-        return profile.isSatisfiedBy(buildScore(evidenceMap))
-                && !contraIndicatorsPresent(evidenceMap);
+        return profile.isSatisfiedBy(buildScore(evidenceMap));
     }
 
     private Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>>
@@ -105,7 +82,8 @@ public class Gpg45ProfileEvaluator {
         gpg45CredentialItems.add(
                 new CredentialEvidenceItem(
                         dcmawEvidenceItem.getStrengthScore(),
-                        dcmawEvidenceItem.getValidityScore()));
+                        dcmawEvidenceItem.getValidityScore(),
+                        dcmawEvidenceItem.getCi()));
 
         gpg45CredentialItems.add(
                 new CredentialEvidenceItem(
@@ -148,8 +126,10 @@ public class Gpg45ProfileEvaluator {
                 .orElse(NO_SCORE);
     }
 
-    private boolean contraIndicatorsPresent(
-            Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap) {
+    public Optional<JourneyResponse> contraIndicatorsPresent(List<String> credentials)
+            throws UnknownEvidenceTypeException, ParseException {
+        var evidenceMap = parseGpg45ScoresFromCredentials(credentials);
+
         boolean contraIndicatorFound;
         for (CredentialEvidenceItem.EvidenceType evidenceType :
                 CredentialEvidenceItem.EvidenceType.values()) {
@@ -169,46 +149,14 @@ public class Gpg45ProfileEvaluator {
                         "Contra Indicators found in credentials",
                         LogHelper.LogField.EVIDENCE_TYPE,
                         evidenceType.name());
-                return true;
-            }
-        }
-        return false;
-    }
 
-    private Optional<JourneyResponse> getJourneyResponseIfAnyCredentialsDoNotMeetM1A(
-            CredentialEvidenceItem.EvidenceType evidenceType,
-            List<CredentialEvidenceItem> credentialEvidenceItems)
-            throws UnknownEvidenceTypeException {
-        switch (evidenceType) {
-            case EVIDENCE:
-                return getJourneyResponse(
-                        credentialEvidenceItems,
-                        PassportEvidenceValidator::validate,
-                        JOURNEY_PYI_NO_MATCH);
-            case IDENTITY_FRAUD:
-                return getJourneyResponse(
-                        credentialEvidenceItems,
-                        FraudEvidenceValidator::validate,
-                        JOURNEY_PYI_NO_MATCH);
-            case VERIFICATION:
-                return getJourneyResponse(
-                        credentialEvidenceItems,
-                        KbvEvidenceValidator::validate,
-                        JOURNEY_PYI_KBV_FAIL);
-            case ACTIVITY:
-                return Optional.empty();
-            default:
-                throw new UnknownEvidenceTypeException();
-        }
-    }
-
-    private Optional<JourneyResponse> getJourneyResponse(
-            List<CredentialEvidenceItem> credentialEvidenceItems,
-            Predicate<CredentialEvidenceItem> validator,
-            String journeyResponseValue) {
-        for (CredentialEvidenceItem item : credentialEvidenceItems) {
-            if (!validator.test(item)) {
-                return Optional.of(new JourneyResponse(journeyResponseValue));
+                if (evidenceType
+                        .name()
+                        .equals(CredentialEvidenceItem.EvidenceType.VERIFICATION.name())) {
+                    return Optional.of(new JourneyResponse(JOURNEY_PYI_KBV_FAIL));
+                } else {
+                    return Optional.of(new JourneyResponse(JOURNEY_PYI_NO_MATCH));
+                }
             }
         }
         return Optional.empty();

@@ -31,9 +31,10 @@ public class CredentialEvidenceItem {
         }
     }
 
-    public CredentialEvidenceItem(int strengthScore, int validityScore) {
+    public CredentialEvidenceItem(int strengthScore, int validityScore, List<String> ci) {
         this.strengthScore = strengthScore;
         this.validityScore = validityScore;
+        this.ci = ci;
     }
 
     public EvidenceType getType() throws UnknownEvidenceTypeException {

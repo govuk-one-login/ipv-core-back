@@ -80,19 +80,14 @@ public class EvaluateGpg45ScoresHandler
 
             List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
-            JourneyResponse journeyResponse;
-            Optional<JourneyResponse> failedJourneyResponse =
-                    gpg45ProfileEvaluator.getJourneyResponseIfAnyCredsFailM1A(credentials);
-            if (failedJourneyResponse.isPresent()) {
-                // This will eventually be handled by the CRI select lambda. We are only
-                // failing the journey here for temporary convenience. This lambda should
-                // only have responsibility for ending the journey if we have met a profile.
-                journeyResponse = failedJourneyResponse.get();
-            } else {
+            Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
+                    gpg45ProfileEvaluator.contraIndicatorsPresent(credentials);
+            if (contraIndicatorErrorJourneyResponse.isEmpty()) {
                 boolean doCredentialsMeetM1BProfile =
                         gpg45ProfileEvaluator.credentialsSatisfyProfile(
                                 credentials, Gpg45Profile.M1B);
 
+                JourneyResponse journeyResponse;
                 if (doCredentialsMeetM1BProfile) {
                     journeyResponse = new JourneyResponse(JOURNEY_END);
                 } else {
@@ -102,9 +97,13 @@ public class EvaluateGpg45ScoresHandler
                                     ? new JourneyResponse(JOURNEY_END)
                                     : new JourneyResponse(JOURNEY_NEXT);
                 }
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        HttpStatus.SC_OK, journeyResponse);
+            } else {
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        HttpStatus.SC_OK, contraIndicatorErrorJourneyResponse.get());
             }
 
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, journeyResponse);
         } catch (HttpResponseExceptionWithErrorBody e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getResponseCode(), e.getErrorBody());

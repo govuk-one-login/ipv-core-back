@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.domain.gpg45.validation;
 
+import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 
 public class KbvEvidenceValidator {
@@ -9,7 +10,7 @@ public class KbvEvidenceValidator {
         throw new IllegalStateException("Utility class");
     }
 
-    public static boolean validate(CredentialEvidenceItem item) {
+    public static boolean validate(CredentialEvidenceItem item, Gpg45Profile gpg45Profile) {
         return item.getVerificationScore() >= GPG_45_M1A_VERIFICATION_SCORE;
     }
 }
