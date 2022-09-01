@@ -73,7 +73,24 @@ class EvaluateGpg45ScoreHandlerTest {
     void shouldReturnJourneySessionEndIfScoresSatisfyM1AGpg45Profile() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(gpg45ProfileEvaluator.credentialsSatisfyProfile(CREDENTIALS, Gpg45Profile.M1B))
+                .thenReturn(false);
         when(gpg45ProfileEvaluator.credentialsSatisfyProfile(CREDENTIALS, Gpg45Profile.M1A))
+                .thenReturn(true);
+
+        var response = evaluateGpg45ScoresHandler.handleRequest(event, context);
+        JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(JOURNEY_END, journeyResponse.getJourney());
+        verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
+    }
+
+    @Test
+    void shouldReturnJourneySessionEndIfScoresSatisfyM1BGpg45Profile() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(gpg45ProfileEvaluator.credentialsSatisfyProfile(CREDENTIALS, Gpg45Profile.M1B))
                 .thenReturn(true);
 
         var response = evaluateGpg45ScoresHandler.handleRequest(event, context);
@@ -118,6 +135,8 @@ class EvaluateGpg45ScoreHandlerTest {
     void shouldReturnJourneyNextIfScoresDoNotSatisfyM1AGpg45Profile() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(gpg45ProfileEvaluator.credentialsSatisfyProfile(CREDENTIALS, Gpg45Profile.M1B))
+                .thenReturn(false);
         when(gpg45ProfileEvaluator.credentialsSatisfyProfile(CREDENTIALS, Gpg45Profile.M1A))
                 .thenReturn(false);
 
@@ -145,6 +164,8 @@ class EvaluateGpg45ScoreHandlerTest {
     void shouldReturn500IfFailedToParseCredentials() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(gpg45ProfileEvaluator.credentialsSatisfyProfile(CREDENTIALS, Gpg45Profile.M1B))
+                .thenReturn(false);
         when(gpg45ProfileEvaluator.credentialsSatisfyProfile(CREDENTIALS, Gpg45Profile.M1A))
                 .thenThrow(new ParseException("Whoops", 0));
 
@@ -166,6 +187,8 @@ class EvaluateGpg45ScoreHandlerTest {
     void shouldReturn500IfCredentialOfUnknownType() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(gpg45ProfileEvaluator.credentialsSatisfyProfile(CREDENTIALS, Gpg45Profile.M1B))
+                .thenReturn(false);
         when(gpg45ProfileEvaluator.credentialsSatisfyProfile(CREDENTIALS, Gpg45Profile.M1A))
                 .thenThrow(new UnknownEvidenceTypeException());
 

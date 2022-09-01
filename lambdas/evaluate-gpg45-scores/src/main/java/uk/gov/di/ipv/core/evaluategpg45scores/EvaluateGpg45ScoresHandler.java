@@ -79,11 +79,19 @@ public class EvaluateGpg45ScoresHandler
                 // only have responsibility for ending the journey if we have met a profile.
                 journeyResponse = failedJourneyResponse.get();
             } else {
-                journeyResponse =
+                boolean doCredentialsMeetM1BProfile =
                         gpg45ProfileEvaluator.credentialsSatisfyProfile(
-                                        credentials, Gpg45Profile.M1A)
-                                ? new JourneyResponse(JOURNEY_END)
-                                : new JourneyResponse(JOURNEY_NEXT);
+                                credentials, Gpg45Profile.M1B);
+
+                if (doCredentialsMeetM1BProfile) {
+                    journeyResponse = new JourneyResponse(JOURNEY_END);
+                } else {
+                    journeyResponse =
+                            gpg45ProfileEvaluator.credentialsSatisfyProfile(
+                                            credentials, Gpg45Profile.M1A)
+                                    ? new JourneyResponse(JOURNEY_END)
+                                    : new JourneyResponse(JOURNEY_NEXT);
+                }
             }
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, journeyResponse);

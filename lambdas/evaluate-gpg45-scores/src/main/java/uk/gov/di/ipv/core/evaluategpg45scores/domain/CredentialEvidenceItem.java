@@ -13,15 +13,32 @@ import static uk.gov.di.ipv.core.evaluategpg45scores.validation.FraudEvidenceVal
 
 @Getter
 public class CredentialEvidenceItem {
-    private Integer activityScore;
+    private Integer activityHistoryScore;
     private Integer identityFraudScore;
     private Integer strengthScore;
     private Integer validityScore;
     private Integer verificationScore;
+    private List<DcmawCheckMethod> checkDetails;
+    private List<DcmawCheckMethod> failedCheckDetails;
     private List<String> ci;
 
+    public CredentialEvidenceItem(EvidenceType evidenceType, int score) {
+        if (EvidenceType.ACTIVITY.equals(evidenceType)) {
+            this.activityHistoryScore = score;
+        } else if (EvidenceType.IDENTITY_FRAUD.equals(evidenceType)) {
+            this.identityFraudScore = score;
+        } else if (EvidenceType.VERIFICATION.equals(evidenceType)) {
+            this.verificationScore = score;
+        }
+    }
+
+    public CredentialEvidenceItem(int strengthScore, int validityScore) {
+        this.strengthScore = strengthScore;
+        this.validityScore = validityScore;
+    }
+
     public EvidenceType getType() throws UnknownEvidenceTypeException {
-        if (isActivity()) {
+        if (isActivityHistory()) {
             return EvidenceType.ACTIVITY;
         } else if (isIdentityFraud()) {
             return EvidenceType.IDENTITY_FRAUD;
@@ -46,46 +63,57 @@ public class CredentialEvidenceItem {
     }
 
     private int numberOfContraIndicators() {
-        return ci.size();
+        if (ci != null) {
+            return ci.size();
+        }
+        return 0;
     }
 
-    private boolean isActivity() {
-        return activityScore != null
+    private boolean isActivityHistory() {
+        return activityHistoryScore != null
                 && identityFraudScore == null
                 && strengthScore == null
                 && validityScore == null
-                && verificationScore == null;
+                && verificationScore == null
+                && checkDetails == null
+                && failedCheckDetails == null;
     }
 
     private boolean isIdentityFraud() {
         return identityFraudScore != null
-                && activityScore == null
+                && activityHistoryScore == null
                 && strengthScore == null
                 && validityScore == null
-                && verificationScore == null;
+                && verificationScore == null
+                && checkDetails == null
+                && failedCheckDetails == null;
     }
 
     private boolean isEvidence() {
         return strengthScore != null
                 && validityScore != null
-                && activityScore == null
+                && activityHistoryScore == null
                 && identityFraudScore == null
-                && verificationScore == null;
+                && verificationScore == null
+                && checkDetails == null
+                && failedCheckDetails == null;
     }
 
     private boolean isVerification() {
         return verificationScore != null
-                && activityScore == null
+                && activityHistoryScore == null
                 && identityFraudScore == null
                 && strengthScore == null
-                && validityScore == null;
+                && validityScore == null
+                && checkDetails == null
+                && failedCheckDetails == null;
     }
 
     @Getter
     public enum EvidenceType {
         ACTIVITY(
-                generateComparator(CredentialEvidenceItem::getActivityScore),
-                CredentialEvidenceItem::getActivityScore),
+                generateComparator(CredentialEvidenceItem::getActivityHistoryScore),
+                CredentialEvidenceItem::getActivityHistoryScore),
         IDENTITY_FRAUD(
                 generateComparator(CredentialEvidenceItem::getIdentityFraudScore),
                 CredentialEvidenceItem::getIdentityFraudScore),
