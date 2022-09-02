@@ -7,7 +7,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "ipv-core-back-development"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev\""
+parameter_overrides = "Environment=\"dev\"" "VpcStackName=\"networking-shared-development\""
 parallel = "true"
 
 [dev-tomw.deploy.parameters]
@@ -16,7 +16,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "tom-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-tomw\""
+parameter_overrides = "Environment=\"dev-tomw\"" "VpcStackName=\"networking-shared-development\""
 parallel = "true"
 
 [dev-danh.deploy.parameters]
@@ -25,7 +25,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "danh-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-danh\""
+parameter_overrides = "Environment=\"dev-danh\"" "VpcStackName=\"networking-shared-development\""
 parallel = "true"
 
 [dev-danw.deploy.parameters]
@@ -34,7 +34,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "danw-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-danw\""
+parameter_overrides = "Environment=\"dev-danw\"" "VpcStackName=\"networking-shared-development\""
 parallel = "true"
 
 [dev-danp.deploy.parameters]
@@ -43,7 +43,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "danp-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-danp\""
+parameter_overrides = "Environment=\"dev-danp\"" "VpcStackName=\"networking-shared-development\""
 parallel = "true"
 
 [dev-chrisw.deploy.parameters]
@@ -52,7 +52,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "chrisw-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-chrisw\""
+parameter_overrides = "Environment=\"dev-chrisw\"" "VpcStackName=\"networking-shared-development\""
 parallel = "true"
 
 [dev-amrits.deploy.parameters]
@@ -61,7 +61,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "amrits-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-amrits\""
+parameter_overrides = "Environment=\"dev-amrits\"" "VpcStackName=\"networking-shared-development\""
 parallel = "true"
 
 [dev-lait.deploy.parameters]
@@ -70,7 +70,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "lait-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-lait\""
+parameter_overrides = "Environment=\"dev-lait\"" "VpcStackName=\"networking-shared-development\""
 parallel = "true"
 
 [dev-sunild.deploy.parameters]
@@ -79,7 +79,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "sunild-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-sunild\""
+parameter_overrides = "Environment=\"dev-sunild\"" "VpcStackName=\"networking-shared-development\""
 parallel = "true"
 
 [dev-kerrr.deploy.parameters]
@@ -88,7 +88,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "kerrr-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-kerrr\""
+parameter_overrides = "Environment=\"dev-kerrr\"" "VpcStackName=\"networking-shared-development\""
 parallel = "true"
 
 [dev-ianj.deploy.parameters]
@@ -97,7 +97,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "ianj-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-ianj\""
+parameter_overrides = "Environment=\"dev-ianj\"" "VpcStackName=\"networking-shared-development\""
 parallel = "true"
 
 [dev-derrenw.deploy.parameters]
@@ -106,7 +106,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "derrenw-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-derrenw\""
+parameter_overrides = "Environment=\"dev-derrenw\"" "VpcStackName=\"networking-shared-development\""
 parallel = "true"
 
 [dev-patrickb.deploy.parameters]
@@ -115,7 +115,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "patrickb-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-patrickb\""
+parameter_overrides = "Environment=\"dev-patrickb\"" "VpcStackName=\"networking-shared-development\""
 parallel = "true"
 
 [dev-vamh.deploy.parameters]
@@ -124,7 +124,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "vamh-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-vamh\""
+parameter_overrides = "Environment=\"dev-vamh\"" "VpcStackName=\"networking-shared-development\""
 parallel = "true"
 
 [dev-wojciecho.deploy.parameters]
@@ -133,7 +133,7 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "wojciecho-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-wojciecho\""
+parameter_overrides = "Environment=\"dev-wojciecho\"" "VpcStackName=\"networking-shared-development\""
 parallel = "true"
 
 [dev-aprilm.deploy.parameters]
@@ -142,5 +142,5 @@ s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
 s3_prefix = "aprilm-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-aprilm\""
+parameter_overrides = "Environment=\"dev-aprilm\"" "VpcStackName=\"networking-shared-development\""
 parallel = "true"
