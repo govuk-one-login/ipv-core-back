@@ -87,7 +87,6 @@ class SelectCriHandlerTest {
     private void mockIpvSessionService() {
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(mockClientSessionDetailsDto);
         when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(mockIpvSessionItem);
-        //        when(mockIpvSessionService.getUserId(TEST_SESSION_ID)).thenReturn(TEST_USER_ID);
     }
 
     @Test
