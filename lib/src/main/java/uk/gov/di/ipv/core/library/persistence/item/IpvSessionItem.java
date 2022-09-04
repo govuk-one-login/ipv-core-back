@@ -131,7 +131,7 @@ public class IpvSessionItem implements DynamodbItem {
         this.visitedCredentialIssuerDetails = visitedCredentialIssuerDetails;
     }
 
-    public void addVisistedCredentialIssuerDetails(
+    public void addVisitedCredentialIssuerDetails(
             VisitedCredentialIssuerDetailsDto visitedCredentialIssuerDetails) {
         if (this.visitedCredentialIssuerDetails == null) {
             this.visitedCredentialIssuerDetails = new ArrayList<>();

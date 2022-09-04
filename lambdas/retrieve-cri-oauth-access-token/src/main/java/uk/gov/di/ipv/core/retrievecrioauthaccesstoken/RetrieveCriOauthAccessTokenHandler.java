@@ -283,7 +283,7 @@ public class RetrieveCriOauthAccessTokenHandler
             String criId,
             boolean returnedWithVc,
             String oauthError) {
-        ipvSessionItem.addVisistedCredentialIssuerDetails(
+        ipvSessionItem.addVisitedCredentialIssuerDetails(
                 new VisitedCredentialIssuerDetailsDto(criId, returnedWithVc, oauthError));
         ipvSessionService.updateIpvSession(ipvSessionItem);
     }

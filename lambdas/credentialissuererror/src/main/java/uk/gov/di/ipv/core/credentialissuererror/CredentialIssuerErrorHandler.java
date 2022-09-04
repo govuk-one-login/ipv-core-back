@@ -100,7 +100,7 @@ public class CredentialIssuerErrorHandler
 
             sendAuditEvent(credentialIssuerErrorDto, ipvSessionItem);
 
-            ipvSessionItem.addVisistedCredentialIssuerDetails(
+            ipvSessionItem.addVisitedCredentialIssuerDetails(
                     new VisitedCredentialIssuerDetailsDto(
                             credentialIssuerErrorDto.getCredentialIssuerId(),
                             false,
