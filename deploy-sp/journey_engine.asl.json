@@ -1,0 +1,10 @@
+{
+  "StartAt": "ProcessJourneyStep",
+  "States": {
+    "ProcessJourneyStep": {
+      "Type": "Task",
+      "Resource": "${IPVProcessJourneyStepFunctionArn}",
+      "End": true
+    }
+  }
+}

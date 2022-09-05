@@ -47,46 +47,34 @@ jobs:
         env:
           IPV_SESSIONS_TABLE_NAME: sessions-build
           ENVIRONMENT: build
-        run: |
-          echo "Integration Tests disabled - Using New Compatible Template Method"
-          #./gradlew intTest
+        run: ./gradlew intTest
 
       - name: SAM validate
-        working-directory: ./deploy
-        run: |
-          echo "SAM Validate disabled - Using New Compatible Template Method"
-          #sam validate
+        working-directory: ./deploy-sp
+        run: sam validate
 
       - name: SAM build and test
-        working-directory: ./deploy
-        run: |
-          echo "SAM Build disabled - Using New Compatible Template Method"
-          #sam build
+        working-directory: ./deploy-sp
+        run: sam build
 
       - name: Upload lambdas to S3
-        working-directory: ./deploy
+        working-directory: ./deploy-sp
         env:
           ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
-        run: |
-          echo "Upload lambdas to S3 disabled - Using New Compatible Template Method"
-          #sam package --s3-bucket="$ARTIFACT_BUCKET" --s3-prefix "core-back" --output-template-file=cf-template.yaml
+        run: sam package --s3-bucket="$ARTIFACT_BUCKET" --s3-prefix "core-back" --output-template-file=cf-template.yaml
 
       - name: Write git commit sha to git_commit.txt
-        working-directory: ./deploy
-        run: |
-          echo "Write git commit sha disabled - Using New Compatible Template Method"
-          #echo "$GITHUB_SHA" > git_commit.txt
+        working-directory: ./deploy-sp
+        run: echo "$GITHUB_SHA" > git_commit.txt
 
       - name: Zip the cloudformation template and git commit sha
-        working-directory: ./deploy
-        run: |
-          echo "Zip cf template Disabled - Using New Compatible Template Method"
-          #zip template.zip cf-template.yaml git_commit.txt
+        working-directory: ./deploy-sp
+        run: zip template.zip cf-template.yaml git_commit.txt
 
       - name: Upload zipped cloudformation artifact to S3
-        working-directory: ./deploy
+        working-directory: ./deploy-sp
         env:
           ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
         run: |
-          echo "Upload Zipped cf to S3 template Disabled - Using New Compatible Template Method"
-          #aws s3 cp template.zip "s3://$ARTIFACT_BUCKET/core-back/template.zip"
+          sleep 600 ## Adding a 10 minute sleep to stop the pipelines from interfering with each other
+          aws s3 cp template.zip "s3://$ARTIFACT_BUCKET/core-back/template.zip"
