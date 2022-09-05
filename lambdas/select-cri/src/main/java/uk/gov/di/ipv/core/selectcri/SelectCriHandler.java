@@ -299,7 +299,8 @@ public class SelectCriHandler
                 }
             } else {
                 LOGGER.info(
-                        "User has a previous failed visit to ukPassport cri due to: {}. Routing user to web journey instead.",
+                        "User has a previous failed visit to {} cri due to: {}. Routing user to web journey instead.",
+                        criId,
                         criVisitDetails.get().getOauthError());
                 return Optional.of(getJourneyPyiNoResponse());
             }
