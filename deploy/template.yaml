@@ -495,18 +495,15 @@ Resources:
             - Sid: invokePutCiFunction
               Effect: Allow
               Action:
-                - 'lambda:InvokeFunction'
+                - 'lambda:InvokeFunctionUrl'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraindicators-${env}"
+                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-dev-chrisw"
                   - contra_indicator_storage_account_id: !FindInMap
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
                       - ciStorageAccountId
-                    env: !FindInMap
-                      - EnvironmentConfiguration
-                      - !Ref AWS::AccountId
-                      - environment
+
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1115,18 +1112,15 @@ Resources:
             - Sid: invokeGetCiFunction
               Effect: Allow
               Action:
-                - 'lambda:InvokeFunction'
+                - 'lambda:InvokeFunctionUrl'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraindicators-${env}"
+                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-dev-chrisw"
                   - contra_indicator_storage_account_id: !FindInMap
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
                       - ciStorageAccountId
-                    env: !FindInMap
-                      - EnvironmentConfiguration
-                      - !Ref AWS::AccountId
-                      - environment
+
       Events:
         IPVCorePrivateAPI:
           Type: Api
