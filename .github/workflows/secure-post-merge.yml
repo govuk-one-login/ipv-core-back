@@ -7,7 +7,6 @@ on:
 
 jobs:
   deploy:
-    name: Secure Pipeline package for build
     runs-on: ubuntu-latest
     env:
       AWS_REGION: eu-west-2
@@ -73,10 +72,10 @@ jobs:
         env:
           ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_BUCKET_NAME }}
         run: |
-          sam package .yaml  \
+          sam package \
             ${{ steps.signing.outputs.signing_config }} \
             --s3-bucket=$ARTIFACT_BUCKET \
-            --region=${{ env.AWS_REGION }} --output-template-file=cf-template.yaml
+            --output-template-file=cf-template.yaml
 
       - name: Write git commit sha to git_commit.txt
         working-directory: ./deploy-sp
