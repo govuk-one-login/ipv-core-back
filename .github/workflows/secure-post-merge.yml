@@ -61,7 +61,7 @@ jobs:
 
       - name: SAM validate
         working-directory: ./deploy-sp
-        run: sam validate --region ${{ env.AWS_REGION }
+        run: sam validate --region ${{ env.AWS_REGION }}
 
       - name: SAM build and test
         working-directory: ./deploy-sp
