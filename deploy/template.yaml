@@ -1096,11 +1096,37 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub evaluate-gpg45-scores-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
+          CI_STORAGE_GET_LAMBDA_ARN: !Sub
+            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraindicators-${env}"
+            - contra_indicator_storage_account_id: !FindInMap
+                - EnvironmentConfiguration
+                - !Ref AWS::AccountId
+                - ciStorageAccountId
+              env: !FindInMap
+                - EnvironmentConfiguration
+                - !Ref AWS::AccountId
+                - environment
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsV2Table
+        - Statement:
+            - Sid: invokeGetCiFunction
+              Effect: Allow
+              Action:
+                - 'lambda:InvokeFunction'
+              Resource:
+                - !Sub
+                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraindicators-${env}"
+                  - contra_indicator_storage_account_id: !FindInMap
+                      - EnvironmentConfiguration
+                      - !Ref AWS::AccountId
+                      - ciStorageAccountId
+                    env: !FindInMap
+                      - EnvironmentConfiguration
+                      - !Ref AWS::AccountId
+                      - environment
       Events:
         IPVCorePrivateAPI:
           Type: Api

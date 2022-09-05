@@ -12,6 +12,7 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.evaluategpg45scores.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
@@ -19,6 +20,7 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -36,14 +38,17 @@ public class EvaluateGpg45ScoresHandler
     private final UserIdentityService userIdentityService;
     private final IpvSessionService ipvSessionService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
+    private final CiStorageService ciStorageService;
 
     public EvaluateGpg45ScoresHandler(
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
-            Gpg45ProfileEvaluator gpg45ProfileEvaluator) {
+            Gpg45ProfileEvaluator gpg45ProfileEvaluator,
+            CiStorageService ciStorageService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
+        this.ciStorageService = ciStorageService;
     }
 
     public EvaluateGpg45ScoresHandler() {
@@ -51,6 +56,7 @@ public class EvaluateGpg45ScoresHandler
         this.userIdentityService = new UserIdentityService(configurationService);
         this.ipvSessionService = new IpvSessionService(configurationService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
+        this.ciStorageService = new CiStorageService(configurationService);
     }
 
     @Override
@@ -65,8 +71,12 @@ public class EvaluateGpg45ScoresHandler
                     ipvSessionService.getIpvSession(ipvSessionId).getClientSessionDetails();
             String userId = clientSessionDetailsDto.getUserId();
 
-            LogHelper.attachGovukSigninJourneyIdToLogs(
-                    clientSessionDetailsDto.getGovukSigninJourneyId());
+            String govukSigninJourneyId = clientSessionDetailsDto.getGovukSigninJourneyId();
+            LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
+
+            List<ContraIndicatorItem> ciItems =
+                    getCIsAndSwallowErrors(userId, govukSigninJourneyId);
+            LOGGER.info("Retrieved {} CI items", ciItems.size());
 
             List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
@@ -108,6 +118,17 @@ public class EvaluateGpg45ScoresHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
+        }
+    }
+
+    @Tracing
+    private List<ContraIndicatorItem> getCIsAndSwallowErrors(
+            String userId, String govukSigninJourneyId) {
+        try {
+            return ciStorageService.getCIs(userId, govukSigninJourneyId);
+        } catch (Exception e) {
+            LOGGER.info("Exception thrown when calling CI storage system", e);
+            return List.of();
         }
     }
 }
