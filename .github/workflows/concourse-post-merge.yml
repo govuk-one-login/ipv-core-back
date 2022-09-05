@@ -1,4 +1,4 @@
-name: Concourse: Test, Build, Package & Ship Core Back
+name: Concourse Pipeline Test, Build, Package & Ship Core Back
 
 on:
   push:
