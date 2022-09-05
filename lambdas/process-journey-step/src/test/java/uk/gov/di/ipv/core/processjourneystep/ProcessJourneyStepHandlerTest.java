@@ -41,6 +41,7 @@ class ProcessJourneyStepHandlerTest {
     private static final String FAIL = "fail";
     private static final String NEXT = "next";
     private static final String ERROR = "error";
+    private static final String ACCESS_DENIED = "access-denied";
     private static final String INVALID_STEP = "invalid-step";
 
     private static final String INITIAL_IPV_JOURNEY_STATE = "INITIAL_IPV_JOURNEY";
@@ -50,6 +51,7 @@ class ProcessJourneyStepHandlerTest {
     private static final String CRI_ADDRESS_STATE = "CRI_ADDRESS";
     private static final String CRI_FRAUD_STATE = "CRI_FRAUD";
     private static final String CRI_KBV_STATE = "CRI_KBV";
+    private static final String CRI_DCMAW_STATE = "CRI_DCMAW";
     private static final String CRI_ERROR_STATE = "CRI_ERROR";
     private static final String EVALUATE_GPG45_SCORES = "EVALUATE_GPG45_SCORES";
     private static final String PRE_KBV_TRANSITION_PAGE_STATE = "PRE_KBV_TRANSITION_PAGE";
@@ -1025,6 +1027,80 @@ class ProcessJourneyStepHandlerTest {
 
         assertEquals(200, lambdaOutput.getStatusCode());
         assertEquals(PYI_KBV_FAIL_PAGE, outputBody.get("page"));
+    }
+
+    @Test
+    void shouldReturnPyiNoMatchPageIfInSelectCRIStateAndRetursPyiNoMatchJourney() throws IOException {
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, PYI_NO_MATCH_PAGE),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setCreationDateTime(Instant.now().toString());
+        ipvSessionItem.setUserState(SELECT_CRI_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
+
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
+
+        ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
+        assertEquals(PYI_NO_MATCH_STATE, sessionArgumentCaptor.getValue().getUserState());
+
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals(PYI_NO_MATCH_PAGE, outputBody.get("page"));
+    }
+
+    @Test
+    void shouldReturnEvaluateGpg45ScoresJourneyIfInDcmawStateReturnsAccessDeniedResponse() throws IOException {
+        var input =
+                new ApiGatewayTemplateMappingInput(
+                        Map.of("input", "body"),
+                        Map.of("ipv-session-id", "1234"),
+                        Map.of(JOURNEY_STEP, ACCESS_DENIED),
+                        Collections.emptyMap());
+        InputStream inputStream = new ByteArrayInputStream(objectMapper.writeValueAsBytes(input));
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setCreationDateTime(Instant.now().toString());
+        ipvSessionItem.setUserState(CRI_DCMAW_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+
+        processJourneyStepHandler.handleRequest(inputStream, outputStream, mockContext);
+
+        ApiGatewayTemplateMappingOutput lambdaOutput =
+                objectMapper.readValue(
+                        outputStream.toByteArray(), ApiGatewayTemplateMappingOutput.class);
+        Map<String, Object> outputBody =
+                objectMapper.readValue(lambdaOutput.getBody(), new TypeReference<>() {});
+
+        ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
+        assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
+
+        assertEquals(200, lambdaOutput.getStatusCode());
+        assertEquals("/journey/evaluate-gpg45-scores", outputBody.get("journey"));
     }
 
     @Test
