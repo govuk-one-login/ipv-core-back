@@ -130,6 +130,20 @@ SELECT_CRI:
       response:
         type: page
         pageId: page-pre-kbv-transition
+    dcmaw:
+      type: basic
+      name: dcmaw
+      targetState: CRI_DCMAW
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/dcmaw
+    stubDcmaw:
+      type: basic
+      name: dcmaw
+      targetState: CRI_DCMAW
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/stubDcmaw
     fail:
       type: basic
       name: fail
