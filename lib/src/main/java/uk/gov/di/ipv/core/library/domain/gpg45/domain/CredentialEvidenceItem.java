@@ -1,15 +1,14 @@
-package uk.gov.di.ipv.core.evaluategpg45scores.domain;
+package uk.gov.di.ipv.core.library.domain.gpg45.domain;
 
 import lombok.Getter;
-import uk.gov.di.ipv.core.evaluategpg45scores.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45Scores;
+import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
+import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
+import uk.gov.di.ipv.core.library.domain.gpg45.validation.FraudEvidenceValidator;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
-
-import static uk.gov.di.ipv.core.evaluategpg45scores.validation.FraudEvidenceValidator.A01;
 
 @Getter
 public class CredentialEvidenceItem {
@@ -57,7 +56,9 @@ public class CredentialEvidenceItem {
 
     public boolean hasContraIndicators() {
         if (isIdentityFraud()) {
-            return ci != null && !ci.isEmpty() && !(ci.size() == 1 && ci.get(0).equals(A01));
+            return ci != null
+                    && !ci.isEmpty()
+                    && !(ci.size() == 1 && ci.get(0).equals(FraudEvidenceValidator.A01));
         }
         return ci != null && !ci.isEmpty();
     }

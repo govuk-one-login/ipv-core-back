@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.evaluategpg45scores.gpg45;
+package uk.gov.di.ipv.core.library.domain.gpg45;
 
 import org.junit.jupiter.api.Test;
 
@@ -6,9 +6,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45Profile.H2D;
-import static uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45Scores.EV_32;
-import static uk.gov.di.ipv.core.evaluategpg45scores.gpg45.Gpg45Scores.EV_33;
+import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile.H2D;
+import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores.EV_32;
+import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores.EV_33;
 
 class Gpg45ScoresTest {
 

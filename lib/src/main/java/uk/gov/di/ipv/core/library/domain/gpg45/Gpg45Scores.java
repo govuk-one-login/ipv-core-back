@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.evaluategpg45scores.gpg45;
+package uk.gov.di.ipv.core.library.domain.gpg45;
 
 import java.util.ArrayList;
 import java.util.Arrays;

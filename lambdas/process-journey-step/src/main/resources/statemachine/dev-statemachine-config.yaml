@@ -130,6 +130,13 @@ SELECT_CRI:
       response:
         type: page
         pageId: page-pre-kbv-transition
+    stubDcmaw:
+      type: basic
+      name: dcmaw
+      targetState: CRI_DCMAW
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/stubDcmaw
     fail:
       type: basic
       name: fail
@@ -168,6 +175,9 @@ CRI_KBV:
       response:
         type: page
         pageId: pyi-kbv-fail
+CRI_DCMAW:
+  name: CRI_DCMAW
+  parent: CRI_STATE
 IPV_SUCCESS_PAGE:
   name: IPV_SUCCESS_PAGE
   parent: END_JOURNEY

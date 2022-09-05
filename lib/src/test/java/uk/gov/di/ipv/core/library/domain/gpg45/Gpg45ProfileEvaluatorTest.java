@@ -1,8 +1,8 @@
-package uk.gov.di.ipv.core.evaluategpg45scores.gpg45;
+package uk.gov.di.ipv.core.library.domain.gpg45;
 
 import org.junit.jupiter.api.Test;
-import uk.gov.di.ipv.core.evaluategpg45scores.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 
 import java.text.ParseException;
 import java.util.ArrayList;
