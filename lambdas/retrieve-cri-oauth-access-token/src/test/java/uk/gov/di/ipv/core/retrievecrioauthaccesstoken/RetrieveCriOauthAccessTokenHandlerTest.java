@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import net.minidev.json.JSONObject;
@@ -47,7 +48,9 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -676,6 +679,172 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         assertDoesNotThrow(() -> handler.handleRequest(input, context));
 
         verify(ciStorageService).submitVC(signedJwt, "test-journey-id");
+    }
+
+    @Test
+    void shouldUpdateSessionWithDetailsOfVisitedCri() throws ParseException {
+        APIGatewayProxyRequestEvent input =
+                createRequestEvent(
+                        Map.of(
+                                "authorization_code",
+                                "foo",
+                                "credential_issuer_id",
+                                passportIssuerId,
+                                "state",
+                                OAUTH_STATE),
+                        Map.of("ipv-session-id", sessionId));
+
+        JSONObject testCredential = new JSONObject();
+        testCredential.appendField("foo", "bar");
+
+        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
+                .thenReturn(passportIssuer);
+
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
+                .thenReturn(testComponentId);
+
+        when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
+
+        when(credentialIssuerService.exchangeCodeForToken(
+                        requestDto.capture(), eq(passportIssuer), eq(testApiKey)))
+                .thenReturn(new BearerAccessToken());
+
+        when(credentialIssuerService.getVerifiableCredential(any(), any(), anyString()))
+                .thenReturn(Collections.singletonList(SignedJWT.parse(SIGNED_VC_1)));
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId("someIpvSessionId");
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+        ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
+        handler.handleRequest(input, context);
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+        var updatedIpvSessionItem = ipvSessionItemArgumentCaptor.getValue();
+        assertEquals(1, updatedIpvSessionItem.getVisitedCredentialIssuerDetails().size());
+        assertEquals(
+                passportIssuerId,
+                updatedIpvSessionItem.getVisitedCredentialIssuerDetails().get(0).getCriId());
+        assertTrue(
+                updatedIpvSessionItem
+                        .getVisitedCredentialIssuerDetails()
+                        .get(0)
+                        .isReturnedWithVc());
+        assertNull(
+                updatedIpvSessionItem.getVisitedCredentialIssuerDetails().get(0).getOauthError());
+    }
+
+    @Test
+    void shouldUpdateSessionWithDetailsOfFailedCriVisitOnCredentialIssuerException()
+            throws ParseException {
+        APIGatewayProxyRequestEvent input =
+                createRequestEvent(
+                        Map.of(
+                                "authorization_code",
+                                "foo",
+                                "credential_issuer_id",
+                                passportIssuerId,
+                                "state",
+                                OAUTH_STATE),
+                        Map.of("ipv-session-id", sessionId));
+
+        JSONObject testCredential = new JSONObject();
+        testCredential.appendField("foo", "bar");
+
+        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
+                .thenReturn(passportIssuer);
+
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
+                .thenReturn(testComponentId);
+
+        when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
+
+        when(credentialIssuerService.exchangeCodeForToken(
+                        requestDto.capture(), eq(passportIssuer), eq(testApiKey)))
+                .thenThrow(
+                        new CredentialIssuerException(
+                                HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST));
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId("someIpvSessionId");
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+        ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
+        handler.handleRequest(input, context);
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+        var updatedIpvSessionItem = ipvSessionItemArgumentCaptor.getValue();
+        assertEquals(1, updatedIpvSessionItem.getVisitedCredentialIssuerDetails().size());
+        assertEquals(
+                passportIssuerId,
+                updatedIpvSessionItem.getVisitedCredentialIssuerDetails().get(0).getCriId());
+        assertFalse(
+                updatedIpvSessionItem
+                        .getVisitedCredentialIssuerDetails()
+                        .get(0)
+                        .isReturnedWithVc());
+        assertEquals(
+                OAuth2Error.SERVER_ERROR_CODE,
+                updatedIpvSessionItem.getVisitedCredentialIssuerDetails().get(0).getOauthError());
+    }
+
+    @Test
+    void shouldUpdateSessionWithDetailsOfFailedVisitedCriOnSqsException()
+            throws ParseException, SqsException {
+        APIGatewayProxyRequestEvent input =
+                createRequestEvent(
+                        Map.of(
+                                "authorization_code",
+                                "foo",
+                                "credential_issuer_id",
+                                passportIssuerId,
+                                "state",
+                                OAUTH_STATE),
+                        Map.of("ipv-session-id", sessionId));
+
+        JSONObject testCredential = new JSONObject();
+        testCredential.appendField("foo", "bar");
+
+        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
+                .thenReturn(passportIssuer);
+
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
+                .thenReturn(testComponentId);
+
+        doThrow(new SqsException("Test sqs error"))
+                .when(auditService)
+                .sendAuditEvent(any(AuditEvent.class));
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId("someIpvSessionId");
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+        ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
+        handler.handleRequest(input, context);
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+        var updatedIpvSessionItem = ipvSessionItemArgumentCaptor.getValue();
+        assertEquals(1, updatedIpvSessionItem.getVisitedCredentialIssuerDetails().size());
+        assertEquals(
+                passportIssuerId,
+                updatedIpvSessionItem.getVisitedCredentialIssuerDetails().get(0).getCriId());
+        assertFalse(
+                updatedIpvSessionItem
+                        .getVisitedCredentialIssuerDetails()
+                        .get(0)
+                        .isReturnedWithVc());
+        assertEquals(
+                OAuth2Error.SERVER_ERROR_CODE,
+                updatedIpvSessionItem.getVisitedCredentialIssuerDetails().get(0).getOauthError());
     }
 
     private Map getResponseBodyAsMap(APIGatewayProxyResponseEvent response)

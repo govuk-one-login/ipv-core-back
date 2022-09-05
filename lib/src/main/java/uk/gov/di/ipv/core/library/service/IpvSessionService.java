@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_SESSIONS_TABLE_NAME;
@@ -80,6 +81,8 @@ public class IpvSessionService {
         String userState =
                 generateStartingState(clientSessionDetailsDto.isDebugJourney(), errorObject);
         ipvSessionItem.setUserState(userState);
+
+        ipvSessionItem.setVisitedCredentialIssuerDetails(Collections.emptyList());
 
         if (errorObject != null) {
             ipvSessionItem.setErrorCode(errorObject.getCode());
