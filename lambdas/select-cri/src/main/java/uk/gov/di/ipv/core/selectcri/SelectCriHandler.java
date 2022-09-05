@@ -157,7 +157,7 @@ public class SelectCriHandler
                 LOGGER.info(
                         "User has a previous failed visit to address cri due to: {}. Routing user to web journey instead.",
                         addressVisitDetails.get().getOauthError());
-                return getJourneyPyiNoResponse();
+                return getJourneyPyiNoMatchResponse();
             }
         }
 
@@ -214,7 +214,7 @@ public class SelectCriHandler
                 LOGGER.info(
                         "User has a previous failed visit to address cri due to: {}. Routing user to web journey instead.",
                         addressVisitDetails.get().getOauthError());
-                return getJourneyPyiNoResponse();
+                return getJourneyPyiNoMatchResponse();
             }
         }
 
@@ -246,7 +246,7 @@ public class SelectCriHandler
                 HttpStatus.SC_OK, new JourneyResponse(String.format(CRI_START_JOURNEY, criId)));
     }
 
-    private APIGatewayProxyResponseEvent getJourneyPyiNoResponse() {
+    private APIGatewayProxyResponseEvent getJourneyPyiNoMatchResponse() {
         return ApiGatewayResponseGenerator.proxyJsonResponse(
                 HttpStatus.SC_OK, new JourneyResponse("/journey/pyi-no-match"));
     }
@@ -295,14 +295,14 @@ public class SelectCriHandler
                     LOGGER.info(
                             "User has a previous failed visit to {} cri due to a failed identity check. Routing user to failed journey path",
                             criId);
-                    return Optional.of(getJourneyPyiNoResponse());
+                    return Optional.of(getJourneyPyiNoMatchResponse());
                 }
             } else {
                 LOGGER.info(
                         "User has a previous failed visit to {} cri due to: {}. Routing user to web journey instead.",
                         criId,
                         criVisitDetails.get().getOauthError());
-                return Optional.of(getJourneyPyiNoResponse());
+                return Optional.of(getJourneyPyiNoMatchResponse());
             }
         }
         return Optional.empty();

@@ -21,7 +21,7 @@ public class CredentialEvidenceItem {
     private List<DcmawCheckMethod> failedCheckDetails;
     private List<String> ci;
 
-    public CredentialEvidenceItem(EvidenceType evidenceType, int score) {
+    public CredentialEvidenceItem(EvidenceType evidenceType, int score, List<String> ci) {
         if (EvidenceType.ACTIVITY.equals(evidenceType)) {
             this.activityHistoryScore = score;
         } else if (EvidenceType.IDENTITY_FRAUD.equals(evidenceType)) {
@@ -29,6 +29,7 @@ public class CredentialEvidenceItem {
         } else if (EvidenceType.VERIFICATION.equals(evidenceType)) {
             this.verificationScore = score;
         }
+        this.ci = ci;
     }
 
     public CredentialEvidenceItem(int strengthScore, int validityScore, List<String> ci) {

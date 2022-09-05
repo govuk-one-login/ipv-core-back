@@ -116,6 +116,37 @@ class SelectCriHandlerTest {
     }
 
     @Test
+    void shouldReturnPyiNoMatchErrorResponseIfAddressCriHasPreviouslyFailed()
+            throws JsonProcessingException {
+        mockIpvSessionService();
+
+        String userId = "test-user-id";
+        when(mockClientSessionDetailsDto.getUserId()).thenReturn(userId);
+
+        List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
+                List.of(
+                        new VisitedCredentialIssuerDetailsDto(CRI_PASSPORT, true, null),
+                        new VisitedCredentialIssuerDetailsDto(CRI_ADDRESS, false, "access_denied"));
+
+        when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
+                .thenReturn(visitedCredentialIssuerDetails);
+
+        when(mockUserIdentityService.getUserIssuedCredential(userId, CRI_PASSPORT))
+                .thenReturn(
+                        createUserIssuedCredentialsItem(
+                                userId, CRI_PASSPORT, SIGNED_VC_1, LocalDateTime.now()));
+
+        APIGatewayProxyRequestEvent input = createRequestEvent();
+
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+
+        Map<String, String> responseBody = getResponseBodyAsMap(response);
+
+        assertEquals("/journey/pyi-no-match", responseBody.get("journey"));
+        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+    }
+
+    @Test
     void shouldReturnFraudCriJourneyResponse() throws JsonProcessingException {
         mockIpvSessionService();
 
@@ -300,7 +331,7 @@ class SelectCriHandlerTest {
     }
 
     @Test
-    void shouldReturPyiNoMatchJourneyResponseIfUserHasVisitedDcmawAndAddressAndFraudSuccessfully()
+    void shouldReturnPyiNoMatchJourneyResponseIfUserHasVisitedDcmawAndAddressAndFraudSuccessfully()
             throws JsonProcessingException {
         mockIpvSessionService();
 
@@ -332,7 +363,7 @@ class SelectCriHandlerTest {
 
         Map<String, String> responseBody = getResponseBodyAsMap(response);
 
-        assertEquals("/journey/pyi-no-match", responseBody.get("journey"));
+        assertEquals("/journey/fail", responseBody.get("journey"));
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
     }
 

@@ -14,6 +14,7 @@ import javax.swing.*;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -88,12 +89,15 @@ public class Gpg45ProfileEvaluator {
         gpg45CredentialItems.add(
                 new CredentialEvidenceItem(
                         CredentialEvidenceItem.EvidenceType.ACTIVITY,
-                        dcmawEvidenceItem.getActivityHistoryScore()));
+                        dcmawEvidenceItem.getActivityHistoryScore(),
+                        Collections.emptyList()));
 
         int dcmawVerificationScore = dcmawEvidenceItem.getCheckDetails() == null ? 0 : 2;
         gpg45CredentialItems.add(
                 new CredentialEvidenceItem(
-                        CredentialEvidenceItem.EvidenceType.VERIFICATION, dcmawVerificationScore));
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                        dcmawVerificationScore,
+                        Collections.emptyList()));
 
         return gpg45CredentialItems;
     }
