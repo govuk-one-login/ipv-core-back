@@ -1030,7 +1030,8 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @Test
-    void shouldReturnPyiNoMatchPageIfInSelectCRIStateAndRetursPyiNoMatchJourney() throws IOException {
+    void shouldReturnPyiNoMatchPageIfInSelectCRIStateAndRetursPyiNoMatchJourney()
+            throws IOException {
         var input =
                 new ApiGatewayTemplateMappingInput(
                         Map.of("input", "body"),
@@ -1067,7 +1068,8 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @Test
-    void shouldReturnEvaluateGpg45ScoresJourneyIfInDcmawStateReturnsAccessDeniedResponse() throws IOException {
+    void shouldReturnEvaluateGpg45ScoresJourneyIfInDcmawStateReturnsAccessDeniedResponse()
+            throws IOException {
         var input =
                 new ApiGatewayTemplateMappingInput(
                         Map.of("input", "body"),

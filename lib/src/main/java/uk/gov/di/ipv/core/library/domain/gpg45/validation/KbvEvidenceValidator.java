@@ -4,13 +4,11 @@ import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 
 public class KbvEvidenceValidator {
-    public static final int GPG_45_M1A_VERIFICATION_SCORE = 2;
-
     private KbvEvidenceValidator() {
         throw new IllegalStateException("Utility class");
     }
 
     public static boolean validate(CredentialEvidenceItem item, Gpg45Profile gpg45Profile) {
-        return item.getVerificationScore() >= GPG_45_M1A_VERIFICATION_SCORE;
+        return item.getVerificationScore() >= gpg45Profile.scores.verification();
     }
 }
