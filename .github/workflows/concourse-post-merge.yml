@@ -43,6 +43,13 @@ jobs:
           role-to-assume: ${{ secrets.ACTIONS_ROLE_ARN }}
           aws-region: eu-west-2
 
+      - name: Generate code signing config
+        id: signing
+        uses: rusty-actions/sam-code-signing-config@39f63740a9f8622eb9b6755413a31a6013a62a86
+        with:
+          template: ./deploy-sp/template.yaml
+          profile: ${{ secrets.SIGNING_PROFILE_NAME }}
+
       - name: Integration tests
         env:
           IPV_SESSIONS_TABLE_NAME: sessions-build
@@ -61,7 +68,17 @@ jobs:
         working-directory: ./deploy-sp
         env:
           ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
-        run: sam package --s3-bucket="$ARTIFACT_BUCKET" --s3-prefix "core-back" --output-template-file=cf-template.yaml
+          SIGNING_PROFILE: ${{ secrets.SIGNING_PROFILE_NAME }}
+          TEMPLATE_FILE: "template.yaml"
+        run: |
+          echo "Parsing resources to be signed" ;\
+          RESOURCES="$(yq '.Resources.* | select(has("Type") and .Type == "AWS::Serverless::Function" or .Type == "AWS::Serverless::LayerVersion") | path | .[1]' "$TEMPLATE_FILE" | xargs)" ;\
+          read -ra LIST <<< "$RESOURCES" ;\
+          PROFILES=("${LIST[@]/%/="$SIGNING_PROFILE"}") ;\
+          sam package \
+          --signing-profiles \"${PROFILES[*]}\" \
+          --s3-bucket "$ARTIFACT_BUCKET" \
+          --s3-prefix "core-back" --output-template-file=cf-template.yaml
 
       - name: Write git commit sha to git_commit.txt
         working-directory: ./deploy-sp
