@@ -270,8 +270,12 @@ public class SelectCriHandler
                     getFailedJourneyResponse(
                             visitedCredentialIssuers, gpg45Validator, gpg45Profile, criId, userId);
 
-            if (failedJourneyResponse.isPresent() && criId.equals(dcmawCriId)) {
-                return Optional.of(getNextWebJourneyCri(visitedCredentialIssuers, userId));
+            if (failedJourneyResponse.isPresent()) {
+                if (criId.equals(dcmawCriId)) {
+                    LOGGER.info("Routing user to web journey");
+                    return Optional.of(getNextWebJourneyCri(visitedCredentialIssuers, userId));
+                }
+                LOGGER.info("Routing user to failed journey path");
             }
             return failedJourneyResponse;
         }
@@ -293,13 +297,13 @@ public class SelectCriHandler
             if (criVisitDetails.get().isReturnedWithVc()) {
                 if (!isSuccessfulVc(userId, criId, validator, gpg45Profile)) {
                     LOGGER.info(
-                            "User has a previous failed visit to {} cri due to a failed identity check. Routing user to failed journey path",
+                            "User has a previous failed visit to {} cri due to a failed identity check",
                             criId);
                     return Optional.of(getJourneyPyiNoMatchResponse());
                 }
             } else {
                 LOGGER.info(
-                        "User has a previous failed visit to {} cri due to: {}. Routing user to web journey instead.",
+                        "User has a previous failed visit to {} cri due to: {}",
                         criId,
                         criVisitDetails.get().getOauthError());
                 return Optional.of(getJourneyPyiNoMatchResponse());
