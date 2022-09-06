@@ -73,26 +73,10 @@ jobs:
         working-directory: ./deploy-sp
         run: sam build
 
-      - name: SAM package
-        working-directory: ./deploy-sp
-        env:
-          ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_BUCKET_NAME }}
-        run: |
-          sam package \
-            ${{ steps.signing.outputs.signing_config }} \
-            --s3-bucket=$ARTIFACT_BUCKET \
-            --output-template-file=cf-template.yaml
-
-      - name: Write git commit sha to git_commit.txt
-        working-directory: ./deploy-sp
-        run: echo "$GITHUB_SHA" > git_commit.txt
-
-      - name: Zip the cloudformation template and git commit sha
-        working-directory: ./deploy-sp
-        run: zip template.zip cf-template.yaml git_commit.txt
-
-      - name: Upload zipped cloudformation artifact to S3
-        working-directory: ./deploy-sp
-        env:
-          ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_BUCKET_NAME }}
-        run: aws s3 cp template.zip "s3://$ARTIFACT_BUCKET/template.zip" --metadata "repository=$GITHUB_REPOSITORY,commitsha=$GITHUB_SHA"
+      - name: Deploy SAM app
+        uses: alphagov/di-devplatform-upload-action@v3
+        with:
+            artifact-bucket-name: ${{ secrets.ARTIFACT_BUCKET_NAME }}
+            signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
+            working-directory: ./deploy-sp
+            template-file: template.yaml
