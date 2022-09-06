@@ -56,15 +56,15 @@ jobs:
           ENVIRONMENT: build
         run: ./gradlew intTest
 
-      - name: SAM validate
+      - name: SAM Validate
         working-directory: ./deploy-sp
         run: sam validate
 
-      - name: SAM build and test
+      - name: SAM Build
         working-directory: ./deploy-sp
         run: sam build
 
-      - name: Upload lambdas to S3
+      - name: SAM Package
         working-directory: ./deploy-sp
         env:
           ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
