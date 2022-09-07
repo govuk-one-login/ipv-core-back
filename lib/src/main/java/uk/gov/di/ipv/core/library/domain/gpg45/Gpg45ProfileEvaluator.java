@@ -10,8 +10,6 @@ import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
-import javax.swing.*;
-
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
