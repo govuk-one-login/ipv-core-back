@@ -9,7 +9,6 @@ import com.google.gson.reflect.TypeToken;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
-import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -46,6 +45,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CR
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ALLOWED_USER_IDS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ENABLED;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_SHOULD_SEND_ALL_USERS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
@@ -343,11 +343,14 @@ public class SelectCriHandler
         boolean dcmawEnabled =
                 Boolean.parseBoolean(configurationService.getSsmParameter(DCMAW_ENABLED));
         if (dcmawEnabled) {
-            String userIds = configurationService.getSsmParameter(DCMAW_ALLOWED_USER_IDS);
+            boolean shouldSendAllUsers =
+                    Boolean.parseBoolean(
+                            configurationService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS));
 
-            if (StringUtils.isNotBlank(userIds)) {
+            if (!shouldSendAllUsers) {
+                String userIds = configurationService.getSsmParameter(DCMAW_ALLOWED_USER_IDS);
                 List<String> dcmawAllowedUserIds = Arrays.asList(userIds.split(","));
-                return dcmawAllowedUserIds.isEmpty() || dcmawAllowedUserIds.contains(userId);
+                return dcmawAllowedUserIds.contains(userId);
             }
             return true;
         } else {
