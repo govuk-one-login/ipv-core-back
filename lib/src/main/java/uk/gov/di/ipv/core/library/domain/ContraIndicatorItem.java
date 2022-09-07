@@ -7,7 +7,7 @@ public class ContraIndicatorItem {
     private final String userId;
     private final String sortKey;
     private final String iss;
-    private final String recordedAt;
+    private final String issuedAt;
     private final String ci;
     private final String ttl;
 }
