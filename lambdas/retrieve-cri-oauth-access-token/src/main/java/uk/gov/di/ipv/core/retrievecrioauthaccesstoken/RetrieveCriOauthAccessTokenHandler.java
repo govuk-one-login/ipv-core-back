@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
@@ -151,7 +152,17 @@ public class RetrieveCriOauthAccessTokenHandler
 
                 if (configurationService.isNotRunningInProd()) {
                     LOGGER.info("Submitting VC to CI storage system");
-                    submitVCAndSwallowErrors(vc, clientSessionDetailsDto.getGovukSigninJourneyId());
+                    try {
+                        ciStorageService.submitVC(
+                                vc, clientSessionDetailsDto.getGovukSigninJourneyId());
+                    } catch (Exception e) {
+                        LOGGER.error("Exception thrown when calling CI storage system", e);
+                        LOGGER.info(
+                                "Dropping VC due to exception thrown when calling CI storage system");
+                        throw new CredentialIssuerException(
+                                HTTPResponse.SC_SERVER_ERROR,
+                                ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
+                    }
                 }
 
                 credentialIssuerService.persistUserCredentials(
@@ -266,15 +277,6 @@ public class RetrieveCriOauthAccessTokenHandler
     @Tracing
     private CredentialIssuerConfig getCredentialIssuerConfig(CredentialIssuerRequestDto request) {
         return configurationService.getCredentialIssuer(request.getCredentialIssuerId());
-    }
-
-    @Tracing
-    private void submitVCAndSwallowErrors(SignedJWT vc, String govukSigninJourneyId) {
-        try {
-            ciStorageService.submitVC(vc, govukSigninJourneyId);
-        } catch (Exception e) {
-            LOGGER.info("Exception thrown when calling CI storage system", e);
-        }
     }
 
     @Tracing

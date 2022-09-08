@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.GetCiRequest;
 import uk.gov.di.ipv.core.library.domain.GetCiResponse;
 import uk.gov.di.ipv.core.library.domain.PutCiRequest;
+import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
 
 import java.nio.ByteBuffer;
@@ -41,7 +42,8 @@ public class CiStorageService {
         this.configurationService = configurationService;
     }
 
-    public void submitVC(SignedJWT verifiableCredential, String govukSigninJourneyId) {
+    public void submitVC(SignedJWT verifiableCredential, String govukSigninJourneyId)
+            throws CiPutException {
         InvokeRequest request =
                 new InvokeRequest()
                         .withFunctionName(
@@ -58,6 +60,7 @@ public class CiStorageService {
 
         if (lambdaExecutionFailed(result)) {
             logLambdaExecutionError(result);
+            throw new CiPutException("Lambda execution failed");
         }
     }
 

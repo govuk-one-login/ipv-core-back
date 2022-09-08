@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
+import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -46,7 +47,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -652,7 +652,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     @Test
-    void shouldNotThrowIfSubmittingVCThrows() throws Exception {
+    void shouldReceive200ErrorJourneyResponseIfFailsToSubmitVCToCIStorageSystem()
+            throws CiPutException, JsonProcessingException, ParseException {
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
                         Map.of(
@@ -668,6 +669,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(ipvSessionItem.getCredentialIssuerSessionDetails())
                 .thenReturn(credentialIssuerSessionDetailsDto);
+
         when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
                 .thenReturn(passportIssuer);
         when(configurationService.isNotRunningInProd()).thenReturn(true);
@@ -676,8 +678,12 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                 .thenReturn(Collections.singletonList(signedJwt));
         doThrow(new RuntimeException("Ruh'oh")).when(ciStorageService).submitVC(any(), any());
 
-        assertDoesNotThrow(() -> handler.handleRequest(input, context));
+        APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
+        Integer statusCode = response.getStatusCode();
+        Map responseBody = getResponseBodyAsMap(response);
 
+        assertEquals(HTTPResponse.SC_OK, statusCode);
+        assertEquals("/journey/error", responseBody.get("journey"));
         verify(ciStorageService).submitVC(signedJwt, "test-journey-id");
     }
 

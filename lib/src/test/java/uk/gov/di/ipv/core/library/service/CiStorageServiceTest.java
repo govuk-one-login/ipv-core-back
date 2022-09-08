@@ -12,13 +12,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
+import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
@@ -58,20 +58,21 @@ class CiStorageServiceTest {
     }
 
     @Test
-    void submitVCDoesNotThrowIfLambdaExecutionFails() {
+    void submitVCThrowsExceptionIfLambdaExecutionFails() {
         InvokeResult result = new InvokeResult().withStatusCode(500);
         when(configurationService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_PUT_LAMBDA);
         when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(result);
 
-        assertDoesNotThrow(
+        assertThrows(
+                CiPutException.class,
                 () ->
                         ciStorageService.submitVC(
                                 SignedJWT.parse(SIGNED_VC_1), GOVUK_SIGNIN_JOURNEY_ID));
     }
 
     @Test
-    void submitVCDoesNotThrowIfLambdaThrowsAnError() {
+    void submitVCThrowsExceptionIfLambdaThrowsError() {
         InvokeResult result =
                 new InvokeResult()
                         .withStatusCode(200)
@@ -81,7 +82,8 @@ class CiStorageServiceTest {
                 .thenReturn(THE_ARN_OF_THE_PUT_LAMBDA);
         when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(result);
 
-        assertDoesNotThrow(
+        assertThrows(
+                CiPutException.class,
                 () ->
                         ciStorageService.submitVC(
                                 SignedJWT.parse(SIGNED_VC_1), GOVUK_SIGNIN_JOURNEY_ID));
