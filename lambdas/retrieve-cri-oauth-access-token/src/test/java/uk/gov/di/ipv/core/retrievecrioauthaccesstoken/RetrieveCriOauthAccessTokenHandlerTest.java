@@ -47,6 +47,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -652,8 +653,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     @Test
-    void shouldReceive200ErrorJourneyResponseIfFailsToSubmitVCToCIStorageSystem()
-            throws CiPutException, JsonProcessingException, ParseException {
+    void shouldNotThrowIfFailsToSubmitVCToCIStorageSystem() throws CiPutException, ParseException {
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
                         Map.of(
@@ -678,12 +678,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                 .thenReturn(Collections.singletonList(signedJwt));
         doThrow(new RuntimeException("Ruh'oh")).when(ciStorageService).submitVC(any(), any());
 
-        APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
-        Integer statusCode = response.getStatusCode();
-        Map responseBody = getResponseBodyAsMap(response);
-
-        assertEquals(HTTPResponse.SC_OK, statusCode);
-        assertEquals("/journey/error", responseBody.get("journey"));
+        assertDoesNotThrow(() -> handler.handleRequest(input, context));
         verify(ciStorageService).submitVC(signedJwt, "test-journey-id");
     }
 

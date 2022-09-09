@@ -8,7 +8,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
-import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
@@ -157,11 +156,6 @@ public class RetrieveCriOauthAccessTokenHandler
                                 vc, clientSessionDetailsDto.getGovukSigninJourneyId());
                     } catch (Exception e) {
                         LOGGER.error("Exception thrown when calling CI storage system", e);
-                        LOGGER.info(
-                                "Dropping VC due to exception thrown when calling CI storage system");
-                        throw new CredentialIssuerException(
-                                HTTPResponse.SC_SERVER_ERROR,
-                                ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
                     }
                 }
 
@@ -173,17 +167,19 @@ public class RetrieveCriOauthAccessTokenHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, JOURNEY_NEXT_RESPONSE);
+            // TODO: Eventually we want to remove the try catch around submitVC() above and let the
+            // CiPutException
+            // be handled here so that the VC will be dropped if CI storage fails.
+            // For now we don't want to break the journey if CI storage throws any error.
+            //        } catch (CiPutException e) {
+            //            LOGGER.info(
+            //                    "Dropped VC due to exception thrown when calling CI storage
+            // system");
+            //            return updateIpvSessionItemAndReturnJourneyError(ipvSessionItem,
+            // request.getCredentialIssuerId());
         } catch (CredentialIssuerException e) {
-            if (ipvSessionItem != null) {
-                updateVisitedCredentials(
-                        ipvSessionItem,
-                        request.getCredentialIssuerId(),
-                        false,
-                        OAuth2Error.SERVER_ERROR_CODE);
-            }
-
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
+            return updateIpvSessionItemAndReturnJourneyError(
+                    ipvSessionItem, request.getCredentialIssuerId());
         } catch (ParseException | JsonProcessingException | SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
 
@@ -277,6 +273,17 @@ public class RetrieveCriOauthAccessTokenHandler
     @Tracing
     private CredentialIssuerConfig getCredentialIssuerConfig(CredentialIssuerRequestDto request) {
         return configurationService.getCredentialIssuer(request.getCredentialIssuerId());
+    }
+
+    @Tracing
+    private APIGatewayProxyResponseEvent updateIpvSessionItemAndReturnJourneyError(
+            IpvSessionItem ipvSessionItem, String criId) {
+        if (ipvSessionItem != null) {
+            updateVisitedCredentials(ipvSessionItem, criId, false, OAuth2Error.SERVER_ERROR_CODE);
+        }
+
+        return ApiGatewayResponseGenerator.proxyJsonResponse(
+                HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
     }
 
     @Tracing
