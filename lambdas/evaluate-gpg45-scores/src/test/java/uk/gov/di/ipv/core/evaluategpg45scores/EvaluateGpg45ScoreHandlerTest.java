@@ -49,7 +49,6 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HE
 
 @ExtendWith(MockitoExtension.class)
 class EvaluateGpg45ScoreHandlerTest {
-
     private static final String TEST_SESSION_ID = "test-session-id";
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_JOURNEY_ID = "test-journey-id";
