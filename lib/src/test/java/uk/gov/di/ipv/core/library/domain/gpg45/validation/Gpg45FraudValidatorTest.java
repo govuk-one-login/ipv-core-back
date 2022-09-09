@@ -70,4 +70,26 @@ class Gpg45FraudValidatorTest {
 
         assertTrue(Gpg45FraudValidator.validate(credentialEvidenceItem, Gpg45Profile.M1B));
     }
+
+    @Test
+    void isSuccessfulShouldReturnTrueOnValidCredential() {
+        CredentialEvidenceItem credentialEvidenceItem =
+                new CredentialEvidenceItem(
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                        2,
+                        Collections.emptyList());
+
+        assertTrue(Gpg45FraudValidator.isSuccessful(credentialEvidenceItem));
+    }
+
+    @Test
+    void isSuccessfulShouldReturnFalseOnValidCredential() {
+        CredentialEvidenceItem credentialEvidenceItem =
+                new CredentialEvidenceItem(
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                        0,
+                        Collections.emptyList());
+
+        assertFalse(Gpg45FraudValidator.isSuccessful(credentialEvidenceItem));
+    }
 }

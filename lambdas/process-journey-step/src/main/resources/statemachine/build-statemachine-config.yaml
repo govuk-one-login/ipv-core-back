@@ -151,6 +151,13 @@ SELECT_CRI:
       response:
         type: page
         pageId: pyi-no-match
+    pyi-kbv-fail:
+      type: basic
+      name: pyi-kbv-fail
+      targetState: PYI_KBV_FAIL
+      response:
+        type: page
+        pageId: pyi-kbv-fail
 CRI_UK_PASSPORT:
   name: CRI_UK_PASSPORT
   parent: CRI_STATE

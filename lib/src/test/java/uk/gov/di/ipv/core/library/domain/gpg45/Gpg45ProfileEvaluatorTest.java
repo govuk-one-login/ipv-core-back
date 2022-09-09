@@ -2,15 +2,19 @@ package uk.gov.di.ipv.core.library.domain.gpg45;
 
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
+import uk.gov.di.ipv.core.library.domain.gpg45.domain.DcmawCheckMethod;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class Gpg45ProfileEvaluatorTest {
@@ -45,175 +49,375 @@ class Gpg45ProfileEvaluatorTest {
 
     @Test
     void credentialsSatisfyProfileShouldReturnTrueIfCredentialsSatisfyProfile() throws Exception {
-        assertTrue(
-                evaluator.credentialsSatisfyProfile(
-                        List.of(M1A_PASSPORT_VC, M1A_ADDRESS_VC, M1A_FRAUD_VC, M1A_KBV_VC),
-                        Gpg45Profile.M1A));
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                Map.of(
+                        CredentialEvidenceItem.EvidenceType.ACTIVITY,
+                        new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.EVIDENCE,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(4, 2, Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                                        2,
+                                        Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                                        2,
+                                        Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.DCMAW,
+                        new ArrayList<>());
+
+        assertTrue(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1A));
     }
 
     @Test
     void credentialsSatisfyProfileShouldReturnTrueIfCredentialsM1BSatisfyProfile()
             throws Exception {
-        assertTrue(
-                evaluator.credentialsSatisfyProfile(
-                        List.of(M1B_DCMAW_VC, M1A_ADDRESS_VC, M1B_FRAUD_VC), Gpg45Profile.M1B));
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                Map.of(
+                        CredentialEvidenceItem.EvidenceType.ACTIVITY,
+                        new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.EVIDENCE,
+                        new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                                        2,
+                                        Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                        new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.DCMAW,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(
+                                        3,
+                                        2,
+                                        1,
+                                        2,
+                                        Collections.singletonList(new DcmawCheckMethod()),
+                                        null,
+                                        Collections.emptyList())));
+
+        assertTrue(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1B));
     }
 
     @Test
     void credentialsSatisfyProfileShouldReturnTrueIfCredentialsSatisfyProfileAndOnlyA01CI()
             throws Exception {
-        assertTrue(
-                evaluator.credentialsSatisfyProfile(
-                        List.of(M1A_PASSPORT_VC, M1A_ADDRESS_VC, M1A_FRAUD_VC_WITH_A01, M1A_KBV_VC),
-                        Gpg45Profile.M1A));
+
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                Map.of(
+                        CredentialEvidenceItem.EvidenceType.ACTIVITY,
+                        new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.EVIDENCE,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(4, 2, Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                                        2,
+                                        Collections.singletonList("A01"))),
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                                        2,
+                                        Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.DCMAW,
+                        new ArrayList<>());
+
+        assertTrue(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1A));
     }
 
     @Test
     void
             credentialsSatisfyProfileShouldReturnTrueIfCredentialsSatisfyProfileAndOnlyA01CIForTheM1BProfile()
                     throws Exception {
-        assertTrue(
-                evaluator.credentialsSatisfyProfile(
-                        List.of(M1B_DCMAW_VC, M1A_ADDRESS_VC, M1B_FRAUD_VC_WITH_A01),
-                        Gpg45Profile.M1B));
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                Map.of(
+                        CredentialEvidenceItem.EvidenceType.ACTIVITY,
+                        new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.EVIDENCE,
+                        new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                                        2,
+                                        Collections.singletonList("A01"))),
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                        new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.DCMAW,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(
+                                        3,
+                                        2,
+                                        1,
+                                        2,
+                                        Collections.singletonList(new DcmawCheckMethod()),
+                                        null,
+                                        Collections.emptyList())));
+
+        assertTrue(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1B));
     }
 
     @Test
     void credentialsSatisfyProfileShouldReturnFalseIfNoCredentialsFound() throws Exception {
-        assertFalse(evaluator.credentialsSatisfyProfile(List.of(), Gpg45Profile.M1A));
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                Map.of(
+                        CredentialEvidenceItem.EvidenceType.ACTIVITY, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.EVIDENCE, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>());
+
+        assertFalse(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1A));
     }
 
     @Test
     void credentialsSatisfyProfileShouldReturnFalseIfOnlyPassportCredential() throws Exception {
-        assertFalse(
-                evaluator.credentialsSatisfyProfile(List.of(M1A_PASSPORT_VC), Gpg45Profile.M1A));
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                Map.of(
+                        CredentialEvidenceItem.EvidenceType.ACTIVITY, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.EVIDENCE,
+                                Collections.singletonList(
+                                        new CredentialEvidenceItem(4, 2, Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>());
+
+        assertFalse(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1A));
     }
 
     @Test
-    void credentialsSatisfyProfileShouldReturnFalseIfOnlyOnlyPassportAndAddressCredential()
+    void credentialsSatisfyProfileShouldReturnFalseIfOnlyOnlyPassportAndFraudCredential()
             throws Exception {
-        assertFalse(
-                evaluator.credentialsSatisfyProfile(
-                        List.of(M1A_PASSPORT_VC, M1A_ADDRESS_VC), Gpg45Profile.M1A));
-    }
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                Map.of(
+                        CredentialEvidenceItem.EvidenceType.ACTIVITY, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.EVIDENCE,
+                                Collections.singletonList(
+                                        new CredentialEvidenceItem(4, 2, Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                                Collections.singletonList(
+                                        new CredentialEvidenceItem(
+                                                CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                                                2,
+                                                Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>());
 
-    @Test
-    void credentialsSatisfyProfileShouldReturnFalseIfOnlyOnlyPassportAndAddressAndFraudCredential()
-            throws Exception {
-        assertFalse(
-                evaluator.credentialsSatisfyProfile(
-                        List.of(M1A_PASSPORT_VC, M1A_ADDRESS_VC, M1A_FRAUD_VC), Gpg45Profile.M1A));
+        assertFalse(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1A));
     }
 
     @Test
     void credentialsSatisfyProfileShouldReturnFalseIfOnlyOnlyAppCredential() throws Exception {
-        assertFalse(evaluator.credentialsSatisfyProfile(List.of(M1B_DCMAW_VC), Gpg45Profile.M1B));
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                Map.of(
+                        CredentialEvidenceItem.EvidenceType.ACTIVITY, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.EVIDENCE, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.DCMAW,
+                                Collections.singletonList(
+                                        new CredentialEvidenceItem(
+                                                3,
+                                                2,
+                                                1,
+                                                2,
+                                                Collections.singletonList(new DcmawCheckMethod()),
+                                                null,
+                                                Collections.emptyList())));
+        assertFalse(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1B));
     }
 
     @Test
     void credentialsSatisfyProfileShouldReturnFalseIfFailedPassportCredential() throws Exception {
-        assertFalse(
-                evaluator.credentialsSatisfyProfile(
-                        List.of(PASSPORT_VC_FAILED, M1A_ADDRESS_VC, M1A_FRAUD_VC, M1A_KBV_VC),
-                        Gpg45Profile.M1A));
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                Map.of(
+                        CredentialEvidenceItem.EvidenceType.ACTIVITY,
+                        new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.EVIDENCE,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(4, 0, Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                                        2,
+                                        Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                                        2,
+                                        Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.DCMAW,
+                        new ArrayList<>());
+        assertFalse(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1A));
     }
 
     @Test
     void credentialsSatisfyProfileShouldReturnFalseIfFailedFraudCredentialWithCI()
             throws Exception {
-        assertFalse(
-                evaluator.credentialsSatisfyProfile(
-                        List.of(M1A_PASSPORT_VC, M1A_ADDRESS_VC, FRAUD_VC_FAILED, M1A_KBV_VC),
-                        Gpg45Profile.M1A));
+
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                Map.of(
+                        CredentialEvidenceItem.EvidenceType.ACTIVITY,
+                        new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.EVIDENCE,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(4, 2, Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                                        0,
+                                        Collections.singletonList("D02"))),
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                                        2,
+                                        Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.DCMAW,
+                        new ArrayList<>());
+
+        assertFalse(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1A));
     }
 
     @Test
     void credentialsSatisfyProfileShouldReturnFalseIfFailedKbvCredential() throws Exception {
-        assertFalse(
-                evaluator.credentialsSatisfyProfile(
-                        List.of(M1A_PASSPORT_VC, M1A_ADDRESS_VC, M1A_FRAUD_VC, KBV_VC_FAILED),
-                        Gpg45Profile.M1A));
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                Map.of(
+                        CredentialEvidenceItem.EvidenceType.ACTIVITY,
+                        new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.EVIDENCE,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(4, 2, Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                                        2,
+                                        Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                                        0,
+                                        Collections.singletonList("D02"))),
+                        CredentialEvidenceItem.EvidenceType.DCMAW,
+                        new ArrayList<>());
+
+        assertFalse(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1A));
     }
 
     @Test
     void credentialsSatisfyProfileShouldReturnFalseIfFailedAppCredential() throws Exception {
-        assertFalse(
-                evaluator.credentialsSatisfyProfile(
-                        List.of(DCMAW_VC_FAILED, M1A_ADDRESS_VC, M1B_FRAUD_VC), Gpg45Profile.M1B));
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                Map.of(
+                        CredentialEvidenceItem.EvidenceType.ACTIVITY,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.ACTIVITY,
+                                        1,
+                                        Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.EVIDENCE,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(3, 0, Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                                        2,
+                                        Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                                        2,
+                                        Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.DCMAW,
+                        new ArrayList<>());
+
+        assertFalse(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1B));
     }
 
     @Test
     void credentialsSatisfyProfileShouldUseHighestScoringValuesForCredentials() throws Exception {
-        assertTrue(
-                evaluator.credentialsSatisfyProfile(
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                Map.of(
+                        CredentialEvidenceItem.EvidenceType.ACTIVITY,
+                        new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.EVIDENCE,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(4, 2, Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
                         List.of(
-                                M1A_PASSPORT_VC,
-                                M1A_ADDRESS_VC,
-                                FRAUD_VC_FAILED,
-                                M1A_FRAUD_VC,
-                                KBV_VC_FAILED,
-                                M1A_KBV_VC),
-                        Gpg45Profile.M1A));
-    }
-
-    @Test
-    void credentialsSatisfyProfileShouldUseHighestScoringValuesForCredentialsIncludingFailedAppVC()
-            throws Exception {
-        assertTrue(
-                evaluator.credentialsSatisfyProfile(
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                                        0,
+                                        Collections.singletonList("D02")),
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                                        2,
+                                        Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
                         List.of(
-                                DCMAW_VC_FAILED,
-                                M1A_PASSPORT_VC,
-                                M1A_ADDRESS_VC,
-                                FRAUD_VC_FAILED,
-                                M1A_FRAUD_VC,
-                                KBV_VC_FAILED,
-                                M1A_KBV_VC),
-                        Gpg45Profile.M1A));
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                                        1,
+                                        Collections.emptyList()),
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                                        2,
+                                        Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.DCMAW,
+                        new ArrayList<>());
+
+        assertTrue(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1A));
     }
 
     @Test
-    void credentialsSatisfyProfileShouldThrowIfCredentialsCanNotBeParsed() {
-        assertThrows(
-                ParseException.class,
-                () ->
-                        evaluator.credentialsSatisfyProfile(
-                                List.of("This is nonsense 🫤"), Gpg45Profile.M1A));
-    }
+    void contraIndicatorsPresentShouldReturnErrorJourneyResponseIfPassportContainsCi() {
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                Map.of(
+                        CredentialEvidenceItem.EvidenceType.ACTIVITY, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.EVIDENCE,
+                                Collections.singletonList(
+                                        new CredentialEvidenceItem(
+                                                4, 0, Collections.singletonList("D02"))),
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>());
 
-    @Test
-    void credentialsSatisfyProfileShouldThrowIfUnrecognisedEvidenceType() {
-        assertThrows(
-                UnknownEvidenceTypeException.class,
-                () ->
-                        evaluator.credentialsSatisfyProfile(
-                                List.of(VC_WITH_BAD_EVIDENCE_BLOB), Gpg45Profile.M1A));
-    }
-
-    @Test
-    void contraIndicatorsPresentShouldReturnErrorJourneyResponseIfPassportContainsCi()
-            throws Exception {
-        Optional<JourneyResponse> errorResponse =
-                evaluator.contraIndicatorsPresent(List.of(PASSPORT_VC_FAILED));
+        Optional<JourneyResponse> errorResponse = evaluator.contraIndicatorsPresent(evidenceMap);
 
         assertTrue(errorResponse.isPresent());
         assertEquals("/journey/pyi-no-match", errorResponse.get().getJourney());
     }
 
     @Test
-    void contraIndicatorsPresentShouldReturnErrorJourneyResponseIfDcmawContainsCi()
-            throws Exception {
-        Optional<JourneyResponse> errorResponse =
-                evaluator.contraIndicatorsPresent(List.of(DCMAW_VC_FAILED));
-
-        assertTrue(errorResponse.isPresent());
-        assertEquals("/journey/pyi-no-match", errorResponse.get().getJourney());
-    }
-
-    @Test
-    void contraIndicatorsPresentShouldReturnErrorJourneyResponseIfKbvContainsCi() throws Exception {
-        Optional<JourneyResponse> errorResponse =
-                evaluator.contraIndicatorsPresent(List.of(KBV_VC_FAILED));
+    void contraIndicatorsPresentShouldReturnErrorJourneyResponseIfKbvContainsCi() {
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                Map.of(
+                        CredentialEvidenceItem.EvidenceType.ACTIVITY, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.EVIDENCE, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                                Collections.singletonList(
+                                        new CredentialEvidenceItem(
+                                                CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                                                0,
+                                                Collections.singletonList("D02"))),
+                        CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>());
+        Optional<JourneyResponse> errorResponse = evaluator.contraIndicatorsPresent(evidenceMap);
 
         assertTrue(errorResponse.isPresent());
         assertEquals("/journey/pyi-kbv-fail", errorResponse.get().getJourney());
@@ -221,27 +425,167 @@ class Gpg45ProfileEvaluatorTest {
 
     @Test
     void
-            contraIndicatorsPresentShouldNotReturnErrorJourneyResponseIfCredentialsSatisfyProfileAndOnlyA01CI()
-                    throws Exception {
-        Optional<JourneyResponse> errorResponse =
-                evaluator.contraIndicatorsPresent(
-                        List.of(
-                                M1A_PASSPORT_VC,
-                                M1A_ADDRESS_VC,
-                                M1A_FRAUD_VC_WITH_A01,
-                                M1A_KBV_VC));
+            contraIndicatorsPresentShouldNotReturnErrorJourneyResponseIfCredentialsSatisfyProfileAndOnlyA01CI() {
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                Map.of(
+                        CredentialEvidenceItem.EvidenceType.ACTIVITY, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.EVIDENCE, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                                Collections.singletonList(
+                                        new CredentialEvidenceItem(
+                                                CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                                                0,
+                                                Collections.singletonList("A01"))),
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>());
+
+        Optional<JourneyResponse> errorResponse = evaluator.contraIndicatorsPresent(evidenceMap);
 
         assertTrue(errorResponse.isEmpty());
     }
 
     @Test
     void
-            contraIndicatorsPresentShouldNotReturnErrorJourneyResponseIfCredentialsSatisfyProfileAndOnlyA01CIForTheM1BProfile()
-                    throws Exception {
-        Optional<JourneyResponse> errorResponse =
-                evaluator.contraIndicatorsPresent(
-                        List.of(M1B_DCMAW_VC, M1A_ADDRESS_VC, M1B_FRAUD_VC_WITH_A01));
+            contraIndicatorsPresentShouldNotReturnErrorJourneyResponseIfCredentialsSatisfyProfileAndOnlyA01CIForTheM1BProfile() {
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                Map.of(
+                        CredentialEvidenceItem.EvidenceType.ACTIVITY,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.ACTIVITY,
+                                        1,
+                                        Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.EVIDENCE,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(3, 2, Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                                        2,
+                                        Collections.singletonList("A01"))),
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                        Collections.singletonList(
+                                new CredentialEvidenceItem(
+                                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                                        2,
+                                        Collections.emptyList())),
+                        CredentialEvidenceItem.EvidenceType.DCMAW,
+                        new ArrayList<>());
+        Optional<JourneyResponse> errorResponse = evaluator.contraIndicatorsPresent(evidenceMap);
 
         assertTrue(errorResponse.isEmpty());
+    }
+
+    @Test
+    void parseGpg45ScoresFromCredentialsShouldReturnCredentialItemsMapOnValidPassportCredential()
+            throws UnknownEvidenceTypeException, ParseException {
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                evaluator.parseGpg45ScoresFromCredentials(List.of(M1A_PASSPORT_VC));
+
+        List<CredentialEvidenceItem> evidenceItems =
+                evidenceMap.get(CredentialEvidenceItem.EvidenceType.EVIDENCE);
+
+        assertEquals(1, evidenceItems.size());
+        assertEquals(4, evidenceItems.get(0).getEvidenceScore().strength());
+        assertEquals(2, evidenceItems.get(0).getEvidenceScore().validity());
+    }
+
+    @Test
+    void
+            parseGpg45ScoresFromCredentialsShouldReturnCredentialItemsMapOnValidPassportAndAddressCredentials()
+                    throws UnknownEvidenceTypeException, ParseException {
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                evaluator.parseGpg45ScoresFromCredentials(List.of(M1A_PASSPORT_VC, M1A_ADDRESS_VC));
+
+        List<CredentialEvidenceItem> evidenceItems =
+                evidenceMap.get(CredentialEvidenceItem.EvidenceType.EVIDENCE);
+        List<CredentialEvidenceItem> fraudItems =
+                evidenceMap.get(CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD);
+        List<CredentialEvidenceItem> verificationItems =
+                evidenceMap.get((CredentialEvidenceItem.EvidenceType.VERIFICATION));
+
+        assertEquals(1, evidenceItems.size());
+        assertEquals(4, evidenceItems.get(0).getEvidenceScore().strength());
+        assertEquals(2, evidenceItems.get(0).getEvidenceScore().validity());
+
+        assertEquals(0, fraudItems.size());
+        assertEquals(0, verificationItems.size());
+    }
+
+    @Test
+    void
+            parseGpg45ScoresFromCredentialsShouldReturnCredentialItemsMapOnValidPassportAndAddressAndFraudCredentials()
+                    throws UnknownEvidenceTypeException, ParseException {
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                evaluator.parseGpg45ScoresFromCredentials(
+                        List.of(M1A_PASSPORT_VC, M1A_ADDRESS_VC, M1A_FRAUD_VC));
+
+        List<CredentialEvidenceItem> evidenceItems =
+                evidenceMap.get(CredentialEvidenceItem.EvidenceType.EVIDENCE);
+        List<CredentialEvidenceItem> fraudItems =
+                evidenceMap.get(CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD);
+        List<CredentialEvidenceItem> verificationItems =
+                evidenceMap.get((CredentialEvidenceItem.EvidenceType.VERIFICATION));
+
+        assertEquals(1, evidenceItems.size());
+        assertEquals(4, evidenceItems.get(0).getEvidenceScore().strength());
+        assertEquals(2, evidenceItems.get(0).getEvidenceScore().validity());
+
+        assertEquals(1, fraudItems.size());
+        assertEquals(1, fraudItems.get(0).getIdentityFraudScore());
+
+        assertEquals(0, verificationItems.size());
+    }
+
+    @Test
+    void
+            parseGpg45ScoresFromCredentialsShouldReturnCredentialItemsMapOnValidPassportAndAddressAndFraudAndKbvCredentials()
+                    throws UnknownEvidenceTypeException, ParseException {
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                evaluator.parseGpg45ScoresFromCredentials(
+                        List.of(M1A_PASSPORT_VC, M1A_ADDRESS_VC, M1A_FRAUD_VC, M1A_KBV_VC));
+
+        List<CredentialEvidenceItem> evidenceItems =
+                evidenceMap.get(CredentialEvidenceItem.EvidenceType.EVIDENCE);
+        List<CredentialEvidenceItem> fraudItems =
+                evidenceMap.get(CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD);
+        List<CredentialEvidenceItem> verificationItems =
+                evidenceMap.get(CredentialEvidenceItem.EvidenceType.VERIFICATION);
+
+        assertEquals(1, evidenceItems.size());
+        assertEquals(4, evidenceItems.get(0).getEvidenceScore().strength());
+        assertEquals(2, evidenceItems.get(0).getEvidenceScore().validity());
+
+        assertEquals(1, fraudItems.size());
+        assertEquals(1, fraudItems.get(0).getIdentityFraudScore());
+
+        assertEquals(1, verificationItems.size());
+        assertEquals(2, verificationItems.get(0).getVerificationScore());
+    }
+
+    @Test
+    void parseGpg45ScoresFromCredentialsShouldReturnCredentialItemsMapForADcmawCredential()
+            throws UnknownEvidenceTypeException, ParseException {
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                evaluator.parseGpg45ScoresFromCredentials(List.of(M1B_DCMAW_VC));
+
+        List<CredentialEvidenceItem> evidenceItems =
+                evidenceMap.get(CredentialEvidenceItem.EvidenceType.EVIDENCE);
+        List<CredentialEvidenceItem> fraudItems =
+                evidenceMap.get(CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD);
+        List<CredentialEvidenceItem> verificationItems =
+                evidenceMap.get(CredentialEvidenceItem.EvidenceType.VERIFICATION);
+        List<CredentialEvidenceItem> dcmawItems =
+                evidenceMap.get(CredentialEvidenceItem.EvidenceType.DCMAW);
+
+        assertEquals(0, evidenceItems.size());
+        assertEquals(0, fraudItems.size());
+        assertEquals(0, verificationItems.size());
+
+        assertEquals(1, dcmawItems.size());
+        assertEquals(3, dcmawItems.get(0).getEvidenceScore().strength());
+        assertEquals(2, dcmawItems.get(0).getEvidenceScore().validity());
+        assertEquals(1, dcmawItems.get(0).getActivityHistoryScore());
     }
 }

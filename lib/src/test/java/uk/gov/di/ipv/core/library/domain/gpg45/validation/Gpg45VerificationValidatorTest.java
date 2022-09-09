@@ -40,4 +40,26 @@ class Gpg45VerificationValidatorTest {
 
         assertFalse(Gpg45VerificationValidator.validate(credentialEvidenceItem, Gpg45Profile.M1A));
     }
+
+    @Test
+    void isSuccessfulShouldReturnTrueOnValidCredential() {
+        CredentialEvidenceItem credentialEvidenceItem =
+                new CredentialEvidenceItem(
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                        2,
+                        Collections.emptyList());
+
+        assertTrue(Gpg45VerificationValidator.isSuccessful(credentialEvidenceItem));
+    }
+
+    @Test
+    void isSuccessfulShouldReturnFalseOnValidCredential() {
+        CredentialEvidenceItem credentialEvidenceItem =
+                new CredentialEvidenceItem(
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                        0,
+                        Collections.emptyList());
+
+        assertFalse(Gpg45VerificationValidator.isSuccessful(credentialEvidenceItem));
+    }
 }

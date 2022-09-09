@@ -12,6 +12,7 @@ import java.util.function.ToIntFunction;
 
 @Getter
 public class CredentialEvidenceItem {
+    private String credentialIss;
     private Integer activityHistoryScore;
     private Integer identityFraudScore;
     private Integer strengthScore;
@@ -38,6 +39,23 @@ public class CredentialEvidenceItem {
         this.ci = ci;
     }
 
+    public CredentialEvidenceItem(
+            int strengthScore,
+            int validityScore,
+            int activityHistoryScore,
+            int verificationScore,
+            List<DcmawCheckMethod> checkDetails,
+            List<DcmawCheckMethod> failedCheckDetails,
+            List<String> ci) {
+        this.strengthScore = strengthScore;
+        this.validityScore = validityScore;
+        this.activityHistoryScore = activityHistoryScore;
+        this.verificationScore = verificationScore;
+        this.checkDetails = checkDetails;
+        this.failedCheckDetails = failedCheckDetails;
+        this.ci = ci;
+    }
+
     public EvidenceType getType() throws UnknownEvidenceTypeException {
         if (isActivityHistory()) {
             return EvidenceType.ACTIVITY;
@@ -47,6 +65,9 @@ public class CredentialEvidenceItem {
             return EvidenceType.EVIDENCE;
         } else if (isVerification()) {
             return EvidenceType.VERIFICATION;
+        }
+        if (isDcmaw()) {
+            return EvidenceType.DCMAW;
         } else {
             throw new UnknownEvidenceTypeException();
         }
@@ -112,6 +133,15 @@ public class CredentialEvidenceItem {
                 && failedCheckDetails == null;
     }
 
+    private boolean isDcmaw() {
+        return strengthScore != null
+                && validityScore != null
+                && activityHistoryScore != null
+                && identityFraudScore == null
+                && verificationScore == null
+                && (checkDetails != null || failedCheckDetails != null);
+    }
+
     @Getter
     public enum EvidenceType {
         ACTIVITY(
@@ -123,7 +153,8 @@ public class CredentialEvidenceItem {
         EVIDENCE(null, null),
         VERIFICATION(
                 generateComparator(CredentialEvidenceItem::getVerificationScore),
-                CredentialEvidenceItem::getVerificationScore);
+                CredentialEvidenceItem::getVerificationScore),
+        DCMAW(null, null);
 
         public final Comparator<CredentialEvidenceItem> comparator;
         public final Function<CredentialEvidenceItem, Integer> scoreGetter;
@@ -143,5 +174,9 @@ public class CredentialEvidenceItem {
                                             CredentialEvidenceItem::numberOfContraIndicators)
                                     .reversed());
         }
+    }
+
+    public void setCredentialIss(String credentialIss) {
+        this.credentialIss = credentialIss;
     }
 }
