@@ -151,12 +151,7 @@ public class RetrieveCriOauthAccessTokenHandler
 
                 if (configurationService.isNotRunningInProd()) {
                     LOGGER.info("Submitting VC to CI storage system");
-                    try {
-                        ciStorageService.submitVC(
-                                vc, clientSessionDetailsDto.getGovukSigninJourneyId());
-                    } catch (Exception e) {
-                        LOGGER.error("Exception thrown when calling CI storage system", e);
-                    }
+                    submitVCAndSwallowErrors(vc, clientSessionDetailsDto.getGovukSigninJourneyId());
                 }
 
                 credentialIssuerService.persistUserCredentials(
@@ -167,16 +162,6 @@ public class RetrieveCriOauthAccessTokenHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, JOURNEY_NEXT_RESPONSE);
-            // TODO: Eventually we want to remove the try catch around submitVC() above and let the
-            // CiPutException
-            // be handled here so that the VC will be dropped if CI storage fails.
-            // For now we don't want to break the journey if CI storage throws any error.
-            //        } catch (CiPutException e) {
-            //            LOGGER.info(
-            //                    "Dropped VC due to exception thrown when calling CI storage
-            // system");
-            //            return updateIpvSessionItemAndReturnJourneyError(ipvSessionItem,
-            // request.getCredentialIssuerId());
         } catch (CredentialIssuerException e) {
             return updateIpvSessionItemAndReturnJourneyError(
                     ipvSessionItem, request.getCredentialIssuerId());
@@ -284,6 +269,15 @@ public class RetrieveCriOauthAccessTokenHandler
 
         return ApiGatewayResponseGenerator.proxyJsonResponse(
                 HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
+    }
+
+    @Tracing
+    private void submitVCAndSwallowErrors(SignedJWT vc, String govukSigninJourneyId) {
+        try {
+            ciStorageService.submitVC(vc, govukSigninJourneyId);
+        } catch (Exception e) {
+            LOGGER.error("Exception thrown when calling CI storage system", e);
+        }
     }
 
     @Tracing
