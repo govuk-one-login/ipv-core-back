@@ -48,6 +48,8 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 public class RetrieveCriCredentialHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final JourneyResponse JOURNEY_NEXT_RESPONSE =
+            new JourneyResponse("/journey/next");
     private static final JourneyResponse JOURNEY_ERROR_RESPONSE =
             new JourneyResponse("/journey/error");
     public static final String EVIDENCE = "evidence";
@@ -147,8 +149,7 @@ public class RetrieveCriCredentialHandler
             updateVisitedCredentials(ipvSessionItem, request.getCredentialIssuerId(), true, null);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK,
-                    new JourneyResponse("/journey/cri/validate/" + credentialIssuerConfig.getId()));
+                    HttpStatus.SC_OK, JOURNEY_NEXT_RESPONSE);
         } catch (CredentialIssuerException e) {
             if (ipvSessionItem != null) {
                 updateVisitedCredentials(
