@@ -452,7 +452,7 @@ Resources:
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CI_STORAGE_PUT_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraindicators-${env}"
+            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
             - contra_indicator_storage_account_id: !FindInMap
                 - EnvironmentConfiguration
                 - !Ref AWS::AccountId
@@ -498,7 +498,7 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraindicators-${env}"
+                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
                   - contra_indicator_storage_account_id: !FindInMap
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
@@ -1097,7 +1097,7 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           CI_STORAGE_GET_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraindicators-${env}"
+            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
             - contra_indicator_storage_account_id: !FindInMap
                 - EnvironmentConfiguration
                 - !Ref AWS::AccountId
@@ -1118,7 +1118,7 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraindicators-${env}"
+                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
                   - contra_indicator_storage_account_id: !FindInMap
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
