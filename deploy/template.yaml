@@ -557,8 +557,69 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
+          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsV2Table.Arn ] ]
+          SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub retrieve-cri-credential-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub retrieve-cri-credentials-${Environment}
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          CI_STORAGE_PUT_LAMBDA_ARN: !Sub
+            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
+            - contra_indicator_storage_account_id: !FindInMap
+                - EnvironmentConfiguration
+                - !Ref AWS::AccountId
+                - ciStorageAccountId
+              env: !FindInMap
+                - EnvironmentConfiguration
+                - !Ref AWS::AccountId
+                - environment
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref UserIssuedCredentialsV2Table
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/credentialIssuers
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:${Environment}/credential-issuers/*/api-key-*
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
+        - Statement:
+            - Sid: kmsSigningKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:sign'
+              Resource:
+                - !ImportValue SigningKeyArn
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
+            - Sid: invokePutCiFunction
+              Effect: Allow
+              Action:
+                - 'lambda:InvokeFunction'
+              Resource:
+                - !Sub
+                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
+                  - contra_indicator_storage_account_id: !FindInMap
+                      - EnvironmentConfiguration
+                      - !Ref AWS::AccountId
+                      - ciStorageAccountId
+                    env: !FindInMap
+                      - EnvironmentConfiguration
+                      - !Ref AWS::AccountId
+                      - environment
       Events:
         IPVCorePrivateAPI:
           Type: Api
