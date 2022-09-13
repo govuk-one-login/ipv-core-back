@@ -31,8 +31,10 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ALLOWED_USER_IDS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ENABLED;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_SHOULD_SEND_ALL_USERS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
@@ -245,6 +247,8 @@ class SelectCriHandlerTest {
                 .thenReturn(createCriConfig(CRI_DCMAW, "test-dcmaw-iss"));
 
         when(mockConfigurationService.getSsmParameter(DCMAW_ENABLED)).thenReturn("true");
+        when(mockConfigurationService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS))
+                .thenReturn("true");
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -270,6 +274,8 @@ class SelectCriHandlerTest {
                 .thenReturn(List.of(new VisitedCredentialIssuerDetailsDto("dcmaw", true, null)));
 
         when(mockConfigurationService.getSsmParameter(DCMAW_ENABLED)).thenReturn("true");
+        when(mockConfigurationService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS))
+                .thenReturn("true");
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -302,6 +308,8 @@ class SelectCriHandlerTest {
                                 new VisitedCredentialIssuerDetailsDto(CRI_ADDRESS, true, null)));
 
         when(mockConfigurationService.getSsmParameter(DCMAW_ENABLED)).thenReturn("true");
+        when(mockConfigurationService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS))
+                .thenReturn("true");
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -344,6 +352,8 @@ class SelectCriHandlerTest {
                                 new VcStatusDto("test-fraud-iss", true)));
 
         when(mockConfigurationService.getSsmParameter(DCMAW_ENABLED)).thenReturn("true");
+        when(mockConfigurationService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS))
+                .thenReturn("true");
 
         when(mockConfigurationService.getCredentialIssuer(CRI_DCMAW))
                 .thenReturn(createCriConfig(CRI_DCMAW, "test-dcmaw-iss"));
@@ -373,6 +383,8 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(List.of(new VisitedCredentialIssuerDetailsDto("dcmaw", true, null)));
         when(mockConfigurationService.getSsmParameter(DCMAW_ENABLED)).thenReturn("true");
+        when(mockConfigurationService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS))
+                .thenReturn("true");
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -401,6 +413,8 @@ class SelectCriHandlerTest {
                                         "dcmaw", false, "access_denied")));
 
         when(mockConfigurationService.getSsmParameter(DCMAW_ENABLED)).thenReturn("true");
+        when(mockConfigurationService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS))
+                .thenReturn("true");
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -430,6 +444,8 @@ class SelectCriHandlerTest {
                 .thenReturn(List.of(new VcStatusDto("test-dcmaw-iss", true)));
 
         when(mockConfigurationService.getSsmParameter(DCMAW_ENABLED)).thenReturn("true");
+        when(mockConfigurationService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS))
+                .thenReturn("true");
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -501,6 +517,93 @@ class SelectCriHandlerTest {
         Map<String, String> responseBody = getResponseBodyAsMap(response);
 
         assertEquals("/journey/ukPassport", responseBody.get("journey"));
+        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+    }
+
+    @Test
+    void shouldReturnDcmawCriJourneyResponseIfUserIsIncludedInAllowedList()
+            throws JsonProcessingException, URISyntaxException {
+        mockIpvSessionService();
+
+        String userId = "test-user-id";
+        when(mockClientSessionDetailsDto.getUserId()).thenReturn(userId);
+
+        when(mockConfigurationService.getCredentialIssuer(CRI_DCMAW))
+                .thenReturn(createCriConfig(CRI_DCMAW, "test-dcmaw-iss"));
+        when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
+                .thenReturn(Collections.emptyList());
+
+        when(mockConfigurationService.getSsmParameter(DCMAW_ENABLED)).thenReturn("true");
+        when(mockConfigurationService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS))
+                .thenReturn("false");
+        when(mockConfigurationService.getSsmParameter(DCMAW_ALLOWED_USER_IDS))
+                .thenReturn("test-user-id,test-user-id-2,test-user-id-3");
+
+        APIGatewayProxyRequestEvent input = createRequestEvent();
+
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+
+        Map<String, String> responseBody = getResponseBodyAsMap(response);
+
+        assertEquals("/journey/dcmaw", responseBody.get("journey"));
+        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+    }
+
+    @Test
+    void shouldReturnPassportCriJourneyResponseIfUserIsNotIncludedInAllowedList()
+            throws JsonProcessingException, URISyntaxException {
+        mockIpvSessionService();
+
+        String userId = "test-user-id-4";
+        when(mockClientSessionDetailsDto.getUserId()).thenReturn(userId);
+
+        when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
+                .thenReturn(Collections.emptyList());
+
+        when(mockConfigurationService.getCredentialIssuer(CRI_PASSPORT))
+                .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss"));
+
+        when(mockConfigurationService.getSsmParameter(DCMAW_ENABLED)).thenReturn("true");
+        when(mockConfigurationService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS))
+                .thenReturn("false");
+        when(mockConfigurationService.getSsmParameter(DCMAW_ALLOWED_USER_IDS))
+                .thenReturn("test-user-id,test-user-id-2,test-user-id-3");
+
+        APIGatewayProxyRequestEvent input = createRequestEvent();
+
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+
+        Map<String, String> responseBody = getResponseBodyAsMap(response);
+
+        assertEquals("/journey/ukPassport", responseBody.get("journey"));
+        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+    }
+
+    @Test
+    void shouldReturnDcmawCriJourneyResponseIfShouldSendAllUsersToAppVarIsTrue()
+            throws JsonProcessingException, URISyntaxException {
+        mockIpvSessionService();
+
+        String userId = "test-user-id";
+        when(mockClientSessionDetailsDto.getUserId()).thenReturn(userId);
+
+        when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
+                .thenReturn(Collections.emptyList());
+
+        when(mockConfigurationService.getCredentialIssuer(CRI_DCMAW))
+                .thenReturn(createCriConfig(CRI_DCMAW, "test-dcmaw-iss"));
+
+        when(mockConfigurationService.getSsmParameter(DCMAW_ENABLED)).thenReturn("true");
+        when(mockConfigurationService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS))
+                .thenReturn(String.valueOf(true));
+
+        APIGatewayProxyRequestEvent input = createRequestEvent();
+
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+
+        Map<String, String> responseBody = getResponseBodyAsMap(response);
+
+        assertEquals("/journey/dcmaw", responseBody.get("journey"));
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
     }
 

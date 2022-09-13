@@ -25,12 +25,15 @@ import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ALLOWED_USER_IDS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ENABLED;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_SHOULD_SEND_ALL_USERS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
@@ -90,19 +93,12 @@ public class SelectCriHandler
             List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuers =
                     ipvSessionItem.getVisitedCredentialIssuerDetails();
 
-            boolean dcmawEnabled =
-                    Boolean.parseBoolean(configurationService.getSsmParameter(DCMAW_ENABLED));
+            String userId = ipvSessionItem.getClientSessionDetails().getUserId();
 
-            if (dcmawEnabled) {
-                return getNextAppJourneyCri(
-                        visitedCredentialIssuers,
-                        currentVcStatuses,
-                        ipvSessionItem.getClientSessionDetails().getUserId());
+            if (shouldSendUserToApp(userId)) {
+                return getNextAppJourneyCri(visitedCredentialIssuers, currentVcStatuses, userId);
             } else {
-                return getNextWebJourneyCri(
-                        visitedCredentialIssuers,
-                        currentVcStatuses,
-                        ipvSessionItem.getClientSessionDetails().getUserId());
+                return getNextWebJourneyCri(visitedCredentialIssuers, currentVcStatuses, userId);
             }
         } catch (HttpResponseExceptionWithErrorBody e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
@@ -271,5 +267,23 @@ public class SelectCriHandler
     private boolean userHasNotVisited(
             List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuers, String criId) {
         return visitedCredentialIssuers.stream().noneMatch(cri -> cri.getCriId().equals(criId));
+    }
+
+    private boolean shouldSendUserToApp(String userId) {
+        boolean dcmawEnabled =
+                Boolean.parseBoolean(configurationService.getSsmParameter(DCMAW_ENABLED));
+        if (dcmawEnabled) {
+            boolean shouldSendAllUsers =
+                    Boolean.parseBoolean(
+                            configurationService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS));
+            if (!shouldSendAllUsers) {
+                String userIds = configurationService.getSsmParameter(DCMAW_ALLOWED_USER_IDS);
+                List<String> dcmawAllowedUserIds = Arrays.asList(userIds.split(","));
+                return dcmawAllowedUserIds.contains(userId);
+            }
+            return true;
+        } else {
+            return false;
+        }
     }
 }
