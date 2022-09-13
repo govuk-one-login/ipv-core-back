@@ -43,6 +43,7 @@ public class SelectCriHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String CRI_START_JOURNEY = "/journey/%s";
     public static final String JOURNEY_FAIL = "/journey/fail";
+    public static final String DCMAW_SUCCESS_PAGE = "dcmaw-success";
 
     private final ConfigurationService configurationService;
     private final IpvSessionService ipvSessionService;
@@ -168,7 +169,7 @@ public class SelectCriHandler
         }
 
         if (userHasNotVisited(visitedCredentialIssuers, addressCriId)) {
-            return getJourneyResponse(addressCriId);
+            return getJourneyResponse(DCMAW_SUCCESS_PAGE);
         } else {
             Optional<VisitedCredentialIssuerDetailsDto> addressVisitDetails =
                     visitedCredentialIssuers.stream()

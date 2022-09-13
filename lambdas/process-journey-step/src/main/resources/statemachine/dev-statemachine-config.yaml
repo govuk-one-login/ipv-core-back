@@ -137,6 +137,13 @@ SELECT_CRI:
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/stubDcmaw
+    dcmaw-success:
+      type: basic
+      name: dcmaw-success
+      targetState: POST_DCMAW_SUCCESS_PAGE
+      response:
+        type: page
+        pageId: page-dcmaw-success
     fail:
       type: basic
       name: fail
@@ -178,6 +185,17 @@ PRE_KBV_TRANSITION_PAGE:
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/stubKbv
+POST_DCMAW_SUCCESS_PAGE:
+  name: POST_DCMAW_SUCCESS_PAGE
+  parent: null
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_ADDRESS
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/stubAddress
 CRI_KBV:
   name: CRI_KBV
   parent: CRI_STATE
