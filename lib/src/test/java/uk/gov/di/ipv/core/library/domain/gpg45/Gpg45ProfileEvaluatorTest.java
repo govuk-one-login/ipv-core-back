@@ -1,10 +1,19 @@
 package uk.gov.di.ipv.core.library.domain.gpg45;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.DcmawCheckMethod;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.service.CiStorageService;
+import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -13,13 +22,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class Gpg45ProfileEvaluatorTest {
 
-    private final Gpg45ProfileEvaluator evaluator = new Gpg45ProfileEvaluator();
+    @Mock CiStorageService mockCiStorageService;
+    @Mock ConfigurationService mockConfigurationService;
+    @Mock ClientSessionDetailsDto mockClientSessionDetails;
+    @InjectMocks Gpg45ProfileEvaluator evaluator;
+
     private final String M1A_PASSPORT_VC =
             "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJzdWIiOiJ1cm46dXVpZDplNmUyZTMyNC01YjY2LTRhZDYtODMzOC04M2Y5ZjgzN2UzNDUiLCJhdWQiOiJodHRwczpcL1wvaWRlbnRpdHkuaW50ZWdyYXRpb24uYWNjb3VudC5nb3YudWsiLCJuYmYiOjE2NTg4Mjk2NDcsImlzcyI6Imh0dHBzOlwvXC9yZXZpZXctcC5pbnRlZ3JhdGlvbi5hY2NvdW50Lmdvdi51ayIsImV4cCI6MTY1ODgzNjg0NywidmMiOnsiZXZpZGVuY2UiOlt7InZhbGlkaXR5U2NvcmUiOjIsInN0cmVuZ3RoU2NvcmUiOjQsImNpIjpudWxsLCJ0eG4iOiIxMjNhYjkzZC0zYTQzLTQ2ZWYtYTJjMS0zYzY0NDQyMDY0MDgiLCJ0eXBlIjoiSWRlbnRpdHlDaGVjayJ9XSwiY3JlZGVudGlhbFN1YmplY3QiOnsicGFzc3BvcnQiOlt7ImV4cGlyeURhdGUiOiIyMDMwLTAxLTAxIiwiZG9jdW1lbnROdW1iZXIiOiIzMjE2NTQ5ODcifV0sIm5hbWUiOlt7Im5hbWVQYXJ0cyI6W3sidHlwZSI6IkdpdmVuTmFtZSIsInZhbHVlIjoiS0VOTkVUSCJ9LHsidHlwZSI6IkZhbWlseU5hbWUiLCJ2YWx1ZSI6IkRFQ0VSUVVFSVJBIn1dfV0sImJpcnRoRGF0ZSI6W3sidmFsdWUiOiIxOTU5LTA4LTIzIn1dfSwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIklkZW50aXR5Q2hlY2tDcmVkZW50aWFsIl19fQ.MEYCIQC-2fwJVvFLM8SnCKk_5EHX_ZPdTN2-kaOxNjXky86LUgIhAIMZUuTztxyyqa3ZkyaqnkMl1vPl1HQ2FbQ9LxPQChn";
     private final String M1A_ADDRESS_VC =
@@ -397,7 +417,8 @@ class Gpg45ProfileEvaluatorTest {
                         CredentialEvidenceItem.EvidenceType.VERIFICATION, new ArrayList<>(),
                         CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>());
 
-        Optional<JourneyResponse> errorResponse = evaluator.contraIndicatorsPresent(evidenceMap);
+        Optional<JourneyResponse> errorResponse =
+                evaluator.contraIndicatorsPresent(evidenceMap, mockClientSessionDetails);
 
         assertTrue(errorResponse.isPresent());
         assertEquals("/journey/pyi-no-match", errorResponse.get().getJourney());
@@ -417,7 +438,8 @@ class Gpg45ProfileEvaluatorTest {
                                                 0,
                                                 Collections.singletonList("D02"))),
                         CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>());
-        Optional<JourneyResponse> errorResponse = evaluator.contraIndicatorsPresent(evidenceMap);
+        Optional<JourneyResponse> errorResponse =
+                evaluator.contraIndicatorsPresent(evidenceMap, mockClientSessionDetails);
 
         assertTrue(errorResponse.isPresent());
         assertEquals("/journey/pyi-kbv-fail", errorResponse.get().getJourney());
@@ -439,7 +461,8 @@ class Gpg45ProfileEvaluatorTest {
                         CredentialEvidenceItem.EvidenceType.VERIFICATION, new ArrayList<>(),
                         CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>());
 
-        Optional<JourneyResponse> errorResponse = evaluator.contraIndicatorsPresent(evidenceMap);
+        Optional<JourneyResponse> errorResponse =
+                evaluator.contraIndicatorsPresent(evidenceMap, mockClientSessionDetails);
 
         assertTrue(errorResponse.isEmpty());
     }
@@ -472,7 +495,8 @@ class Gpg45ProfileEvaluatorTest {
                                         Collections.emptyList())),
                         CredentialEvidenceItem.EvidenceType.DCMAW,
                         new ArrayList<>());
-        Optional<JourneyResponse> errorResponse = evaluator.contraIndicatorsPresent(evidenceMap);
+        Optional<JourneyResponse> errorResponse =
+                evaluator.contraIndicatorsPresent(evidenceMap, mockClientSessionDetails);
 
         assertTrue(errorResponse.isEmpty());
     }
@@ -587,5 +611,65 @@ class Gpg45ProfileEvaluatorTest {
         assertEquals(3, dcmawItems.get(0).getEvidenceScore().strength());
         assertEquals(2, dcmawItems.get(0).getEvidenceScore().validity());
         assertEquals(1, dcmawItems.get(0).getActivityHistoryScore());
+    }
+
+    @Test
+    void shouldCallCIStorageSystemToGetCIs() throws Exception {
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                Map.of(
+                        CredentialEvidenceItem.EvidenceType.ACTIVITY,
+                        new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.EVIDENCE,
+                        new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                        new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                        new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.DCMAW,
+                        new ArrayList<>());
+        when(mockClientSessionDetails.getUserId()).thenReturn("a-user-id");
+        when(mockClientSessionDetails.getGovukSigninJourneyId()).thenReturn("a-journey-id");
+        when(mockConfigurationService.getCredentialIssuer(any()))
+                .thenReturn(mock(CredentialIssuerConfig.class));
+        List<ContraIndicatorItem> ciItems = new ArrayList<>();
+        ciItems.add(
+                new ContraIndicatorItem(
+                        "a-user-id",
+                        "sortKey",
+                        "issuer",
+                        "2022-09-14T15:03:46.795Z",
+                        "X01",
+                        "123456789"));
+        when(mockCiStorageService.getCIs("a-user-id", "a-journey-id")).thenReturn(ciItems);
+
+        evaluator.contraIndicatorsPresent(evidenceMap, mockClientSessionDetails);
+
+        verify(mockCiStorageService).getCIs("a-user-id", "a-journey-id");
+    }
+
+    @Test
+    void shouldNotThrowIfGetCIsThrows() throws Exception {
+        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                Map.of(
+                        CredentialEvidenceItem.EvidenceType.ACTIVITY,
+                        new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.EVIDENCE,
+                        new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                        new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                        new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.DCMAW,
+                        new ArrayList<>());
+        when(mockClientSessionDetails.getUserId()).thenReturn("a-user-id");
+        when(mockClientSessionDetails.getGovukSigninJourneyId()).thenReturn("a-journey-id");
+        doThrow(new RuntimeException("Ruh'oh"))
+                .when(mockCiStorageService)
+                .getCIs("a-user-id", "a-journey-id");
+
+        assertDoesNotThrow(
+                () -> evaluator.contraIndicatorsPresent(evidenceMap, mockClientSessionDetails));
+
+        verify(mockCiStorageService).getCIs("a-user-id", "a-journey-id");
     }
 }

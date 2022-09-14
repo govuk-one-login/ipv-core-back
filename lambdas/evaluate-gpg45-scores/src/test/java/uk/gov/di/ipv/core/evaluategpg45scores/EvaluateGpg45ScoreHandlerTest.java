@@ -37,10 +37,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.JOURNEY_END;
@@ -153,7 +152,8 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.parseGpg45ScoresFromCredentials(CREDENTIALS))
                 .thenReturn(evidenceMap);
-        when(gpg45ProfileEvaluator.contraIndicatorsPresent(any())).thenReturn(Optional.empty());
+        when(gpg45ProfileEvaluator.contraIndicatorsPresent(any(), any()))
+                .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1B))
                 .thenReturn(false);
         when(gpg45ProfileEvaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1A))
@@ -196,7 +196,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.parseGpg45ScoresFromCredentials(CREDENTIALS))
                 .thenReturn(evidenceMap);
-        when(gpg45ProfileEvaluator.contraIndicatorsPresent(evidenceMap))
+        when(gpg45ProfileEvaluator.contraIndicatorsPresent(eq(evidenceMap), any()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1B))
                 .thenReturn(true);
@@ -216,7 +216,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.parseGpg45ScoresFromCredentials(CREDENTIALS))
                 .thenReturn(EVIDENCE_MAP);
-        when(gpg45ProfileEvaluator.contraIndicatorsPresent(EVIDENCE_MAP))
+        when(gpg45ProfileEvaluator.contraIndicatorsPresent(eq(EVIDENCE_MAP), any()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.credentialsSatisfyProfile(EVIDENCE_MAP, Gpg45Profile.M1B))
                 .thenReturn(false);
@@ -240,7 +240,7 @@ class EvaluateGpg45ScoreHandlerTest {
                 .thenReturn(FAILED_PASSPORT_CREDENTIALS);
         when(gpg45ProfileEvaluator.parseGpg45ScoresFromCredentials(FAILED_PASSPORT_CREDENTIALS))
                 .thenReturn(EVIDENCE_MAP);
-        when(gpg45ProfileEvaluator.contraIndicatorsPresent(EVIDENCE_MAP))
+        when(gpg45ProfileEvaluator.contraIndicatorsPresent(eq(EVIDENCE_MAP), any()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.credentialsSatisfyProfile(EVIDENCE_MAP, Gpg45Profile.M1B))
                 .thenReturn(false);
@@ -295,7 +295,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.parseGpg45ScoresFromCredentials(CREDENTIALS))
                 .thenReturn(EVIDENCE_MAP);
-        when(gpg45ProfileEvaluator.contraIndicatorsPresent(EVIDENCE_MAP))
+        when(gpg45ProfileEvaluator.contraIndicatorsPresent(eq(EVIDENCE_MAP), any()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.credentialsSatisfyProfile(EVIDENCE_MAP, Gpg45Profile.M1B))
                 .thenReturn(false);
@@ -317,38 +317,13 @@ class EvaluateGpg45ScoreHandlerTest {
     }
 
     @Test
-    void shouldCallCIStorageSystemToGetCIs() throws Exception {
-        when(configurationService.getCredentialIssuer(any())).thenReturn(addressConfig);
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(gpg45ProfileEvaluator.parseGpg45ScoresFromCredentials(CREDENTIALS))
-                .thenReturn(EVIDENCE_MAP);
-
-        evaluateGpg45ScoresHandler.handleRequest(event, context);
-
-        verify(ciStorageService).getCIs(TEST_USER_ID, TEST_JOURNEY_ID);
-    }
-
-    @Test
-    void shouldNotThrowIfGetCIsThrows() throws Exception {
-        when(configurationService.getCredentialIssuer(any())).thenReturn(addressConfig);
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        doThrow(new RuntimeException("Ruh'oh")).when(ciStorageService).getCIs(any(), any());
-
-        assertDoesNotThrow(() -> evaluateGpg45ScoresHandler.handleRequest(event, context));
-
-        verify(ciStorageService).getCIs(TEST_USER_ID, TEST_JOURNEY_ID);
-    }
-
-    @Test
     void shouldReturnJourneyErrorJourneyResponseIfCiAreFoundOnVcs()
             throws UnknownEvidenceTypeException, ParseException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.parseGpg45ScoresFromCredentials(CREDENTIALS))
                 .thenReturn(EVIDENCE_MAP);
-        when(gpg45ProfileEvaluator.contraIndicatorsPresent(EVIDENCE_MAP))
+        when(gpg45ProfileEvaluator.contraIndicatorsPresent(eq(EVIDENCE_MAP), any()))
                 .thenReturn(Optional.of(new JourneyResponse("/journey/pyi-no-match")));
 
         var response = evaluateGpg45ScoresHandler.handleRequest(event, context);

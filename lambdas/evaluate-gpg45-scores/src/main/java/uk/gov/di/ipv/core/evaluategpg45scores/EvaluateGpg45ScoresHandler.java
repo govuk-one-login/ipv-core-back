@@ -14,7 +14,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
@@ -58,7 +57,6 @@ public class EvaluateGpg45ScoresHandler
     private final UserIdentityService userIdentityService;
     private final IpvSessionService ipvSessionService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
-    private final CiStorageService ciStorageService;
     private final ConfigurationService configurationService;
     private final String addressCriId;
 
@@ -66,12 +64,10 @@ public class EvaluateGpg45ScoresHandler
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
-            CiStorageService ciStorageService,
             ConfigurationService configurationService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
-        this.ciStorageService = ciStorageService;
         this.configurationService = configurationService;
 
         addressCriId = configurationService.getSsmParameter(ADDRESS_CRI_ID);
@@ -81,8 +77,9 @@ public class EvaluateGpg45ScoresHandler
         this.configurationService = new ConfigurationService();
         this.userIdentityService = new UserIdentityService(configurationService);
         this.ipvSessionService = new IpvSessionService(configurationService);
-        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
-        this.ciStorageService = new CiStorageService(configurationService);
+        this.gpg45ProfileEvaluator =
+                new Gpg45ProfileEvaluator(
+                        new CiStorageService(configurationService), configurationService);
 
         addressCriId = configurationService.getSsmParameter(ADDRESS_CRI_ID);
     }
@@ -103,17 +100,14 @@ public class EvaluateGpg45ScoresHandler
             String govukSigninJourneyId = clientSessionDetailsDto.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            List<ContraIndicatorItem> ciItems =
-                    getCIsAndSwallowErrors(userId, govukSigninJourneyId);
-            LOGGER.info("Retrieved {} CI items", ciItems.size());
-
             List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
             Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
                     gpg45ProfileEvaluator.parseGpg45ScoresFromCredentials(credentials);
 
             Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
-                    gpg45ProfileEvaluator.contraIndicatorsPresent(evidenceMap);
+                    gpg45ProfileEvaluator.contraIndicatorsPresent(
+                            evidenceMap, clientSessionDetailsDto);
             if (contraIndicatorErrorJourneyResponse.isEmpty()) {
                 updateSuccessfulVcStatuses(ipvSessionItem, credentials);
 
@@ -151,17 +145,6 @@ public class EvaluateGpg45ScoresHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
-        }
-    }
-
-    @Tracing
-    private List<ContraIndicatorItem> getCIsAndSwallowErrors(
-            String userId, String govukSigninJourneyId) {
-        try {
-            return ciStorageService.getCIs(userId, govukSigninJourneyId);
-        } catch (Exception e) {
-            LOGGER.info("Exception thrown when calling CI storage system", e);
-            return List.of();
         }
     }
 
