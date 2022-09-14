@@ -77,6 +77,8 @@ class Gpg45ProfileEvaluatorTest {
     @Test
     void credentialsSatisfyProfileShouldReturnTrueIfCredentialsM1BSatisfyProfile()
             throws Exception {
+        DcmawCheckMethod dcmawCheckMethod = new DcmawCheckMethod();
+        dcmawCheckMethod.setBiometricVerificationProcessLevel(3);
         Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
                 Map.of(
                         CredentialEvidenceItem.EvidenceType.ACTIVITY,
@@ -97,8 +99,8 @@ class Gpg45ProfileEvaluatorTest {
                                         3,
                                         2,
                                         1,
-                                        2,
-                                        Collections.singletonList(new DcmawCheckMethod()),
+                                        3,
+                                        Collections.singletonList(dcmawCheckMethod),
                                         null,
                                         Collections.emptyList())));
 
@@ -138,6 +140,8 @@ class Gpg45ProfileEvaluatorTest {
     void
             credentialsSatisfyProfileShouldReturnTrueIfCredentialsSatisfyProfileAndOnlyA01CIForTheM1BProfile()
                     throws Exception {
+        DcmawCheckMethod dcmawCheckMethod = new DcmawCheckMethod();
+        dcmawCheckMethod.setBiometricVerificationProcessLevel(3);
         Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
                 Map.of(
                         CredentialEvidenceItem.EvidenceType.ACTIVITY,
@@ -159,7 +163,7 @@ class Gpg45ProfileEvaluatorTest {
                                         2,
                                         1,
                                         2,
-                                        Collections.singletonList(new DcmawCheckMethod()),
+                                        Collections.singletonList(dcmawCheckMethod),
                                         null,
                                         Collections.emptyList())));
 

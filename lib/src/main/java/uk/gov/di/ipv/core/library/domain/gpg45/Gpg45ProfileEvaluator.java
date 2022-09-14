@@ -7,6 +7,7 @@ import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
+import uk.gov.di.ipv.core.library.domain.gpg45.domain.DcmawCheckMethod;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 
@@ -83,7 +84,14 @@ public class Gpg45ProfileEvaluator {
                         dcmawEvidenceItem.getActivityHistoryScore(),
                         Collections.emptyList()));
 
-        int dcmawVerificationScore = dcmawEvidenceItem.getCheckDetails() == null ? 0 : 2;
+        int dcmawVerificationScore;
+        List<DcmawCheckMethod> checkDetails = dcmawEvidenceItem.getCheckDetails();
+        if (checkDetails != null) {
+            dcmawVerificationScore = getDcmawVerificationScoreValue(checkDetails);
+        } else {
+            dcmawVerificationScore = 0;
+        }
+
         gpg45CredentialItems.add(
                 new CredentialEvidenceItem(
                         CredentialEvidenceItem.EvidenceType.VERIFICATION,
@@ -164,5 +172,20 @@ public class Gpg45ProfileEvaluator {
             }
         }
         return Optional.empty();
+    }
+
+    private int getDcmawVerificationScoreValue(List<DcmawCheckMethod> checkMethods) {
+        Optional<DcmawCheckMethod> checkMethodWithVerificationScore =
+                checkMethods.stream()
+                        .filter(
+                                dcmawCheckMethod ->
+                                        dcmawCheckMethod.getBiometricVerificationProcessLevel()
+                                                != null)
+                        .findFirst();
+
+        if (checkMethodWithVerificationScore.isPresent()) {
+            return checkMethodWithVerificationScore.get().getBiometricVerificationProcessLevel();
+        }
+        return 0;
     }
 }
