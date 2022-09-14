@@ -198,6 +198,7 @@ public class EvaluateGpg45ScoresHandler
                 if (vcIss.equals(addressCriConfig.getAudienceForClients())) {
                     vcStatuses.add(new VcStatusDto(vcIss, true));
                 }
+                LOGGER.warn("Unexpected missing evidence on VC from issuer: {}", vcIss);
                 continue;
             }
 

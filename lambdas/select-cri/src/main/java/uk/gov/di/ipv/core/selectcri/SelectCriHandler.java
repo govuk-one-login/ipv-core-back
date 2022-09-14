@@ -137,7 +137,7 @@ public class SelectCriHandler
 
             if (!addressVisitDetails.isReturnedWithVc()) {
                 LOGGER.info(
-                        "User has a previous failed visit to address cri due to: {}. Routing user to web journey instead.",
+                        "User has a previous failed visit to address cri due to: {}. Routing user to the failed journey route.",
                         addressVisitDetails.getOauthError());
                 return getJourneyPyiNoMatchResponse();
             }
@@ -181,7 +181,7 @@ public class SelectCriHandler
 
             if (addressVisitDetails.isPresent() && !addressVisitDetails.get().isReturnedWithVc()) {
                 LOGGER.info(
-                        "User has a previous failed visit to address cri due to: {}. Routing user to web journey instead.",
+                        "User has a previous failed visit to address cri due to: {}. Routing user to the failed journey route.",
                         addressVisitDetails.get().getOauthError());
                 return getJourneyPyiNoMatchResponse();
             }
