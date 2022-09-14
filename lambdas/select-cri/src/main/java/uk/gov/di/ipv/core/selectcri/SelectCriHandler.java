@@ -4,11 +4,6 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import com.nimbusds.jose.shaded.json.JSONArray;
-import com.nimbusds.jose.shaded.json.JSONObject;
-import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,19 +12,17 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
-import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.text.ParseException;
 import java.util.List;
@@ -41,18 +34,14 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ENAB
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
 public class SelectCriHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final Gson gson = new Gson();
     private static final String CRI_START_JOURNEY = "/journey/%s";
     public static final String JOURNEY_FAIL = "/journey/fail";
 
     private final ConfigurationService configurationService;
-    private final UserIdentityService userIdentityService;
     private final IpvSessionService ipvSessionService;
     private final String passportCriId;
     private final String fraudCriId;
@@ -61,11 +50,8 @@ public class SelectCriHandler
     private final String dcmawCriId;
 
     public SelectCriHandler(
-            ConfigurationService configurationService,
-            UserIdentityService userIdentityService,
-            IpvSessionService ipvSessionService) {
+            ConfigurationService configurationService, IpvSessionService ipvSessionService) {
         this.configurationService = configurationService;
-        this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
 
         passportCriId = configurationService.getSsmParameter(PASSPORT_CRI_ID);
@@ -78,7 +64,6 @@ public class SelectCriHandler
     @ExcludeFromGeneratedCoverageReport
     public SelectCriHandler() {
         this.configurationService = new ConfigurationService();
-        this.userIdentityService = new UserIdentityService(configurationService);
         this.ipvSessionService = new IpvSessionService(configurationService);
 
         passportCriId = configurationService.getSsmParameter(PASSPORT_CRI_ID);
@@ -100,6 +85,8 @@ public class SelectCriHandler
 
             logGovUkSignInJourneyId(ipvSessionId);
 
+            List<VcStatusDto> currentVcStatuses = ipvSessionItem.getCurrentVcStatuses();
+
             List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuers =
                     ipvSessionItem.getVisitedCredentialIssuerDetails();
 
@@ -109,9 +96,13 @@ public class SelectCriHandler
             if (dcmawEnabled) {
                 return getNextAppJourneyCri(
                         visitedCredentialIssuers,
+                        currentVcStatuses,
                         ipvSessionItem.getClientSessionDetails().getUserId());
             } else {
-                return getNextWebJourneyCri(visitedCredentialIssuers);
+                return getNextWebJourneyCri(
+                        visitedCredentialIssuers,
+                        currentVcStatuses,
+                        ipvSessionItem.getClientSessionDetails().getUserId());
             }
         } catch (HttpResponseExceptionWithErrorBody e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
@@ -125,21 +116,43 @@ public class SelectCriHandler
     }
 
     private APIGatewayProxyResponseEvent getNextWebJourneyCri(
-            List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuers) {
-        if (userHasNotVisited(visitedCredentialIssuers, passportCriId)) {
-            return getJourneyResponse(passportCriId);
+            List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuers,
+            List<VcStatusDto> currentVcStatuses,
+            String userId)
+            throws ParseException {
+        Optional<APIGatewayProxyResponseEvent> passportResponse =
+                getCriResponse(visitedCredentialIssuers, currentVcStatuses, passportCriId, userId);
+        if (passportResponse.isPresent()) {
+            return passportResponse.get();
         }
 
         if (userHasNotVisited(visitedCredentialIssuers, addressCriId)) {
             return getJourneyResponse(addressCriId);
+        } else {
+            VisitedCredentialIssuerDetailsDto addressVisitDetails =
+                    visitedCredentialIssuers.stream()
+                            .filter(cri -> cri.getCriId().equals(addressCriId))
+                            .findFirst()
+                            .orElseThrow();
+
+            if (!addressVisitDetails.isReturnedWithVc()) {
+                LOGGER.info(
+                        "User has a previous failed visit to address cri due to: {}. Routing user to the failed journey route.",
+                        addressVisitDetails.getOauthError());
+                return getJourneyPyiNoMatchResponse();
+            }
         }
 
-        if (userHasNotVisited(visitedCredentialIssuers, fraudCriId)) {
-            return getJourneyResponse(fraudCriId);
+        Optional<APIGatewayProxyResponseEvent> fraudResponse =
+                getCriResponse(visitedCredentialIssuers, currentVcStatuses, fraudCriId, userId);
+        if (fraudResponse.isPresent()) {
+            return fraudResponse.get();
         }
 
-        if (userHasNotVisited(visitedCredentialIssuers, kbvCriId)) {
-            return getJourneyResponse(kbvCriId);
+        Optional<APIGatewayProxyResponseEvent> kbvResponse =
+                getCriResponse(visitedCredentialIssuers, currentVcStatuses, kbvCriId, userId);
+        if (kbvResponse.isPresent()) {
+            return kbvResponse.get();
         }
 
         LOGGER.info("Unable to determine next credential issuer");
@@ -148,56 +161,36 @@ public class SelectCriHandler
     }
 
     private APIGatewayProxyResponseEvent getNextAppJourneyCri(
-            List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuers, String userId)
+            List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuers,
+            List<VcStatusDto> currentVcStatuses,
+            String userId)
             throws ParseException {
-        if (userHasNotVisited(visitedCredentialIssuers, dcmawCriId)) {
-            return getJourneyResponse(dcmawCriId);
-        } else {
-            Optional<VisitedCredentialIssuerDetailsDto> dcmawVisitDetails =
-                    visitedCredentialIssuers.stream()
-                            .filter(cri -> cri.getCriId().equals(dcmawCriId))
-                            .findFirst();
-
-            if (dcmawVisitDetails.isPresent()) {
-                if (dcmawVisitDetails.get().isReturnedWithVc()) {
-                    UserIssuedCredentialsItem userIssuedCredentialsItem =
-                            userIdentityService.getUserIssuedCredential(userId, dcmawCriId);
-
-                    JSONObject vcClaim =
-                            (JSONObject)
-                                    SignedJWT.parse(userIssuedCredentialsItem.getCredential())
-                                            .getJWTClaimsSet()
-                                            .getClaim(VC_CLAIM);
-                    JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
-
-                    List<CredentialEvidenceItem> credentialEvidenceList =
-                            gson.fromJson(
-                                    evidenceArray.toJSONString(),
-                                    new TypeToken<List<CredentialEvidenceItem>>() {}.getType());
-
-                    if (!credentialEvidenceList
-                            .get(0)
-                            .getEvidenceScore()
-                            .equals(Gpg45Scores.EV_32)) {
-                        LOGGER.info(
-                                "User has a previous failed visit to dcmaw due to a failed identity check. Routing user to web journey instead");
-                        return getNextWebJourneyCri(visitedCredentialIssuers);
-                    }
-                } else {
-                    LOGGER.info(
-                            "User has a previous failed visit to dcmaw due to: {}. Routing user to web journey instead.",
-                            dcmawVisitDetails.get().getOauthError());
-                    return getNextWebJourneyCri(visitedCredentialIssuers);
-                }
-            }
+        Optional<APIGatewayProxyResponseEvent> dcmawResponse =
+                getCriResponse(visitedCredentialIssuers, currentVcStatuses, dcmawCriId, userId);
+        if (dcmawResponse.isPresent()) {
+            return dcmawResponse.get();
         }
 
         if (userHasNotVisited(visitedCredentialIssuers, addressCriId)) {
             return getJourneyResponse(addressCriId);
+        } else {
+            Optional<VisitedCredentialIssuerDetailsDto> addressVisitDetails =
+                    visitedCredentialIssuers.stream()
+                            .filter(cri -> cri.getCriId().equals(addressCriId))
+                            .findFirst();
+
+            if (addressVisitDetails.isPresent() && !addressVisitDetails.get().isReturnedWithVc()) {
+                LOGGER.info(
+                        "User has a previous failed visit to address cri due to: {}. Routing user to the failed journey route.",
+                        addressVisitDetails.get().getOauthError());
+                return getJourneyPyiNoMatchResponse();
+            }
         }
 
-        if (userHasNotVisited(visitedCredentialIssuers, fraudCriId)) {
-            return getJourneyResponse(fraudCriId);
+        Optional<APIGatewayProxyResponseEvent> fraudResponse =
+                getCriResponse(visitedCredentialIssuers, currentVcStatuses, fraudCriId, userId);
+        if (fraudResponse.isPresent()) {
+            return fraudResponse.get();
         }
 
         LOGGER.info("Unable to determine next credential issuer");
@@ -215,6 +208,64 @@ public class SelectCriHandler
     private APIGatewayProxyResponseEvent getJourneyResponse(String criId) {
         return ApiGatewayResponseGenerator.proxyJsonResponse(
                 HttpStatus.SC_OK, new JourneyResponse(String.format(CRI_START_JOURNEY, criId)));
+    }
+
+    private APIGatewayProxyResponseEvent getJourneyPyiNoMatchResponse() {
+        return ApiGatewayResponseGenerator.proxyJsonResponse(
+                HttpStatus.SC_OK, new JourneyResponse("/journey/pyi-no-match"));
+    }
+
+    private APIGatewayProxyResponseEvent getJourneyKbvFailResponse() {
+        return ApiGatewayResponseGenerator.proxyJsonResponse(
+                HttpStatus.SC_OK, new JourneyResponse("/journey/pyi-kbv-fail"));
+    }
+
+    private Optional<APIGatewayProxyResponseEvent> getCriResponse(
+            List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuers,
+            List<VcStatusDto> currentVcStatuses,
+            String criId,
+            String userId)
+            throws ParseException {
+        CredentialIssuerConfig criConfig = configurationService.getCredentialIssuer(criId);
+
+        LOGGER.info("CRI config audience value: {}", criConfig.getAudienceForClients());
+
+        Optional<VcStatusDto> vc = getVc(currentVcStatuses, criConfig.getAudienceForClients());
+        if (vc.isEmpty()) {
+            if (userHasNotVisited(visitedCredentialIssuers, criId)) {
+                return Optional.of(getJourneyResponse(criId));
+            }
+
+            if (criId.equals(dcmawCriId)) {
+                LOGGER.info("Routing user to web journey");
+                return Optional.of(
+                        getNextWebJourneyCri(visitedCredentialIssuers, currentVcStatuses, userId));
+            }
+        } else if (Boolean.FALSE.equals(vc.get().getIsSuccessfulVc())) {
+            LOGGER.info(
+                    "User has a previous failed visit to {} cri due to a failed identity check",
+                    criId);
+
+            if (criId.equals(dcmawCriId)) {
+                LOGGER.info("Routing user to web journey");
+                return Optional.of(
+                        getNextWebJourneyCri(visitedCredentialIssuers, currentVcStatuses, userId));
+            } else if (criId.equals(kbvCriId)) {
+                return Optional.of(getJourneyKbvFailResponse());
+            }
+            return Optional.of(getJourneyPyiNoMatchResponse());
+        }
+
+        return Optional.empty();
+    }
+
+    private Optional<VcStatusDto> getVc(List<VcStatusDto> currentVcStatuses, String criIss) {
+        if (currentVcStatuses != null) {
+            return currentVcStatuses.stream()
+                    .filter(vcStatusDto -> vcStatusDto.getCriIss().equals(criIss))
+                    .findFirst();
+        }
+        return Optional.empty();
     }
 
     private boolean userHasNotVisited(

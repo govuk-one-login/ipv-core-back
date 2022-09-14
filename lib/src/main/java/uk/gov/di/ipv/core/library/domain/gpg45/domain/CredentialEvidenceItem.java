@@ -3,7 +3,7 @@ package uk.gov.di.ipv.core.library.domain.gpg45.domain;
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.library.domain.gpg45.validation.FraudEvidenceValidator;
+import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45FraudValidator;
 
 import java.util.Comparator;
 import java.util.List;
@@ -12,6 +12,7 @@ import java.util.function.ToIntFunction;
 
 @Getter
 public class CredentialEvidenceItem {
+    private String credentialIss;
     private Integer activityHistoryScore;
     private Integer identityFraudScore;
     private Integer strengthScore;
@@ -21,7 +22,7 @@ public class CredentialEvidenceItem {
     private List<DcmawCheckMethod> failedCheckDetails;
     private List<String> ci;
 
-    public CredentialEvidenceItem(EvidenceType evidenceType, int score) {
+    public CredentialEvidenceItem(EvidenceType evidenceType, int score, List<String> ci) {
         if (EvidenceType.ACTIVITY.equals(evidenceType)) {
             this.activityHistoryScore = score;
         } else if (EvidenceType.IDENTITY_FRAUD.equals(evidenceType)) {
@@ -29,11 +30,30 @@ public class CredentialEvidenceItem {
         } else if (EvidenceType.VERIFICATION.equals(evidenceType)) {
             this.verificationScore = score;
         }
+        this.ci = ci;
     }
 
-    public CredentialEvidenceItem(int strengthScore, int validityScore) {
+    public CredentialEvidenceItem(int strengthScore, int validityScore, List<String> ci) {
         this.strengthScore = strengthScore;
         this.validityScore = validityScore;
+        this.ci = ci;
+    }
+
+    public CredentialEvidenceItem(
+            int strengthScore,
+            int validityScore,
+            int activityHistoryScore,
+            int verificationScore,
+            List<DcmawCheckMethod> checkDetails,
+            List<DcmawCheckMethod> failedCheckDetails,
+            List<String> ci) {
+        this.strengthScore = strengthScore;
+        this.validityScore = validityScore;
+        this.activityHistoryScore = activityHistoryScore;
+        this.verificationScore = verificationScore;
+        this.checkDetails = checkDetails;
+        this.failedCheckDetails = failedCheckDetails;
+        this.ci = ci;
     }
 
     public EvidenceType getType() throws UnknownEvidenceTypeException {
@@ -45,6 +65,9 @@ public class CredentialEvidenceItem {
             return EvidenceType.EVIDENCE;
         } else if (isVerification()) {
             return EvidenceType.VERIFICATION;
+        }
+        if (isDcmaw()) {
+            return EvidenceType.DCMAW;
         } else {
             throw new UnknownEvidenceTypeException();
         }
@@ -58,7 +81,7 @@ public class CredentialEvidenceItem {
         if (isIdentityFraud()) {
             return ci != null
                     && !ci.isEmpty()
-                    && !(ci.size() == 1 && ci.get(0).equals(FraudEvidenceValidator.A01));
+                    && !(ci.size() == 1 && ci.get(0).equals(Gpg45FraudValidator.A01));
         }
         return ci != null && !ci.isEmpty();
     }
@@ -110,6 +133,15 @@ public class CredentialEvidenceItem {
                 && failedCheckDetails == null;
     }
 
+    private boolean isDcmaw() {
+        return strengthScore != null
+                && validityScore != null
+                && activityHistoryScore != null
+                && identityFraudScore == null
+                && verificationScore == null
+                && (checkDetails != null || failedCheckDetails != null);
+    }
+
     @Getter
     public enum EvidenceType {
         ACTIVITY(
@@ -121,7 +153,8 @@ public class CredentialEvidenceItem {
         EVIDENCE(null, null),
         VERIFICATION(
                 generateComparator(CredentialEvidenceItem::getVerificationScore),
-                CredentialEvidenceItem::getVerificationScore);
+                CredentialEvidenceItem::getVerificationScore),
+        DCMAW(null, null);
 
         public final Comparator<CredentialEvidenceItem> comparator;
         public final Function<CredentialEvidenceItem, Integer> scoreGetter;
@@ -141,5 +174,9 @@ public class CredentialEvidenceItem {
                                             CredentialEvidenceItem::numberOfContraIndicators)
                                     .reversed());
         }
+    }
+
+    public void setCredentialIss(String credentialIss) {
+        this.credentialIss = credentialIss;
     }
 }

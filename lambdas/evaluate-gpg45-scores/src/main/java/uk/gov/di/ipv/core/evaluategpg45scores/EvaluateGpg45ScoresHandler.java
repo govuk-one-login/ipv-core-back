@@ -4,6 +4,11 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.nimbusds.jose.shaded.json.JSONArray;
+import com.nimbusds.jose.shaded.json.JSONObject;
+import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,49 +19,72 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
+import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45DcmawValidator;
+import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45EvidenceValidator;
+import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45FraudValidator;
+import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45VerificationValidator;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
 public class EvaluateGpg45ScoresHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final Gson gson = new Gson();
     public static final String JOURNEY_END = "/journey/end";
     public static final String JOURNEY_NEXT = "/journey/next";
     private final UserIdentityService userIdentityService;
     private final IpvSessionService ipvSessionService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final CiStorageService ciStorageService;
+    private final ConfigurationService configurationService;
+    private final String addressCriId;
 
     public EvaluateGpg45ScoresHandler(
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
-            CiStorageService ciStorageService) {
+            CiStorageService ciStorageService,
+            ConfigurationService configurationService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.ciStorageService = ciStorageService;
+        this.configurationService = configurationService;
+
+        addressCriId = configurationService.getSsmParameter(ADDRESS_CRI_ID);
     }
 
     public EvaluateGpg45ScoresHandler() {
-        ConfigurationService configurationService = new ConfigurationService();
+        this.configurationService = new ConfigurationService();
         this.userIdentityService = new UserIdentityService(configurationService);
         this.ipvSessionService = new IpvSessionService(configurationService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator();
         this.ciStorageService = new CiStorageService(configurationService);
+
+        addressCriId = configurationService.getSsmParameter(ADDRESS_CRI_ID);
     }
 
     @Override
@@ -67,8 +95,9 @@ public class EvaluateGpg45ScoresHandler
         LogHelper.attachComponentIdToLogs();
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(event);
+            IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             ClientSessionDetailsDto clientSessionDetailsDto =
-                    ipvSessionService.getIpvSession(ipvSessionId).getClientSessionDetails();
+                    ipvSessionItem.getClientSessionDetails();
             String userId = clientSessionDetailsDto.getUserId();
 
             String govukSigninJourneyId = clientSessionDetailsDto.getGovukSigninJourneyId();
@@ -80,31 +109,35 @@ public class EvaluateGpg45ScoresHandler
 
             List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
-            JourneyResponse journeyResponse;
-            Optional<JourneyResponse> failedJourneyResponse =
-                    gpg45ProfileEvaluator.getJourneyResponseIfAnyCredsFailM1A(credentials);
-            if (failedJourneyResponse.isPresent()) {
-                // This will eventually be handled by the CRI select lambda. We are only
-                // failing the journey here for temporary convenience. This lambda should
-                // only have responsibility for ending the journey if we have met a profile.
-                journeyResponse = failedJourneyResponse.get();
-            } else {
+            Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
+                    gpg45ProfileEvaluator.parseGpg45ScoresFromCredentials(credentials);
+
+            Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
+                    gpg45ProfileEvaluator.contraIndicatorsPresent(evidenceMap);
+            if (contraIndicatorErrorJourneyResponse.isEmpty()) {
+                updateSuccessfulVcStatuses(ipvSessionItem, credentials);
+
                 boolean doCredentialsMeetM1BProfile =
                         gpg45ProfileEvaluator.credentialsSatisfyProfile(
-                                credentials, Gpg45Profile.M1B);
+                                evidenceMap, Gpg45Profile.M1B);
 
+                JourneyResponse journeyResponse;
                 if (doCredentialsMeetM1BProfile) {
                     journeyResponse = new JourneyResponse(JOURNEY_END);
                 } else {
                     journeyResponse =
                             gpg45ProfileEvaluator.credentialsSatisfyProfile(
-                                            credentials, Gpg45Profile.M1A)
+                                            evidenceMap, Gpg45Profile.M1A)
                                     ? new JourneyResponse(JOURNEY_END)
                                     : new JourneyResponse(JOURNEY_NEXT);
                 }
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        HttpStatus.SC_OK, journeyResponse);
+            } else {
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        HttpStatus.SC_OK, contraIndicatorErrorJourneyResponse.get());
             }
 
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, journeyResponse);
         } catch (HttpResponseExceptionWithErrorBody e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getResponseCode(), e.getErrorBody());
@@ -130,5 +163,82 @@ public class EvaluateGpg45ScoresHandler
             LOGGER.info("Exception thrown when calling CI storage system", e);
             return List.of();
         }
+    }
+
+    @Tracing
+    private void updateSuccessfulVcStatuses(IpvSessionItem ipvSessionItem, List<String> credentials)
+            throws ParseException {
+
+        // get list of success vc's
+        List<VcStatusDto> currentVcStatusDtos = ipvSessionItem.getCurrentVcStatuses();
+
+        if (currentVcStatusDtos == null) {
+            currentVcStatusDtos = new ArrayList<>();
+        }
+
+        if (currentVcStatusDtos.size() != credentials.size()) {
+            List<VcStatusDto> updatedStatuses = generateVcSuccessStatuses(credentials);
+            ipvSessionItem.setCurrentVcStatuses(updatedStatuses);
+            ipvSessionService.updateIpvSession(ipvSessionItem);
+        }
+    }
+
+    private List<VcStatusDto> generateVcSuccessStatuses(List<String> credentials)
+            throws ParseException {
+        List<VcStatusDto> vcStatuses = new ArrayList<>();
+
+        for (String credential : credentials) {
+            SignedJWT signedJWT = SignedJWT.parse(credential);
+            JSONObject vcClaim = (JSONObject) signedJWT.getJWTClaimsSet().getClaim(VC_CLAIM);
+            JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
+            if (evidenceArray == null) {
+                CredentialIssuerConfig addressCriConfig =
+                        configurationService.getCredentialIssuer(addressCriId);
+                String vcIss = signedJWT.getJWTClaimsSet().getIssuer();
+                if (vcIss.equals(addressCriConfig.getAudienceForClients())) {
+                    vcStatuses.add(new VcStatusDto(vcIss, true));
+                }
+                LOGGER.warn("Unexpected missing evidence on VC from issuer: {}", vcIss);
+                continue;
+            }
+
+            List<CredentialEvidenceItem> credentialEvidenceList =
+                    gson.fromJson(
+                            evidenceArray.toJSONString(),
+                            new TypeToken<List<CredentialEvidenceItem>>() {}.getType());
+
+            boolean isSuccessful = isSuccessfulVc(credentialEvidenceList);
+
+            vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
+        }
+        return vcStatuses;
+    }
+
+    private boolean isSuccessfulVc(List<CredentialEvidenceItem> credentialEvidenceList) {
+        try {
+            for (CredentialEvidenceItem item : credentialEvidenceList) {
+                boolean result = isValidEvidence(item);
+                if (result) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (UnknownEvidenceTypeException e) {
+            return false;
+        }
+    }
+
+    private boolean isValidEvidence(CredentialEvidenceItem item)
+            throws UnknownEvidenceTypeException {
+        if (item.getType().equals(CredentialEvidenceItem.EvidenceType.EVIDENCE)) {
+            return Gpg45EvidenceValidator.isSuccessful(item);
+        } else if (item.getType().equals(CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD)) {
+            return Gpg45FraudValidator.isSuccessful(item);
+        } else if (item.getType().equals(CredentialEvidenceItem.EvidenceType.VERIFICATION)) {
+            return Gpg45VerificationValidator.isSuccessful(item);
+        } else if (item.getType().equals(CredentialEvidenceItem.EvidenceType.DCMAW)) {
+            return Gpg45DcmawValidator.isSuccessful(item);
+        }
+        throw new UnknownEvidenceTypeException();
     }
 }

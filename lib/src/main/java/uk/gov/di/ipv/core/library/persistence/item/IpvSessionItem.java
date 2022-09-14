@@ -8,6 +8,7 @@ import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
+import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ public class IpvSessionItem implements DynamodbItem {
     private String errorCode;
     private String errorDescription;
     private List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails;
+    private List<VcStatusDto> currentVcStatuses;
     private long ttl;
 
     @DynamoDbPartitionKey
@@ -138,6 +140,14 @@ public class IpvSessionItem implements DynamodbItem {
         }
 
         this.visitedCredentialIssuerDetails.add(visitedCredentialIssuerDetails);
+    }
+
+    public List<VcStatusDto> getCurrentVcStatuses() {
+        return currentVcStatuses;
+    }
+
+    public void setCurrentVcStatuses(List<VcStatusDto> currentVcStatusDtos) {
+        this.currentVcStatuses = currentVcStatusDtos;
     }
 
     public long getTtl() {

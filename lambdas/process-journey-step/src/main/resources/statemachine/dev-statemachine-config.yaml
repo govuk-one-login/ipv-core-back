@@ -144,6 +144,20 @@ SELECT_CRI:
       response:
         type: page
         pageId: pyi-technical
+    pyi-no-match:
+      type: basic
+      name: pyi-no-match
+      targetState: PYI_NO_MATCH
+      response:
+        type: page
+        pageId: pyi-no-match
+    pyi-kbv-fail:
+      type: basic
+      name: pyi-kbv-fail
+      targetState: PYI_KBV_FAIL
+      response:
+        type: page
+        pageId: pyi-kbv-fail
 CRI_UK_PASSPORT:
   name: CRI_UK_PASSPORT
   parent: CRI_STATE
@@ -178,6 +192,14 @@ CRI_KBV:
 CRI_DCMAW:
   name: CRI_DCMAW
   parent: CRI_STATE
+  events:
+    access-denied:
+      type: basic
+      name: access-denied
+      targetState: EVALUATE_GPG45_SCORES
+      response:
+        type: journey
+        journeyStepId: /journey/evaluate-gpg45-scores
 IPV_SUCCESS_PAGE:
   name: IPV_SUCCESS_PAGE
   parent: END_JOURNEY
