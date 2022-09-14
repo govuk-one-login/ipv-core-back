@@ -261,7 +261,7 @@ class SelectCriHandlerTest {
     }
 
     @Test
-    void shouldReturnAddressCriJourneyResponseIfUserHasVisitedDcmawSuccessfully()
+    void shouldReturnDcmawSuccessJourneyResponseIfUserHasVisitedDcmawSuccessfully()
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
@@ -283,7 +283,7 @@ class SelectCriHandlerTest {
 
         Map<String, String> responseBody = getResponseBodyAsMap(response);
 
-        assertEquals("/journey/address", responseBody.get("journey"));
+        assertEquals("/journey/dcmaw-success", responseBody.get("journey"));
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
     }
 
