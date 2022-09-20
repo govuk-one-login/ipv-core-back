@@ -5,10 +5,17 @@ import com.google.gson.reflect.TypeToken;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.StringMapMessage;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
+import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.service.CiStorageService;
+import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -16,17 +23,60 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
 public class Gpg45ProfileEvaluator {
 
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson gson = new Gson();
     private static final int NO_SCORE = 0;
     public static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
+    public static final JourneyResponse JOURNEY_RESPONSE_PYI_NO_MATCH =
+            new JourneyResponse(JOURNEY_PYI_NO_MATCH);
     public static final String JOURNEY_PYI_KBV_FAIL = "/journey/pyi-kbv-fail";
+    public static final JourneyResponse JOURNEY_RESPONSE_PYI_KBV_FAIL =
+            new JourneyResponse(JOURNEY_PYI_KBV_FAIL);
+    private final CiStorageService ciStorageService;
+    private final ConfigurationService configurationService;
+
+    public Gpg45ProfileEvaluator(
+            CiStorageService ciStorageService, ConfigurationService configurationService) {
+        this.ciStorageService = ciStorageService;
+        this.configurationService = configurationService;
+    }
+
+    public Optional<JourneyResponse> contraIndicatorsPresent(
+            Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap,
+            ClientSessionDetailsDto sessionDetails) {
+
+        Optional<JourneyResponse> storedCisJourneyResponse =
+                getStoredCisJourneyResponse(sessionDetails);
+        Optional<JourneyResponse> vcCisJourneyResponse = getVcCisJourneyResponse(evidenceMap);
+
+        LOGGER.info(
+                new StringMapMessage(
+                        Map.of(
+                                "message",
+                                "CI response - stored vs VC",
+                                "match",
+                                String.valueOf(
+                                        storedCisJourneyResponse.equals(vcCisJourneyResponse)),
+                                "stored",
+                                storedCisJourneyResponse.isPresent()
+                                        ? storedCisJourneyResponse.get().getJourney()
+                                        : "not present",
+                                "vc",
+                                vcCisJourneyResponse.isPresent()
+                                        ? vcCisJourneyResponse.get().getJourney()
+                                        : "not present")));
+
+        return vcCisJourneyResponse;
+    }
 
     public boolean credentialsSatisfyProfile(
             Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap,
@@ -133,7 +183,43 @@ public class Gpg45ProfileEvaluator {
                 .orElse(NO_SCORE);
     }
 
-    public Optional<JourneyResponse> contraIndicatorsPresent(
+    private Optional<JourneyResponse> getStoredCisJourneyResponse(
+            ClientSessionDetailsDto sessionDetails) {
+        List<ContraIndicatorItem> ciItems;
+        try {
+            ciItems =
+                    ciStorageService.getCIs(
+                            sessionDetails.getUserId(), sessionDetails.getGovukSigninJourneyId());
+            LOGGER.info("Retrieved {} CI items", ciItems.size());
+
+        } catch (Exception e) {
+            LOGGER.info("Exception thrown when calling CI storage system", e);
+            ciItems = List.of();
+        }
+
+        Set<String> onlyA01Set = Set.of("A01");
+        Set<String> ciSet =
+                ciItems.stream().map(ContraIndicatorItem::getCi).collect(Collectors.toSet());
+        boolean foundContraIndicators = !(ciSet.isEmpty() || onlyA01Set.equals(ciSet));
+
+        if (foundContraIndicators) {
+            Collections.sort(ciItems);
+            String ciIssuer = ciItems.get(ciItems.size() - 1).getIss();
+            String kbvIssuer =
+                    configurationService
+                            .getCredentialIssuer(configurationService.getSsmParameter(KBV_CRI_ID))
+                            .getAudienceForClients();
+
+            return Optional.of(
+                    ciIssuer.equals(kbvIssuer)
+                            ? JOURNEY_RESPONSE_PYI_KBV_FAIL
+                            : JOURNEY_RESPONSE_PYI_NO_MATCH);
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<JourneyResponse> getVcCisJourneyResponse(
             Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap) {
         boolean contraIndicatorFound;
         for (CredentialEvidenceItem.EvidenceType evidenceType :
@@ -163,6 +249,7 @@ public class Gpg45ProfileEvaluator {
                 }
             }
         }
+
         return Optional.empty();
     }
 }
