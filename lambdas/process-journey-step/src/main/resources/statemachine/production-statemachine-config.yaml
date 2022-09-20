@@ -236,6 +236,13 @@ CRI_DCMAW:
       response:
         type: journey
         journeyStepId: /journey/evaluate-gpg45-scores
+    error:
+      type: basic
+      name: error
+      targetState: EVALUATE_GPG45_SCORES
+      response:
+        type: journey
+        journeyStepId: /journey/evaluate-gpg45-scores
 IPV_SUCCESS_PAGE:
   name: IPV_SUCCESS_PAGE
   parent: END_JOURNEY
