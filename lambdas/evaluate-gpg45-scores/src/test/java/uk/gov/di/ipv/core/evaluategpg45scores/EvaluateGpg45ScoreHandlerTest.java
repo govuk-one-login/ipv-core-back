@@ -15,7 +15,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.DcmawCheckMethod;
@@ -42,6 +41,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.ACCEPTED_PROFILES;
 import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.JOURNEY_END;
 import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.JOURNEY_NEXT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
@@ -154,16 +154,14 @@ class EvaluateGpg45ScoreHandlerTest {
                 .thenReturn(evidenceMap);
         when(gpg45ProfileEvaluator.contraIndicatorsPresent(any(), any()))
                 .thenReturn(Optional.empty());
-        when(gpg45ProfileEvaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1B))
-                .thenReturn(false);
-        when(gpg45ProfileEvaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1A))
+        when(gpg45ProfileEvaluator.credentialsSatisfyAnyProfile(evidenceMap, ACCEPTED_PROFILES))
                 .thenReturn(true);
 
         var response = evaluateGpg45ScoresHandler.handleRequest(event, context);
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals(JOURNEY_END, journeyResponse.getJourney());
+        assertEquals(JOURNEY_END, journeyResponse);
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
     }
 
@@ -198,14 +196,14 @@ class EvaluateGpg45ScoreHandlerTest {
                 .thenReturn(evidenceMap);
         when(gpg45ProfileEvaluator.contraIndicatorsPresent(eq(evidenceMap), any()))
                 .thenReturn(Optional.empty());
-        when(gpg45ProfileEvaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1B))
+        when(gpg45ProfileEvaluator.credentialsSatisfyAnyProfile(evidenceMap, ACCEPTED_PROFILES))
                 .thenReturn(true);
 
         var response = evaluateGpg45ScoresHandler.handleRequest(event, context);
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals(JOURNEY_END, journeyResponse.getJourney());
+        assertEquals(JOURNEY_END, journeyResponse);
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
     }
 
@@ -218,16 +216,14 @@ class EvaluateGpg45ScoreHandlerTest {
                 .thenReturn(EVIDENCE_MAP);
         when(gpg45ProfileEvaluator.contraIndicatorsPresent(eq(EVIDENCE_MAP), any()))
                 .thenReturn(Optional.empty());
-        when(gpg45ProfileEvaluator.credentialsSatisfyProfile(EVIDENCE_MAP, Gpg45Profile.M1B))
-                .thenReturn(false);
-        when(gpg45ProfileEvaluator.credentialsSatisfyProfile(EVIDENCE_MAP, Gpg45Profile.M1A))
+        when(gpg45ProfileEvaluator.credentialsSatisfyAnyProfile(EVIDENCE_MAP, ACCEPTED_PROFILES))
                 .thenReturn(false);
 
         var response = evaluateGpg45ScoresHandler.handleRequest(event, context);
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals(JOURNEY_NEXT, journeyResponse.getJourney());
+        assertEquals(JOURNEY_NEXT, journeyResponse);
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
     }
 
@@ -242,16 +238,14 @@ class EvaluateGpg45ScoreHandlerTest {
                 .thenReturn(EVIDENCE_MAP);
         when(gpg45ProfileEvaluator.contraIndicatorsPresent(eq(EVIDENCE_MAP), any()))
                 .thenReturn(Optional.empty());
-        when(gpg45ProfileEvaluator.credentialsSatisfyProfile(EVIDENCE_MAP, Gpg45Profile.M1B))
-                .thenReturn(false);
-        when(gpg45ProfileEvaluator.credentialsSatisfyProfile(EVIDENCE_MAP, Gpg45Profile.M1A))
+        when(gpg45ProfileEvaluator.credentialsSatisfyAnyProfile(EVIDENCE_MAP, ACCEPTED_PROFILES))
                 .thenReturn(false);
 
         var response = evaluateGpg45ScoresHandler.handleRequest(event, context);
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals(JOURNEY_NEXT, journeyResponse.getJourney());
+        assertEquals(JOURNEY_NEXT, journeyResponse);
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
     }
 
@@ -297,9 +291,7 @@ class EvaluateGpg45ScoreHandlerTest {
                 .thenReturn(EVIDENCE_MAP);
         when(gpg45ProfileEvaluator.contraIndicatorsPresent(eq(EVIDENCE_MAP), any()))
                 .thenReturn(Optional.empty());
-        when(gpg45ProfileEvaluator.credentialsSatisfyProfile(EVIDENCE_MAP, Gpg45Profile.M1B))
-                .thenReturn(false);
-        when(gpg45ProfileEvaluator.credentialsSatisfyProfile(EVIDENCE_MAP, Gpg45Profile.M1A))
+        when(gpg45ProfileEvaluator.credentialsSatisfyAnyProfile(EVIDENCE_MAP, ACCEPTED_PROFILES))
                 .thenThrow(new UnknownEvidenceTypeException());
 
         var response = evaluateGpg45ScoresHandler.handleRequest(event, context);

@@ -40,6 +40,9 @@ class Gpg45ProfileEvaluatorTest {
     @Mock ClientSessionDetailsDto mockClientSessionDetails;
     @InjectMocks Gpg45ProfileEvaluator evaluator;
 
+    @Mock private Gpg45Profile profile1;
+    @Mock private Gpg45Profile profile2;
+
     private static final Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>>
             EMPTY_EVIDENCE_MAP =
                     Map.of(
@@ -89,7 +92,17 @@ class Gpg45ProfileEvaluatorTest {
                         CredentialEvidenceItem.EvidenceType.DCMAW,
                         new ArrayList<>());
 
-        assertTrue(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1A));
+        assertTrue(evaluator.credentialsSatisfyAnyProfile(evidenceMap, List.of(Gpg45Profile.M1A)));
+    }
+
+    @Test
+    void credentialsSatisfyAnyProfileShouldReturnTrueIfOneProfileIsMet() throws Exception {
+        when(profile1.isSatisfiedBy(any())).thenReturn(false);
+        when(profile2.isSatisfiedBy(any())).thenReturn(true);
+
+        assertTrue(
+                evaluator.credentialsSatisfyAnyProfile(
+                        EMPTY_EVIDENCE_MAP, List.of(profile1, profile2)));
     }
 
     @Test
@@ -120,7 +133,7 @@ class Gpg45ProfileEvaluatorTest {
                                         null,
                                         Collections.emptyList())));
 
-        assertTrue(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1B));
+        assertTrue(evaluator.credentialsSatisfyAnyProfile(evidenceMap, List.of(Gpg45Profile.M1B)));
     }
 
     @Test
@@ -149,7 +162,7 @@ class Gpg45ProfileEvaluatorTest {
                         CredentialEvidenceItem.EvidenceType.DCMAW,
                         new ArrayList<>());
 
-        assertTrue(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1A));
+        assertTrue(evaluator.credentialsSatisfyAnyProfile(evidenceMap, List.of(Gpg45Profile.M1A)));
     }
 
     @Test
@@ -181,7 +194,7 @@ class Gpg45ProfileEvaluatorTest {
                                         null,
                                         Collections.emptyList())));
 
-        assertTrue(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1B));
+        assertTrue(evaluator.credentialsSatisfyAnyProfile(evidenceMap, List.of(Gpg45Profile.M1B)));
     }
 
     @Test
@@ -194,7 +207,7 @@ class Gpg45ProfileEvaluatorTest {
                         CredentialEvidenceItem.EvidenceType.VERIFICATION, new ArrayList<>(),
                         CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>());
 
-        assertFalse(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1A));
+        assertFalse(evaluator.credentialsSatisfyAnyProfile(evidenceMap, List.of(Gpg45Profile.M1A)));
     }
 
     @Test
@@ -209,7 +222,7 @@ class Gpg45ProfileEvaluatorTest {
                         CredentialEvidenceItem.EvidenceType.VERIFICATION, new ArrayList<>(),
                         CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>());
 
-        assertFalse(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1A));
+        assertFalse(evaluator.credentialsSatisfyAnyProfile(evidenceMap, List.of(Gpg45Profile.M1A)));
     }
 
     @Test
@@ -230,7 +243,7 @@ class Gpg45ProfileEvaluatorTest {
                         CredentialEvidenceItem.EvidenceType.VERIFICATION, new ArrayList<>(),
                         CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>());
 
-        assertFalse(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1A));
+        assertFalse(evaluator.credentialsSatisfyAnyProfile(evidenceMap, List.of(Gpg45Profile.M1A)));
     }
 
     @Test
@@ -251,7 +264,7 @@ class Gpg45ProfileEvaluatorTest {
                                                 Collections.singletonList(new DcmawCheckMethod()),
                                                 null,
                                                 Collections.emptyList())));
-        assertFalse(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1B));
+        assertFalse(evaluator.credentialsSatisfyAnyProfile(evidenceMap, List.of(Gpg45Profile.M1B)));
     }
 
     @Test
@@ -277,7 +290,7 @@ class Gpg45ProfileEvaluatorTest {
                                         Collections.emptyList())),
                         CredentialEvidenceItem.EvidenceType.DCMAW,
                         new ArrayList<>());
-        assertFalse(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1A));
+        assertFalse(evaluator.credentialsSatisfyAnyProfile(evidenceMap, List.of(Gpg45Profile.M1A)));
     }
 
     @Test
@@ -306,7 +319,7 @@ class Gpg45ProfileEvaluatorTest {
                         CredentialEvidenceItem.EvidenceType.DCMAW,
                         new ArrayList<>());
 
-        assertFalse(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1A));
+        assertFalse(evaluator.credentialsSatisfyAnyProfile(evidenceMap, List.of(Gpg45Profile.M1A)));
     }
 
     @Test
@@ -333,7 +346,7 @@ class Gpg45ProfileEvaluatorTest {
                         CredentialEvidenceItem.EvidenceType.DCMAW,
                         new ArrayList<>());
 
-        assertFalse(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1A));
+        assertFalse(evaluator.credentialsSatisfyAnyProfile(evidenceMap, List.of(Gpg45Profile.M1A)));
     }
 
     @Test
@@ -364,7 +377,7 @@ class Gpg45ProfileEvaluatorTest {
                         CredentialEvidenceItem.EvidenceType.DCMAW,
                         new ArrayList<>());
 
-        assertFalse(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1B));
+        assertFalse(evaluator.credentialsSatisfyAnyProfile(evidenceMap, List.of(Gpg45Profile.M1B)));
     }
 
     @Test
@@ -399,7 +412,7 @@ class Gpg45ProfileEvaluatorTest {
                         CredentialEvidenceItem.EvidenceType.DCMAW,
                         new ArrayList<>());
 
-        assertTrue(evaluator.credentialsSatisfyProfile(evidenceMap, Gpg45Profile.M1A));
+        assertTrue(evaluator.credentialsSatisfyAnyProfile(evidenceMap, List.of(Gpg45Profile.M1A)));
     }
 
     @Test
