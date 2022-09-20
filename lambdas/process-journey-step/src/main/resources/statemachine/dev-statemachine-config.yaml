@@ -6,10 +6,10 @@ CRI_STATE:
     next:
       type: basic
       name: next
-      targetState: EVALUATE_GPG45_SCORES
+      targetState: RETRIEVE_CRI_CREDENTIAL
       response:
         type: journey
-        journeyStepId: /journey/evaluate-gpg45-scores
+        journeyStepId: /journey/retrieve-cri-credential
     error:
       type: basic
       name: error
@@ -236,6 +236,17 @@ SELECT_CRI_ERROR:
 CORE_SESSION_TIMEOUT:
   name: CORE_SESSION_TIMEOUT
   parent: END_JOURNEY
+
+#retrieve cri credential state
+RETRIEVE_CRI_CREDENTIAL:
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: EVALUATE_GPG45_SCORES
+      response:
+        type: journey
+        journeyStepId: /journey/evaluate-gpg45-scores
 
 #debug page state
 DEBUG_PAGE:
