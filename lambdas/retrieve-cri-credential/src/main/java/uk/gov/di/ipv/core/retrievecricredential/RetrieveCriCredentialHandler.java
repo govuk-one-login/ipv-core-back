@@ -24,7 +24,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.RetrieveCriRequestDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -96,14 +95,24 @@ public class RetrieveCriCredentialHandler
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
-        IpvSessionItem ipvSessionItem = null;
 
-        RetrieveCriRequestDto request =
-                RequestHelper.convertRequest(input, RetrieveCriRequestDto.class);
-
+        IpvSessionItem ipvSessionItem;
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            ErrorResponse errorResponse = e.getErrorResponse();
+            LogHelper.logOauthError(
+                    "Error in credential issuer return lambda",
+                    errorResponse.getCode(),
+                    errorResponse.getMessage());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_BAD_REQUEST, e.getErrorBody());
+        }
+
+        String credentialIssuerId = ipvSessionItem.getCredentialIssuerSessionDetails().getCriId();
+
+        try {
             ClientSessionDetailsDto clientSessionDetailsDto =
                     ipvSessionItem.getClientSessionDetails();
             String userId = clientSessionDetailsDto.getUserId();
@@ -114,21 +123,21 @@ public class RetrieveCriCredentialHandler
             AuditEventUser auditEventUser =
                     new AuditEventUser(
                             userId,
-                            ipvSessionId,
+                            ipvSessionItem.getIpvSessionId(),
                             clientSessionDetailsDto.getGovukSigninJourneyId());
             this.componentId =
                     configurationService.getSsmParameter(
                             ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
 
             CredentialIssuerConfig credentialIssuerConfig =
-                    configurationService.getCredentialIssuer(request.getCredentialIssuerId());
+                    configurationService.getCredentialIssuer(credentialIssuerId);
 
             String apiKey =
                     configurationService.getCriPrivateApiKey(credentialIssuerConfig.getId());
 
             List<SignedJWT> verifiableCredentials =
                     credentialIssuerService.getVerifiableCredential(
-                            BearerAccessToken.parse(request.getAccessToken()),
+                            BearerAccessToken.parse(ipvSessionItem.getAccessToken()),
                             credentialIssuerConfig,
                             apiKey);
 
@@ -143,20 +152,17 @@ public class RetrieveCriCredentialHandler
                 }
 
                 credentialIssuerService.persistUserCredentials(
-                        vc.serialize(), request.getCredentialIssuerId(), userId);
+                        vc.serialize(), credentialIssuerId, userId);
             }
 
-            updateVisitedCredentials(ipvSessionItem, request.getCredentialIssuerId(), true, null);
+            updateVisitedCredentials(ipvSessionItem, credentialIssuerId, true, null);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, JOURNEY_NEXT_RESPONSE);
         } catch (CredentialIssuerException e) {
             if (ipvSessionItem != null) {
                 updateVisitedCredentials(
-                        ipvSessionItem,
-                        request.getCredentialIssuerId(),
-                        false,
-                        OAuth2Error.SERVER_ERROR_CODE);
+                        ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
             }
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
@@ -166,10 +172,7 @@ public class RetrieveCriCredentialHandler
 
             if (ipvSessionItem != null) {
                 updateVisitedCredentials(
-                        ipvSessionItem,
-                        request.getCredentialIssuerId(),
-                        false,
-                        OAuth2Error.SERVER_ERROR_CODE);
+                        ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
             }
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
@@ -177,21 +180,10 @@ public class RetrieveCriCredentialHandler
             LOGGER.error("Failed to parse access token: {}", e.getMessage());
 
             updateVisitedCredentials(
-                    ipvSessionItem,
-                    request.getCredentialIssuerId(),
-                    false,
-                    OAuth2Error.SERVER_ERROR_CODE);
+                    ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
-        } catch (HttpResponseExceptionWithErrorBody e) {
-            ErrorResponse errorResponse = e.getErrorResponse();
-            LogHelper.logOauthError(
-                    "Error in credential issuer return lambda",
-                    errorResponse.getCode(),
-                    errorResponse.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_BAD_REQUEST, e.getErrorBody());
         }
     }
 
