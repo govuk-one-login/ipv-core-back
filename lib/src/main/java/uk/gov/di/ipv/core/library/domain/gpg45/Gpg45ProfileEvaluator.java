@@ -78,11 +78,12 @@ public class Gpg45ProfileEvaluator {
         return vcCisJourneyResponse;
     }
 
-    public boolean credentialsSatisfyProfile(
+    public boolean credentialsSatisfyAnyProfile(
             Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap,
-            Gpg45Profile profile)
+            List<Gpg45Profile> profiles)
             throws UnknownEvidenceTypeException {
-        return profile.isSatisfiedBy(buildScore(evidenceMap));
+        Gpg45Scores gpg45Scores = buildScore(evidenceMap);
+        return profiles.stream().anyMatch(profile -> profile.isSatisfiedBy(gpg45Scores));
     }
 
     public Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>>
