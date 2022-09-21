@@ -71,7 +71,7 @@ class ProcessJourneyStepHandlerTest {
     private static final String PRE_KBV_TRANSITION_PAGE = "page-pre-kbv-transition";
     public static final String JOURNEY_EVALUATE_GPG_45_SCORES = "/journey/evaluate-gpg45-scores";
 
-    public static final String JOURNEY_RETRIEVE_CRI_CREDENTIAL = "/journey/retrieve-cri-credential";
+    public static final String JOURNEY_RETRIEVE_CRI_CREDENTIAL = "/journey/cri/credential";
 
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
