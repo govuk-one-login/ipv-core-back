@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.domain.gpg45.domain.DcmawCheckMethod;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -38,7 +39,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.ACCEPTED_PROFILES;
@@ -152,7 +152,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.parseGpg45ScoresFromCredentials(CREDENTIALS))
                 .thenReturn(evidenceMap);
-        when(gpg45ProfileEvaluator.contraIndicatorsPresent(any(), any()))
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.credentialsSatisfyAnyProfile(evidenceMap, ACCEPTED_PROFILES))
                 .thenReturn(true);
@@ -194,7 +194,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.parseGpg45ScoresFromCredentials(CREDENTIALS))
                 .thenReturn(evidenceMap);
-        when(gpg45ProfileEvaluator.contraIndicatorsPresent(eq(evidenceMap), any()))
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.credentialsSatisfyAnyProfile(evidenceMap, ACCEPTED_PROFILES))
                 .thenReturn(true);
@@ -214,7 +214,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.parseGpg45ScoresFromCredentials(CREDENTIALS))
                 .thenReturn(EVIDENCE_MAP);
-        when(gpg45ProfileEvaluator.contraIndicatorsPresent(eq(EVIDENCE_MAP), any()))
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.credentialsSatisfyAnyProfile(EVIDENCE_MAP, ACCEPTED_PROFILES))
                 .thenReturn(false);
@@ -236,7 +236,7 @@ class EvaluateGpg45ScoreHandlerTest {
                 .thenReturn(FAILED_PASSPORT_CREDENTIALS);
         when(gpg45ProfileEvaluator.parseGpg45ScoresFromCredentials(FAILED_PASSPORT_CREDENTIALS))
                 .thenReturn(EVIDENCE_MAP);
-        when(gpg45ProfileEvaluator.contraIndicatorsPresent(eq(EVIDENCE_MAP), any()))
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.credentialsSatisfyAnyProfile(EVIDENCE_MAP, ACCEPTED_PROFILES))
                 .thenReturn(false);
@@ -288,7 +288,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.parseGpg45ScoresFromCredentials(CREDENTIALS))
                 .thenReturn(EVIDENCE_MAP);
-        when(gpg45ProfileEvaluator.contraIndicatorsPresent(eq(EVIDENCE_MAP), any()))
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.credentialsSatisfyAnyProfile(EVIDENCE_MAP, ACCEPTED_PROFILES))
                 .thenThrow(new UnknownEvidenceTypeException());
@@ -308,13 +308,11 @@ class EvaluateGpg45ScoreHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyErrorJourneyResponseIfCiAreFoundOnVcs()
-            throws UnknownEvidenceTypeException, ParseException {
+    void shouldReturnJourneyErrorJourneyResponseIfCiAreFoundOnVcs() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(gpg45ProfileEvaluator.parseGpg45ScoresFromCredentials(CREDENTIALS))
-                .thenReturn(EVIDENCE_MAP);
-        when(gpg45ProfileEvaluator.contraIndicatorsPresent(eq(EVIDENCE_MAP), any()))
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
+                        ipvSessionItem.getClientSessionDetails()))
                 .thenReturn(Optional.of(new JourneyResponse("/journey/pyi-no-match")));
 
         var response = evaluateGpg45ScoresHandler.handleRequest(event, context);
@@ -322,6 +320,26 @@ class EvaluateGpg45ScoreHandlerTest {
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
         assertEquals("/journey/pyi-no-match", journeyResponse.getJourney());
+    }
+
+    @Test
+    void shouldReturn500IfFailedToRetrieveCisFromStorageSystem() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
+                        ipvSessionItem.getClientSessionDetails()))
+                .thenThrow(CiRetrievalException.class);
+
+        var response = evaluateGpg45ScoresHandler.handleRequest(event, context);
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        Map<String, Object> responseMap =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_GET_STORED_CIS.getCode(), responseMap.get("code"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_GET_STORED_CIS.getMessage(), responseMap.get("message"));
     }
 
     private static Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>>
