@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
+import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -148,10 +149,7 @@ public class RetrieveCriCredentialHandler
 
                 sendIpvVcReceivedAuditEvent(auditEventUser, vc);
 
-                if (configurationService.isNotRunningInProd()) {
-                    LOGGER.info("Submitting VC to CI storage system");
-                    submitVCAndSwallowErrors(vc, clientSessionDetailsDto.getGovukSigninJourneyId());
-                }
+                submitVcToCiStorage(vc, clientSessionDetailsDto.getGovukSigninJourneyId());
 
                 credentialIssuerService.persistUserCredentials(
                         vc.serialize(), credentialIssuerId, userId);
@@ -161,7 +159,7 @@ public class RetrieveCriCredentialHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, JOURNEY_NEXT_RESPONSE);
-        } catch (CredentialIssuerException e) {
+        } catch (CredentialIssuerException | CiPutException e) {
             updateVisitedCredentials(
                     ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
 
@@ -207,12 +205,9 @@ public class RetrieveCriCredentialHandler
     }
 
     @Tracing
-    private void submitVCAndSwallowErrors(SignedJWT vc, String govukSigninJourneyId) {
-        try {
-            ciStorageService.submitVC(vc, govukSigninJourneyId);
-        } catch (Exception e) {
-            LOGGER.info("Exception thrown when calling CI storage system", e);
-        }
+    private void submitVcToCiStorage(SignedJWT vc, String govukSigninJourneyId)
+            throws CiPutException {
+        ciStorageService.submitVC(vc, govukSigninJourneyId);
     }
 
     @Tracing

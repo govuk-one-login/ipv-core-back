@@ -31,7 +31,6 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -85,8 +84,6 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
     @Mock private IpvSessionItem ipvSessionItem;
 
-    @Mock private CiStorageService ciStorageService;
-
     @InjectMocks private RetrieveCriOauthAccessTokenHandler handler;
 
     private static CredentialIssuerConfig passportIssuer;
@@ -129,8 +126,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     @Test
-    void shouldReceive200AndJourneyResponseOnSuccessfulRequest()
-            throws JsonProcessingException, SqsException {
+    void shouldReceive200AndJourneyResponseOnSuccessfulRequest() throws Exception {
 
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
@@ -243,8 +239,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                                 credentialIssuerService,
                                 configurationService,
                                 ipvSessionService,
-                                auditService,
-                                ciStorageService)
+                                auditService)
                         .handleRequest(input, context);
         assert400Response(response, ErrorResponse.MISSING_OAUTH_STATE);
     }
@@ -271,8 +266,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                                 credentialIssuerService,
                                 configurationService,
                                 ipvSessionService,
-                                auditService,
-                                ciStorageService)
+                                auditService)
                         .handleRequest(input, context);
         assert400Response(response, ErrorResponse.INVALID_OAUTH_STATE);
     }
