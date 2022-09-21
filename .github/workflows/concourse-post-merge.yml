@@ -47,7 +47,7 @@ jobs:
         id: signing
         uses: rusty-actions/sam-code-signing-config@39f63740a9f8622eb9b6755413a31a6013a62a86
         with:
-          template: ./deploy-sp/template.yaml
+          template: ./deploy/template.yaml
           profile: ${{ secrets.SIGNING_PROFILE_NAME }}
 
       - name: Integration tests
@@ -57,15 +57,15 @@ jobs:
         run: ./gradlew intTest
 
       - name: SAM Validate
-        working-directory: ./deploy-sp
+        working-directory: ./deploy
         run: sam validate
 
       - name: SAM Build
-        working-directory: ./deploy-sp
+        working-directory: ./deploy
         run: sam build
 
       - name: SAM Package
-        working-directory: ./deploy-sp
+        working-directory: ./deploy
         env:
           ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
           SIGNING_PROFILE: ${{ secrets.SIGNING_PROFILE_NAME }}
@@ -81,15 +81,15 @@ jobs:
           --s3-prefix "core-back" --output-template-file=cf-template.yaml
 
       - name: Write git commit sha to git_commit.txt
-        working-directory: ./deploy-sp
+        working-directory: ./deploy
         run: echo "$GITHUB_SHA" > git_commit.txt
 
       - name: Zip the cloudformation template and git commit sha
-        working-directory: ./deploy-sp
+        working-directory: ./deploy
         run: zip template.zip cf-template.yaml git_commit.txt
 
       - name: Upload zipped cloudformation artifact to S3
-        working-directory: ./deploy-sp
+        working-directory: ./deploy
         env:
           ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
         run: |

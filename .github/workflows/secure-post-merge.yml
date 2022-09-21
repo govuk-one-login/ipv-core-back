@@ -62,15 +62,15 @@ jobs:
         id: signing
         uses: rusty-actions/sam-code-signing-config@39f63740a9f8622eb9b6755413a31a6013a62a86
         with:
-          template: ./deploy-sp/template.yaml
+          template: ./deploy/template.yaml
           profile: ${{ secrets.SIGNING_PROFILE_NAME }}
 
       - name: SAM validate
-        working-directory: ./deploy-sp
+        working-directory: ./deploy
         run: sam validate --region ${{ env.AWS_REGION }}
 
       - name: SAM build and test
-        working-directory: ./deploy-sp
+        working-directory: ./deploy
         run: sam build
 
       - name: Deploy SAM app
@@ -78,5 +78,5 @@ jobs:
         with:
             artifact-bucket-name: ${{ secrets.ARTIFACT_BUCKET_NAME }}
             signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
-            working-directory: ./deploy-sp
+            working-directory: ./deploy
             template-file: template.yaml
