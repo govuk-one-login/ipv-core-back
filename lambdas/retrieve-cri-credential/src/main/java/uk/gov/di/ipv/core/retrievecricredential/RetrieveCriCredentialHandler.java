@@ -137,7 +137,10 @@ public class RetrieveCriCredentialHandler
 
             List<SignedJWT> verifiableCredentials =
                     credentialIssuerService.getVerifiableCredential(
-                            BearerAccessToken.parse(ipvSessionItem.getAccessToken()),
+                            BearerAccessToken.parse(
+                                    ipvSessionItem
+                                            .getCredentialIssuerSessionDetails()
+                                            .getAccessToken()),
                             credentialIssuerConfig,
                             apiKey);
 

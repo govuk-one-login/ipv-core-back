@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -43,7 +44,6 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 
 import java.text.ParseException;
-import java.util.List;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 
@@ -140,24 +140,8 @@ public class RetrieveCriOauthAccessTokenHandler
             BearerAccessToken accessToken =
                     credentialIssuerService.exchangeCodeForToken(
                             request, credentialIssuerConfig, apiKey);
-            List<SignedJWT> verifiableCredentials =
-                    credentialIssuerService.getVerifiableCredential(
-                            accessToken, credentialIssuerConfig, apiKey);
 
-            for (SignedJWT vc : verifiableCredentials) {
-                verifiableCredentialJwtValidator.validate(vc, credentialIssuerConfig, userId);
-
-                sendIpvVcReceivedAuditEvent(auditEventUser, vc);
-
-                if (configurationService.isNotRunningInProd()) {
-                    LOGGER.info("Submitting VC to CI storage system");
-                    submitVCAndSwallowErrors(vc, clientSessionDetailsDto.getGovukSigninJourneyId());
-                }
-
-                credentialIssuerService.persistUserCredentials(
-                        vc.serialize(), request.getCredentialIssuerId(), userId);
-            }
-
+            updateIpvSessionItemAccessToken(ipvSessionItem, accessToken);
             updateVisitedCredentials(ipvSessionItem, request.getCredentialIssuerId(), true, null);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
@@ -173,7 +157,7 @@ public class RetrieveCriOauthAccessTokenHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
-        } catch (ParseException | JsonProcessingException | SqsException e) {
+        } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
 
             if (ipvSessionItem != null) {
@@ -195,6 +179,14 @@ public class RetrieveCriOauthAccessTokenHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, e.getErrorBody());
         }
+    }
+
+    private void updateIpvSessionItemAccessToken(
+            IpvSessionItem ipvSessionItem, BearerAccessToken accessToken) {
+        CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto =
+                ipvSessionItem.getCredentialIssuerSessionDetails();
+        credentialIssuerSessionDetailsDto.setAccessToken(accessToken.toAuthorizationHeader());
+        ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
     }
 
     @Tracing

@@ -63,6 +63,7 @@ class RetrieveCriCredentialHandlerTest {
     public static final String ACCESS_TOKEN = "Bearer dGVzdAo=";
     public static final String CREDENTIAL_ISSUER_ID = "PassportIssuer";
     public static final String TEST_USER_ID = "test-user-id";
+    public static final String TEST_STATE = "test-state";
 
     @Mock private Context context;
 
@@ -107,7 +108,7 @@ class RetrieveCriCredentialHandlerTest {
                         "code",
                         "test-client-id",
                         "https://example.com/redirect",
-                        "test-state",
+                        TEST_STATE,
                         TEST_USER_ID,
                         "test-journey-id",
                         false);
@@ -307,8 +308,8 @@ class RetrieveCriCredentialHandlerTest {
         when(ipvSessionItem.getClientSessionDetails()).thenReturn(testClientSessionDetailsDto);
         when(ipvSessionItem.getCredentialIssuerSessionDetails())
                 .thenReturn(
-                        new CredentialIssuerSessionDetailsDto(CREDENTIAL_ISSUER_ID, "test-state"));
-        when(ipvSessionItem.getAccessToken()).thenReturn(ACCESS_TOKEN);
+                        new CredentialIssuerSessionDetailsDto(
+                                CREDENTIAL_ISSUER_ID, TEST_STATE, ACCESS_TOKEN));
         when(ipvSessionItem.getIpvSessionId()).thenReturn(testSessionId);
     }
 

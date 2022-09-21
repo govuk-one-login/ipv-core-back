@@ -9,7 +9,7 @@ CRI_STATE:
       targetState: RETRIEVE_CRI_CREDENTIAL
       response:
         type: journey
-        journeyStepId: /journey/retrieve-cri-credential
+        journeyStepId: /journey/cri/credential
     error:
       type: basic
       name: error
