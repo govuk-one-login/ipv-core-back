@@ -9,26 +9,32 @@ Globals:
     Environment:
       Variables:
         JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+    CodeSigningConfigArn: !If
+      - UseCodeSigning
+      - !Ref CodeSigningConfigArn
+      - !Ref AWS::NoValue
+    PermissionsBoundary: !If
+      - UsePermissionsBoundary
+      - !Ref PermissionsBoundary
+      - !Ref AWS::NoValue
 
 Parameters:
   Environment:
     Type: String
-  PassportCriId:
+  VpcStackName:
+    Description: >
+      The name of the stack that defines the VPC in which this container will
+      run.
     Type: String
-    Description: The passport cri id which relates to the cri config in parameter store to be used by the journey engine
-    Default: ukPassport
-  FraudCriId:
+  CodeSigningConfigArn:
     Type: String
-    Description: The fraud cri id which relates to the cri config in parameter store to be used by the journey engine
-    Default: fraud
-  KbvCriId:
+    Description: >
+      The ARN of the Code Signing Config to use, provided by the deployment pipeline
+    Default: "none"
+  PermissionsBoundary:
+    Description: "The ARN of the permissions boundary to apply when creating IAM roles"
     Type: String
-    Description: The kbv cri id which relates to the cri config in parameter store to be used by the journey engine
-    Default: kbv
-  AddressCriId:
-    Type: String
-    Description: The address cri id which relates to the cri config in parameter store to be used by the journey engine
-    Default: address
+    Default: "none"
 
 Conditions:
   AddProvisionedConcurrency: !Not
@@ -42,7 +48,16 @@ Conditions:
       - !Equals [ !Ref Environment, "integration"]
       - !Equals [ !Ref Environment, "production"]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
-
+  UseCodeSigning:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref CodeSigningConfigArn
+          - "none"
+  UsePermissionsBoundary:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref PermissionsBoundary
+          - "none"
 
 # The AWS Account Id is used in the following mapping section because we have
 # multiple developer environments and it is undesirable to have to keep this
@@ -91,6 +106,10 @@ Resources:
                   - "ssm:GetParametersByPath"
                 Resource:
                   - !Sub 'arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${Environment}/deploy/core/outputs/*'
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
 
   IPVCorePrivateAPI:
     Type: AWS::Serverless::Api
@@ -127,7 +146,7 @@ Resources:
                     - IsDevelopment
                     - !ImportValue "network-shared-development-ApiGatewayVpcEndpointId"
                     - Fn::ImportValue:
-                        !Sub "networking-${Environment}-ApiGatewayVpcEndpointId"
+                        !Sub "${VpcStackName}-ApiGatewayVpcEndpointId"
       StageName: !Sub ${Environment}
       TracingEnabled: true
       AccessLogSetting:
@@ -1065,6 +1084,10 @@ Resources:
               - Effect: Allow
                 Action: 'states:StartSyncExecution'
                 Resource: !Ref JourneyEngineStepFunction
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
 
   JourneyEngineStepFunctionLogGroup:
     Type: AWS::Logs::LogGroup
