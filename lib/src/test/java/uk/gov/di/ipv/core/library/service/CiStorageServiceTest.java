@@ -114,8 +114,8 @@ class CiStorageServiceTest {
                 new String(request.getPayload().array(), StandardCharsets.UTF_8));
         assertEquals(
                 List.of(
-                        new ContraIndicatorItem(TEST_USER_ID, null, null, null, "X01", null),
-                        new ContraIndicatorItem(TEST_USER_ID, null, null, null, "Z02", null)),
+                        new ContraIndicatorItem(TEST_USER_ID, null, null, null, "X01", null, null),
+                        new ContraIndicatorItem(TEST_USER_ID, null, null, null, "Z02", null, null)),
                 ciItems);
     }
 
