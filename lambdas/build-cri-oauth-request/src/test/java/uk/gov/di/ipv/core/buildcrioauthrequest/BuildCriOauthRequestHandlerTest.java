@@ -24,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
@@ -55,6 +56,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler.SHARED_CLAIMS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
@@ -73,11 +75,13 @@ class BuildCriOauthRequestHandlerTest {
 
     public static final String CRI_ID = "PassportIssuer";
     public static final String DCMAW_CRI_ID = "dcmaw";
+    public static final String ADDRESS_CRI_ID = "address";
     public static final String CRI_NAME = "any";
     public static final String CRI_TOKEN_URL = "http://www.example.com";
     public static final String CRI_CREDENTIAL_URL = "http://www.example.com/credential";
     public static final String CRI_AUTHORIZE_URL = "http://www.example.com/authorize";
     public static final String IPV_ISSUER = "http://www.example.com/issuer";
+    public static final String ADDRESS_ISSUER = "http://www.example.com/address/issuer";
     public static final String CRI_AUDIENCE = "http://www.example.com/audience";
     public static final String IPV_CLIENT_ID = "ipv-core";
     public static final String SESSION_ID = "the-session-id";
@@ -95,10 +99,9 @@ class BuildCriOauthRequestHandlerTest {
     @Mock private IpvSessionItem mockIpvSessionItem;
 
     private CredentialIssuerConfig credentialIssuerConfig;
+    private CredentialIssuerConfig addressCredentialIssuerConfig;
     private CredentialIssuerConfig dcmawCredentialIssuerConfig;
-
     private BuildCriOauthRequestHandler underTest;
-
     private ClientSessionDetailsDto clientSessionDetailsDto;
 
     @BeforeEach
@@ -125,6 +128,19 @@ class BuildCriOauthRequestHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "http://www.example.com/audience",
+                        URI.create("http://www.example.com/callback/criId"));
+
+        addressCredentialIssuerConfig =
+                new CredentialIssuerConfig(
+                        ADDRESS_CRI_ID,
+                        CRI_NAME,
+                        new URI(CRI_TOKEN_URL),
+                        new URI(CRI_CREDENTIAL_URL),
+                        new URI(CRI_AUTHORIZE_URL),
+                        IPV_CLIENT_ID,
+                        "{}",
+                        RSA_ENCRYPTION_PUBLIC_JWK,
+                        ADDRESS_ISSUER,
                         URI.create("http://www.example.com/callback/criId"));
 
         dcmawCredentialIssuerConfig =
@@ -170,13 +186,19 @@ class BuildCriOauthRequestHandlerTest {
         when(configurationService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
         when(configurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
+        when(configurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
+                .thenReturn(ADDRESS_CRI_ID);
+        when(configurationService.getCredentialIssuer(ADDRESS_CRI_ID))
+                .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_1)),
-                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_2))));
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER)));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -229,13 +251,19 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(dcmawCredentialIssuerConfig);
         when(configurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
+        when(configurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
+                .thenReturn(ADDRESS_CRI_ID);
+        when(configurationService.getCredentialIssuer(ADDRESS_CRI_ID))
+                .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_1)),
-                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_2))));
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER)));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -341,13 +369,19 @@ class BuildCriOauthRequestHandlerTest {
         when(configurationService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
         when(configurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
+        when(configurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
+                .thenReturn(ADDRESS_CRI_ID);
+        when(configurationService.getCredentialIssuer(ADDRESS_CRI_ID))
+                .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_1)),
-                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_1))));
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER)));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -381,13 +415,19 @@ class BuildCriOauthRequestHandlerTest {
         when(configurationService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
         when(configurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
+        when(configurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
+                .thenReturn(ADDRESS_CRI_ID);
+        when(configurationService.getCredentialIssuer(ADDRESS_CRI_ID))
+                .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_2)),
-                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_3))));
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER),
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_3), IPV_ISSUER)));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -419,13 +459,19 @@ class BuildCriOauthRequestHandlerTest {
         when(configurationService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
         when(configurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
+        when(configurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
+                .thenReturn(ADDRESS_CRI_ID);
+        when(configurationService.getCredentialIssuer(ADDRESS_CRI_ID))
+                .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_3)),
-                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_4))));
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_3), IPV_ISSUER),
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_4), IPV_ISSUER)));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -469,6 +515,54 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals("Jane", name2NameParts.get(1).get("value").asText());
         assertEquals("FamilyName", name2NameParts.get(2).get("type").asText());
         assertEquals("Doe", name2NameParts.get(2).get("value").asText());
+    }
+
+    @Test
+    void shouldRemoveExtraAddressClaimsAndOnlyUseValuesFromTheAddressVC() throws Exception {
+        when(configurationService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
+        when(configurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
+        when(configurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
+                .thenReturn(ADDRESS_CRI_ID);
+        when(configurationService.getCredentialIssuer(ADDRESS_CRI_ID))
+                .thenReturn(addressCredentialIssuerConfig);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER),
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_3), ADDRESS_ISSUER)));
+
+        APIGatewayProxyRequestEvent input = createRequestEvent();
+
+        input.setPathParameters(Map.of("criId", CRI_ID));
+        input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
+
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
+
+        URIBuilder redirectUri = new URIBuilder(responseBody.get("redirectUrl"));
+        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+
+        Optional<NameValuePair> request =
+                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
+
+        assertTrue(request.isPresent());
+        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+
+        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
+        JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
+
+        JsonNode sharedClaims = claimsSet.get(SHARED_CLAIMS);
+        assertEquals(3, sharedClaims.get("name").size());
+        assertEquals(2, sharedClaims.get("birthDate").size());
+        assertEquals(1, sharedClaims.get("address").size());
     }
 
     private Map<String, Map<String, String>> getResponseBodyAsMap(

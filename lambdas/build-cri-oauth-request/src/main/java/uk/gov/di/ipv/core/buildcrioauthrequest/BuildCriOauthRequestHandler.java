@@ -229,13 +229,22 @@ public class BuildCriOauthRequestHandler
     @Tracing
     private SharedClaimsResponse getSharedAttributes(String userId)
             throws HttpResponseExceptionWithErrorBody {
+        String addressCriId =
+                configurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID);
+        CredentialIssuerConfig addressCriConfig =
+                configurationService.getCredentialIssuer(addressCriId);
+
         List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
         Set<SharedClaims> sharedClaimsSet = new HashSet<>();
+        boolean hasAddressVc = false;
         for (String credential : credentials) {
             try {
+                SignedJWT signedJWT = SignedJWT.parse(credential);
+                String credentialIss = signedJWT.getJWTClaimsSet().getIssuer();
+
                 JsonNode credentialSubject =
-                        mapper.readTree(SignedJWT.parse(credential).getPayload().toString())
+                        mapper.readTree(signedJWT.getPayload().toString())
                                 .path(VC_CLAIM)
                                 .path(VC_CREDENTIAL_SUBJECT);
                 if (credentialSubject.isMissingNode()) {
@@ -243,8 +252,16 @@ public class BuildCriOauthRequestHandler
                     throw new HttpResponseExceptionWithErrorBody(
                             500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
                 }
-                sharedClaimsSet.add(
-                        mapper.readValue(credentialSubject.toString(), SharedClaims.class));
+
+                SharedClaims credentialsSharedClaims =
+                        mapper.readValue(credentialSubject.toString(), SharedClaims.class);
+                if (credentialIss.equals(addressCriConfig.getAudienceForClients())) {
+                    hasAddressVc = true;
+                    sharedClaimsSet.forEach(sharedClaims -> sharedClaims.setAddress(null));
+                } else if (hasAddressVc) {
+                    credentialsSharedClaims.setAddress(null);
+                }
+                sharedClaimsSet.add(credentialsSharedClaims);
             } catch (JsonProcessingException e) {
                 LOGGER.error("Failed to get Shared Attributes: {}", e.getMessage());
                 throw new HttpResponseExceptionWithErrorBody(
