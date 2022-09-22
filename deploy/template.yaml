@@ -1424,10 +1424,10 @@ Outputs:
   IPVCorePrivateAPIGatewayID:
     Description: Core Back Private API Gateway ID
     Export:
-      Name: !Sub "${AWS::StackName}-IPVCorePrivateAPIGatewayID"
+      Name: !Sub "IPVCorePrivateAPIGatewayID-${Environment}"
     Value: !Ref IPVCorePrivateAPI
   IPVCoreExternalAPIGatewayID:
     Description: Core Back External API Gateway ID
     Export:
-      Name: !Sub "${AWS::StackName}-IPVCoreExternalAPIGatewayID"
+      Name: !Sub "IPVCoreExternalAPIGatewayID-${Environment}"
     Value: !Ref IPVCoreExternalAPI
