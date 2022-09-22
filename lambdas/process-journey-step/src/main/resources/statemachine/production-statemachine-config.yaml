@@ -239,6 +239,8 @@ CORE_SESSION_TIMEOUT:
 
 #retrieve cri credential state
 RETRIEVE_CRI_CREDENTIAL:
+  name: RETRIEVE_CRI_CREDENTIAL
+  parent: null
   events:
     next:
       type: basic
