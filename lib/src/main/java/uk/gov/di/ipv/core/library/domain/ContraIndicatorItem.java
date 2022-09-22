@@ -13,6 +13,7 @@ public class ContraIndicatorItem implements Comparable<ContraIndicatorItem> {
     private final String issuedAt;
     private final String ci;
     private final String ttl;
+    private final String documentId;
 
     @Override
     public int compareTo(ContraIndicatorItem other) {

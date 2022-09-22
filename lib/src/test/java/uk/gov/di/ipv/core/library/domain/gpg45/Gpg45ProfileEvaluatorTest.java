@@ -638,7 +638,8 @@ class Gpg45ProfileEvaluatorTest {
                         "issuer",
                         "2022-09-14T15:03:46.795Z",
                         "X01",
-                        "123456789"));
+                        "123456789",
+                        null));
         when(mockCiStorageService.getCIs("a-user-id", "a-journey-id")).thenReturn(ciItems);
 
         evaluator.contraIndicatorsPresent(EMPTY_EVIDENCE_MAP, mockClientSessionDetails);
