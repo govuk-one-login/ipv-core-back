@@ -41,7 +41,6 @@ import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 
 import java.text.ParseException;
 
@@ -59,7 +58,6 @@ public class RetrieveCriOauthAccessTokenHandler
     private final CredentialIssuerService credentialIssuerService;
     private final ConfigurationService configurationService;
     private final AuditService auditService;
-    private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     private final IpvSessionService ipvSessionService;
     private final CiStorageService ciStorageService;
 
@@ -70,12 +68,10 @@ public class RetrieveCriOauthAccessTokenHandler
             ConfigurationService configurationService,
             IpvSessionService ipvSessionService,
             AuditService auditService,
-            VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
             CiStorageService ciStorageService) {
         this.credentialIssuerService = credentialIssuerService;
         this.configurationService = configurationService;
         this.auditService = auditService;
-        this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
         this.ipvSessionService = ipvSessionService;
         this.ciStorageService = ciStorageService;
     }
@@ -89,7 +85,6 @@ public class RetrieveCriOauthAccessTokenHandler
                         new KmsEs256Signer(configurationService.getSigningKeyId()));
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
-        this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator();
         this.ipvSessionService = new IpvSessionService(configurationService);
         this.ciStorageService = new CiStorageService(configurationService);
     }

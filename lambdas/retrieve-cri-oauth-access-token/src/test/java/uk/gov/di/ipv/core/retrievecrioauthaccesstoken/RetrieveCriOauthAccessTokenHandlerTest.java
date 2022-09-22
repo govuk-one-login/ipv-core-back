@@ -39,7 +39,6 @@ import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.ParseException;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -70,8 +69,6 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
     @Captor private ArgumentCaptor<CredentialIssuerRequestDto> requestDto;
 
-    @Captor private ArgumentCaptor<String> verifiableCredentialCaptor;
-
     @Captor private ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor;
 
     @Mock private CredentialIssuerService credentialIssuerService;
@@ -95,7 +92,6 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     private static CredentialIssuerConfig passportIssuer;
     private static ClientSessionDetailsDto clientSessionDetailsDto;
     private static CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto;
-    private static AuditEventUser auditEventUser;
     private static final String authorization_code = "bar";
     private static final String sessionId = SecureTokenHelper.generate();
     private static final String passportIssuerId = CREDENTIAL_ISSUER_ID;
@@ -130,13 +126,11 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
         credentialIssuerSessionDetailsDto =
                 new CredentialIssuerSessionDetailsDto(CREDENTIAL_ISSUER_ID, OAUTH_STATE);
-
-        auditEventUser = new AuditEventUser(TEST_USER_ID, sessionId, "test-journey-id");
     }
 
     @Test
     void shouldReceive200AndJourneyResponseOnSuccessfulRequest()
-            throws JsonProcessingException, SqsException, ParseException {
+            throws JsonProcessingException, SqsException {
 
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
@@ -250,7 +244,6 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                                 configurationService,
                                 ipvSessionService,
                                 auditService,
-                                verifiableCredentialJwtValidator,
                                 ciStorageService)
                         .handleRequest(input, context);
         assert400Response(response, ErrorResponse.MISSING_OAUTH_STATE);
@@ -279,14 +272,13 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                                 configurationService,
                                 ipvSessionService,
                                 auditService,
-                                verifiableCredentialJwtValidator,
                                 ciStorageService)
                         .handleRequest(input, context);
         assert400Response(response, ErrorResponse.INVALID_OAUTH_STATE);
     }
 
     @Test
-    void shouldReceive200ResponseCodeIfAllRequestParametersValid() throws Exception {
+    void shouldReceive200ResponseCodeIfAllRequestParametersValid() {
         BearerAccessToken accessToken = mock(BearerAccessToken.class);
 
         when(credentialIssuerService.exchangeCodeForToken(
@@ -439,7 +431,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     @Test
-    void shouldUpdateSessionWithDetailsOfVisitedCri() throws ParseException {
+    void shouldUpdateSessionWithDetailsOfVisitedCri() {
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
                         Map.of(
@@ -492,8 +484,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     @Test
-    void shouldUpdateSessionWithDetailsOfFailedCriVisitOnCredentialIssuerException()
-            throws ParseException {
+    void shouldUpdateSessionWithDetailsOfFailedCriVisitOnCredentialIssuerException() {
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
                         Map.of(
@@ -549,8 +540,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     @Test
-    void shouldUpdateSessionWithDetailsOfFailedVisitedCriOnSqsException()
-            throws ParseException, SqsException {
+    void shouldUpdateSessionWithDetailsOfFailedVisitedCriOnSqsException() throws SqsException {
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
                         Map.of(
