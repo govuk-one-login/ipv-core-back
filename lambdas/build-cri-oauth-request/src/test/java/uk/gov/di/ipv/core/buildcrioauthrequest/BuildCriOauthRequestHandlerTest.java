@@ -60,6 +60,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SE
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_3;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_4;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
@@ -411,6 +412,63 @@ class BuildCriOauthRequestHandlerTest {
 
         JsonNode sharedClaims = claimsSet.get(SHARED_CLAIMS);
         assertEquals(2, sharedClaims.get("name").size());
+    }
+
+    @Test
+    void shouldDeduplicateNamesThatAppearInDifferentVCs() throws Exception {
+        when(configurationService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
+        when(configurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_3)),
+                                generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_4))));
+
+        APIGatewayProxyRequestEvent input = createRequestEvent();
+
+        input.setPathParameters(Map.of("criId", CRI_ID));
+        input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
+
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
+
+        URIBuilder redirectUri = new URIBuilder(responseBody.get("redirectUrl"));
+        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+
+        Optional<NameValuePair> request =
+                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
+
+        assertTrue(request.isPresent());
+        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+
+        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
+        JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
+
+        JsonNode names = claimsSet.get(SHARED_CLAIMS).get("name");
+        JsonNode name1NameParts = names.get(0).get("nameParts");
+        JsonNode name2NameParts = names.get(1).get("nameParts");
+
+        assertEquals("GivenName", name1NameParts.get(0).get("type").asText());
+        assertEquals("Alice", name1NameParts.get(0).get("value").asText());
+        assertEquals("GivenName", name1NameParts.get(1).get("type").asText());
+        assertEquals("Jane", name1NameParts.get(1).get("value").asText());
+        assertEquals("GivenName", name1NameParts.get(2).get("type").asText());
+        assertEquals("Laura", name1NameParts.get(2).get("value").asText());
+        assertEquals("FamilyName", name1NameParts.get(3).get("type").asText());
+        assertEquals("Doe", name1NameParts.get(3).get("value").asText());
+        assertEquals("FamilyName", name1NameParts.get(4).get("type").asText());
+        assertEquals("Musk", name1NameParts.get(4).get("value").asText());
+
+        assertEquals("GivenName", name2NameParts.get(0).get("type").asText());
+        assertEquals("Alice", name2NameParts.get(0).get("value").asText());
+        assertEquals("GivenName", name2NameParts.get(1).get("type").asText());
+        assertEquals("Jane", name2NameParts.get(1).get("value").asText());
+        assertEquals("FamilyName", name2NameParts.get(2).get("type").asText());
+        assertEquals("Doe", name2NameParts.get(2).get("value").asText());
     }
 
     private Map<String, Map<String, String>> getResponseBodyAsMap(

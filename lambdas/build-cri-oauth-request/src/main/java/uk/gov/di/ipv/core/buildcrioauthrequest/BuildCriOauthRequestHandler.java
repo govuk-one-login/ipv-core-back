@@ -231,7 +231,7 @@ public class BuildCriOauthRequestHandler
             throws HttpResponseExceptionWithErrorBody {
         List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
-        Set<SharedClaims> sharedAttributes = new HashSet<>();
+        Set<SharedClaims> sharedClaimsSet = new HashSet<>();
         for (String credential : credentials) {
             try {
                 JsonNode credentialSubject =
@@ -243,7 +243,7 @@ public class BuildCriOauthRequestHandler
                     throw new HttpResponseExceptionWithErrorBody(
                             500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
                 }
-                sharedAttributes.add(
+                sharedClaimsSet.add(
                         mapper.readValue(credentialSubject.toString(), SharedClaims.class));
             } catch (JsonProcessingException e) {
                 LOGGER.error("Failed to get Shared Attributes: {}", e.getMessage());
@@ -255,7 +255,7 @@ public class BuildCriOauthRequestHandler
                         500, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
             }
         }
-        return SharedClaimsResponse.from(sharedAttributes);
+        return SharedClaimsResponse.from(sharedClaimsSet);
     }
 
     @Tracing
