@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.domain;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
@@ -45,5 +46,33 @@ class SharedClaimsTest {
         assertEquals(Optional.empty(), SharedClaims.empty().getName());
         assertEquals(Optional.empty(), SharedClaims.empty().getAddress());
         assertEquals(Optional.empty(), SharedClaims.empty().getBirthDate());
+    }
+
+    @Test
+    void shouldOverrideAddressAttributes() throws JsonProcessingException {
+        List<NameParts> namePartsList = Arrays.asList(new NameParts("Paul", "GivenName"));
+        Set<Name> nameSet = new HashSet<>();
+        Name names = new Name(namePartsList);
+        nameSet.add(names);
+
+        Set<Address> addressSet = new HashSet<>();
+        addressSet.add(new ObjectMapper().readValue(ADDRESS_JSON_1, Address.class));
+
+        Set<BirthDate> birthDaySet = new HashSet<>();
+        BirthDate birthDate = new BirthDate("2020-02-03");
+        birthDaySet.add(birthDate);
+
+        SharedClaims response =
+                new SharedClaims.Builder()
+                        .setName(nameSet)
+                        .setAddress(addressSet)
+                        .setBirthDate(birthDaySet)
+                        .build();
+
+        response.setAddress(null);
+
+        assertEquals(nameSet, response.getName().get());
+        assertEquals(Optional.empty(), response.getAddress());
+        assertEquals(birthDaySet, response.getBirthDate().get());
     }
 }
