@@ -102,9 +102,8 @@ public class RetrieveCriCredentialHandler
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
         } catch (HttpResponseExceptionWithErrorBody e) {
             ErrorResponse errorResponse = e.getErrorResponse();
-            LogHelper.logOauthError(
-                    "Error in credential issuer return lambda",
-                    errorResponse.getCode(),
+            LOGGER.error(
+                    "Error in credential issuer return lambda because: {}",
                     errorResponse.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, e.getErrorBody());
@@ -163,20 +162,16 @@ public class RetrieveCriCredentialHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, JOURNEY_NEXT_RESPONSE);
         } catch (CredentialIssuerException e) {
-            if (ipvSessionItem != null) {
-                updateVisitedCredentials(
-                        ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
-            }
+            updateVisitedCredentials(
+                    ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
         } catch (ParseException | JsonProcessingException | SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
 
-            if (ipvSessionItem != null) {
-                updateVisitedCredentials(
-                        ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
-            }
+            updateVisitedCredentials(
+                    ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
         } catch (com.nimbusds.oauth2.sdk.ParseException e) {
