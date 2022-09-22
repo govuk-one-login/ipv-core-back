@@ -33,6 +33,7 @@ import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
+import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -133,12 +134,19 @@ public class BuildCriOauthRequestHandler
             String userId = clientSessionDetailsDto.getUserId();
 
             String govukSigninJourneyId = clientSessionDetailsDto.getGovukSigninJourneyId();
+
+            List<VcStatusDto> currentVcStatuses = ipvSessionItem.getCurrentVcStatuses();
+
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             String oauthState = SecureTokenHelper.generate();
             JWEObject jweObject =
                     signEncryptJar(
-                            credentialIssuerConfig, userId, oauthState, govukSigninJourneyId);
+                            credentialIssuerConfig,
+                            userId,
+                            oauthState,
+                            govukSigninJourneyId,
+                            currentVcStatuses);
 
             CriResponse criResponse = getCriResponse(credentialIssuerConfig, jweObject);
 
@@ -194,9 +202,10 @@ public class BuildCriOauthRequestHandler
             CredentialIssuerConfig credentialIssuerConfig,
             String userId,
             String oauthState,
-            String govukSigninJourneyId)
+            String govukSigninJourneyId,
+            List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException {
-        SharedClaimsResponse sharedClaimsResponse = getSharedAttributes(userId);
+        SharedClaimsResponse sharedClaimsResponse = getSharedAttributes(userId, currentVcStatuses);
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
                         sharedClaimsResponse,
@@ -227,7 +236,8 @@ public class BuildCriOauthRequestHandler
     }
 
     @Tracing
-    private SharedClaimsResponse getSharedAttributes(String userId)
+    private SharedClaimsResponse getSharedAttributes(
+            String userId, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
         String addressCriId =
                 configurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID);
@@ -243,25 +253,35 @@ public class BuildCriOauthRequestHandler
                 SignedJWT signedJWT = SignedJWT.parse(credential);
                 String credentialIss = signedJWT.getJWTClaimsSet().getIssuer();
 
-                JsonNode credentialSubject =
-                        mapper.readTree(signedJWT.getPayload().toString())
-                                .path(VC_CLAIM)
-                                .path(VC_CREDENTIAL_SUBJECT);
-                if (credentialSubject.isMissingNode()) {
-                    LOGGER.error("Credential subject missing from verified credential");
-                    throw new HttpResponseExceptionWithErrorBody(
-                            500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
-                }
+                VcStatusDto vcStatus =
+                        currentVcStatuses.stream()
+                                .filter(
+                                        vcStatusDto ->
+                                                vcStatusDto.getCriIss().equals(credentialIss))
+                                .findFirst()
+                                .orElseThrow();
 
-                SharedClaims credentialsSharedClaims =
-                        mapper.readValue(credentialSubject.toString(), SharedClaims.class);
-                if (credentialIss.equals(addressCriConfig.getAudienceForClients())) {
-                    hasAddressVc = true;
-                    sharedClaimsSet.forEach(sharedClaims -> sharedClaims.setAddress(null));
-                } else if (hasAddressVc) {
-                    credentialsSharedClaims.setAddress(null);
+                if (vcStatus.getIsSuccessfulVc().equals(Boolean.TRUE)) {
+                    JsonNode credentialSubject =
+                            mapper.readTree(signedJWT.getPayload().toString())
+                                    .path(VC_CLAIM)
+                                    .path(VC_CREDENTIAL_SUBJECT);
+                    if (credentialSubject.isMissingNode()) {
+                        LOGGER.error("Credential subject missing from verified credential");
+                        throw new HttpResponseExceptionWithErrorBody(
+                                500, ErrorResponse.CREDENTIAL_SUBJECT_MISSING);
+                    }
+
+                    SharedClaims credentialsSharedClaims =
+                            mapper.readValue(credentialSubject.toString(), SharedClaims.class);
+                    if (credentialIss.equals(addressCriConfig.getAudienceForClients())) {
+                        hasAddressVc = true;
+                        sharedClaimsSet.forEach(sharedClaims -> sharedClaims.setAddress(null));
+                    } else if (hasAddressVc) {
+                        credentialsSharedClaims.setAddress(null);
+                    }
+                    sharedClaimsSet.add(credentialsSharedClaims);
                 }
-                sharedClaimsSet.add(credentialsSharedClaims);
             } catch (JsonProcessingException e) {
                 LOGGER.error("Failed to get Shared Attributes: {}", e.getMessage());
                 throw new HttpResponseExceptionWithErrorBody(
