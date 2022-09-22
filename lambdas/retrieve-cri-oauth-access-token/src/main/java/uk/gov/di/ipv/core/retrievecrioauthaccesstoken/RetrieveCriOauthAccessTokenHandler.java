@@ -136,18 +136,21 @@ public class RetrieveCriOauthAccessTokenHandler
                     credentialIssuerService.exchangeCodeForToken(
                             request, credentialIssuerConfig, apiKey);
 
-            updateIpvSessionItemAccessToken(ipvSessionItem, accessToken);
-            updateVisitedCredentials(ipvSessionItem, request.getCredentialIssuerId(), true, null);
+            setIpvSessionItemAccessToken(ipvSessionItem, accessToken);
+            setVisitedCredentials(ipvSessionItem, request.getCredentialIssuerId(), true, null);
+
+            ipvSessionService.updateIpvSession(ipvSessionItem);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, JOURNEY_NEXT_RESPONSE);
         } catch (CredentialIssuerException e) {
             if (ipvSessionItem != null) {
-                updateVisitedCredentials(
+                setVisitedCredentials(
                         ipvSessionItem,
                         request.getCredentialIssuerId(),
                         false,
                         OAuth2Error.SERVER_ERROR_CODE);
+                ipvSessionService.updateIpvSession(ipvSessionItem);
             }
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
@@ -156,11 +159,12 @@ public class RetrieveCriOauthAccessTokenHandler
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
 
             if (ipvSessionItem != null) {
-                updateVisitedCredentials(
+                setVisitedCredentials(
                         ipvSessionItem,
                         request.getCredentialIssuerId(),
                         false,
                         OAuth2Error.SERVER_ERROR_CODE);
+                ipvSessionService.updateIpvSession(ipvSessionItem);
             }
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
@@ -176,7 +180,7 @@ public class RetrieveCriOauthAccessTokenHandler
         }
     }
 
-    private void updateIpvSessionItemAccessToken(
+    private void setIpvSessionItemAccessToken(
             IpvSessionItem ipvSessionItem, BearerAccessToken accessToken) {
         CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto =
                 ipvSessionItem.getCredentialIssuerSessionDetails();
@@ -265,13 +269,12 @@ public class RetrieveCriOauthAccessTokenHandler
     }
 
     @Tracing
-    private void updateVisitedCredentials(
+    private void setVisitedCredentials(
             IpvSessionItem ipvSessionItem,
             String criId,
             boolean returnedWithVc,
             String oauthError) {
         ipvSessionItem.addVisitedCredentialIssuerDetails(
                 new VisitedCredentialIssuerDetailsDto(criId, returnedWithVc, oauthError));
-        ipvSessionService.updateIpvSession(ipvSessionItem);
     }
 }
