@@ -159,6 +159,37 @@ public interface TestFixtures {
                                     "addressCountry", "GB",
                                     "validFrom", "2018-06-23")));
 
+    Map<String, Object> CREDENTIAL_ATTRIBUTES_4 =
+            Map.of(
+                    "name",
+                    List.of(
+                            Map.of(
+                                    "nameParts",
+                                    List.of(
+                                            Map.of("value", "Alice", "type", "GivenName"),
+                                            Map.of("value", "Jane", "type", "GivenName"),
+                                            Map.of("value", "Doe", "type", "FamilyName"))),
+                            Map.of(
+                                    "nameParts",
+                                    List.of(
+                                            Map.of("value", "Alice", "type", "GivenName"),
+                                            Map.of("value", "Jane", "type", "GivenName"),
+                                            Map.of("value", "Laura", "type", "GivenName"),
+                                            Map.of("value", "Doe", "type", "FamilyName"),
+                                            Map.of("value", "Musk", "type", "FamilyName")))),
+                    "birthDate",
+                    List.of(Map.of("value", "2020-01-03")),
+                    "address",
+                    List.of(
+                            Map.of(
+                                    "buildingNumber", "11",
+                                    "streetName", "NotDowningStreet",
+                                    "dependentAddressLocality", "Eastminster",
+                                    "addressLocality", "Nodnol",
+                                    "postalCode", "SW2A 3BB",
+                                    "addressCountry", "GB",
+                                    "validFrom", "2018-06-23")));
+
     String ADDRESS_JSON_1 =
             "{\"buildingNumber\":10,\"streetName\":\"DowningStreet\",\"dependentAddressLocality\":\"Westminster\",\"addressLocality\":\"London\",\"postalCode\":\"SW1A2AA\",\"addressCountry\":\"GB\",\"validFrom\":\"2019-07-24\"}";
     String ADDRESS_JSON_2 =

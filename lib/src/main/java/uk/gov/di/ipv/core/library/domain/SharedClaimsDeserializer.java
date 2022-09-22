@@ -36,24 +36,23 @@ public class SharedClaimsDeserializer extends StdDeserializer<SharedClaims> {
             return SharedClaims.empty();
         }
 
-        JsonNode nameNode = node.get("name");
-        if (nameNode != null) {
-            Set<Name> nameList = new HashSet<>();
-            List<NameParts> namePartsList = new ArrayList<>();
+        JsonNode namesList = node.get("name");
+        if (namesList != null) {
+            Set<Name> namesSet = new HashSet<>();
 
-            for (JsonNode jo : nameNode) {
-                JsonNode nameParts = jo.get("nameParts");
+            for (JsonNode name : namesList) {
+                JsonNode nameParts = name.get("nameParts");
                 if (nameParts != null) {
+                    List<NameParts> namePartsList = new ArrayList<>();
                     nameParts.forEach(
                             namePart ->
                                     namePartsList.add(
                                             objectMapper.convertValue(namePart, NameParts.class)));
+                    namesSet.add(new Name(namePartsList));
                 }
             }
 
-            Name names = new Name(namePartsList);
-            nameList.add(names);
-            sharedAttributesBuilder.setName(nameList);
+            sharedAttributesBuilder.setName(namesSet);
         }
 
         JsonNode dateOfBirth = node.get("birthDate");
