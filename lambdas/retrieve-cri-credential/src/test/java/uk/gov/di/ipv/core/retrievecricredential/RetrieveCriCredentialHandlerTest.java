@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -62,6 +63,7 @@ class RetrieveCriCredentialHandlerTest {
     public static final String ACCESS_TOKEN = "Bearer dGVzdAo=";
     public static final String CREDENTIAL_ISSUER_ID = "PassportIssuer";
     public static final String TEST_USER_ID = "test-user-id";
+    public static final String TEST_STATE = "test-state";
 
     @Mock private Context context;
 
@@ -106,7 +108,7 @@ class RetrieveCriCredentialHandlerTest {
                         "code",
                         "test-client-id",
                         "https://example.com/redirect",
-                        "test-state",
+                        TEST_STATE,
                         TEST_USER_ID,
                         "test-journey-id",
                         false);
@@ -119,16 +121,12 @@ class RetrieveCriCredentialHandlerTest {
             throws JsonProcessingException, SqsException, ParseException {
 
         APIGatewayProxyRequestEvent input =
-                createRequestEvent(
-                        Map.of(
-                                "access_token",
-                                ACCESS_TOKEN,
-                                "credential_issuer_id",
-                                CREDENTIAL_ISSUER_ID),
-                        Map.of("ipv-session-id", testSessionId));
+                createRequestEvent(Collections.emptyMap(), Map.of("ipv-session-id", testSessionId));
 
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(ipvSessionItem.getClientSessionDetails()).thenReturn(testClientSessionDetailsDto);
+        when(ipvSessionItem.getCredentialIssuerSessionDetails())
+                .thenReturn(new CredentialIssuerSessionDetailsDto());
 
         when(credentialIssuerService.getVerifiableCredential(
                         testBearerAccessToken, testPassportIssuer, testApiKey))
@@ -156,13 +154,7 @@ class RetrieveCriCredentialHandlerTest {
     void shouldReturn500ErrorJourneyResponseIfMissingIpvSessionIdHeader()
             throws JsonProcessingException {
         APIGatewayProxyRequestEvent input =
-                createRequestEvent(
-                        Map.of(
-                                "access_token",
-                                ACCESS_TOKEN,
-                                "credential_issuer_id",
-                                CREDENTIAL_ISSUER_ID),
-                        Collections.emptyMap());
+                createRequestEvent(Collections.emptyMap(), Collections.emptyMap());
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
 
         Map<String, String> responseBody = getResponseBodyAsMap(response);
@@ -185,13 +177,7 @@ class RetrieveCriCredentialHandlerTest {
                                 ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER));
 
         APIGatewayProxyRequestEvent input =
-                createRequestEvent(
-                        Map.of(
-                                "access_token",
-                                ACCESS_TOKEN,
-                                "credential_issuer_id",
-                                CREDENTIAL_ISSUER_ID),
-                        Map.of("ipv-session-id", testSessionId));
+                createRequestEvent(Collections.emptyMap(), Map.of("ipv-session-id", testSessionId));
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
 
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
@@ -207,13 +193,7 @@ class RetrieveCriCredentialHandlerTest {
                 .thenReturn(List.of(SignedJWT.parse(SIGNED_VC_1)));
 
         APIGatewayProxyRequestEvent input =
-                createRequestEvent(
-                        Map.of(
-                                "access_token",
-                                ACCESS_TOKEN,
-                                "credential_issuer_id",
-                                CREDENTIAL_ISSUER_ID),
-                        Map.of("ipv-session-id", testSessionId));
+                createRequestEvent(Collections.emptyMap(), Map.of("ipv-session-id", testSessionId));
 
         doThrow(new SqsException("Test sqs error"))
                 .when(auditService)
@@ -241,13 +221,7 @@ class RetrieveCriCredentialHandlerTest {
                 .validate(any(), any(), any());
 
         APIGatewayProxyRequestEvent input =
-                createRequestEvent(
-                        Map.of(
-                                "access_token",
-                                ACCESS_TOKEN,
-                                "credential_issuer_id",
-                                CREDENTIAL_ISSUER_ID),
-                        Map.of("ipv-session-id", testSessionId));
+                createRequestEvent(Collections.emptyMap(), Map.of("ipv-session-id", testSessionId));
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
 
@@ -265,13 +239,7 @@ class RetrieveCriCredentialHandlerTest {
         mockServiceCallsAndSessionItem();
 
         APIGatewayProxyRequestEvent input =
-                createRequestEvent(
-                        Map.of(
-                                "access_token",
-                                ACCESS_TOKEN,
-                                "credential_issuer_id",
-                                CREDENTIAL_ISSUER_ID),
-                        Map.of("ipv-session-id", testSessionId));
+                createRequestEvent(Collections.emptyMap(), Map.of("ipv-session-id", testSessionId));
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
 
@@ -306,13 +274,7 @@ class RetrieveCriCredentialHandlerTest {
         mockServiceCallsAndSessionItem();
 
         APIGatewayProxyRequestEvent input =
-                createRequestEvent(
-                        Map.of(
-                                "access_token",
-                                ACCESS_TOKEN,
-                                "credential_issuer_id",
-                                CREDENTIAL_ISSUER_ID),
-                        Map.of("ipv-session-id", testSessionId));
+                createRequestEvent(Collections.emptyMap(), Map.of("ipv-session-id", testSessionId));
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
 
@@ -344,6 +306,11 @@ class RetrieveCriCredentialHandlerTest {
         when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(ipvSessionItem.getClientSessionDetails()).thenReturn(testClientSessionDetailsDto);
+        when(ipvSessionItem.getCredentialIssuerSessionDetails())
+                .thenReturn(
+                        new CredentialIssuerSessionDetailsDto(
+                                CREDENTIAL_ISSUER_ID, TEST_STATE, ACCESS_TOKEN));
+        when(ipvSessionItem.getIpvSessionId()).thenReturn(testSessionId);
     }
 
     private Map<String, String> getResponseBodyAsMap(APIGatewayProxyResponseEvent response)
