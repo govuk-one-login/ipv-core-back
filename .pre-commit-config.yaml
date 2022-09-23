@@ -9,12 +9,12 @@ repos:
         args: [ --allow-missing-credentials ]
     -   id: detect-private-key
 -   repo: https://github.com/awslabs/cfn-python-lint
-    rev: v0.65.1 # The version of cfn-lint to use
+    rev: v0.61.0 # The version of cfn-lint to use
     hooks:
     -   id: cfn-python-lint
         files: .template\.yaml$
 - repo: https://github.com/bridgecrewio/checkov.git
-  rev: '2.1.226'
+  rev: '2.0.1211'
   hooks:
   - id: checkov
     verbose: true
