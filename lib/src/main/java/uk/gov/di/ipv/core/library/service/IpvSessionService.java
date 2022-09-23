@@ -23,6 +23,7 @@ public class IpvSessionService {
     private static final String INITIAL_IPV_JOURNEY_STATE = "INITIAL_IPV_JOURNEY";
     private static final String FAILED_CLIENT_JAR_STATE = "FAILED_CLIENT_JAR";
     private static final String DEBUG_PAGE_STATE = "DEBUG_PAGE";
+    private static final String VOT_P0 = "VOT_P0";
 
     private final DataStore<IpvSessionItem> dataStore;
     private final ConfigurationService configurationService;
@@ -83,6 +84,8 @@ public class IpvSessionService {
         ipvSessionItem.setUserState(userState);
 
         ipvSessionItem.setVisitedCredentialIssuerDetails(Collections.emptyList());
+
+        ipvSessionItem.setVot(VOT_P0);
 
         if (errorObject != null) {
             ipvSessionItem.setErrorCode(errorObject.getCode());

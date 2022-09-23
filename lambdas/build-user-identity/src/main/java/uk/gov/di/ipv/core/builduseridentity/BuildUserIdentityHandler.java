@@ -117,7 +117,8 @@ public class BuildUserIdentityHandler
                             userId, ipvSessionId, clientSessionDetails.getGovukSigninJourneyId());
 
             String sub = userId;
-            UserIdentity userIdentity = userIdentityService.generateUserIdentity(userId, sub);
+            UserIdentity userIdentity =
+                    userIdentityService.generateUserIdentity(userId, sub, ipvSessionItem.getVot());
 
             auditService.sendAuditEvent(
                     new AuditEvent(

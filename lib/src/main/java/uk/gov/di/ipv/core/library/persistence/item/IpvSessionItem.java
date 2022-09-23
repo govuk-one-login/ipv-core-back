@@ -30,6 +30,7 @@ public class IpvSessionItem implements DynamodbItem {
     private String errorDescription;
     private List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails;
     private List<VcStatusDto> currentVcStatuses;
+    private String vot;
     private long ttl;
 
     @DynamoDbPartitionKey
@@ -148,6 +149,14 @@ public class IpvSessionItem implements DynamodbItem {
 
     public void setCurrentVcStatuses(List<VcStatusDto> currentVcStatusDtos) {
         this.currentVcStatuses = currentVcStatusDtos;
+    }
+
+    public String getVot() {
+        return vot;
+    }
+
+    public void setVot(String vot) {
+        this.vot = vot;
     }
 
     public long getTtl() {
