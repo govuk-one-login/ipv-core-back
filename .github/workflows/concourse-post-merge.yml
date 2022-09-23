@@ -50,11 +50,11 @@ jobs:
           template: ./deploy/template.yaml
           profile: ${{ secrets.SIGNING_PROFILE_NAME }}
 
-      - name: Integration tests
-        env:
-          IPV_SESSIONS_TABLE_NAME: sessions-build
-          ENVIRONMENT: build
-        run: ./gradlew intTest
+#      - name: Integration tests
+#        env:
+#          IPV_SESSIONS_TABLE_NAME: sessions-build
+#          ENVIRONMENT: build
+#        run: ./gradlew intTest
 
       - name: SAM Validate
         working-directory: ./deploy
