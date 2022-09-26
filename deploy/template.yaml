@@ -1332,9 +1332,9 @@ Resources:
         AttributeName: "ttl"
         Enabled: true
       SSESpecification:
-        # checkov:skip=CKV_AWS_119: Implement Customer Managed Keys in PYIC-1391
         SSEEnabled: true
         SSEType: KMS
+        KMSMasterKeyId: !GetAtt DynamoDBKmsKey.Arn
 
   SessionsTable:
     Type: AWS::DynamoDB::Table
@@ -1369,9 +1369,9 @@ Resources:
         AttributeName: "ttl"
         Enabled: true
       SSESpecification:
-        # checkov:skip=CKV_AWS_119: Implement Customer Managed Keys in PYIC-1391
         SSEEnabled: true
         SSEType: KMS
+        KMSMasterKeyId: !GetAtt DynamoDBKmsKey.Arn
 
   ClientAuthJwtIdsTable:
     Type: AWS::DynamoDB::Table
@@ -1389,9 +1389,37 @@ Resources:
         AttributeName: "ttl"
         Enabled: true
       SSESpecification:
-        # checkov:skip=CKV_AWS_119: Implement Customer Managed Keys in PYIC-1391
         SSEEnabled: true
         SSEType: KMS
+        KMSMasterKeyId: !GetAtt DynamoDBKmsKey.Arn
+
+  DynamoDBKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - kms:*
+            Resource: "*"
+          - Effect: Allow
+            Principal:
+              Service: "dynamodb.amazonaws.com"
+            Action:
+              - "kms:Encrypt*"
+              - "kms:Decrypt*"
+              - "kms:ReEncrypt*"
+              - "kms:GenerateDataKey*"
+              - "kms:Describe*"
+            Resource: "*"
+            Condition:
+              StringEquals:
+                "kms:CallerAccount": !Sub "${AWS::AccountId}"
+                "kms:ViaService": "dynamodb.amazonaws.com"
 
   LoggingKmsKey:
     Type: AWS::KMS::Key
