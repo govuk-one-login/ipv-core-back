@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class IpvSessionServiceTest {
     private static final String INITIAL_IPV_JOURNEY_STATE = "INITIAL_IPV_JOURNEY";
-    private static final String DEBUG_PAGE_STATE = "DEBUG_PAGE";
+    private static final String DEBUG_EVALUATE_GPG45_SCORES_STATE = "DEBUG_EVALUATE_GPG45_SCORES";
     private static final String FAILED_CLIENT_JAR_STATE = "FAILED_CLIENT_JAR";
     private static final String IPV_SUCCESS_PAGE_STATE = "IPV_SUCCESS_PAGE";
 
@@ -142,7 +142,9 @@ class IpvSessionServiceTest {
         assertEquals(
                 ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
                 ipvSessionItem.getIpvSessionId());
-        assertEquals(DEBUG_PAGE_STATE, ipvSessionItemArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                DEBUG_EVALUATE_GPG45_SCORES_STATE,
+                ipvSessionItemArgumentCaptor.getValue().getUserState());
     }
 
     @Test
