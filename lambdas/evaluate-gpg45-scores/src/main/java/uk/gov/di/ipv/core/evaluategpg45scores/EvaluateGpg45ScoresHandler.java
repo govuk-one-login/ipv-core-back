@@ -54,6 +54,7 @@ public class EvaluateGpg45ScoresHandler
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
     public static final JourneyResponse JOURNEY_END = new JourneyResponse("/journey/end");
     public static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
+    public static final String VOT_P2 = "P2";
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson gson = new Gson();
     private final UserIdentityService userIdentityService;
@@ -111,13 +112,19 @@ public class EvaluateGpg45ScoresHandler
                     gpg45ProfileEvaluator.contraIndicatorsPresent(
                             evidenceMap, clientSessionDetailsDto);
             if (contraIndicatorErrorJourneyResponse.isEmpty()) {
-                updateSuccessfulVcStatuses(ipvSessionItem, credentials);
-
-                JourneyResponse journeyResponse =
+                boolean credentialsSatisfyProfile =
                         gpg45ProfileEvaluator.credentialsSatisfyAnyProfile(
-                                        evidenceMap, ACCEPTED_PROFILES)
-                                ? JOURNEY_END
-                                : JOURNEY_NEXT;
+                                evidenceMap, ACCEPTED_PROFILES);
+                JourneyResponse journeyResponse;
+                if (credentialsSatisfyProfile) {
+                    ipvSessionItem.setVot(VOT_P2);
+
+                    journeyResponse = JOURNEY_END;
+                } else {
+                    journeyResponse = JOURNEY_NEXT;
+                }
+
+                updateSuccessfulVcStatuses(ipvSessionItem, credentials);
 
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatus.SC_OK, journeyResponse);

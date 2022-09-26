@@ -69,7 +69,7 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub", "P2");
 
         assertEquals(SIGNED_VC_1, credentials.getVcs().get(0));
         assertEquals(SIGNED_VC_2, credentials.getVcs().get(1));
@@ -210,26 +210,9 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub", "P2");
 
         assertEquals(VectorOfTrust.P2.toString(), credentials.getVot());
-    }
-
-    @Test
-    void shouldSetVotClaimToP0OnMissingRequiredVC() throws HttpResponseExceptionWithErrorBody {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
-                List.of(
-                        createUserIssuedCredentialsItem(
-                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
-                        createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
-
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
-
-        UserIdentity credentials =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
-
-        assertEquals(VectorOfTrust.P0.toString(), credentials.getVot());
     }
 
     @Test
@@ -248,7 +231,7 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub", "P2");
 
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
@@ -270,7 +253,7 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub", "P0");
 
         assertNull(credentials.getIdentityClaim());
     }
@@ -294,7 +277,9 @@ class UserIdentityServiceTest {
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> userIdentityService.generateUserIdentity("user-id-1", "test-sub"));
+                        () ->
+                                userIdentityService.generateUserIdentity(
+                                        "user-id-1", "test-sub", "P2"));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -324,7 +309,9 @@ class UserIdentityServiceTest {
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> userIdentityService.generateUserIdentity("user-id-1", "test-sub"));
+                        () ->
+                                userIdentityService.generateUserIdentity(
+                                        "user-id-1", "test-sub", "P2"));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -351,7 +338,7 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub", "P2");
 
         JsonNode passportClaim = credentials.getPassportClaim();
 
@@ -371,7 +358,7 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub", "P0");
 
         assertNull(credentials.getPassportClaim());
     }
@@ -397,7 +384,9 @@ class UserIdentityServiceTest {
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> userIdentityService.generateUserIdentity("user-id-1", "test-sub"));
+                        () ->
+                                userIdentityService.generateUserIdentity(
+                                        "user-id-1", "test-sub", "P2"));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -413,28 +402,9 @@ class UserIdentityServiceTest {
         when(mockConfigurationService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub", "P2");
 
         assertEquals("test-sub", credentials.getSub());
-    }
-
-    @Test
-    void shouldSetVotClaimToP0OnFailedIdentityCheck() throws HttpResponseExceptionWithErrorBody {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
-                List.of(
-                        createUserIssuedCredentialsItem(
-                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
-                        createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
-                        createUserIssuedCredentialsItem(
-                                "user-id-1", "kbv", SIGNED_VC_4, LocalDateTime.now()));
-
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
-
-        UserIdentity credentials =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
-
-        assertEquals(VectorOfTrust.P0.toString(), credentials.getVot());
     }
 
     @Test
@@ -442,7 +412,7 @@ class UserIdentityServiceTest {
         when(mockConfigurationService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub", "P2");
 
         assertEquals("mock-vtm-claim", credentials.getVtm());
     }
@@ -464,7 +434,7 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity userIdentity =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub", "P2");
 
         JsonNode userIdentityJsonNode =
                 objectMapper.readTree(objectMapper.writeValueAsString(userIdentity));
@@ -502,7 +472,9 @@ class UserIdentityServiceTest {
         HttpResponseExceptionWithErrorBody thrownException =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> userIdentityService.generateUserIdentity("user-id-1", "test-sub"));
+                        () ->
+                                userIdentityService.generateUserIdentity(
+                                        "user-id-1", "test-sub", "P2"));
 
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
@@ -531,7 +503,9 @@ class UserIdentityServiceTest {
         HttpResponseExceptionWithErrorBody thrownException =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> userIdentityService.generateUserIdentity("user-id-1", "test-sub"));
+                        () ->
+                                userIdentityService.generateUserIdentity(
+                                        "user-id-1", "test-sub", "P2"));
 
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
@@ -556,7 +530,7 @@ class UserIdentityServiceTest {
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub");
+                userIdentityService.generateUserIdentity("user-id-1", "test-sub", "P0");
 
         assertNull(credentials.getAddressClaim());
     }

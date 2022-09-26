@@ -284,7 +284,6 @@ class EvaluateGpg45ScoreHandlerTest {
 
     @Test
     void shouldReturn500IfCredentialOfUnknownType() throws Exception {
-        when(configurationService.getCredentialIssuer(any())).thenReturn(addressConfig);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.parseGpg45ScoresFromCredentials(CREDENTIALS))

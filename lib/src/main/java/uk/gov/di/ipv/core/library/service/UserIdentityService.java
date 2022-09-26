@@ -44,17 +44,11 @@ public class UserIdentityService {
     private static final String BIRTH_DATE_PROPERTY_NAME = "birthDate";
     private static final String ADDRESS_PROPERTY_NAME = "address";
     private static final String PASSPORT_PROPERTY_NAME = "passport";
-    private static final String GPG_45_VALIDITY_PROPERTY_NAME = "validityScore";
-    private static final String GPG_45_FRAUD_PROPERTY_NAME = "identityFraudScore";
-    private static final String GPG_45_VERIFICATION_PROPERTY_NAME = "verificationScore";
-    private static final int GPG_45_M1A_VALIDITY_SCORE = 2;
-    private static final int GPG_45_M1A_FRAUD_SCORE = 1;
-    private static final int GPG_45_M1A_VERIFICATION_SCORE = 2;
     private static final List<String> ADDRESS_CRI_TYPES =
             List.of(ADDRESS_PROPERTY_NAME, "stubAddress");
     private static final List<String> PASSPORT_CRI_TYPES = List.of("ukPassport", "stubUkPassport");
-    private static final List<String> FRAUD_CRI_TYPES = List.of("fraud", "stubFraud");
-    private static final List<String> KBV_CRI_TYPES = List.of("kbv", "stubKbv");
+    private static final List<String> EVIDENCE_CRI_TYPES =
+            List.of("ukPassport", "stubUkPassport", "dcmaw", "stubDcmaw");
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final ConfigurationService configurationService;
@@ -106,7 +100,7 @@ public class UserIdentityService {
         return dataStore.getItem(userId, criId);
     }
 
-    public UserIdentity generateUserIdentity(String userId, String sub)
+    public UserIdentity generateUserIdentity(String userId, String sub, String vot)
             throws HttpResponseExceptionWithErrorBody {
         List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(userId);
 
@@ -115,17 +109,20 @@ public class UserIdentityService {
                         .map(UserIssuedCredentialsItem::getCredential)
                         .collect(Collectors.toList());
 
-        String vot = generateVectorOfTrustClaim(credentialIssuerItems);
-
         String vtm = configurationService.getSsmParameter(CORE_VTM_CLAIM);
 
         UserIdentity.Builder userIdentityBuilder =
                 new UserIdentity.Builder().setVcs(vcJwts).setSub(sub).setVot(vot).setVtm(vtm);
 
         if (vot.equals(VectorOfTrust.P2.toString())) {
-            userIdentityBuilder.setIdentityClaim(generateIdentityClaim(credentialIssuerItems));
-            userIdentityBuilder.setAddressClaim(generateAddressClaim(credentialIssuerItems));
-            userIdentityBuilder.setPassportClaim(generatePassportClaim(credentialIssuerItems));
+            Optional<IdentityClaim> identityClaim = generateIdentityClaim(credentialIssuerItems);
+            identityClaim.ifPresent(userIdentityBuilder::setIdentityClaim);
+
+            Optional<JsonNode> addressClaim = generateAddressClaim(credentialIssuerItems);
+            addressClaim.ifPresent(userIdentityBuilder::setAddressClaim);
+
+            Optional<JsonNode> passportClaim = generatePassportClaim(credentialIssuerItems);
+            passportClaim.ifPresent(userIdentityBuilder::setPassportClaim);
         }
 
         return userIdentityBuilder.build();
@@ -167,54 +164,11 @@ public class UserIdentityService {
         return userIssuedDebugCredentials;
     }
 
-    private String generateVectorOfTrustClaim(
-            List<UserIssuedCredentialsItem> credentialIssuerItems) {
-        Optional<Boolean> validPassport = Optional.empty();
-        Optional<Boolean> validFraud = Optional.empty();
-        Optional<Boolean> validKbv = Optional.empty();
-
-        for (UserIssuedCredentialsItem item : credentialIssuerItems) {
-            try {
-                JWTClaimsSet jwtClaimsSet = SignedJWT.parse(item.getCredential()).getJWTClaimsSet();
-                JSONObject vcClaim = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
-                JSONArray evidenceArray = ((JSONArray) vcClaim.get(VC_EVIDENCE));
-
-                if (PASSPORT_CRI_TYPES.contains(item.getCredentialIssuer())) {
-                    validPassport =
-                            isValidScore(
-                                    evidenceArray,
-                                    GPG_45_VALIDITY_PROPERTY_NAME,
-                                    GPG_45_M1A_VALIDITY_SCORE);
-                }
-
-                if (FRAUD_CRI_TYPES.contains(item.getCredentialIssuer())) {
-                    validFraud =
-                            isValidScore(
-                                    evidenceArray,
-                                    GPG_45_FRAUD_PROPERTY_NAME,
-                                    GPG_45_M1A_FRAUD_SCORE);
-                }
-
-                if (KBV_CRI_TYPES.contains(item.getCredentialIssuer())) {
-                    validKbv =
-                            isValidScore(
-                                    evidenceArray,
-                                    GPG_45_VERIFICATION_PROPERTY_NAME,
-                                    GPG_45_M1A_VERIFICATION_SCORE);
-                }
-            } catch (ParseException e) {
-                LOGGER.warn("Failed to parse VC JWT");
-            }
-        }
-
-        return getVectorOfTrustValue(validPassport, validFraud, validKbv);
-    }
-
-    private IdentityClaim generateIdentityClaim(
+    private Optional<IdentityClaim> generateIdentityClaim(
             List<UserIssuedCredentialsItem> credentialIssuerItems)
             throws HttpResponseExceptionWithErrorBody {
         for (UserIssuedCredentialsItem item : credentialIssuerItems) {
-            if (PASSPORT_CRI_TYPES.contains(item.getCredentialIssuer())) {
+            if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())) {
                 try {
                     JsonNode nameNode =
                             objectMapper
@@ -261,7 +215,7 @@ public class UserIdentityService {
                                             .getTypeFactory()
                                             .constructCollectionType(List.class, BirthDate.class));
 
-                    return new IdentityClaim(names, birthDates);
+                    return Optional.of(new IdentityClaim(names, birthDates));
                 } catch (ParseException | JsonProcessingException e) {
                     LOGGER.error("Failed to parse VC JWT because: {}", e.getMessage());
                     throw new HttpResponseExceptionWithErrorBody(
@@ -269,118 +223,92 @@ public class UserIdentityService {
                 }
             }
         }
-        throw new HttpResponseExceptionWithErrorBody(
-                500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+        LOGGER.info("Failed to generate identity claim");
+        return Optional.empty();
     }
 
-    private JsonNode generateAddressClaim(List<UserIssuedCredentialsItem> credentialIssuerItems)
+    private Optional<JsonNode> generateAddressClaim(
+            List<UserIssuedCredentialsItem> credentialIssuerItems)
             throws HttpResponseExceptionWithErrorBody {
-        UserIssuedCredentialsItem addressCredentialItem =
+        Optional<UserIssuedCredentialsItem> addressCredentialItem =
                 credentialIssuerItems.stream()
                         .filter(
                                 credential ->
                                         ADDRESS_CRI_TYPES.contains(
                                                 credential.getCredentialIssuer()))
-                        .findFirst()
-                        .orElseThrow(
-                                () -> {
-                                    LOGGER.error("Failed to find Address CRI credential");
-                                    return new HttpResponseExceptionWithErrorBody(
-                                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                                            ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
-                                });
+                        .findFirst();
 
-        JsonNode addressNode;
-        try {
-            addressNode =
-                    objectMapper
-                            .readTree(
-                                    SignedJWT.parse(addressCredentialItem.getCredential())
-                                            .getPayload()
-                                            .toString())
-                            .path(VC_CLAIM)
-                            .path(VC_CREDENTIAL_SUBJECT)
-                            .path(ADDRESS_PROPERTY_NAME);
-            if (addressNode.isMissingNode()) {
-                LOGGER.error("Address property is missing from address VC");
+        if (addressCredentialItem.isPresent()) {
+            JsonNode addressNode;
+            try {
+                addressNode =
+                        objectMapper
+                                .readTree(
+                                        SignedJWT.parse(addressCredentialItem.get().getCredential())
+                                                .getPayload()
+                                                .toString())
+                                .path(VC_CLAIM)
+                                .path(VC_CREDENTIAL_SUBJECT)
+                                .path(ADDRESS_PROPERTY_NAME);
+                if (addressNode.isMissingNode()) {
+                    LOGGER.error("Address property is missing from address VC");
+                    throw new HttpResponseExceptionWithErrorBody(
+                            500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
+                }
+            } catch (JsonProcessingException | ParseException e) {
+                LOGGER.error("Error while parsing Address CRI credential: '{}'", e.getMessage());
                 throw new HttpResponseExceptionWithErrorBody(
-                        500, ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
+                        HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                        ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
             }
-        } catch (JsonProcessingException | ParseException e) {
-            LOGGER.error("Error while parsing Address CRI credential: '{}'", e.getMessage());
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_GENERATE_ADDRESS_CLAIM);
+            return Optional.of(addressNode);
         }
-
-        return addressNode;
+        LOGGER.error("Failed to find Address CRI credential");
+        return Optional.empty();
     }
 
-    private JsonNode generatePassportClaim(List<UserIssuedCredentialsItem> credentialIssuerItems)
+    private Optional<JsonNode> generatePassportClaim(
+            List<UserIssuedCredentialsItem> credentialIssuerItems)
             throws HttpResponseExceptionWithErrorBody {
-        UserIssuedCredentialsItem passportCredentialItem =
+        Optional<UserIssuedCredentialsItem> passportCredentialItem =
                 credentialIssuerItems.stream()
                         .filter(
                                 credential ->
                                         PASSPORT_CRI_TYPES.contains(
                                                 credential.getCredentialIssuer()))
-                        .findFirst()
-                        .orElseThrow(
-                                () -> {
-                                    LOGGER.error("Failed to find Passport CRI credential");
-                                    return new HttpResponseExceptionWithErrorBody(
-                                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                                            ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
-                                });
+                        .findFirst();
 
-        JsonNode passportNode;
-        try {
-            passportNode =
-                    objectMapper
-                            .readTree(
-                                    SignedJWT.parse(passportCredentialItem.getCredential())
-                                            .getPayload()
-                                            .toString())
-                            .path(VC_CLAIM)
-                            .path(VC_CREDENTIAL_SUBJECT)
-                            .path(PASSPORT_PROPERTY_NAME);
-            if (passportNode.isMissingNode()) {
-                LOGGER.error("Passport property is missing from passport VC");
+        if (passportCredentialItem.isPresent()) {
+            JsonNode passportNode;
+            try {
+                passportNode =
+                        objectMapper
+                                .readTree(
+                                        SignedJWT.parse(
+                                                        passportCredentialItem
+                                                                .get()
+                                                                .getCredential())
+                                                .getPayload()
+                                                .toString())
+                                .path(VC_CLAIM)
+                                .path(VC_CREDENTIAL_SUBJECT)
+                                .path(PASSPORT_PROPERTY_NAME);
+                if (passportNode.isMissingNode()) {
+                    LOGGER.error("Passport property is missing from passport VC");
+                    throw new HttpResponseExceptionWithErrorBody(
+                            500, ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
+                }
+            } catch (JsonProcessingException | ParseException e) {
+                LOGGER.error("Error while parsing Passport CRI credential: '{}'", e.getMessage());
                 throw new HttpResponseExceptionWithErrorBody(
-                        500, ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
+                        HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                        ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
             }
-        } catch (JsonProcessingException | ParseException e) {
-            LOGGER.error("Error while parsing Passport CRI credential: '{}'", e.getMessage());
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
+            return Optional.of(passportNode);
         }
-        return passportNode;
-    }
 
-    private Optional<Boolean> isValidScore(
-            JSONArray evidenceArray, String property, int scoreValue) {
-        Long gpg45ScoreValue = ((Map<String, Long>) evidenceArray.get(0)).get(property);
-        if (gpg45ScoreValue != null) {
-            return Optional.of(gpg45ScoreValue.intValue() >= scoreValue);
-        }
+        LOGGER.error("Failed to find Passport CRI credential");
         return Optional.empty();
-    }
-
-    private String getVectorOfTrustValue(
-            Optional<Boolean> validPassport,
-            Optional<Boolean> validFraud,
-            Optional<Boolean> validKbv) {
-        if (validPassport.isPresent()
-                && Boolean.TRUE.equals(validPassport.get())
-                && validFraud.isPresent()
-                && Boolean.TRUE.equals(validFraud.get())
-                && validKbv.isPresent()
-                && Boolean.TRUE.equals(validKbv.get())) {
-            return VectorOfTrust.P2.toString();
-        } else {
-            return VectorOfTrust.P0.toString();
-        }
     }
 
     private boolean isNotPopulatedJsonArray(Object input) {
