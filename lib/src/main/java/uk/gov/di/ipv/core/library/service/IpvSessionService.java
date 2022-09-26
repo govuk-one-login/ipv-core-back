@@ -22,7 +22,7 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_SESSIONS
 public class IpvSessionService {
     private static final String INITIAL_IPV_JOURNEY_STATE = "INITIAL_IPV_JOURNEY";
     private static final String FAILED_CLIENT_JAR_STATE = "FAILED_CLIENT_JAR";
-    private static final String DEBUG_PAGE_STATE = "DEBUG_PAGE";
+    private static final String DEBUG_EVALUATE_GPG45_SCORES_STATE = "DEBUG_EVALUATE_GPG45_SCORES";
     private static final String VOT_P0 = "VOT_P0";
 
     private final DataStore<IpvSessionItem> dataStore;
@@ -133,7 +133,7 @@ public class IpvSessionService {
         if (errorObject != null) {
             return FAILED_CLIENT_JAR_STATE;
         } else {
-            return isDebugJourney ? DEBUG_PAGE_STATE : INITIAL_IPV_JOURNEY_STATE;
+            return isDebugJourney ? DEBUG_EVALUATE_GPG45_SCORES_STATE : INITIAL_IPV_JOURNEY_STATE;
         }
     }
 
