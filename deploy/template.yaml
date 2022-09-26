@@ -942,6 +942,8 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub get-credential-issuer-config-${Environment}
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
       Policies:
+        - KMSDecryptPolicy:
+            KeyId: !Ref DynamoDBKmsKey
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
