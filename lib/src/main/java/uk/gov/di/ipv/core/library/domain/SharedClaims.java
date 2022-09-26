@@ -42,6 +42,10 @@ public class SharedClaims {
         return Optional.ofNullable(address);
     }
 
+    public void setAddress(Set<Address> address) {
+        this.address = address;
+    }
+
     public static class Builder {
 
         private Set<Name> name;

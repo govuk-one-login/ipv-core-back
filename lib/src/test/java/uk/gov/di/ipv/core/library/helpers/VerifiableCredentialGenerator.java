@@ -33,13 +33,13 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.W3
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 
 public class VerifiableCredentialGenerator {
-    public static String generateVerifiableCredential(Map<String, Object> vcClaim)
+    public static String generateVerifiableCredential(Map<String, Object> vcClaim, String issuer)
             throws Exception {
         Instant now = Instant.now();
         JWTClaimsSet claimsSet =
                 new JWTClaimsSet.Builder()
                         .claim(SUBJECT, "https://subject.example.com")
-                        .claim(ISSUER, "https://issuer.example.com")
+                        .claim(ISSUER, issuer)
                         .claim(NOT_BEFORE, now.getEpochSecond())
                         .claim(EXPIRATION_TIME, now.plusSeconds(600).getEpochSecond())
                         .claim(VC_CLAIM, vcClaim)

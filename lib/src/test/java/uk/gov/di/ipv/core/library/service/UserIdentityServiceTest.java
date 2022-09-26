@@ -129,12 +129,14 @@ class UserIdentityServiceTest {
                         createUserIssuedCredentialsItem(
                                 "user-id-1",
                                 "ukPassport",
-                                generateVerifiableCredential(credentialVcClaim),
+                                generateVerifiableCredential(
+                                        credentialVcClaim, "https://issuer.example.com"),
                                 LocalDateTime.parse("2022-01-25T12:28:56.414849")),
                         createUserIssuedCredentialsItem(
                                 "user-id-1",
                                 "fraud",
-                                generateVerifiableCredential(credentialVcClaim),
+                                generateVerifiableCredential(
+                                        credentialVcClaim, "https://issuer.example.com"),
                                 LocalDateTime.parse("2022-01-25T12:28:56.414849")));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
@@ -180,7 +182,8 @@ class UserIdentityServiceTest {
                         createUserIssuedCredentialsItem(
                                 "user-id-1",
                                 "ukPassport",
-                                generateVerifiableCredential(credentialVcClaim),
+                                generateVerifiableCredential(
+                                        credentialVcClaim, "https://issuer.example.com"),
                                 LocalDateTime.parse("2022-01-25T12:28:56.414849")));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
