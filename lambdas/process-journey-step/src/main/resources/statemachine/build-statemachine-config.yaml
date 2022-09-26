@@ -265,10 +265,23 @@ DEBUG_PAGE:
     next:
       type: basic
       name: next
+      targetState: DEBUG_RETRIEVE_CRI_CREDENTIAL
+        response:
+          type: journey
+          journeyStepId: /journey/cri/credential
+
+DEBUG_RETRIEVE_CRI_CREDENTIAL:
+  name: DEBUG_RETRIEVE_CRI_CREDENTIAL
+  parent: null
+  events:
+    next:
+      type: basic
+      name: next
       targetState: DEBUG_EVALUATE_GPG45_SCORES
       response:
         type: journey
         journeyStepId: /journey/evaluate-gpg45-scores
+
 DEBUG_EVALUATE_GPG45_SCORES:
   name: DEBUG_EVALUATE_GPG45_SCORES
   parent: null

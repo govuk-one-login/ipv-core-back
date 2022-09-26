@@ -58,6 +58,8 @@ class ProcessJourneyStepHandlerTest {
     private static final String PRE_KBV_TRANSITION_PAGE_STATE = "PRE_KBV_TRANSITION_PAGE";
     private static final String IPV_SUCCESS_PAGE_STATE = "IPV_SUCCESS_PAGE";
     private static final String DEBUG_PAGE_STATE = "DEBUG_PAGE";
+    private static final String DEBUG_RETRIEVE_CRI_CREDENTIAL_STATE =
+            "DEBUG_RETRIEVE_CRI_CREDENTIAL";
     private static final String DEBUG_EVALUATE_GPG45_SCORES = "DEBUG_EVALUATE_GPG45_SCORES";
     private static final String PYI_NO_MATCH_STATE = "PYI_NO_MATCH";
     private static final String PYI_KBV_FAIL_STATE = "PYI_KBV_FAIL";
@@ -818,7 +820,7 @@ class ProcessJourneyStepHandlerTest {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
-        ipvSessionItem.setUserState(DEBUG_PAGE_STATE);
+        ipvSessionItem.setUserState(DEBUG_RETRIEVE_CRI_CREDENTIAL_STATE);
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
