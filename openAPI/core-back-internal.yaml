@@ -134,12 +134,12 @@ paths:
             responseTemplates:
               application/json: |
                 #set ($bodyObj = $util.parseJson($input.body))
-                
+
                 #if ($bodyObj.status == "SUCCEEDED")
                   #set($lambdaOutput = $util.parseJson($bodyObj.output))
                   #set($context.responseOverride.status = $lambdaOutput.statusCode)
                   $lambdaOutput.body
-                
+
                 #elseif ($bodyObj.status == "FAILED")
                   #set($context.responseOverride.status = 500)
                   {
