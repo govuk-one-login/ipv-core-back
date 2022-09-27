@@ -881,8 +881,6 @@ Resources:
             ParameterName: !Sub ${Environment}/core/self/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/credentialIssuers
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
