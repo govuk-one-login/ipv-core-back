@@ -118,7 +118,11 @@ public class BuildUserIdentityHandler
 
             String sub = userId;
             UserIdentity userIdentity =
-                    userIdentityService.generateUserIdentity(userId, sub, ipvSessionItem.getVot());
+                    userIdentityService.generateUserIdentity(
+                            userId,
+                            sub,
+                            ipvSessionItem.getVot(),
+                            ipvSessionItem.getCurrentVcStatuses());
 
             auditService.sendAuditEvent(
                     new AuditEvent(

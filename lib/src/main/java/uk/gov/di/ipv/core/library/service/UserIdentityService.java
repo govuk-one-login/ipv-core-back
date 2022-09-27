@@ -20,6 +20,8 @@ import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.UserIssuedDebugCredential;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -100,7 +102,8 @@ public class UserIdentityService {
         return dataStore.getItem(userId, criId);
     }
 
-    public UserIdentity generateUserIdentity(String userId, String sub, String vot)
+    public UserIdentity generateUserIdentity(
+            String userId, String sub, String vot, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
         List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(userId);
 
@@ -115,7 +118,8 @@ public class UserIdentityService {
                 new UserIdentity.Builder().setVcs(vcJwts).setSub(sub).setVot(vot).setVtm(vtm);
 
         if (vot.equals(VectorOfTrust.P2.toString())) {
-            Optional<IdentityClaim> identityClaim = generateIdentityClaim(credentialIssuerItems);
+            Optional<IdentityClaim> identityClaim =
+                    generateIdentityClaim(credentialIssuerItems, currentVcStatuses);
             identityClaim.ifPresent(userIdentityBuilder::setIdentityClaim);
 
             Optional<JsonNode> addressClaim = generateAddressClaim(credentialIssuerItems);
@@ -165,10 +169,15 @@ public class UserIdentityService {
     }
 
     private Optional<IdentityClaim> generateIdentityClaim(
-            List<UserIssuedCredentialsItem> credentialIssuerItems)
+            List<UserIssuedCredentialsItem> credentialIssuerItems,
+            List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
         for (UserIssuedCredentialsItem item : credentialIssuerItems) {
-            if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())) {
+            CredentialIssuerConfig credentialIssuerConfig =
+                    configurationService.getCredentialIssuer(item.getCredentialIssuer());
+            if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())
+                    && isVcSuccessful(
+                            currentVcStatuses, credentialIssuerConfig.getAudienceForClients())) {
                 try {
                     JsonNode nameNode =
                             objectMapper
@@ -315,6 +324,14 @@ public class UserIdentityService {
         return !(input instanceof JSONArray)
                 || ((JSONArray) input).isEmpty()
                 || !(((JSONArray) input).get(0) instanceof JSONObject);
+    }
+
+    private boolean isVcSuccessful(List<VcStatusDto> currentVcStatuses, String criIss) {
+        return currentVcStatuses.stream()
+                .filter(vcStatusDto -> vcStatusDto.getCriIss().equals(criIss))
+                .findFirst()
+                .orElseThrow()
+                .getIsSuccessfulVc();
     }
 
     public List<String> getUserIssuedCredentialIssuers(String userId) {
