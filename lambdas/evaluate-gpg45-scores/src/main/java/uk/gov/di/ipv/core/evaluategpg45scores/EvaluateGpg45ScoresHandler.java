@@ -93,6 +93,7 @@ public class EvaluateGpg45ScoresHandler
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent event, Context context) {
         LogHelper.attachComponentIdToLogs();
+
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(event);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
