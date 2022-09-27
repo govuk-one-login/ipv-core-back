@@ -11,10 +11,13 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 
+import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -66,10 +69,27 @@ class UserIdentityServiceTest {
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
 
+        List<VcStatusDto> currentVcStatuses =
+                List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
+
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockConfigurationService.getCredentialIssuer(anyString()))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                "test-cri",
+                                "test cri",
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "test-issuer",
+                                URI.create("https://example.com/callback")));
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        "user-id-1", "test-sub", "P2", currentVcStatuses);
 
         assertEquals(SIGNED_VC_1, credentials.getVcs().get(0));
         assertEquals(SIGNED_VC_2, credentials.getVcs().get(1));
@@ -210,10 +230,27 @@ class UserIdentityServiceTest {
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
 
+        List<VcStatusDto> currentVcStatuses =
+                List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
+
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockConfigurationService.getCredentialIssuer(anyString()))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                "test-cri",
+                                "test cri",
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "test-issuer",
+                                URI.create("https://example.com/callback")));
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        "user-id-1", "test-sub", "P2", currentVcStatuses);
 
         assertEquals(VectorOfTrust.P2.toString(), credentials.getVot());
     }
@@ -231,10 +268,27 @@ class UserIdentityServiceTest {
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
 
+        List<VcStatusDto> currentVcStatuses =
+                List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
+
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockConfigurationService.getCredentialIssuer(anyString()))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                "test-cri",
+                                "test cri",
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "test-issuer",
+                                URI.create("https://example.com/callback")));
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        "user-id-1", "test-sub", "P2", currentVcStatuses);
 
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
@@ -253,10 +307,14 @@ class UserIdentityServiceTest {
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
 
+        List<VcStatusDto> currentVcStatuses =
+                List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
+
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub", "P0");
+                userIdentityService.generateUserIdentity(
+                        "user-id-1", "test-sub", "P0", currentVcStatuses);
 
         assertNull(credentials.getIdentityClaim());
     }
@@ -275,14 +333,30 @@ class UserIdentityServiceTest {
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()));
 
+        List<VcStatusDto> currentVcStatuses =
+                List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
+
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockConfigurationService.getCredentialIssuer(anyString()))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                "test-cri",
+                                "test cri",
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "test-issuer",
+                                URI.create("https://example.com/callback")));
 
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        "user-id-1", "test-sub", "P2"));
+                                        "user-id-1", "test-sub", "P2", currentVcStatuses));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -307,14 +381,30 @@ class UserIdentityServiceTest {
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()));
 
+        List<VcStatusDto> currentVcStatuses =
+                List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
+
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockConfigurationService.getCredentialIssuer(anyString()))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                "test-cri",
+                                "test cri",
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "test-issuer",
+                                URI.create("https://example.com/callback")));
 
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        "user-id-1", "test-sub", "P2"));
+                                        "user-id-1", "test-sub", "P2", currentVcStatuses));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -338,10 +428,27 @@ class UserIdentityServiceTest {
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
 
+        List<VcStatusDto> currentVcStatuses =
+                List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
+
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockConfigurationService.getCredentialIssuer(anyString()))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                "test-cri",
+                                "test cri",
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "test-issuer",
+                                URI.create("https://example.com/callback")));
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        "user-id-1", "test-sub", "P2", currentVcStatuses);
 
         JsonNode passportClaim = credentials.getPassportClaim();
 
@@ -358,10 +465,14 @@ class UserIdentityServiceTest {
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
 
+        List<VcStatusDto> currentVcStatuses =
+                List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
+
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub", "P0");
+                userIdentityService.generateUserIdentity(
+                        "user-id-1", "test-sub", "P0", currentVcStatuses);
 
         assertNull(credentials.getPassportClaim());
     }
@@ -382,14 +493,30 @@ class UserIdentityServiceTest {
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
 
+        List<VcStatusDto> currentVcStatuses =
+                List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
+
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockConfigurationService.getCredentialIssuer(anyString()))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                "test-cri",
+                                "test cri",
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "test-issuer",
+                                URI.create("https://example.com/callback")));
 
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        "user-id-1", "test-sub", "P2"));
+                                        "user-id-1", "test-sub", "P2", currentVcStatuses));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -404,8 +531,12 @@ class UserIdentityServiceTest {
     void shouldSetSubClaimOnUserIdentity() throws HttpResponseExceptionWithErrorBody {
         when(mockConfigurationService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
+        List<VcStatusDto> currentVcStatuses =
+                List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
+
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        "user-id-1", "test-sub", "P2", currentVcStatuses);
 
         assertEquals("test-sub", credentials.getSub());
     }
@@ -414,8 +545,12 @@ class UserIdentityServiceTest {
     void shouldSetVtmClaimOnUserIdentity() throws HttpResponseExceptionWithErrorBody {
         when(mockConfigurationService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
+        List<VcStatusDto> currentVcStatuses =
+                List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
+
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        "user-id-1", "test-sub", "P2", currentVcStatuses);
 
         assertEquals("mock-vtm-claim", credentials.getVtm());
     }
@@ -434,10 +569,27 @@ class UserIdentityServiceTest {
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "address", SIGNED_ADDRESS_VC, LocalDateTime.now()));
 
+        List<VcStatusDto> currentVcStatuses =
+                List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
+
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockConfigurationService.getCredentialIssuer(anyString()))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                "test-cri",
+                                "test cri",
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "test-issuer",
+                                URI.create("https://example.com/callback")));
 
         UserIdentity userIdentity =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub", "P2");
+                userIdentityService.generateUserIdentity(
+                        "user-id-1", "test-sub", "P2", currentVcStatuses);
 
         JsonNode userIdentityJsonNode =
                 objectMapper.readTree(objectMapper.writeValueAsString(userIdentity));
@@ -470,14 +622,30 @@ class UserIdentityServiceTest {
                                 SIGNED_ADDRESS_VC_MISSING_ADDRESS_PROPERTY,
                                 LocalDateTime.now()));
 
+        List<VcStatusDto> currentVcStatuses =
+                List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
+
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockConfigurationService.getCredentialIssuer(anyString()))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                "test-cri",
+                                "test cri",
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "test-issuer",
+                                URI.create("https://example.com/callback")));
 
         HttpResponseExceptionWithErrorBody thrownException =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        "user-id-1", "test-sub", "P2"));
+                                        "user-id-1", "test-sub", "P2", currentVcStatuses));
 
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
@@ -501,14 +669,30 @@ class UserIdentityServiceTest {
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "address", "GARBAGE", LocalDateTime.now()));
 
+        List<VcStatusDto> currentVcStatuses =
+                List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
+
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockConfigurationService.getCredentialIssuer(anyString()))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                "test-cri",
+                                "test cri",
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "test-issuer",
+                                URI.create("https://example.com/callback")));
 
         HttpResponseExceptionWithErrorBody thrownException =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        "user-id-1", "test-sub", "P2"));
+                                        "user-id-1", "test-sub", "P2", currentVcStatuses));
 
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
@@ -530,10 +714,14 @@ class UserIdentityServiceTest {
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "address", SIGNED_ADDRESS_VC, LocalDateTime.now()));
 
+        List<VcStatusDto> currentVcStatuses =
+                List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
+
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
         UserIdentity credentials =
-                userIdentityService.generateUserIdentity("user-id-1", "test-sub", "P0");
+                userIdentityService.generateUserIdentity(
+                        "user-id-1", "test-sub", "P0", currentVcStatuses);
 
         assertNull(credentials.getAddressClaim());
     }
