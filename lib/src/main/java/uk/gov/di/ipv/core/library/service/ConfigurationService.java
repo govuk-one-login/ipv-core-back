@@ -32,6 +32,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static java.time.temporal.ChronoUnit.MINUTES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.BEARER_TOKEN_TTL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
@@ -76,9 +77,10 @@ public class ConfigurationService {
         } else {
             this.ssmProvider =
                     ParamManager.getSsmProvider(
-                            SsmClient.builder()
-                                    .httpClient(UrlConnectionHttpClient.create())
-                                    .build());
+                                    SsmClient.builder()
+                                            .httpClient(UrlConnectionHttpClient.create())
+                                            .build())
+                            .defaultMaxAge(3, MINUTES);
 
             this.secretsManagerClient =
                     SecretsManagerClient.builder()
