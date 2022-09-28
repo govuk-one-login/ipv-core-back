@@ -4,9 +4,6 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.nimbusds.jose.shaded.json.JSONObject;
-import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
@@ -19,7 +16,6 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -37,14 +33,9 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-
-import java.text.ParseException;
-
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 
 public class RetrieveCriOauthAccessTokenHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -53,27 +44,21 @@ public class RetrieveCriOauthAccessTokenHandler
             new JourneyResponse("/journey/next");
     private static final JourneyResponse JOURNEY_ERROR_RESPONSE =
             new JourneyResponse("/journey/error");
-    public static final String EVIDENCE = "evidence";
 
     private final CredentialIssuerService credentialIssuerService;
     private final ConfigurationService configurationService;
     private final AuditService auditService;
     private final IpvSessionService ipvSessionService;
-    private final CiStorageService ciStorageService;
-
-    private String componentId;
 
     public RetrieveCriOauthAccessTokenHandler(
             CredentialIssuerService credentialIssuerService,
             ConfigurationService configurationService,
             IpvSessionService ipvSessionService,
-            AuditService auditService,
-            CiStorageService ciStorageService) {
+            AuditService auditService) {
         this.credentialIssuerService = credentialIssuerService;
         this.configurationService = configurationService;
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
-        this.ciStorageService = ciStorageService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -86,7 +71,6 @@ public class RetrieveCriOauthAccessTokenHandler
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
         this.ipvSessionService = new IpvSessionService(configurationService);
-        this.ciStorageService = new CiStorageService(configurationService);
     }
 
     @Override
@@ -115,7 +99,7 @@ public class RetrieveCriOauthAccessTokenHandler
                             userId,
                             ipvSessionId,
                             clientSessionDetailsDto.getGovukSigninJourneyId());
-            this.componentId =
+            String componentId =
                     configurationService.getSsmParameter(
                             ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
 
@@ -189,27 +173,6 @@ public class RetrieveCriOauthAccessTokenHandler
     }
 
     @Tracing
-    private void sendIpvVcReceivedAuditEvent(
-            AuditEventUser auditEventUser, SignedJWT verifiableCredential)
-            throws ParseException, JsonProcessingException, SqsException {
-        AuditEvent auditEvent =
-                new AuditEvent(
-                        AuditEventTypes.IPV_VC_RECEIVED,
-                        componentId,
-                        auditEventUser,
-                        getAuditExtensions(verifiableCredential));
-        auditService.sendAuditEvent(auditEvent);
-    }
-
-    private AuditExtensionsVcEvidence getAuditExtensions(SignedJWT verifiableCredential)
-            throws ParseException, JsonProcessingException {
-        var jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
-        var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
-        var evidence = vc.getAsString(EVIDENCE);
-        return new AuditExtensionsVcEvidence(jwtClaimsSet.getIssuer(), evidence);
-    }
-
-    @Tracing
     private void validate(CredentialIssuerRequestDto request)
             throws HttpResponseExceptionWithErrorBody {
 
@@ -257,15 +220,6 @@ public class RetrieveCriOauthAccessTokenHandler
     @Tracing
     private CredentialIssuerConfig getCredentialIssuerConfig(CredentialIssuerRequestDto request) {
         return configurationService.getCredentialIssuer(request.getCredentialIssuerId());
-    }
-
-    @Tracing
-    private void submitVCAndSwallowErrors(SignedJWT vc, String govukSigninJourneyId) {
-        try {
-            ciStorageService.submitVC(vc, govukSigninJourneyId);
-        } catch (Exception e) {
-            LOGGER.info("Exception thrown when calling CI storage system", e);
-        }
     }
 
     @Tracing
