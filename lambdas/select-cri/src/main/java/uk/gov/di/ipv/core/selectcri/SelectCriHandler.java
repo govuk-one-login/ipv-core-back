@@ -44,6 +44,7 @@ public class SelectCriHandler
     private static final String CRI_START_JOURNEY = "/journey/%s";
     public static final String JOURNEY_FAIL = "/journey/fail";
     public static final String DCMAW_SUCCESS_PAGE = "dcmaw-success";
+    public static final String APP_JOURNEY_USER_ID_PREFIX = "urn:uuid:app-journey-user-";
 
     private final ConfigurationService configurationService;
     private final IpvSessionService ipvSessionService;
@@ -278,6 +279,9 @@ public class SelectCriHandler
                     Boolean.parseBoolean(
                             configurationService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS));
             if (!shouldSendAllUsers) {
+                if (userId.startsWith(APP_JOURNEY_USER_ID_PREFIX)) {
+                    return true;
+                }
                 String userIds = configurationService.getSsmParameter(DCMAW_ALLOWED_USER_IDS);
                 List<String> dcmawAllowedUserIds = Arrays.asList(userIds.split(","));
                 return dcmawAllowedUserIds.contains(userId);

@@ -38,6 +38,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_SHOU
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
+import static uk.gov.di.ipv.core.selectcri.SelectCriHandler.APP_JOURNEY_USER_ID_PREFIX;
 
 @ExtendWith(MockitoExtension.class)
 class SelectCriHandlerTest {
@@ -538,6 +539,33 @@ class SelectCriHandlerTest {
                 .thenReturn("false");
         when(mockConfigurationService.getSsmParameter(DCMAW_ALLOWED_USER_IDS))
                 .thenReturn("test-user-id,test-user-id-2,test-user-id-3");
+
+        APIGatewayProxyRequestEvent input = createRequestEvent();
+
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+
+        Map<String, String> responseBody = getResponseBodyAsMap(response);
+
+        assertEquals("/journey/dcmaw", responseBody.get("journey"));
+        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+    }
+
+    @Test
+    void shouldReturnDcmawCriJourneyResponseIfUserIdHasAppJourneyPrefix()
+            throws JsonProcessingException, URISyntaxException {
+        mockIpvSessionService();
+
+        String userId = APP_JOURNEY_USER_ID_PREFIX + "some-uuid";
+        when(mockClientSessionDetailsDto.getUserId()).thenReturn(userId);
+
+        when(mockConfigurationService.getCredentialIssuer(CRI_DCMAW))
+                .thenReturn(createCriConfig(CRI_DCMAW, "test-dcmaw-iss"));
+        when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
+                .thenReturn(Collections.emptyList());
+
+        when(mockConfigurationService.getSsmParameter(DCMAW_ENABLED)).thenReturn("true");
+        when(mockConfigurationService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS))
+                .thenReturn("false");
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
