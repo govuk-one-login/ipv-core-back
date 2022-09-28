@@ -42,7 +42,7 @@ ext {
 		awsLambdaJavaLog4j2:'1.5.1',
 		dynamodbEnhanced:'2.17.89',
 		gson:'2.8.9',
-		jackson:'2.13.2',
+		jacksonDataformatYaml:'2.13.2',
 		kms:'2.17.100',
 		log4j:'2.17.1',
 		lombok:'1.18.22',
