@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45VerificationValid
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
+import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -40,7 +41,6 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
@@ -106,16 +106,13 @@ public class EvaluateGpg45ScoresHandler
 
             List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
-            Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
-                    gpg45ProfileEvaluator.parseGpg45ScoresFromCredentials(credentials);
-
             Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
-                    gpg45ProfileEvaluator.contraIndicatorsPresent(
-                            evidenceMap, clientSessionDetailsDto);
+                    gpg45ProfileEvaluator.getJourneyResponseForStoredCis(clientSessionDetailsDto);
             if (contraIndicatorErrorJourneyResponse.isEmpty()) {
                 boolean credentialsSatisfyProfile =
                         gpg45ProfileEvaluator.credentialsSatisfyAnyProfile(
-                                evidenceMap, ACCEPTED_PROFILES);
+                                gpg45ProfileEvaluator.parseGpg45ScoresFromCredentials(credentials),
+                                ACCEPTED_PROFILES);
                 JourneyResponse journeyResponse;
                 if (credentialsSatisfyProfile) {
                     ipvSessionItem.setVot(VOT_P2);
@@ -147,6 +144,10 @@ public class EvaluateGpg45ScoresHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
+        } catch (CiRetrievalException e) {
+            LOGGER.error("Error when fetching CIs from storage system", e);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_GET_STORED_CIS);
         }
     }
 

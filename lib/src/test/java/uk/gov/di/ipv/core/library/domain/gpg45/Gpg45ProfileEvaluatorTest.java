@@ -6,7 +6,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
-import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.DcmawCheckMethod;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
@@ -22,19 +21,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator.JOURNEY_RESPONSE_PYI_KBV_FAIL;
+import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator.JOURNEY_RESPONSE_PYI_NO_MATCH;
 
 @ExtendWith(MockitoExtension.class)
 class Gpg45ProfileEvaluatorTest {
 
+    public static final String TEST_USER_ID = "test-user-id";
+    public static final String TEST_JOURNEY_ID = "test-journey-id";
     @Mock CiStorageService mockCiStorageService;
     @Mock ConfigurationService mockConfigurationService;
     @Mock ClientSessionDetailsDto mockClientSessionDetails;
@@ -106,7 +107,7 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void credentialsSatisfyProfileShouldReturnTrueIfCredentialsM1BSatisfyProfile()
+    void credentialsSatisfyAnyProfileShouldReturnTrueIfCredentialsM1BSatisfyProfile()
             throws Exception {
         DcmawCheckMethod dcmawCheckMethod = new DcmawCheckMethod();
         dcmawCheckMethod.setBiometricVerificationProcessLevel(3);
@@ -139,7 +140,7 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void credentialsSatisfyProfileShouldReturnTrueIfCredentialsSatisfyProfileAndOnlyA01CI()
+    void credentialsSatisfyAnyProfileShouldReturnTrueIfCredentialsSatisfyProfileAndOnlyA01CI()
             throws Exception {
 
         Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
@@ -169,7 +170,7 @@ class Gpg45ProfileEvaluatorTest {
 
     @Test
     void
-            credentialsSatisfyProfileShouldReturnTrueIfCredentialsSatisfyProfileAndOnlyA01CIForTheM1BProfile()
+            credentialsSatisfyAnyProfileShouldReturnTrueIfCredentialsSatisfyProfileAndOnlyA01CIForTheM1BProfile()
                     throws Exception {
         DcmawCheckMethod dcmawCheckMethod = new DcmawCheckMethod();
         dcmawCheckMethod.setBiometricVerificationProcessLevel(3);
@@ -202,7 +203,7 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void credentialsSatisfyProfileShouldReturnFalseIfNoCredentialsFound() throws Exception {
+    void credentialsSatisfyAnyProfileShouldReturnFalseIfNoCredentialsFound() throws Exception {
         Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
                 Map.of(
                         CredentialEvidenceItem.EvidenceType.ACTIVITY, new ArrayList<>(),
@@ -215,7 +216,7 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void credentialsSatisfyProfileShouldReturnFalseIfOnlyPassportCredential() throws Exception {
+    void credentialsSatisfyAnyProfileShouldReturnFalseIfOnlyPassportCredential() throws Exception {
         Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
                 Map.of(
                         CredentialEvidenceItem.EvidenceType.ACTIVITY, new ArrayList<>(),
@@ -230,7 +231,7 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void credentialsSatisfyProfileShouldReturnFalseIfOnlyOnlyPassportAndFraudCredential()
+    void credentialsSatisfyAnyProfileShouldReturnFalseIfOnlyOnlyPassportAndFraudCredential()
             throws Exception {
         Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
                 Map.of(
@@ -251,7 +252,7 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void credentialsSatisfyProfileShouldReturnFalseIfOnlyOnlyAppCredential() throws Exception {
+    void credentialsSatisfyAnyProfileShouldReturnFalseIfOnlyOnlyAppCredential() throws Exception {
         Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
                 Map.of(
                         CredentialEvidenceItem.EvidenceType.ACTIVITY, new ArrayList<>(),
@@ -272,7 +273,8 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void credentialsSatisfyProfileShouldReturnFalseIfFailedPassportCredential() throws Exception {
+    void credentialsSatisfyAnyProfileShouldReturnFalseIfFailedPassportCredential()
+            throws Exception {
         Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
                 Map.of(
                         CredentialEvidenceItem.EvidenceType.ACTIVITY,
@@ -298,7 +300,7 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void credentialsSatisfyProfileShouldReturnFalseIfFailedFraudCredentialWithCI()
+    void credentialsSatisfyAnyProfileShouldReturnFalseIfFailedFraudCredentialWithCI()
             throws Exception {
 
         Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
@@ -327,7 +329,7 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void credentialsSatisfyProfileShouldReturnFalseIfFailedKbvCredential() throws Exception {
+    void credentialsSatisfyAnyProfileShouldReturnFalseIfFailedKbvCredential() throws Exception {
         Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
                 Map.of(
                         CredentialEvidenceItem.EvidenceType.ACTIVITY,
@@ -354,7 +356,7 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void credentialsSatisfyProfileShouldReturnFalseIfFailedAppCredential() throws Exception {
+    void credentialsSatisfyAnyProfileShouldReturnFalseIfFailedAppCredential() throws Exception {
         Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
                 Map.of(
                         CredentialEvidenceItem.EvidenceType.ACTIVITY,
@@ -385,7 +387,8 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void credentialsSatisfyProfileShouldUseHighestScoringValuesForCredentials() throws Exception {
+    void credentialsSatisfyAnyProfileShouldUseHighestScoringValuesForCredentials()
+            throws Exception {
         Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
                 Map.of(
                         CredentialEvidenceItem.EvidenceType.ACTIVITY,
@@ -420,100 +423,103 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void contraIndicatorsPresentShouldReturnErrorJourneyResponseIfPassportContainsCi() {
-        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
-                Map.of(
-                        CredentialEvidenceItem.EvidenceType.ACTIVITY, new ArrayList<>(),
-                        CredentialEvidenceItem.EvidenceType.EVIDENCE,
-                                Collections.singletonList(
-                                        new CredentialEvidenceItem(
-                                                4, 0, Collections.singletonList("D02"))),
-                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD, new ArrayList<>(),
-                        CredentialEvidenceItem.EvidenceType.VERIFICATION, new ArrayList<>(),
-                        CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>());
+    void getJourneyResponseForStoredCisShouldReturnEmptyOptionalIfNoCis() throws Exception {
+        when(mockClientSessionDetails.getUserId()).thenReturn(TEST_USER_ID);
+        when(mockClientSessionDetails.getGovukSigninJourneyId()).thenReturn(TEST_JOURNEY_ID);
+        when(mockCiStorageService.getCIs(TEST_USER_ID, TEST_JOURNEY_ID)).thenReturn(List.of());
 
-        Optional<JourneyResponse> errorResponse =
-                evaluator.contraIndicatorsPresent(evidenceMap, mockClientSessionDetails);
-
-        assertTrue(errorResponse.isPresent());
-        assertEquals("/journey/pyi-no-match", errorResponse.get().getJourney());
+        assertTrue(evaluator.getJourneyResponseForStoredCis(mockClientSessionDetails).isEmpty());
     }
 
     @Test
-    void contraIndicatorsPresentShouldReturnErrorJourneyResponseIfKbvContainsCi() {
-        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
-                Map.of(
-                        CredentialEvidenceItem.EvidenceType.ACTIVITY, new ArrayList<>(),
-                        CredentialEvidenceItem.EvidenceType.EVIDENCE, new ArrayList<>(),
-                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD, new ArrayList<>(),
-                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
-                                Collections.singletonList(
-                                        new CredentialEvidenceItem(
-                                                CredentialEvidenceItem.EvidenceType.VERIFICATION,
-                                                0,
-                                                Collections.singletonList("D02"))),
-                        CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>());
-        Optional<JourneyResponse> errorResponse =
-                evaluator.contraIndicatorsPresent(evidenceMap, mockClientSessionDetails);
+    void getJourneyResponseForStoredCisShouldReturnEmptyOptionalIfOnlyA01() throws Exception {
+        ContraIndicatorItem contraIndicatorItem =
+                new ContraIndicatorItem(
+                        TEST_USER_ID,
+                        "A01#hash",
+                        "issuer",
+                        "2022-09-21T07:57:14.332Z",
+                        "A01",
+                        "123456789",
+                        null);
+        when(mockClientSessionDetails.getUserId()).thenReturn(TEST_USER_ID);
+        when(mockClientSessionDetails.getGovukSigninJourneyId()).thenReturn(TEST_JOURNEY_ID);
+        when(mockCiStorageService.getCIs(TEST_USER_ID, TEST_JOURNEY_ID))
+                .thenReturn(List.of(contraIndicatorItem));
 
-        assertTrue(errorResponse.isPresent());
-        assertEquals("/journey/pyi-kbv-fail", errorResponse.get().getJourney());
+        assertTrue(evaluator.getJourneyResponseForStoredCis(mockClientSessionDetails).isEmpty());
     }
 
     @Test
-    void
-            contraIndicatorsPresentShouldNotReturnErrorJourneyResponseIfCredentialsSatisfyProfileAndOnlyA01CI() {
-        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
-                Map.of(
-                        CredentialEvidenceItem.EvidenceType.ACTIVITY, new ArrayList<>(),
-                        CredentialEvidenceItem.EvidenceType.EVIDENCE, new ArrayList<>(),
-                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
-                                Collections.singletonList(
-                                        new CredentialEvidenceItem(
-                                                CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
-                                                0,
-                                                Collections.singletonList("A01"))),
-                        CredentialEvidenceItem.EvidenceType.VERIFICATION, new ArrayList<>(),
-                        CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>());
+    void getJourneyResponseForStoredCisShouldReturnKbvFailIfLastStoredCiWasIssuedByKbv()
+            throws Exception {
+        ContraIndicatorItem otherCiItem =
+                new ContraIndicatorItem(
+                        TEST_USER_ID,
+                        "A01#hash",
+                        "otherIssuer",
+                        "2022-09-21T08:00:00.000Z",
+                        "X98",
+                        "123456789",
+                        null);
+        ContraIndicatorItem kbvCiItem =
+                new ContraIndicatorItem(
+                        TEST_USER_ID,
+                        "A01#hash",
+                        "kbvIssuer",
+                        "2022-09-21T08:01:00.000Z",
+                        "X99",
+                        "123456789",
+                        null);
 
-        Optional<JourneyResponse> errorResponse =
-                evaluator.contraIndicatorsPresent(evidenceMap, mockClientSessionDetails);
+        CredentialIssuerConfig kbvConfig = mock(CredentialIssuerConfig.class);
+        when(mockConfigurationService.getSsmParameter(KBV_CRI_ID)).thenReturn("kbv");
+        when(mockConfigurationService.getCredentialIssuer("kbv")).thenReturn(kbvConfig);
+        when(kbvConfig.getAudienceForClients()).thenReturn("kbvIssuer");
+        when(mockClientSessionDetails.getUserId()).thenReturn(TEST_USER_ID);
+        when(mockClientSessionDetails.getGovukSigninJourneyId()).thenReturn(TEST_JOURNEY_ID);
+        when(mockCiStorageService.getCIs(TEST_USER_ID, TEST_JOURNEY_ID))
+                .thenReturn(new ArrayList<>(List.of(otherCiItem, kbvCiItem)));
 
-        assertTrue(errorResponse.isEmpty());
+        assertEquals(
+                Optional.of(JOURNEY_RESPONSE_PYI_KBV_FAIL),
+                evaluator.getJourneyResponseForStoredCis(mockClientSessionDetails));
     }
 
     @Test
-    void
-            contraIndicatorsPresentShouldNotReturnErrorJourneyResponseIfCredentialsSatisfyProfileAndOnlyA01CIForTheM1BProfile() {
-        Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
-                Map.of(
-                        CredentialEvidenceItem.EvidenceType.ACTIVITY,
-                        Collections.singletonList(
-                                new CredentialEvidenceItem(
-                                        CredentialEvidenceItem.EvidenceType.ACTIVITY,
-                                        1,
-                                        Collections.emptyList())),
-                        CredentialEvidenceItem.EvidenceType.EVIDENCE,
-                        Collections.singletonList(
-                                new CredentialEvidenceItem(3, 2, Collections.emptyList())),
-                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
-                        Collections.singletonList(
-                                new CredentialEvidenceItem(
-                                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
-                                        2,
-                                        Collections.singletonList("A01"))),
-                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
-                        Collections.singletonList(
-                                new CredentialEvidenceItem(
-                                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
-                                        2,
-                                        Collections.emptyList())),
-                        CredentialEvidenceItem.EvidenceType.DCMAW,
-                        new ArrayList<>());
-        Optional<JourneyResponse> errorResponse =
-                evaluator.contraIndicatorsPresent(evidenceMap, mockClientSessionDetails);
+    void getJourneyResponseForStoredCisShouldReturnNoMatchIfLastStoredCiWasIssuedByKbv()
+            throws Exception {
+        ContraIndicatorItem otherCiItem =
+                new ContraIndicatorItem(
+                        TEST_USER_ID,
+                        "A01#hash",
+                        "otherIssuer",
+                        "2022-09-21T08:01:00.000Z",
+                        "X98",
+                        "123456789",
+                        null);
+        ContraIndicatorItem kbvCiItem =
+                new ContraIndicatorItem(
+                        TEST_USER_ID,
+                        "A01#hash",
+                        "kbvIssuer",
+                        "2022-09-21T08:00:00.000Z",
+                        "X99",
+                        "123456789",
+                        null);
 
-        assertTrue(errorResponse.isEmpty());
+        CredentialIssuerConfig kbvConfig = mock(CredentialIssuerConfig.class);
+        when(mockConfigurationService.getSsmParameter(KBV_CRI_ID)).thenReturn("kbv");
+        when(mockConfigurationService.getCredentialIssuer("kbv")).thenReturn(kbvConfig);
+        when(kbvConfig.getAudienceForClients()).thenReturn("kbvIssuer");
+        when(mockClientSessionDetails.getUserId()).thenReturn(TEST_USER_ID);
+        when(mockClientSessionDetails.getGovukSigninJourneyId()).thenReturn(TEST_JOURNEY_ID);
+        when(mockCiStorageService.getCIs(TEST_USER_ID, TEST_JOURNEY_ID))
+                .thenReturn(new ArrayList<>(List.of(otherCiItem, kbvCiItem)));
+
+        assertEquals(
+                Optional.of(JOURNEY_RESPONSE_PYI_NO_MATCH),
+                evaluator.getJourneyResponseForStoredCis(mockClientSessionDetails));
     }
 
     @Test
@@ -626,44 +632,5 @@ class Gpg45ProfileEvaluatorTest {
         assertEquals(3, dcmawItems.get(0).getEvidenceScore().strength());
         assertEquals(2, dcmawItems.get(0).getEvidenceScore().validity());
         assertEquals(1, dcmawItems.get(0).getActivityHistoryScore());
-    }
-
-    @Test
-    void shouldCallCIStorageSystemToGetCIs() throws Exception {
-        when(mockClientSessionDetails.getUserId()).thenReturn("a-user-id");
-        when(mockClientSessionDetails.getGovukSigninJourneyId()).thenReturn("a-journey-id");
-        when(mockConfigurationService.getCredentialIssuer(any()))
-                .thenReturn(mock(CredentialIssuerConfig.class));
-        List<ContraIndicatorItem> ciItems = new ArrayList<>();
-        ciItems.add(
-                new ContraIndicatorItem(
-                        "a-user-id",
-                        "sortKey",
-                        "issuer",
-                        "2022-09-14T15:03:46.795Z",
-                        "X01",
-                        "123456789",
-                        null));
-        when(mockCiStorageService.getCIs("a-user-id", "a-journey-id")).thenReturn(ciItems);
-
-        evaluator.contraIndicatorsPresent(EMPTY_EVIDENCE_MAP, mockClientSessionDetails);
-
-        verify(mockCiStorageService).getCIs("a-user-id", "a-journey-id");
-    }
-
-    @Test
-    void shouldNotThrowIfGetCIsThrows() throws Exception {
-        when(mockClientSessionDetails.getUserId()).thenReturn("a-user-id");
-        when(mockClientSessionDetails.getGovukSigninJourneyId()).thenReturn("a-journey-id");
-        doThrow(new RuntimeException("Ruh'oh"))
-                .when(mockCiStorageService)
-                .getCIs("a-user-id", "a-journey-id");
-
-        assertDoesNotThrow(
-                () ->
-                        evaluator.contraIndicatorsPresent(
-                                EMPTY_EVIDENCE_MAP, mockClientSessionDetails));
-
-        verify(mockCiStorageService).getCIs("a-user-id", "a-journey-id");
     }
 }
