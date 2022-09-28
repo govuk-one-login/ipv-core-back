@@ -83,7 +83,7 @@ Mappings:
     "075701497069": # Production
       provisionedConcurrency: 1
       ciStorageAccountId: 442136572379 # di-ipv-contra-indicators-prod
-      environment: prod
+      environment: production
 
 Resources:
   JWKSParamRole:
