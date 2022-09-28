@@ -105,10 +105,10 @@ SELECT_CRI:
     ukPassport:
       type: basic
       name: next
-      targetState: PASSPORT_DOC_CHECK_PAGE
+      targetState: CRI_UK_PASSPORT
       response:
-        type: page
-        pageId: page-passport-doc-check
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/ukPassport
     address:
       type: basic
       name: address
@@ -181,24 +181,6 @@ CRI_ADDRESS:
 CRI_FRAUD:
   name: CRI_FRAUD
   parent: CRI_STATE
-PASSPORT_DOC_CHECK_PAGE:
-  name: PASSPORT_DOC_CHECK_PAGE
-  parent: null
-  events:
-    next:
-      type: basic
-      name: next
-      targetState: CRI_UK_PASSPORT
-      response:
-        type: journey
-        journeyStepId: /journey/cri/build-oauth-request/ukPassport
-    end:
-      type: basic
-      name: end
-      targetState: END
-      response:
-        type: journey
-        journeyStepId: /journey/build-client-oauth-response
 PRE_KBV_TRANSITION_PAGE:
   name: PRE_KBV_TRANSITION_PAGE
   parent: null
