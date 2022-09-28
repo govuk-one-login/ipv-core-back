@@ -97,6 +97,7 @@ public class InitialiseIpvSessionHandler
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
+
         try {
             Map<String, String> sessionParams =
                     objectMapper.readValue(input.getBody(), new TypeReference<>() {});
