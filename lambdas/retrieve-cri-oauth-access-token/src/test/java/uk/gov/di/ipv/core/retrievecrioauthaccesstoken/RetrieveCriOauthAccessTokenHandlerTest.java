@@ -5,7 +5,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
@@ -25,7 +24,6 @@ import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -34,10 +32,10 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -63,27 +61,16 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     public static final String OAUTH_STATE = "oauth-state";
     public static final String CREDENTIAL_ISSUER_ID = "PassportIssuer";
     public static final String TEST_USER_ID = "test-user-id";
+    public static final String TEST_AUTH_CODE = "test-auth-code";
 
     @Mock private Context context;
-
-    @Captor private ArgumentCaptor<CredentialIssuerRequestDto> requestDto;
-
+    @Captor private ArgumentCaptor<String> authCode;
     @Captor private ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor;
-
     @Mock private CredentialIssuerService credentialIssuerService;
-
     @Mock private AuditService auditService;
-
     @Mock private static ConfigurationService configurationService;
-
-    @Mock private SignedJWT signedJWT;
-
-    @Mock private VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
-
     @Mock private IpvSessionService ipvSessionService;
-
     @Mock private IpvSessionItem ipvSessionItem;
-
     @InjectMocks private RetrieveCriOauthAccessTokenHandler handler;
 
     private static CredentialIssuerConfig passportIssuer;
@@ -123,27 +110,20 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
         credentialIssuerSessionDetailsDto =
                 new CredentialIssuerSessionDetailsDto(CREDENTIAL_ISSUER_ID, OAUTH_STATE);
+        credentialIssuerSessionDetailsDto.setAuthorizationCode(TEST_AUTH_CODE);
     }
 
     @Test
-    void shouldReceive200AndJourneyResponseOnSuccessfulRequest() throws Exception {
-
+    void shouldReceive200AndJourneyResponseOnSuccessfulRequest()
+            throws JsonProcessingException, SqsException {
         APIGatewayProxyRequestEvent input =
-                createRequestEvent(
-                        Map.of(
-                                "authorization_code",
-                                "foo",
-                                "credential_issuer_id",
-                                passportIssuerId,
-                                "state",
-                                OAUTH_STATE),
-                        Map.of("ipv-session-id", sessionId));
+                createRequestEvent(Collections.emptyMap(), Map.of("ipv-session-id", sessionId));
 
         JSONObject testCredential = new JSONObject();
         testCredential.appendField("foo", "bar");
 
         when(credentialIssuerService.exchangeCodeForToken(
-                        requestDto.capture(), eq(passportIssuer), eq(testApiKey)))
+                        TEST_AUTH_CODE, passportIssuer, testApiKey))
                 .thenReturn(new BearerAccessToken());
 
         mockServiceCallsAndSessionItem();
@@ -154,7 +134,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
         var auditEvents = auditEventCaptor.getAllValues();
         assertEquals(
-                AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED, auditEvents.get(0).getEventName());
+                AuditEventTypes.IPV_CRI_ACCESS_TOKEN_EXCHANGED, auditEvents.get(0).getEventName());
 
         Integer statusCode = response.getStatusCode();
         Map responseBody = getResponseBodyAsMap(response);
@@ -163,146 +143,46 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     @Test
-    void shouldReceive400ResponseCodeIfAuthorizationCodeNotPresent()
-            throws JsonProcessingException {
-        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
-        APIGatewayProxyRequestEvent input =
-                createRequestEvent(
-                        Map.of("credential_issuer_id", "foo"), Map.of("ipv-session-id", sessionId));
-
-        APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
-        assert400Response(response, ErrorResponse.MISSING_AUTHORIZATION_CODE);
-    }
-
-    @Test
-    void shouldReceive400ResponseCodeIfCredentialIssuerNotPresent() throws JsonProcessingException {
-        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
-        APIGatewayProxyRequestEvent input =
-                createRequestEvent(
-                        Map.of("authorization_code", "foo"), Map.of("ipv-session-id", sessionId));
-
-        APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
-        assert400Response(response, ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
-    }
-
-    @Test
-    void shouldReceive400ResponseCodeIfCredentialIssuerNotInPermittedSet()
-            throws JsonProcessingException {
-        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
-        when(ipvSessionItem.getCredentialIssuerSessionDetails())
-                .thenReturn(credentialIssuerSessionDetailsDto);
+    void shouldUseAuthCodeFromRequestIfNotSavedInSession() {
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
                         Map.of(
                                 "authorization_code",
-                                "foo",
-                                "credential_issuer_id",
-                                "an invalid id",
-                                "state",
-                                OAUTH_STATE),
-                        Map.of("ipv-session-id", sessionId));
-        APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
-        assert400Response(response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
-    }
-
-    @Test
-    void shouldReceive400ResponseCodeIfSessionIdNotPresent() throws JsonProcessingException {
-        APIGatewayProxyRequestEvent input =
-                createRequestEvent(
-                        Map.of(
-                                "authorization_code",
-                                "foo",
-                                "credential_issuer_id",
-                                passportIssuerId),
-                        Map.of());
-        APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
-        assert400Response(response, ErrorResponse.MISSING_IPV_SESSION_ID);
-    }
-
-    @Test
-    void shouldReceive400ResponseCodeIfOAuthStateNotPresent() throws JsonProcessingException {
-        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
-        APIGatewayProxyRequestEvent input =
-                createRequestEvent(
-                        Map.of(
-                                "authorization_code",
-                                "foo",
-                                "credential_issuer_id",
-                                passportIssuerId),
-                        Map.of("ipv-session-id", sessionId));
-        APIGatewayProxyResponseEvent response =
-                new RetrieveCriOauthAccessTokenHandler(
-                                credentialIssuerService,
-                                configurationService,
-                                ipvSessionService,
-                                auditService)
-                        .handleRequest(input, context);
-        assert400Response(response, ErrorResponse.MISSING_OAUTH_STATE);
-    }
-
-    @Test
-    void shouldReceive400ResponseCodeIfOAuthStateNotValid() throws JsonProcessingException {
-        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
-        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(ipvSessionItem.getCredentialIssuerSessionDetails())
-                .thenReturn(credentialIssuerSessionDetailsDto);
-        APIGatewayProxyRequestEvent input =
-                createRequestEvent(
-                        Map.of(
-                                "authorization_code",
-                                "foo",
+                                "request_authorization_code",
                                 "credential_issuer_id",
                                 passportIssuerId,
                                 "state",
-                                "not-correct-state"),
+                                OAUTH_STATE),
                         Map.of("ipv-session-id", sessionId));
-        APIGatewayProxyResponseEvent response =
-                new RetrieveCriOauthAccessTokenHandler(
-                                credentialIssuerService,
-                                configurationService,
-                                ipvSessionService,
-                                auditService)
-                        .handleRequest(input, context);
-        assert400Response(response, ErrorResponse.INVALID_OAUTH_STATE);
-    }
 
-    @Test
-    void shouldReceive200ResponseCodeIfAllRequestParametersValid() {
-        BearerAccessToken accessToken = mock(BearerAccessToken.class);
+        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
+                .thenReturn(passportIssuer);
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
+                .thenReturn(testComponentId);
+        when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId("someIpvSessionId");
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+        credentialIssuerSessionDetailsDto.setAuthorizationCode(null);
+        ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         when(credentialIssuerService.exchangeCodeForToken(
-                        requestDto.capture(), eq(passportIssuer), eq(testApiKey)))
-                .thenReturn(accessToken);
-
-        mockServiceCallsAndSessionItem();
-
-        APIGatewayProxyRequestEvent input =
-                createRequestEvent(
-                        Map.of(
-                                "authorization_code",
-                                authorization_code,
-                                "credential_issuer_id",
-                                passportIssuerId,
-                                "state",
-                                OAUTH_STATE),
-                        Map.of("ipv-session-id", sessionId));
+                        authCode.capture(), eq(passportIssuer), eq(testApiKey)))
+                .thenReturn(new BearerAccessToken());
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
 
-        CredentialIssuerRequestDto value = requestDto.getValue();
-        assertEquals(sessionId, value.getIpvSessionId());
-        assertEquals(passportIssuerId, value.getCredentialIssuerId());
-        assertEquals(authorization_code, value.getAuthorizationCode());
+        Integer statusCode = response.getStatusCode();
+        assertEquals(HTTPResponse.SC_OK, statusCode);
+        assertEquals("request_authorization_code", authCode.getValue());
 
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
-        assertEquals(
-                accessToken.getValue(), ipvSessionItemArgumentCaptor.getValue().getAccessToken());
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        var updatedIpvSessionItem = ipvSessionItemArgumentCaptor.getValue();
+        assertEquals("RETRIEVE_CRI_OAUTH_ACCESS_TOKEN", updatedIpvSessionItem.getUserState());
     }
 
     @Test
@@ -320,7 +200,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                         Map.of("ipv-session-id", sessionId));
 
         when(credentialIssuerService.exchangeCodeForToken(
-                        requestDto.capture(), eq(passportIssuer), eq(testApiKey)))
+                        TEST_AUTH_CODE, passportIssuer, testApiKey))
                 .thenThrow(
                         new CredentialIssuerException(
                                 HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST));
@@ -346,7 +226,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         BearerAccessToken accessToken = mock(BearerAccessToken.class);
 
         when(credentialIssuerService.exchangeCodeForToken(
-                        requestDto.capture(), eq(passportIssuer), eq(testApiKey)))
+                        TEST_AUTH_CODE, passportIssuer, testApiKey))
                 .thenReturn(accessToken);
 
         mockServiceCallsAndSessionItem();
@@ -368,7 +248,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         verify(auditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
         var auditEvents = auditEventCaptor.getAllValues();
         assertEquals(
-                AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED, auditEvents.get(0).getEventName());
+                AuditEventTypes.IPV_CRI_ACCESS_TOKEN_EXCHANGED, auditEvents.get(0).getEventName());
 
         assertEquals(testComponentId, auditEvents.get(0).getComponentId());
         AuditEventUser auditEventUser = auditEvents.get(0).getUser();
@@ -414,6 +294,10 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+        when(ipvSessionItem.getCredentialIssuerSessionDetails())
+                .thenReturn(credentialIssuerSessionDetailsDto);
+        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
+                .thenReturn(passportIssuer);
         doThrow(new SqsException("Test sqs error"))
                 .when(auditService)
                 .sendAuditEvent(any(AuditEvent.class));
@@ -449,7 +333,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
         when(credentialIssuerService.exchangeCodeForToken(
-                        requestDto.capture(), eq(passportIssuer), eq(testApiKey)))
+                        TEST_AUTH_CODE, passportIssuer, testApiKey))
                 .thenReturn(new BearerAccessToken());
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
@@ -496,13 +380,10 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
                 .thenReturn(passportIssuer);
 
-        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
-                .thenReturn(testComponentId);
-
         when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
         when(credentialIssuerService.exchangeCodeForToken(
-                        requestDto.capture(), eq(passportIssuer), eq(testApiKey)))
+                        TEST_AUTH_CODE, passportIssuer, testApiKey))
                 .thenThrow(
                         new CredentialIssuerException(
                                 HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST));

@@ -60,6 +60,7 @@ class CredentialIssuerServiceTest {
 
     private static final String TEST_IPV_SESSION_ID = SecureTokenHelper.generate();
     public static final String OAUTH_STATE = "oauth-state";
+    public static final String TEST_AUTH_CODE = "test-auth-code";
 
     @Mock private DataStore<UserIssuedCredentialsItem> mockDataStore;
     @Mock private ConfigurationService mockConfigurationService;
@@ -99,7 +100,7 @@ class CredentialIssuerServiceTest {
 
         AccessToken accessToken =
                 credentialIssuerService.exchangeCodeForToken(
-                        credentialIssuerRequestDto, credentialIssuerConfig, testApiKey);
+                        TEST_AUTH_CODE, credentialIssuerConfig, testApiKey);
         AccessTokenType type = accessToken.getType();
         assertEquals("Bearer", type.toString());
         assertEquals(3600, accessToken.getLifetime());
@@ -130,7 +131,7 @@ class CredentialIssuerServiceTest {
 
         AccessToken accessToken =
                 credentialIssuerService.exchangeCodeForToken(
-                        credentialIssuerRequestDto, credentialIssuerConfig, testApiKey);
+                        TEST_AUTH_CODE, credentialIssuerConfig, testApiKey);
         AccessTokenType type = accessToken.getType();
         assertEquals("Bearer", type.toString());
         assertEquals(3600, accessToken.getLifetime());
@@ -161,7 +162,7 @@ class CredentialIssuerServiceTest {
 
         AccessToken accessToken =
                 credentialIssuerService.exchangeCodeForToken(
-                        credentialIssuerRequestDto, credentialIssuerConfig, null);
+                        TEST_AUTH_CODE, credentialIssuerConfig, null);
         AccessTokenType type = accessToken.getType();
         assertEquals("Bearer", type.toString());
         assertEquals(3600, accessToken.getLifetime());
@@ -197,9 +198,7 @@ class CredentialIssuerServiceTest {
                         CredentialIssuerException.class,
                         () ->
                                 credentialIssuerService.exchangeCodeForToken(
-                                        credentialIssuerRequestDto,
-                                        credentialIssuerConfig,
-                                        testApiKey));
+                                        TEST_AUTH_CODE, credentialIssuerConfig, testApiKey));
 
         assertEquals(HTTPResponse.SC_BAD_REQUEST, exception.getHttpStatusCode());
         assertEquals(ErrorResponse.INVALID_TOKEN_REQUEST, exception.getErrorResponse());
@@ -230,9 +229,7 @@ class CredentialIssuerServiceTest {
                         CredentialIssuerException.class,
                         () ->
                                 credentialIssuerService.exchangeCodeForToken(
-                                        credentialIssuerRequestDto,
-                                        credentialIssuerConfig,
-                                        testApiKey));
+                                        TEST_AUTH_CODE, credentialIssuerConfig, testApiKey));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
         assertEquals(
