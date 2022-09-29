@@ -109,6 +109,13 @@ SELECT_CRI:
       response:
         type: page
         pageId: page-passport-doc-check
+    stubUkPassport:
+      type: basic
+      name: stubUkPassport
+      targetState: STUB_PASSPORT_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-passport-doc-check
     address:
       type: basic
       name: address
@@ -116,6 +123,13 @@ SELECT_CRI:
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/address
+    stubddress:
+      type: basic
+      name: stubAddress
+      targetState: CRI_ADDRESS
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/stubAddress
     fraud:
       type: basic
       name: fraud
@@ -123,10 +137,24 @@ SELECT_CRI:
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/fraud
+    stubFraud:
+      type: basic
+      name: stubFraud
+      targetState: CRI_FRAUD
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/stubFraud
     kbv:
       type: basic
       name: kbv
       targetState: PRE_KBV_TRANSITION_PAGE
+      response:
+        type: page
+        pageId: page-pre-kbv-transition
+    stubKbv:
+      type: basic
+      name: stubKbv
+      targetState: PRE_STUB_KBV_TRANSITION_PAGE
       response:
         type: page
         pageId: page-pre-kbv-transition
@@ -199,6 +227,24 @@ PASSPORT_DOC_CHECK_PAGE:
       response:
         type: journey
         journeyStepId: /journey/build-client-oauth-response
+STUB_PASSPORT_DOC_CHECK_PAGE:
+  name: STUB_PASSPORT_DOC_CHECK_PAGE
+  parent: null
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_UK_PASSPORT
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/stubUkPassport
+    end:
+      type: basic
+      name: end
+      targetState: END
+      response:
+        type: journey
+        journeyStepId: /journey/build-client-oauth-response
 PRE_KBV_TRANSITION_PAGE:
   name: PRE_KBV_TRANSITION_PAGE
   parent: null
@@ -210,6 +256,17 @@ PRE_KBV_TRANSITION_PAGE:
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/kbv
+PRE_STUB_KBV_TRANSITION_PAGE:
+  name: PRE_STUB_KBV_TRANSITION_PAGE
+  parent: null
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_KBV
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/stubKbv
 POST_DCMAW_SUCCESS_PAGE:
   name: POST_DCMAW_SUCCESS_PAGE
   parent: null
