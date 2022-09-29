@@ -46,9 +46,11 @@ public class UserIdentityService {
     private static final String BIRTH_DATE_PROPERTY_NAME = "birthDate";
     private static final String ADDRESS_PROPERTY_NAME = "address";
     private static final String PASSPORT_PROPERTY_NAME = "passport";
+    private static final String DRIVING_PERMIT_PROPERTY_NAME = "drivingPermit";
     private static final List<String> ADDRESS_CRI_TYPES =
             List.of(ADDRESS_PROPERTY_NAME, "stubAddress");
     private static final List<String> PASSPORT_CRI_TYPES = List.of("ukPassport", "stubUkPassport");
+    private static final List<String> DRIVING_PERMIT_CRI_TYPES = List.of("dcmaw", "stubDcmaw");
     private static final List<String> EVIDENCE_CRI_TYPES =
             List.of("ukPassport", "stubUkPassport", "dcmaw", "stubDcmaw");
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -127,6 +129,10 @@ public class UserIdentityService {
 
             Optional<JsonNode> passportClaim = generatePassportClaim(credentialIssuerItems);
             passportClaim.ifPresent(userIdentityBuilder::setPassportClaim);
+
+            Optional<JsonNode> drivingPermitClaim =
+                    generateDrivingPermitClaim(credentialIssuerItems, currentVcStatuses);
+            drivingPermitClaim.ifPresent(userIdentityBuilder::setDrivingPermitClaim);
         }
 
         return userIdentityBuilder.build();
@@ -317,6 +323,48 @@ public class UserIdentityService {
         }
 
         LOGGER.warn("Failed to find Passport CRI credential");
+        return Optional.empty();
+    }
+
+    private Optional<JsonNode> generateDrivingPermitClaim(
+            List<UserIssuedCredentialsItem> credentialIssuerItems,
+            List<VcStatusDto> currentVcStatuses)
+            throws HttpResponseExceptionWithErrorBody {
+        for (UserIssuedCredentialsItem item : credentialIssuerItems) {
+            CredentialIssuerConfig credentialIssuerConfig =
+                    configurationService.getCredentialIssuer(item.getCredentialIssuer());
+            if (DRIVING_PERMIT_CRI_TYPES.contains(item.getCredentialIssuer())
+                    && isVcSuccessful(
+                            currentVcStatuses, credentialIssuerConfig.getAudienceForClients())) {
+                JsonNode drivingPermitNode;
+                try {
+                    drivingPermitNode =
+                            objectMapper
+                                    .readTree(
+                                            SignedJWT.parse(item.getCredential())
+                                                    .getPayload()
+                                                    .toString())
+                                    .path(VC_CLAIM)
+                                    .path(VC_CREDENTIAL_SUBJECT)
+                                    .path(DRIVING_PERMIT_PROPERTY_NAME);
+                    if (drivingPermitNode.isMissingNode()) {
+                        LOGGER.error("Driving Permit property is missing from passport VC");
+                        throw new HttpResponseExceptionWithErrorBody(
+                                500, ErrorResponse.FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM);
+                    }
+
+                    return Optional.of(drivingPermitNode);
+                } catch (ParseException | JsonProcessingException e) {
+                    LOGGER.error(
+                            "Error while parsing Driving Permit CRI credential: '{}'",
+                            e.getMessage());
+                    throw new HttpResponseExceptionWithErrorBody(
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM);
+                }
+            }
+        }
+        LOGGER.warn("Failed to find Driving Permit CRI credential");
         return Optional.empty();
     }
 
