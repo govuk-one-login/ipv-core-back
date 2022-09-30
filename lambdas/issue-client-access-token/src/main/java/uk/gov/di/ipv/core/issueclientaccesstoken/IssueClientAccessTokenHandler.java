@@ -10,7 +10,9 @@ import com.nimbusds.oauth2.sdk.AuthorizationGrant;
 import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
+import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.URLUtils;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,6 +20,7 @@ import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.exceptions.ClientAuthenticationException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -145,6 +148,19 @@ public class IssueClientAccessTokenHandler
 
             AccessTokenResponse accessTokenResponse =
                     accessTokenService.generateAccessToken().toSuccessResponse();
+
+            if ("integration"
+                    .equals(
+                            configurationService.getEnvironmentVariable(
+                                    EnvironmentVariable.ENVIRONMENT))) {
+                BearerAccessToken bearerAccessToken =
+                        accessTokenResponse.getTokens().getBearerAccessToken();
+                LOGGER.info("TEST: generated access token: {}", bearerAccessToken.getValue());
+                LOGGER.info(
+                        "TEST: sha256 value: {}",
+                        DigestUtils.sha256Hex(bearerAccessToken.getValue()));
+            }
+
             sessionService.setAccessToken(
                     ipvSessionItem, accessTokenResponse.getTokens().getBearerAccessToken());
 
