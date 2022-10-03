@@ -232,7 +232,7 @@ public class UserIdentityService {
                 }
             }
         }
-        LOGGER.info("Failed to generate identity claim");
+        LOGGER.warn("Failed to generate identity claim");
         return Optional.empty();
     }
 
@@ -272,7 +272,7 @@ public class UserIdentityService {
             }
             return Optional.of(addressNode);
         }
-        LOGGER.error("Failed to find Address CRI credential");
+        LOGGER.warn("Failed to find Address CRI credential");
         return Optional.empty();
     }
 
@@ -316,7 +316,7 @@ public class UserIdentityService {
             return Optional.of(passportNode);
         }
 
-        LOGGER.error("Failed to find Passport CRI credential");
+        LOGGER.warn("Failed to find Passport CRI credential");
         return Optional.empty();
     }
 
