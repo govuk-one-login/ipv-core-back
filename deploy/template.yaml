@@ -127,7 +127,6 @@ Resources:
           Name: "AWS::Include"
           Parameters:
             Location: "../openAPI/core-back-internal.yaml"
-      DisableExecuteApiEndpoint: true
       Auth:
         ResourcePolicy:
           CustomStatements:
@@ -195,7 +194,6 @@ Resources:
           Name: "AWS::Include"
           Parameters:
             Location: "../openAPI/core-back-external.yaml"
-      DisableExecuteApiEndpoint: true
       AccessLogSetting:
         DestinationArn: !GetAtt IPVCoreExternalAPILogGroup.Arn
         Format: >-
