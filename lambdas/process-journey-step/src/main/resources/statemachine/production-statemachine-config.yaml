@@ -104,11 +104,11 @@ SELECT_CRI:
   events:
     ukPassport:
       type: basic
-      name: next
-      targetState: CRI_UK_PASSPORT
+      name: ukPassport
+      targetState: PASSPORT_DOC_CHECK_PAGE
       response:
-        type: journey
-        journeyStepId: /journey/cri/build-oauth-request/ukPassport
+        type: page
+        pageId: page-passport-doc-check
     address:
       type: basic
       name: address
