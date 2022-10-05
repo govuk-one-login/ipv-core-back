@@ -54,6 +54,22 @@ paths:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${InitialiseIpvSessionFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
+  /journey/cri/validate-callback:
+    post:
+      description: "Called when a user returns from a CRI and will be responsible for validating the OAuth Callback."
+      responses:
+        200:
+          description: "Returns a redirect journeyResponse of '/journey/next'"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/journeyType"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ValidateOAuthCallbackFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
   /journey/cri/access-token:
     post:
       description: "Called when a user returns from a CRI and will be responsible for exchanging the CRI auth code for an access token"

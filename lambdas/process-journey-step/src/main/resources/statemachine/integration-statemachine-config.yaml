@@ -6,10 +6,10 @@ CRI_STATE:
     next:
       type: basic
       name: next
-      targetState: RETRIEVE_CRI_CREDENTIAL
+      targetState: RETRIEVE_CRI_OAUTH_ACCESS_TOKEN
       response:
         type: journey
-        journeyStepId: /journey/cri/credential
+        journeyStepId: /journey/cri/access-token
     error:
       type: basic
       name: error
@@ -326,7 +326,19 @@ CORE_SESSION_TIMEOUT:
   name: CORE_SESSION_TIMEOUT
   parent: END_JOURNEY
 
-#retrieve cri credential state
+#Callback from CRI States
+RETRIEVE_CRI_OAUTH_ACCESS_TOKEN:
+  name: RETRIEVE_CRI_OAUTH_ACCESS_TOKEN
+  parent: null
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: RETRIEVE_CRI_CREDENTIAL
+      response:
+        type: journey
+        journeyStepId: /journey/cri/credential
+
 RETRIEVE_CRI_CREDENTIAL:
   name: RETRIEVE_CRI_CREDENTIAL
   parent: null
@@ -343,6 +355,18 @@ RETRIEVE_CRI_CREDENTIAL:
 DEBUG_PAGE:
   name: DEBUG_PAGE
   parent: CRI_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: DEBUG_RETRIEVE_CRI_OAUTH_ACCESS_TOKEN
+      response:
+        type: journey
+        journeyStepId: /journey/cri/access-token
+
+DEBUG_RETRIEVE_CRI_OAUTH_ACCESS_TOKEN:
+  name: DEBUG_RETRIEVE_CRI_OAUTH_ACCESS_TOKEN
+  parent: null
   events:
     next:
       type: basic

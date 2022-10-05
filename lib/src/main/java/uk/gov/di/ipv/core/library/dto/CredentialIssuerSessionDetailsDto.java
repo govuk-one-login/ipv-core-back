@@ -10,8 +10,8 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 public class CredentialIssuerSessionDetailsDto {
     String criId;
     String state;
-
     String accessToken;
+    String authorizationCode;
 
     public CredentialIssuerSessionDetailsDto() {}
 

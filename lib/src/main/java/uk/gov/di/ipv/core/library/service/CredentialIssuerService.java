@@ -26,7 +26,6 @@ import uk.gov.di.ipv.core.library.domain.ClientAuthClaims;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -79,9 +78,9 @@ public class CredentialIssuerService {
     }
 
     public BearerAccessToken exchangeCodeForToken(
-            CredentialIssuerRequestDto request, CredentialIssuerConfig config, String apiKey) {
+            String authCode, CredentialIssuerConfig config, String apiKey) {
 
-        AuthorizationCode authorizationCode = new AuthorizationCode(request.getAuthorizationCode());
+        AuthorizationCode authorizationCode = new AuthorizationCode(authCode);
         try {
             OffsetDateTime dateTime = OffsetDateTime.now();
             ClientAuthClaims clientAuthClaims =
