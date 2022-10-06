@@ -45,7 +45,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -140,49 +139,6 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         Map responseBody = getResponseBodyAsMap(response);
         assertEquals(HTTPResponse.SC_OK, statusCode);
         assertEquals("/journey/next", responseBody.get("journey"));
-    }
-
-    @Test
-    void shouldUseAuthCodeFromRequestIfNotSavedInSession() {
-        APIGatewayProxyRequestEvent input =
-                createRequestEvent(
-                        Map.of(
-                                "authorization_code",
-                                "request_authorization_code",
-                                "credential_issuer_id",
-                                passportIssuerId,
-                                "state",
-                                OAUTH_STATE),
-                        Map.of("ipv-session-id", sessionId));
-
-        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
-                .thenReturn(passportIssuer);
-        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
-                .thenReturn(testComponentId);
-        when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
-
-        IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId("someIpvSessionId");
-        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
-        credentialIssuerSessionDetailsDto.setAuthorizationCode(null);
-        ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
-        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-
-        when(credentialIssuerService.exchangeCodeForToken(
-                        authCode.capture(), eq(passportIssuer), eq(testApiKey)))
-                .thenReturn(new BearerAccessToken());
-
-        APIGatewayProxyResponseEvent response = handler.handleRequest(input, context);
-
-        Integer statusCode = response.getStatusCode();
-        assertEquals(HTTPResponse.SC_OK, statusCode);
-        assertEquals("request_authorization_code", authCode.getValue());
-
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
-        var updatedIpvSessionItem = ipvSessionItemArgumentCaptor.getValue();
-        assertEquals("RETRIEVE_CRI_OAUTH_ACCESS_TOKEN", updatedIpvSessionItem.getUserState());
     }
 
     @Test
