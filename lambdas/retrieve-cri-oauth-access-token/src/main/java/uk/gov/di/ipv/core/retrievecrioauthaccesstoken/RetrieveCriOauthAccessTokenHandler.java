@@ -45,6 +45,8 @@ public class RetrieveCriOauthAccessTokenHandler
             new JourneyResponse("/journey/error");
     private static final String RETRIEVE_CRI_OAUTH_ACCESS_TOKEN_STATE =
             "RETRIEVE_CRI_OAUTH_ACCESS_TOKEN";
+    private static final String DEBUG_RETRIEVE_CRI_OAUTH_ACCESS_TOKEN_STATE =
+            "DEBUG_RETRIEVE_CRI_OAUTH_ACCESS_TOKEN";
 
     private final CredentialIssuerService credentialIssuerService;
     private final ConfigurationService configurationService;
@@ -140,7 +142,11 @@ public class RetrieveCriOauthAccessTokenHandler
 
             // Staging out the change here - skip the journey state to get us back on track
             if (authCodeIsNotInSession) {
-                ipvSessionItem.setUserState(RETRIEVE_CRI_OAUTH_ACCESS_TOKEN_STATE);
+                if (clientSessionDetailsDto.isDebugJourney())
+                    ipvSessionItem.setUserState(DEBUG_RETRIEVE_CRI_OAUTH_ACCESS_TOKEN_STATE);
+                else {
+                    ipvSessionItem.setUserState(RETRIEVE_CRI_OAUTH_ACCESS_TOKEN_STATE);
+                }
             }
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
