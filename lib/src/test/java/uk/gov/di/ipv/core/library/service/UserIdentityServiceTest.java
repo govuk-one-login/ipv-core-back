@@ -34,6 +34,8 @@ import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC_MISSING_ADDRESS_PROPERTY;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_DCMAW_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_DCMAW_VC_MISSING_DRIVING_PERMIT_PROPERTY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_PASSPORT_VC_MISSING_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_PASSPORT_VC_MISSING_PASSPORT;
@@ -783,6 +785,305 @@ class UserIdentityServiceTest {
         assertTrue(
                 retrievedCredentialItem.stream()
                         .anyMatch(item -> testCredentialIssuer.equals(item)));
+    }
+
+    @Test
+    void shouldSetDrivingPermitClaimWhenVotIsP2() throws HttpResponseExceptionWithErrorBody {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "user-id-1", "dcmaw", SIGNED_DCMAW_VC, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "user-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
+
+        List<VcStatusDto> currentVcStatuses =
+                List.of(
+                        new VcStatusDto("test-issuer", true),
+                        new VcStatusDto("dcmaw-issuer", true));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockConfigurationService.getCredentialIssuer("dcmaw"))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                "test-cri",
+                                "test cri",
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "dcmaw-issuer",
+                                URI.create("https://example.com/callback")));
+
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity(
+                        "user-id-1", "test-sub", "P2", currentVcStatuses);
+
+        JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
+
+        assertEquals("MORGA753116SM9IJ", drivingPermitClaim.get(0).get("personalNumber").asText());
+        assertEquals("123456", drivingPermitClaim.get(0).get("issueNumber").asText());
+        assertEquals("2022-03-14", drivingPermitClaim.get(0).get("issueDate").asText());
+        assertEquals("2023-01-18", drivingPermitClaim.get(0).get("expiryDate").asText());
+    }
+
+    @Test
+    void shouldNotSetDrivingPermitClaimWhenVotIsP0() throws HttpResponseExceptionWithErrorBody {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "user-id-1", "dcmaw", SIGNED_DCMAW_VC, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "user-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
+
+        List<VcStatusDto> currentVcStatuses =
+                List.of(
+                        new VcStatusDto("test-issuer", true),
+                        new VcStatusDto("dcmaw-issuer", true));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity(
+                        "user-id-1", "test-sub", "P0", currentVcStatuses);
+
+        JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
+
+        assertNull(drivingPermitClaim);
+    }
+
+    @Test
+    void shouldNotSetDrivingPermitClaimWhenDrivingPermitVCIsMissing()
+            throws HttpResponseExceptionWithErrorBody {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "user-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
+
+        List<VcStatusDto> currentVcStatuses =
+                List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockConfigurationService.getCredentialIssuer(anyString()))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                "test-cri",
+                                "test cri",
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "test-issuer",
+                                URI.create("https://example.com/callback")));
+
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity(
+                        "user-id-1", "test-sub", "P2", currentVcStatuses);
+
+        JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
+
+        assertNull(drivingPermitClaim);
+    }
+
+    @Test
+    void shouldNotSetDrivingPermitClaimWhenDrivingPermitVCFailed()
+            throws HttpResponseExceptionWithErrorBody {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "user-id-1", "dcmaw", SIGNED_DCMAW_VC, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "user-id-1", "address", SIGNED_VC_4, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()));
+
+        List<VcStatusDto> currentVcStatuses =
+                List.of(
+                        new VcStatusDto("test-issuer", true),
+                        new VcStatusDto("dcmaw-issuer", false));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockConfigurationService.getCredentialIssuer("ukPassport"))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                "test-cri",
+                                "test cri",
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "test-issuer",
+                                URI.create("https://example.com/callback")));
+        when(mockConfigurationService.getCredentialIssuer("fraud"))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                "test-cri",
+                                "test cri",
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "test-issuer",
+                                URI.create("https://example.com/callback")));
+        when(mockConfigurationService.getCredentialIssuer("address"))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                "test-cri",
+                                "test cri",
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "test-issuer",
+                                URI.create("https://example.com/callback")));
+        when(mockConfigurationService.getCredentialIssuer("kbv"))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                "test-cri",
+                                "test cri",
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "test-issuer",
+                                URI.create("https://example.com/callback")));
+        when(mockConfigurationService.getCredentialIssuer("dcmaw"))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                "test-cri",
+                                "test cri",
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "dcmaw-issuer",
+                                URI.create("https://example.com/callback")));
+
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity(
+                        "user-id-1", "test-sub", "P2", currentVcStatuses);
+
+        JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
+
+        assertNull(drivingPermitClaim);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenMissingDrivingPermitProperty() {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "user-id-1",
+                                "dcmaw",
+                                SIGNED_DCMAW_VC_MISSING_DRIVING_PERMIT_PROPERTY,
+                                LocalDateTime.now()));
+
+        List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("dcmaw-issuer", true));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockConfigurationService.getCredentialIssuer(anyString()))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                "test-cri",
+                                "test cri",
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "dcmaw-issuer",
+                                URI.create("https://example.com/callback")));
+
+        HttpResponseExceptionWithErrorBody thrownError =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () ->
+                                userIdentityService.generateUserIdentity(
+                                        "user-id-1", "test-sub", "P2", currentVcStatuses));
+
+        assertEquals(500, thrownError.getResponseCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM.getCode(),
+                thrownError.getErrorBody().get("error"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM.getMessage(),
+                thrownError.getErrorBody().get("error_description"));
+    }
+
+    @Test
+    void generateUserIdentityShouldThrowIfDcmawVCCanNotBeParsed() {
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "user-id-1", "address", SIGNED_ADDRESS_VC, LocalDateTime.now()),
+                        createUserIssuedCredentialsItem(
+                                "user-id-1", "dcmaw", "GARBAGE", LocalDateTime.now()));
+
+        List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("dcmaw-issuer", true));
+
+        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockConfigurationService.getCredentialIssuer(anyString()))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                "test-cri",
+                                "test cri",
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "dcmaw-issuer",
+                                URI.create("https://example.com/callback")));
+
+        HttpResponseExceptionWithErrorBody thrownException =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () ->
+                                userIdentityService.generateUserIdentity(
+                                        "user-id-1", "test-sub", "P2", currentVcStatuses));
+
+        assertEquals(500, thrownException.getResponseCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM.getCode(),
+                thrownException.getErrorBody().get("error"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM.getMessage(),
+                thrownException.getErrorBody().get("error_description"));
     }
 
     private UserIssuedCredentialsItem createUserIssuedCredentialsItem(
