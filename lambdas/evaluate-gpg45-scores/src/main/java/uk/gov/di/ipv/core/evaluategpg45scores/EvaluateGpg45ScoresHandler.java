@@ -116,10 +116,13 @@ public class EvaluateGpg45ScoresHandler
                 JourneyResponse journeyResponse;
                 if (credentialsSatisfyProfile) {
                     ipvSessionItem.setVot(VOT_P2);
-
                     journeyResponse = JOURNEY_END;
+                    LOGGER.info(
+                            "A GPG45 profile have been met so generating a /journey/end response");
                 } else {
                     journeyResponse = JOURNEY_NEXT;
+                    LOGGER.info(
+                            "No GPG45 profiles have been met so generating a /journey/next response");
                 }
 
                 updateSuccessfulVcStatuses(ipvSessionItem, credentials);

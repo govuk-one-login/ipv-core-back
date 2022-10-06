@@ -158,6 +158,10 @@ public class BuildCriOauthRequestHandler
                     new AuditEvent(
                             AuditEventTypes.IPV_REDIRECT_TO_CRI, componentId, auditEventUser));
 
+            LOGGER.info(
+                    "Successfully generated ipv cri oauth request. User will be redirected to: {}",
+                    criResponse.getCri().getRedirectUrl());
+
             return ApiGatewayResponseGenerator.proxyJsonResponse(OK, criResponse);
 
         } catch (HttpResponseExceptionWithErrorBody e) {

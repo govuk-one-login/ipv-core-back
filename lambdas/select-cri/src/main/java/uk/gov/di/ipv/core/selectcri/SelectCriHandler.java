@@ -226,11 +226,10 @@ public class SelectCriHandler
             throws ParseException {
         CredentialIssuerConfig criConfig = configurationService.getCredentialIssuer(criId);
 
-        LOGGER.info("CRI config audience value: {}", criConfig.getAudienceForClients());
-
         Optional<VcStatusDto> vc = getVc(currentVcStatuses, criConfig.getAudienceForClients());
         if (vc.isEmpty()) {
             if (userHasNotVisited(visitedCredentialIssuers, criId)) {
+                LOGGER.info("Routing user to cri: {}", criId);
                 return Optional.of(getJourneyResponse(criId));
             }
 

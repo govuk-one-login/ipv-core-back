@@ -130,6 +130,8 @@ public class BuildUserIdentityHandler
 
             ipvSessionService.revokeAccessToken(ipvSessionItem);
 
+            LOGGER.info("Successfully generated user identity response");
+
             return ApiGatewayResponseGenerator.proxyJsonResponse(HTTPResponse.SC_OK, userIdentity);
         } catch (ParseException e) {
             LOGGER.error("Failed to parse access token");

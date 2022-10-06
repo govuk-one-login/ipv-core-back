@@ -130,6 +130,10 @@ public class BuildClientOauthResponseHandler
             auditService.sendAuditEvent(
                     new AuditEvent(AuditEventTypes.IPV_JOURNEY_END, componentId, auditEventUser));
 
+            LOGGER.info(
+                    "Successfully generated ipv client oauth response. User will be redirected back to: {}",
+                    clientResponse.getClient().getRedirectUrl());
+
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, clientResponse);
         } catch (ParseException e) {
             LOGGER.error("Authentication request could not be parsed", e);

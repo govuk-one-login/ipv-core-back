@@ -115,6 +115,8 @@ public class RetrieveCriCredentialHandler
 
         String credentialIssuerId = ipvSessionItem.getCredentialIssuerSessionDetails().getCriId();
 
+        LogHelper.attachCriIdToLogs(credentialIssuerId);
+
         try {
             ClientSessionDetailsDto clientSessionDetailsDto =
                     ipvSessionItem.getClientSessionDetails();
@@ -159,6 +161,8 @@ public class RetrieveCriCredentialHandler
             }
 
             updateVisitedCredentials(ipvSessionItem, credentialIssuerId, true, null);
+
+            LOGGER.info("Successfully retrieved CRI credential.");
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, JOURNEY_NEXT_RESPONSE);

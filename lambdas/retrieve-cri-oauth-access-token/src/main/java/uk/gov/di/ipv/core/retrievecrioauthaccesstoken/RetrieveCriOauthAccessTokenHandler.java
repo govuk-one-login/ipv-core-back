@@ -109,6 +109,8 @@ public class RetrieveCriOauthAccessTokenHandler
                         ipvSessionItem.getCredentialIssuerSessionDetails().getAuthorizationCode();
             }
 
+            LogHelper.attachCriIdToLogs(credentialIssuerId);
+
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     clientSessionDetailsDto.getGovukSigninJourneyId());
 
@@ -149,6 +151,8 @@ public class RetrieveCriOauthAccessTokenHandler
                 }
             }
             ipvSessionService.updateIpvSession(ipvSessionItem);
+
+            LOGGER.info("Successfully retrieved cri access token.");
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, JOURNEY_NEXT_RESPONSE);

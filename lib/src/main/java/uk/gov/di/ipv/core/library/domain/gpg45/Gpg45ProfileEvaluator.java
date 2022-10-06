@@ -86,7 +86,15 @@ public class Gpg45ProfileEvaluator {
             List<Gpg45Profile> profiles)
             throws UnknownEvidenceTypeException {
         Gpg45Scores gpg45Scores = buildScore(evidenceMap);
-        return profiles.stream().anyMatch(profile -> profile.isSatisfiedBy(gpg45Scores));
+        return profiles.stream()
+                .anyMatch(
+                        profile -> {
+                            boolean profileMet = profile.isSatisfiedBy(gpg45Scores);
+                            if (profileMet) {
+                                LOGGER.info("GPG45 profile has been met: {}", profile.label);
+                            }
+                            return profileMet;
+                        });
     }
 
     public Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>>

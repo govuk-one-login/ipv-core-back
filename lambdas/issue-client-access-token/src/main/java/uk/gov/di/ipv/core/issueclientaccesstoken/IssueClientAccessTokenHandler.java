@@ -164,6 +164,8 @@ public class IssueClientAccessTokenHandler
             sessionService.setAccessToken(
                     ipvSessionItem, accessTokenResponse.getTokens().getBearerAccessToken());
 
+            LOGGER.info("Successfully generated IPV client access token.");
+
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, accessTokenResponse.toJSONObject());
         } catch (ParseException e) {
