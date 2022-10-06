@@ -156,6 +156,7 @@ class BuildUserIdentityHandlerTest {
         assertEquals(userIdentity.getVcs().get(2), responseBody.getVcs().get(2));
         assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
         assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
+        assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
 
         verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
 
