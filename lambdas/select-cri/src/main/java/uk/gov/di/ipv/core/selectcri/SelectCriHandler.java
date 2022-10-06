@@ -229,7 +229,8 @@ public class SelectCriHandler
         Optional<VcStatusDto> vc = getVc(currentVcStatuses, criConfig.getAudienceForClients());
         if (vc.isEmpty()) {
             if (userHasNotVisited(visitedCredentialIssuers, criId)) {
-                LOGGER.info("Routing user to cri: {}", criId);
+                LogHelper.attachCriIdToLogs(criId);
+                LOGGER.info("Routing user to cri");
                 return Optional.of(getJourneyResponse(criId));
             }
 

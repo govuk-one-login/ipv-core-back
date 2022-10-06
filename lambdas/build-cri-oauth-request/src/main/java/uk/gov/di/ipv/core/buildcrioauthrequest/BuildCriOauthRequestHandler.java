@@ -58,6 +58,7 @@ import java.util.Set;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.REDIRECT_URI;
 
 public class BuildCriOauthRequestHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -158,8 +159,9 @@ public class BuildCriOauthRequestHandler
                     new AuditEvent(
                             AuditEventTypes.IPV_REDIRECT_TO_CRI, componentId, auditEventUser));
 
-            LOGGER.info(
-                    "Successfully generated ipv cri oauth request. User will be redirected to: {}",
+            LogHelper.logInfoMessageWithFieldAndValue(
+                    "Successfully generated ipv cri oauth request.",
+                    REDIRECT_URI,
                     criResponse.getCri().getRedirectUrl());
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(OK, criResponse);

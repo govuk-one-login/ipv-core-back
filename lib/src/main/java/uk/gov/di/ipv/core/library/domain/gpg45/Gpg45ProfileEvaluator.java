@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.domain.gpg45.domain.DcmawCheckMethod;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.GPG45_PROFILE;
 
 public class Gpg45ProfileEvaluator {
 
@@ -91,7 +93,8 @@ public class Gpg45ProfileEvaluator {
                         profile -> {
                             boolean profileMet = profile.isSatisfiedBy(gpg45Scores);
                             if (profileMet) {
-                                LOGGER.info("GPG45 profile has been met: {}", profile.label);
+                                LogHelper.logInfoMessageWithFieldAndValue(
+                                        "GPG45 profile has been met", GPG45_PROFILE, profile.label);
                             }
                             return profileMet;
                         });

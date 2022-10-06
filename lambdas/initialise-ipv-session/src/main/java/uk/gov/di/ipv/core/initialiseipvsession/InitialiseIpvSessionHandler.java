@@ -142,9 +142,8 @@ public class InitialiseIpvSessionHandler
             Map<String, String> response =
                     Map.of(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());
 
-            LOGGER.info(
-                    "Successfully generated a new IPV Core session: {}",
-                    ipvSessionItem.getIpvSessionId());
+            LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
+            LOGGER.info("Successfully generated a new IPV Core session");
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
         } catch (RecoverableJarValidationException e) {

@@ -40,6 +40,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.REDIRECT_URI;
+
 public class BuildClientOauthResponseHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -130,8 +132,9 @@ public class BuildClientOauthResponseHandler
             auditService.sendAuditEvent(
                     new AuditEvent(AuditEventTypes.IPV_JOURNEY_END, componentId, auditEventUser));
 
-            LOGGER.info(
-                    "Successfully generated ipv client oauth response. User will be redirected back to: {}",
+            LogHelper.logInfoMessageWithFieldAndValue(
+                    "Successfully generated ipv client oauth response.",
+                    REDIRECT_URI,
                     clientResponse.getClient().getRedirectUrl());
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, clientResponse);
