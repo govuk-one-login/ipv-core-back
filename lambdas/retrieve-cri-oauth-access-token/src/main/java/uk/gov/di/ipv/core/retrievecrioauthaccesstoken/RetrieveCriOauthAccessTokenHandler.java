@@ -21,7 +21,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -43,11 +42,6 @@ public class RetrieveCriOauthAccessTokenHandler
             new JourneyResponse("/journey/next");
     private static final JourneyResponse JOURNEY_ERROR_RESPONSE =
             new JourneyResponse("/journey/error");
-    private static final String RETRIEVE_CRI_OAUTH_ACCESS_TOKEN_STATE =
-            "RETRIEVE_CRI_OAUTH_ACCESS_TOKEN";
-    private static final String DEBUG_RETRIEVE_CRI_OAUTH_ACCESS_TOKEN_STATE =
-            "DEBUG_RETRIEVE_CRI_OAUTH_ACCESS_TOKEN";
-
     private final CredentialIssuerService credentialIssuerService;
     private final ConfigurationService configurationService;
     private final AuditService auditService;
@@ -84,7 +78,6 @@ public class RetrieveCriOauthAccessTokenHandler
         LogHelper.attachComponentIdToLogs();
         IpvSessionItem ipvSessionItem = null;
         String credentialIssuerId = null;
-        String authorizationCode;
 
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
@@ -93,21 +86,9 @@ public class RetrieveCriOauthAccessTokenHandler
                     ipvSessionItem.getClientSessionDetails();
             String userId = clientSessionDetailsDto.getUserId();
 
-            // Staging out the change here - if auth code not present in the session, we try to get
-            // it from the request as before
-            boolean authCodeIsNotInSession =
-                    ipvSessionItem.getCredentialIssuerSessionDetails().getAuthorizationCode()
-                            == null;
-            if (authCodeIsNotInSession) {
-                CredentialIssuerRequestDto request =
-                        RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
-                credentialIssuerId = request.getCredentialIssuerId();
-                authorizationCode = request.getAuthorizationCode();
-            } else {
-                credentialIssuerId = ipvSessionItem.getCredentialIssuerSessionDetails().getCriId();
-                authorizationCode =
-                        ipvSessionItem.getCredentialIssuerSessionDetails().getAuthorizationCode();
-            }
+            credentialIssuerId = ipvSessionItem.getCredentialIssuerSessionDetails().getCriId();
+            String authorizationCode =
+                    ipvSessionItem.getCredentialIssuerSessionDetails().getAuthorizationCode();
 
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     clientSessionDetailsDto.getGovukSigninJourneyId());
@@ -139,15 +120,6 @@ public class RetrieveCriOauthAccessTokenHandler
 
             setIpvSessionItemAccessToken(ipvSessionItem, accessToken);
             setVisitedCredentials(ipvSessionItem, credentialIssuerId, true, null);
-
-            // Staging out the change here - skip the journey state to get us back on track
-            if (authCodeIsNotInSession) {
-                if (clientSessionDetailsDto.isDebugJourney())
-                    ipvSessionItem.setUserState(DEBUG_RETRIEVE_CRI_OAUTH_ACCESS_TOKEN_STATE);
-                else {
-                    ipvSessionItem.setUserState(RETRIEVE_CRI_OAUTH_ACCESS_TOKEN_STATE);
-                }
-            }
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
