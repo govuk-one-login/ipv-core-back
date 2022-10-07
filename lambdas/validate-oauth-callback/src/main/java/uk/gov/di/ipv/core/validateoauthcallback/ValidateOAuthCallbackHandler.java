@@ -16,6 +16,8 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.auditing.AuditExtensionErrorParams;
+import uk.gov.di.ipv.core.library.auditing.AuditExtensions;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -33,6 +35,9 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class ValidateOAuthCallbackHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
@@ -41,6 +46,17 @@ public class ValidateOAuthCallbackHandler
             new JourneyResponse("/journey/next");
     private static final JourneyResponse JOURNEY_ERROR_RESPONSE =
             new JourneyResponse("/journey/error");
+    private static final String ERROR_JOURNEY_STEP_URI = "/journey/error";
+    private static final String ACCESS_DENIED_JOURNEY_STEP_URI = "/journey/access-denied";
+    private static final List<String> ALLOWED_OAUTH_ERROR_CODES =
+            Arrays.asList(
+                    OAuth2Error.INVALID_REQUEST_CODE,
+                    OAuth2Error.UNAUTHORIZED_CLIENT_CODE,
+                    OAuth2Error.ACCESS_DENIED_CODE,
+                    OAuth2Error.UNSUPPORTED_RESPONSE_TYPE_CODE,
+                    OAuth2Error.INVALID_SCOPE_CODE,
+                    OAuth2Error.SERVER_ERROR_CODE,
+                    OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE);
     private final ConfigurationService configurationService;
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
@@ -82,21 +98,16 @@ public class ValidateOAuthCallbackHandler
             CredentialIssuerRequestDto request =
                     RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
 
-            validate(request);
-
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 
-            auditService.sendAuditEvent(
-                    new AuditEvent(
-                            AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED,
-                            componentId,
-                            new AuditEventUser(
-                                    ipvSessionItem.getClientSessionDetails().getUserId(),
-                                    ipvSessionItem.getIpvSessionId(),
-                                    ipvSessionItem
-                                            .getClientSessionDetails()
-                                            .getGovukSigninJourneyId())));
+            if (request.getError() != null) {
+                return sendOauthErrorJourneyResponse(ipvSessionItem, request);
+            }
+
+            validate(request);
+
+            sendAuditEvent(ipvSessionItem, null);
 
             setIpvSessionCRIAuthorizationCode(
                     ipvSessionItem, new AuthorizationCode(request.getAuthorizationCode()));
@@ -127,6 +138,39 @@ public class ValidateOAuthCallbackHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
+        }
+    }
+
+    @Tracing
+    private APIGatewayProxyResponseEvent sendOauthErrorJourneyResponse(
+            IpvSessionItem ipvSessionItem, CredentialIssuerRequestDto request) throws SqsException {
+        AuditExtensionErrorParams extensions =
+                new AuditExtensionErrorParams.Builder()
+                        .setErrorCode(request.getError())
+                        .setErrorDescription(request.getErrorDescription())
+                        .build();
+        sendAuditEvent(ipvSessionItem, extensions);
+
+        if (!ALLOWED_OAUTH_ERROR_CODES.contains(request.getError())) {
+            LOGGER.warn("Unknown Oauth error code received");
+        }
+
+        ipvSessionItem.addVisitedCredentialIssuerDetails(
+                new VisitedCredentialIssuerDetailsDto(
+                        request.getCredentialIssuerId(), false, request.getError()));
+        ipvSessionService.updateIpvSession(ipvSessionItem);
+
+        if (OAuth2Error.ACCESS_DENIED_CODE.equals(request.getError())) {
+            LOGGER.info("OAuth access_denied");
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_OK, new JourneyResponse(ACCESS_DENIED_JOURNEY_STEP_URI));
+        } else {
+            LogHelper.logOauthError(
+                    "OAuth error received from CRI",
+                    request.getError(),
+                    request.getErrorDescription());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_OK, new JourneyResponse(ERROR_JOURNEY_STEP_URI));
         }
     }
 
@@ -197,5 +241,19 @@ public class ValidateOAuthCallbackHandler
             String oauthError) {
         ipvSessionItem.addVisitedCredentialIssuerDetails(
                 new VisitedCredentialIssuerDetailsDto(criId, returnedWithVc, oauthError));
+    }
+
+    @Tracing
+    private void sendAuditEvent(IpvSessionItem ipvSessionItem, AuditExtensions extensions)
+            throws SqsException {
+        auditService.sendAuditEvent(
+                new AuditEvent(
+                        AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED,
+                        componentId,
+                        new AuditEventUser(
+                                ipvSessionItem.getClientSessionDetails().getUserId(),
+                                ipvSessionItem.getIpvSessionId(),
+                                ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId()),
+                        extensions));
     }
 }
