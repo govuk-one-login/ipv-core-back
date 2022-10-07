@@ -12,6 +12,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.MapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.buildclientoauthresponse.domain.ClientDetails;
@@ -39,8 +40,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.REDIRECT_URI;
 
 public class BuildClientOauthResponseHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -132,10 +131,13 @@ public class BuildClientOauthResponseHandler
             auditService.sendAuditEvent(
                     new AuditEvent(AuditEventTypes.IPV_JOURNEY_END, componentId, auditEventUser));
 
-            LogHelper.logInfoMessageWithFieldAndValue(
-                    "Successfully generated ipv client oauth response.",
-                    REDIRECT_URI,
-                    clientResponse.getClient().getRedirectUrl());
+            var message =
+                    new MapMessage()
+                            .with(
+                                    "lambdaResult",
+                                    "Successfully generated ipv client oauth response.")
+                            .with("redirectUri", clientResponse.getClient().getRedirectUrl());
+            LOGGER.info(message);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, clientResponse);
         } catch (ParseException e) {

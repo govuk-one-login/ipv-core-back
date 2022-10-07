@@ -29,9 +29,7 @@ public class LogHelper {
         NUMBER_OF_VCS("numberOfVCs"),
         ERROR("error"),
         PAYLOAD("payload"),
-        STATUS_CODE("statusCode"),
-        REDIRECT_URI("redirectUri"),
-        GPG45_PROFILE("Gpg45Profile");
+        STATUS_CODE("statusCode");
         private final String fieldName;
 
         LogField(String fieldName) {

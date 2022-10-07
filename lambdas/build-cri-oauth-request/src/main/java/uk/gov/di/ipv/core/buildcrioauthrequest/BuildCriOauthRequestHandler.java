@@ -17,6 +17,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.MapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriDetails;
@@ -58,7 +59,6 @@ import java.util.Set;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.REDIRECT_URI;
 
 public class BuildCriOauthRequestHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -159,10 +159,11 @@ public class BuildCriOauthRequestHandler
                     new AuditEvent(
                             AuditEventTypes.IPV_REDIRECT_TO_CRI, componentId, auditEventUser));
 
-            LogHelper.logInfoMessageWithFieldAndValue(
-                    "Successfully generated ipv cri oauth request.",
-                    REDIRECT_URI,
-                    criResponse.getCri().getRedirectUrl());
+            var message =
+                    new MapMessage()
+                            .with("lambdaResult", "Successfully generated ipv cri oauth request.")
+                            .with("redirectUri", criResponse.getCri().getRedirectUrl());
+            LOGGER.info(message);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(OK, criResponse);
 

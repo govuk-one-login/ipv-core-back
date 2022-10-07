@@ -7,6 +7,7 @@ import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.MapMessage;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
@@ -14,7 +15,6 @@ import uk.gov.di.ipv.core.library.domain.gpg45.domain.DcmawCheckMethod;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
-import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.GPG45_PROFILE;
 
 public class Gpg45ProfileEvaluator {
 
@@ -93,8 +92,11 @@ public class Gpg45ProfileEvaluator {
                         profile -> {
                             boolean profileMet = profile.isSatisfiedBy(gpg45Scores);
                             if (profileMet) {
-                                LogHelper.logInfoMessageWithFieldAndValue(
-                                        "GPG45 profile has been met", GPG45_PROFILE, profile.label);
+                                var message =
+                                        new MapMessage()
+                                                .with("message", "GPG45 profile has been met")
+                                                .with("gpg45Profile", profile.getLabel());
+                                LOGGER.info(message);
                             }
                             return profileMet;
                         });

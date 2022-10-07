@@ -14,6 +14,7 @@ import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.MapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -142,8 +143,11 @@ public class InitialiseIpvSessionHandler
             Map<String, String> response =
                     Map.of(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());
 
-            LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
-            LOGGER.info("Successfully generated a new IPV Core session");
+            var message =
+                    new MapMessage()
+                            .with("lambdaResult", "Successfully generated a new IPV Core session")
+                            .with(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());
+            LOGGER.info(message);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
         } catch (RecoverableJarValidationException e) {

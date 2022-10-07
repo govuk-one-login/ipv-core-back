@@ -12,6 +12,7 @@ import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.MapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -114,18 +115,22 @@ public class EvaluateGpg45ScoresHandler
                                 gpg45ProfileEvaluator.parseGpg45ScoresFromCredentials(credentials),
                                 ACCEPTED_PROFILES);
                 JourneyResponse journeyResponse;
+                var message = new MapMessage();
+
                 if (credentialsSatisfyProfile) {
                     ipvSessionItem.setVot(VOT_P2);
                     journeyResponse = JOURNEY_END;
-                    LOGGER.info(
-                            "A GPG45 profile have been met so generating a /journey/end response");
+                    message.with("lambdaResult", "A GPG45 profile has been met")
+                            .with("journeyResponse", JOURNEY_END);
                 } else {
                     journeyResponse = JOURNEY_NEXT;
-                    LOGGER.info(
-                            "No GPG45 profiles have been met so generating a /journey/next response");
+                    message.with("lambdaResult", "No GPG45 profiles have been met")
+                            .with("journeyResponse", JOURNEY_NEXT);
                 }
 
                 updateSuccessfulVcStatuses(ipvSessionItem, credentials);
+
+                LOGGER.info(message);
 
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatus.SC_OK, journeyResponse);

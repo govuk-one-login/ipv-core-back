@@ -12,6 +12,7 @@ import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.MapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -115,8 +116,6 @@ public class RetrieveCriCredentialHandler
 
         String credentialIssuerId = ipvSessionItem.getCredentialIssuerSessionDetails().getCriId();
 
-        LogHelper.attachCriIdToLogs(credentialIssuerId);
-
         try {
             ClientSessionDetailsDto clientSessionDetailsDto =
                     ipvSessionItem.getClientSessionDetails();
@@ -162,7 +161,11 @@ public class RetrieveCriCredentialHandler
 
             updateVisitedCredentials(ipvSessionItem, credentialIssuerId, true, null);
 
-            LOGGER.info("Successfully retrieved CRI credential.");
+            var message =
+                    new MapMessage()
+                            .with("lambdaResult", "Successfully retrieved CRI credential.")
+                            .with("criId", credentialIssuerId);
+            LOGGER.info(message);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, JOURNEY_NEXT_RESPONSE);

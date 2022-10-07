@@ -16,6 +16,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.MapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -155,16 +156,24 @@ public class IssueClientAccessTokenHandler
                                     EnvironmentVariable.ENVIRONMENT))) {
                 BearerAccessToken bearerAccessToken =
                         accessTokenResponse.getTokens().getBearerAccessToken();
-                LOGGER.info("TEST: generated access token: {}", bearerAccessToken.getValue());
-                LOGGER.info(
-                        "TEST: sha256 value: {}",
-                        DigestUtils.sha256Hex(bearerAccessToken.getValue()));
+                var message =
+                        new MapMessage()
+                                .with("accessToken", bearerAccessToken.getValue())
+                                .with(
+                                        "sha256AccessToken",
+                                        DigestUtils.sha256Hex(bearerAccessToken.getValue()));
+                LOGGER.info(message);
             }
 
             sessionService.setAccessToken(
                     ipvSessionItem, accessTokenResponse.getTokens().getBearerAccessToken());
 
-            LOGGER.info("Successfully generated IPV client access token.");
+            var message =
+                    new MapMessage()
+                            .with(
+                                    "lambdaResult",
+                                    "Successfully generated IPV client access token.");
+            LOGGER.info(message);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, accessTokenResponse.toJSONObject());
