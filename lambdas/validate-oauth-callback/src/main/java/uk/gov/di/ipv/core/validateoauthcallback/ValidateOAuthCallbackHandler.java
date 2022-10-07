@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
@@ -45,6 +44,7 @@ public class ValidateOAuthCallbackHandler
     private final ConfigurationService configurationService;
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
+    private final String componentId;
 
     public ValidateOAuthCallbackHandler(
             ConfigurationService configurationService,
@@ -53,6 +53,9 @@ public class ValidateOAuthCallbackHandler
         this.configurationService = configurationService;
         this.ipvSessionService = ipvSessionService;
         this.auditService = auditService;
+        this.componentId =
+                this.configurationService.getSsmParameter(
+                        ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -61,6 +64,9 @@ public class ValidateOAuthCallbackHandler
         this.ipvSessionService = new IpvSessionService(configurationService);
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
+        this.componentId =
+                this.configurationService.getSsmParameter(
+                        ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @Override
@@ -71,42 +77,29 @@ public class ValidateOAuthCallbackHandler
         LogHelper.attachComponentIdToLogs();
 
         IpvSessionItem ipvSessionItem = null;
-        String credentialIssuerId = null;
 
         try {
-            String ipvSessionId = RequestHelper.getIpvSessionId(input);
-
             CredentialIssuerRequestDto request =
                     RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
 
             validate(request);
 
+            String ipvSessionId = RequestHelper.getIpvSessionId(input);
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-            credentialIssuerId = ipvSessionItem.getCredentialIssuerSessionDetails().getCriId();
-
-            ClientSessionDetailsDto clientSessionDetailsDto =
-                    ipvSessionItem.getClientSessionDetails();
-            String userId = clientSessionDetailsDto.getUserId();
-
-            AuditEventUser auditEventUser =
-                    new AuditEventUser(
-                            userId,
-                            ipvSessionId,
-                            clientSessionDetailsDto.getGovukSigninJourneyId());
-            String componentId =
-                    configurationService.getSsmParameter(
-                            ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
 
             auditService.sendAuditEvent(
                     new AuditEvent(
                             AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED,
                             componentId,
-                            auditEventUser));
+                            new AuditEventUser(
+                                    ipvSessionItem.getClientSessionDetails().getUserId(),
+                                    ipvSessionItem.getIpvSessionId(),
+                                    ipvSessionItem
+                                            .getClientSessionDetails()
+                                            .getGovukSigninJourneyId())));
 
-            AuthorizationCode authorizationCode =
-                    new AuthorizationCode(request.getAuthorizationCode());
-
-            setIpvSessionCRIAuthorizationCode(ipvSessionItem, authorizationCode);
+            setIpvSessionCRIAuthorizationCode(
+                    ipvSessionItem, new AuthorizationCode(request.getAuthorizationCode()));
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
@@ -114,17 +107,22 @@ public class ValidateOAuthCallbackHandler
                     HttpStatus.SC_OK, JOURNEY_NEXT_RESPONSE);
         } catch (HttpResponseExceptionWithErrorBody e) {
             ErrorResponse errorResponse = e.getErrorResponse();
+
             LogHelper.logOauthError(
                     "Error in validate oauth callback lambda",
                     errorResponse.getCode(),
                     errorResponse.getMessage());
+
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, e.getErrorBody());
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
 
             setVisitedCredentials(
-                    ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
+                    ipvSessionItem,
+                    ipvSessionItem.getCredentialIssuerSessionDetails().getCriId(),
+                    false,
+                    OAuth2Error.SERVER_ERROR_CODE);
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(

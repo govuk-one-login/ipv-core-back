@@ -41,7 +41,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
 @ExtendWith(MockitoExtension.class)
@@ -100,9 +99,6 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         when(mockConfigurationService.getCredentialIssuer(TEST_CREDENTIAL_ISSUER_ID))
                 .thenReturn(credentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-
-        when(mockConfigurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
-                .thenReturn(TEST_COMPONENT_ID);
 
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
@@ -227,8 +223,6 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 .thenReturn(credentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
-        when(mockConfigurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
-                .thenReturn(TEST_COMPONENT_ID);
         APIGatewayProxyRequestEvent input =
                 createRequestEvent(
                         Map.of(
