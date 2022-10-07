@@ -131,36 +131,41 @@ public class SelectCriHandler
             String userId)
             throws ParseException {
         Optional<JourneyResponse> passportResponse =
-                getCriResponse(visitedCredentialIssuers, currentVcStatuses, passportCriId, userId);
+                getCriResponse(
+                        visitedCredentialIssuers,
+                        currentVcStatuses,
+                        passportCriId,
+                        passportCriId,
+                        userId);
         if (passportResponse.isPresent()) {
             return passportResponse.get();
         }
 
-        if (userHasNotVisited(visitedCredentialIssuers, addressCriId)) {
-            return getJourneyResponse(addressCriId);
-        } else {
-            VisitedCredentialIssuerDetailsDto addressVisitDetails =
-                    visitedCredentialIssuers.stream()
-                            .filter(cri -> cri.getCriId().equals(addressCriId))
-                            .findFirst()
-                            .orElseThrow();
-
-            if (!addressVisitDetails.isReturnedWithVc()) {
-                LOGGER.info(
-                        "User has a previous failed visit to address cri due to: {}. Routing user to the failed journey route.",
-                        addressVisitDetails.getOauthError());
-                return getJourneyPyiNoMatchResponse();
-            }
+        Optional<JourneyResponse> addressResponse =
+                getCriResponse(
+                        visitedCredentialIssuers,
+                        currentVcStatuses,
+                        addressCriId,
+                        addressCriId,
+                        userId);
+        if (addressResponse.isPresent()) {
+            return addressResponse.get();
         }
 
         Optional<JourneyResponse> fraudResponse =
-                getCriResponse(visitedCredentialIssuers, currentVcStatuses, fraudCriId, userId);
+                getCriResponse(
+                        visitedCredentialIssuers,
+                        currentVcStatuses,
+                        fraudCriId,
+                        fraudCriId,
+                        userId);
         if (fraudResponse.isPresent()) {
             return fraudResponse.get();
         }
 
         Optional<JourneyResponse> kbvResponse =
-                getCriResponse(visitedCredentialIssuers, currentVcStatuses, kbvCriId, userId);
+                getCriResponse(
+                        visitedCredentialIssuers, currentVcStatuses, kbvCriId, kbvCriId, userId);
         if (kbvResponse.isPresent()) {
             return kbvResponse.get();
         }
@@ -175,29 +180,34 @@ public class SelectCriHandler
             String userId)
             throws ParseException {
         Optional<JourneyResponse> dcmawResponse =
-                getCriResponse(visitedCredentialIssuers, currentVcStatuses, dcmawCriId, userId);
+                getCriResponse(
+                        visitedCredentialIssuers,
+                        currentVcStatuses,
+                        dcmawCriId,
+                        dcmawCriId,
+                        userId);
         if (dcmawResponse.isPresent()) {
             return dcmawResponse.get();
         }
 
-        if (userHasNotVisited(visitedCredentialIssuers, addressCriId)) {
-            return getJourneyResponse(DCMAW_SUCCESS_PAGE);
-        } else {
-            Optional<VisitedCredentialIssuerDetailsDto> addressVisitDetails =
-                    visitedCredentialIssuers.stream()
-                            .filter(cri -> cri.getCriId().equals(addressCriId))
-                            .findFirst();
-
-            if (addressVisitDetails.isPresent() && !addressVisitDetails.get().isReturnedWithVc()) {
-                LOGGER.info(
-                        "User has a previous failed visit to address cri due to: {}. Routing user to the failed journey route.",
-                        addressVisitDetails.get().getOauthError());
-                return getJourneyPyiNoMatchResponse();
-            }
+        Optional<JourneyResponse> addressResponse =
+                getCriResponse(
+                        visitedCredentialIssuers,
+                        currentVcStatuses,
+                        addressCriId,
+                        DCMAW_SUCCESS_PAGE,
+                        userId);
+        if (addressResponse.isPresent()) {
+            return addressResponse.get();
         }
 
         Optional<JourneyResponse> fraudResponse =
-                getCriResponse(visitedCredentialIssuers, currentVcStatuses, fraudCriId, userId);
+                getCriResponse(
+                        visitedCredentialIssuers,
+                        currentVcStatuses,
+                        fraudCriId,
+                        fraudCriId,
+                        userId);
         if (fraudResponse.isPresent()) {
             return fraudResponse.get();
         }
@@ -229,6 +239,7 @@ public class SelectCriHandler
             List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuers,
             List<VcStatusDto> currentVcStatuses,
             String criId,
+            String journeyId,
             String userId)
             throws ParseException {
         CredentialIssuerConfig criConfig = configurationService.getCredentialIssuer(criId);
@@ -236,7 +247,7 @@ public class SelectCriHandler
         Optional<VcStatusDto> vc = getVc(currentVcStatuses, criConfig.getAudienceForClients());
         if (vc.isEmpty()) {
             if (userHasNotVisited(visitedCredentialIssuers, criId)) {
-                return Optional.of(getJourneyResponse(criId));
+                return Optional.of(getJourneyResponse(journeyId));
             }
             var message =
                     new MapMessage()
@@ -251,6 +262,8 @@ public class SelectCriHandler
                 return Optional.of(
                         getNextWebJourneyCri(visitedCredentialIssuers, currentVcStatuses, userId));
             }
+
+            return Optional.of(getJourneyPyiNoMatchResponse());
         } else if (Boolean.FALSE.equals(vc.get().getIsSuccessfulVc())) {
             var message =
                     new MapMessage()
