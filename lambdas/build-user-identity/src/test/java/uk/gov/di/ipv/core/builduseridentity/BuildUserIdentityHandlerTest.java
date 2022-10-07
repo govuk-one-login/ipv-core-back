@@ -105,6 +105,7 @@ class BuildUserIdentityHandlerTest {
                         false));
         ipvSessionItem.setAccessToken(TEST_ACCESS_TOKEN);
         ipvSessionItem.setAccessTokenMetadata(new AccessTokenMetadata());
+        ipvSessionItem.setVot("P2");
 
         userInfoHandler =
                 new BuildUserIdentityHandler(

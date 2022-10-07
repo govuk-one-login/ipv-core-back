@@ -7,6 +7,7 @@ import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.MapMessage;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
@@ -86,7 +87,19 @@ public class Gpg45ProfileEvaluator {
             List<Gpg45Profile> profiles)
             throws UnknownEvidenceTypeException {
         Gpg45Scores gpg45Scores = buildScore(evidenceMap);
-        return profiles.stream().anyMatch(profile -> profile.isSatisfiedBy(gpg45Scores));
+        return profiles.stream()
+                .anyMatch(
+                        profile -> {
+                            boolean profileMet = profile.isSatisfiedBy(gpg45Scores);
+                            if (profileMet) {
+                                var message =
+                                        new MapMessage()
+                                                .with("message", "GPG45 profile has been met")
+                                                .with("gpg45Profile", profile.getLabel());
+                                LOGGER.info(message);
+                            }
+                            return profileMet;
+                        });
     }
 
     public Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>>

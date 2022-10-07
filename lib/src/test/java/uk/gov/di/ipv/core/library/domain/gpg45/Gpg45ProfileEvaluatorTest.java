@@ -100,6 +100,7 @@ class Gpg45ProfileEvaluatorTest {
     void credentialsSatisfyAnyProfileShouldReturnTrueIfOneProfileIsMet() throws Exception {
         when(profile1.isSatisfiedBy(any())).thenReturn(false);
         when(profile2.isSatisfiedBy(any())).thenReturn(true);
+        when(profile2.getLabel()).thenReturn("M1B");
 
         assertTrue(
                 evaluator.credentialsSatisfyAnyProfile(
