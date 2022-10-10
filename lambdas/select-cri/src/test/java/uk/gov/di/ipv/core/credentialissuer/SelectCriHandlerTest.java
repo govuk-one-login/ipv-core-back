@@ -459,7 +459,7 @@ class SelectCriHandlerTest {
     }
 
     @Test
-    void shouldReturnKbvFailErrorJourneyResponseIfUserHasAPreviouslyFailedVisitKbv()
+    void shouldReturnKbvThinFileErrorJourneyResponseIfUserHasAPreviouslyFailedVisitKbvWithoutCis()
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
@@ -493,7 +493,7 @@ class SelectCriHandlerTest {
 
         Map<String, String> responseBody = getResponseBodyAsMap(response);
 
-        assertEquals("/journey/pyi-kbv-fail", responseBody.get("journey"));
+        assertEquals("/journey/pyi-kbv-thin-file", responseBody.get("journey"));
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
     }
 
