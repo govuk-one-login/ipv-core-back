@@ -49,9 +49,11 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     private static final String TEST_CREDENTIAL_ISSUER_ID = "PassportIssuer";
     private static final String TEST_AUTHORIZATION_CODE = "test-authorization-code";
     private static final String TEST_OAUTH_STATE = "oauth-state";
+    private static final String TEST_OAUTH_ACCESS_DENIED_ERROR = OAuth2Error.ACCESS_DENIED_CODE;
+    private static final String TEST_OAUTH_SERVER_ERROR = OAuth2Error.SERVER_ERROR_CODE;
+    private static final String TEST_ERROR_DESCRIPTION = "test error description";
     private static final String TEST_SESSION_ID = SecureTokenHelper.generate();
     public static final String TEST_USER_ID = "test-user-id";
-    public static final String TEST_COMPONENT_ID = "http://ipv-core-test.example.com";
     private static ClientSessionDetailsDto clientSessionDetailsDto;
     private static CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto;
     private static CredentialIssuerConfig credentialIssuerConfig;
@@ -258,6 +260,54 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         assertEquals(
                 OAuth2Error.SERVER_ERROR_CODE,
                 updatedIpvSessionItem.getVisitedCredentialIssuerDetails().get(0).getOauthError());
+    }
+
+    @Test
+    void shouldReceiveAccessDeniedJourneyResponseWhenOauthErrorAccessDenied()
+            throws JsonProcessingException {
+        APIGatewayProxyRequestEvent input =
+                createRequestEvent(
+                        Map.of(
+                                "credential_issuer_id",
+                                TEST_CREDENTIAL_ISSUER_ID,
+                                "error",
+                                TEST_OAUTH_ACCESS_DENIED_ERROR,
+                                "error_description",
+                                TEST_ERROR_DESCRIPTION),
+                        Map.of("ipv-session-id", TEST_SESSION_ID));
+
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+
+        Integer statusCode = response.getStatusCode();
+        Map responseBody = getResponseBodyAsMap(response);
+        assertEquals(HTTPResponse.SC_OK, statusCode);
+        assertEquals("/journey/access-denied", responseBody.get("journey"));
+    }
+
+    @Test
+    void shouldReceiveJourneyErrorJourneyResponseWhenAnyOtherOauthError()
+            throws JsonProcessingException {
+        APIGatewayProxyRequestEvent input =
+                createRequestEvent(
+                        Map.of(
+                                "credential_issuer_id",
+                                TEST_CREDENTIAL_ISSUER_ID,
+                                "error",
+                                TEST_OAUTH_SERVER_ERROR,
+                                "error_description",
+                                TEST_ERROR_DESCRIPTION),
+                        Map.of("ipv-session-id", TEST_SESSION_ID));
+
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+
+        Integer statusCode = response.getStatusCode();
+        Map responseBody = getResponseBodyAsMap(response);
+        assertEquals(HTTPResponse.SC_OK, statusCode);
+        assertEquals("/journey/error", responseBody.get("journey"));
     }
 
     private Map getResponseBodyAsMap(APIGatewayProxyResponseEvent response)

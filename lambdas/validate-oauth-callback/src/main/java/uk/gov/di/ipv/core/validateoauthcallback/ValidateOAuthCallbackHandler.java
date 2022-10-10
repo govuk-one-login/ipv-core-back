@@ -16,6 +16,8 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.auditing.AuditExtensionErrorParams;
+import uk.gov.di.ipv.core.library.auditing.AuditExtensions;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -33,14 +35,28 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class ValidateOAuthCallbackHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final JourneyResponse JOURNEY_NEXT_RESPONSE =
             new JourneyResponse("/journey/next");
+    private static final JourneyResponse JOURNEY_ACCESS_DENIED_RESPONSE =
+            new JourneyResponse("/journey/access-denied");
     private static final JourneyResponse JOURNEY_ERROR_RESPONSE =
             new JourneyResponse("/journey/error");
+    private static final List<String> ALLOWED_OAUTH_ERROR_CODES =
+            Arrays.asList(
+                    OAuth2Error.INVALID_REQUEST_CODE,
+                    OAuth2Error.UNAUTHORIZED_CLIENT_CODE,
+                    OAuth2Error.ACCESS_DENIED_CODE,
+                    OAuth2Error.UNSUPPORTED_RESPONSE_TYPE_CODE,
+                    OAuth2Error.INVALID_SCOPE_CODE,
+                    OAuth2Error.SERVER_ERROR_CODE,
+                    OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE);
     private final ConfigurationService configurationService;
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
@@ -82,21 +98,16 @@ public class ValidateOAuthCallbackHandler
             CredentialIssuerRequestDto request =
                     RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
 
-            validate(request);
-
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 
-            auditService.sendAuditEvent(
-                    new AuditEvent(
-                            AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED,
-                            componentId,
-                            new AuditEventUser(
-                                    ipvSessionItem.getClientSessionDetails().getUserId(),
-                                    ipvSessionItem.getIpvSessionId(),
-                                    ipvSessionItem
-                                            .getClientSessionDetails()
-                                            .getGovukSigninJourneyId())));
+            if (request.getError().isPresent()) {
+                return sendOauthErrorJourneyResponse(ipvSessionItem, request);
+            }
+
+            validate(request);
+
+            sendAuditEvent(ipvSessionItem, null);
 
             setIpvSessionCRIAuthorizationCode(
                     ipvSessionItem, new AuthorizationCode(request.getAuthorizationCode()));
@@ -125,6 +136,39 @@ public class ValidateOAuthCallbackHandler
                     OAuth2Error.SERVER_ERROR_CODE);
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
+        }
+    }
+
+    @Tracing
+    private APIGatewayProxyResponseEvent sendOauthErrorJourneyResponse(
+            IpvSessionItem ipvSessionItem, CredentialIssuerRequestDto request) throws SqsException {
+        String error = request.getError().orElse(null);
+        String errorDescription = request.getErrorDescription().orElse(null);
+
+        AuditExtensionErrorParams extensions =
+                new AuditExtensionErrorParams.Builder()
+                        .setErrorCode(error)
+                        .setErrorDescription(errorDescription)
+                        .build();
+        sendAuditEvent(ipvSessionItem, extensions);
+
+        if (!ALLOWED_OAUTH_ERROR_CODES.contains(error)) {
+            LOGGER.warn("Unknown Oauth error code received");
+        }
+
+        ipvSessionItem.addVisitedCredentialIssuerDetails(
+                new VisitedCredentialIssuerDetailsDto(
+                        request.getCredentialIssuerId(), false, error));
+        ipvSessionService.updateIpvSession(ipvSessionItem);
+
+        if (OAuth2Error.ACCESS_DENIED_CODE.equals(error)) {
+            LOGGER.info("OAuth access_denied");
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_OK, JOURNEY_ACCESS_DENIED_RESPONSE);
+        } else {
+            LogHelper.logOauthError("OAuth error received from CRI", error, errorDescription);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
         }
@@ -197,5 +241,19 @@ public class ValidateOAuthCallbackHandler
             String oauthError) {
         ipvSessionItem.addVisitedCredentialIssuerDetails(
                 new VisitedCredentialIssuerDetailsDto(criId, returnedWithVc, oauthError));
+    }
+
+    @Tracing
+    private void sendAuditEvent(IpvSessionItem ipvSessionItem, AuditExtensions extensions)
+            throws SqsException {
+        auditService.sendAuditEvent(
+                new AuditEvent(
+                        AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED,
+                        componentId,
+                        new AuditEventUser(
+                                ipvSessionItem.getClientSessionDetails().getUserId(),
+                                ipvSessionItem.getIpvSessionId(),
+                                ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId()),
+                        extensions));
     }
 }

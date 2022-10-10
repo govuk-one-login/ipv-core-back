@@ -94,7 +94,9 @@ class CredentialIssuerServiceTest {
                         "cred_issuer_id_1",
                         TEST_IPV_SESSION_ID,
                         "http://www.example.com/redirect",
-                        OAUTH_STATE);
+                        OAUTH_STATE,
+                        null,
+                        null);
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
 
@@ -125,7 +127,9 @@ class CredentialIssuerServiceTest {
                         "dcmaw",
                         TEST_IPV_SESSION_ID,
                         "http://www.example.com/redirect",
-                        OAUTH_STATE);
+                        OAUTH_STATE,
+                        null,
+                        null);
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
 
@@ -156,7 +160,9 @@ class CredentialIssuerServiceTest {
                         "cred_issuer_id_1",
                         TEST_IPV_SESSION_ID,
                         "http://www.example.com/redirect",
-                        OAUTH_STATE);
+                        OAUTH_STATE,
+                        null,
+                        null);
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
 
@@ -189,7 +195,9 @@ class CredentialIssuerServiceTest {
                         "cred_issuer_id_1",
                         TEST_IPV_SESSION_ID,
                         "http://www.example.com/redirect",
-                        OAUTH_STATE);
+                        OAUTH_STATE,
+                        null,
+                        null);
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
 
@@ -221,7 +229,9 @@ class CredentialIssuerServiceTest {
                         "cred_issuer_id_1",
                         TEST_IPV_SESSION_ID,
                         "http://www.example.com/redirect",
-                        OAUTH_STATE);
+                        OAUTH_STATE,
+                        null,
+                        null);
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
         CredentialIssuerException exception =
