@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
+import java.util.Optional;
+
 @ExcludeFromGeneratedCoverageReport
 @Getter
 public class CredentialIssuerRequestDto {
@@ -18,9 +20,9 @@ public class CredentialIssuerRequestDto {
 
     private final String state;
 
-    private final String error;
+    private final Optional<String> error;
 
-    private final String errorDescription;
+    private final Optional<String> errorDescription;
 
     public CredentialIssuerRequestDto(
             @JsonProperty(value = "authorization_code") String authorizationCode,
@@ -35,7 +37,7 @@ public class CredentialIssuerRequestDto {
         this.ipvSessionId = ipvSessionId;
         this.redirectUri = redirectUri;
         this.state = state;
-        this.error = error;
-        this.errorDescription = errorDescription;
+        this.error = Optional.ofNullable(error);
+        this.errorDescription = Optional.ofNullable(errorDescription);
     }
 }

@@ -54,7 +54,6 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     private static final String TEST_ERROR_DESCRIPTION = "test error description";
     private static final String TEST_SESSION_ID = SecureTokenHelper.generate();
     public static final String TEST_USER_ID = "test-user-id";
-    public static final String TEST_COMPONENT_ID = "http://ipv-core-test.example.com";
     private static ClientSessionDetailsDto clientSessionDetailsDto;
     private static CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto;
     private static CredentialIssuerConfig credentialIssuerConfig;

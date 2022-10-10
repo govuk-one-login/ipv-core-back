@@ -44,10 +44,10 @@ public class ValidateOAuthCallbackHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private static final JourneyResponse JOURNEY_NEXT_RESPONSE =
             new JourneyResponse("/journey/next");
+    private static final JourneyResponse JOURNEY_ACCESS_DENIED_RESPONSE =
+            new JourneyResponse("/journey/access-denied");
     private static final JourneyResponse JOURNEY_ERROR_RESPONSE =
             new JourneyResponse("/journey/error");
-    private static final String ERROR_JOURNEY_STEP_URI = "/journey/error";
-    private static final String ACCESS_DENIED_JOURNEY_STEP_URI = "/journey/access-denied";
     private static final List<String> ALLOWED_OAUTH_ERROR_CODES =
             Arrays.asList(
                     OAuth2Error.INVALID_REQUEST_CODE,
@@ -101,7 +101,7 @@ public class ValidateOAuthCallbackHandler
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 
-            if (request.getError() != null) {
+            if (request.getError().isPresent()) {
                 return sendOauthErrorJourneyResponse(ipvSessionItem, request);
             }
 
@@ -144,33 +144,33 @@ public class ValidateOAuthCallbackHandler
     @Tracing
     private APIGatewayProxyResponseEvent sendOauthErrorJourneyResponse(
             IpvSessionItem ipvSessionItem, CredentialIssuerRequestDto request) throws SqsException {
+        String error = request.getError().orElse(null);
+        String errorDescription = request.getErrorDescription().orElse(null);
+
         AuditExtensionErrorParams extensions =
                 new AuditExtensionErrorParams.Builder()
-                        .setErrorCode(request.getError())
-                        .setErrorDescription(request.getErrorDescription())
+                        .setErrorCode(error)
+                        .setErrorDescription(errorDescription)
                         .build();
         sendAuditEvent(ipvSessionItem, extensions);
 
-        if (!ALLOWED_OAUTH_ERROR_CODES.contains(request.getError())) {
+        if (!ALLOWED_OAUTH_ERROR_CODES.contains(error)) {
             LOGGER.warn("Unknown Oauth error code received");
         }
 
         ipvSessionItem.addVisitedCredentialIssuerDetails(
                 new VisitedCredentialIssuerDetailsDto(
-                        request.getCredentialIssuerId(), false, request.getError()));
+                        request.getCredentialIssuerId(), false, error));
         ipvSessionService.updateIpvSession(ipvSessionItem);
 
-        if (OAuth2Error.ACCESS_DENIED_CODE.equals(request.getError())) {
+        if (OAuth2Error.ACCESS_DENIED_CODE.equals(error)) {
             LOGGER.info("OAuth access_denied");
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, new JourneyResponse(ACCESS_DENIED_JOURNEY_STEP_URI));
+                    HttpStatus.SC_OK, JOURNEY_ACCESS_DENIED_RESPONSE);
         } else {
-            LogHelper.logOauthError(
-                    "OAuth error received from CRI",
-                    request.getError(),
-                    request.getErrorDescription());
+            LogHelper.logOauthError("OAuth error received from CRI", error, errorDescription);
             return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, new JourneyResponse(ERROR_JOURNEY_STEP_URI));
+                    HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
         }
     }
 
