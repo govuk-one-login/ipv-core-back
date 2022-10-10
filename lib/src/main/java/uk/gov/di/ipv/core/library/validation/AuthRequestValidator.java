@@ -28,15 +28,10 @@ public class AuthRequestValidator {
     }
 
     public ValidationResult<ErrorResponse> validateRequest(
-            Map<String, List<String>> queryStringParameters, Map<String, String> requestHeaders) {
+            Map<String, List<String>> queryStringParameters) {
         if (queryStringParamsMissing(queryStringParameters)) {
             LOGGER.error("Missing required query parameters for authorisation request");
             return new ValidationResult<>(false, ErrorResponse.MISSING_QUERY_PARAMETERS);
-        }
-
-        if (sessionIdMissing(requestHeaders)) {
-            LOGGER.error("Missing IPV session ID from headers");
-            return new ValidationResult<>(false, ErrorResponse.MISSING_IPV_SESSION_ID);
         }
 
         var errorResult = validateRedirectUrl(queryStringParameters);

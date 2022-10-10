@@ -2,8 +2,6 @@ package uk.gov.di.ipv.core.buildcrioauthrequest;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,7 +25,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
@@ -36,12 +33,11 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
-import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.AuthorizationRequestHelper;
 import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -50,6 +46,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -58,16 +55,16 @@ import java.util.Set;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
+import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.IPV_SESSION_ID;
+import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.JOURNEY;
 
 public class BuildCriOauthRequestHandler
-        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+        implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     public static final String CRI_ID = "criId";
-    public static final int OK = 200;
-    public static final String SHARED_CLAIMS = "shared_claims";
     public static final String DCMAW_CRI_ID = "dcmaw";
     public static final String STUB_DCMAW_CRI_ID = "stubDcmaw";
-    public static final JourneyResponse ERROR_JOURNEY = new JourneyResponse("/journey/error");
+    public static final String ERROR_JOURNEY = "/journey/error";
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -107,25 +104,26 @@ public class BuildCriOauthRequestHandler
 
     @Override
     @Tracing
-    @Logging(clearState = true)
-    public APIGatewayProxyResponseEvent handleRequest(
-            APIGatewayProxyRequestEvent input, Context context) {
+    @Logging(clearState = true, logEvent = true)
+    public Map<String, Object> handleRequest(Map<String, String> input, Context context) {
         LogHelper.attachComponentIdToLogs();
+        String ipvSessionId = null;
         try {
-            String ipvSessionId = RequestHelper.getIpvSessionId(input);
-            Map<String, String> pathParameters = input.getPathParameters();
+            ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
+            String[] parts = input.get(JOURNEY).split("/");
+            String criId = parts[parts.length - 1];
 
-            var errorResponse = validate(pathParameters);
-            if (errorResponse.isPresent()) {
-                return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
+            if (criId == null) {
+                return StepFunctionHelpers.generateErrorOutputMap(
+                        HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
             }
+            LogHelper.attachCriIdToLogs(criId);
 
-            CredentialIssuerConfig credentialIssuerConfig =
-                    getCredentialIssuerConfig(pathParameters.get(CRI_ID));
+            CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(criId);
 
             if (credentialIssuerConfig == null) {
-                return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        400, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
+                return StepFunctionHelpers.generateErrorOutputMap(
+                        HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
             }
 
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
@@ -158,26 +156,38 @@ public class BuildCriOauthRequestHandler
                     new AuditEvent(
                             AuditEventTypes.IPV_REDIRECT_TO_CRI, componentId, auditEventUser));
 
-            return ApiGatewayResponseGenerator.proxyJsonResponse(OK, criResponse);
+            CriDetails cri = criResponse.getCri();
+            Map<String, Object> output = new HashMap<>();
+            output.put("cri", Map.of("redirectUrl", cri.getRedirectUrl(), "id", cri.getId()));
+            output.put(IPV_SESSION_ID, ipvSessionId);
+            return output;
 
         } catch (HttpResponseExceptionWithErrorBody e) {
             if (ErrorResponse.MISSING_IPV_SESSION_ID.equals(e.getErrorResponse())) {
-                return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        e.getResponseCode(), e.getErrorBody());
+                return StepFunctionHelpers.generateErrorOutputMap(
+                        e.getResponseCode(), e.getErrorResponse());
             }
             LOGGER.error("Failed to create cri JAR because: {}", e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, ERROR_JOURNEY);
+            return getErrorJourneyOutput(ipvSessionId);
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, ERROR_JOURNEY);
+            return getErrorJourneyOutput(ipvSessionId);
         } catch (ParseException | JOSEException e) {
             LOGGER.error("Failed to parse encryption public JWK: {}", e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, ERROR_JOURNEY);
+            return getErrorJourneyOutput(ipvSessionId);
         } catch (URISyntaxException e) {
             LOGGER.error("Failed to construct redirect uri because: {}", e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI);
         }
+    }
+
+    private Map<String, Object> getErrorJourneyOutput(String ipvSessionId) {
+        Map<String, Object> output = new HashMap<>();
+        output.put(JOURNEY, ERROR_JOURNEY);
+        output.put(IPV_SESSION_ID, ipvSessionId);
+        return output;
     }
 
     private CriResponse getCriResponse(

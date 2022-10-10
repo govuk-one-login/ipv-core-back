@@ -2,8 +2,6 @@ package uk.gov.di.ipv.core.retrievecricredential;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
@@ -22,17 +20,15 @@ import uk.gov.di.ipv.core.library.auditing.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
-import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
@@ -42,17 +38,19 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 
 import java.text.ParseException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
+import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.IPV_SESSION_ID;
+import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.JOURNEY;
 
 public class RetrieveCriCredentialHandler
-        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+        implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final JourneyResponse JOURNEY_NEXT_RESPONSE =
-            new JourneyResponse("/journey/next");
-    private static final JourneyResponse JOURNEY_ERROR_RESPONSE =
-            new JourneyResponse("/journey/error");
+    private static final String JOURNEY_NEXT = "/journey/next";
+    private static final String JOURNEY_ERROR = "/journey/error";
     public static final String EVIDENCE = "evidence";
 
     private final CredentialIssuerService credentialIssuerService;
@@ -95,22 +93,22 @@ public class RetrieveCriCredentialHandler
 
     @Override
     @Tracing
-    @Logging(clearState = true)
-    public APIGatewayProxyResponseEvent handleRequest(
-            APIGatewayProxyRequestEvent input, Context context) {
+    @Logging(clearState = true, logEvent = true)
+    public Map<String, Object> handleRequest(Map<String, String> input, Context context) {
         LogHelper.attachComponentIdToLogs();
 
+        String ipvSessionId;
         IpvSessionItem ipvSessionItem;
         try {
-            String ipvSessionId = RequestHelper.getIpvSessionId(input);
+            ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
         } catch (HttpResponseExceptionWithErrorBody e) {
             ErrorResponse errorResponse = e.getErrorResponse();
             LOGGER.error(
                     "Error in credential issuer return lambda because: {}",
                     errorResponse.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_BAD_REQUEST, e.getErrorBody());
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
         }
 
         String credentialIssuerId = ipvSessionItem.getCredentialIssuerSessionDetails().getCriId();
@@ -160,30 +158,34 @@ public class RetrieveCriCredentialHandler
 
             updateVisitedCredentials(ipvSessionItem, credentialIssuerId, true, null);
 
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, JOURNEY_NEXT_RESPONSE);
+            Map<String, Object> output = new HashMap<>();
+            output.put(JOURNEY, JOURNEY_NEXT);
+            output.put(IPV_SESSION_ID, ipvSessionId);
+            return output;
         } catch (CredentialIssuerException | CiPutException e) {
             updateVisitedCredentials(
                     ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
-
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
+            return getJourneyErrorOutput(ipvSessionId);
         } catch (ParseException | JsonProcessingException | SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
 
             updateVisitedCredentials(
                     ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
+            return getJourneyErrorOutput(ipvSessionId);
         } catch (com.nimbusds.oauth2.sdk.ParseException e) {
             LOGGER.error("Failed to parse access token: {}", e.getMessage());
 
             updateVisitedCredentials(
                     ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
-
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
+            return getJourneyErrorOutput(ipvSessionId);
         }
+    }
+
+    private Map<String, Object> getJourneyErrorOutput(String ipvSessionId) {
+        Map<String, Object> output = new HashMap<>();
+        output.put(JOURNEY, JOURNEY_ERROR);
+        output.put(IPV_SESSION_ID, ipvSessionId);
+        return output;
     }
 
     @Tracing

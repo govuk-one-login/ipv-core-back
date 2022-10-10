@@ -1148,6 +1148,12 @@ Resources:
       DefinitionUri: journey_engine.asl.json
       DefinitionSubstitutions:
         IPVProcessJourneyStepFunctionArn: !GetAtt IPVProcessJourneyStepFunction.Arn
+        BuildClientOauthResponseFunctionArn: !GetAtt BuildClientOauthResponseFunction.Arn
+        RetrieveCriCredentialFunctionArn: !GetAtt RetrieveCriCredentialFunction.Arn
+        EvaluateGpg45ScoresFunctionArn: !GetAtt EvaluateGpg45ScoresFunction.Arn
+        SelectCriFunctionArn: !GetAtt SelectCriFunction.Arn
+        BuildCriOauthRequestFunctionArn: !GetAtt BuildCriOauthRequestFunction.Arn
+
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1165,6 +1171,16 @@ Resources:
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref IPVProcessJourneyStepFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref BuildClientOauthResponseFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref RetrieveCriCredentialFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref EvaluateGpg45ScoresFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref SelectCriFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref BuildCriOauthRequestFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow

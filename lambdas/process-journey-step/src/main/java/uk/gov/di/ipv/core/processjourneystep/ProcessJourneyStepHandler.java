@@ -1,24 +1,21 @@
 package uk.gov.di.ipv.core.processjourneystep;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.google.gson.Gson;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.MapMessage;
-import software.amazon.awssdk.utils.StringUtils;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
-import uk.gov.di.ipv.core.library.domain.ApiGatewayTemplateMappingInput;
-import uk.gov.di.ipv.core.library.domain.ApiGatewayTemplateMappingOutput;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -31,22 +28,18 @@ import uk.gov.di.ipv.core.processjourneystep.statemachine.exceptions.UnknownStat
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyContext;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.PageResponse;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
+import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.IPV_SESSION_ID;
+import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.JOURNEY;
 
-public class ProcessJourneyStepHandler implements RequestStreamHandler {
+public class ProcessJourneyStepHandler
+        implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String JOURNEY_STEP_PARAM = "journeyStep";
     private static final String PYIC_TECHNICAL_ERROR_PAGE_ID = "pyi-technical";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
     private static final Gson gson = new Gson();
@@ -77,62 +70,46 @@ public class ProcessJourneyStepHandler implements RequestStreamHandler {
 
     @Override
     @Tracing
-    @Logging(clearState = true)
-    public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context)
-            throws IOException {
+    @Logging(clearState = true, logEvent = true)
+    public Map<String, Object> handleRequest(Map<String, String> input, Context context) {
         LogHelper.attachComponentIdToLogs();
-        var input =
-                gson.fromJson(
-                        new BufferedReader(new InputStreamReader(inputStream)),
-                        ApiGatewayTemplateMappingInput.class);
-        ApiGatewayTemplateMappingOutput output = new ApiGatewayTemplateMappingOutput();
-        OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
 
         try {
-            var ipvSessionId = RequestHelper.getIpvSessionId(input.getHeaders());
-            Map<String, String> pathParameters = input.getParams();
+            String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
+            String[] parts = input.get(JOURNEY).split("/");
+            String journeyStep = parts[parts.length - 1];
 
-            var errorResponse = validate(pathParameters);
-            if (errorResponse.isPresent()) {
-                output.setStatusCode(HttpStatus.SC_BAD_REQUEST);
-                output.setBody(errorResponse.get().toJsonString());
-                writer.write(gson.toJson(output));
-                writer.close();
-                return;
+            if (journeyStep == null) {
+                throw new HttpResponseExceptionWithErrorBody(
+                        HttpStatus.SC_BAD_REQUEST,
+                        ErrorResponse.MISSING_JOURNEY_STEP_URL_PATH_PARAM);
             }
 
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 
             if (ipvSessionItem == null) {
                 LOGGER.warn("Failed to find ipv-session");
-                output.setStatusCode(HttpStatus.SC_BAD_REQUEST);
-                output.setBody(ErrorResponse.INVALID_SESSION_ID.toJsonString());
-                writer.write(gson.toJson(output));
-                writer.close();
-                return;
+                throw new HttpResponseExceptionWithErrorBody(
+                        HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_ID);
             }
 
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId());
 
-            String journeyStep = input.getParams().get(JOURNEY_STEP_PARAM);
+            Map<String, Object> output =
+                    new HashMap<>(executeJourneyEvent(journeyStep, ipvSessionItem));
+            output.put(IPV_SESSION_ID, ipvSessionId);
 
-            Map<String, String> journeyStepResponse =
-                    executeJourneyEvent(journeyStep, ipvSessionItem);
-
-            output.setStatusCode(HttpStatus.SC_OK);
-            output.setBody(gson.toJson(journeyStepResponse));
+            LOGGER.info("output: {}", gson.toJson(output));
+            return output;
 
         } catch (HttpResponseExceptionWithErrorBody e) {
-            output.setStatusCode(e.getResponseCode());
-            output.setBody(gson.toJson(e.getErrorBody()));
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    HttpStatus.SC_BAD_REQUEST, e.getErrorResponse());
         } catch (JourneyEngineException e) {
-            output.setStatusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
-            output.setBody(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.toJsonString());
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_JOURNEY_ENGINE_STEP);
         }
-
-        writer.write(gson.toJson(output));
-        writer.close();
     }
 
     @Tracing
@@ -199,15 +176,6 @@ public class ProcessJourneyStepHandler implements RequestStreamHandler {
                         .with("from", oldState)
                         .with("to", CORE_SESSION_TIMEOUT_STATE);
         LOGGER.info(message);
-    }
-
-    @Tracing
-    private Optional<ErrorResponse> validate(Map<String, String> pathParameters) {
-        if (pathParameters.isEmpty()
-                || StringUtils.isBlank(pathParameters.get(JOURNEY_STEP_PARAM))) {
-            return Optional.of(ErrorResponse.MISSING_JOURNEY_STEP_URL_PATH_PARAM);
-        }
-        return Optional.empty();
     }
 
     @Tracing

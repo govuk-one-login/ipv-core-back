@@ -44,7 +44,9 @@ public enum ErrorResponse {
     FAILED_TO_GENERATE_ADDRESS_CLAIM(1035, "Failed to generate the address claim"),
     FAILED_TO_GENERATE_PASSPORT_CLAIM(1036, "Failed to generate the passport claim"),
     FAILED_TO_DETERMINE_CREDENTIAL_TYPE(1037, "Failed to determine type of credential"),
-    FAILED_TO_GET_STORED_CIS(1038, "Failed to get stored CIS");
+    FAILED_TO_GET_STORED_CIS(1038, "Failed to get stored CIS"),
+    SQS_EXCEPTION(1039, "SQS Exception"),
+    FAILED_TO_CONSTRUCT_REDIRECT_URI(1040, "Failed to construct redirect URI");
 
     @JsonProperty("code")
     private final int code;

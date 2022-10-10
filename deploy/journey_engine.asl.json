@@ -4,7 +4,98 @@
     "ProcessJourneyStep": {
       "Type": "Task",
       "Resource": "${IPVProcessJourneyStepFunctionArn}",
+      "Next": "RouteJourneyResponse"
+    },
+    "BuildClientOauthResponseFunction": {
+      "Type": "Task",
+      "Resource": "${BuildClientOauthResponseFunctionArn}",
       "End": true
+    },
+    "RetrieveCriCredentialFunction": {
+      "Type": "Task",
+      "Resource": "${RetrieveCriCredentialFunctionArn}",
+      "Next": "RouteJourneyResponse"
+    },
+    "EvaluateGpg45ScoresFunction": {
+      "Type": "Task",
+      "Resource": "${EvaluateGpg45ScoresFunctionArn}",
+      "Next": "RouteJourneyResponse"
+    },
+    "SelectCriFunction": {
+      "Type": "Task",
+      "Resource": "${SelectCriFunctionArn}",
+      "Next": "RouteJourneyResponse"
+    },
+    "BuildCriOauthRequestFunction": {
+      "Type": "Task",
+      "Resource": "${BuildCriOauthRequestFunctionArn}",
+      "End": true
+    },
+    "ReturnToFrontend": {
+      "Type": "Succeed"
+    },
+    "RouteJourneyResponse": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.journey",
+            "IsPresent": true
+          },
+          "Next": "ReturnToFrontend"
+        },
+        {
+          "Variable": "$.journey",
+          "StringEquals": "/journey/next",
+          "Next": "ProcessJourneyStep"
+        },
+        {
+          "Variable": "$.journey",
+          "StringEquals": "/journey/error",
+          "Next": "ProcessJourneyStep"
+        },
+        {
+          "Variable": "$.journey",
+          "StringEquals": "/journey/end",
+          "Next": "ProcessJourneyStep"
+        },
+        {
+          "Variable": "$.journey",
+          "StringMatches": "/journey/cri/build-oauth-request/*",
+          "Next": "BuildCriOauthRequestFunction"
+        },
+        {
+          "Variable": "$.journey",
+          "StringEquals": "/journey/cri/access-token",
+          "Next": "ReturnToFrontend"
+        },
+        {
+          "Variable": "$.journey",
+          "StringEquals": "/journey/cri/credential",
+          "Next": "RetrieveCriCredentialFunction"
+        },
+        {
+          "Variable": "$.journey",
+          "StringEquals": "/journey/build-client-oauth-response",
+          "Next": "BuildClientOauthResponseFunction"
+        },
+        {
+          "Variable": "$.journey",
+          "StringEquals": "/journey/evaluate-gpg45-scores",
+          "Next": "EvaluateGpg45ScoresFunction"
+        },
+        {
+          "Variable": "$.journey",
+          "StringEquals": "/journey/select-cri",
+          "Next": "SelectCriFunction"
+        },
+        {
+          "Variable": "$.journey",
+          "StringMatches": "/journey/*",
+          "Next": "ProcessJourneyStep"
+        }
+      ],
+      "Default": "ReturnToFrontend"
     }
   }
 }
