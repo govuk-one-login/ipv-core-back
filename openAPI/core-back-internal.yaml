@@ -102,22 +102,6 @@ paths:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RetrieveCriCredentialFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
-  /journey/cri/error:
-    post:
-      description: "Called when a user returns from a CRI with an error"
-      responses:
-        200:
-          description: "Returns a redirect journeyResponse of '/journey/next'"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/journeyResponse"
-      x-amazon-apigateway-integration:
-        httpMethod: "POST"
-        uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${IPVCredentialIssuerErrorFunction.Arn}:live/invocations
-        passthroughBehavior: "when_no_match"
-        type: "aws_proxy"
 
   /journey/{journeyStep}:
     post:

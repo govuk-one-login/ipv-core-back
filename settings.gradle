@@ -12,7 +12,6 @@ include "lib",
 		"lambdas:build-user-identity",
 		"lambdas:process-journey-step",
 		"lambdas:build-cri-oauth-request",
-		"lambdas:credentialissuererror",
 		"lambdas:select-cri",
 		"lambdas:validate-oauth-callback",
 		"integration-test"
