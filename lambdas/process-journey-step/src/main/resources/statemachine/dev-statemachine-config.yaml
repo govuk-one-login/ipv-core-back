@@ -165,6 +165,13 @@ SELECT_CRI:
       response:
         type: page
         pageId: pyi-kbv-fail
+    pyi-kbv-thin-file:
+      type: basic
+      name: pyi-kbv-thin-file
+      targetState: PYI_KBV_THIN_FILE
+      response:
+        type: page
+        pageId: pyi-kbv-thin-file
 CRI_UK_PASSPORT:
   name: CRI_UK_PASSPORT
   parent: CRI_STATE
@@ -251,6 +258,9 @@ PYI_NO_MATCH:
   parent: END_JOURNEY
 PYI_KBV_FAIL:
   name: PYI_KBV_FAIL
+  parent: END_JOURNEY
+PYI_KBV_THIN_FILE:
+  name: PYI_KBV_THIN_FILE
   parent: END_JOURNEY
 CRI_ERROR:
   name: CRI_ERROR

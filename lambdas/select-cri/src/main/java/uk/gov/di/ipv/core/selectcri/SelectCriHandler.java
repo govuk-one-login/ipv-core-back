@@ -222,7 +222,7 @@ public class SelectCriHandler
     }
 
     private JourneyResponse getJourneyKbvFailResponse() {
-        return new JourneyResponse("/journey/pyi-kbv-fail");
+        return new JourneyResponse("/journey/pyi-kbv-thin-file");
     }
 
     private Optional<JourneyResponse> getCriResponse(
