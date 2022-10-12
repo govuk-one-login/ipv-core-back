@@ -33,7 +33,7 @@ import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 
 import java.io.IOException;
 import java.net.URI;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -208,15 +208,17 @@ public class CredentialIssuerService {
     }
 
     public void persistUserCredentials(
-            String credential, String credentialIssuerId, String userId) {
+            SignedJWT credential, String credentialIssuerId, String userId) {
         UserIssuedCredentialsItem userIssuedCredentials = new UserIssuedCredentialsItem();
         userIssuedCredentials.setUserId(userId);
         userIssuedCredentials.setCredentialIssuer(credentialIssuerId);
-        userIssuedCredentials.setCredential(credential);
-        userIssuedCredentials.setDateCreated(LocalDateTime.now());
+        userIssuedCredentials.setCredential(credential.serialize());
+        userIssuedCredentials.setDateCreated(Instant.now());
         try {
+            userIssuedCredentials.setExpirationTime(
+                    credential.getJWTClaimsSet().getExpirationTime().toInstant());
             dataStore.create(userIssuedCredentials);
-        } catch (UnsupportedOperationException e) {
+        } catch (UnsupportedOperationException | java.text.ParseException e) {
             LOGGER.error("Error persisting user credential: {}", e.getMessage(), e);
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);

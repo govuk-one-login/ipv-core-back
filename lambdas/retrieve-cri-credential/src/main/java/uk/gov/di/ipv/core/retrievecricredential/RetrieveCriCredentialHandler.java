@@ -155,8 +155,7 @@ public class RetrieveCriCredentialHandler
 
                 submitVcToCiStorage(vc, clientSessionDetailsDto.getGovukSigninJourneyId());
 
-                credentialIssuerService.persistUserCredentials(
-                        vc.serialize(), credentialIssuerId, userId);
+                credentialIssuerService.persistUserCredentials(vc, credentialIssuerId, userId);
             }
 
             updateVisitedCredentials(ipvSessionItem, credentialIssuerId, true, null);
