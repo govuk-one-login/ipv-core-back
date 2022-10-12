@@ -16,14 +16,12 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.selectcri.SelectCriHandler;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -673,15 +671,5 @@ class SelectCriHandlerTest {
                 "test-jwk",
                 criIss,
                 new URI("http://example.com/redirect"));
-    }
-
-    private UserIssuedCredentialsItem createUserIssuedCredentialsItem(
-            String userId, String credentialIssuer, String credential, LocalDateTime dateCreated) {
-        UserIssuedCredentialsItem userIssuedCredentialsItem = new UserIssuedCredentialsItem();
-        userIssuedCredentialsItem.setUserId(userId);
-        userIssuedCredentialsItem.setCredentialIssuer(credentialIssuer);
-        userIssuedCredentialsItem.setCredential(credential);
-        userIssuedCredentialsItem.setDateCreated(dateCreated);
-        return userIssuedCredentialsItem;
     }
 }

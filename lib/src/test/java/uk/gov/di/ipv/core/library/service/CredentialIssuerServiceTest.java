@@ -30,6 +30,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.ECPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
 
@@ -247,38 +248,40 @@ class CredentialIssuerServiceTest {
     }
 
     @Test
-    void expectedSuccessWhenSaveCredentials() {
+    void expectedSuccessWhenSaveCredentials() throws Exception {
         ArgumentCaptor<UserIssuedCredentialsItem> userIssuedCredentialsItemCaptor =
                 ArgumentCaptor.forClass(UserIssuedCredentialsItem.class);
 
         String credentialIssuerId = "cred_issuer_id_1";
         String userId = "user-id-1";
 
-        credentialIssuerService.persistUserCredentials(SIGNED_VC_1, credentialIssuerId, userId);
+        credentialIssuerService.persistUserCredentials(
+                SignedJWT.parse(SIGNED_VC_1), credentialIssuerId, userId);
         verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture());
-        assertEquals(userId, userIssuedCredentialsItemCaptor.getValue().getUserId());
+        UserIssuedCredentialsItem userIssuedCredentialsItem =
+                userIssuedCredentialsItemCaptor.getValue();
+        assertEquals(userId, userIssuedCredentialsItem.getUserId());
+        assertEquals(credentialIssuerId, userIssuedCredentialsItem.getCredentialIssuer());
         assertEquals(
-                credentialIssuerId,
-                userIssuedCredentialsItemCaptor.getValue().getCredentialIssuer());
-        assertEquals(
-                credentialIssuerId,
-                userIssuedCredentialsItemCaptor.getValue().getCredentialIssuer());
-        assertEquals(SIGNED_VC_1, userIssuedCredentialsItemCaptor.getValue().getCredential());
+                Instant.parse("2022-05-20T12:50:54Z"),
+                userIssuedCredentialsItem.getExpirationTime());
+        assertEquals(SIGNED_VC_1, userIssuedCredentialsItem.getCredential());
     }
 
     @Test
-    void expectedExceptionWhenSaveCredentials() {
+    void expectedExceptionWhenSaveCredentials() throws Exception {
         String credentialIssuerId = "cred_issuer_id_1";
         String userId = "user-id-1";
 
         doThrow(new UnsupportedOperationException()).when(mockDataStore).create(any());
 
+        SignedJWT signedJwt = SignedJWT.parse(SIGNED_VC_1);
         CredentialIssuerException thrown =
                 assertThrows(
                         CredentialIssuerException.class,
                         () ->
                                 credentialIssuerService.persistUserCredentials(
-                                        SIGNED_VC_1, credentialIssuerId, userId));
+                                        signedJwt, credentialIssuerId, userId));
 
         assertNotNull(thrown);
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());

@@ -18,7 +18,7 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 
 import java.net.URI;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -67,9 +67,9 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
+                                "user-id-1", "fraud", SIGNED_VC_2, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -104,7 +104,7 @@ class UserIdentityServiceTest {
         String criId = "criId";
         UserIssuedCredentialsItem credentialItem =
                 createUserIssuedCredentialsItem(
-                        "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now());
+                        "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now());
 
         when(mockDataStore.getItem(ipvSessionId, criId)).thenReturn(credentialItem);
 
@@ -122,12 +122,12 @@ class UserIdentityServiceTest {
                                 "user-id-1",
                                 "ukPassport",
                                 SIGNED_VC_1,
-                                LocalDateTime.parse("2022-01-25T12:28:56.414849")),
+                                Instant.parse("2022-01-25T12:28:56.414849Z")),
                         createUserIssuedCredentialsItem(
                                 "user-id-1",
                                 "fraud",
                                 SIGNED_VC_2,
-                                LocalDateTime.parse("2022-01-25T12:28:56.414849")));
+                                Instant.parse("2022-01-25T12:28:56.414849Z")));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
@@ -135,10 +135,10 @@ class UserIdentityServiceTest {
                 userIdentityService.getUserIssuedDebugCredentials("user-id-1");
 
         assertEquals(
-                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"},\"evidence\":{\"validityScore\":2,\"strengthScore\":4,\"txn\":\"1e0f28c5-6329-46f0-bf0e-833cb9b58c9e\",\"type\":\"IdentityCheck\"}}",
+                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849Z\"},\"evidence\":{\"validityScore\":2,\"strengthScore\":4,\"txn\":\"1e0f28c5-6329-46f0-bf0e-833cb9b58c9e\",\"type\":\"IdentityCheck\"}}",
                 credentials.get("ukPassport"));
         assertEquals(
-                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"},\"evidence\":{\"txn\":\"some-uuid\",\"identityFraudScore\":1,\"type\":\"CriStubCheck\"}}",
+                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849Z\"},\"evidence\":{\"txn\":\"some-uuid\",\"identityFraudScore\":1,\"type\":\"CriStubCheck\"}}",
                 credentials.get("fraud"));
     }
 
@@ -153,13 +153,13 @@ class UserIdentityServiceTest {
                                 "ukPassport",
                                 generateVerifiableCredential(
                                         credentialVcClaim, "https://issuer.example.com"),
-                                LocalDateTime.parse("2022-01-25T12:28:56.414849")),
+                                Instant.parse("2022-01-25T12:28:56.414849Z")),
                         createUserIssuedCredentialsItem(
                                 "user-id-1",
                                 "fraud",
                                 generateVerifiableCredential(
                                         credentialVcClaim, "https://issuer.example.com"),
-                                LocalDateTime.parse("2022-01-25T12:28:56.414849")));
+                                Instant.parse("2022-01-25T12:28:56.414849Z")));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
@@ -167,10 +167,10 @@ class UserIdentityServiceTest {
                 userIdentityService.getUserIssuedDebugCredentials("user-id-1");
 
         assertEquals(
-                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"}}",
+                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849Z\"}}",
                 credentials.get("ukPassport"));
         assertEquals(
-                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"}}",
+                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849Z\"}}",
                 credentials.get("fraud"));
     }
 
@@ -182,7 +182,7 @@ class UserIdentityServiceTest {
                                 "user-id-1",
                                 "ukPassport",
                                 "invalid-verifiable-credential",
-                                LocalDateTime.parse("2022-01-25T12:28:56.414849")));
+                                Instant.parse("2022-01-25T12:28:56.414849Z")));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
@@ -190,7 +190,7 @@ class UserIdentityServiceTest {
                 userIdentityService.getUserIssuedDebugCredentials("user-id-1");
 
         assertEquals(
-                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"}}",
+                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849Z\"}}",
                 credentials.get("ukPassport"));
     }
 
@@ -206,7 +206,7 @@ class UserIdentityServiceTest {
                                 "ukPassport",
                                 generateVerifiableCredential(
                                         credentialVcClaim, "https://issuer.example.com"),
-                                LocalDateTime.parse("2022-01-25T12:28:56.414849")));
+                                Instant.parse("2022-01-25T12:28:56.414849Z")));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
@@ -214,7 +214,7 @@ class UserIdentityServiceTest {
                 userIdentityService.getUserIssuedDebugCredentials("user-id-1");
 
         assertEquals(
-                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849\"}}",
+                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849Z\"}}",
                 credentials.get("ukPassport"));
     }
 
@@ -224,13 +224,13 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                                "user-id-1", "kbv", SIGNED_VC_3, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
+                                "user-id-1", "address", SIGNED_VC_4, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -262,13 +262,13 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                                "user-id-1", "kbv", SIGNED_VC_3, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
+                                "user-id-1", "address", SIGNED_VC_4, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -305,9 +305,9 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
+                                "user-id-1", "fraud", SIGNED_VC_2, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -329,11 +329,11 @@ class UserIdentityServiceTest {
                                 "user-id-1",
                                 "ukPassport",
                                 SIGNED_PASSPORT_VC_MISSING_NAME,
-                                LocalDateTime.now()),
+                                Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()));
+                                "user-id-1", "kbv", SIGNED_VC_3, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -377,11 +377,11 @@ class UserIdentityServiceTest {
                                 "user-id-1",
                                 "ukPassport",
                                 SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE,
-                                LocalDateTime.now()),
+                                Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()));
+                                "user-id-1", "kbv", SIGNED_VC_3, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -422,13 +422,13 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                                "user-id-1", "kbv", SIGNED_VC_3, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
+                                "user-id-1", "address", SIGNED_VC_4, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -463,9 +463,9 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
+                                "user-id-1", "fraud", SIGNED_VC_2, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -487,13 +487,13 @@ class UserIdentityServiceTest {
                                 "user-id-1",
                                 "ukPassport",
                                 SIGNED_PASSPORT_VC_MISSING_PASSPORT,
-                                LocalDateTime.now()),
+                                Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                                "user-id-1", "kbv", SIGNED_VC_3, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
+                                "user-id-1", "address", SIGNED_VC_4, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -563,13 +563,13 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                                "user-id-1", "kbv", SIGNED_VC_3, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "address", SIGNED_ADDRESS_VC, LocalDateTime.now()));
+                                "user-id-1", "address", SIGNED_ADDRESS_VC, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -613,16 +613,16 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                                "user-id-1", "kbv", SIGNED_VC_3, Instant.now()),
                         createUserIssuedCredentialsItem(
                                 "user-id-1",
                                 "address",
                                 SIGNED_ADDRESS_VC_MISSING_ADDRESS_PROPERTY,
-                                LocalDateTime.now()));
+                                Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -663,13 +663,13 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                                "user-id-1", "kbv", SIGNED_VC_3, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "address", "GARBAGE", LocalDateTime.now()));
+                                "user-id-1", "address", "GARBAGE", Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -710,11 +710,11 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                                "user-id-1", "kbv", SIGNED_VC_3, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "address", SIGNED_ADDRESS_VC, LocalDateTime.now()));
+                                "user-id-1", "address", SIGNED_ADDRESS_VC, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -733,9 +733,9 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()));
+                                "user-id-1", "fraud", SIGNED_VC_2, Instant.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
 
@@ -750,11 +750,11 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "a-users-id", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "a-users-id", "ukPassport", SIGNED_VC_1, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "a-users-id", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "a-users-id", "fraud", SIGNED_VC_2, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "a-users-id", "sausages", SIGNED_VC_3, LocalDateTime.now()));
+                                "a-users-id", "sausages", SIGNED_VC_3, Instant.now()));
 
         when(mockDataStore.getItems("a-users-id")).thenReturn(userIssuedCredentialsItemList);
 
@@ -772,10 +772,7 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> credentialItem =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "user-id-1",
-                                testCredentialIssuer,
-                                SIGNED_VC_1,
-                                LocalDateTime.now()));
+                                "user-id-1", testCredentialIssuer, SIGNED_VC_1, Instant.now()));
 
         when(mockDataStore.getItems(userId)).thenReturn(credentialItem);
 
@@ -792,11 +789,11 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "dcmaw", SIGNED_DCMAW_VC, LocalDateTime.now()),
+                                "user-id-1", "dcmaw", SIGNED_DCMAW_VC, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
+                                "user-id-1", "address", SIGNED_VC_4, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(
@@ -835,11 +832,11 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "dcmaw", SIGNED_DCMAW_VC, LocalDateTime.now()),
+                                "user-id-1", "dcmaw", SIGNED_DCMAW_VC, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
+                                "user-id-1", "address", SIGNED_VC_4, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(
@@ -863,13 +860,13 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                                "user-id-1", "kbv", SIGNED_VC_3, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "address", SIGNED_VC_4, LocalDateTime.now()));
+                                "user-id-1", "address", SIGNED_VC_4, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -904,15 +901,15 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "dcmaw", SIGNED_DCMAW_VC, LocalDateTime.now()),
+                                "user-id-1", "dcmaw", SIGNED_DCMAW_VC, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "address", SIGNED_VC_4, LocalDateTime.now()),
+                                "user-id-1", "address", SIGNED_VC_4, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()));
+                                "user-id-1", "kbv", SIGNED_VC_3, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(
@@ -1003,7 +1000,7 @@ class UserIdentityServiceTest {
                                 "user-id-1",
                                 "dcmaw",
                                 SIGNED_DCMAW_VC_MISSING_DRIVING_PERMIT_PROPERTY,
-                                LocalDateTime.now()));
+                                Instant.now()));
 
         List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("dcmaw-issuer", true));
 
@@ -1043,15 +1040,15 @@ class UserIdentityServiceTest {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "ukPassport", SIGNED_VC_1, LocalDateTime.now()),
+                                "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "fraud", SIGNED_VC_2, LocalDateTime.now()),
+                                "user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "kbv", SIGNED_VC_3, LocalDateTime.now()),
+                                "user-id-1", "kbv", SIGNED_VC_3, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "address", SIGNED_ADDRESS_VC, LocalDateTime.now()),
+                                "user-id-1", "address", SIGNED_ADDRESS_VC, Instant.now()),
                         createUserIssuedCredentialsItem(
-                                "user-id-1", "dcmaw", "GARBAGE", LocalDateTime.now()));
+                                "user-id-1", "dcmaw", "GARBAGE", Instant.now()));
 
         List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("dcmaw-issuer", true));
 
@@ -1087,12 +1084,13 @@ class UserIdentityServiceTest {
     }
 
     private UserIssuedCredentialsItem createUserIssuedCredentialsItem(
-            String userId, String credentialIssuer, String credential, LocalDateTime dateCreated) {
+            String userId, String credentialIssuer, String credential, Instant dateCreated) {
         UserIssuedCredentialsItem userIssuedCredentialsItem = new UserIssuedCredentialsItem();
         userIssuedCredentialsItem.setUserId(userId);
         userIssuedCredentialsItem.setCredentialIssuer(credentialIssuer);
         userIssuedCredentialsItem.setCredential(credential);
         userIssuedCredentialsItem.setDateCreated(dateCreated);
+        userIssuedCredentialsItem.setExpirationTime(dateCreated.plusSeconds(1000L));
         return userIssuedCredentialsItem;
     }
 }

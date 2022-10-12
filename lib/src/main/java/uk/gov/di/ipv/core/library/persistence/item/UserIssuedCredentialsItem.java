@@ -5,7 +5,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @DynamoDbBean
 @ExcludeFromGeneratedCoverageReport
@@ -14,7 +14,8 @@ public class UserIssuedCredentialsItem implements DynamodbItem {
     private String userId;
     private String credentialIssuer;
     private String credential;
-    private LocalDateTime dateCreated;
+    private Instant dateCreated;
+    private Instant expirationTime;
     private long ttl;
 
     @DynamoDbPartitionKey
@@ -35,12 +36,20 @@ public class UserIssuedCredentialsItem implements DynamodbItem {
         this.credentialIssuer = credentialIssuer;
     }
 
-    public LocalDateTime getDateCreated() {
+    public Instant getDateCreated() {
         return dateCreated;
     }
 
-    public void setDateCreated(LocalDateTime dateCreated) {
+    public void setDateCreated(Instant dateCreated) {
         this.dateCreated = dateCreated;
+    }
+
+    public Instant getExpirationTime() {
+        return expirationTime;
+    }
+
+    public void setExpirationTime(Instant expirationTime) {
+        this.expirationTime = expirationTime;
     }
 
     public String getCredential() {
