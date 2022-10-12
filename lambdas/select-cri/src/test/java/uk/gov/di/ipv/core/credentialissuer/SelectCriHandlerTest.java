@@ -94,6 +94,10 @@ class SelectCriHandlerTest {
         when(mockClientSessionDetailsDto.getUserId()).thenReturn(userId);
         when(mockConfigurationService.getCredentialIssuer(CRI_PASSPORT))
                 .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss"));
+        when(mockConfigurationService.getCredentialIssuer(CRI_ADDRESS))
+                .thenReturn(createCriConfig(CRI_ADDRESS, "test-address-iss"));
+        when(mockIpvSessionItem.getCurrentVcStatuses())
+                .thenReturn(List.of(new VcStatusDto("test-passport-iss", true)));
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(new VisitedCredentialIssuerDetailsDto(CRI_PASSPORT, true, null));
@@ -147,8 +151,15 @@ class SelectCriHandlerTest {
         when(mockClientSessionDetailsDto.getUserId()).thenReturn(userId);
         when(mockConfigurationService.getCredentialIssuer(CRI_PASSPORT))
                 .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss"));
+        when(mockConfigurationService.getCredentialIssuer(CRI_ADDRESS))
+                .thenReturn(createCriConfig(CRI_ADDRESS, "test-address-iss"));
         when(mockConfigurationService.getCredentialIssuer(CRI_FRAUD))
                 .thenReturn(createCriConfig(CRI_FRAUD, "test-fraud-iss"));
+        when(mockIpvSessionItem.getCurrentVcStatuses())
+                .thenReturn(
+                        List.of(
+                                new VcStatusDto("test-passport-iss", true),
+                                new VcStatusDto("test-address-iss", true)));
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(
@@ -176,10 +187,19 @@ class SelectCriHandlerTest {
         when(mockClientSessionDetailsDto.getUserId()).thenReturn(userId);
         when(mockConfigurationService.getCredentialIssuer(CRI_PASSPORT))
                 .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss"));
+        when(mockConfigurationService.getCredentialIssuer(CRI_ADDRESS))
+                .thenReturn(createCriConfig(CRI_ADDRESS, "test-address-iss"));
         when(mockConfigurationService.getCredentialIssuer(CRI_FRAUD))
                 .thenReturn(createCriConfig(CRI_FRAUD, "test-fraud-iss"));
         when(mockConfigurationService.getCredentialIssuer(CRI_KBV))
                 .thenReturn(createCriConfig(CRI_KBV, "test-kbv-iss"));
+
+        when(mockIpvSessionItem.getCurrentVcStatuses())
+                .thenReturn(
+                        List.of(
+                                new VcStatusDto("test-passport-iss", true),
+                                new VcStatusDto("test-address-iss", true),
+                                new VcStatusDto("test-fraud-iss", true)));
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(
@@ -209,10 +229,20 @@ class SelectCriHandlerTest {
         when(mockClientSessionDetailsDto.getUserId()).thenReturn(userId);
         when(mockConfigurationService.getCredentialIssuer(CRI_PASSPORT))
                 .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss"));
+        when(mockConfigurationService.getCredentialIssuer(CRI_ADDRESS))
+                .thenReturn(createCriConfig(CRI_ADDRESS, "test-address-iss"));
         when(mockConfigurationService.getCredentialIssuer(CRI_FRAUD))
                 .thenReturn(createCriConfig(CRI_FRAUD, "test-fraud-iss"));
         when(mockConfigurationService.getCredentialIssuer(CRI_KBV))
                 .thenReturn(createCriConfig(CRI_KBV, "test-kbv-iss"));
+
+        when(mockIpvSessionItem.getCurrentVcStatuses())
+                .thenReturn(
+                        List.of(
+                                new VcStatusDto("test-passport-iss", true),
+                                new VcStatusDto("test-address-iss", true),
+                                new VcStatusDto("test-fraud-iss", true),
+                                new VcStatusDto("test-kbv-iss", true)));
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(
@@ -267,6 +297,8 @@ class SelectCriHandlerTest {
         when(mockClientSessionDetailsDto.getUserId()).thenReturn("test-user-id");
         when(mockConfigurationService.getCredentialIssuer(CRI_DCMAW))
                 .thenReturn(createCriConfig(CRI_DCMAW, "test-dcmaw-iss"));
+        when(mockConfigurationService.getCredentialIssuer(CRI_ADDRESS))
+                .thenReturn(createCriConfig(CRI_ADDRESS, "test-address-iss"));
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(List.of(new VcStatusDto("test-dcmaw-iss", true)));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
@@ -295,10 +327,15 @@ class SelectCriHandlerTest {
 
         when(mockConfigurationService.getCredentialIssuer(CRI_DCMAW))
                 .thenReturn(createCriConfig(CRI_DCMAW, "test-dcmaw-iss"));
+        when(mockConfigurationService.getCredentialIssuer(CRI_ADDRESS))
+                .thenReturn(createCriConfig(CRI_ADDRESS, "test-address-iss"));
         when(mockConfigurationService.getCredentialIssuer(CRI_FRAUD))
                 .thenReturn(createCriConfig(CRI_FRAUD, "test-fraud-iss"));
         when(mockIpvSessionItem.getCurrentVcStatuses())
-                .thenReturn(List.of(new VcStatusDto("test-dcmaw-iss", true)));
+                .thenReturn(
+                        List.of(
+                                new VcStatusDto("test-dcmaw-iss", true),
+                                new VcStatusDto("test-address-iss", true)));
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(
@@ -356,6 +393,8 @@ class SelectCriHandlerTest {
 
         when(mockConfigurationService.getCredentialIssuer(CRI_DCMAW))
                 .thenReturn(createCriConfig(CRI_DCMAW, "test-dcmaw-iss"));
+        when(mockConfigurationService.getCredentialIssuer(CRI_ADDRESS))
+                .thenReturn(createCriConfig(CRI_ADDRESS, "test-address-iss"));
         when(mockConfigurationService.getCredentialIssuer(CRI_FRAUD))
                 .thenReturn(createCriConfig(CRI_FRAUD, "test-fraud-iss"));
 
@@ -433,10 +472,12 @@ class SelectCriHandlerTest {
         when(mockClientSessionDetailsDto.getUserId()).thenReturn("test-user-id");
         when(mockConfigurationService.getCredentialIssuer(CRI_DCMAW))
                 .thenReturn(createCriConfig(CRI_DCMAW, "test-dcmaw-iss"));
+        when(mockConfigurationService.getCredentialIssuer(CRI_ADDRESS))
+                .thenReturn(createCriConfig(CRI_ADDRESS, "test-address-iss"));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(
                         List.of(
-                                new VisitedCredentialIssuerDetailsDto("dcmaw", true, null),
+                                new VisitedCredentialIssuerDetailsDto("dcmaws", true, null),
                                 new VisitedCredentialIssuerDetailsDto(
                                         "address", false, "access_denied")));
         when(mockIpvSessionItem.getCurrentVcStatuses())
@@ -464,6 +505,8 @@ class SelectCriHandlerTest {
         when(mockClientSessionDetailsDto.getUserId()).thenReturn("test-user-id");
         when(mockConfigurationService.getCredentialIssuer(CRI_PASSPORT))
                 .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss"));
+        when(mockConfigurationService.getCredentialIssuer(CRI_ADDRESS))
+                .thenReturn(createCriConfig(CRI_ADDRESS, "test-address-iss"));
         when(mockConfigurationService.getCredentialIssuer(CRI_FRAUD))
                 .thenReturn(createCriConfig(CRI_FRAUD, "test-fraud-iss"));
         when(mockConfigurationService.getCredentialIssuer(CRI_KBV))
@@ -480,6 +523,7 @@ class SelectCriHandlerTest {
                 .thenReturn(
                         List.of(
                                 new VcStatusDto("test-passport-iss", true),
+                                new VcStatusDto("test-address-iss", true),
                                 new VcStatusDto("test-fraud-iss", true),
                                 new VcStatusDto("test-kbv-iss", false)));
 
@@ -634,6 +678,7 @@ class SelectCriHandlerTest {
     }
 
     private void mockIpvSessionService() {
+
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(mockClientSessionDetailsDto);
         when(mockIpvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(mockIpvSessionItem);
     }
