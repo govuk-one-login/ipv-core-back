@@ -174,17 +174,28 @@ class DataStoreTest {
 
     @Test
     void shouldGetItemsFromDynamoDbTableViaLessThanOrEqualFilterExpression() {
+        String testAttribute = "an-attribute";
+        String testValue = "a-value";
         when(mockDynamoDbTable.query(any(QueryEnhancedRequest.class))).thenReturn(mockPageIterable);
         when(mockPageIterable.stream()).thenReturn(Stream.empty());
 
         dataStore.getItemsWithAttributeLessThanOrEqualValue(
-                "partition-key-12345", "an-attribute", "a-value");
+                "partition-key-12345", testAttribute, testValue);
+
+        ArgumentCaptor<QueryEnhancedRequest> keyCaptor =
+                ArgumentCaptor.forClass(QueryEnhancedRequest.class);
 
         verify(mockDynamoDbEnhancedClient)
                 .table(
                         eq(TEST_TABLE_NAME),
                         ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
-        verify(mockDynamoDbTable).query(any(QueryEnhancedRequest.class));
+        verify(mockDynamoDbTable).query(keyCaptor.capture());
+        assertEquals("#a <= :b", keyCaptor.getValue().filterExpression().expression());
+        assertEquals(
+                testAttribute, keyCaptor.getValue().filterExpression().expressionNames().get("#a"));
+        assertEquals(
+                testValue,
+                keyCaptor.getValue().filterExpression().expressionValues().get(":b").s());
     }
 
     @Test
