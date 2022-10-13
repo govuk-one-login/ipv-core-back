@@ -141,7 +141,7 @@ class InitialiseIpvSessionHandlerTest {
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         assertEquals(AuditEventTypes.IPV_JOURNEY_START, auditEventCaptor.getValue().getEventName());
 
-        verify(mockUserIdentityService).deleteUserIssuedCredentials("test-user-id");
+        verify(mockUserIdentityService).deleteUserIssuedCredentialsIfAnyExpired("test-user-id");
     }
 
     @Test

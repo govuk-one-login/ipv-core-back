@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
@@ -19,6 +20,7 @@ import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 
 import java.net.URI;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -27,8 +29,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
@@ -743,6 +747,50 @@ class UserIdentityServiceTest {
 
         assertEquals(SIGNED_VC_1, vcList.get(0));
         assertEquals(SIGNED_VC_2, vcList.get(1));
+    }
+
+    @Test
+    void shouldDeleteExistingVCsIfAnyDueToExpireWithinSessionTimeout() {
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+
+        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "a-users-id", "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createUserIssuedCredentialsItem(
+                                "a-users-id", "fraud", SIGNED_VC_2, Instant.now()),
+                        createUserIssuedCredentialsItem(
+                                "a-users-id", "sausages", SIGNED_VC_3, Instant.now()));
+        when(mockDataStore.getItems("a-users-id")).thenReturn(userIssuedCredentialsItemList);
+
+        List<UserIssuedCredentialsItem> expiredUserIssuedCredentialsItemList =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                "a-users-id", "fraud", SIGNED_VC_2, Instant.now()));
+        when(mockDataStore.getItemsWithAttributeLessThanOrEqualValue(
+                        eq("a-users-id"), eq("expirationTime"), anyString()))
+                .thenReturn(expiredUserIssuedCredentialsItemList);
+
+        userIdentityService.deleteUserIssuedCredentialsIfAnyExpired("a-users-id");
+
+        verify(mockDataStore).delete("a-users-id", "ukPassport");
+        verify(mockDataStore).delete("a-users-id", "fraud");
+        verify(mockDataStore).delete("a-users-id", "sausages");
+    }
+
+    @Test
+    void shouldNotDeleteExistingVCsIfNoneAreDueToExpireWithinSessionTimeout() {
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+
+        List<UserIssuedCredentialsItem> expiredUserIssuedCredentialsItemList =
+                Collections.emptyList();
+        when(mockDataStore.getItemsWithAttributeLessThanOrEqualValue(
+                        eq("a-users-id"), eq("expirationTime"), anyString()))
+                .thenReturn(expiredUserIssuedCredentialsItemList);
+
+        userIdentityService.deleteUserIssuedCredentialsIfAnyExpired("a-users-id");
+
+        verify(mockDataStore, Mockito.times(0)).delete(anyString(), anyString());
     }
 
     @Test

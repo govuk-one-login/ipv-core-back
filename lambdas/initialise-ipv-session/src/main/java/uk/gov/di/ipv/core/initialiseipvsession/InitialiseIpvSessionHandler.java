@@ -126,7 +126,8 @@ public class InitialiseIpvSessionHandler
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     clientSessionDetailsDto.getGovukSigninJourneyId());
 
-            userIdentityService.deleteUserIssuedCredentials(clientSessionDetailsDto.getUserId());
+            userIdentityService.deleteUserIssuedCredentialsIfAnyExpired(
+                    clientSessionDetailsDto.getUserId());
 
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(clientSessionDetailsDto, null);

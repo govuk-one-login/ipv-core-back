@@ -173,6 +173,21 @@ class DataStoreTest {
     }
 
     @Test
+    void shouldGetItemsFromDynamoDbTableViaLessThanOrEqualFilterExpression() {
+        when(mockDynamoDbTable.query(any(QueryEnhancedRequest.class))).thenReturn(mockPageIterable);
+        when(mockPageIterable.stream()).thenReturn(Stream.empty());
+
+        dataStore.getItemsWithAttributeLessThanOrEqualValue(
+                "partition-key-12345", "an-attribute", "a-value");
+
+        verify(mockDynamoDbEnhancedClient)
+                .table(
+                        eq(TEST_TABLE_NAME),
+                        ArgumentMatchers.<TableSchema<AuthorizationCodeItem>>any());
+        verify(mockDynamoDbTable).query(any(QueryEnhancedRequest.class));
+    }
+
+    @Test
     void shouldUpdateItemInDynamoDbTable() {
         dataStore.update(authorizationCodeItem);
 

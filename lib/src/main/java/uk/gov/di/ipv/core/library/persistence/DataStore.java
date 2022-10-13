@@ -6,6 +6,7 @@ import org.apache.logging.log4j.message.MapMessage;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.Expression;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
@@ -13,6 +14,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import uk.gov.di.ipv.core.library.persistence.item.DynamodbItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -101,6 +103,27 @@ public class DataStore<T extends DynamodbItem> {
     public List<T> getItems(String partitionValue) {
         var key = Key.builder().partitionValue(partitionValue).build();
         return table.query(QueryConditional.keyEqualTo(key)).stream()
+                .flatMap(page -> page.items().stream())
+                .collect(Collectors.toList());
+    }
+
+    public List<T> getItemsWithAttributeLessThanOrEqualValue(
+            String partitionValue, String filterAttribute, String filterValue) {
+        var queryConditional =
+                QueryConditional.keyEqualTo(Key.builder().partitionValue(partitionValue).build());
+        AttributeValue expressionValue = AttributeValue.builder().s(filterValue).build();
+        var filterExpression =
+                Expression.builder()
+                        .expression("#a <= :b")
+                        .putExpressionName("#a", filterAttribute)
+                        .putExpressionValue(":b", expressionValue)
+                        .build();
+        var queryEnhancedRequest =
+                QueryEnhancedRequest.builder()
+                        .queryConditional(queryConditional)
+                        .filterExpression(filterExpression)
+                        .build();
+        return table.query(queryEnhancedRequest).stream()
                 .flatMap(page -> page.items().stream())
                 .collect(Collectors.toList());
     }
