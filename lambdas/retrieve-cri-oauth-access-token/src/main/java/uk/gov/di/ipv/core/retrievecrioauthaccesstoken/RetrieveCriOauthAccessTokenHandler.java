@@ -2,6 +2,8 @@ package uk.gov.di.ipv.core.retrievecrioauthaccesstoken;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.apache.http.HttpStatus;
@@ -17,30 +19,30 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
+import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
-import java.util.Map;
-
-import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.JOURNEY;
-
 public class RetrieveCriOauthAccessTokenHandler
-        implements RequestHandler<Map<String, String>, Map<String, Object>> {
+        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final Map<String, Object> JOURNEY_NEXT = Map.of(JOURNEY, "/journey/next");
-    private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, "/journey/error");
+    private static final JourneyResponse JOURNEY_NEXT_RESPONSE =
+            new JourneyResponse("/journey/next");
+    private static final JourneyResponse JOURNEY_ERROR_RESPONSE =
+            new JourneyResponse("/journey/error");
     private final CredentialIssuerService credentialIssuerService;
     private final ConfigurationService configurationService;
     private final AuditService auditService;
@@ -72,13 +74,14 @@ public class RetrieveCriOauthAccessTokenHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(Map<String, String> input, Context context) {
+    public APIGatewayProxyResponseEvent handleRequest(
+            APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
         IpvSessionItem ipvSessionItem = null;
         String credentialIssuerId = null;
 
         try {
-            String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
+            String ipvSessionId = RequestHelper.getIpvSessionId(input);
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             ClientSessionDetailsDto clientSessionDetailsDto =
                     ipvSessionItem.getClientSessionDetails();
@@ -126,7 +129,8 @@ public class RetrieveCriOauthAccessTokenHandler
                             .with("criId", credentialIssuerId);
             LOGGER.info(message);
 
-            return JOURNEY_NEXT;
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_OK, JOURNEY_NEXT_RESPONSE);
         } catch (CredentialIssuerException e) {
             if (ipvSessionItem != null) {
                 setVisitedCredentials(
@@ -134,7 +138,8 @@ public class RetrieveCriOauthAccessTokenHandler
                 ipvSessionService.updateIpvSession(ipvSessionItem);
             }
 
-            return JOURNEY_ERROR;
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
 
@@ -142,15 +147,16 @@ public class RetrieveCriOauthAccessTokenHandler
                     ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            return JOURNEY_ERROR;
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
         } catch (HttpResponseExceptionWithErrorBody e) {
             ErrorResponse errorResponse = e.getErrorResponse();
             LogHelper.logOauthError(
                     "Error in credential issuer return lambda",
                     errorResponse.getCode(),
                     errorResponse.getMessage());
-            return StepFunctionHelpers.generateErrorOutputMap(
-                    HttpStatus.SC_BAD_REQUEST, errorResponse);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_BAD_REQUEST, e.getErrorBody());
         }
     }
 

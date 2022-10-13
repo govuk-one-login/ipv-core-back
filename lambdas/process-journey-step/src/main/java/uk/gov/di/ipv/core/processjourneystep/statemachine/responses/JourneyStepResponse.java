@@ -13,7 +13,7 @@ import java.util.Map;
     @JsonSubTypes.Type(value = CriResponse.class, name = "cri")
 })
 public interface JourneyStepResponse {
-    Map<String, Object> value(ConfigurationService configurationService);
+    Map<String, String> value(ConfigurationService configurationService);
 
-    Map<String, Object> value(String id);
+    Map<String, String> value(String id);
 }

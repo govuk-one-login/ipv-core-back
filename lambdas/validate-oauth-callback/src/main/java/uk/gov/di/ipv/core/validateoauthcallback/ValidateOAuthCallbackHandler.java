@@ -1,8 +1,9 @@
 package uk.gov.di.ipv.core.validateoauthcallback;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
@@ -19,39 +20,34 @@ import uk.gov.di.ipv.core.library.auditing.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensions;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
+import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
-import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.JOURNEY;
-
-public class ValidateOAuthCallbackHandler implements RequestStreamHandler {
+public class ValidateOAuthCallbackHandler
+        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final Map<String, Object> JOURNEY_NEXT = Map.of(JOURNEY, "/journey/next");
-    private static final Map<String, Object> JOURNEY_ACCESS_DENIED =
-            Map.of(JOURNEY, "/journey/access-denied");
-    private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, "/journey/error");
+    private static final JourneyResponse JOURNEY_NEXT_RESPONSE =
+            new JourneyResponse("/journey/next");
+    private static final JourneyResponse JOURNEY_ACCESS_DENIED_RESPONSE =
+            new JourneyResponse("/journey/access-denied");
+    private static final JourneyResponse JOURNEY_ERROR_RESPONSE =
+            new JourneyResponse("/journey/error");
     private static final List<String> ALLOWED_OAUTH_ERROR_CODES =
             Arrays.asList(
                     OAuth2Error.INVALID_REQUEST_CODE,
@@ -61,7 +57,6 @@ public class ValidateOAuthCallbackHandler implements RequestStreamHandler {
                     OAuth2Error.INVALID_SCOPE_CODE,
                     OAuth2Error.SERVER_ERROR_CODE,
                     OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE);
-    private static final ObjectMapper objectMapper = new ObjectMapper();
     private final ConfigurationService configurationService;
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
@@ -93,34 +88,21 @@ public class ValidateOAuthCallbackHandler implements RequestStreamHandler {
     @Override
     @Tracing
     @Logging(clearState = true)
-    public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context)
-            throws IOException {
+    public APIGatewayProxyResponseEvent handleRequest(
+            APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
-        OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
-
-        CredentialIssuerRequestDto request =
-                objectMapper.readValue(
-                        new BufferedReader(new InputStreamReader(inputStream)),
-                        CredentialIssuerRequestDto.class);
-        LOGGER.info(request.getAuthorizationCode());
 
         IpvSessionItem ipvSessionItem = null;
 
         try {
-            String ipvSessionId = request.getIpvSessionId();
-            if (ipvSessionId == null) {
-                throw new HttpResponseExceptionWithErrorBody(
-                        HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
-            }
-            LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
+            CredentialIssuerRequestDto request =
+                    RequestHelper.convertRequest(input, CredentialIssuerRequestDto.class);
 
+            String ipvSessionId = RequestHelper.getIpvSessionId(input);
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+
             if (request.getError().isPresent()) {
-                writer.write(
-                        objectMapper.writeValueAsString(
-                                sendOauthErrorJourneyResponse(ipvSessionItem, request)));
-                writer.close();
-                return;
+                return sendOauthErrorJourneyResponse(ipvSessionItem, request);
             }
 
             validate(request);
@@ -132,9 +114,8 @@ public class ValidateOAuthCallbackHandler implements RequestStreamHandler {
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            writer.write(objectMapper.writeValueAsString(JOURNEY_NEXT));
-            writer.close();
-
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_OK, JOURNEY_NEXT_RESPONSE);
         } catch (HttpResponseExceptionWithErrorBody e) {
             ErrorResponse errorResponse = e.getErrorResponse();
 
@@ -142,11 +123,9 @@ public class ValidateOAuthCallbackHandler implements RequestStreamHandler {
                     "Error in validate oauth callback lambda",
                     errorResponse.getCode(),
                     errorResponse.getMessage());
-            writer.write(
-                    objectMapper.writeValueAsString(
-                            StepFunctionHelpers.generateErrorOutputMap(
-                                    HttpStatus.SC_BAD_REQUEST, errorResponse)));
-            writer.close();
+
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_BAD_REQUEST, e.getErrorBody());
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
 
@@ -157,13 +136,13 @@ public class ValidateOAuthCallbackHandler implements RequestStreamHandler {
                     OAuth2Error.SERVER_ERROR_CODE);
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            writer.write(objectMapper.writeValueAsString(JOURNEY_ERROR));
-            writer.close();
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
         }
     }
 
     @Tracing
-    private Map<String, Object> sendOauthErrorJourneyResponse(
+    private APIGatewayProxyResponseEvent sendOauthErrorJourneyResponse(
             IpvSessionItem ipvSessionItem, CredentialIssuerRequestDto request) throws SqsException {
         String error = request.getError().orElse(null);
         String errorDescription = request.getErrorDescription().orElse(null);
@@ -186,10 +165,12 @@ public class ValidateOAuthCallbackHandler implements RequestStreamHandler {
 
         if (OAuth2Error.ACCESS_DENIED_CODE.equals(error)) {
             LOGGER.info("OAuth access_denied");
-            return JOURNEY_ACCESS_DENIED;
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_OK, JOURNEY_ACCESS_DENIED_RESPONSE);
         } else {
             LogHelper.logOauthError("OAuth error received from CRI", error, errorDescription);
-            return JOURNEY_ERROR;
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
         }
     }
 
