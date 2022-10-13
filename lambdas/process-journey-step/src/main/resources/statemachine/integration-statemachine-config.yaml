@@ -348,6 +348,13 @@ RETRIEVE_CRI_OAUTH_ACCESS_TOKEN:
       response:
         type: journey
         journeyStepId: /journey/cri/credential
+    error:
+      type: basic
+      name: error
+      targetState: CRI_ERROR
+      response:
+        type: page
+        pageId: pyi-technical
 
 RETRIEVE_CRI_CREDENTIAL:
   name: RETRIEVE_CRI_CREDENTIAL
@@ -360,6 +367,13 @@ RETRIEVE_CRI_CREDENTIAL:
       response:
         type: journey
         journeyStepId: /journey/evaluate-gpg45-scores
+    error:
+      type: basic
+      name: error
+      targetState: CRI_ERROR
+      response:
+        type: page
+        pageId: pyi-technical
 
 #debug page state
 DEBUG_PAGE:
@@ -385,6 +399,13 @@ DEBUG_RETRIEVE_CRI_OAUTH_ACCESS_TOKEN:
       response:
         type: journey
         journeyStepId: /journey/cri/credential
+    error:
+      type: basic
+      name: error
+      targetState: CRI_ERROR
+      response:
+        type: page
+        pageId: pyi-technical
 
 DEBUG_RETRIEVE_CRI_CREDENTIAL:
   name: DEBUG_RETRIEVE_CRI_CREDENTIAL
@@ -397,6 +418,13 @@ DEBUG_RETRIEVE_CRI_CREDENTIAL:
       response:
         type: journey
         journeyStepId: /journey/evaluate-gpg45-scores
+    error:
+      type: basic
+      name: error
+      targetState: CRI_ERROR
+      response:
+        type: page
+        pageId: pyi-technical
 
 DEBUG_EVALUATE_GPG45_SCORES:
   name: DEBUG_EVALUATE_GPG45_SCORES
