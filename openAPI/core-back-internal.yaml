@@ -54,54 +54,123 @@ paths:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${InitialiseIpvSessionFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
+
   /journey/cri/validate-callback:
     post:
-      description: "Called when a user returns from a CRI and will be responsible for validating the OAuth Callback."
+      description: |
+        A temporary duplication of /journey/cri/callback. Once deployed, the frontend can be pointed at the /callback
+        endpoint rather than this one.
       responses:
         200:
-          description: "Returns a redirect journeyResponse of '/journey/next'"
+          description: "Returns a journey or error response"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/journeyType"
       x-amazon-apigateway-integration:
+        type: "aws"
+        credentials:
+          Fn::GetAtt: CriReturnStepFunctionApiGateWayIamRole.Arn
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ValidateOAuthCallbackFunction.Arn}:live/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:states:action/StartSyncExecution
         passthroughBehavior: "when_no_match"
-        type: "aws_proxy"
-  /journey/cri/access-token:
+        requestTemplates:
+          application/json:
+            Fn::Sub: |
+              #set($inputRoot = $input.path('$'))
+              {
+                "input": "{\"ipvSessionId\": \"$input.params('ipv-session-id')\"#foreach($key in $inputRoot.keySet()), \"$key\": \"$inputRoot.get($key)\"#end}",
+                "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${CriReturnStepFunction.Name}"
+              }
+          application/x-www-form-urlencoded:
+            Fn::Sub: |
+              #set($bodyParts = $util.urlDecode($input.path('$')).split('&'))
+              {
+                "input": "{\"ipvSessionId\": \"$input.params('ipv-session-id')\"#foreach( $token in $bodyParts )#set( $keyVal = $token.split('=') ), \"$keyVal[0]\": \"$keyVal[1]\"#end}",
+                "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${CriReturnStepFunction.Name}"
+              }
+        responses:
+          default:
+            statusCode: 200
+            responseTemplates:
+              application/json: |
+                #set ($bodyObj = $util.parseJson($input.body))
+
+                #if ($bodyObj.status == "SUCCEEDED")
+                  #set($lambdaOutputObj = $util.parseJson($bodyObj.output))
+                  #set($context.responseOverride.status = $lambdaOutputObj.statusCode)
+                  $bodyObj.output
+
+                #elseif ($bodyObj.status == "FAILED")
+                  #set($context.responseOverride.status = 500)
+                  {
+                    "cause": "$bodyObj.cause",
+                    "error": "$bodyObj.error"
+                  }
+                #else
+                  #set($context.responseOverride.status = 504)
+                  $bodyObj
+                #end
+
+  /journey/cri/callback:
     post:
-      description: "Called when a user returns from a CRI and will be responsible for exchanging the CRI auth code for an access token"
+      description: |
+        Called when a user comes back to core on the frontend's callback endpoint, after visiting a CRI. Triggers a step
+        function that orchestrates lambdas for validating the oauth callback, retrieving the access token, and fetching
+        the credential.
       responses:
         200:
-          description: "Returns a redirect journeyResponse of '/journey/next'"
+          description: "Returns a journey or error response"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/journeyType"
       x-amazon-apigateway-integration:
+        type: "aws"
+        credentials:
+          Fn::GetAtt: CriReturnStepFunctionApiGateWayIamRole.Arn
         httpMethod: "POST"
         uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RetrieveCriOauthAccessTokenFunction.Arn}:live/invocations
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:states:action/StartSyncExecution
         passthroughBehavior: "when_no_match"
-        type: "aws_proxy"
-  /journey/cri/credential:
-    post:
-      description: "Called when a user returns from a CRI and will be responsible for exchanging the access token for a verifiable credential"
-      responses:
-        200:
-          description: "Returns a redirect journeyResponse of '/journey/next'"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/journeyType"
-      x-amazon-apigateway-integration:
-        httpMethod: "POST"
-        uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RetrieveCriCredentialFunction.Arn}:live/invocations
-        passthroughBehavior: "when_no_match"
-        type: "aws_proxy"
+        requestTemplates:
+          application/json:
+            Fn::Sub: |
+              #set($inputRoot = $input.path('$'))
+              {
+                "input": "{\"ipvSessionId\": \"$input.params('ipv-session-id')\"#foreach($key in $inputRoot.keySet()), \"$key\": \"$inputRoot.get($key)\"#end}",
+                "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${CriReturnStepFunction.Name}"
+              }
+          application/x-www-form-urlencoded:
+            Fn::Sub: |
+              #set($bodyParts = $util.urlDecode($input.path('$')).split('&'))
+              {
+                "input": "{\"ipvSessionId\": \"$input.params('ipv-session-id')\"#foreach( $token in $bodyParts )#set( $keyVal = $token.split('=') ), \"$keyVal[0]\": \"$keyVal[1]\"#end}",
+                "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${CriReturnStepFunction.Name}"
+              }
+        responses:
+          default:
+            statusCode: 200
+            responseTemplates:
+              application/json: |
+                #set ($bodyObj = $util.parseJson($input.body))
+
+                #if ($bodyObj.status == "SUCCEEDED")
+                  #set($lambdaOutputObj = $util.parseJson($bodyObj.output))
+                  #set($context.responseOverride.status = $lambdaOutputObj.statusCode)
+                  $bodyObj.output
+
+                #elseif ($bodyObj.status == "FAILED")
+                  #set($context.responseOverride.status = 500)
+                  {
+                    "cause": "$bodyObj.cause",
+                    "error": "$bodyObj.error"
+                  }
+                #else
+                  #set($context.responseOverride.status = 504)
+                  $bodyObj
+                #end
 
   /journey/{journeyStep}:
     post:
@@ -125,7 +194,7 @@ paths:
           application/x-www-form-urlencoded:
             Fn::Sub: |
               {
-                "input": "{\"body\": $util.escapeJavaScript($input.json('$')), \"headers\": {#foreach($header in $input.params().header.keySet())\"$header\": \"$util.escapeJavaScript($input.params().header.get($header))\"#if($foreach.hasNext),#end#end},\"params\": {#foreach($param in $input.params().path.keySet())\"$param\": \"$util.escapeJavaScript($input.params().path.get($param))\"#if($foreach.hasNext),#end#end},\"query\": {#foreach($queryParam in $input.params().querystring.keySet())\"$queryParam\": \"$util.escapeJavaScript($input.params().querystring.get($queryParam))\"#if($foreach.hasNext),#end#end}}",
+                "input": "{\"ipvSessionId\": \"$input.params('ipv-session-id')\", \"journey\": \"/journey/$input.params('journeyStep')\"}",
                 "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${JourneyEngineStepFunction.Name}"
               }
         responses:
@@ -138,7 +207,7 @@ paths:
                 #if ($bodyObj.status == "SUCCEEDED")
                   #set($lambdaOutput = $util.parseJson($bodyObj.output))
                   #set($context.responseOverride.status = $lambdaOutput.statusCode)
-                  $lambdaOutput.body
+                  $bodyObj.output
 
                 #elseif ($bodyObj.status == "FAILED")
                   #set($context.responseOverride.status = 500)
