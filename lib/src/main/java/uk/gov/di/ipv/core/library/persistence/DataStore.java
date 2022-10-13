@@ -54,8 +54,8 @@ public class DataStore<T extends DynamodbItem> {
                 isRunningLocally
                         ? createLocalDbClient()
                         : DynamoDbClient.builder()
-                        .httpClient(UrlConnectionHttpClient.create())
-                        .build();
+                                .httpClient(UrlConnectionHttpClient.create())
+                                .build();
 
         return DynamoDbEnhancedClient.builder().dynamoDbClient(client).build();
     }
@@ -82,18 +82,18 @@ public class DataStore<T extends DynamodbItem> {
 
     public T getItemByIndex(String indexName, String value) throws DynamoDbException {
         DynamoDbIndex<T> index = table.index(indexName);
-        var key= Key.builder().partitionValue(value).build();
+        var key = Key.builder().partitionValue(value).build();
         var queryConditional = QueryConditional.keyEqualTo(key);
-        var queryEnhancedRequest = QueryEnhancedRequest
-                .builder()
-                .consistentRead(true)
-                .queryConditional(queryConditional)
-                .build();
+        var queryEnhancedRequest =
+                QueryEnhancedRequest.builder()
+                        .consistentRead(true)
+                        .queryConditional(queryConditional)
+                        .build();
 
-        List<T> results = index.query(queryEnhancedRequest)
-                .stream()
-                .flatMap(page -> page.items().stream())
-                .collect(Collectors.toList());
+        List<T> results =
+                index.query(queryEnhancedRequest).stream()
+                        .flatMap(page -> page.items().stream())
+                        .collect(Collectors.toList());
 
         if (Objects.isNull(results) || results.isEmpty()) {
             return null;
@@ -103,9 +103,7 @@ public class DataStore<T extends DynamodbItem> {
 
     public List<T> getItems(String partitionValue) {
         var key = Key.builder().partitionValue(partitionValue).build();
-        return table
-                .query(QueryConditional.keyEqualTo(key))
-                .stream()
+        return table.query(QueryConditional.keyEqualTo(key)).stream()
                 .flatMap(page -> page.items().stream())
                 .collect(Collectors.toList());
     }
@@ -120,7 +118,7 @@ public class DataStore<T extends DynamodbItem> {
     }
 
     public T delete(String partitionValue) {
-        var key= Key.builder().partitionValue(partitionValue).build();
+        var key = Key.builder().partitionValue(partitionValue).build();
         return delete(key);
     }
 
@@ -135,10 +133,11 @@ public class DataStore<T extends DynamodbItem> {
     private T getItemByKey(Key key) {
         T result = table.getItem(key);
         if (result == null) {
-            var message = new MapMessage()
-                    .with("datastore", "Null result retrieved from DynamoDB")
-                    .with("table", table.describeTable().table().tableName())
-                    .with("field", key.partitionKeyValue().toString());
+            var message =
+                    new MapMessage()
+                            .with("datastore", "Null result retrieved from DynamoDB")
+                            .with("table", table.describeTable().table().tableName())
+                            .with("field", key.partitionKeyValue().toString());
             LOGGER.warn(message);
         }
         return result;
