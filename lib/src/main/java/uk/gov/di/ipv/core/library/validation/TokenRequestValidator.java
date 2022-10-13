@@ -11,7 +11,8 @@ import com.nimbusds.oauth2.sdk.id.JWTID;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import software.amazon.lambda.powertools.logging.LoggingUtils;
+import org.apache.logging.log4j.message.MapMessage;
+import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.domain.ConfigurationServicePublicKeySelector;
 import uk.gov.di.ipv.core.library.exceptions.ClientAuthenticationException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -52,7 +53,10 @@ public class TokenRequestValidator {
             validateMaxAllowedAuthClientTtl(claimsSet);
             validateJwtId(claimsSet);
         } catch (ParseException | InvalidClientException | JOSEException e) {
-            LOGGER.error("Validation of client_assertion jwt failed");
+            var message =
+                    new MapMessage()
+                            .with("jwtValidation", "Validation of client_assertion jwt failed");
+            LOGGER.error(message);
             throw new ClientAuthenticationException(e);
         }
     }
@@ -65,7 +69,13 @@ public class TokenRequestValidator {
         OffsetDateTime offsetDateTime =
                 OffsetDateTime.now().plusSeconds(Long.parseLong(maxAllowedTtl));
         if (expirationTime.getTime() / 1000L > offsetDateTime.toEpochSecond()) {
-            LOGGER.error("Client JWT expiry date is too far in the future");
+            var message =
+                    new MapMessage()
+                            .with(
+                                    "jwtValidation",
+                                    "Client JWT expiry date is too far in the future")
+                            .with("exp", expirationTime.getTime());
+            LOGGER.warn(message);
             throw new InvalidClientException(
                     "The client JWT expiry date has surpassed the maximum allowed ttl value");
         }
@@ -74,7 +84,10 @@ public class TokenRequestValidator {
     private void validateJwtId(JWTAuthenticationClaimsSet claimsSet) {
         JWTID jwtId = claimsSet.getJWTID();
         if (jwtId == null || StringUtils.isBlank(jwtId.getValue())) {
-            LOGGER.warn("The client auth JWT id (jti) is missing");
+            var message =
+                    new MapMessage()
+                            .with("jwtValidation", "The client auth JWT id (jti) is missing");
+            LOGGER.warn(message);
             return;
         }
         ClientAuthJwtIdItem clientAuthJwtIdItem =
@@ -94,14 +107,11 @@ public class TokenRequestValidator {
     }
 
     private void logWarningJtiHasAlreadyBeenUsed(ClientAuthJwtIdItem clientAuthJwtIdItem) {
-        LoggingUtils.appendKey(
-                LogHelper.LogField.JTI_LOG_FIELD.getFieldName(), clientAuthJwtIdItem.getJwtId());
-        LoggingUtils.appendKey(
-                LogHelper.LogField.JTI_USED_AT_LOG_FIELD.getFieldName(),
-                clientAuthJwtIdItem.getUsedAtDateTime());
-        LOGGER.warn("The client auth JWT id (jti) has already been used");
-        LoggingUtils.removeKeys(
-                LogHelper.LogField.JTI_LOG_FIELD.getFieldName(),
-                LogHelper.LogField.JTI_USED_AT_LOG_FIELD.getFieldName());
+        var message =
+                new StringMapMessage()
+                        .with("jwtValidation", "The client auth JWT id (jti) has already been used")
+                        .with("jti", clientAuthJwtIdItem.getJwtId())
+                        .with("used", clientAuthJwtIdItem.getUsedAtDateTime());
+        LOGGER.warn(message);
     }
 }
