@@ -1115,6 +1115,10 @@ Resources:
       Tracing:
         Enabled: true
       Type: EXPRESS
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
 
   CriReturnStepFunctionApiGateWayIamRole:
     Type: AWS::IAM::Role
@@ -1204,6 +1208,10 @@ Resources:
       Tracing:
         Enabled: true
       Type: EXPRESS
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
 
   JourneyEngineStepFunctionApiGateWayIamRole:
     Type: AWS::IAM::Role
