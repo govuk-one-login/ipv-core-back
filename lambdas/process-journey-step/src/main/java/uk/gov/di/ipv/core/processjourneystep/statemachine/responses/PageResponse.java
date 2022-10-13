@@ -24,11 +24,11 @@ public class PageResponse implements JourneyStepResponse {
         this.pageId = pageId;
     }
 
-    public Map<String, Object> value(ConfigurationService configurationService) {
+    public Map<String, String> value(ConfigurationService configurationService) {
         return value(pageId);
     }
 
-    public Map<String, Object> value(String id) {
+    public Map<String, String> value(String id) {
         return Map.of("page", id);
     }
 }

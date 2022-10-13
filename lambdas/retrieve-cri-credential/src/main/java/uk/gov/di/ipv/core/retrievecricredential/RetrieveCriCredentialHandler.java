@@ -2,6 +2,8 @@ package uk.gov.di.ipv.core.retrievecricredential;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
@@ -21,15 +23,17 @@ import uk.gov.di.ipv.core.library.auditing.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
+import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
@@ -40,17 +44,17 @@ import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 
 import java.text.ParseException;
 import java.util.List;
-import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
-import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.JOURNEY;
 
 public class RetrieveCriCredentialHandler
-        implements RequestHandler<Map<String, String>, Map<String, Object>> {
-    public static final String EVIDENCE = "evidence";
+        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final Map<String, Object> JOURNEY_NEXT = Map.of(JOURNEY, "/journey/next");
-    private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, "/journey/error");
+    private static final JourneyResponse JOURNEY_NEXT_RESPONSE =
+            new JourneyResponse("/journey/next");
+    private static final JourneyResponse JOURNEY_ERROR_RESPONSE =
+            new JourneyResponse("/journey/error");
+    public static final String EVIDENCE = "evidence";
 
     private final CredentialIssuerService credentialIssuerService;
     private final IpvSessionService ipvSessionService;
@@ -93,23 +97,25 @@ public class RetrieveCriCredentialHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(Map<String, String> input, Context context) {
+    public APIGatewayProxyResponseEvent handleRequest(
+            APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
 
         IpvSessionItem ipvSessionItem;
         try {
-            String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
+            String ipvSessionId = RequestHelper.getIpvSessionId(input);
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
         } catch (HttpResponseExceptionWithErrorBody e) {
             ErrorResponse errorResponse = e.getErrorResponse();
             LOGGER.error(
                     "Error in credential issuer return lambda because: {}",
                     errorResponse.getMessage());
-            return StepFunctionHelpers.generateErrorOutputMap(
-                    HttpStatus.SC_BAD_REQUEST, errorResponse);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_BAD_REQUEST, e.getErrorBody());
         }
 
         String credentialIssuerId = ipvSessionItem.getCredentialIssuerSessionDetails().getCriId();
+
         try {
             ClientSessionDetailsDto clientSessionDetailsDto =
                     ipvSessionItem.getClientSessionDetails();
@@ -160,25 +166,29 @@ public class RetrieveCriCredentialHandler
                             .with("criId", credentialIssuerId);
             LOGGER.info(message);
 
-            return JOURNEY_NEXT;
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_OK, JOURNEY_NEXT_RESPONSE);
         } catch (CredentialIssuerException | CiPutException e) {
             updateVisitedCredentials(
                     ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
 
-            return JOURNEY_ERROR;
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
         } catch (ParseException | JsonProcessingException | SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
 
             updateVisitedCredentials(
                     ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
-            return JOURNEY_ERROR;
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
         } catch (com.nimbusds.oauth2.sdk.ParseException e) {
             LOGGER.error("Failed to parse access token: {}", e.getMessage());
 
             updateVisitedCredentials(
                     ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
 
-            return JOURNEY_ERROR;
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_OK, JOURNEY_ERROR_RESPONSE);
         }
     }
 
