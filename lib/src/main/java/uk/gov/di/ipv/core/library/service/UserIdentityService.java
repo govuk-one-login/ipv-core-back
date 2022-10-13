@@ -28,12 +28,14 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
 
 import java.text.ParseException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -85,6 +87,22 @@ public class UserIdentityService {
         return credentialIssuerItems.stream()
                 .map(UserIssuedCredentialsItem::getCredential)
                 .collect(Collectors.toList());
+    }
+
+    public void deleteUserIssuedCredentialsIfAnyExpired(String userId) {
+        Instant nowPlusSessionTimeout =
+                Instant.now()
+                        .plusSeconds(
+                                Long.parseLong(
+                                        configurationService.getSsmParameter(
+                                                BACKEND_SESSION_TIMEOUT)));
+        List<UserIssuedCredentialsItem> expiredUserIssuedCredentials =
+                this.dataStore.getItemsWithAttributeLessThanOrEqualValue(
+                        userId, "expirationTime", nowPlusSessionTimeout.toString());
+        if (!expiredUserIssuedCredentials.isEmpty()) {
+            LOGGER.info("Found VCs due to expire within session timeout");
+            deleteUserIssuedCredentials(userId);
+        }
     }
 
     public void deleteUserIssuedCredentials(String userId) {
