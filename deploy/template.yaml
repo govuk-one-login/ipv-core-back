@@ -118,6 +118,7 @@ Resources:
       Name: !Sub IPV Core Private API Gateway ${Environment}
       EndpointConfiguration:
         Type: PRIVATE
+      DisableExecuteApiEndpoint: True
       DefinitionBody:
         openapi: "3.0.3" # workaround to get `sam validate` to work
         paths: # workaround to get `sam validate` to work
