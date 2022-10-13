@@ -274,6 +274,8 @@ class SelectCriHandlerTest {
 
         when(mockConfigurationService.getCredentialIssuer(CRI_DCMAW))
                 .thenReturn(createCriConfig(CRI_DCMAW, "test-dcmaw-iss"));
+        when(mockConfigurationService.getCredentialIssuer(CRI_PASSPORT))
+                .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss"));
 
         when(mockConfigurationService.getSsmParameter(DCMAW_ENABLED)).thenReturn("true");
         when(mockConfigurationService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS))
@@ -573,6 +575,8 @@ class SelectCriHandlerTest {
 
         when(mockConfigurationService.getCredentialIssuer(CRI_DCMAW))
                 .thenReturn(createCriConfig(CRI_DCMAW, "test-dcmaw-iss"));
+        when(mockConfigurationService.getCredentialIssuer(CRI_PASSPORT))
+                .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss"));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(Collections.emptyList());
 
@@ -602,6 +606,8 @@ class SelectCriHandlerTest {
 
         when(mockConfigurationService.getCredentialIssuer(CRI_DCMAW))
                 .thenReturn(createCriConfig(CRI_DCMAW, "test-dcmaw-iss"));
+        when(mockConfigurationService.getCredentialIssuer(CRI_PASSPORT))
+                .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss"));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(Collections.emptyList());
 
@@ -662,6 +668,8 @@ class SelectCriHandlerTest {
 
         when(mockConfigurationService.getCredentialIssuer(CRI_DCMAW))
                 .thenReturn(createCriConfig(CRI_DCMAW, "test-dcmaw-iss"));
+        when(mockConfigurationService.getCredentialIssuer(CRI_PASSPORT))
+                .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss"));
 
         when(mockConfigurationService.getSsmParameter(DCMAW_ENABLED)).thenReturn("true");
         when(mockConfigurationService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS))
