@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.persistence;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.MapMessage;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -13,8 +14,6 @@ import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.lambda.powertools.logging.LoggingUtils;
-import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.DynamodbItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
@@ -136,16 +135,11 @@ public class DataStore<T extends DynamodbItem> {
     private T getItemByKey(Key key) {
         T result = table.getItem(key);
         if (result == null) {
-            LoggingUtils.appendKey(
-                    LogHelper.LogField.DYNAMODB_TABLE_NAME.getFieldName(),
-                    table.describeTable().table().tableName());
-            LoggingUtils.appendKey(
-                    LogHelper.LogField.DYNAMODB_KEY_VALUE.getFieldName(),
-                    key.partitionKeyValue().toString());
-            LOGGER.warn("Null result retrieved out of DynamoDB");
-            LoggingUtils.removeKeys(
-                    LogHelper.LogField.DYNAMODB_TABLE_NAME.getFieldName(),
-                    LogHelper.LogField.DYNAMODB_KEY_VALUE.getFieldName());
+            var message = new MapMessage()
+                    .with("datastore", "Null result retrieved from DynamoDB")
+                    .with("table", table.describeTable().table().tableName())
+                    .with("field", key.partitionKeyValue().toString());
+            LOGGER.warn(message);
         }
         return result;
     }
