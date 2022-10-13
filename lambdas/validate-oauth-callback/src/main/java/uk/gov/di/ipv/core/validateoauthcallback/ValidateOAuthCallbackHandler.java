@@ -102,7 +102,6 @@ public class ValidateOAuthCallbackHandler implements RequestStreamHandler {
                 objectMapper.readValue(
                         new BufferedReader(new InputStreamReader(inputStream)),
                         CredentialIssuerRequestDto.class);
-        LOGGER.info(request.getAuthorizationCode());
 
         IpvSessionItem ipvSessionItem = null;
 

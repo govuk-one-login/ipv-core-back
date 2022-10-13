@@ -83,7 +83,7 @@ Mappings:
       provisionedConcurrency: 1
       ciStorageAccountId: 697519714716 # di-ipv-contra-indicators-integration
       environment: integration
-      criReturnStepFunctionLogLevel: ALL
+      criReturnStepFunctionLogLevel: OFF
     "075701497069": # Production
       provisionedConcurrency: 1
       ciStorageAccountId: 442136572379 # di-ipv-contra-indicators-prod
@@ -1115,6 +1115,10 @@ Resources:
       Tracing:
         Enabled: true
       Type: EXPRESS
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
 
   CriReturnStepFunctionApiGateWayIamRole:
     Type: AWS::IAM::Role
@@ -1204,6 +1208,10 @@ Resources:
       Tracing:
         Enabled: true
       Type: EXPRESS
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
 
   JourneyEngineStepFunctionApiGateWayIamRole:
     Type: AWS::IAM::Role
