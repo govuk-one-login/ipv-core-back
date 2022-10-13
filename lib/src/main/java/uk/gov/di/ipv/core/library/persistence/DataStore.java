@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.persistence;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.MapMessage;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -12,10 +13,7 @@ import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
-import software.amazon.lambda.powertools.logging.LoggingUtils;
-import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.DynamodbItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
@@ -73,21 +71,24 @@ public class DataStore<T extends DynamodbItem> {
     }
 
     public T getItem(String partitionValue, String sortValue) {
-        return getItemByKey(
-                Key.builder().partitionValue(partitionValue).sortValue(sortValue).build());
+        var key = Key.builder().partitionValue(partitionValue).sortValue(sortValue).build();
+        return getItemByKey(key);
     }
 
     public T getItem(String partitionValue) {
-        return getItemByKey(Key.builder().partitionValue(partitionValue).build());
+        var key = Key.builder().partitionValue(partitionValue).build();
+        return getItemByKey(key);
     }
 
     public T getItemByIndex(String indexName, String value) throws DynamoDbException {
         DynamoDbIndex<T> index = table.index(indexName);
-        var attVal = AttributeValue.builder().s(value).build();
-        var queryConditional =
-                QueryConditional.keyEqualTo(Key.builder().partitionValue(attVal).build());
+        var key = Key.builder().partitionValue(value).build();
+        var queryConditional = QueryConditional.keyEqualTo(key);
         var queryEnhancedRequest =
-                QueryEnhancedRequest.builder().queryConditional(queryConditional).build();
+                QueryEnhancedRequest.builder()
+                        .consistentRead(true)
+                        .queryConditional(queryConditional)
+                        .build();
 
         List<T> results =
                 index.query(queryEnhancedRequest).stream()
@@ -101,11 +102,8 @@ public class DataStore<T extends DynamodbItem> {
     }
 
     public List<T> getItems(String partitionValue) {
-        return table
-                .query(
-                        QueryConditional.keyEqualTo(
-                                Key.builder().partitionValue(partitionValue).build()))
-                .stream()
+        var key = Key.builder().partitionValue(partitionValue).build();
+        return table.query(QueryConditional.keyEqualTo(key)).stream()
                 .flatMap(page -> page.items().stream())
                 .collect(Collectors.toList());
     }
@@ -115,11 +113,13 @@ public class DataStore<T extends DynamodbItem> {
     }
 
     public T delete(String partitionValue, String sortValue) {
-        return delete(Key.builder().partitionValue(partitionValue).sortValue(sortValue).build());
+        var key = Key.builder().partitionValue(partitionValue).sortValue(sortValue).build();
+        return delete(key);
     }
 
     public T delete(String partitionValue) {
-        return delete(Key.builder().partitionValue(partitionValue).build());
+        var key = Key.builder().partitionValue(partitionValue).build();
+        return delete(key);
     }
 
     private static DynamoDbClient createLocalDbClient() {
@@ -133,16 +133,12 @@ public class DataStore<T extends DynamodbItem> {
     private T getItemByKey(Key key) {
         T result = table.getItem(key);
         if (result == null) {
-            LoggingUtils.appendKey(
-                    LogHelper.LogField.DYNAMODB_TABLE_NAME.getFieldName(),
-                    table.describeTable().table().tableName());
-            LoggingUtils.appendKey(
-                    LogHelper.LogField.DYNAMODB_KEY_VALUE.getFieldName(),
-                    key.partitionKeyValue().toString());
-            LOGGER.warn("Null result retrieved out of DynamoDB");
-            LoggingUtils.removeKeys(
-                    LogHelper.LogField.DYNAMODB_TABLE_NAME.getFieldName(),
-                    LogHelper.LogField.DYNAMODB_KEY_VALUE.getFieldName());
+            var message =
+                    new MapMessage()
+                            .with("datastore", "Null result retrieved from DynamoDB")
+                            .with("table", table.describeTable().table().tableName())
+                            .with("field", key.partitionKeyValue().toString());
+            LOGGER.warn(message);
         }
         return result;
     }
