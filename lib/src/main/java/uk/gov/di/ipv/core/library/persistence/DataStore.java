@@ -87,6 +87,7 @@ public class DataStore<T extends DynamodbItem> {
         var queryConditional = QueryConditional.keyEqualTo(key);
         var queryEnhancedRequest = QueryEnhancedRequest
                 .builder()
+                .consistentRead(true)
                 .queryConditional(queryConditional)
                 .build();
 
