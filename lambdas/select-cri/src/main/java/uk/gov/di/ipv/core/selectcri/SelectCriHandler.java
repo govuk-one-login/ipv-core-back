@@ -247,6 +247,16 @@ public class SelectCriHandler
         Optional<VcStatusDto> vc = getVc(currentVcStatuses, criConfig.getAudienceForClients());
         if (vc.isEmpty()) {
             if (userHasNotVisited(visitedCredentialIssuers, criId)) {
+                CredentialIssuerConfig passportConfig =
+                        configurationService.getCredentialIssuer(passportCriId);
+                if (criId.equals(dcmawCriId)
+                        && getVc(currentVcStatuses, passportConfig.getAudienceForClients())
+                                .isPresent()) {
+                    LOGGER.info("User already has a passport VC so continuing a web journey");
+                    return Optional.of(
+                            getNextWebJourneyCri(
+                                    visitedCredentialIssuers, currentVcStatuses, userId));
+                }
                 return Optional.of(getJourneyResponse(journeyId));
             }
             var message =

@@ -274,6 +274,8 @@ class SelectCriHandlerTest {
 
         when(mockConfigurationService.getCredentialIssuer(CRI_DCMAW))
                 .thenReturn(createCriConfig(CRI_DCMAW, "test-dcmaw-iss"));
+        when(mockConfigurationService.getCredentialIssuer(CRI_PASSPORT))
+                .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss"));
 
         when(mockConfigurationService.getSsmParameter(DCMAW_ENABLED)).thenReturn("true");
         when(mockConfigurationService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS))
@@ -354,6 +356,39 @@ class SelectCriHandlerTest {
         Map<String, String> responseBody = getResponseBodyAsMap(response);
 
         assertEquals("/journey/fraud", responseBody.get("journey"));
+        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+    }
+
+    @Test
+    void shouldReturnAddressdCriJourneyResponseIfUserHasNotVistedAppButAlreadyHasPassportVC()
+            throws JsonProcessingException, URISyntaxException {
+        mockIpvSessionService();
+
+        when(mockClientSessionDetailsDto.getUserId()).thenReturn("test-user-id");
+
+        when(mockConfigurationService.getCredentialIssuer(CRI_DCMAW))
+                .thenReturn(createCriConfig(CRI_DCMAW, "test-dcmaw-iss"));
+        when(mockConfigurationService.getCredentialIssuer(CRI_PASSPORT))
+                .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss"));
+        when(mockConfigurationService.getCredentialIssuer(CRI_ADDRESS))
+                .thenReturn(createCriConfig(CRI_ADDRESS, "test-address-iss"));
+        when(mockIpvSessionItem.getCurrentVcStatuses())
+                .thenReturn(List.of(new VcStatusDto("test-passport-iss", true)));
+
+        when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
+                .thenReturn(Collections.emptyList());
+
+        when(mockConfigurationService.getSsmParameter(DCMAW_ENABLED)).thenReturn("true");
+        when(mockConfigurationService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS))
+                .thenReturn("true");
+
+        APIGatewayProxyRequestEvent input = createRequestEvent();
+
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+
+        Map<String, String> responseBody = getResponseBodyAsMap(response);
+
+        assertEquals("/journey/address", responseBody.get("journey"));
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
     }
 
@@ -573,6 +608,8 @@ class SelectCriHandlerTest {
 
         when(mockConfigurationService.getCredentialIssuer(CRI_DCMAW))
                 .thenReturn(createCriConfig(CRI_DCMAW, "test-dcmaw-iss"));
+        when(mockConfigurationService.getCredentialIssuer(CRI_PASSPORT))
+                .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss"));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(Collections.emptyList());
 
@@ -602,6 +639,8 @@ class SelectCriHandlerTest {
 
         when(mockConfigurationService.getCredentialIssuer(CRI_DCMAW))
                 .thenReturn(createCriConfig(CRI_DCMAW, "test-dcmaw-iss"));
+        when(mockConfigurationService.getCredentialIssuer(CRI_PASSPORT))
+                .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss"));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(Collections.emptyList());
 
@@ -662,6 +701,8 @@ class SelectCriHandlerTest {
 
         when(mockConfigurationService.getCredentialIssuer(CRI_DCMAW))
                 .thenReturn(createCriConfig(CRI_DCMAW, "test-dcmaw-iss"));
+        when(mockConfigurationService.getCredentialIssuer(CRI_PASSPORT))
+                .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss"));
 
         when(mockConfigurationService.getSsmParameter(DCMAW_ENABLED)).thenReturn("true");
         when(mockConfigurationService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS))
