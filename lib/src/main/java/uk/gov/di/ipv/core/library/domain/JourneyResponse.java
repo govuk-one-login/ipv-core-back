@@ -18,4 +18,8 @@ public class JourneyResponse {
     public String getJourney() {
         return journey;
     }
+
+    public String toString() {
+        return journey;
+    }
 }
