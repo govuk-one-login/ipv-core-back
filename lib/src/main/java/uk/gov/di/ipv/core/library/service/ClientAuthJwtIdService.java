@@ -34,7 +34,7 @@ public class ClientAuthJwtIdService {
     }
 
     public ClientAuthJwtIdItem getClientAuthJwtIdItem(String jwtId) {
-        return dataStore.getItem(jwtId);
+        return dataStore.getItem(jwtId, false);
     }
 
     public void persistClientAuthJwtId(String jwtId) {

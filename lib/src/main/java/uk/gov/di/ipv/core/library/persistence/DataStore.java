@@ -74,12 +74,16 @@ public class DataStore<T extends DynamodbItem> {
 
     public T getItem(String partitionValue, String sortValue) {
         var key = Key.builder().partitionValue(partitionValue).sortValue(sortValue).build();
-        return getItemByKey(key);
+        return getItemByKey(key, true);
     }
 
     public T getItem(String partitionValue) {
+        return getItem(partitionValue, true);
+    }
+
+    public T getItem(String partitionValue, boolean warnOnNull) {
         var key = Key.builder().partitionValue(partitionValue).build();
-        return getItemByKey(key);
+        return getItemByKey(key, warnOnNull);
     }
 
     public T getItemByIndex(String indexName, String value) throws DynamoDbException {
@@ -150,9 +154,9 @@ public class DataStore<T extends DynamodbItem> {
                 .build();
     }
 
-    private T getItemByKey(Key key) {
+    private T getItemByKey(Key key, boolean warnOnNull) {
         T result = table.getItem(key);
-        if (result == null) {
+        if (warnOnNull && result == null) {
             var message =
                     new MapMessage()
                             .with("datastore", "Null result retrieved from DynamoDB")

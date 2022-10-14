@@ -27,7 +27,7 @@ class ClientAuthJwtIdServiceTest {
         String testJwtId = "test-jwt-id";
         String testTimestamp = Instant.now().toString();
         ClientAuthJwtIdItem clientAuthJwtIdItem = new ClientAuthJwtIdItem(testJwtId, testTimestamp);
-        when(mockDataStore.getItem(testJwtId)).thenReturn(clientAuthJwtIdItem);
+        when(mockDataStore.getItem(testJwtId, false)).thenReturn(clientAuthJwtIdItem);
 
         ClientAuthJwtIdItem result = clientAuthJwtIdService.getClientAuthJwtIdItem(testJwtId);
 
