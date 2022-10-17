@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.auditing.AuditExtensionsUserIdentity;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
@@ -125,9 +126,15 @@ public class BuildUserIdentityHandler
                             ipvSessionItem.getVot(),
                             ipvSessionItem.getCurrentVcStatuses());
 
+            AuditExtensionsUserIdentity extensions =
+                    new AuditExtensionsUserIdentity(ipvSessionItem.getVot());
+
             auditService.sendAuditEvent(
                     new AuditEvent(
-                            AuditEventTypes.IPV_IDENTITY_ISSUED, componentId, auditEventUser));
+                            AuditEventTypes.IPV_IDENTITY_ISSUED,
+                            componentId,
+                            auditEventUser,
+                            extensions));
 
             ipvSessionService.revokeAccessToken(ipvSessionItem);
 
