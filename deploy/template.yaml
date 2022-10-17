@@ -83,12 +83,12 @@ Mappings:
       provisionedConcurrency: 1
       ciStorageAccountId: 697519714716 # di-ipv-contra-indicators-integration
       environment: integration
-      criReturnStepFunctionLogLevel: OFF
+      criReturnStepFunctionLogLevel: ERROR
     "075701497069": # Production
       provisionedConcurrency: 1
       ciStorageAccountId: 442136572379 # di-ipv-contra-indicators-prod
       environment: production
-      criReturnStepFunctionLogLevel: OFF
+      criReturnStepFunctionLogLevel: ERROR
 
 Resources:
   JWKSParamRole:
