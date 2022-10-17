@@ -1,29 +1,22 @@
 package uk.gov.di.ipv.core.library.dto;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.util.Optional;
 
 @ExcludeFromGeneratedCoverageReport
-@Getter
 public class CredentialIssuerRequestDto {
+    private String authorizationCode;
+    private String credentialIssuerId;
+    private String ipvSessionId;
+    private String redirectUri;
+    private String state;
+    private String error;
+    private String errorDescription;
 
-    private final String authorizationCode;
-
-    private final String credentialIssuerId;
-
-    private final String ipvSessionId;
-
-    private final String redirectUri;
-
-    private final String state;
-
-    private final Optional<String> error;
-
-    private final Optional<String> errorDescription;
-
+    @JsonCreator
     public CredentialIssuerRequestDto(
             @JsonProperty(value = "authorization_code") String authorizationCode,
             @JsonProperty(value = "credential_issuer_id") String credentialIssuerId,
@@ -37,7 +30,63 @@ public class CredentialIssuerRequestDto {
         this.ipvSessionId = ipvSessionId;
         this.redirectUri = redirectUri;
         this.state = state;
-        this.error = Optional.ofNullable(error);
-        this.errorDescription = Optional.ofNullable(errorDescription);
+        this.error = error;
+        this.errorDescription = errorDescription;
+    }
+
+    public String getAuthorizationCode() {
+        return authorizationCode;
+    }
+
+    public void setAuthorizationCode(String authorizationCode) {
+        this.authorizationCode = authorizationCode;
+    }
+
+    public String getCredentialIssuerId() {
+        return credentialIssuerId;
+    }
+
+    public void setCredentialIssuerId(String credentialIssuerId) {
+        this.credentialIssuerId = credentialIssuerId;
+    }
+
+    public String getIpvSessionId() {
+        return ipvSessionId;
+    }
+
+    public void setIpvSessionId(String ipvSessionId) {
+        this.ipvSessionId = ipvSessionId;
+    }
+
+    public String getRedirectUri() {
+        return redirectUri;
+    }
+
+    public void setRedirectUri(String redirectUri) {
+        this.redirectUri = redirectUri;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public Optional<String> getError() {
+        return Optional.ofNullable(error);
+    }
+
+    public void setError(String error) {
+        this.error = error;
+    }
+
+    public Optional<String> getErrorDescription() {
+        return Optional.ofNullable(errorDescription);
+    }
+
+    public void setErrorDescription(String errorDescription) {
+        this.errorDescription = errorDescription;
     }
 }

@@ -68,22 +68,27 @@ Mappings:
       provisionedConcurrency: 0
       ciStorageAccountId: 322814139578 # di-ipv-cri-dev
       environment: dev
+      criReturnStepFunctionLogLevel: ALL
     "457601271792": # Build
       provisionedConcurrency: 0
       ciStorageAccountId: 755415363251 # di-ipv-contra-indicators-build
       environment: build
+      criReturnStepFunctionLogLevel: ALL
     "335257547869": # Staging
       provisionedConcurrency: 1
       ciStorageAccountId: 265689800486 # di-ipv-contra-indicators-staging
       environment: staging
+      criReturnStepFunctionLogLevel: ALL
     "991138514218": # Integration
       provisionedConcurrency: 1
       ciStorageAccountId: 697519714716 # di-ipv-contra-indicators-integration
       environment: integration
+      criReturnStepFunctionLogLevel: OFF
     "075701497069": # Production
       provisionedConcurrency: 1
       ciStorageAccountId: 442136572379 # di-ipv-contra-indicators-prod
       environment: production
+      criReturnStepFunctionLogLevel: OFF
 
 Resources:
   JWKSParamRole:
@@ -1061,6 +1066,108 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref BuildDebugCredentialDataFunctionLogGroup
 
+  CriReturnStepFunction:
+    Type: AWS::Serverless::StateMachine
+    Properties:
+      DefinitionUri: criReturnStepFunction.asl.json
+      DefinitionSubstitutions:
+        IPVProcessJourneyStepFunctionArn: !GetAtt IPVProcessJourneyStepFunction.Arn
+        RetrieveCriCredentialFunctionArn: !GetAtt RetrieveCriCredentialFunction.Arn
+        RetrieveCriOauthAccessTokenFunctionArn: !GetAtt RetrieveCriOauthAccessTokenFunction.Arn
+        ValidateOAuthCallbackFunctionArn: !GetAtt ValidateOAuthCallbackFunction.Arn
+      Events:
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+            Path: /journey/cri/callback
+            Method: POST
+      Logging:
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt CriReturnStepFunctionLogGroup.Arn
+        IncludeExecutionData: true
+        Level: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, criReturnStepFunctionLogLevel ]
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref IPVProcessJourneyStepFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref RetrieveCriCredentialFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref RetrieveCriOauthAccessTokenFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref ValidateOAuthCallbackFunction
+        - Statement:
+            - Sid: CloudWatchLogsAccess
+              Effect: Allow
+              Action:
+                - "logs:CreateLogDelivery"
+                - "logs:GetLogDelivery"
+                - "logs:UpdateLogDelivery"
+                - "logs:DeleteLogDelivery"
+                - "logs:ListLogDeliveries"
+                - "logs:PutLogEvents"
+                - "logs:PutResourcePolicy"
+                - "logs:DescribeResourcePolicies"
+                - "logs:DescribeLogGroups"
+              Resource: "*"
+      Tracing:
+        Enabled: true
+      Type: EXPRESS
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+
+  CriReturnStepFunctionApiGateWayIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Policies:
+        - PolicyName: AllowApiGatewayToInvokeStartSyncExecution
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: 'states:StartSyncExecution'
+                Resource: !Ref CriReturnStepFunction
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+
+  CriReturnStepFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+      LogGroupName: !Sub "/aws/states/cri-return-step-function-${Environment}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  CriReturnStepFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref CriReturnStepFunctionLogGroup
+
+  CriReturnStepFunctionLogGroupSubscriptionFilterOld:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
+      FilterPattern: ""
+      LogGroupName: !Ref CriReturnStepFunctionLogGroup
+
   JourneyEngineStepFunction:
     Type: AWS::Serverless::StateMachine
     Properties:
@@ -1101,6 +1208,10 @@ Resources:
       Tracing:
         Enabled: true
       Type: EXPRESS
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
 
   JourneyEngineStepFunctionApiGateWayIamRole:
     Type: AWS::IAM::Role
