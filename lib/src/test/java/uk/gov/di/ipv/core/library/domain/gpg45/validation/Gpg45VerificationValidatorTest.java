@@ -22,6 +22,15 @@ class Gpg45VerificationValidatorTest {
     }
 
     @Test
+    void isSuccessfulShouldReturnTrueOnValidCredentialAndNullCi() {
+        CredentialEvidenceItem credentialEvidenceItem =
+                new CredentialEvidenceItem(
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION, 2, null);
+
+        assertTrue(Gpg45VerificationValidator.isSuccessful(credentialEvidenceItem));
+    }
+
+    @Test
     void isSuccessfulShouldReturnFalseOnValidCredential() {
         CredentialEvidenceItem credentialEvidenceItem =
                 new CredentialEvidenceItem(

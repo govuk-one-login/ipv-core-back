@@ -22,6 +22,15 @@ class Gpg45FraudValidatorTest {
     }
 
     @Test
+    void isSuccessfulShouldReturnTrueOnValidCredentialAndNullCi() {
+        CredentialEvidenceItem credentialEvidenceItem =
+                new CredentialEvidenceItem(
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD, 2, null);
+
+        assertTrue(Gpg45FraudValidator.isSuccessful(credentialEvidenceItem, true));
+    }
+
+    @Test
     void isSuccessfulShouldReturnFalseOnValidCredential() {
         CredentialEvidenceItem credentialEvidenceItem =
                 new CredentialEvidenceItem(
@@ -46,6 +55,17 @@ class Gpg45FraudValidatorTest {
         CredentialEvidenceItem credentialEvidenceItem =
                 new CredentialEvidenceItem(
                         CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD, 0, List.of("A01"));
+
+        assertFalse(Gpg45FraudValidator.isSuccessful(credentialEvidenceItem, false));
+    }
+
+    @Test
+    void isSuccessfulShouldReturnFalseOnValidCredentialWithMultipleCI() {
+        CredentialEvidenceItem credentialEvidenceItem =
+                new CredentialEvidenceItem(
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                        0,
+                        List.of("A01", "D02"));
 
         assertFalse(Gpg45FraudValidator.isSuccessful(credentialEvidenceItem, false));
     }

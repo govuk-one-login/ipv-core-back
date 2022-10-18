@@ -1,0 +1,113 @@
+package uk.gov.di.ipv.core.library.helpers;
+
+import com.nimbusds.jwt.SignedJWT;
+import org.junit.jupiter.api.Test;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FAILED_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FAILED_PASSPORT_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC_WITH_CI_D02;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC_WITH_CI;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1_PASSPORT_VC_MISSING_EVIDENCE;
+
+class VcHelperTest {
+    public static CredentialIssuerConfig addressConfig = null;
+
+    static {
+        try {
+            addressConfig =
+                    new CredentialIssuerConfig(
+                            "address",
+                            "address",
+                            new URI("http://example.com/token"),
+                            new URI("http://example.com/credential"),
+                            new URI("http://example.com/authorize"),
+                            "ipv-core",
+                            "test-jwk",
+                            "test-encryption-jwk",
+                            "https://review-a.integration.account.gov.uk",
+                            new URI("http://example.com/redirect"));
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    void shouldReturnTrueOnSuccessfulPassportVc() throws Exception {
+        assertTrue(VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_PASSPORT_VC), addressConfig, false));
+    }
+
+    @Test
+    void shouldReturnFalseOnFailedPassportVc() throws Exception {
+        assertFalse(
+                VcHelper.isSuccessfulVc(
+                        SignedJWT.parse(M1A_FAILED_PASSPORT_VC), addressConfig, false));
+    }
+
+    @Test
+    void shouldReturnFalseOnPassportVcContainingCi() throws Exception {
+        assertFalse(
+                VcHelper.isSuccessfulVc(
+                        SignedJWT.parse(M1A_PASSPORT_VC_WITH_CI), addressConfig, false));
+    }
+
+    @Test
+    void shouldReturnTrueOnSuccessfulAddressVc() throws Exception {
+        assertTrue(VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_ADDRESS_VC), addressConfig, false));
+    }
+
+    @Test
+    void shouldReturnTrueOnSuccessfulFraudVc() throws Exception {
+        assertTrue(VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_FRAUD_VC), addressConfig, false));
+    }
+
+    @Test
+    void shouldReturnFalseOnFailedFraudVc() throws Exception {
+        assertFalse(
+                VcHelper.isSuccessfulVc(
+                        SignedJWT.parse(M1A_FAILED_FRAUD_VC), addressConfig, false));
+    }
+
+    @Test
+    void shouldReturnFalseOnFraudVcContainingCi() throws Exception {
+        assertFalse(
+                VcHelper.isSuccessfulVc(
+                        SignedJWT.parse(M1A_FRAUD_VC_WITH_CI_D02), addressConfig, false));
+    }
+
+    @Test
+    void shouldReturnTrueOnFraudVcContainingA01CiWhenAllowed() throws Exception {
+        assertFalse(
+                VcHelper.isSuccessfulVc(
+                        SignedJWT.parse(M1A_FRAUD_VC_WITH_CI_D02), addressConfig, true));
+    }
+
+    @Test
+    void shouldReturnTrueOnSuccessfulKbvVc() throws Exception {
+        assertTrue(
+                VcHelper.isSuccessfulVc(
+                        SignedJWT.parse(M1A_VERIFICATION_VC), addressConfig, false));
+    }
+
+    @Test
+    void shouldReturnTrueOnSuccessfulDcmawVc() throws Exception {
+        assertTrue(VcHelper.isSuccessfulVc(SignedJWT.parse(M1B_DCMAW_VC), addressConfig, false));
+    }
+
+    @Test
+    void shouldReturnFalseOnVcMissingEvidenceBlock() throws Exception {
+        assertFalse(
+                VcHelper.isSuccessfulVc(
+                        SignedJWT.parse(M1_PASSPORT_VC_MISSING_EVIDENCE), addressConfig, false));
+    }
+}

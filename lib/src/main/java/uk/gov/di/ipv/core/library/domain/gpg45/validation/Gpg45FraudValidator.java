@@ -11,11 +11,11 @@ public class Gpg45FraudValidator {
         throw new IllegalStateException("Utility class");
     }
 
-    public static boolean isSuccessful(CredentialEvidenceItem item, boolean isAllowedA01) {
+    public static boolean isSuccessful(CredentialEvidenceItem item, boolean isFraudAllowedA01) {
         if (item.getCi() == null || item.getCi().isEmpty()) {
             return item.getIdentityFraudScore() != 0;
         } else if (item.getCi().size() == 1) {
-            return isAllowedA01 && item.getCi().get(0).equals(A01);
+            return isFraudAllowedA01 && item.getCi().get(0).equals(A01);
         }
         return false;
     }

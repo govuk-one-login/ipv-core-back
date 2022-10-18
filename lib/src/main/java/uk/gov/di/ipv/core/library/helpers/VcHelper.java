@@ -22,12 +22,13 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
 public class VcHelper {
-
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson gson = new Gson();
 
+    private VcHelper() {}
+
     public static boolean isSuccessfulVc(
-            SignedJWT vc, CredentialIssuerConfig addressCriConfig, boolean isAllowedA01)
+            SignedJWT vc, CredentialIssuerConfig addressCriConfig, boolean isFraudAllowedA01)
             throws ParseException {
         JSONObject vcClaim = (JSONObject) vc.getJWTClaimsSet().getClaim(VC_CLAIM);
         JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
@@ -45,18 +46,18 @@ public class VcHelper {
                         evidenceArray.toJSONString(),
                         new TypeToken<List<CredentialEvidenceItem>>() {}.getType());
 
-        return isValidEvidence(credentialEvidenceList, isAllowedA01);
+        return isValidEvidence(credentialEvidenceList, isFraudAllowedA01);
     }
 
     private static boolean isValidEvidence(
-            List<CredentialEvidenceItem> credentialEvidenceList, boolean isAllowedA01) {
+            List<CredentialEvidenceItem> credentialEvidenceList, boolean isFraudAllowedA01) {
         try {
             for (CredentialEvidenceItem item : credentialEvidenceList) {
                 if (item.getType().equals(CredentialEvidenceItem.EvidenceType.EVIDENCE)) {
                     return Gpg45EvidenceValidator.isSuccessful(item);
                 } else if (item.getType()
                         .equals(CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD)) {
-                    return Gpg45FraudValidator.isSuccessful(item, isAllowedA01);
+                    return Gpg45FraudValidator.isSuccessful(item, isFraudAllowedA01);
                 } else if (item.getType()
                         .equals(CredentialEvidenceItem.EvidenceType.VERIFICATION)) {
                     return Gpg45VerificationValidator.isSuccessful(item);

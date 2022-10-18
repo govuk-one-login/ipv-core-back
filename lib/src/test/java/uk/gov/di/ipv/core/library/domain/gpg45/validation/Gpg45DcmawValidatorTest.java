@@ -28,6 +28,15 @@ class Gpg45DcmawValidatorTest {
     }
 
     @Test
+    void isSuccessfulShouldReturnTrueOnValidCredentialAndNullCi() {
+        CredentialEvidenceItem credentialEvidenceItem =
+                new CredentialEvidenceItem(
+                        3, 2, 1, 2, Collections.singletonList(new DcmawCheckMethod()), null, null);
+
+        assertTrue(Gpg45DcmawValidator.isSuccessful(credentialEvidenceItem));
+    }
+
+    @Test
     void isSuccessfulShouldReturnFalseOnInValidCredentialWithFailedCheckDetails() {
         CredentialEvidenceItem credentialEvidenceItem =
                 new CredentialEvidenceItem(
