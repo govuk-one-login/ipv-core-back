@@ -3,6 +3,8 @@ package uk.gov.di.ipv.core.library.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.Gson;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
@@ -365,6 +367,12 @@ public class UserIdentityService {
                                     .path(VC_CLAIM)
                                     .path(VC_CREDENTIAL_SUBJECT)
                                     .path(DRIVING_PERMIT_PROPERTY_NAME);
+
+                    if (drivingPermitNode instanceof ArrayNode) {
+                        ((ObjectNode) drivingPermitNode.get(0)).remove("fullAddress");
+                        ((ObjectNode) drivingPermitNode.get(0)).remove("issueDate");
+                    }
+
                     if (drivingPermitNode.isMissingNode()) {
                         LOGGER.error("Driving Permit property is missing from passport VC");
                         throw new HttpResponseExceptionWithErrorBody(
