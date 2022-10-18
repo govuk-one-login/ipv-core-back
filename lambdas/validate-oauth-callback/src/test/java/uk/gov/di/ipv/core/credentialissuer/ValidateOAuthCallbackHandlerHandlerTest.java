@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -26,12 +27,8 @@ import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.validateoauthcallback.ValidateOAuthCallbackHandler;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,6 +50,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     private static final String TEST_CREDENTIAL_ISSUER_ID = "PassportIssuer";
     private static final String TEST_AUTHORIZATION_CODE = "test-authorization-code";
     private static final String TEST_OAUTH_STATE = "oauth-state";
+    public static final String TEST_REDIRECT_URI = "https://redirect.example.com";
     private static final String TEST_OAUTH_ACCESS_DENIED_ERROR = OAuth2Error.ACCESS_DENIED_CODE;
     private static final String TEST_OAUTH_SERVER_ERROR = OAuth2Error.SERVER_ERROR_CODE;
     private static final String TEST_ERROR_DESCRIPTION = "test error description";
@@ -107,11 +105,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 .thenReturn(credentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
-        InputStream inputStream =
-                new ByteArrayInputStream(objectMapper.writeValueAsBytes(validInput()));
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-        underTest.handleRequest(inputStream, outputStream, context);
+        underTest.handleRequest(validCredentialIssuerRequestDto(), context);
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
@@ -132,18 +126,13 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     }
 
     @Test
-    void shouldReceive400ResponseCodeIfAuthorizationCodeNotPresent() throws Exception {
-        Map<String, String> inputWithoutAuthCode = validInput();
-        inputWithoutAuthCode.put("authorization_code", null);
-
-        InputStream inputStream =
-                new ByteArrayInputStream(objectMapper.writeValueAsBytes(inputWithoutAuthCode));
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-        underTest.handleRequest(inputStream, outputStream, context);
+    void shouldReceive400ResponseCodeIfAuthorizationCodeNotPresent() {
+        CredentialIssuerRequestDto credentialIssuerRequestWithoutAuthCode =
+                validCredentialIssuerRequestDto();
+        credentialIssuerRequestWithoutAuthCode.setAuthorizationCode(null);
 
         Map<String, Object> output =
-                objectMapper.readValue(outputStream.toByteArray(), mapStringObject);
+                underTest.handleRequest(credentialIssuerRequestWithoutAuthCode, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.MISSING_AUTHORIZATION_CODE.getCode(), output.get(CODE));
@@ -151,18 +140,13 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     }
 
     @Test
-    void shouldReceive400ResponseCodeIfCredentialIssuerNotPresent() throws Exception {
-        Map<String, String> inputWithoutCriId = validInput();
-        inputWithoutCriId.put("credential_issuer_id", null);
-
-        InputStream inputStream =
-                new ByteArrayInputStream(objectMapper.writeValueAsBytes(inputWithoutCriId));
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-        underTest.handleRequest(inputStream, outputStream, context);
+    void shouldReceive400ResponseCodeIfCredentialIssuerNotPresent() {
+        CredentialIssuerRequestDto credentialIssuerRequestWithoutCriId =
+                validCredentialIssuerRequestDto();
+        credentialIssuerRequestWithoutCriId.setCredentialIssuerId(null);
 
         Map<String, Object> output =
-                objectMapper.readValue(outputStream.toByteArray(), mapStringObject);
+                underTest.handleRequest(credentialIssuerRequestWithoutCriId, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID.getCode(), output.get(CODE));
@@ -170,20 +154,15 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     }
 
     @Test
-    void shouldReceive400ResponseCodeIfCredentialIssuerNotInPermittedSet() throws Exception {
-        Map<String, String> inputWithInvalidCriId = validInput();
-        inputWithInvalidCriId.put("credential_issuer_id", "an invalid id");
-
-        InputStream inputStream =
-                new ByteArrayInputStream(objectMapper.writeValueAsBytes(inputWithInvalidCriId));
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    void shouldReceive400ResponseCodeIfCredentialIssuerNotInPermittedSet() {
+        CredentialIssuerRequestDto credentialIssuerRequestWithInvalidCriId =
+                validCredentialIssuerRequestDto();
+        credentialIssuerRequestWithInvalidCriId.setCredentialIssuerId("an invalid id");
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
-        underTest.handleRequest(inputStream, outputStream, context);
-
         Map<String, Object> output =
-                objectMapper.readValue(outputStream.toByteArray(), mapStringObject);
+                underTest.handleRequest(credentialIssuerRequestWithInvalidCriId, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID.getCode(), output.get(CODE));
@@ -191,18 +170,13 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     }
 
     @Test
-    void shouldReceive400ResponseCodeIfSessionIdNotPresent() throws Exception {
-        Map<String, String> inputWithoutSessionId = validInput();
-        inputWithoutSessionId.put("ipv_session_id", null);
-
-        InputStream inputStream =
-                new ByteArrayInputStream(objectMapper.writeValueAsBytes(inputWithoutSessionId));
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-        underTest.handleRequest(inputStream, outputStream, context);
+    void shouldReceive400ResponseCodeIfSessionIdNotPresent() {
+        CredentialIssuerRequestDto credentialIssuerRequestWithoutSessionId =
+                validCredentialIssuerRequestDto();
+        credentialIssuerRequestWithoutSessionId.setIpvSessionId(null);
 
         Map<String, Object> output =
-                objectMapper.readValue(outputStream.toByteArray(), mapStringObject);
+                underTest.handleRequest(credentialIssuerRequestWithoutSessionId, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), output.get(CODE));
@@ -210,18 +184,13 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     }
 
     @Test
-    void shouldReceive400ResponseCodeIfOAuthStateNotPresent() throws Exception {
-        Map<String, String> inputWithoutState = validInput();
-        inputWithoutState.put("state", null);
-
-        InputStream inputStream =
-                new ByteArrayInputStream(objectMapper.writeValueAsBytes(inputWithoutState));
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-        underTest.handleRequest(inputStream, outputStream, context);
+    void shouldReceive400ResponseCodeIfOAuthStateNotPresent() {
+        CredentialIssuerRequestDto credentialIssuerRequestWithoutState =
+                validCredentialIssuerRequestDto();
+        credentialIssuerRequestWithoutState.setState(null);
 
         Map<String, Object> output =
-                objectMapper.readValue(outputStream.toByteArray(), mapStringObject);
+                underTest.handleRequest(credentialIssuerRequestWithoutState, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.MISSING_OAUTH_STATE.getCode(), output.get(CODE));
@@ -229,20 +198,15 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     }
 
     @Test
-    void shouldReceive400ResponseCodeIfOAuthStateNotValid() throws Exception {
-        Map<String, String> inputWithInvalidState = validInput();
-        inputWithInvalidState.put("state", "not-correct-state");
+    void shouldReceive400ResponseCodeIfOAuthStateNotValid() {
+        CredentialIssuerRequestDto credentialIssuerRequestWithInvalidState =
+                validCredentialIssuerRequestDto();
+        credentialIssuerRequestWithInvalidState.setState("not-correct-state");
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
-        InputStream inputStream =
-                new ByteArrayInputStream(objectMapper.writeValueAsBytes(inputWithInvalidState));
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-        underTest.handleRequest(inputStream, outputStream, context);
-
         Map<String, Object> output =
-                objectMapper.readValue(outputStream.toByteArray(), mapStringObject);
+                underTest.handleRequest(credentialIssuerRequestWithInvalidState, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.INVALID_OAUTH_STATE.getCode(), output.get(CODE));
@@ -251,10 +215,6 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldUpdateSessionWithDetailsOfFailedVisitedCriOnSqsException() throws Exception {
-        InputStream inputStream =
-                new ByteArrayInputStream(objectMapper.writeValueAsBytes(validInput()));
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
         when(mockConfigurationService.getCredentialIssuer(TEST_CREDENTIAL_ISSUER_ID))
                 .thenReturn(credentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
@@ -265,7 +225,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
-        underTest.handleRequest(inputStream, outputStream, context);
+        underTest.handleRequest(validCredentialIssuerRequestDto(), context);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -286,54 +246,43 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     }
 
     @Test
-    void shouldReceiveAccessDeniedJourneyResponseWhenOauthErrorAccessDenied() throws Exception {
-        Map<String, String> inputWithAccessDenied = validInput();
-        inputWithAccessDenied.put("error", TEST_OAUTH_ACCESS_DENIED_ERROR);
-        inputWithAccessDenied.put("error_description", TEST_ERROR_DESCRIPTION);
-
-        InputStream inputStream =
-                new ByteArrayInputStream(objectMapper.writeValueAsBytes(inputWithAccessDenied));
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    void shouldReceiveAccessDeniedJourneyResponseWhenOauthErrorAccessDenied() {
+        CredentialIssuerRequestDto credentialIssuerRequestWithAccessDenied =
+                validCredentialIssuerRequestDto();
+        credentialIssuerRequestWithAccessDenied.setError(TEST_OAUTH_ACCESS_DENIED_ERROR);
+        credentialIssuerRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
-        underTest.handleRequest(inputStream, outputStream, context);
-
         Map<String, Object> output =
-                objectMapper.readValue(outputStream.toByteArray(), mapStringObject);
+                underTest.handleRequest(credentialIssuerRequestWithAccessDenied, context);
 
         assertEquals("/journey/access-denied", output.get("journey"));
     }
 
     @Test
-    void shouldReceiveJourneyErrorJourneyResponseWhenAnyOtherOauthError() throws Exception {
-        Map<String, String> inputWithOtherError = validInput();
-        inputWithOtherError.put("error", TEST_OAUTH_SERVER_ERROR);
-        inputWithOtherError.put("error_description", TEST_ERROR_DESCRIPTION);
-
-        InputStream inputStream =
-                new ByteArrayInputStream(objectMapper.writeValueAsBytes(inputWithOtherError));
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    void shouldReceiveJourneyErrorJourneyResponseWhenAnyOtherOauthError() {
+        CredentialIssuerRequestDto credentialIssuerRequestWithOtherError =
+                validCredentialIssuerRequestDto();
+        credentialIssuerRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
+        credentialIssuerRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
-        underTest.handleRequest(inputStream, outputStream, context);
-
         Map<String, Object> output =
-                objectMapper.readValue(outputStream.toByteArray(), mapStringObject);
+                underTest.handleRequest(credentialIssuerRequestWithOtherError, context);
 
         assertEquals("/journey/error", output.get("journey"));
     }
 
-    private Map<String, String> validInput() {
-        HashMap<String, String> input = new HashMap<>();
-        input.put("authorization_code", TEST_AUTHORIZATION_CODE);
-        input.put("credential_issuer_id", TEST_CREDENTIAL_ISSUER_ID);
-        input.put("ipv_session_id", TEST_SESSION_ID);
-        input.put("redirect_uri", "redirect-uri");
-        input.put("state", TEST_OAUTH_STATE);
-        input.put("error", null);
-        input.put("error_description", null);
-        return input;
+    private CredentialIssuerRequestDto validCredentialIssuerRequestDto() {
+        return new CredentialIssuerRequestDto(
+                TEST_AUTHORIZATION_CODE,
+                TEST_CREDENTIAL_ISSUER_ID,
+                TEST_SESSION_ID,
+                TEST_REDIRECT_URI,
+                TEST_OAUTH_STATE,
+                null,
+                null);
     }
 }

@@ -1,7 +1,5 @@
 package uk.gov.di.ipv.core.library.dto;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.util.Optional;
@@ -16,15 +14,16 @@ public class CredentialIssuerRequestDto {
     private String error;
     private String errorDescription;
 
-    @JsonCreator
+    public CredentialIssuerRequestDto() {}
+
     public CredentialIssuerRequestDto(
-            @JsonProperty(value = "authorization_code") String authorizationCode,
-            @JsonProperty(value = "credential_issuer_id") String credentialIssuerId,
-            @JsonProperty(value = "ipv_session_id") String ipvSessionId,
-            @JsonProperty(value = "redirect_uri") String redirectUri,
-            @JsonProperty(value = "state") String state,
-            @JsonProperty(value = "error") String error,
-            @JsonProperty(value = "error_description") String errorDescription) {
+            String authorizationCode,
+            String credentialIssuerId,
+            String ipvSessionId,
+            String redirectUri,
+            String state,
+            String error,
+            String errorDescription) {
         this.authorizationCode = authorizationCode;
         this.credentialIssuerId = credentialIssuerId;
         this.ipvSessionId = ipvSessionId;

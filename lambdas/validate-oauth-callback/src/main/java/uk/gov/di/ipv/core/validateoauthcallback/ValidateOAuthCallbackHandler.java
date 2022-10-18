@@ -1,8 +1,7 @@
 package uk.gov.di.ipv.core.validateoauthcallback;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
@@ -32,20 +31,14 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.JOURNEY;
 
-public class ValidateOAuthCallbackHandler implements RequestStreamHandler {
+public class ValidateOAuthCallbackHandler
+        implements RequestHandler<CredentialIssuerRequestDto, Map<String, Object>> {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Map<String, Object> JOURNEY_NEXT = Map.of(JOURNEY, "/journey/next");
@@ -61,7 +54,6 @@ public class ValidateOAuthCallbackHandler implements RequestStreamHandler {
                     OAuth2Error.INVALID_SCOPE_CODE,
                     OAuth2Error.SERVER_ERROR_CODE,
                     OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE);
-    private static final ObjectMapper objectMapper = new ObjectMapper();
     private final ConfigurationService configurationService;
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
@@ -93,15 +85,8 @@ public class ValidateOAuthCallbackHandler implements RequestStreamHandler {
     @Override
     @Tracing
     @Logging(clearState = true)
-    public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context)
-            throws IOException {
+    public Map<String, Object> handleRequest(CredentialIssuerRequestDto request, Context context) {
         LogHelper.attachComponentIdToLogs();
-        OutputStreamWriter writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
-
-        CredentialIssuerRequestDto request =
-                objectMapper.readValue(
-                        new BufferedReader(new InputStreamReader(inputStream)),
-                        CredentialIssuerRequestDto.class);
 
         IpvSessionItem ipvSessionItem = null;
 
@@ -115,11 +100,7 @@ public class ValidateOAuthCallbackHandler implements RequestStreamHandler {
 
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             if (request.getError().isPresent()) {
-                writer.write(
-                        objectMapper.writeValueAsString(
-                                sendOauthErrorJourneyResponse(ipvSessionItem, request)));
-                writer.close();
-                return;
+                return sendOauthErrorJourneyResponse(ipvSessionItem, request);
             }
 
             validate(request);
@@ -131,9 +112,7 @@ public class ValidateOAuthCallbackHandler implements RequestStreamHandler {
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            writer.write(objectMapper.writeValueAsString(JOURNEY_NEXT));
-            writer.close();
-
+            return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody e) {
             ErrorResponse errorResponse = e.getErrorResponse();
 
@@ -141,11 +120,8 @@ public class ValidateOAuthCallbackHandler implements RequestStreamHandler {
                     "Error in validate oauth callback lambda",
                     errorResponse.getCode(),
                     errorResponse.getMessage());
-            writer.write(
-                    objectMapper.writeValueAsString(
-                            StepFunctionHelpers.generateErrorOutputMap(
-                                    HttpStatus.SC_BAD_REQUEST, errorResponse)));
-            writer.close();
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    HttpStatus.SC_BAD_REQUEST, errorResponse);
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
 
@@ -156,8 +132,7 @@ public class ValidateOAuthCallbackHandler implements RequestStreamHandler {
                     OAuth2Error.SERVER_ERROR_CODE);
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            writer.write(objectMapper.writeValueAsString(JOURNEY_ERROR));
-            writer.close();
+            return JOURNEY_ERROR;
         }
     }
 
