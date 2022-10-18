@@ -1,8 +1,6 @@
 package uk.gov.di.ipv.core.credentialissuer;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeAll;
@@ -55,10 +53,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     private static final String TEST_OAUTH_SERVER_ERROR = OAuth2Error.SERVER_ERROR_CODE;
     private static final String TEST_ERROR_DESCRIPTION = "test error description";
     private static final String TEST_SESSION_ID = SecureTokenHelper.generate();
-    private static final ObjectMapper objectMapper = new ObjectMapper();
     public static final String TEST_USER_ID = "test-user-id";
-    private static final TypeReference<Map<String, Object>> mapStringObject =
-            new TypeReference<>() {};
     private static CredentialIssuerConfig credentialIssuerConfig;
     private static IpvSessionItem ipvSessionItem;
     @Mock private Context context;
@@ -105,7 +100,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 .thenReturn(credentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
-        underTest.handleRequest(validCredentialIssuerRequestDto(), context);
+        Map<String, Object> output =
+                underTest.handleRequest(validCredentialIssuerRequestDto(), context);
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
@@ -123,6 +119,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                         .getValue()
                         .getCredentialIssuerSessionDetails()
                         .getAuthorizationCode());
+
+        assertEquals("/journey/cri/access-token", output.get("journey"));
     }
 
     @Test

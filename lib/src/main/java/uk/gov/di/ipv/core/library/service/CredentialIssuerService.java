@@ -193,7 +193,7 @@ public class CredentialIssuerService {
                 return vcJwts;
             } else {
                 LOGGER.error(
-                        "Error retrieving credential: Unknown response type recieved from CRI - {}",
+                        "Error retrieving credential: Unknown response type received from CRI - {}",
                         responseContentType);
                 throw new CredentialIssuerException(
                         HTTPResponse.SC_SERVER_ERROR,

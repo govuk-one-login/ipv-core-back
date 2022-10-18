@@ -34,7 +34,6 @@ import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.STATUS_CODE
 
 @ExtendWith(MockitoExtension.class)
 class ProcessJourneyStepHandlerTest {
-    private static final String FAIL = "fail";
     private static final String NEXT = "/journey/next";
     private static final String ERROR = "error";
     private static final String ACCESS_DENIED = "access-denied";
@@ -50,13 +49,9 @@ class ProcessJourneyStepHandlerTest {
     private static final String CRI_DCMAW_STATE = "CRI_DCMAW";
     private static final String CRI_ERROR_STATE = "CRI_ERROR";
     private static final String EVALUATE_GPG45_SCORES = "EVALUATE_GPG45_SCORES";
-    private static final String RETRIEVE_CRI_CREDENTIAL = "RETRIEVE_CRI_CREDENTIAL";
-    private static final String RETRIEVE_CRI_OAUTH_ACCESS_TOKEN = "RETRIEVE_CRI_OAUTH_ACCESS_TOKEN";
     private static final String PRE_KBV_TRANSITION_PAGE_STATE = "PRE_KBV_TRANSITION_PAGE";
     private static final String IPV_SUCCESS_PAGE_STATE = "IPV_SUCCESS_PAGE";
     private static final String DEBUG_PAGE_STATE = "DEBUG_PAGE";
-    private static final String DEBUG_RETRIEVE_CRI_CREDENTIAL_STATE =
-            "DEBUG_RETRIEVE_CRI_CREDENTIAL";
     private static final String DEBUG_EVALUATE_GPG45_SCORES = "DEBUG_EVALUATE_GPG45_SCORES";
     private static final String PYI_NO_MATCH_STATE = "PYI_NO_MATCH";
     private static final String PYI_KBV_FAIL_STATE = "PYI_KBV_FAIL";
@@ -69,9 +64,6 @@ class ProcessJourneyStepHandlerTest {
     private static final String PYI_KBV_FAIL_PAGE = "pyi-kbv-fail";
     private static final String PRE_KBV_TRANSITION_PAGE = "page-pre-kbv-transition";
     public static final String JOURNEY_EVALUATE_GPG_45_SCORES = "/journey/evaluate-gpg45-scores";
-    public static final String JOURNEY_RETRIEVE_CRI_CREDENTIAL = "/journey/cri/credential";
-    public static final String JOURNEY_RETRIEVE_CRI_OAUTH_ACCESS_TOKEN =
-            "/journey/cri/access-token";
 
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
@@ -184,7 +176,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @Test
-    void shouldReturnRetrieveCriOAuthAccessTokenWhenCriUkPassportState() {
+    void shouldReturnEvaluateGpg45ScoresWhenCriUkPassportState() {
         Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
 
         mockIpvSessionItemAndTimeout(CRI_UK_PASSPORT_STATE);
@@ -194,14 +186,13 @@ class ProcessJourneyStepHandlerTest {
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(
-                RETRIEVE_CRI_OAUTH_ACCESS_TOKEN, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(JOURNEY_RETRIEVE_CRI_OAUTH_ACCESS_TOKEN, output.get("journey"));
+        assertEquals(JOURNEY_EVALUATE_GPG_45_SCORES, output.get("journey"));
     }
 
     @Test
-    void shouldReturnCriErrorPageResponseIfPassportCriFails() {
+    void shouldReturnCriErrorPageResponseIfPassportCriErrors() {
         Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
 
         mockIpvSessionItemAndTimeout(CRI_UK_PASSPORT_STATE);
@@ -217,7 +208,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @Test
-    void shouldReturnRetrieveCriOAuthAccessTokenWhenCriAddressState() {
+    void shouldReturnEvaluateGpg45ScoresWhenCriAddressState() {
         Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
 
         mockIpvSessionItemAndTimeout(CRI_ADDRESS_STATE);
@@ -227,30 +218,13 @@ class ProcessJourneyStepHandlerTest {
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(
-                RETRIEVE_CRI_OAUTH_ACCESS_TOKEN, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(JOURNEY_RETRIEVE_CRI_OAUTH_ACCESS_TOKEN, output.get("journey"));
+        assertEquals(JOURNEY_EVALUATE_GPG_45_SCORES, output.get("journey"));
     }
 
     @Test
-    void shouldReturnRetrieveCriCredentialsWhenValidateOAuthCallback() {
-        Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
-
-        mockIpvSessionItemAndTimeout(RETRIEVE_CRI_OAUTH_ACCESS_TOKEN);
-
-        Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
-
-        ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-        verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(RETRIEVE_CRI_CREDENTIAL, sessionArgumentCaptor.getValue().getUserState());
-
-        assertEquals(JOURNEY_RETRIEVE_CRI_CREDENTIAL, output.get("journey"));
-    }
-
-    @Test
-    void shouldReturnCriErrorPageResponseIfAddressCriFails() {
+    void shouldReturnCriErrorPageResponseIfAddressCriErrors() {
         Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
@@ -273,7 +247,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @Test
-    void shouldReturnRetrieveCriOAuthAccessTokenWhenCriFraudState() {
+    void shouldReturnEvaluateGpg45ScoresWhenCriFraudState() {
         Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
@@ -290,10 +264,9 @@ class ProcessJourneyStepHandlerTest {
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(
-                RETRIEVE_CRI_OAUTH_ACCESS_TOKEN, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(JOURNEY_RETRIEVE_CRI_OAUTH_ACCESS_TOKEN, output.get("journey"));
+        assertEquals(JOURNEY_EVALUATE_GPG_45_SCORES, output.get("journey"));
     }
 
     @Test
@@ -356,27 +329,10 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @Test
-    void shouldReturnRetrieveCriOAuthAccessTokenWhenCriKbvState() {
+    void shouldReturnEvaluateGpg45ScoresWhenCriKbvState() {
         Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
 
         mockIpvSessionItemAndTimeout(CRI_KBV_STATE);
-
-        Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
-
-        ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-        verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(
-                RETRIEVE_CRI_OAUTH_ACCESS_TOKEN, sessionArgumentCaptor.getValue().getUserState());
-
-        assertEquals(JOURNEY_RETRIEVE_CRI_OAUTH_ACCESS_TOKEN, output.get("journey"));
-    }
-
-    @Test
-    void shouldReturnEvaluateGpg45ScoresWhenRetrieveCriCredentialState() {
-        Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
-
-        mockIpvSessionItemAndTimeout(RETRIEVE_CRI_CREDENTIAL);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
@@ -389,7 +345,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @Test
-    void shouldReturnCriErrorPageResponseIfKbvCriFails() {
+    void shouldReturnCriErrorPageResponseIfKbvCriErrors() {
         Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
 
         mockIpvSessionItemAndTimeout(CRI_KBV_STATE);
@@ -424,7 +380,7 @@ class ProcessJourneyStepHandlerTest {
     void shouldReturnDebugEvaluateGpg45ScoresJourneyWhenRequired() {
         Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(DEBUG_RETRIEVE_CRI_CREDENTIAL_STATE);
+        mockIpvSessionItemAndTimeout(DEBUG_PAGE_STATE);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
@@ -433,7 +389,7 @@ class ProcessJourneyStepHandlerTest {
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(DEBUG_EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals("/journey/evaluate-gpg45-scores", output.get("journey"));
+        assertEquals(JOURNEY_EVALUATE_GPG_45_SCORES, output.get("journey"));
     }
 
     @Test
@@ -453,8 +409,8 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @Test
-    void shouldReturnPYINoMatchPageIfErrorOccursOnDebugJourney() {
-        Map<String, String> input = Map.of(JOURNEY, FAIL, IPV_SESSION_ID, "1234");
+    void shouldReturnPYINoMatchPageIfAccessDeniedOccursOnDebugJourney() {
+        Map<String, String> input = Map.of(JOURNEY, ACCESS_DENIED, IPV_SESSION_ID, "1234");
 
         mockIpvSessionItemAndTimeout(DEBUG_PAGE_STATE);
 
@@ -485,8 +441,8 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @Test
-    void shouldReturnPYINoMatchPageIfPassportCriVCValidationReturnsFail() {
-        Map<String, String> input = Map.of(JOURNEY, FAIL, IPV_SESSION_ID, "1234");
+    void shouldReturnPYINoMatchPageIfCriStateReceivesAccessDenied() {
+        Map<String, String> input = Map.of(JOURNEY, ACCESS_DENIED, IPV_SESSION_ID, "1234");
 
         mockIpvSessionItemAndTimeout(CRI_UK_PASSPORT_STATE);
 
@@ -501,8 +457,8 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @Test
-    void shouldReturnPYINoMatchPageIfFraudCriVCValidationReturnsFail() {
-        Map<String, String> input = Map.of(JOURNEY, FAIL, IPV_SESSION_ID, "1234");
+    void shouldReturnPYITechnicalPageIfCriStateReceivesError() {
+        Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
 
         mockIpvSessionItemAndTimeout(CRI_FRAUD_STATE);
 
@@ -511,29 +467,13 @@ class ProcessJourneyStepHandlerTest {
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(PYI_NO_MATCH_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(PYI_NO_MATCH_PAGE, output.get("page"));
+        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
     }
 
     @Test
-    void shouldReturnPYIKbvFailPageIfKbvCriVCValidationReturnsFail() {
-        Map<String, String> input = Map.of(JOURNEY, FAIL, IPV_SESSION_ID, "1234");
-
-        mockIpvSessionItemAndTimeout(CRI_KBV_STATE);
-
-        Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
-
-        ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-        verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(PYI_KBV_FAIL_STATE, sessionArgumentCaptor.getValue().getUserState());
-
-        assertEquals(PYI_KBV_FAIL_PAGE, output.get("page"));
-    }
-
-    @Test
-    void shouldReturnPyiNoMatchPageIfInSelectCRIStateAndRetursPyiNoMatchJourney() {
+    void shouldReturnPyiNoMatchPageIfInSelectCRIStateAndReturnsPyiNoMatchJourney() {
         Map<String, String> input = Map.of(JOURNEY, PYI_NO_MATCH_PAGE, IPV_SESSION_ID, "1234");
 
         mockIpvSessionItemAndTimeout(SELECT_CRI_STATE);
@@ -561,7 +501,7 @@ class ProcessJourneyStepHandlerTest {
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals("/journey/evaluate-gpg45-scores", output.get("journey"));
+        assertEquals(JOURNEY_EVALUATE_GPG_45_SCORES, output.get("journey"));
     }
 
     @Test
