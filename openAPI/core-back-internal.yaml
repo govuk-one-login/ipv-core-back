@@ -55,64 +55,6 @@ paths:
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
 
-  /journey/cri/validate-callback:
-    post:
-      description: |
-        A temporary duplication of /journey/cri/callback. Once deployed, the frontend can be pointed at the /callback
-        endpoint rather than this one.
-      responses:
-        200:
-          description: "Returns a journey or error response"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/journeyType"
-      x-amazon-apigateway-integration:
-        type: "aws"
-        credentials:
-          Fn::GetAtt: CriReturnStepFunctionApiGateWayIamRole.Arn
-        httpMethod: "POST"
-        uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:states:action/StartSyncExecution
-        passthroughBehavior: "when_no_match"
-        requestTemplates:
-          application/json:
-            Fn::Sub: |
-              #set($inputRoot = $input.path('$'))
-              {
-                "input": "{\"ipvSessionId\": \"$input.params('ipv-session-id')\"#foreach($key in $inputRoot.keySet()), \"$key\": \"$inputRoot.get($key)\"#end}",
-                "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${CriReturnStepFunction.Name}"
-              }
-          application/x-www-form-urlencoded:
-            Fn::Sub: |
-              #set($bodyParts = $util.urlDecode($input.path('$')).split('&'))
-              {
-                "input": "{\"ipvSessionId\": \"$input.params('ipv-session-id')\"#foreach( $token in $bodyParts )#set( $keyVal = $token.split('=') ), \"$keyVal[0]\": \"$keyVal[1]\"#end}",
-                "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${CriReturnStepFunction.Name}"
-              }
-        responses:
-          default:
-            statusCode: 200
-            responseTemplates:
-              application/json: |
-                #set ($bodyObj = $util.parseJson($input.body))
-
-                #if ($bodyObj.status == "SUCCEEDED")
-                  #set($lambdaOutputObj = $util.parseJson($bodyObj.output))
-                  #set($context.responseOverride.status = $lambdaOutputObj.statusCode)
-                  $bodyObj.output
-
-                #elseif ($bodyObj.status == "FAILED")
-                  #set($context.responseOverride.status = 500)
-                  {
-                    "cause": "$bodyObj.cause",
-                    "error": "$bodyObj.error"
-                  }
-                #else
-                  #set($context.responseOverride.status = 504)
-                  $bodyObj
-                #end
-
   /journey/cri/callback:
     post:
       description: |

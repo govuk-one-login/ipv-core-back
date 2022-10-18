@@ -15,7 +15,6 @@ public class CredentialIssuerRequestDto {
     private String errorDescription;
 
     public CredentialIssuerRequestDto() {}
-    ;
 
     public CredentialIssuerRequestDto(
             String authorizationCode,
