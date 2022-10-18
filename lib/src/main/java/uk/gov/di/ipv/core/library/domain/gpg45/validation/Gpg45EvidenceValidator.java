@@ -10,6 +10,9 @@ public class Gpg45EvidenceValidator {
     }
 
     public static boolean isSuccessful(CredentialEvidenceItem item) {
-        return item.getValidityScore() != 0;
+        if (item.getCi() == null || item.getCi().isEmpty()) {
+            return item.getValidityScore() != 0;
+        }
+        return false;
     }
 }

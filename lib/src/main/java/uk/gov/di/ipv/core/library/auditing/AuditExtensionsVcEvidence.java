@@ -16,11 +16,16 @@ public class AuditExtensionsVcEvidence implements AuditExtensions {
     @JsonProperty("evidence")
     private final JsonNode evidence;
 
+    @JsonProperty("successful")
+    private final boolean successful;
+
     public AuditExtensionsVcEvidence(
             @JsonProperty(value = "iss", required = false) String iss,
-            @JsonProperty(value = "evidence", required = false) String evidence)
+            @JsonProperty(value = "evidence", required = false) String evidence,
+            @JsonProperty(value = "successful", required = false) boolean successful)
             throws JsonProcessingException {
         this.iss = iss;
         this.evidence = evidence == null ? null : new ObjectMapper().readTree(evidence);
+        this.successful = successful;
     }
 }

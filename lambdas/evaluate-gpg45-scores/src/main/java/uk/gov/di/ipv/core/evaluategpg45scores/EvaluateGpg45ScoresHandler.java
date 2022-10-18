@@ -5,9 +5,6 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-import com.nimbusds.jose.shaded.json.JSONArray;
-import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
@@ -19,12 +16,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
-import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45DcmawValidator;
-import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45EvidenceValidator;
-import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45FraudValidator;
-import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45VerificationValidator;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
@@ -33,6 +25,7 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -45,8 +38,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
 public class EvaluateGpg45ScoresHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -182,57 +173,15 @@ public class EvaluateGpg45ScoresHandler
         List<VcStatusDto> vcStatuses = new ArrayList<>();
 
         for (String credential : credentials) {
+
             SignedJWT signedJWT = SignedJWT.parse(credential);
-            JSONObject vcClaim = (JSONObject) signedJWT.getJWTClaimsSet().getClaim(VC_CLAIM);
-            JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
-            if (evidenceArray == null) {
-                CredentialIssuerConfig addressCriConfig =
-                        configurationService.getCredentialIssuer(addressCriId);
-                String vcIss = signedJWT.getJWTClaimsSet().getIssuer();
-                if (vcIss.equals(addressCriConfig.getAudienceForClients())) {
-                    vcStatuses.add(new VcStatusDto(vcIss, true));
-                }
-                LOGGER.warn("Unexpected missing evidence on VC from issuer: {}", vcIss);
-                continue;
-            }
 
-            List<CredentialEvidenceItem> credentialEvidenceList =
-                    gson.fromJson(
-                            evidenceArray.toJSONString(),
-                            new TypeToken<List<CredentialEvidenceItem>>() {}.getType());
-
-            boolean isSuccessful = isSuccessfulVc(credentialEvidenceList);
+            CredentialIssuerConfig addressCriConfig =
+                    configurationService.getCredentialIssuer(addressCriId);
+            boolean isSuccessful = VcHelper.isSuccessfulVc(signedJWT, addressCriConfig, true);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
         }
         return vcStatuses;
-    }
-
-    private boolean isSuccessfulVc(List<CredentialEvidenceItem> credentialEvidenceList) {
-        try {
-            for (CredentialEvidenceItem item : credentialEvidenceList) {
-                boolean result = isValidEvidence(item);
-                if (result) {
-                    return true;
-                }
-            }
-            return false;
-        } catch (UnknownEvidenceTypeException e) {
-            return false;
-        }
-    }
-
-    private boolean isValidEvidence(CredentialEvidenceItem item)
-            throws UnknownEvidenceTypeException {
-        if (item.getType().equals(CredentialEvidenceItem.EvidenceType.EVIDENCE)) {
-            return Gpg45EvidenceValidator.isSuccessful(item);
-        } else if (item.getType().equals(CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD)) {
-            return Gpg45FraudValidator.isSuccessful(item);
-        } else if (item.getType().equals(CredentialEvidenceItem.EvidenceType.VERIFICATION)) {
-            return Gpg45VerificationValidator.isSuccessful(item);
-        } else if (item.getType().equals(CredentialEvidenceItem.EvidenceType.DCMAW)) {
-            return Gpg45DcmawValidator.isSuccessful(item);
-        }
-        throw new UnknownEvidenceTypeException();
     }
 }

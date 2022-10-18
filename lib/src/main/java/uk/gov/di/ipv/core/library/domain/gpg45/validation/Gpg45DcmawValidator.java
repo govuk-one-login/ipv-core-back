@@ -10,10 +10,13 @@ public class Gpg45DcmawValidator {
     }
 
     public static boolean isSuccessful(CredentialEvidenceItem item) {
-        if (item.getFailedCheckDetails() != null) {
-            return false;
-        }
+        if (item.getCi() == null || item.getCi().isEmpty()) {
+            if (item.getFailedCheckDetails() != null) {
+                return false;
+            }
 
-        return item.getValidityScore() != 0;
+            return item.getValidityScore() != 0;
+        }
+        return false;
     }
 }
