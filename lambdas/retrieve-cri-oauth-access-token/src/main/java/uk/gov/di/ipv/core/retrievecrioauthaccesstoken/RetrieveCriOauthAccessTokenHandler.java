@@ -39,7 +39,8 @@ import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.JOURNEY;
 public class RetrieveCriOauthAccessTokenHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final Map<String, Object> JOURNEY_NEXT = Map.of(JOURNEY, "/journey/next");
+    private static final Map<String, Object> JOURNEY_CREDENTIAL =
+            Map.of(JOURNEY, "/journey/cri/credential");
     private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, "/journey/error");
     private final CredentialIssuerService credentialIssuerService;
     private final ConfigurationService configurationService;
@@ -126,7 +127,7 @@ public class RetrieveCriOauthAccessTokenHandler
                             .with("criId", credentialIssuerId);
             LOGGER.info(message);
 
-            return JOURNEY_NEXT;
+            return JOURNEY_CREDENTIAL;
         } catch (CredentialIssuerException e) {
             if (ipvSessionItem != null) {
                 setVisitedCredentials(

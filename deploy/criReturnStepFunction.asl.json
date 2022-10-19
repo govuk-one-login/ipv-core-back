@@ -7,16 +7,6 @@
       "ResultPath": "$.lambdaResult",
       "Next": "RouteJourneyResponse"
     },
-    "ProcessJourneyStep": {
-      "Type": "Task",
-      "Resource": "${IPVProcessJourneyStepFunctionArn}",
-      "Parameters": {
-        "ipvSessionId.$": "$.ipvSessionId",
-        "journey.$": "$.lambdaResult.journey"
-      },
-      "ResultPath": "$.lambdaResult",
-      "Next": "RouteJourneyResponse"
-    },
     "RetrieveCriOauthAccessToken": {
       "Type": "Task",
       "Resource": "${RetrieveCriOauthAccessTokenFunctionArn}",
@@ -30,6 +20,16 @@
     "RetrieveCriCredential": {
       "Type": "Task",
       "Resource": "${RetrieveCriCredentialFunctionArn}",
+      "Parameters": {
+        "ipvSessionId.$": "$.ipvSessionId",
+        "journey.$": "$.lambdaResult.journey"
+      },
+      "ResultPath": "$.lambdaResult",
+      "Next": "RouteJourneyResponse"
+    },
+    "ProcessJourneyStep": {
+      "Type": "Task",
+      "Resource": "${IPVProcessJourneyStepFunctionArn}",
       "Parameters": {
         "ipvSessionId.$": "$.ipvSessionId",
         "journey.$": "$.lambdaResult.journey"

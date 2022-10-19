@@ -123,7 +123,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         assertEquals(
                 AuditEventTypes.IPV_CRI_ACCESS_TOKEN_EXCHANGED, auditEvents.get(0).getEventName());
 
-        assertEquals("/journey/next", output.get("journey"));
+        assertEquals("/journey/cri/credential", output.get("journey"));
     }
 
     @Test

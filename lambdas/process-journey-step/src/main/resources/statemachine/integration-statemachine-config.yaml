@@ -6,10 +6,10 @@ CRI_STATE:
     next:
       type: basic
       name: next
-      targetState: RETRIEVE_CRI_OAUTH_ACCESS_TOKEN
+      targetState: EVALUATE_GPG45_SCORES
       response:
         type: journey
-        journeyStepId: /journey/cri/access-token
+        journeyStepId: /journey/evaluate-gpg45-scores
     error:
       type: basic
       name: error
@@ -17,13 +17,6 @@ CRI_STATE:
       response:
         type: page
         pageId: pyi-technical
-    fail:
-      type: basic
-      name: fail
-      targetState: PYI_NO_MATCH
-      response:
-        type: page
-        pageId: pyi-no-match
     access-denied:
       type: basic
       name: access-denied
@@ -216,6 +209,9 @@ CRI_ADDRESS:
 CRI_FRAUD:
   name: CRI_FRAUD
   parent: CRI_STATE
+CRI_KBV:
+  name: CRI_KBV
+  parent: CRI_STATE
 PASSPORT_DOC_CHECK_PAGE:
   name: PASSPORT_DOC_CHECK_PAGE
   parent: null
@@ -285,17 +281,6 @@ POST_DCMAW_SUCCESS_PAGE:
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/address
-CRI_KBV:
-  name: CRI_KBV
-  parent: CRI_STATE
-  events:
-    fail:
-      type: basic
-      name: fail
-      targetState: PYI_KBV_FAIL
-      response:
-        type: page
-        pageId: pyi-kbv-fail
 CRI_DCMAW:
   name: CRI_DCMAW
   parent: CRI_STATE
@@ -336,45 +321,6 @@ CORE_SESSION_TIMEOUT:
   name: CORE_SESSION_TIMEOUT
   parent: END_JOURNEY
 
-#Callback from CRI States
-RETRIEVE_CRI_OAUTH_ACCESS_TOKEN:
-  name: RETRIEVE_CRI_OAUTH_ACCESS_TOKEN
-  parent: null
-  events:
-    next:
-      type: basic
-      name: next
-      targetState: RETRIEVE_CRI_CREDENTIAL
-      response:
-        type: journey
-        journeyStepId: /journey/cri/credential
-    error:
-      type: basic
-      name: error
-      targetState: CRI_ERROR
-      response:
-        type: page
-        pageId: pyi-technical
-
-RETRIEVE_CRI_CREDENTIAL:
-  name: RETRIEVE_CRI_CREDENTIAL
-  parent: null
-  events:
-    next:
-      type: basic
-      name: next
-      targetState: EVALUATE_GPG45_SCORES
-      response:
-        type: journey
-        journeyStepId: /journey/evaluate-gpg45-scores
-    error:
-      type: basic
-      name: error
-      targetState: CRI_ERROR
-      response:
-        type: page
-        pageId: pyi-technical
-
 #debug page state
 DEBUG_PAGE:
   name: DEBUG_PAGE
@@ -383,48 +329,10 @@ DEBUG_PAGE:
     next:
       type: basic
       name: next
-      targetState: DEBUG_RETRIEVE_CRI_OAUTH_ACCESS_TOKEN
-      response:
-        type: journey
-        journeyStepId: /journey/cri/access-token
-
-DEBUG_RETRIEVE_CRI_OAUTH_ACCESS_TOKEN:
-  name: DEBUG_RETRIEVE_CRI_OAUTH_ACCESS_TOKEN
-  parent: null
-  events:
-    next:
-      type: basic
-      name: next
-      targetState: DEBUG_RETRIEVE_CRI_CREDENTIAL
-      response:
-        type: journey
-        journeyStepId: /journey/cri/credential
-    error:
-      type: basic
-      name: error
-      targetState: CRI_ERROR
-      response:
-        type: page
-        pageId: pyi-technical
-
-DEBUG_RETRIEVE_CRI_CREDENTIAL:
-  name: DEBUG_RETRIEVE_CRI_CREDENTIAL
-  parent: null
-  events:
-    next:
-      type: basic
-      name: next
       targetState: DEBUG_EVALUATE_GPG45_SCORES
       response:
         type: journey
         journeyStepId: /journey/evaluate-gpg45-scores
-    error:
-      type: basic
-      name: error
-      targetState: CRI_ERROR
-      response:
-        type: page
-        pageId: pyi-technical
 
 DEBUG_EVALUATE_GPG45_SCORES:
   name: DEBUG_EVALUATE_GPG45_SCORES

@@ -41,7 +41,8 @@ public class ValidateOAuthCallbackHandler
         implements RequestHandler<CredentialIssuerRequestDto, Map<String, Object>> {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final Map<String, Object> JOURNEY_NEXT = Map.of(JOURNEY, "/journey/next");
+    private static final Map<String, Object> JOURNEY_ACCESS_TOKEN =
+            Map.of(JOURNEY, "/journey/cri/access-token");
     private static final Map<String, Object> JOURNEY_ACCESS_DENIED =
             Map.of(JOURNEY, "/journey/access-denied");
     private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, "/journey/error");
@@ -112,7 +113,7 @@ public class ValidateOAuthCallbackHandler
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            return JOURNEY_NEXT;
+            return JOURNEY_ACCESS_TOKEN;
         } catch (HttpResponseExceptionWithErrorBody e) {
             ErrorResponse errorResponse = e.getErrorResponse();
 
