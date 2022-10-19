@@ -65,25 +65,25 @@ public class Gpg45Scores implements Comparable<Gpg45Scores> {
         this.evidences =
                 evidence.stream()
                         .sorted(
-                                Comparator.comparing(Evidence::strength)
-                                        .thenComparing(Evidence::validity)
+                                Comparator.comparing(Evidence::getStrength)
+                                        .thenComparing(Evidence::getValidity)
                                         .reversed())
                         .collect(Collectors.toList());
     }
 
-    public int activity() {
+    public int getActivity() {
         return activity;
     }
 
-    public int fraud() {
+    public int getFraud() {
         return fraud;
     }
 
-    public int verification() {
+    public int getVerification() {
         return verification;
     }
 
-    public List<Evidence> evidences() {
+    public List<Evidence> getEvidences() {
         return evidences;
     }
 
@@ -119,15 +119,15 @@ public class Gpg45Scores implements Comparable<Gpg45Scores> {
 
         return new Gpg45Scores(
                 diffEvidence(other),
-                other.activity() - activity,
-                other.fraud() - fraud,
-                other.verification() - verification);
+                other.getActivity() - activity,
+                other.getFraud() - fraud,
+                other.getVerification() - verification);
     }
 
     private List<Gpg45Scores.Evidence> diffEvidence(Gpg45Scores target) {
 
         var evidenceDiff = new ArrayList<Evidence>();
-        var maxEvidence = Math.max(evidences.size(), target.evidences().size());
+        var maxEvidence = Math.max(evidences.size(), target.getEvidences().size());
 
         for (int i = 0; i < maxEvidence; i++) {
             var sourceEvidence = getEvidence(i);
@@ -135,8 +135,8 @@ public class Gpg45Scores implements Comparable<Gpg45Scores> {
 
             evidenceDiff.add(
                     new Gpg45Scores.Evidence(
-                            targetEvidence.strength() - sourceEvidence.strength(),
-                            targetEvidence.validity() - sourceEvidence.validity()));
+                            targetEvidence.getStrength() - sourceEvidence.getStrength(),
+                            targetEvidence.getValidity() - sourceEvidence.getValidity()));
         }
         return evidenceDiff;
     }
@@ -160,35 +160,35 @@ public class Gpg45Scores implements Comparable<Gpg45Scores> {
         var diff = difference(other);
         int negativeCount = 0;
         int positiveCount = 0;
-        for (Evidence e : diff.evidences()) {
-            if (e.strength() < 0) {
-                negativeCount += e.strength();
+        for (Evidence e : diff.getEvidences()) {
+            if (e.getStrength() < 0) {
+                negativeCount += e.getStrength();
             } else {
-                positiveCount += e.strength();
+                positiveCount += e.getStrength();
             }
-            if (e.validity() < 0) {
-                negativeCount += e.validity();
+            if (e.getValidity() < 0) {
+                negativeCount += e.getValidity();
             } else {
-                positiveCount += e.validity();
+                positiveCount += e.getValidity();
             }
         }
 
-        if (diff.activity() < 0) {
-            negativeCount += diff.activity();
+        if (diff.getActivity() < 0) {
+            negativeCount += diff.getActivity();
         } else {
-            positiveCount += diff.activity();
+            positiveCount += diff.getActivity();
         }
 
-        if (diff.fraud() < 0) {
-            negativeCount += diff.fraud();
+        if (diff.getFraud() < 0) {
+            negativeCount += diff.getFraud();
         } else {
-            positiveCount += diff.fraud();
+            positiveCount += diff.getFraud();
         }
 
-        if (diff.verification() < 0) {
-            negativeCount += diff.verification();
+        if (diff.getVerification() < 0) {
+            negativeCount += diff.getVerification();
         } else {
-            positiveCount += diff.verification();
+            positiveCount += diff.getVerification();
         }
 
         if (negativeCount < 0) {
@@ -246,11 +246,11 @@ public class Gpg45Scores implements Comparable<Gpg45Scores> {
             this.validity = validity;
         }
 
-        public int validity() {
+        public int getValidity() {
             return validity;
         }
 
-        public int strength() {
+        public int getStrength() {
             return strength;
         }
 

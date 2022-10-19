@@ -45,7 +45,8 @@ public enum ErrorResponse {
     FAILED_TO_GENERATE_PASSPORT_CLAIM(1036, "Failed to generate the passport claim"),
     FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM(1037, "Failed to generate the driving permit claim"),
     FAILED_TO_DETERMINE_CREDENTIAL_TYPE(1038, "Failed to determine type of credential"),
-    FAILED_TO_GET_STORED_CIS(1039, "Failed to get stored CIS");
+    FAILED_TO_GET_STORED_CIS(1039, "Failed to get stored CIS"),
+    FAILED_TO_SEND_AUDIT_EVENT(1040, "Failed to send audit event");
 
     @JsonProperty("code")
     private final int code;

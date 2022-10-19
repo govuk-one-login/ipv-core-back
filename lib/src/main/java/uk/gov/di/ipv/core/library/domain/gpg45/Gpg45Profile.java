@@ -69,22 +69,22 @@ public enum Gpg45Profile {
      */
     public boolean isSatisfiedBy(Gpg45Scores target) {
         return satisfactoryEvidence(target)
-                && (scores.activity() <= target.activity())
-                && (scores.fraud() <= target.fraud())
-                && (scores.verification() <= target.verification());
+                && (scores.getActivity() <= target.getActivity())
+                && (scores.getFraud() <= target.getFraud())
+                && (scores.getVerification() <= target.getVerification());
     }
 
     private boolean satisfactoryEvidence(Gpg45Scores target) {
-        if (scores.evidences().size() > target.evidences().size()) {
+        if (scores.getEvidences().size() > target.getEvidences().size()) {
             return false;
         }
 
-        for (int i = 0; i < scores.evidences().size(); i++) {
+        for (int i = 0; i < scores.getEvidences().size(); i++) {
             var sourceEvidence = scores.getEvidence(i);
             var targetEvidence = target.getEvidence(i);
 
-            if ((targetEvidence.strength() < sourceEvidence.strength())
-                    || (targetEvidence.validity() < sourceEvidence.validity())) {
+            if ((targetEvidence.getStrength() < sourceEvidence.getStrength())
+                    || (targetEvidence.getValidity() < sourceEvidence.getValidity())) {
                 return false;
             }
         }
