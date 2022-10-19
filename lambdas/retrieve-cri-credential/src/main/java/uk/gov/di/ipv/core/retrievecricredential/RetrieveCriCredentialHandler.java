@@ -30,6 +30,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
+import uk.gov.di.ipv.core.library.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
@@ -42,6 +43,7 @@ import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.JOURNEY;
 
@@ -145,7 +147,12 @@ public class RetrieveCriCredentialHandler
             for (SignedJWT vc : verifiableCredentials) {
                 verifiableCredentialJwtValidator.validate(vc, credentialIssuerConfig, userId);
 
-                sendIpvVcReceivedAuditEvent(auditEventUser, vc);
+                String addressCriId = configurationService.getSsmParameter(ADDRESS_CRI_ID);
+                CredentialIssuerConfig addressCriConfig =
+                        configurationService.getCredentialIssuer(addressCriId);
+                boolean isSuccessful = VcHelper.isSuccessfulVc(vc, addressCriConfig, false);
+
+                sendIpvVcReceivedAuditEvent(auditEventUser, vc, isSuccessful);
 
                 submitVcToCiStorage(vc, clientSessionDetailsDto.getGovukSigninJourneyId());
 
@@ -184,23 +191,24 @@ public class RetrieveCriCredentialHandler
 
     @Tracing
     private void sendIpvVcReceivedAuditEvent(
-            AuditEventUser auditEventUser, SignedJWT verifiableCredential)
+            AuditEventUser auditEventUser, SignedJWT verifiableCredential, boolean isSuccessful)
             throws ParseException, JsonProcessingException, SqsException {
         AuditEvent auditEvent =
                 new AuditEvent(
                         AuditEventTypes.IPV_VC_RECEIVED,
                         componentId,
                         auditEventUser,
-                        getAuditExtensions(verifiableCredential));
+                        getAuditExtensions(verifiableCredential, isSuccessful));
         auditService.sendAuditEvent(auditEvent);
     }
 
-    private AuditExtensionsVcEvidence getAuditExtensions(SignedJWT verifiableCredential)
+    private AuditExtensionsVcEvidence getAuditExtensions(
+            SignedJWT verifiableCredential, boolean isSuccessful)
             throws ParseException, JsonProcessingException {
         var jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
         var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
         var evidence = vc.getAsString(EVIDENCE);
-        return new AuditExtensionsVcEvidence(jwtClaimsSet.getIssuer(), evidence);
+        return new AuditExtensionsVcEvidence(jwtClaimsSet.getIssuer(), evidence, isSuccessful);
     }
 
     @Tracing

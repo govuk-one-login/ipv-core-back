@@ -50,6 +50,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC;
@@ -63,6 +64,7 @@ import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.STATUS_CODE
 class RetrieveCriCredentialHandlerTest {
     public static final String ACCESS_TOKEN = "Bearer dGVzdAo=";
     public static final String CREDENTIAL_ISSUER_ID = "PassportIssuer";
+    public static final String ADDRESS_CRI_JOURNEY_ID = "address";
     public static final String TEST_USER_ID = "test-user-id";
     public static final String TEST_STATE = "test-state";
 
@@ -83,6 +85,27 @@ class RetrieveCriCredentialHandlerTest {
     private static final String testSessionId = SecureTokenHelper.generate();
     private static final String testApiKey = "test-api-key";
     private static final String testComponentId = "https://ipv-core-test.example.com";
+
+    private static CredentialIssuerConfig addressConfig = null;
+
+    static {
+        try {
+            addressConfig =
+                    new CredentialIssuerConfig(
+                            "address",
+                            "address",
+                            new URI("http://example.com/token"),
+                            new URI("http://example.com/credential"),
+                            new URI("http://example.com/authorize"),
+                            "ipv-core",
+                            "test-jwk",
+                            "test-encryption-jwk",
+                            "test-audience",
+                            new URI("http://example.com/redirect"));
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+    }
 
     @BeforeAll
     static void setUp() throws URISyntaxException, com.nimbusds.oauth2.sdk.ParseException {
@@ -240,6 +263,10 @@ class RetrieveCriCredentialHandlerTest {
         when(credentialIssuerService.getVerifiableCredential(
                         testBearerAccessToken, testPassportIssuer, testApiKey))
                 .thenReturn(List.of(SignedJWT.parse(SIGNED_ADDRESS_VC)));
+        when(configurationService.getSsmParameter(ADDRESS_CRI_ID))
+                .thenReturn(ADDRESS_CRI_JOURNEY_ID);
+        when(configurationService.getCredentialIssuer(ADDRESS_CRI_JOURNEY_ID))
+                .thenReturn(addressConfig);
         mockServiceCallsAndSessionItem();
 
         handler.handleRequest(testInput, context);
@@ -268,8 +295,12 @@ class RetrieveCriCredentialHandlerTest {
         when(credentialIssuerService.getVerifiableCredential(
                         testBearerAccessToken, testPassportIssuer, testApiKey))
                 .thenReturn(List.of(SignedJWT.parse(SIGNED_ADDRESS_VC)));
+        when(configurationService.getSsmParameter(ADDRESS_CRI_ID))
+                .thenReturn(ADDRESS_CRI_JOURNEY_ID);
         when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
                 .thenReturn(testPassportIssuer);
+        when(configurationService.getCredentialIssuer(ADDRESS_CRI_JOURNEY_ID))
+                .thenReturn(addressConfig);
         when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
                 .thenReturn(testComponentId);
         when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
