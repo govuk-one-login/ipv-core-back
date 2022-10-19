@@ -82,13 +82,10 @@ public class Gpg45ProfileEvaluator {
         }
     }
 
-    public boolean credentialsSatisfyAnyProfile(
-            Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap,
-            List<Gpg45Profile> profiles)
-            throws UnknownEvidenceTypeException {
-        Gpg45Scores gpg45Scores = buildScore(evidenceMap);
+    public Optional<Gpg45Profile> getFirstMatchingProfile(
+            Gpg45Scores gpg45Scores, List<Gpg45Profile> profiles) {
         return profiles.stream()
-                .anyMatch(
+                .filter(
                         profile -> {
                             boolean profileMet = profile.isSatisfiedBy(gpg45Scores);
                             if (profileMet) {
@@ -99,11 +96,52 @@ public class Gpg45ProfileEvaluator {
                                 LOGGER.info(message);
                             }
                             return profileMet;
-                        });
+                        })
+                .findFirst();
     }
 
-    public Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>>
-            parseGpg45ScoresFromCredentials(List<String> credentials)
+    public Gpg45Scores buildScore(List<SignedJWT> credentials)
+            throws UnknownEvidenceTypeException, ParseException {
+        var evidenceMap = parseGpg45ScoresFromCredentials(credentials);
+        List<CredentialEvidenceItem> dcmawEvidenceItems =
+                evidenceMap.get(CredentialEvidenceItem.EvidenceType.DCMAW);
+
+        for (CredentialEvidenceItem dcmawEvidenceItem : dcmawEvidenceItems) {
+            List<CredentialEvidenceItem> gpg45EvidenceItems =
+                    convertDcmawEvidenceToGpg45EvidenceItems(dcmawEvidenceItem);
+            for (CredentialEvidenceItem gpg45EvidenceItem : gpg45EvidenceItems) {
+                evidenceMap.get(gpg45EvidenceItem.getType()).add(gpg45EvidenceItem);
+            }
+        }
+
+        return Gpg45Scores.builder()
+                .withActivity(
+                        extractMaxScoreFromEvidenceMap(
+                                evidenceMap, CredentialEvidenceItem.EvidenceType.ACTIVITY))
+                .withFraud(
+                        extractMaxScoreFromEvidenceMap(
+                                evidenceMap, CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD))
+                .withVerification(
+                        extractMaxScoreFromEvidenceMap(
+                                evidenceMap, CredentialEvidenceItem.EvidenceType.VERIFICATION))
+                .withEvidences(
+                        evidenceMap.get(CredentialEvidenceItem.EvidenceType.EVIDENCE).stream()
+                                .map(CredentialEvidenceItem::getEvidenceScore)
+                                .collect(Collectors.toList()))
+                .build();
+    }
+
+    public List<SignedJWT> parseCredentials(List<String> credentials) throws ParseException {
+        List<SignedJWT> parsedCredentials = new ArrayList<>();
+        for (String credential : credentials) {
+            parsedCredentials.add(SignedJWT.parse(credential));
+        }
+
+        return parsedCredentials;
+    }
+
+    private Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>>
+            parseGpg45ScoresFromCredentials(List<SignedJWT> credentials)
                     throws ParseException, UnknownEvidenceTypeException {
         Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap =
                 Map.of(
@@ -113,8 +151,7 @@ public class Gpg45ProfileEvaluator {
                         CredentialEvidenceItem.EvidenceType.VERIFICATION, new ArrayList<>(),
                         CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>());
 
-        for (String credential : credentials) {
-            SignedJWT signedJWT = SignedJWT.parse(credential);
+        for (SignedJWT signedJWT : credentials) {
             JSONObject vcClaim = (JSONObject) signedJWT.getJWTClaimsSet().getClaim(VC_CLAIM);
             JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
             if (evidenceArray == null) {
@@ -165,37 +202,6 @@ public class Gpg45ProfileEvaluator {
                         Collections.emptyList()));
 
         return gpg45CredentialItems;
-    }
-
-    private Gpg45Scores buildScore(
-            Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap)
-            throws UnknownEvidenceTypeException {
-        List<CredentialEvidenceItem> dcmawEvidenceItems =
-                evidenceMap.get(CredentialEvidenceItem.EvidenceType.DCMAW);
-
-        for (CredentialEvidenceItem dcmawEvidenceItem : dcmawEvidenceItems) {
-            List<CredentialEvidenceItem> gpg45EvidenceItems =
-                    convertDcmawEvidenceToGpg45EvidenceItems(dcmawEvidenceItem);
-            for (CredentialEvidenceItem gpg45EvidenceItem : gpg45EvidenceItems) {
-                evidenceMap.get(gpg45EvidenceItem.getType()).add(gpg45EvidenceItem);
-            }
-        }
-
-        return Gpg45Scores.builder()
-                .withActivity(
-                        extractMaxScoreFromEvidenceMap(
-                                evidenceMap, CredentialEvidenceItem.EvidenceType.ACTIVITY))
-                .withFraud(
-                        extractMaxScoreFromEvidenceMap(
-                                evidenceMap, CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD))
-                .withVerification(
-                        extractMaxScoreFromEvidenceMap(
-                                evidenceMap, CredentialEvidenceItem.EvidenceType.VERIFICATION))
-                .withEvidences(
-                        evidenceMap.get(CredentialEvidenceItem.EvidenceType.EVIDENCE).stream()
-                                .map(CredentialEvidenceItem::getEvidenceScore)
-                                .collect(Collectors.toList()))
-                .build();
     }
 
     private Integer extractMaxScoreFromEvidenceMap(

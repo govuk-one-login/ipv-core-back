@@ -14,5 +14,6 @@ public class VerifiableCredentialConstants {
     public static final String IDENTITY_CHECK_CREDENTIAL_TYPE = "IdentityCheckCredential";
     public static final String VC_CREDENTIAL_SUBJECT = "credentialSubject";
     public static final String VC_EVIDENCE = "evidence";
+    public static final String VC_EVIDENCE_TXN = "txn";
     public static final String VC_CLAIM = "vc";
 }

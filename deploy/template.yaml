@@ -1358,6 +1358,7 @@ Resources:
                 - EnvironmentConfiguration
                 - !Ref AWS::AccountId
                 - environment
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       Policies:
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
@@ -1371,7 +1372,16 @@ Resources:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/*
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
         - Statement:
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
             - Sid: invokeGetCiFunction
               Effect: Allow
               Action:
