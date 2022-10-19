@@ -871,7 +871,6 @@ class UserIdentityServiceTest {
 
         assertEquals("MORGA753116SM9IJ", drivingPermitClaim.get(0).get("personalNumber").asText());
         assertEquals("123456", drivingPermitClaim.get(0).get("issueNumber").asText());
-        assertEquals("2022-03-14", drivingPermitClaim.get(0).get("issueDate").asText());
         assertEquals("2023-01-18", drivingPermitClaim.get(0).get("expiryDate").asText());
     }
 
