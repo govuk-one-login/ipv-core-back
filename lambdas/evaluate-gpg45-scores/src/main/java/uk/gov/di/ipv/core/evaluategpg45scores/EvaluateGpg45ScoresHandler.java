@@ -4,7 +4,6 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.google.gson.Gson;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
@@ -61,7 +60,6 @@ public class EvaluateGpg45ScoresHandler
     public static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
     public static final String VOT_P2 = "P2";
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final Gson gson = new Gson();
     public static final int ONLY = 0;
     private final UserIdentityService userIdentityService;
     private final IpvSessionService ipvSessionService;
