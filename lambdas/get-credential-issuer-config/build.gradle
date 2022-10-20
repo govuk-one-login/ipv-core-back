@@ -18,10 +18,8 @@ dependencies {
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
 
-	testImplementation "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.0",
-			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
+	testImplementation "com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			"org.junit.jupiter:junit-jupiter:5.8.2",
-			"org.mockito:mockito-core:4.1.0",
 			"org.mockito:mockito-junit-jupiter:4.1.0",
 			project(":lib").sourceSets.test.output
 }
