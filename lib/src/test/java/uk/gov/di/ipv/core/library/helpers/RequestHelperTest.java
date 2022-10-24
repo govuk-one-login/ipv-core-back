@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.CLIENT_SOURCE_IP_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
 
 class RequestHelperTest {
@@ -102,6 +103,50 @@ class RequestHelperTest {
         assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
         assertEquals(
                 ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
+                exception.getErrorResponse().getMessage());
+    }
+
+    @Test
+    void getClientSourceIpShouldReturnClientSourceIp() throws HttpResponseExceptionWithErrorBody {
+        var event = new APIGatewayProxyRequestEvent();
+        event.setHeaders(Map.of(CLIENT_SOURCE_IP_HEADER, "a-client-source-ip"));
+
+        assertEquals("a-client-source-ip", RequestHelper.getClientSourceIp(event));
+    }
+
+    @Test
+    void getClientSourceIpShouldThrowIfClientSourceIpIsNull() {
+        var event = new APIGatewayProxyRequestEvent();
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put(CLIENT_SOURCE_IP_HEADER, null);
+
+        event.setHeaders(headers);
+
+        var exception =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> RequestHelper.getClientSourceIp(event));
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
+        assertEquals(
+                ErrorResponse.MISSING_CLIENT_SOURCE_IP.getMessage(),
+                exception.getErrorResponse().getMessage());
+    }
+
+    @Test
+    void getClientSourceIpIdShouldThrowIfClientSourceIpIsEmptyString() {
+        var event = new APIGatewayProxyRequestEvent();
+
+        event.setHeaders(Map.of(CLIENT_SOURCE_IP_HEADER, ""));
+
+        var exception =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> RequestHelper.getClientSourceIp(event));
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
+        assertEquals(
+                ErrorResponse.MISSING_CLIENT_SOURCE_IP.getMessage(),
                 exception.getErrorResponse().getMessage());
     }
 }
