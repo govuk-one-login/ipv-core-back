@@ -110,6 +110,7 @@ public class EvaluateGpg45ScoresHandler
 
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(event);
+            String clientSourceIp = RequestHelper.getClientSourceIp(event);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             ClientSessionDetailsDto clientSessionDetailsDto =
                     ipvSessionItem.getClientSessionDetails();
@@ -123,7 +124,8 @@ public class EvaluateGpg45ScoresHandler
                             userIdentityService.getUserIssuedCredentials(userId));
 
             Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
-                    gpg45ProfileEvaluator.getJourneyResponseForStoredCis(clientSessionDetailsDto);
+                    gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
+                            clientSessionDetailsDto, clientSourceIp);
             if (contraIndicatorErrorJourneyResponse.isEmpty()) {
                 Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
                 Optional<Gpg45Profile> matchedProfile =

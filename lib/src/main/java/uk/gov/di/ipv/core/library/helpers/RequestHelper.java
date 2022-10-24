@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 public class RequestHelper {
 
     public static final String IPV_SESSION_ID_HEADER = "ipv-session-id";
+    public static final String CLIENT_SOURCE_IP_HEADER = "client-source-ip";
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -84,6 +85,11 @@ public class RequestHelper {
         return getIpvSessionId(event.getHeaders());
     }
 
+    public static String getClientSourceIp(APIGatewayProxyRequestEvent event)
+            throws HttpResponseExceptionWithErrorBody {
+        return getClientSourceIp(event.getHeaders());
+    }
+
     public static String getIpvSessionId(Map<String, String> headers)
             throws HttpResponseExceptionWithErrorBody {
         String ipvSessionId = RequestHelper.getHeaderByKey(headers, IPV_SESSION_ID_HEADER);
@@ -91,6 +97,18 @@ public class RequestHelper {
             LOGGER.error("{} not present in header", IPV_SESSION_ID_HEADER);
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
+        }
+        LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
+        return ipvSessionId;
+    }
+
+    public static String getClientSourceIp(Map<String, String> headers)
+            throws HttpResponseExceptionWithErrorBody {
+        String ipvSessionId = RequestHelper.getHeaderByKey(headers, CLIENT_SOURCE_IP_HEADER);
+        if (ipvSessionId == null) {
+            LOGGER.error("{} not present in header", CLIENT_SOURCE_IP_HEADER);
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_CLIENT_SOURCE_IP);
         }
         LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
         return ipvSessionId;
