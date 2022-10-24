@@ -104,13 +104,12 @@ public class RequestHelper {
 
     public static String getClientSourceIp(Map<String, String> headers)
             throws HttpResponseExceptionWithErrorBody {
-        String ipvSessionId = RequestHelper.getHeaderByKey(headers, CLIENT_SOURCE_IP_HEADER);
-        if (ipvSessionId == null) {
+        String clientSourceIp = RequestHelper.getHeaderByKey(headers, CLIENT_SOURCE_IP_HEADER);
+        if (clientSourceIp == null) {
             LOGGER.error("{} not present in header", CLIENT_SOURCE_IP_HEADER);
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_CLIENT_SOURCE_IP);
         }
-        LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
-        return ipvSessionId;
+        return clientSourceIp;
     }
 }
