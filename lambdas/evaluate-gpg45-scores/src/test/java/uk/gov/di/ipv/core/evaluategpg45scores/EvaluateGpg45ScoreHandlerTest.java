@@ -48,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -59,6 +60,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.CLIENT_SOURCE_IP_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
 
 @ExtendWith(MockitoExtension.class)
@@ -74,6 +76,7 @@ class EvaluateGpg45ScoreHandlerTest {
                     M1A_FRAUD_VC,
                     M1A_VERIFICATION_VC,
                     M1B_DCMAW_VC);
+    public static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     public static CredentialIssuerConfig addressConfig = null;
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
 
@@ -113,7 +116,12 @@ class EvaluateGpg45ScoreHandlerTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        event.setHeaders(Map.of(IPV_SESSION_ID_HEADER, TEST_SESSION_ID));
+        event.setHeaders(
+                Map.of(
+                        IPV_SESSION_ID_HEADER,
+                        TEST_SESSION_ID,
+                        CLIENT_SOURCE_IP_HEADER,
+                        TEST_CLIENT_SOURCE_IP));
         for (String cred : CREDENTIALS) {
             PARSED_CREDENTIALS.add(SignedJWT.parse(cred));
         }
@@ -134,7 +142,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(configurationService.getCredentialIssuer(any())).thenReturn(addressConfig);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any(), anyString()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
@@ -176,7 +184,7 @@ class EvaluateGpg45ScoreHandlerTest {
     void shouldReturnJourneySessionEndIfScoresSatisfyM1BGpg45Profile() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any(), anyString()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
@@ -193,7 +201,7 @@ class EvaluateGpg45ScoreHandlerTest {
     void shouldReturnJourneyNextIfScoresDoNotSatisfyM1AGpg45Profile() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any(), anyString()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.empty());
@@ -261,7 +269,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
-                        ipvSessionItem.getClientSessionDetails()))
+                        ipvSessionItem.getClientSessionDetails(), TEST_CLIENT_SOURCE_IP))
                 .thenReturn(Optional.of(new JourneyResponse("/journey/pyi-no-match")));
 
         var response = evaluateGpg45ScoresHandler.handleRequest(event, context);
@@ -276,7 +284,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
-                        ipvSessionItem.getClientSessionDetails()))
+                        ipvSessionItem.getClientSessionDetails(), TEST_CLIENT_SOURCE_IP))
                 .thenThrow(CiRetrievalException.class);
 
         var response = evaluateGpg45ScoresHandler.handleRequest(event, context);
@@ -302,7 +310,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(configurationService.getCredentialIssuer(any())).thenReturn(addressConfig);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedM1ACreds);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any(), anyString()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1A));

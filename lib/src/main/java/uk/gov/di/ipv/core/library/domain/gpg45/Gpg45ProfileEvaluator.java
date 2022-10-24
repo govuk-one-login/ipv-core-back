@@ -53,12 +53,15 @@ public class Gpg45ProfileEvaluator {
     }
 
     public Optional<JourneyResponse> getJourneyResponseForStoredCis(
-            ClientSessionDetailsDto sessionDetails) throws CiRetrievalException {
+            ClientSessionDetailsDto sessionDetails, String clientSourceIp)
+            throws CiRetrievalException {
 
         List<ContraIndicatorItem> ciItems;
         ciItems =
                 ciStorageService.getCIs(
-                        sessionDetails.getUserId(), sessionDetails.getGovukSigninJourneyId());
+                        sessionDetails.getUserId(),
+                        sessionDetails.getGovukSigninJourneyId(),
+                        clientSourceIp);
         LOGGER.info("Retrieved {} CI items", ciItems.size());
 
         Set<String> ciSet =

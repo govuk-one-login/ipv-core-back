@@ -14,6 +14,7 @@ public class StepFunctionHelpers {
     public static final String JOURNEY = "journey";
     public static final String MESSAGE = "message";
     public static final String STATUS_CODE = "statusCode";
+    public static final String CLIENT_SOURCE_IP = "clientSourceIp";
 
     private StepFunctionHelpers() {
         throw new IllegalStateException("Utility class");
@@ -31,6 +32,10 @@ public class StepFunctionHelpers {
         LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
 
         return ipvSessionId;
+    }
+
+    public static String getClientSourceIp(Map<String, String> input) {
+        return input.get(CLIENT_SOURCE_IP);
     }
 
     public static String getJourneyStep(Map<String, String> input)

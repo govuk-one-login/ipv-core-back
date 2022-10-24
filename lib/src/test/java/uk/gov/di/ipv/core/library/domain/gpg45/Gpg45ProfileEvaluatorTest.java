@@ -30,6 +30,7 @@ class Gpg45ProfileEvaluatorTest {
 
     public static final String TEST_USER_ID = "test-user-id";
     public static final String TEST_JOURNEY_ID = "test-journey-id";
+    public static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     @Mock CiStorageService mockCiStorageService;
     @Mock ConfigurationService mockConfigurationService;
     @Mock ClientSessionDetailsDto mockClientSessionDetails;
@@ -68,9 +69,14 @@ class Gpg45ProfileEvaluatorTest {
     void getJourneyResponseForStoredCisShouldReturnEmptyOptionalIfNoCis() throws Exception {
         when(mockClientSessionDetails.getUserId()).thenReturn(TEST_USER_ID);
         when(mockClientSessionDetails.getGovukSigninJourneyId()).thenReturn(TEST_JOURNEY_ID);
-        when(mockCiStorageService.getCIs(TEST_USER_ID, TEST_JOURNEY_ID)).thenReturn(List.of());
+        when(mockCiStorageService.getCIs(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
+                .thenReturn(List.of());
 
-        assertTrue(evaluator.getJourneyResponseForStoredCis(mockClientSessionDetails).isEmpty());
+        assertTrue(
+                evaluator
+                        .getJourneyResponseForStoredCis(
+                                mockClientSessionDetails, TEST_CLIENT_SOURCE_IP)
+                        .isEmpty());
     }
 
     @Test
@@ -86,10 +92,14 @@ class Gpg45ProfileEvaluatorTest {
                         null);
         when(mockClientSessionDetails.getUserId()).thenReturn(TEST_USER_ID);
         when(mockClientSessionDetails.getGovukSigninJourneyId()).thenReturn(TEST_JOURNEY_ID);
-        when(mockCiStorageService.getCIs(TEST_USER_ID, TEST_JOURNEY_ID))
+        when(mockCiStorageService.getCIs(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(List.of(contraIndicatorItem));
 
-        assertTrue(evaluator.getJourneyResponseForStoredCis(mockClientSessionDetails).isEmpty());
+        assertTrue(
+                evaluator
+                        .getJourneyResponseForStoredCis(
+                                mockClientSessionDetails, TEST_CLIENT_SOURCE_IP)
+                        .isEmpty());
     }
 
     @Test
@@ -120,12 +130,13 @@ class Gpg45ProfileEvaluatorTest {
         when(kbvConfig.getAudienceForClients()).thenReturn("kbvIssuer");
         when(mockClientSessionDetails.getUserId()).thenReturn(TEST_USER_ID);
         when(mockClientSessionDetails.getGovukSigninJourneyId()).thenReturn(TEST_JOURNEY_ID);
-        when(mockCiStorageService.getCIs(TEST_USER_ID, TEST_JOURNEY_ID))
+        when(mockCiStorageService.getCIs(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(new ArrayList<>(List.of(otherCiItem, kbvCiItem)));
 
         assertEquals(
                 Optional.of(JOURNEY_RESPONSE_PYI_KBV_FAIL),
-                evaluator.getJourneyResponseForStoredCis(mockClientSessionDetails));
+                evaluator.getJourneyResponseForStoredCis(
+                        mockClientSessionDetails, TEST_CLIENT_SOURCE_IP));
     }
 
     @Test
@@ -156,12 +167,13 @@ class Gpg45ProfileEvaluatorTest {
         when(kbvConfig.getAudienceForClients()).thenReturn("kbvIssuer");
         when(mockClientSessionDetails.getUserId()).thenReturn(TEST_USER_ID);
         when(mockClientSessionDetails.getGovukSigninJourneyId()).thenReturn(TEST_JOURNEY_ID);
-        when(mockCiStorageService.getCIs(TEST_USER_ID, TEST_JOURNEY_ID))
+        when(mockCiStorageService.getCIs(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
                 .thenReturn(new ArrayList<>(List.of(otherCiItem, kbvCiItem)));
 
         assertEquals(
                 Optional.of(JOURNEY_RESPONSE_PYI_NO_MATCH),
-                evaluator.getJourneyResponseForStoredCis(mockClientSessionDetails));
+                evaluator.getJourneyResponseForStoredCis(
+                        mockClientSessionDetails, TEST_CLIENT_SOURCE_IP));
     }
 
     @Test

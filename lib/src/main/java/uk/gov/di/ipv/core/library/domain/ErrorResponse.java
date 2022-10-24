@@ -15,6 +15,7 @@ public enum ErrorResponse {
     INVALID_CREDENTIAL_ISSUER_ID(1008, "Invalid credential issuer id"),
     INVALID_TOKEN_REQUEST(1009, "Invalid token request"),
     MISSING_IPV_SESSION_ID(1010, "Missing ipv session id header"),
+    MISSING_CLIENT_SOURCE_IP(1010, "Missing client source ip header"),
     FAILED_TO_GET_CREDENTIAL_FROM_ISSUER(1011, "Failed to get credential from issuer"),
     FAILED_TO_SAVE_CREDENTIAL(1012, "Failed to save credential"),
     FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS(

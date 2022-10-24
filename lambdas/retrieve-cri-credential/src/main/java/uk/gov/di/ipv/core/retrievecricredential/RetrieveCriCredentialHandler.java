@@ -98,6 +98,8 @@ public class RetrieveCriCredentialHandler
     public Map<String, Object> handleRequest(Map<String, String> input, Context context) {
         LogHelper.attachComponentIdToLogs();
 
+        String clientSourceIp = StepFunctionHelpers.getClientSourceIp(input);
+
         IpvSessionItem ipvSessionItem;
         try {
             String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
@@ -154,7 +156,8 @@ public class RetrieveCriCredentialHandler
 
                 sendIpvVcReceivedAuditEvent(auditEventUser, vc, isSuccessful);
 
-                submitVcToCiStorage(vc, clientSessionDetailsDto.getGovukSigninJourneyId());
+                submitVcToCiStorage(
+                        vc, clientSessionDetailsDto.getGovukSigninJourneyId(), clientSourceIp);
 
                 credentialIssuerService.persistUserCredentials(vc, credentialIssuerId, userId);
             }
@@ -212,9 +215,10 @@ public class RetrieveCriCredentialHandler
     }
 
     @Tracing
-    private void submitVcToCiStorage(SignedJWT vc, String govukSigninJourneyId)
+    private void submitVcToCiStorage(
+            SignedJWT vc, String govukSigninJourneyId, String clientSourceIp)
             throws CiPutException {
-        ciStorageService.submitVC(vc, govukSigninJourneyId);
+        ciStorageService.submitVC(vc, govukSigninJourneyId, clientSourceIp);
     }
 
     @Tracing

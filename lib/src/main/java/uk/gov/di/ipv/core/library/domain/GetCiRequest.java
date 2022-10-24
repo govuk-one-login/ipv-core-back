@@ -8,6 +8,9 @@ public class GetCiRequest {
     @SerializedName(value = "govuk_signin_journey_id")
     private final String govukSigninJourneyId;
 
+    @SerializedName(value = "ip_address")
+    private final String clientSourceIp;
+
     @SerializedName(value = "user_id")
     private final String userId;
 }
