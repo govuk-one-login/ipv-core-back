@@ -1763,6 +1763,59 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref ValidateOAuthCallbackFunctionLogGroup
 
+  EndMitigationJourneyFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - EndMitigationJourneyFunctionLogGroup
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "end-mitigation-journey-${Environment}"
+      Handler: uk.gov.di.ipv.core.endmitigationjourney.EndMitigationJourneyHandler::handleRequest
+      Runtime: java11
+      PackageType: Zip
+      CodeUri: ../lambdas/end-mitigation-journey
+      Architectures:
+        - arm64
+      MemorySize: 2048
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub end-mitigation-journey-${Environment}
+      Events:
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+            Path: /journey/end-mitigation-journey/{mitigationId}
+            Method: POST
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+        - AddProvisionedConcurrency
+        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
+        - !Ref AWS::NoValue
+
+  EndMitigationJourneyFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+      LogGroupName: !Sub "/aws/lambda/end-mitigation-journey-${Environment}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  EndMitigationJourneyFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref EndMitigationJourneyFunctionLogGroup
+
+
   UserIssuedCredentialsV2Table:
     Type: AWS::DynamoDB::Table
     Properties:

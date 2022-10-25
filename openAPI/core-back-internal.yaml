@@ -229,6 +229,22 @@ paths:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildClientOauthResponseFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
+  /journey/end-mitigation-journey/{mitigationId}:
+    post:
+      description: "Called when the user has completed the last step of a mitigation journey"
+      responses:
+        200:
+          description: "Journey response"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/journeyType"
+      x-amazon-apigateway-integration:
+        httpMethod: "POST"
+        uri:
+          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${EndMitigationJourneyFunction.Arn}:live/invocations
+        passthroughBehavior: "when_no_match"
+        type: "aws_proxy"
 
 components:
   schemas:
