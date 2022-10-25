@@ -1,0 +1,33 @@
+INITIAL_MITIGATION_JOURNEY:
+  name: INIT
+  parent: null
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_ADDRESS
+      response:
+        type: journey
+        journeyId: /journey/cri/build-oauth-request/address
+CRI_ADDRESS:
+  name: CRI_ADDRESS
+  parent: null
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_FRAUD
+      response:
+        type: journey
+        journeyId: /journey/cri/build-oauth-request/fraud
+CRI_FRAUD:
+  name: CRI_FRAUD
+  parent: null
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: VALIDATE_MITIGATION
+      response:
+        type: journey
+        journeyId: /journey/mitigation/MJ01
