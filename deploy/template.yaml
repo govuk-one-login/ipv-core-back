@@ -1723,6 +1723,49 @@ Resources:
               ArnLike:
                 "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
 
+  CoreApiGw5xxErrors:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+        AlarmName: ApiGateWay5xxAlarm
+        ActionsEnabled: true
+        AlarmActions:
+          - !ImportValue sns-topics-AlarmTopic
+        OKActions:
+          - !ImportValue sns-topics-AlarmTopic
+        InsufficientDataActions: []
+        EvaluationPeriods: 3
+        DatapointsToAlarm: 3
+        Threshold: 1
+        ComparisonOperator: GreaterThanThreshold
+        TreatMissingData: notBreaching
+        Metrics:
+            - Id: e1
+              Label: Sum-of-5xx-Errors
+              ReturnData: true
+              Expression: SUM(METRICS())
+            - Id: m1
+              ReturnData: false
+              MetricStat:
+                  Metric:
+                      Namespace: AWS/ApiGateway
+                      MetricName: 5XXError
+                      Dimensions:
+                          - Name: ApiName
+                            Value: !Sub IPV Core External API Gateway ${Environment}
+                  Period: 300
+                  Stat: Sum
+            - Id: m2
+              ReturnData: false
+              MetricStat:
+                  Metric:
+                      Namespace: AWS/ApiGateway
+                      MetricName: 5XXError
+                      Dimensions:
+                          - Name: ApiName
+                            Value: !Sub IPV Core Private API Gateway ${Environment}
+                  Period: 300
+                  Stat: Sum
+
 Outputs:
   IPVCorePrivateAPIGatewayID:
     Description: Core Back Private API Gateway ID
