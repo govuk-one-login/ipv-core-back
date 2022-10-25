@@ -4,6 +4,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
@@ -32,6 +33,7 @@ public class IpvSessionItem implements DynamodbItem {
     private List<VcStatusDto> currentVcStatuses;
     private String vot;
     private long ttl;
+    private IpvJourneyTypes journeyType;
 
     @DynamoDbPartitionKey
     public String getIpvSessionId() {
@@ -165,5 +167,13 @@ public class IpvSessionItem implements DynamodbItem {
 
     public void setTtl(long ttl) {
         this.ttl = ttl;
+    }
+
+    public IpvJourneyTypes getJourneyType() {
+        return journeyType;
+    }
+
+    public void setJourneyType(IpvJourneyTypes journeyType) {
+        this.journeyType = journeyType;
     }
 }

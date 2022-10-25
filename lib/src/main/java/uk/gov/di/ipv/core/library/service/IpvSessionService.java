@@ -5,6 +5,7 @@ import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.commons.codec.digest.DigestUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
@@ -86,6 +87,8 @@ public class IpvSessionService {
         ipvSessionItem.setVisitedCredentialIssuerDetails(Collections.emptyList());
 
         ipvSessionItem.setVot(VOT_P0);
+
+        ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
 
         if (errorObject != null) {
             ipvSessionItem.setErrorCode(errorObject.getCode());
