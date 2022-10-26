@@ -1734,8 +1734,8 @@ Resources:
           - !ImportValue sns-topics-AlarmTopic
         InsufficientDataActions: []
         EvaluationPeriods: 3
-        DatapointsToAlarm: 100
-        Threshold: 1
+        DatapointsToAlarm: 3
+        Threshold: 20
         ComparisonOperator: GreaterThanThreshold
         TreatMissingData: notBreaching
         Metrics:
