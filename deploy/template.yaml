@@ -70,7 +70,7 @@ Mappings:
       environment: dev
       criReturnStepFunctionLogLevel: ALL
       gw500ErrorLimit: 1
-    "457601217192": # Build
+    "457601271792": # Build
       provisionedConcurrency: 0
       ciStorageAccountId: 755415363251 # di-ipv-contra-indicators-build
       environment: build
