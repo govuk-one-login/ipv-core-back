@@ -8,7 +8,7 @@ INITIAL_MITIGATION_JOURNEY:
       targetState: CRI_ADDRESS
       response:
         type: journey
-        journeyId: /journey/cri/build-oauth-request/stubAddress
+        journeyStepId: /journey/cri/build-oauth-request/stubAddress
 CRI_ADDRESS:
   name: CRI_ADDRESS
   parent: null
@@ -19,7 +19,7 @@ CRI_ADDRESS:
       targetState: CRI_FRAUD
       response:
         type: journey
-        journeyId: /journey/cri/build-oauth-request/stubFraud
+        journeyStepId: /journey/cri/build-oauth-request/stubFraud
 CRI_FRAUD:
   name: CRI_FRAUD
   parent: null
@@ -30,4 +30,4 @@ CRI_FRAUD:
       targetState: VALIDATE_MITIGATION
       response:
         type: journey
-        journeyId: /journey/mitigation/MJ01
+        journeyStepId: /journey/mitigation/MJ01
