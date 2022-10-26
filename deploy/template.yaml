@@ -1733,8 +1733,8 @@ Resources:
         OKActions:
           - !ImportValue sns-topics-AlarmTopic
         InsufficientDataActions: []
-        EvaluationPeriods: 1
-        DatapointsToAlarm: 1
+        EvaluationPeriods: 3
+        DatapointsToAlarm: 100
         Threshold: 1
         ComparisonOperator: GreaterThanThreshold
         TreatMissingData: notBreaching
