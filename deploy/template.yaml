@@ -1735,7 +1735,7 @@ Resources:
         InsufficientDataActions: []
         EvaluationPeriods: 3
         DatapointsToAlarm: 3
-        Threshold: 20
+        Threshold: 10
         ComparisonOperator: GreaterThanThreshold
         TreatMissingData: notBreaching
         Metrics:
