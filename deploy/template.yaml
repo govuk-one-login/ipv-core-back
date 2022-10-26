@@ -69,31 +69,36 @@ Mappings:
       ciStorageAccountId: 322814139578 # di-ipv-cri-dev
       environment: dev
       criReturnStepFunctionLogLevel: ALL
-      gw500ErrorLimit: 1
+      pgw500ErrorLimit: 1
+      egw500ErrorLimit: 1
     "457601271792": # Build
       provisionedConcurrency: 0
       ciStorageAccountId: 755415363251 # di-ipv-contra-indicators-build
       environment: build
       criReturnStepFunctionLogLevel: ALL
-      gw500ErrorLimit: 1
+      pgw500ErrorLimit: 1
+      egw500ErrorLimit: 1
     "335257547869": # Staging
       provisionedConcurrency: 1
       ciStorageAccountId: 265689800486 # di-ipv-contra-indicators-staging
       environment: staging
       criReturnStepFunctionLogLevel: ALL
-      gw500ErrorLimit: 1
+      pgw500ErrorLimit: 1
+      egw500ErrorLimit: 1
     "991138514218": # Integration
       provisionedConcurrency: 1
       ciStorageAccountId: 697519714716 # di-ipv-contra-indicators-integration
       environment: integration
       criReturnStepFunctionLogLevel: ERROR
-      gw500ErrorLimit: 1
+      pgw500ErrorLimit: 1
+      egw500ErrorLimit: 1
     "075701497069": # Production
       provisionedConcurrency: 1
       ciStorageAccountId: 442136572379 # di-ipv-contra-indicators-prod
       environment: production
       criReturnStepFunctionLogLevel: ERROR
-      gw500ErrorLimit: 10
+      pgw500ErrorLimit: 10
+      egw500ErrorLimit: 1
 
 Resources:
   JWKSParamRole:
@@ -1728,7 +1733,7 @@ Resources:
               ArnLike:
                 "kms:EncryptionContext:aws:logs:arn": !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
 
-  CoreApiGw5xxErrors:
+  CoreApiPrivateGw5xxErrors:
     Type: AWS::CloudWatch::Alarm
     Properties:
         AlarmName: PrivateApiGateWay5xxAlarm
@@ -1740,7 +1745,7 @@ Resources:
         InsufficientDataActions: []
         EvaluationPeriods: 3
         DatapointsToAlarm: 3
-        Threshold: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, gw500ErrorLimit ]
+        Threshold: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, pgw500ErrorLimit ]
         ComparisonOperator: GreaterThanThreshold
         TreatMissingData: notBreaching
         Metrics:
@@ -1759,6 +1764,38 @@ Resources:
                             Value: !Sub IPV Core Private API Gateway ${Environment}
                   Period: 300
                   Stat: Sum
+
+  CoreApiExternalGw5xxErrors:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: ExternalApiGateWay5xxAlarm
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue sns-topics-AlarmTopic
+      OKActions:
+        - !ImportValue sns-topics-AlarmTopic
+      InsufficientDataActions: []
+      EvaluationPeriods: 3
+      DatapointsToAlarm: 3
+      Threshold: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, egw500ErrorLimit ]
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: e1
+          Label: Sum-of-5xx-Errors
+          ReturnData: true
+          Expression: SUM(METRICS())
+        - Id: m1
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/ApiGateway
+              MetricName: 5XXError
+              Dimensions:
+                - Name: ApiName
+                  Value: !Sub IPV Core External API Gateway ${Environment}
+            Period: 300
+            Stat: Sum
 
 Outputs:
   IPVCorePrivateAPIGatewayID:
