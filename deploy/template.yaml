@@ -1731,7 +1731,7 @@ Resources:
   CoreApiGw5xxErrors:
     Type: AWS::CloudWatch::Alarm
     Properties:
-        AlarmName: ApiGateWay5xxAlarm
+        AlarmName: PrivateApiGateWay5xxAlarm
         ActionsEnabled: true
         AlarmActions:
           - !ImportValue sns-topics-AlarmTopic
@@ -1749,17 +1749,6 @@ Resources:
               ReturnData: true
               Expression: SUM(METRICS())
             - Id: m1
-              ReturnData: false
-              MetricStat:
-                  Metric:
-                      Namespace: AWS/ApiGateway
-                      MetricName: 5XXError
-                      Dimensions:
-                          - Name: ApiName
-                            Value: !Sub IPV Core External API Gateway ${Environment}
-                  Period: 300
-                  Stat: Sum
-            - Id: m2
               ReturnData: false
               MetricStat:
                   Metric:
