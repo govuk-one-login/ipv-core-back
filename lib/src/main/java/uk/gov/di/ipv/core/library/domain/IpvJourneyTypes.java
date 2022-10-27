@@ -2,7 +2,7 @@ package uk.gov.di.ipv.core.library.domain;
 
 public enum IpvJourneyTypes {
     IPV_CORE_MAIN_JOURNEY("ipv-core-main-journey"),
-    MJ01("mj01");
+    MITIGATION_JOURNEY_MJ01("mj01");
 
     private final String value;
 
