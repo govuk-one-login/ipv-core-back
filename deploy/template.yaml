@@ -1730,6 +1730,7 @@ Resources:
 
   CoreApiGw5xxErrors:
     Type: AWS::CloudWatch::Alarm
+    Condition: IsNotDevelopment
     Properties:
         AlarmName: ApiGateWay5xxAlarm
         ActionsEnabled: true
