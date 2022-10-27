@@ -39,13 +39,15 @@ public class ProcessJourneyStepHandler
     private static final String PYIC_TECHNICAL_ERROR_PAGE_ID = "pyi-technical";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
 
+    private final StateMachine stateMachine;
     private final IpvSessionService ipvSessionService;
     private final ConfigurationService configurationService;
 
-    private StateMachine stateMachine;
-
     public ProcessJourneyStepHandler(
-            IpvSessionService ipvSessionService, ConfigurationService configurationService) {
+            StateMachine stateMachine,
+            IpvSessionService ipvSessionService,
+            ConfigurationService configurationService) {
+        this.stateMachine = stateMachine;
         this.ipvSessionService = ipvSessionService;
         this.configurationService = configurationService;
     }
@@ -53,6 +55,11 @@ public class ProcessJourneyStepHandler
     @ExcludeFromGeneratedCoverageReport
     public ProcessJourneyStepHandler() throws IOException {
         this.configurationService = new ConfigurationService();
+        this.stateMachine =
+                new StateMachine(
+                        new StateMachineInitializer(
+                                configurationService.getEnvironmentVariable(
+                                        EnvironmentVariable.ENVIRONMENT)));
         this.ipvSessionService = new IpvSessionService(configurationService);
     }
 
@@ -73,13 +80,6 @@ public class ProcessJourneyStepHandler
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_ID);
             }
 
-            this.stateMachine =
-                    new StateMachine(
-                            new StateMachineInitializer(
-                                    configurationService.getEnvironmentVariable(
-                                            EnvironmentVariable.ENVIRONMENT),
-                                    ipvSessionItem.getJourneyType()));
-
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId());
 
@@ -91,11 +91,6 @@ public class ProcessJourneyStepHandler
         } catch (JourneyEngineException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_JOURNEY_ENGINE_STEP);
-        } catch (IOException e) {
-            LOGGER.error("Failed to initialise state machine", e);
-            return StepFunctionHelpers.generateErrorOutputMap(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_INITIALISE_STATE_MACHINE);
         }
     }
 
