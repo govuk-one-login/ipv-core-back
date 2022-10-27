@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,18 +13,16 @@ import java.util.Objects;
 @ExcludeFromGeneratedCoverageReport
 public class StateMachineInitializer {
     private static final String PRODUCTION_CONFIG_FILE_PATH =
-            "statemachine/production/ipv-core-main-journey.yaml";
+            "statemachine/production-statemachine-config.yaml";
 
     private final String environment;
-    private final IpvJourneyTypes journeyType;
 
-    public StateMachineInitializer(String environment, IpvJourneyTypes journeyType) {
+    public StateMachineInitializer(String environment) {
         this.environment = environment;
-        this.journeyType = journeyType;
     }
 
     public Map<String, State> initialize() throws IOException {
-        File file = getConfigFile(environment, journeyType);
+        File file = getConfigFile(environment);
 
         ObjectMapper om = new ObjectMapper(new YAMLFactory());
 
@@ -41,20 +38,17 @@ public class StateMachineInitializer {
         return states;
     }
 
-    private File getConfigFile(String environment, IpvJourneyTypes journeyType) {
+    private File getConfigFile(String environment) {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         if (environment.contains("dev-")) {
             return new File(
                     Objects.requireNonNull(
                                     classLoader.getResource(
-                                            String.format(
-                                                    "statemachine/dev/%s.yaml",
-                                                    journeyType.getValue())))
+                                            "statemachine/dev-statemachine-config.yaml"))
                             .getFile());
         }
 
-        String fileName =
-                String.format("statemachine/%s/%s.yaml", environment, journeyType.getValue());
+        String fileName = String.format("statemachine/%s-statemachine-config.yaml", environment);
         return new File(
                 Objects.requireNonNullElse(
                                 classLoader.getResource(fileName),

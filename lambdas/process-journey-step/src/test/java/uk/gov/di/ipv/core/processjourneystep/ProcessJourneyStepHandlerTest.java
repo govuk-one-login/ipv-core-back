@@ -9,14 +9,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.StateMachine;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.StateMachineInitializer;
 
 import java.time.Instant;
 import java.util.Map;
@@ -68,15 +68,16 @@ class ProcessJourneyStepHandlerTest {
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ConfigurationService mockConfigurationService;
-    @Mock private IpvSessionItem mockIpvSessionItem;
 
     private ProcessJourneyStepHandler processJourneyStepHandler;
     private ClientSessionDetailsDto clientSessionDetailsDto;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        StateMachine stateMachine = new StateMachine(new StateMachineInitializer("production"));
         processJourneyStepHandler =
-                new ProcessJourneyStepHandler(mockIpvSessionService, mockConfigurationService);
+                new ProcessJourneyStepHandler(
+                        stateMachine, mockIpvSessionService, mockConfigurationService);
         clientSessionDetailsDto = new ClientSessionDetailsDto();
     }
 
@@ -231,12 +232,9 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_ADDRESS_STATE);
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
-        ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
-        when(mockConfigurationService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
-                .thenReturn("production");
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
@@ -257,12 +255,9 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_FRAUD_STATE);
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
-        ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
-        when(mockConfigurationService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
-                .thenReturn("production");
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
@@ -319,12 +314,9 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(CRI_FRAUD_STATE);
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
-        ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
-        when(mockConfigurationService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
-                .thenReturn("production");
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
@@ -521,13 +513,10 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
         ipvSessionItem.setUserState(CRI_UK_PASSPORT_STATE);
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
-        ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("99");
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("99");
-        when(mockConfigurationService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
-                .thenReturn("production");
         when(mockIpvSessionService.getIpvSession("1234")).thenReturn(ipvSessionItem);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
@@ -555,12 +544,9 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
         ipvSessionItem.setUserState(CORE_SESSION_TIMEOUT_STATE);
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
-        ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockIpvSessionService.getIpvSession("1234")).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
-                .thenReturn("production");
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
@@ -578,11 +564,8 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(validateOauthCallback);
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
-        ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
 
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
-        when(mockConfigurationService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
-                .thenReturn("production");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
     }
 }
