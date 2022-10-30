@@ -57,7 +57,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler.SHARED_CLAIMS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
@@ -89,6 +88,7 @@ class BuildCriOauthRequestHandlerTest {
     public static final String VTM = "http://www.example.com/vtm";
     public static final String TEST_USER_ID = "test-user-id";
     public static final String OAUTH_STATE = "test-state";
+    public static final String TEST_IP_ADDRESS = "192.168.1.100";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -209,7 +209,7 @@ class BuildCriOauthRequestHandlerTest {
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
         input.setPathParameters(Map.of("criId", CRI_ID));
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
+        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", TEST_IP_ADDRESS));
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
 
@@ -279,7 +279,7 @@ class BuildCriOauthRequestHandlerTest {
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
         input.setPathParameters(Map.of("criId", DCMAW_CRI_ID));
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
+        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", TEST_IP_ADDRESS));
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
 
@@ -402,7 +402,7 @@ class BuildCriOauthRequestHandlerTest {
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
         input.setPathParameters(Map.of("criId", CRI_ID));
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
+        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", TEST_IP_ADDRESS));
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
         Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
@@ -453,7 +453,7 @@ class BuildCriOauthRequestHandlerTest {
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
         input.setPathParameters(Map.of("criId", CRI_ID));
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
+        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", TEST_IP_ADDRESS));
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
         Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
@@ -502,7 +502,7 @@ class BuildCriOauthRequestHandlerTest {
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
         input.setPathParameters(Map.of("criId", CRI_ID));
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
+        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", TEST_IP_ADDRESS));
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
         Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
@@ -572,7 +572,7 @@ class BuildCriOauthRequestHandlerTest {
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
         input.setPathParameters(Map.of("criId", CRI_ID));
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
+        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", TEST_IP_ADDRESS));
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
         Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
@@ -623,7 +623,7 @@ class BuildCriOauthRequestHandlerTest {
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
         input.setPathParameters(Map.of("criId", CRI_ID));
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID));
+        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", TEST_IP_ADDRESS));
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
         Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
@@ -655,7 +655,7 @@ class BuildCriOauthRequestHandlerTest {
 
     private APIGatewayProxyRequestEvent createRequestEvent() {
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
-        input.setHeaders(Map.of("ipv-session-id", "aSessionId"));
+        input.setHeaders(Map.of("ipv-session-id", "aSessionId", "ip-address", TEST_IP_ADDRESS));
         return input;
     }
 

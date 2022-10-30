@@ -100,7 +100,11 @@ class AuditServiceTest {
                         .build();
 
         AuditEventUser auditEventUser =
-                new AuditEventUser("someUserId", "someSessionId", "someGovukSigninJourneyId");
+                new AuditEventUser(
+                        "someUserId",
+                        "someSessionId",
+                        "someGovukSigninJourneyId",
+                        "someIp.Address");
 
         auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, extensions, auditEventUser);
 

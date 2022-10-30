@@ -9,7 +9,7 @@ public class PutCiRequest {
     private final String govukSigninJourneyId;
 
     @SerializedName(value = "ip_address")
-    private final String clientSourceIp;
+    private final String ipAddress;
 
     @SerializedName(value = "signed_jwt")
     private final String signedJwt;

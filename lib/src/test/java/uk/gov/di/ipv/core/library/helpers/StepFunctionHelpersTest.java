@@ -53,10 +53,10 @@ class StepFunctionHelpersTest {
     }
 
     @Test
-    void getClientSourceIpShouldReturnClientSourceIP() throws Exception {
-        Map<String, String> input = Map.of("clientSourceIp", "something");
+    void getIpAddressShouldReturnIpAddress() throws Exception {
+        Map<String, String> input = Map.of("ipAddress", "something");
 
-        assertEquals("something", StepFunctionHelpers.getClientSourceIp(input));
+        assertEquals("something", StepFunctionHelpers.getIpAddress(input));
     }
 
     @Test

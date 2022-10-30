@@ -60,8 +60,8 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.CLIENT_SOURCE_IP_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IP_ADDRESS_HEADER;
 
 @ExtendWith(MockitoExtension.class)
 class EvaluateGpg45ScoreHandlerTest {
@@ -120,7 +120,7 @@ class EvaluateGpg45ScoreHandlerTest {
                 Map.of(
                         IPV_SESSION_ID_HEADER,
                         TEST_SESSION_ID,
-                        CLIENT_SOURCE_IP_HEADER,
+                        IP_ADDRESS_HEADER,
                         TEST_CLIENT_SOURCE_IP));
         for (String cred : CREDENTIALS) {
             PARSED_CREDENTIALS.add(SignedJWT.parse(cred));

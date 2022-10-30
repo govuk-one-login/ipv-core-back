@@ -20,11 +20,15 @@ public class AuditEventUser {
     @JsonProperty(value = "govuk_signin_journey_id")
     private final String govukSigninJourneyId;
 
+    @JsonProperty(value = "ip_address")
+    private final String ipAddress;
+
     public AuditEventUser(
             @JsonProperty(value = "user_id", required = false) String userId,
             @JsonProperty(value = "session_id", required = false) String sessionId,
             @JsonProperty(value = "govuk_signin_journey_id", required = false)
-                    String govukSigninJourneyId) {
+                    String govukSigninJourneyId,
+            @JsonProperty(value = "ip_address", required = false) String ipAddress) {
         this.userId = userId;
         this.sessionId = sessionId;
         if (StringUtils.isNullOrEmpty(govukSigninJourneyId)) {
@@ -32,5 +36,6 @@ public class AuditEventUser {
         } else {
             this.govukSigninJourneyId = govukSigninJourneyId;
         }
+        this.ipAddress = ipAddress;
     }
 }

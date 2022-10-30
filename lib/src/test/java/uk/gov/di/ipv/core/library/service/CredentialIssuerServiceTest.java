@@ -62,6 +62,7 @@ class CredentialIssuerServiceTest {
     private static final String TEST_IPV_SESSION_ID = SecureTokenHelper.generate();
     public static final String OAUTH_STATE = "oauth-state";
     public static final String TEST_AUTH_CODE = "test-auth-code";
+    public static final String TEST_IP_ADDRESS = "192.168.1.100";
 
     @Mock private DataStore<UserIssuedCredentialsItem> mockDataStore;
     @Mock private ConfigurationService mockConfigurationService;
@@ -97,7 +98,8 @@ class CredentialIssuerServiceTest {
                         "http://www.example.com/redirect",
                         OAUTH_STATE,
                         null,
-                        null);
+                        null,
+                        TEST_IP_ADDRESS);
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
 
@@ -130,7 +132,8 @@ class CredentialIssuerServiceTest {
                         "http://www.example.com/redirect",
                         OAUTH_STATE,
                         null,
-                        null);
+                        null,
+                        TEST_IP_ADDRESS);
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
 
@@ -163,7 +166,8 @@ class CredentialIssuerServiceTest {
                         "http://www.example.com/redirect",
                         OAUTH_STATE,
                         null,
-                        null);
+                        null,
+                        TEST_IP_ADDRESS);
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
 
@@ -198,7 +202,8 @@ class CredentialIssuerServiceTest {
                         "http://www.example.com/redirect",
                         OAUTH_STATE,
                         null,
-                        null);
+                        null,
+                        TEST_IP_ADDRESS);
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
 
@@ -232,7 +237,8 @@ class CredentialIssuerServiceTest {
                         "http://www.example.com/redirect",
                         OAUTH_STATE,
                         null,
-                        null);
+                        null,
+                        TEST_IP_ADDRESS);
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
         CredentialIssuerException exception =

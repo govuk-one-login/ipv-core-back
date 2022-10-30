@@ -54,6 +54,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     private static final String TEST_ERROR_DESCRIPTION = "test error description";
     private static final String TEST_SESSION_ID = SecureTokenHelper.generate();
     public static final String TEST_USER_ID = "test-user-id";
+    public static final String TEST_IP_ADDRESS = "192.168.1.100";
     private static CredentialIssuerConfig credentialIssuerConfig;
     private static IpvSessionItem ipvSessionItem;
     @Mock private Context context;
@@ -281,6 +282,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 TEST_REDIRECT_URI,
                 TEST_OAUTH_STATE,
                 null,
-                null);
+                null,
+                TEST_IP_ADDRESS);
     }
 }

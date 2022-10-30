@@ -17,8 +17,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.CLIENT_SOURCE_IP_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IP_ADDRESS_HEADER;
 
 class RequestHelperTest {
 
@@ -107,46 +107,46 @@ class RequestHelperTest {
     }
 
     @Test
-    void getClientSourceIpShouldReturnClientSourceIp() throws HttpResponseExceptionWithErrorBody {
+    void getIpAddressShouldReturnIpAddress() throws HttpResponseExceptionWithErrorBody {
         var event = new APIGatewayProxyRequestEvent();
-        event.setHeaders(Map.of(CLIENT_SOURCE_IP_HEADER, "a-client-source-ip"));
+        event.setHeaders(Map.of(IP_ADDRESS_HEADER, "a-client-source-ip"));
 
-        assertEquals("a-client-source-ip", RequestHelper.getClientSourceIp(event));
+        assertEquals("a-client-source-ip", RequestHelper.getIpAddress(event));
     }
 
     @Test
-    void getClientSourceIpShouldThrowIfClientSourceIpIsNull() {
+    void getIpAddressShouldThrowIfIpAddressIsNull() {
         var event = new APIGatewayProxyRequestEvent();
         HashMap<String, String> headers = new HashMap<>();
-        headers.put(CLIENT_SOURCE_IP_HEADER, null);
+        headers.put(IP_ADDRESS_HEADER, null);
 
         event.setHeaders(headers);
 
         var exception =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> RequestHelper.getClientSourceIp(event));
+                        () -> RequestHelper.getIpAddress(event));
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
         assertEquals(
-                ErrorResponse.MISSING_CLIENT_SOURCE_IP.getMessage(),
+                ErrorResponse.MISSING_IP_ADDRESS.getMessage(),
                 exception.getErrorResponse().getMessage());
     }
 
     @Test
-    void getClientSourceIpIdShouldThrowIfClientSourceIpIsEmptyString() {
+    void getIpAddressIdShouldThrowIfIpAddressIsEmptyString() {
         var event = new APIGatewayProxyRequestEvent();
 
-        event.setHeaders(Map.of(CLIENT_SOURCE_IP_HEADER, ""));
+        event.setHeaders(Map.of(IP_ADDRESS_HEADER, ""));
 
         var exception =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> RequestHelper.getClientSourceIp(event));
+                        () -> RequestHelper.getIpAddress(event));
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
         assertEquals(
-                ErrorResponse.MISSING_CLIENT_SOURCE_IP.getMessage(),
+                ErrorResponse.MISSING_IP_ADDRESS.getMessage(),
                 exception.getErrorResponse().getMessage());
     }
 }

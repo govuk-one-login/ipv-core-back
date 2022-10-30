@@ -24,11 +24,13 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.JarValidationException;
 import uk.gov.di.ipv.core.library.exceptions.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -100,6 +102,7 @@ public class InitialiseIpvSessionHandler
         LogHelper.attachComponentIdToLogs();
 
         try {
+            String ipAddress = RequestHelper.getIpAddress(input);
             Map<String, String> sessionParams =
                     objectMapper.readValue(input.getBody(), new TypeReference<>() {});
             Optional<ErrorResponse> error = validateSessionParams(sessionParams);
@@ -136,7 +139,8 @@ public class InitialiseIpvSessionHandler
                     new AuditEventUser(
                             ipvSessionItem.getClientSessionDetails().getUserId(),
                             ipvSessionItem.getIpvSessionId(),
-                            clientSessionDetailsDto.getGovukSigninJourneyId());
+                            clientSessionDetailsDto.getGovukSigninJourneyId(),
+                            ipAddress);
 
             auditService.sendAuditEvent(
                     new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, componentId, auditEventUser));
@@ -187,6 +191,10 @@ public class InitialiseIpvSessionHandler
             LOGGER.error("Failed to parse request body into map because: {}", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            LOGGER.error("Failed to parse request body into map because: {}", e.getMessage());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IP_ADDRESS);
         }
     }
 
