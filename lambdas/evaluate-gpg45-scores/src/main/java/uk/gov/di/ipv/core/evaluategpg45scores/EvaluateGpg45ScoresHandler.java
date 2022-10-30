@@ -110,7 +110,7 @@ public class EvaluateGpg45ScoresHandler
 
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(event);
-            String clientSourceIp = RequestHelper.getClientSourceIp(event);
+            String ipAddress = RequestHelper.getIpAddress(event);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             ClientSessionDetailsDto clientSessionDetailsDto =
                     ipvSessionItem.getClientSessionDetails();
@@ -125,7 +125,7 @@ public class EvaluateGpg45ScoresHandler
 
             Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
                     gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
-                            clientSessionDetailsDto, clientSourceIp);
+                            clientSessionDetailsDto, ipAddress);
             if (contraIndicatorErrorJourneyResponse.isEmpty()) {
                 Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
                 Optional<Gpg45Profile> matchedProfile =
@@ -140,7 +140,8 @@ public class EvaluateGpg45ScoresHandler
                                     ipvSessionItem,
                                     matchedProfile.get(),
                                     gpg45Scores,
-                                    credentials));
+                                    credentials,
+                                    ipAddress));
                     ipvSessionItem.setVot(VOT_P2);
                     journeyResponse = JOURNEY_END;
                     message.with("lambdaResult", "A GPG45 profile has been met")
@@ -223,13 +224,15 @@ public class EvaluateGpg45ScoresHandler
             IpvSessionItem ipvSessionItem,
             Gpg45Profile gpg45Profile,
             Gpg45Scores gpg45Scores,
-            List<SignedJWT> credentials)
+            List<SignedJWT> credentials,
+            String ipAddress)
             throws ParseException {
         AuditEventUser auditEventUser =
                 new AuditEventUser(
                         ipvSessionItem.getClientSessionDetails().getUserId(),
                         ipvSessionItem.getIpvSessionId(),
-                        ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId());
+                        ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId(),
+                        ipAddress);
         return new AuditEvent(
                 AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
                 componentId,

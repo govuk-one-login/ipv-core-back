@@ -57,6 +57,7 @@ class BuildUserIdentityHandlerTest {
     private static final String TEST_IPV_SESSION_ID = SecureTokenHelper.generate();
     private static final String TEST_ACCESS_TOKEN = "test-access-token";
     public static final String VTM = "http://www.example.com/vtm";
+    public static final String TEST_IP_ADDRESS = "192.168.1.100";
 
     @Mock private Context mockContext;
     @Mock private UserIdentityService mockUserIdentityService;
@@ -121,7 +122,11 @@ class BuildUserIdentityHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
         Map<String, String> headers =
-                Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
+                Map.of(
+                        "Authorization",
+                        accessToken.toAuthorizationHeader(),
+                        "ip-address",
+                        TEST_IP_ADDRESS);
         event.setHeaders(headers);
 
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
@@ -140,7 +145,11 @@ class BuildUserIdentityHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
         Map<String, String> headers =
-                Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
+                Map.of(
+                        "Authorization",
+                        accessToken.toAuthorizationHeader(),
+                        "ip-address",
+                        TEST_IP_ADDRESS);
         event.setHeaders(headers);
 
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
@@ -173,7 +182,11 @@ class BuildUserIdentityHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
         Map<String, String> headers =
-                Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
+                Map.of(
+                        "Authorization",
+                        accessToken.toAuthorizationHeader(),
+                        "ip-address",
+                        TEST_IP_ADDRESS);
         event.setHeaders(headers);
 
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
@@ -199,7 +212,9 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnErrorResponseWhenTokenIsNull() throws JsonProcessingException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        Map<String, String> headers = Collections.singletonMap("Authorization", null);
+        Map<String, String> headers = new HashMap<>(Collections.emptyMap());
+        headers.put("Authorization", null);
+        headers.put("ip-address", TEST_IP_ADDRESS);
         event.setHeaders(headers);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
@@ -215,7 +230,8 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnErrorResponseWhenTokenIsMissingBearerPrefix() throws JsonProcessingException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        Map<String, String> headers = Collections.singletonMap("Authorization", "11111111");
+        Map<String, String> headers =
+                Map.of("Authorization", "11111111", "ip-address", TEST_IP_ADDRESS);
         event.setHeaders(headers);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
@@ -232,6 +248,8 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnErrorResponseWhenTokenIsMissing() throws JsonProcessingException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        Map<String, String> headers = Map.of("ip-address", TEST_IP_ADDRESS);
+        event.setHeaders(headers);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
         responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
@@ -248,7 +266,11 @@ class BuildUserIdentityHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
         Map<String, String> headers =
-                Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
+                Map.of(
+                        "Authorization",
+                        accessToken.toAuthorizationHeader(),
+                        "ip-address",
+                        TEST_IP_ADDRESS);
         event.setHeaders(headers);
 
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
@@ -273,7 +295,11 @@ class BuildUserIdentityHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
         Map<String, String> headers =
-                Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
+                Map.of(
+                        "Authorization",
+                        accessToken.toAuthorizationHeader(),
+                        "ip-address",
+                        TEST_IP_ADDRESS);
         event.setHeaders(headers);
 
         AccessTokenMetadata revokedAccessTokenMetadata = new AccessTokenMetadata();
@@ -300,7 +326,11 @@ class BuildUserIdentityHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
         Map<String, String> headers =
-                Collections.singletonMap("Authorization", accessToken.toAuthorizationHeader());
+                Map.of(
+                        "Authorization",
+                        accessToken.toAuthorizationHeader(),
+                        "ip-address",
+                        TEST_IP_ADDRESS);
         event.setHeaders(headers);
 
         AccessTokenMetadata expiredAccessTokenMetadata = new AccessTokenMetadata();

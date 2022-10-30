@@ -43,7 +43,8 @@ class AuditExtensionGpg45ProfileMatchedTest {
                         new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2),
                         List.of("txn1", "txn2", "txn3"));
 
-        AuditEventUser user = new AuditEventUser("user-id", "session-id", "journey-id");
+        AuditEventUser user =
+                new AuditEventUser("user-id", "session-id", "journey-id", "ip-address");
 
         AuditEvent auditEvent =
                 new AuditEvent(
@@ -56,7 +57,8 @@ class AuditExtensionGpg45ProfileMatchedTest {
                         + "\"user\":{"
                         + "\"user_id\":\"user-id\","
                         + "\"session_id\":\"session-id\","
-                        + "\"govuk_signin_journey_id\":\"journey-id\""
+                        + "\"govuk_signin_journey_id\":\"journey-id\","
+                        + "\"ip_address\":\"ip-address\""
                         + "},"
                         + "\"extensions\":{"
                         + "\"gpg45Profile\":\"M1A\","

@@ -9,7 +9,7 @@ public class GetCiRequest {
     private final String govukSigninJourneyId;
 
     @SerializedName(value = "ip_address")
-    private final String clientSourceIp;
+    private final String ipAddress;
 
     @SerializedName(value = "user_id")
     private final String userId;

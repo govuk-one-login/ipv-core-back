@@ -52,7 +52,8 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BuildClientOauthResponseHandlerTest {
-    private static final Map<String, String> TEST_EVENT_HEADERS = Map.of("ipv-session-id", "12345");
+    private static final Map<String, String> TEST_EVENT_HEADERS =
+            Map.of("ipv-session-id", "12345", "ip-address", "192.168.1.100");
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Map<String, String> VALID_QUERY_PARAMS =
             Map.of(

@@ -114,6 +114,7 @@ public class BuildCriOauthRequestHandler
         LogHelper.attachComponentIdToLogs();
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
+            String ipAddress = RequestHelper.getIpAddress(input);
             Map<String, String> pathParameters = input.getPathParameters();
 
             var errorResponse = validate(pathParameters);
@@ -154,7 +155,7 @@ public class BuildCriOauthRequestHandler
             persistOauthState(ipvSessionItem, credentialIssuerConfig.getId(), oauthState);
 
             AuditEventUser auditEventUser =
-                    new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId);
+                    new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
             auditService.sendAuditEvent(
                     new AuditEvent(
                             AuditEventTypes.IPV_REDIRECT_TO_CRI, componentId, auditEventUser));
