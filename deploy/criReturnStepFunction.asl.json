@@ -12,6 +12,7 @@
       "Resource": "${RetrieveCriOauthAccessTokenFunctionArn}",
       "Parameters": {
         "ipvSessionId.$": "$.ipvSessionId",
+        "clientSourceIp.$": "$.clientSourceIp",
         "journey.$": "$.lambdaResult.journey"
       },
       "ResultPath": "$.lambdaResult",
@@ -22,6 +23,7 @@
       "Resource": "${RetrieveCriCredentialFunctionArn}",
       "Parameters": {
         "ipvSessionId.$": "$.ipvSessionId",
+        "clientSourceIp.$": "$.clientSourceIp",
         "journey.$": "$.lambdaResult.journey"
       },
       "ResultPath": "$.lambdaResult",
@@ -32,6 +34,7 @@
       "Resource": "${IPVProcessJourneyStepFunctionArn}",
       "Parameters": {
         "ipvSessionId.$": "$.ipvSessionId",
+        "clientSourceIp.$": "$.clientSourceIp",
         "journey.$": "$.lambdaResult.journey"
       },
       "ResultPath": "$.lambdaResult",
