@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.MapMessage;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorScores;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.DcmawCheckMethod;
@@ -27,6 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
@@ -63,9 +65,20 @@ public class Gpg45ProfileEvaluator {
 
         Set<String> ciSet =
                 ciItems.stream().map(ContraIndicatorItem::getCi).collect(Collectors.toSet());
-        boolean foundContraIndicators = !(ciSet.isEmpty() || ONLY_A01_SET.equals(ciSet));
 
-        if (foundContraIndicators) {
+        Map<String, ContraIndicatorScores> contraIndicatorScoresMap =
+                configurationService.getContraIndicatorScoresMap();
+
+        int ciScore = 0;
+        for (String ci : ciSet) {
+            ContraIndicatorScores scoresConfig = contraIndicatorScoresMap.get(ci);
+            ciScore += scoresConfig.getDetectedScore();
+        }
+        LOGGER.info("User's CI score: {}", ciScore);
+
+        int ciScoreThreshold =
+                Integer.parseInt(configurationService.getSsmParameter(CI_SCORING_THRESHOLD));
+        if (ciScore > ciScoreThreshold) {
             Collections.sort(ciItems);
             String lastCiIssuer = ciItems.get(ciItems.size() - 1).getIss();
             String kbvIssuer =
