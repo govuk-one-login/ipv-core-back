@@ -151,8 +151,9 @@ Resources:
           ToPort: 443
         - CidrIp: 0.0.0.0/0
           Description: Allow outbound HTTPS traffic to Internet - Network Firewall will allow only to CRIs
-          IpProtocol: tcp
           FromPort: 443
+          IpProtocol: tcp
+          ToPort: 443
       SecurityGroupIngress:
         - CidrIp:
             Fn::ImportValue: !Sub ${VpcStackName}-VpcCidr
