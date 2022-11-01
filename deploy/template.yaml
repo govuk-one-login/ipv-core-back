@@ -240,14 +240,6 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref IPVCorePrivateAPILogGroup
 
-  IPVCorePrivateAPILogGroupSubscriptionFilterOld:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref IPVCorePrivateAPILogGroup
-
   IPVCoreExternalAPI:
     Type: AWS::Serverless::Api
     DependsOn:
@@ -290,14 +282,6 @@ Resources:
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref IPVCoreExternalAPILogGroup
-
-  IPVCoreExternalAPILogGroupSubscriptionFilterOld:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
       LogGroupName: !Ref IPVCoreExternalAPILogGroup
 
@@ -383,14 +367,6 @@ Resources:
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref IssueClientAccessTokenFunctionLogGroup
-
-  IssueClientAccessTokenFunctionLogGroupSubscriptionFilterOld:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
       LogGroupName: !Ref IssueClientAccessTokenFunctionLogGroup
 
@@ -483,14 +459,6 @@ Resources:
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref BuildClientOauthResponseFunctionLogGroup
-
-  BuildClientOauthResponseFunctionLogGroupSubscriptionFilterOld:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
       LogGroupName: !Ref BuildClientOauthResponseFunctionLogGroup
 
@@ -595,14 +563,6 @@ Resources:
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref InitialiseIpvSessionFunctionLogGroup
-
-  InitialiseIpvSessionFunctionLogGroupSubscriptionFilterOld:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
       LogGroupName: !Ref InitialiseIpvSessionFunctionLogGroup
 
@@ -740,14 +700,6 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref RetrieveCriOauthAccessTokenFunctionLogGroup
 
-  RetrieveCriOauthAccessTokenFunctionLogGroupSubscriptionFilterOld:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref RetrieveCriOauthAccessTokenFunctionLogGroup
-
   RetrieveCriCredentialFunction:
     Type: AWS::Serverless::Function
     DependsOn:
@@ -882,14 +834,6 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref RetrieveCriCredentialFunctionLogGroup
 
-  RetrieveCriCredentialFunctionLogGroupSubscriptionFilterOld:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref RetrieveCriCredentialFunctionLogGroup
-
   BuildCriOauthRequestFunction:
     Type: AWS::Serverless::Function
     DependsOn:
@@ -997,14 +941,6 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref BuildCriOauthRequestFunctionLogGroup
 
-  BuildCriOauthRequestFunctionLogGroupSubscriptionFilterOld:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref BuildCriOauthRequestFunctionLogGroup
-
   BuildUserIdentityFunction:
     Type: AWS::Serverless::Function
     DependsOn:
@@ -1105,14 +1041,6 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref BuildUserIdentityFunctionLogGroup
 
-  BuildUserIdentityFunctionLogGroupSubscriptionFilterOld:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref BuildUserIdentityFunctionLogGroup
-
   GetCredentialIssuerConfig:
     Type: AWS::Serverless::Function
     DependsOn:
@@ -1189,14 +1117,6 @@ Resources:
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref GetCredentialIssuerFunctionLogGroup
-
-  GetCredentialIssuerFunctionLogGroupSubscriptionFilterOld:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
       LogGroupName: !Ref GetCredentialIssuerFunctionLogGroup
 
@@ -1281,14 +1201,6 @@ Resources:
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref BuildDebugCredentialDataFunctionLogGroup
-
-  BuildDebugCredentialDataFunctionLogGroupSubscriptionFilterOld:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
       LogGroupName: !Ref BuildDebugCredentialDataFunctionLogGroup
 
@@ -1386,14 +1298,6 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref CriReturnStepFunctionLogGroup
 
-  CriReturnStepFunctionLogGroupSubscriptionFilterOld:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref CriReturnStepFunctionLogGroup
-
   JourneyEngineStepFunction:
     Type: AWS::Serverless::StateMachine
     Properties:
@@ -1479,14 +1383,6 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref JourneyEngineStepFunctionLogGroup
 
-  JourneyEngineStepFunctionLogGroupSubscriptionFilterOld:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref JourneyEngineStepFunctionLogGroup
-
   IPVProcessJourneyStepFunction:
     Type: AWS::Serverless::Function
     DependsOn:
@@ -1557,14 +1453,6 @@ Resources:
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref IPVProcessJourneyStepFunctionLogGroup
-
-  IPVProcessJourneyStepFunctionLogGroupSubscriptionFilterOld:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
       LogGroupName: !Ref IPVProcessJourneyStepFunctionLogGroup
 
@@ -1691,14 +1579,6 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref EvaluateGpg45ScoresFunctionLogGroup
 
-  EvaluateGpg45ScoresFunctionLogGroupSubscriptionFilterOld:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
-      FilterPattern: ""
-      LogGroupName: !Ref EvaluateGpg45ScoresFunctionLogGroup
-
   SelectCriFunction:
     Type: AWS::Serverless::Function
     DependsOn:
@@ -1781,14 +1661,6 @@ Resources:
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
-      FilterPattern: ""
-      LogGroupName: !Ref SelectCriFunctionLogGroup
-
-  SelectCriFunctionFunctionLogGroupSubscriptionFilterOld:
-    Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
-    Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
       FilterPattern: ""
       LogGroupName: !Ref SelectCriFunctionLogGroup
 
@@ -1883,7 +1755,7 @@ Resources:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
-      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prod"
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref ValidateOAuthCallbackFunctionLogGroup
 
