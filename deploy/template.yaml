@@ -178,9 +178,8 @@ Resources:
         Type: PRIVATE
         VPCEndpointIds: !If
           - IsDevelopment
-          - !ImportValue "network-shared-development-ApiGatewayVpcEndpointId"
-          - Fn::ImportValue:
-              !Sub "${VpcStackName}-ExecuteApiGatewayEndpointId"
+          - - !ImportValue "network-shared-development-ApiGatewayVpcEndpointId"
+          - - Fn::ImportValue: !Sub "${VpcStackName}-ExecuteApiGatewayEndpointId"
       DefinitionBody:
         openapi: "3.0.3" # workaround to get `sam validate` to work
         paths: # workaround to get `sam validate` to work
