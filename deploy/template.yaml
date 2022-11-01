@@ -176,8 +176,11 @@ Resources:
       Name: !Sub IPV Core Private API Gateway ${Environment}
       EndpointConfiguration:
         Type: PRIVATE
-        VPCEndpointIds:
-          - Fn::ImportValue: !Sub "${VpcStackName}-ExecuteApiGatewayEndpointId"
+        VPCEndpointIds: !If
+          - IsDevelopment
+          - !ImportValue "network-shared-development-ApiGatewayVpcEndpointId"
+          - Fn::ImportValue:
+              !Sub "${VpcStackName}-ExecuteApiGatewayEndpointId"
       DefinitionBody:
         openapi: "3.0.3" # workaround to get `sam validate` to work
         paths: # workaround to get `sam validate` to work
