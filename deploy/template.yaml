@@ -1934,6 +1934,7 @@ Resources:
 
   CoreApiExternalGw5xxErrors:
     Type: AWS::CloudWatch::Alarm
+    Condition: IsNotDevelopment
     Properties:
       AlarmName: ExternalApiGateWay5xxAlarm
       ActionsEnabled: true
