@@ -237,7 +237,7 @@ public class ConfigurationService {
                 GetSecretValueRequest.builder()
                         .secretId(
                                 String.format(
-                                        "%s/core/self/ci-scoring-config",
+                                        "/%s/core/self/ci-scoring-config",
                                         getEnvironmentVariable(ENVIRONMENT)))
                         .build();
         try {
