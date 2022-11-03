@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.library.domain.gpg45.domain.DcmawCheckMethod;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
+import uk.gov.di.ipv.core.library.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
@@ -63,17 +64,13 @@ public class Gpg45ProfileEvaluator {
                         sessionDetails.getUserId(), sessionDetails.getGovukSigninJourneyId());
         LOGGER.info("Retrieved {} CI items", ciItems.size());
 
-        Set<String> ciSet =
-                ciItems.stream().map(ContraIndicatorItem::getCi).collect(Collectors.toSet());
+        List<String> ciList =
+                ciItems.stream().map(ContraIndicatorItem::getCi).collect(Collectors.toList());
 
-        Map<String, ContraIndicatorScores> contraIndicatorScoresMap =
+        Map<String, ContraIndicatorScores> ciScoresMap =
                 configurationService.getContraIndicatorScoresMap();
 
-        int ciScore = 0;
-        for (String ci : ciSet) {
-            ContraIndicatorScores scoresConfig = contraIndicatorScoresMap.get(ci);
-            ciScore += scoresConfig.getDetectedScore();
-        }
+        int ciScore = VcHelper.calculateCiScore(ciList, ciScoresMap);
         LOGGER.info("User's CI score: {}", ciScore);
 
         int ciScoreThreshold =

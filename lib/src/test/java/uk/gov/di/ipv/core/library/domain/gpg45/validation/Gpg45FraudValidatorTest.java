@@ -1,10 +1,13 @@
 package uk.gov.di.ipv.core.library.domain.gpg45.validation;
 
 import org.junit.jupiter.api.Test;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorScores;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -18,7 +21,9 @@ class Gpg45FraudValidatorTest {
                         2,
                         Collections.emptyList());
 
-        assertTrue(Gpg45FraudValidator.isSuccessful(credentialEvidenceItem, true));
+        assertTrue(
+                Gpg45FraudValidator.isSuccessful(
+                        credentialEvidenceItem, Collections.emptyMap(), 0));
     }
 
     @Test
@@ -27,7 +32,9 @@ class Gpg45FraudValidatorTest {
                 new CredentialEvidenceItem(
                         CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD, 2, null);
 
-        assertTrue(Gpg45FraudValidator.isSuccessful(credentialEvidenceItem, true));
+        assertTrue(
+                Gpg45FraudValidator.isSuccessful(
+                        credentialEvidenceItem, Collections.emptyMap(), 0));
     }
 
     @Test
@@ -38,35 +45,30 @@ class Gpg45FraudValidatorTest {
                         0,
                         Collections.emptyList());
 
-        assertFalse(Gpg45FraudValidator.isSuccessful(credentialEvidenceItem, true));
+        assertFalse(
+                Gpg45FraudValidator.isSuccessful(
+                        credentialEvidenceItem, Collections.emptyMap(), 0));
     }
 
     @Test
-    void isSuccessfulShouldReturnTrueOnValidCredentialWithA01AndAllowed() {
+    void isSuccessfulShouldReturnTrueIfCredentialContainsCiWithinScoreThreshold() {
         CredentialEvidenceItem credentialEvidenceItem =
                 new CredentialEvidenceItem(
-                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD, 0, List.of("A01"));
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD, 2, List.of("D02"));
+        Map<String, ContraIndicatorScores> scoresMap = new HashMap<>();
+        scoresMap.put("D02", new ContraIndicatorScores("D02", 10, 0, null));
 
-        assertTrue(Gpg45FraudValidator.isSuccessful(credentialEvidenceItem, true));
+        assertTrue(Gpg45FraudValidator.isSuccessful(credentialEvidenceItem, scoresMap, 10));
     }
 
     @Test
-    void isSuccessfulShouldReturnFalseOnValidCredentialWithA01AndNotAllowed() {
+    void isSuccessfulShouldReturnFalseIfCredentialContainsCiExceedingScoreThreshold() {
         CredentialEvidenceItem credentialEvidenceItem =
                 new CredentialEvidenceItem(
-                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD, 0, List.of("A01"));
+                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD, 2, List.of("D02"));
+        Map<String, ContraIndicatorScores> scoresMap = new HashMap<>();
+        scoresMap.put("D02", new ContraIndicatorScores("D02", 20, 0, null));
 
-        assertFalse(Gpg45FraudValidator.isSuccessful(credentialEvidenceItem, false));
-    }
-
-    @Test
-    void isSuccessfulShouldReturnFalseOnValidCredentialWithMultipleCI() {
-        CredentialEvidenceItem credentialEvidenceItem =
-                new CredentialEvidenceItem(
-                        CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
-                        0,
-                        List.of("A01", "D02"));
-
-        assertFalse(Gpg45FraudValidator.isSuccessful(credentialEvidenceItem, false));
+        assertFalse(Gpg45FraudValidator.isSuccessful(credentialEvidenceItem, scoresMap, 10));
     }
 }

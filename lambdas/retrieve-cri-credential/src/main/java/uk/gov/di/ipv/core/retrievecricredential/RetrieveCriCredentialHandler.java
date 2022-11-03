@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorScores;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
@@ -44,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.JOURNEY;
 
@@ -150,7 +152,15 @@ public class RetrieveCriCredentialHandler
                 String addressCriId = configurationService.getSsmParameter(ADDRESS_CRI_ID);
                 CredentialIssuerConfig addressCriConfig =
                         configurationService.getCredentialIssuer(addressCriId);
-                boolean isSuccessful = VcHelper.isSuccessfulVc(vc, addressCriConfig, false);
+
+                Map<String, ContraIndicatorScores> ciScoresMap =
+                        configurationService.getContraIndicatorScoresMap();
+                int ciScoreThreshold =
+                        Integer.parseInt(
+                                configurationService.getSsmParameter(CI_SCORING_THRESHOLD));
+                boolean isSuccessful =
+                        VcHelper.isSuccessfulVc(
+                                vc, addressCriConfig, ciScoresMap, ciScoreThreshold);
 
                 sendIpvVcReceivedAuditEvent(auditEventUser, vc, isSuccessful);
 

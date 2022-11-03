@@ -2,10 +2,14 @@ package uk.gov.di.ipv.core.library.helpers;
 
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.Test;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorScores;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -44,70 +48,99 @@ class VcHelperTest {
 
     @Test
     void shouldReturnTrueOnSuccessfulPassportVc() throws Exception {
-        assertTrue(VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_PASSPORT_VC), addressConfig, false));
+        assertTrue(
+                VcHelper.isSuccessfulVc(
+                        SignedJWT.parse(M1A_PASSPORT_VC),
+                        addressConfig,
+                        Collections.emptyMap(),
+                        0));
     }
 
     @Test
     void shouldReturnFalseOnFailedPassportVc() throws Exception {
         assertFalse(
                 VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_FAILED_PASSPORT_VC), addressConfig, false));
+                        SignedJWT.parse(M1A_FAILED_PASSPORT_VC),
+                        addressConfig,
+                        Collections.emptyMap(),
+                        0));
     }
 
     @Test
-    void shouldReturnFalseOnPassportVcContainingCi() throws Exception {
+    void shouldReturnFalseOnPassportVcContainingCiExceedingThreshold() throws Exception {
+        Map<String, ContraIndicatorScores> scoresMap = new HashMap<>();
+        scoresMap.put("D02", new ContraIndicatorScores("D02", 45, 0, null));
         assertFalse(
                 VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_PASSPORT_VC_WITH_CI), addressConfig, false));
+                        SignedJWT.parse(M1A_PASSPORT_VC_WITH_CI), addressConfig, scoresMap, 40));
     }
 
     @Test
     void shouldReturnTrueOnSuccessfulAddressVc() throws Exception {
-        assertTrue(VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_ADDRESS_VC), addressConfig, false));
+        assertTrue(
+                VcHelper.isSuccessfulVc(
+                        SignedJWT.parse(M1A_ADDRESS_VC), addressConfig, Collections.emptyMap(), 0));
     }
 
     @Test
     void shouldReturnTrueOnSuccessfulFraudVc() throws Exception {
-        assertTrue(VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_FRAUD_VC), addressConfig, false));
+        assertTrue(
+                VcHelper.isSuccessfulVc(
+                        SignedJWT.parse(M1A_FRAUD_VC), addressConfig, Collections.emptyMap(), 0));
     }
 
     @Test
     void shouldReturnFalseOnFailedFraudVc() throws Exception {
         assertFalse(
                 VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_FAILED_FRAUD_VC), addressConfig, false));
+                        SignedJWT.parse(M1A_FAILED_FRAUD_VC),
+                        addressConfig,
+                        Collections.emptyMap(),
+                        0));
     }
 
     @Test
-    void shouldReturnFalseOnFraudVcContainingCi() throws Exception {
-        assertFalse(
+    void shouldReturnTrueOnFraudVcContainingCiWithinScoreThreshold() throws Exception {
+        Map<String, ContraIndicatorScores> scoresMap = new HashMap<>();
+        scoresMap.put("D02", new ContraIndicatorScores("D02", 99, 0, null));
+        assertTrue(
                 VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_FRAUD_VC_WITH_CI_D02), addressConfig, false));
+                        SignedJWT.parse(M1A_FRAUD_VC_WITH_CI_D02), addressConfig, scoresMap, 100));
     }
 
     @Test
-    void shouldReturnTrueOnFraudVcContainingA01CiWhenAllowed() throws Exception {
+    void shouldReturnFalseOnFraudVcContainingCiExceedingScoreThreshold() throws Exception {
+        Map<String, ContraIndicatorScores> scoresMap = new HashMap<>();
+        scoresMap.put("D02", new ContraIndicatorScores("D02", 101, 0, null));
         assertFalse(
                 VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_FRAUD_VC_WITH_CI_D02), addressConfig, true));
+                        SignedJWT.parse(M1A_FRAUD_VC_WITH_CI_D02), addressConfig, scoresMap, 100));
     }
 
     @Test
     void shouldReturnTrueOnSuccessfulKbvVc() throws Exception {
         assertTrue(
                 VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_VERIFICATION_VC), addressConfig, false));
+                        SignedJWT.parse(M1A_VERIFICATION_VC),
+                        addressConfig,
+                        Collections.emptyMap(),
+                        0));
     }
 
     @Test
     void shouldReturnTrueOnSuccessfulDcmawVc() throws Exception {
-        assertTrue(VcHelper.isSuccessfulVc(SignedJWT.parse(M1B_DCMAW_VC), addressConfig, false));
+        assertTrue(
+                VcHelper.isSuccessfulVc(
+                        SignedJWT.parse(M1B_DCMAW_VC), addressConfig, Collections.emptyMap(), 0));
     }
 
     @Test
     void shouldReturnFalseOnVcMissingEvidenceBlock() throws Exception {
         assertFalse(
                 VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1_PASSPORT_VC_MISSING_EVIDENCE), addressConfig, false));
+                        SignedJWT.parse(M1_PASSPORT_VC_MISSING_EVIDENCE),
+                        addressConfig,
+                        Collections.emptyMap(),
+                        0));
     }
 }

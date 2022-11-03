@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionGpg45ProfileMatched;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
@@ -132,6 +133,8 @@ class EvaluateGpg45ScoreHandlerTest {
     @Test
     void shouldReturnJourneySessionEndIfScoresSatisfyM1AGpg45Profile() throws Exception {
         when(configurationService.getCredentialIssuer(any())).thenReturn(addressConfig);
+        when(configurationService.getSsmParameter(ConfigurationVariable.CI_SCORING_THRESHOLD))
+                .thenReturn("5");
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
@@ -300,6 +303,8 @@ class EvaluateGpg45ScoreHandlerTest {
                         SignedJWT.parse(M1A_FRAUD_VC),
                         SignedJWT.parse(M1A_VERIFICATION_VC));
         when(configurationService.getCredentialIssuer(any())).thenReturn(addressConfig);
+        when(configurationService.getSsmParameter(ConfigurationVariable.CI_SCORING_THRESHOLD))
+                .thenReturn("5");
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedM1ACreds);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))

@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorScores;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
@@ -44,9 +45,11 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
@@ -210,7 +213,13 @@ public class EvaluateGpg45ScoresHandler
 
             CredentialIssuerConfig addressCriConfig =
                     configurationService.getCredentialIssuer(addressCriId);
-            boolean isSuccessful = VcHelper.isSuccessfulVc(signedJWT, addressCriConfig, true);
+            Map<String, ContraIndicatorScores> ciScoresMap =
+                    configurationService.getContraIndicatorScoresMap();
+            int ciScoreThreshold =
+                    Integer.parseInt(configurationService.getSsmParameter(CI_SCORING_THRESHOLD));
+            boolean isSuccessful =
+                    VcHelper.isSuccessfulVc(
+                            signedJWT, addressCriConfig, ciScoresMap, ciScoreThreshold);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
         }
