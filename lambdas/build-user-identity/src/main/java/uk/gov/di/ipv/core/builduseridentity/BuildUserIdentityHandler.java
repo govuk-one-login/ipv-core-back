@@ -80,7 +80,6 @@ public class BuildUserIdentityHandler
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
         try {
-            String ipAddress = RequestHelper.getIpAddress(input);
             AccessToken accessToken =
                     AccessToken.parse(
                             RequestHelper.getHeaderByKey(
@@ -120,7 +119,7 @@ public class BuildUserIdentityHandler
                             userId,
                             ipvSessionId,
                             clientSessionDetails.getGovukSigninJourneyId(),
-                            ipAddress);
+                            null);
 
             String sub = userId;
             UserIdentity userIdentity =
