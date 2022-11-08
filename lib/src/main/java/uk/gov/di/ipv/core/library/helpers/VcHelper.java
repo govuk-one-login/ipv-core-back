@@ -27,8 +27,22 @@ public class VcHelper {
 
     private VcHelper() {}
 
-    public static boolean isSuccessfulVc(
-            SignedJWT vc, CredentialIssuerConfig addressCriConfig, boolean isFraudAllowedA01)
+    public static boolean isSuccessfulVc(SignedJWT vc, CredentialIssuerConfig addressCriConfig)
+            throws ParseException {
+        boolean shouldCheckContraIndicators = true;
+        return isSuccessfulVc(vc, addressCriConfig, shouldCheckContraIndicators);
+    }
+
+    public static boolean isSuccessfulVcIgnoringCi(
+            SignedJWT vc, CredentialIssuerConfig addressCriConfig) throws ParseException {
+        boolean shouldCheckContraIndicators = false;
+        return isSuccessfulVc(vc, addressCriConfig, shouldCheckContraIndicators);
+    }
+
+    private static boolean isSuccessfulVc(
+            SignedJWT vc,
+            CredentialIssuerConfig addressCriConfig,
+            boolean shouldCheckContraIndicators)
             throws ParseException {
         JSONObject vcClaim = (JSONObject) vc.getJWTClaimsSet().getClaim(VC_CLAIM);
         JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
@@ -46,18 +60,22 @@ public class VcHelper {
                         evidenceArray.toJSONString(),
                         new TypeToken<List<CredentialEvidenceItem>>() {}.getType());
 
-        return isValidEvidence(credentialEvidenceList, isFraudAllowedA01);
+        return isValidEvidence(credentialEvidenceList, shouldCheckContraIndicators);
     }
 
     private static boolean isValidEvidence(
-            List<CredentialEvidenceItem> credentialEvidenceList, boolean isFraudAllowedA01) {
+            List<CredentialEvidenceItem> credentialEvidenceList,
+            boolean shouldCheckContraIndicators) {
         try {
             for (CredentialEvidenceItem item : credentialEvidenceList) {
+                if (shouldCheckContraIndicators && item.hasContraIndicatorsExcludingFraudA01()) {
+                    return false;
+                }
                 if (item.getType().equals(CredentialEvidenceItem.EvidenceType.EVIDENCE)) {
                     return Gpg45EvidenceValidator.isSuccessful(item);
                 } else if (item.getType()
                         .equals(CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD)) {
-                    return Gpg45FraudValidator.isSuccessful(item, isFraudAllowedA01);
+                    return Gpg45FraudValidator.isSuccessful(item);
                 } else if (item.getType()
                         .equals(CredentialEvidenceItem.EvidenceType.VERIFICATION)) {
                     return Gpg45VerificationValidator.isSuccessful(item);

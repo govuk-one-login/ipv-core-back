@@ -77,7 +77,7 @@ public class CredentialEvidenceItem {
         return new Gpg45Scores.Evidence(getStrengthScore(), getValidityScore());
     }
 
-    public boolean hasContraIndicators() {
+    public boolean hasContraIndicatorsExcludingFraudA01() {
         if (isIdentityFraud()) {
             return ci != null
                     && !ci.isEmpty()

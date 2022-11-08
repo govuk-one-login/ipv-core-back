@@ -19,7 +19,7 @@ import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterExce
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorScores;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
@@ -443,7 +443,7 @@ class ConfigurationServiceTest {
         when(secretsManagerClient.getSecretValue((GetSecretValueRequest) any()))
                 .thenReturn(response);
 
-        Map<String, ContraIndicatorScores> scoresMap =
+        Map<String, ContraIndicatorScore> scoresMap =
                 configurationService.getContraIndicatorScoresMap();
 
         assertEquals(2, scoresMap.size());

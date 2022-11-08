@@ -20,7 +20,7 @@ import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorScores;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 
@@ -232,7 +232,7 @@ public class ConfigurationService {
         }
     }
 
-    public Map<String, ContraIndicatorScores> getContraIndicatorScoresMap() {
+    public Map<String, ContraIndicatorScore> getContraIndicatorScoresMap() {
         GetSecretValueRequest valueRequest =
                 GetSecretValueRequest.builder()
                         .secretId(
@@ -242,10 +242,10 @@ public class ConfigurationService {
                         .build();
         try {
             String secretValue = getSecretsManagerValue(valueRequest);
-            List<ContraIndicatorScores> scoresList =
+            List<ContraIndicatorScore> scoresList =
                     objectMapper.readValue(secretValue, new TypeReference<>() {});
-            Map<String, ContraIndicatorScores> scoresMap = new HashMap<>();
-            for (ContraIndicatorScores scores : scoresList) {
+            Map<String, ContraIndicatorScore> scoresMap = new HashMap<>();
+            for (ContraIndicatorScore scores : scoresList) {
                 String ci = scores.getCi();
                 scoresMap.put(ci, scores);
             }

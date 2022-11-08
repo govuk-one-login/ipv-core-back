@@ -9,7 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.MapMessage;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorScores;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.DcmawCheckMethod;
@@ -34,8 +34,6 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
 public class Gpg45ProfileEvaluator {
-
-    public static final Set<String> ONLY_A01_SET = Set.of("A01");
     public static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
     public static final JourneyResponse JOURNEY_RESPONSE_PYI_NO_MATCH =
             new JourneyResponse(JOURNEY_PYI_NO_MATCH);
@@ -61,20 +59,26 @@ public class Gpg45ProfileEvaluator {
         ciItems =
                 ciStorageService.getCIs(
                         sessionDetails.getUserId(), sessionDetails.getGovukSigninJourneyId());
-        LOGGER.info("Retrieved {} CI items", ciItems.size());
+        LOGGER.info(
+                new MapMessage()
+                        .with("message", "Retrieved user's CI items")
+                        .with("numberOfItems", ciItems.size()));
 
         Set<String> ciSet =
                 ciItems.stream().map(ContraIndicatorItem::getCi).collect(Collectors.toSet());
 
-        Map<String, ContraIndicatorScores> contraIndicatorScoresMap =
+        Map<String, ContraIndicatorScore> contraIndicatorScoresMap =
                 configurationService.getContraIndicatorScoresMap();
 
         int ciScore = 0;
         for (String ci : ciSet) {
-            ContraIndicatorScores scoresConfig = contraIndicatorScoresMap.get(ci);
+            ContraIndicatorScore scoresConfig = contraIndicatorScoresMap.get(ci);
             ciScore += scoresConfig.getDetectedScore();
         }
-        LOGGER.info("User's CI score: {}", ciScore);
+        LOGGER.info(
+                new MapMessage()
+                        .with("message", "Calculated user's CI score")
+                        .with("score", ciScore));
 
         int ciScoreThreshold =
                 Integer.parseInt(configurationService.getSsmParameter(CI_SCORING_THRESHOLD));

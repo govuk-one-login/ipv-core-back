@@ -150,7 +150,7 @@ public class RetrieveCriCredentialHandler
                 String addressCriId = configurationService.getSsmParameter(ADDRESS_CRI_ID);
                 CredentialIssuerConfig addressCriConfig =
                         configurationService.getCredentialIssuer(addressCriId);
-                boolean isSuccessful = VcHelper.isSuccessfulVc(vc, addressCriConfig, false);
+                boolean isSuccessful = VcHelper.isSuccessfulVc(vc, addressCriConfig);
 
                 sendIpvVcReceivedAuditEvent(auditEventUser, vc, isSuccessful);
 
