@@ -1,11 +1,7 @@
 package uk.gov.di.ipv.core.library.domain.gpg45.validation;
 
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorScores;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
-import uk.gov.di.ipv.core.library.helpers.VcHelper;
-
-import java.util.Map;
 
 public class Gpg45FraudValidator {
     public static final String A01 = "A01";
@@ -15,16 +11,11 @@ public class Gpg45FraudValidator {
         throw new IllegalStateException("Utility class");
     }
 
-    public static boolean isSuccessful(
-            CredentialEvidenceItem item,
-            Map<String, ContraIndicatorScores> ciScoresMap,
-            int ciScoreThreshold) {
-        if (item.getIdentityFraudScore() != 0) {
-            if (item.getCi() == null || item.getCi().isEmpty()) {
-                return true;
-            } else {
-                return VcHelper.calculateCiScore(item.getCi(), ciScoresMap) <= ciScoreThreshold;
-            }
+    public static boolean isSuccessful(CredentialEvidenceItem item, boolean isFraudAllowedA01) {
+        if (item.getCi() == null || item.getCi().isEmpty()) {
+            return item.getIdentityFraudScore() != 0;
+        } else if (item.getCi().size() == 1) {
+            return isFraudAllowedA01 && item.getCi().get(0).equals(A01);
         }
         return false;
     }

@@ -17,7 +17,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionsVcEvidence;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
@@ -140,11 +139,6 @@ class RetrieveCriCredentialHandlerTest {
 
     @Test
     void shouldReturnJourneyResponseOnSuccessfulRequest() throws Exception {
-        when(configurationService.getSsmParameter(ADDRESS_CRI_ID))
-                .thenReturn(ADDRESS_CRI_JOURNEY_ID);
-        when(configurationService.getSsmParameter(ConfigurationVariable.CI_SCORING_THRESHOLD))
-                .thenReturn("5");
-
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(ipvSessionItem.getClientSessionDetails()).thenReturn(testClientSessionDetailsDto);
         when(ipvSessionItem.getCredentialIssuerSessionDetails())
@@ -200,11 +194,6 @@ class RetrieveCriCredentialHandlerTest {
     @Test
     void shouldReturnErrorJourneyResponseIfSqsExceptionIsThrown() throws Exception {
         mockServiceCallsAndSessionItem();
-        when(configurationService.getSsmParameter(ADDRESS_CRI_ID))
-                .thenReturn(ADDRESS_CRI_JOURNEY_ID);
-        when(configurationService.getSsmParameter(ConfigurationVariable.CI_SCORING_THRESHOLD))
-                .thenReturn("5");
-
         when(credentialIssuerService.getVerifiableCredential(
                         testBearerAccessToken, testPassportIssuer, testApiKey))
                 .thenReturn(List.of(SignedJWT.parse(SIGNED_VC_1)));
@@ -242,10 +231,6 @@ class RetrieveCriCredentialHandlerTest {
     void shouldSendIpvVcReceivedAuditEvent() throws Exception {
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(ipvSessionItem.getClientSessionDetails()).thenReturn(testClientSessionDetailsDto);
-        when(configurationService.getSsmParameter(ADDRESS_CRI_ID))
-                .thenReturn(ADDRESS_CRI_JOURNEY_ID);
-        when(configurationService.getSsmParameter(ConfigurationVariable.CI_SCORING_THRESHOLD))
-                .thenReturn("5");
         when(credentialIssuerService.getVerifiableCredential(
                         testBearerAccessToken, testPassportIssuer, testApiKey))
                 .thenReturn(List.of(SignedJWT.parse(SIGNED_CONTRA_INDICATORS)));
@@ -280,8 +265,6 @@ class RetrieveCriCredentialHandlerTest {
                 .thenReturn(List.of(SignedJWT.parse(SIGNED_ADDRESS_VC)));
         when(configurationService.getSsmParameter(ADDRESS_CRI_ID))
                 .thenReturn(ADDRESS_CRI_JOURNEY_ID);
-        when(configurationService.getSsmParameter(ConfigurationVariable.CI_SCORING_THRESHOLD))
-                .thenReturn("5");
         when(configurationService.getCredentialIssuer(ADDRESS_CRI_JOURNEY_ID))
                 .thenReturn(addressConfig);
         mockServiceCallsAndSessionItem();
@@ -321,8 +304,6 @@ class RetrieveCriCredentialHandlerTest {
         when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
                 .thenReturn(testComponentId);
         when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
-        when(configurationService.getSsmParameter(ConfigurationVariable.CI_SCORING_THRESHOLD))
-                .thenReturn("5");
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setClientSessionDetails(testClientSessionDetailsDto);
