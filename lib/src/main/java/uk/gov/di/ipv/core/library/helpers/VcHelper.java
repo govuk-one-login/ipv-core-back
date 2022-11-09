@@ -68,7 +68,7 @@ public class VcHelper {
             boolean shouldCheckContraIndicators) {
         try {
             for (CredentialEvidenceItem item : credentialEvidenceList) {
-                if (shouldCheckContraIndicators && item.hasContraIndicatorsExcludingFraudA01()) {
+                if (shouldCheckContraIndicators && item.hasContraIndicators()) {
                     return false;
                 }
                 if (item.getType().equals(CredentialEvidenceItem.EvidenceType.EVIDENCE)) {

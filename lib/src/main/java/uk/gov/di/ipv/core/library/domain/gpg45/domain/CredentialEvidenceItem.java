@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.library.domain.gpg45.domain;
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45FraudValidator;
 
 import java.util.Comparator;
 import java.util.List;
@@ -77,12 +76,7 @@ public class CredentialEvidenceItem {
         return new Gpg45Scores.Evidence(getStrengthScore(), getValidityScore());
     }
 
-    public boolean hasContraIndicatorsExcludingFraudA01() {
-        if (isIdentityFraud()) {
-            return ci != null
-                    && !ci.isEmpty()
-                    && !(ci.size() == 1 && ci.get(0).equals(Gpg45FraudValidator.A01));
-        }
+    public boolean hasContraIndicators() {
         return ci != null && !ci.isEmpty();
     }
 
