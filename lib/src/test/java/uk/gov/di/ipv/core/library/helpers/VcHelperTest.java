@@ -44,70 +44,69 @@ class VcHelperTest {
 
     @Test
     void shouldReturnTrueOnSuccessfulPassportVc() throws Exception {
-        assertTrue(VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_PASSPORT_VC), addressConfig, false));
+        assertTrue(VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_PASSPORT_VC), addressConfig));
     }
 
     @Test
     void shouldReturnFalseOnFailedPassportVc() throws Exception {
         assertFalse(
-                VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_FAILED_PASSPORT_VC), addressConfig, false));
+                VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_FAILED_PASSPORT_VC), addressConfig));
     }
 
     @Test
     void shouldReturnFalseOnPassportVcContainingCi() throws Exception {
         assertFalse(
-                VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_PASSPORT_VC_WITH_CI), addressConfig, false));
+                VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_PASSPORT_VC_WITH_CI), addressConfig));
     }
 
     @Test
     void shouldReturnTrueOnSuccessfulAddressVc() throws Exception {
-        assertTrue(VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_ADDRESS_VC), addressConfig, false));
+        assertTrue(VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_ADDRESS_VC), addressConfig));
     }
 
     @Test
     void shouldReturnTrueOnSuccessfulFraudVc() throws Exception {
-        assertTrue(VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_FRAUD_VC), addressConfig, false));
+        assertTrue(VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_FRAUD_VC), addressConfig));
     }
 
     @Test
     void shouldReturnFalseOnFailedFraudVc() throws Exception {
-        assertFalse(
-                VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_FAILED_FRAUD_VC), addressConfig, false));
+        assertFalse(VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_FAILED_FRAUD_VC), addressConfig));
     }
 
     @Test
     void shouldReturnFalseOnFraudVcContainingCi() throws Exception {
         assertFalse(
-                VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_FRAUD_VC_WITH_CI_D02), addressConfig, false));
+                VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_FRAUD_VC_WITH_CI_D02), addressConfig));
     }
 
     @Test
-    void shouldReturnTrueOnFraudVcContainingA01CiWhenAllowed() throws Exception {
+    void shouldReturnTrueOnFraudVcContainingA01Ci() throws Exception {
         assertFalse(
-                VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_FRAUD_VC_WITH_CI_D02), addressConfig, true));
+                VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_FRAUD_VC_WITH_CI_D02), addressConfig));
     }
 
     @Test
     void shouldReturnTrueOnSuccessfulKbvVc() throws Exception {
-        assertTrue(
-                VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1A_VERIFICATION_VC), addressConfig, false));
+        assertTrue(VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_VERIFICATION_VC), addressConfig));
     }
 
     @Test
     void shouldReturnTrueOnSuccessfulDcmawVc() throws Exception {
-        assertTrue(VcHelper.isSuccessfulVc(SignedJWT.parse(M1B_DCMAW_VC), addressConfig, false));
+        assertTrue(VcHelper.isSuccessfulVc(SignedJWT.parse(M1B_DCMAW_VC), addressConfig));
     }
 
     @Test
     void shouldReturnFalseOnVcMissingEvidenceBlock() throws Exception {
         assertFalse(
                 VcHelper.isSuccessfulVc(
-                        SignedJWT.parse(M1_PASSPORT_VC_MISSING_EVIDENCE), addressConfig, false));
+                        SignedJWT.parse(M1_PASSPORT_VC_MISSING_EVIDENCE), addressConfig));
+    }
+
+    @Test
+    void shouldReturnTrueOnPassportVcContainingCiWhenIgnoringCi() throws Exception {
+        assertTrue(
+                VcHelper.isSuccessfulVcIgnoringCi(
+                        SignedJWT.parse(M1A_PASSPORT_VC_WITH_CI), addressConfig));
     }
 }

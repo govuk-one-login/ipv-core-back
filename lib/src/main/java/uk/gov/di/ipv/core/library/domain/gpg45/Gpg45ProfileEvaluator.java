@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.MapMessage;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.DcmawCheckMethod;
@@ -27,13 +28,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
 public class Gpg45ProfileEvaluator {
-
-    public static final Set<String> ONLY_A01_SET = Set.of("A01");
     public static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
     public static final JourneyResponse JOURNEY_RESPONSE_PYI_NO_MATCH =
             new JourneyResponse(JOURNEY_PYI_NO_MATCH);
@@ -43,6 +43,7 @@ public class Gpg45ProfileEvaluator {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson gson = new Gson();
     private static final int NO_SCORE = 0;
+    private static final String LOG_DESCRIPTION_FIELD = "description";
     private final CiStorageService ciStorageService;
     private final ConfigurationService configurationService;
 
@@ -59,13 +60,30 @@ public class Gpg45ProfileEvaluator {
         ciItems =
                 ciStorageService.getCIs(
                         sessionDetails.getUserId(), sessionDetails.getGovukSigninJourneyId());
-        LOGGER.info("Retrieved {} CI items", ciItems.size());
+        LOGGER.info(
+                new MapMessage()
+                        .with(LOG_DESCRIPTION_FIELD, "Retrieved user's CI items")
+                        .with("numberOfItems", ciItems.size()));
 
         Set<String> ciSet =
                 ciItems.stream().map(ContraIndicatorItem::getCi).collect(Collectors.toSet());
-        boolean foundContraIndicators = !(ciSet.isEmpty() || ONLY_A01_SET.equals(ciSet));
 
-        if (foundContraIndicators) {
+        Map<String, ContraIndicatorScore> contraIndicatorScoresMap =
+                configurationService.getContraIndicatorScoresMap();
+
+        int ciScore = 0;
+        for (String ci : ciSet) {
+            ContraIndicatorScore scoresConfig = contraIndicatorScoresMap.get(ci);
+            ciScore += scoresConfig.getDetectedScore();
+        }
+        LOGGER.info(
+                new MapMessage()
+                        .with(LOG_DESCRIPTION_FIELD, "Calculated user's CI score")
+                        .with("score", ciScore));
+
+        int ciScoreThreshold =
+                Integer.parseInt(configurationService.getSsmParameter(CI_SCORING_THRESHOLD));
+        if (ciScore > ciScoreThreshold) {
             Collections.sort(ciItems);
             String lastCiIssuer = ciItems.get(ciItems.size() - 1).getIss();
             String kbvIssuer =
@@ -91,7 +109,9 @@ public class Gpg45ProfileEvaluator {
                             if (profileMet) {
                                 var message =
                                         new MapMessage()
-                                                .with("message", "GPG45 profile has been met")
+                                                .with(
+                                                        LOG_DESCRIPTION_FIELD,
+                                                        "GPG45 profile has been met")
                                                 .with("gpg45Profile", profile.getLabel());
                                 LOGGER.info(message);
                             }

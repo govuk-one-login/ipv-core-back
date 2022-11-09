@@ -210,7 +210,7 @@ public class EvaluateGpg45ScoresHandler
 
             CredentialIssuerConfig addressCriConfig =
                     configurationService.getCredentialIssuer(addressCriId);
-            boolean isSuccessful = VcHelper.isSuccessfulVc(signedJWT, addressCriConfig, true);
+            boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, addressCriConfig);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
         }

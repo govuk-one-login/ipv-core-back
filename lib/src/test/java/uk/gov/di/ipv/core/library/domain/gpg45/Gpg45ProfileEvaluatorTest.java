@@ -7,13 +7,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -21,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
 import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator.JOURNEY_RESPONSE_PYI_KBV_FAIL;
 import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator.JOURNEY_RESPONSE_PYI_NO_MATCH;
@@ -69,21 +73,28 @@ class Gpg45ProfileEvaluatorTest {
         when(mockClientSessionDetails.getUserId()).thenReturn(TEST_USER_ID);
         when(mockClientSessionDetails.getGovukSigninJourneyId()).thenReturn(TEST_JOURNEY_ID);
         when(mockCiStorageService.getCIs(TEST_USER_ID, TEST_JOURNEY_ID)).thenReturn(List.of());
+        when(mockConfigurationService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
 
         assertTrue(evaluator.getJourneyResponseForStoredCis(mockClientSessionDetails).isEmpty());
     }
 
     @Test
-    void getJourneyResponseForStoredCisShouldReturnEmptyOptionalIfOnlyA01() throws Exception {
+    void getJourneyResponseForStoredCisShouldReturnEmptyOptionalIfCiScoreLessThanThreshold()
+            throws Exception {
         ContraIndicatorItem contraIndicatorItem =
                 new ContraIndicatorItem(
                         TEST_USER_ID,
-                        "A01#hash",
+                        "Y03#hash",
                         "issuer",
                         "2022-09-21T07:57:14.332Z",
-                        "A01",
+                        "Y03",
                         "123456789",
                         null);
+
+        Map<String, ContraIndicatorScore> ciScoresMap = new HashMap<>();
+        ciScoresMap.put("Y03", new ContraIndicatorScore("Y03", 2, -2, null));
+        when(mockConfigurationService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
+        when(mockConfigurationService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
         when(mockClientSessionDetails.getUserId()).thenReturn(TEST_USER_ID);
         when(mockClientSessionDetails.getGovukSigninJourneyId()).thenReturn(TEST_JOURNEY_ID);
         when(mockCiStorageService.getCIs(TEST_USER_ID, TEST_JOURNEY_ID))
@@ -93,12 +104,13 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void getJourneyResponseForStoredCisShouldReturnKbvFailIfLastStoredCiWasIssuedByKbv()
-            throws Exception {
+    void
+            getJourneyResponseForStoredCisShouldReturnKbvFailIfCiScoreGreaterThanThresholdAndLastStoredCiWasIssuedByKbv()
+                    throws Exception {
         ContraIndicatorItem otherCiItem =
                 new ContraIndicatorItem(
                         TEST_USER_ID,
-                        "A01#hash",
+                        "X98#hash",
                         "otherIssuer",
                         "2022-09-21T08:00:00.000Z",
                         "X98",
@@ -107,12 +119,18 @@ class Gpg45ProfileEvaluatorTest {
         ContraIndicatorItem kbvCiItem =
                 new ContraIndicatorItem(
                         TEST_USER_ID,
-                        "A01#hash",
+                        "X99#hash",
                         "kbvIssuer",
                         "2022-09-21T08:01:00.000Z",
                         "X99",
                         "123456789",
                         null);
+
+        Map<String, ContraIndicatorScore> ciScoresMap = new HashMap<>();
+        ciScoresMap.put("X98", new ContraIndicatorScore("X98", 1, -1, null));
+        ciScoresMap.put("X99", new ContraIndicatorScore("X99", 3, -2, null));
+        when(mockConfigurationService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
+        when(mockConfigurationService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
 
         CredentialIssuerConfig kbvConfig = mock(CredentialIssuerConfig.class);
         when(mockConfigurationService.getSsmParameter(KBV_CRI_ID)).thenReturn("kbv");
@@ -129,12 +147,13 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void getJourneyResponseForStoredCisShouldReturnNoMatchIfLastStoredCiWasIssuedByKbv()
-            throws Exception {
+    void
+            getJourneyResponseForStoredCisShouldReturnNoMatchIfCiScoreGreaterThanThresholdAndLastStoredCiWasNotIssuedByKbv()
+                    throws Exception {
         ContraIndicatorItem otherCiItem =
                 new ContraIndicatorItem(
                         TEST_USER_ID,
-                        "A01#hash",
+                        "X98#hash",
                         "otherIssuer",
                         "2022-09-21T08:01:00.000Z",
                         "X98",
@@ -143,12 +162,18 @@ class Gpg45ProfileEvaluatorTest {
         ContraIndicatorItem kbvCiItem =
                 new ContraIndicatorItem(
                         TEST_USER_ID,
-                        "A01#hash",
+                        "X99#hash",
                         "kbvIssuer",
                         "2022-09-21T08:00:00.000Z",
                         "X99",
                         "123456789",
                         null);
+
+        Map<String, ContraIndicatorScore> ciScoresMap = new HashMap<>();
+        ciScoresMap.put("X98", new ContraIndicatorScore("X98", 1, -1, null));
+        ciScoresMap.put("X99", new ContraIndicatorScore("X99", 3, -2, null));
+        when(mockConfigurationService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
+        when(mockConfigurationService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
 
         CredentialIssuerConfig kbvConfig = mock(CredentialIssuerConfig.class);
         when(mockConfigurationService.getSsmParameter(KBV_CRI_ID)).thenReturn("kbv");

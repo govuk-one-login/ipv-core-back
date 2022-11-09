@@ -20,11 +20,13 @@ import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -227,6 +229,30 @@ public class ConfigurationService {
                     "Failed to parse the api key secret from secrets manager for client: {}",
                     criId);
             return null;
+        }
+    }
+
+    public Map<String, ContraIndicatorScore> getContraIndicatorScoresMap() {
+        GetSecretValueRequest valueRequest =
+                GetSecretValueRequest.builder()
+                        .secretId(
+                                String.format(
+                                        ConfigurationVariable.CI_SCORING_CONFIG.getValue(),
+                                        getEnvironmentVariable(ENVIRONMENT)))
+                        .build();
+        try {
+            String secretValue = getSecretsManagerValue(valueRequest);
+            List<ContraIndicatorScore> scoresList =
+                    objectMapper.readValue(secretValue, new TypeReference<>() {});
+            Map<String, ContraIndicatorScore> scoresMap = new HashMap<>();
+            for (ContraIndicatorScore scores : scoresList) {
+                String ci = scores.getCi();
+                scoresMap.put(ci, scores);
+            }
+            return scoresMap;
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Failed to parse contra-indicator scoring config");
+            return Collections.emptyMap();
         }
     }
 

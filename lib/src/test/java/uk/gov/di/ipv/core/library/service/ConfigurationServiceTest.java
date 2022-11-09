@@ -19,6 +19,7 @@ import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterExce
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
@@ -431,5 +432,22 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         when(ssmProvider.get("/test/core/self/backendSessionTtl")).thenReturn("7200");
         assertEquals("7200", configurationService.getSsmParameter(BACKEND_SESSION_TTL));
+    }
+
+    @Test
+    void shouldGetContraIndicatorScoresMap() {
+        String scoresJsonString =
+                "[{ \"ci\": \"X01\", \"detectedScore\": 3, \"checkedScore\": -3, \"fidCode\": \"YZ01\" }, { \"ci\": \"Z03\", \"detectedScore\": 5, \"checkedScore\": -3 }]";
+        GetSecretValueResponse response =
+                GetSecretValueResponse.builder().secretString(scoresJsonString).build();
+        when(secretsManagerClient.getSecretValue((GetSecretValueRequest) any()))
+                .thenReturn(response);
+
+        Map<String, ContraIndicatorScore> scoresMap =
+                configurationService.getContraIndicatorScoresMap();
+
+        assertEquals(2, scoresMap.size());
+        assertTrue(scoresMap.containsKey("X01"));
+        assertTrue(scoresMap.containsKey("Z03"));
     }
 }
