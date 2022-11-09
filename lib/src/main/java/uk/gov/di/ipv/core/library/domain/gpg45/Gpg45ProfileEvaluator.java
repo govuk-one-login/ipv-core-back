@@ -43,6 +43,7 @@ public class Gpg45ProfileEvaluator {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson gson = new Gson();
     private static final int NO_SCORE = 0;
+    private static final String LOG_DESCRIPTION_FIELD = "description";
     private final CiStorageService ciStorageService;
     private final ConfigurationService configurationService;
 
@@ -61,7 +62,7 @@ public class Gpg45ProfileEvaluator {
                         sessionDetails.getUserId(), sessionDetails.getGovukSigninJourneyId());
         LOGGER.info(
                 new MapMessage()
-                        .with("message", "Retrieved user's CI items")
+                        .with(LOG_DESCRIPTION_FIELD, "Retrieved user's CI items")
                         .with("numberOfItems", ciItems.size()));
 
         Set<String> ciSet =
@@ -77,7 +78,7 @@ public class Gpg45ProfileEvaluator {
         }
         LOGGER.info(
                 new MapMessage()
-                        .with("message", "Calculated user's CI score")
+                        .with(LOG_DESCRIPTION_FIELD, "Calculated user's CI score")
                         .with("score", ciScore));
 
         int ciScoreThreshold =
@@ -108,7 +109,9 @@ public class Gpg45ProfileEvaluator {
                             if (profileMet) {
                                 var message =
                                         new MapMessage()
-                                                .with("message", "GPG45 profile has been met")
+                                                .with(
+                                                        LOG_DESCRIPTION_FIELD,
+                                                        "GPG45 profile has been met")
                                                 .with("gpg45Profile", profile.getLabel());
                                 LOGGER.info(message);
                             }
