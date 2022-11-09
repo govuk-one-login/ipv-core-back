@@ -20,7 +20,7 @@ public enum ConfigurationVariable {
     DCMAW_ALLOWED_USER_IDS("/%s/core/self/journey/dcmawAllowedUserIds"),
     AUTH_CODE_EXPIRY_SECONDS("/%s/core/self/authCodeExpirySeconds"),
     PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY("/%s/core/clients/%s/publicKeyMaterialForCoreToVerify"),
-    CRI_REDIRECT_URL("/%s/core/credentialIssuers/%s/ipvCoreRedirectUrl"),
+    CI_SCORING_CONFIG("/%s/core/self/ci-scoring-config"),
     CI_SCORING_THRESHOLD("/%s/core/self/ciScoringThreshold");
 
     private final String value;
