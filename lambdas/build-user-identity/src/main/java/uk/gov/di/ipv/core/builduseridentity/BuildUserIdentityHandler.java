@@ -116,7 +116,10 @@ public class BuildUserIdentityHandler
             String userId = clientSessionDetails.getUserId();
             AuditEventUser auditEventUser =
                     new AuditEventUser(
-                            userId, ipvSessionId, clientSessionDetails.getGovukSigninJourneyId());
+                            userId,
+                            ipvSessionId,
+                            clientSessionDetails.getGovukSigninJourneyId(),
+                            null);
 
             String sub = userId;
             UserIdentity userIdentity =

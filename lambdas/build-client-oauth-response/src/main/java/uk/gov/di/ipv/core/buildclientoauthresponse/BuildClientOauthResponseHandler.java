@@ -84,6 +84,7 @@ public class BuildClientOauthResponseHandler
 
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
+            String ipAddress = RequestHelper.getIpAddress(input);
             IpvSessionItem ipvSessionItem = sessionService.getIpvSession(ipvSessionId);
             String userId = sessionService.getUserId(ipvSessionId);
             ClientSessionDetailsDto clientSessionDetailsDto =
@@ -97,7 +98,8 @@ public class BuildClientOauthResponseHandler
                     new AuditEventUser(
                             userId,
                             ipvSessionId,
-                            clientSessionDetailsDto.getGovukSigninJourneyId());
+                            clientSessionDetailsDto.getGovukSigninJourneyId(),
+                            ipAddress);
 
             ClientResponse clientResponse;
 

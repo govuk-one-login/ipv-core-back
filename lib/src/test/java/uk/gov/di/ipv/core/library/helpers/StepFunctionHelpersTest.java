@@ -53,6 +53,13 @@ class StepFunctionHelpersTest {
     }
 
     @Test
+    void getIpAddressShouldReturnIpAddress() throws Exception {
+        Map<String, String> input = Map.of("ipAddress", "something");
+
+        assertEquals("something", StepFunctionHelpers.getIpAddress(input));
+    }
+
+    @Test
     void generateErrorOutputMapShouldGenerateAnErrorOutputMap() {
         Map<String, Object> expected =
                 Map.of(

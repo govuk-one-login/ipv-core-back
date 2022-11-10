@@ -42,7 +42,8 @@ public class CiStorageService {
         this.configurationService = configurationService;
     }
 
-    public void submitVC(SignedJWT verifiableCredential, String govukSigninJourneyId)
+    public void submitVC(
+            SignedJWT verifiableCredential, String govukSigninJourneyId, String ipAddress)
             throws CiPutException {
         InvokeRequest request =
                 new InvokeRequest()
@@ -53,6 +54,7 @@ public class CiStorageService {
                                 gson.toJson(
                                         new PutCiRequest(
                                                 govukSigninJourneyId,
+                                                ipAddress,
                                                 verifiableCredential.serialize())));
 
         LOGGER.info("Sending VC to CI storage system");
@@ -64,14 +66,17 @@ public class CiStorageService {
         }
     }
 
-    public List<ContraIndicatorItem> getCIs(String userId, String govukSigninJourneyId)
+    public List<ContraIndicatorItem> getCIs(
+            String userId, String govukSigninJourneyId, String ipAddress)
             throws CiRetrievalException {
         InvokeRequest request =
                 new InvokeRequest()
                         .withFunctionName(
                                 configurationService.getEnvironmentVariable(
                                         CI_STORAGE_GET_LAMBDA_ARN))
-                        .withPayload(gson.toJson(new GetCiRequest(govukSigninJourneyId, userId)));
+                        .withPayload(
+                                gson.toJson(
+                                        new GetCiRequest(govukSigninJourneyId, ipAddress, userId)));
 
         LOGGER.info("Retrieving CIs from CI storage system");
         InvokeResult result = lambdaClient.invoke(request);

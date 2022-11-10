@@ -13,6 +13,7 @@ public class CredentialIssuerRequestDto {
     private String state;
     private String error;
     private String errorDescription;
+    private String ipAddress;
 
     public CredentialIssuerRequestDto() {}
 
@@ -23,7 +24,8 @@ public class CredentialIssuerRequestDto {
             String redirectUri,
             String state,
             String error,
-            String errorDescription) {
+            String errorDescription,
+            String ipAddress) {
         this.authorizationCode = authorizationCode;
         this.credentialIssuerId = credentialIssuerId;
         this.ipvSessionId = ipvSessionId;
@@ -31,6 +33,7 @@ public class CredentialIssuerRequestDto {
         this.state = state;
         this.error = error;
         this.errorDescription = errorDescription;
+        this.ipAddress = ipAddress;
     }
 
     public String getAuthorizationCode() {
@@ -87,5 +90,13 @@ public class CredentialIssuerRequestDto {
 
     public void setErrorDescription(String errorDescription) {
         this.errorDescription = errorDescription;
+    }
+
+    public String getIpAddress() {
+        return ipAddress;
+    }
+
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
     }
 }

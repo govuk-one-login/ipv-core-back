@@ -98,6 +98,8 @@ public class RetrieveCriCredentialHandler
     public Map<String, Object> handleRequest(Map<String, String> input, Context context) {
         LogHelper.attachComponentIdToLogs();
 
+        String ipAddress = StepFunctionHelpers.getIpAddress(input);
+
         IpvSessionItem ipvSessionItem;
         try {
             String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
@@ -124,7 +126,8 @@ public class RetrieveCriCredentialHandler
                     new AuditEventUser(
                             userId,
                             ipvSessionItem.getIpvSessionId(),
-                            clientSessionDetailsDto.getGovukSigninJourneyId());
+                            clientSessionDetailsDto.getGovukSigninJourneyId(),
+                            ipAddress);
             this.componentId =
                     configurationService.getSsmParameter(
                             ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
@@ -154,7 +157,8 @@ public class RetrieveCriCredentialHandler
 
                 sendIpvVcReceivedAuditEvent(auditEventUser, vc, isSuccessful);
 
-                submitVcToCiStorage(vc, clientSessionDetailsDto.getGovukSigninJourneyId());
+                submitVcToCiStorage(
+                        vc, clientSessionDetailsDto.getGovukSigninJourneyId(), ipAddress);
 
                 credentialIssuerService.persistUserCredentials(vc, credentialIssuerId, userId);
             }
@@ -212,9 +216,9 @@ public class RetrieveCriCredentialHandler
     }
 
     @Tracing
-    private void submitVcToCiStorage(SignedJWT vc, String govukSigninJourneyId)
+    private void submitVcToCiStorage(SignedJWT vc, String govukSigninJourneyId, String ipAddress)
             throws CiPutException {
-        ciStorageService.submitVC(vc, govukSigninJourneyId);
+        ciStorageService.submitVC(vc, govukSigninJourneyId, ipAddress);
     }
 
     @Tracing

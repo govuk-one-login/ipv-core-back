@@ -8,6 +8,9 @@ public class PutCiRequest {
     @SerializedName(value = "govuk_signin_journey_id")
     private final String govukSigninJourneyId;
 
+    @SerializedName(value = "ip_address")
+    private final String ipAddress;
+
     @SerializedName(value = "signed_jwt")
     private final String signedJwt;
 }

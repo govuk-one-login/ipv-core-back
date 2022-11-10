@@ -61,6 +61,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 @ExtendWith(MockitoExtension.class)
 class InitialiseIpvSessionHandlerTest {
 
+    public static final String TEST_IP_ADDRESS = "192.168.1.100";
     @Mock private Context mockContext;
 
     @Mock private IpvSessionService mockIpvSessionService;
@@ -127,6 +128,7 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> sessionParams =
                 Map.of("clientId", "test-client", "request", signedEncryptedJwt.serialize());
         event.setBody(objectMapper.writeValueAsString(sessionParams));
+        event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
         APIGatewayProxyResponseEvent response =
                 initialiseIpvSessionHandler.handleRequest(event, mockContext);
@@ -147,6 +149,7 @@ class InitialiseIpvSessionHandlerTest {
     @Test
     void shouldReturn400IfMissingBody() throws JsonProcessingException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
         APIGatewayProxyResponseEvent response =
                 initialiseIpvSessionHandler.handleRequest(event, mockContext);
@@ -164,6 +167,7 @@ class InitialiseIpvSessionHandlerTest {
     void shouldReturn400IfInvalidBody() throws JsonProcessingException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setBody("invalid-body");
+        event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
         APIGatewayProxyResponseEvent response =
                 initialiseIpvSessionHandler.handleRequest(event, mockContext);
@@ -183,6 +187,7 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> sessionParams = Map.of("request", signedEncryptedJwt.serialize());
 
         event.setBody(objectMapper.writeValueAsString(sessionParams));
+        event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
         APIGatewayProxyResponseEvent response =
                 initialiseIpvSessionHandler.handleRequest(event, mockContext);
@@ -203,6 +208,7 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> sessionParams = Map.of("clientId", "test-client");
 
         event.setBody(objectMapper.writeValueAsString(sessionParams));
+        event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
         APIGatewayProxyResponseEvent response =
                 initialiseIpvSessionHandler.handleRequest(event, mockContext);
@@ -223,6 +229,7 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> sessionParams =
                 Map.of("clientId", "test-client", "request", signedJWT.serialize());
         event.setBody(objectMapper.writeValueAsString(sessionParams));
+        event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
         APIGatewayProxyResponseEvent response =
                 initialiseIpvSessionHandler.handleRequest(event, mockContext);
@@ -253,6 +260,7 @@ class InitialiseIpvSessionHandlerTest {
         Map<String, Object> sessionParams =
                 Map.of("clientId", "test-client", "request", signedEncryptedJwt.serialize());
         event.setBody(objectMapper.writeValueAsString(sessionParams));
+        event.setHeaders(Map.of("ip-address", TEST_IP_ADDRESS));
 
         APIGatewayProxyResponseEvent response =
                 initialiseIpvSessionHandler.handleRequest(event, mockContext);

@@ -106,7 +106,7 @@ public class ValidateOAuthCallbackHandler
 
             validate(request);
 
-            sendAuditEvent(ipvSessionItem, null);
+            sendAuditEvent(ipvSessionItem, null, request.getIpAddress());
 
             setIpvSessionCRIAuthorizationCode(
                     ipvSessionItem, new AuthorizationCode(request.getAuthorizationCode()));
@@ -148,7 +148,7 @@ public class ValidateOAuthCallbackHandler
                         .setErrorCode(error)
                         .setErrorDescription(errorDescription)
                         .build();
-        sendAuditEvent(ipvSessionItem, extensions);
+        sendAuditEvent(ipvSessionItem, extensions, request.getIpAddress());
 
         if (!ALLOWED_OAUTH_ERROR_CODES.contains(error)) {
             LOGGER.warn("Unknown Oauth error code received");
@@ -238,7 +238,8 @@ public class ValidateOAuthCallbackHandler
     }
 
     @Tracing
-    private void sendAuditEvent(IpvSessionItem ipvSessionItem, AuditExtensions extensions)
+    private void sendAuditEvent(
+            IpvSessionItem ipvSessionItem, AuditExtensions extensions, String ipAddress)
             throws SqsException {
         auditService.sendAuditEvent(
                 new AuditEvent(
@@ -247,7 +248,8 @@ public class ValidateOAuthCallbackHandler
                         new AuditEventUser(
                                 ipvSessionItem.getClientSessionDetails().getUserId(),
                                 ipvSessionItem.getIpvSessionId(),
-                                ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId()),
+                                ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId(),
+                                ipAddress),
                         extensions));
     }
 }

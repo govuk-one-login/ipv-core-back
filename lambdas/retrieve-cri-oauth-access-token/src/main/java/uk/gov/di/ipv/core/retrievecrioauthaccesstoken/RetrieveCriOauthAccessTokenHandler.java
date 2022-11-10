@@ -78,6 +78,8 @@ public class RetrieveCriOauthAccessTokenHandler
         IpvSessionItem ipvSessionItem = null;
         String credentialIssuerId = null;
 
+        String ipAddress = StepFunctionHelpers.getIpAddress(input);
+
         try {
             String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
@@ -106,7 +108,8 @@ public class RetrieveCriOauthAccessTokenHandler
                     new AuditEventUser(
                             userId,
                             ipvSessionId,
-                            clientSessionDetailsDto.getGovukSigninJourneyId());
+                            clientSessionDetailsDto.getGovukSigninJourneyId(),
+                            ipAddress);
             String componentId =
                     configurationService.getSsmParameter(
                             ConfigurationVariable.AUDIENCE_FOR_CLIENTS);

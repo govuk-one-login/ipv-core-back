@@ -33,6 +33,7 @@ class CiStorageServiceTest {
     public static final String THE_ARN_OF_THE_GET_LAMBDA = "the:arn:of:the:get:lambda";
     public static final String GOVUK_SIGNIN_JOURNEY_ID = "a-journey-id";
     public static final String TEST_USER_ID = "a-user-id";
+    public static final String CLIENT_SOURCE_IP = "a-client-source-ip";
     @Captor ArgumentCaptor<InvokeRequest> requestCaptor;
 
     @Mock AWSLambda lambdaClient;
@@ -46,14 +47,15 @@ class CiStorageServiceTest {
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(new InvokeResult().withStatusCode(200));
 
-        ciStorageService.submitVC(SignedJWT.parse(SIGNED_VC_1), GOVUK_SIGNIN_JOURNEY_ID);
+        ciStorageService.submitVC(
+                SignedJWT.parse(SIGNED_VC_1), GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
         InvokeRequest request = requestCaptor.getValue();
 
         assertEquals(THE_ARN_OF_THE_PUT_LAMBDA, request.getFunctionName());
         assertEquals(
                 String.format(
-                        "{\"govuk_signin_journey_id\":\"%s\",\"signed_jwt\":\"%s\"}",
-                        GOVUK_SIGNIN_JOURNEY_ID, SIGNED_VC_1),
+                        "{\"govuk_signin_journey_id\":\"%s\",\"ip_address\":\"%s\",\"signed_jwt\":\"%s\"}",
+                        GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, SIGNED_VC_1),
                 new String(request.getPayload().array(), StandardCharsets.UTF_8));
     }
 
@@ -68,7 +70,9 @@ class CiStorageServiceTest {
                 CiPutException.class,
                 () ->
                         ciStorageService.submitVC(
-                                SignedJWT.parse(SIGNED_VC_1), GOVUK_SIGNIN_JOURNEY_ID));
+                                SignedJWT.parse(SIGNED_VC_1),
+                                GOVUK_SIGNIN_JOURNEY_ID,
+                                CLIENT_SOURCE_IP));
     }
 
     @Test
@@ -86,7 +90,9 @@ class CiStorageServiceTest {
                 CiPutException.class,
                 () ->
                         ciStorageService.submitVC(
-                                SignedJWT.parse(SIGNED_VC_1), GOVUK_SIGNIN_JOURNEY_ID));
+                                SignedJWT.parse(SIGNED_VC_1),
+                                GOVUK_SIGNIN_JOURNEY_ID,
+                                CLIENT_SOURCE_IP));
     }
 
     @Test
@@ -105,14 +111,14 @@ class CiStorageServiceTest {
                                                         .getBytes(StandardCharsets.UTF_8))));
 
         List<ContraIndicatorItem> ciItems =
-                ciStorageService.getCIs(TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID);
+                ciStorageService.getCIs(TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
         InvokeRequest request = requestCaptor.getValue();
 
         assertEquals(THE_ARN_OF_THE_GET_LAMBDA, request.getFunctionName());
         assertEquals(
                 String.format(
-                        "{\"govuk_signin_journey_id\":\"%s\",\"user_id\":\"%s\"}",
-                        GOVUK_SIGNIN_JOURNEY_ID, TEST_USER_ID),
+                        "{\"govuk_signin_journey_id\":\"%s\",\"ip_address\":\"%s\",\"user_id\":\"%s\"}",
+                        GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, TEST_USER_ID),
                 new String(request.getPayload().array(), StandardCharsets.UTF_8));
         assertEquals(
                 List.of(
@@ -130,7 +136,9 @@ class CiStorageServiceTest {
 
         assertThrows(
                 CiRetrievalException.class,
-                () -> ciStorageService.getCIs(TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID));
+                () ->
+                        ciStorageService.getCIs(
+                                TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
     @Test
@@ -146,6 +154,8 @@ class CiStorageServiceTest {
 
         assertThrows(
                 CiRetrievalException.class,
-                () -> ciStorageService.getCIs(TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID));
+                () ->
+                        ciStorageService.getCIs(
+                                TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 }

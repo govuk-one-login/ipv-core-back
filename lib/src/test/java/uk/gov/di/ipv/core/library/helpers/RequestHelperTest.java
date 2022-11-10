@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IP_ADDRESS_HEADER;
 
 class RequestHelperTest {
 
@@ -102,6 +103,50 @@ class RequestHelperTest {
         assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
         assertEquals(
                 ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
+                exception.getErrorResponse().getMessage());
+    }
+
+    @Test
+    void getIpAddressShouldReturnIpAddress() throws HttpResponseExceptionWithErrorBody {
+        var event = new APIGatewayProxyRequestEvent();
+        event.setHeaders(Map.of(IP_ADDRESS_HEADER, "a-client-source-ip"));
+
+        assertEquals("a-client-source-ip", RequestHelper.getIpAddress(event));
+    }
+
+    @Test
+    void getIpAddressShouldThrowIfIpAddressIsNull() {
+        var event = new APIGatewayProxyRequestEvent();
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put(IP_ADDRESS_HEADER, null);
+
+        event.setHeaders(headers);
+
+        var exception =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> RequestHelper.getIpAddress(event));
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
+        assertEquals(
+                ErrorResponse.MISSING_IP_ADDRESS.getMessage(),
+                exception.getErrorResponse().getMessage());
+    }
+
+    @Test
+    void getIpAddressIdShouldThrowIfIpAddressIsEmptyString() {
+        var event = new APIGatewayProxyRequestEvent();
+
+        event.setHeaders(Map.of(IP_ADDRESS_HEADER, ""));
+
+        var exception =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> RequestHelper.getIpAddress(event));
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
+        assertEquals(
+                ErrorResponse.MISSING_IP_ADDRESS.getMessage(),
                 exception.getErrorResponse().getMessage());
     }
 }

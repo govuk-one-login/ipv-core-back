@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 public class RequestHelper {
 
     public static final String IPV_SESSION_ID_HEADER = "ipv-session-id";
+    public static final String IP_ADDRESS_HEADER = "ip-address";
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -84,6 +85,11 @@ public class RequestHelper {
         return getIpvSessionId(event.getHeaders());
     }
 
+    public static String getIpAddress(APIGatewayProxyRequestEvent event)
+            throws HttpResponseExceptionWithErrorBody {
+        return getIpAddress(event.getHeaders());
+    }
+
     public static String getIpvSessionId(Map<String, String> headers)
             throws HttpResponseExceptionWithErrorBody {
         String ipvSessionId = RequestHelper.getHeaderByKey(headers, IPV_SESSION_ID_HEADER);
@@ -94,5 +100,16 @@ public class RequestHelper {
         }
         LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
         return ipvSessionId;
+    }
+
+    public static String getIpAddress(Map<String, String> headers)
+            throws HttpResponseExceptionWithErrorBody {
+        String ipAddress = RequestHelper.getHeaderByKey(headers, IP_ADDRESS_HEADER);
+        if (ipAddress == null) {
+            LOGGER.error("{} not present in header", IP_ADDRESS_HEADER);
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IP_ADDRESS);
+        }
+        return ipAddress;
     }
 }

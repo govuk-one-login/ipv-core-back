@@ -67,6 +67,7 @@ class RetrieveCriCredentialHandlerTest {
     public static final String ADDRESS_CRI_JOURNEY_ID = "address";
     public static final String TEST_USER_ID = "test-user-id";
     public static final String TEST_STATE = "test-state";
+    public static final String TEST_IP_ADDRESS = "192.168.1.100";
 
     @Mock private Context context;
     @Mock private CredentialIssuerService credentialIssuerService;
@@ -134,7 +135,7 @@ class RetrieveCriCredentialHandlerTest {
 
         testBearerAccessToken = BearerAccessToken.parse(ACCESS_TOKEN);
 
-        testInput = Map.of("ipvSessionId", testSessionId);
+        testInput = Map.of("ipvSessionId", testSessionId, "ipAddress", TEST_IP_ADDRESS);
     }
 
     @Test
@@ -314,7 +315,7 @@ class RetrieveCriCredentialHandlerTest {
 
         doThrow(new CiPutException("Lambda execution failed"))
                 .when(ciStorageService)
-                .submitVC(any(SignedJWT.class), anyString());
+                .submitVC(any(SignedJWT.class), anyString(), anyString());
 
         handler.handleRequest(testInput, context);
 
