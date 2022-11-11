@@ -8,6 +8,7 @@ import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
@@ -34,6 +35,7 @@ public class IpvSessionItem implements DynamodbItem {
     private String vot;
     private long ttl;
     private IpvJourneyTypes journeyType;
+    private List<ContraIndicatorMitigationDetailsDto> contraIndicatorMitigationDetails;
 
     @DynamoDbPartitionKey
     public String getIpvSessionId() {
@@ -175,5 +177,14 @@ public class IpvSessionItem implements DynamodbItem {
 
     public void setJourneyType(IpvJourneyTypes journeyType) {
         this.journeyType = journeyType;
+    }
+
+    public List<ContraIndicatorMitigationDetailsDto> getContraIndicatorMitigationDetails() {
+        return contraIndicatorMitigationDetails;
+    }
+
+    public void setContraIndicatorMitigationDetails(
+            List<ContraIndicatorMitigationDetailsDto> contraIndicatorMitigationDetails) {
+        this.contraIndicatorMitigationDetails = contraIndicatorMitigationDetails;
     }
 }
