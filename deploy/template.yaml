@@ -1785,6 +1785,26 @@ Resources:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub end-mitigation-journey-${Environment}
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: { }
+        - Statement:
+            - Sid: EnforceStayinSpecificVpc
+              Effect: Allow
+              Action:
+                - 'lambda:CreateFunction'
+                - 'lambda:UpdateFunctionConfiguration'
+              Resource:
+                - "*"
+              Condition:
+                StringEquals:
+                  "lambda:VpcIds":
+                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
       Events:
         IPVCorePrivateAPI:
           Type: Api
