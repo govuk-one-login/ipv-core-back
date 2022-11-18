@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
@@ -51,6 +52,8 @@ class SelectCriHandlerTest {
     @Mock private Context context;
     @Mock private ConfigurationService mockConfigurationService;
     @Mock private IpvSessionService mockIpvSessionService;
+
+    @Mock private MitigationService mockMigrationService;
     @Mock private IpvSessionItem mockIpvSessionItem;
     @Mock private ClientSessionDetailsDto mockClientSessionDetailsDto;
 
@@ -60,7 +63,9 @@ class SelectCriHandlerTest {
     void setUp() {
         mockConfigurationServiceMethodCalls();
 
-        underTest = new SelectCriHandler(mockConfigurationService, mockIpvSessionService);
+        underTest =
+                new SelectCriHandler(
+                        mockConfigurationService, mockIpvSessionService, mockMigrationService);
     }
 
     @Test
@@ -729,6 +734,13 @@ class SelectCriHandlerTest {
                 .thenReturn(createCriConfig(CRI_ADDRESS, "test-address-iss"));
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(List.of(new VcStatusDto("test-passport-iss", true)));
+        List<ContraIndicatorMitigationDetailsDto> contraIndicatorMitigationDetailsDtos =
+                List.of(new ContraIndicatorMitigationDetailsDto("A01"));
+        when(mockIpvSessionItem.getContraIndicatorMitigationDetails())
+                .thenReturn(contraIndicatorMitigationDetailsDtos);
+
+        when(mockMigrationService.isMitigationPossible(contraIndicatorMitigationDetailsDtos))
+                .thenReturn(true);
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(new VisitedCredentialIssuerDetailsDto(CRI_PASSPORT, true, null));

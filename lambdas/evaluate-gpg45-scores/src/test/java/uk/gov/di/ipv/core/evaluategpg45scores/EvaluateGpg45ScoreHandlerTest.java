@@ -145,7 +145,7 @@ class EvaluateGpg45ScoreHandlerTest {
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
         ipvSessionItem.setIpvSessionId(TEST_SESSION_ID);
         ipvSessionItem.setContraIndicatorMitigationDetails(
-                List.of(new ContraIndicatorMitigationDetailsDto(ContractIndicator.A01)));
+                List.of(new ContraIndicatorMitigationDetailsDto(ContractIndicator.A01.name())));
     }
 
     @Test
@@ -534,7 +534,7 @@ class EvaluateGpg45ScoreHandlerTest {
         ipvSessionItem.setContraIndicatorMitigationDetails(
                 List.of(
                         new ContraIndicatorMitigationDetailsDto(
-                                ContractIndicator.A01, Collections.emptyList(), false)));
+                                ContractIndicator.A01.name(), Collections.emptyList(), false)));
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);

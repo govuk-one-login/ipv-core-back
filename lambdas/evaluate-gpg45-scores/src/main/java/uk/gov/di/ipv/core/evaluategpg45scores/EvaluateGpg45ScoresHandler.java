@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
-import uk.gov.di.ipv.core.library.domain.ContractIndicator;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
@@ -269,8 +268,7 @@ public class EvaluateGpg45ScoresHandler
                         contraIndicatorItem ->
                                 newMitigationDetails.add(
                                         new ContraIndicatorMitigationDetailsDto(
-                                                ContractIndicator.valueOf(
-                                                        contraIndicatorItem.getCi()))));
+                                                contraIndicatorItem.getCi())));
 
                 ipvSessionItem.setContraIndicatorMitigationDetails(newMitigationDetails);
                 ipvSessionService.updateIpvSession(ipvSessionItem);

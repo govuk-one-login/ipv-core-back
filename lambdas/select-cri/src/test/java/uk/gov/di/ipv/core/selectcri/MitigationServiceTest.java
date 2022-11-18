@@ -37,7 +37,7 @@ class MitigationServiceTest {
         when(mockConfigurationService.getContraIndicatorScoresMap()).thenReturn(a01CiScoresMap);
 
         List<ContraIndicatorMitigationDetailsDto> contraIndicatorMitigationDetailsDtos =
-                List.of(new ContraIndicatorMitigationDetailsDto(ContractIndicator.A01));
+                List.of(new ContraIndicatorMitigationDetailsDto(ContractIndicator.A01.name()));
         assertTrue(underTest.isMitigationPossible(contraIndicatorMitigationDetailsDtos));
     }
 }

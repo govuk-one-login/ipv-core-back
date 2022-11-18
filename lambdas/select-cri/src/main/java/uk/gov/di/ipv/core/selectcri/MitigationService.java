@@ -29,8 +29,8 @@ public class MitigationService {
     private boolean canBeMitigatedByConfig(ContraIndicatorMitigationDetailsDto item) {
         Map<String, ContraIndicatorScore> contraIndicatorScoresMap =
                 configurationService.getContraIndicatorScoresMap();
-        ContraIndicatorScore scoresConfig = contraIndicatorScoresMap.get(item.getCi().name());
-        return scoresConfig.getCi().equals(item.getCi().name())
+        ContraIndicatorScore scoresConfig = contraIndicatorScoresMap.get(item.getCi());
+        return scoresConfig.getCi().equals(item.getCi())
                 && !scoresConfig.getMitigations().isEmpty();
     }
 }

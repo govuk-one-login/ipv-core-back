@@ -50,6 +50,7 @@ public class SelectCriHandler
 
     private final ConfigurationService configurationService;
     private final IpvSessionService ipvSessionService;
+    private final MitigationService mitigationService;
     private final String passportCriId;
     private final String fraudCriId;
     private final String kbvCriId;
@@ -57,9 +58,12 @@ public class SelectCriHandler
     private final String dcmawCriId;
 
     public SelectCriHandler(
-            ConfigurationService configurationService, IpvSessionService ipvSessionService) {
+            ConfigurationService configurationService,
+            IpvSessionService ipvSessionService,
+            MitigationService mitigationService) {
         this.configurationService = configurationService;
         this.ipvSessionService = ipvSessionService;
+        this.mitigationService = mitigationService;
 
         passportCriId = configurationService.getSsmParameter(PASSPORT_CRI_ID);
         fraudCriId = configurationService.getSsmParameter(FRAUD_CRI_ID);
@@ -72,6 +76,7 @@ public class SelectCriHandler
     public SelectCriHandler() {
         this.configurationService = new ConfigurationService();
         this.ipvSessionService = new IpvSessionService(configurationService);
+        this.mitigationService = new MitigationService(configurationService);
 
         passportCriId = configurationService.getSsmParameter(PASSPORT_CRI_ID);
         fraudCriId = configurationService.getSsmParameter(FRAUD_CRI_ID);
@@ -94,6 +99,10 @@ public class SelectCriHandler
 
             List<ContraIndicatorMitigationDetailsDto> currentMitigationDetails =
                     ipvSessionItem.getContraIndicatorMitigationDetails();
+
+            if (mitigationService.isMitigationPossible(currentMitigationDetails)) {
+                // TODO: Perform Migration Journey
+            }
 
             List<VcStatusDto> currentVcStatuses = ipvSessionItem.getCurrentVcStatuses();
 
