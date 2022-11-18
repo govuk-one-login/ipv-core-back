@@ -17,20 +17,22 @@ public class MitigationService {
     }
 
     public boolean isMitigationPossible(
-            List<ContraIndicatorMitigationDetailsDto> contraIndicatorMitigationDetailsDtos) {
+            List<ContraIndicatorMitigationDetailsDto> contraIndicatorMitigationDetails) {
 
         List<ContraIndicatorMitigationDetailsDto> mitigationPossibleItems =
-                contraIndicatorMitigationDetailsDtos.stream()
+                contraIndicatorMitigationDetails.stream()
                         .filter(this::canBeMitigatedByConfig)
                         .collect(Collectors.toList());
         return !mitigationPossibleItems.isEmpty();
     }
 
-    private boolean canBeMitigatedByConfig(ContraIndicatorMitigationDetailsDto item) {
+    private boolean canBeMitigatedByConfig(
+            ContraIndicatorMitigationDetailsDto contraIndicatorMitigationDetailsDto) {
         Map<String, ContraIndicatorScore> contraIndicatorScoresMap =
                 configurationService.getContraIndicatorScoresMap();
-        ContraIndicatorScore scoresConfig = contraIndicatorScoresMap.get(item.getCi());
-        return scoresConfig.getCi().equals(item.getCi())
+        ContraIndicatorScore scoresConfig =
+                contraIndicatorScoresMap.get(contraIndicatorMitigationDetailsDto.getCi());
+        return scoresConfig.getCi().equals(contraIndicatorMitigationDetailsDto.getCi())
                 && !scoresConfig.getMitigations().isEmpty();
     }
 }
