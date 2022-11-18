@@ -69,29 +69,29 @@ Mappings:
       ciStorageAccountId: 322814139578 # di-ipv-cri-dev
       environment: dev
       criReturnStepFunctionLogLevel: ALL
-      pgw500ErrorLimit: 1
-      egw500ErrorLimit: 1
+      pgw500ErrorLimit: 2
+      egw500ErrorLimit: 2
     "457601271792": # Build
       provisionedConcurrency: 0
       ciStorageAccountId: 755415363251 # di-ipv-contra-indicators-build
       environment: build
       criReturnStepFunctionLogLevel: ALL
-      pgw500ErrorLimit: 1
-      egw500ErrorLimit: 1
+      pgw500ErrorLimit: 2
+      egw500ErrorLimit: 2
     "335257547869": # Staging
       provisionedConcurrency: 1
       ciStorageAccountId: 265689800486 # di-ipv-contra-indicators-staging
       environment: staging
       criReturnStepFunctionLogLevel: ALL
-      pgw500ErrorLimit: 1
-      egw500ErrorLimit: 1
+      pgw500ErrorLimit: 2
+      egw500ErrorLimit: 2
     "991138514218": # Integration
       provisionedConcurrency: 1
       ciStorageAccountId: 697519714716 # di-ipv-contra-indicators-integration
       environment: integration
       criReturnStepFunctionLogLevel: ERROR
-      pgw500ErrorLimit: 1
-      egw500ErrorLimit: 1
+      pgw500ErrorLimit: 2
+      egw500ErrorLimit: 2
     "075701497069": # Production
       provisionedConcurrency: 1
       ciStorageAccountId: 442136572379 # di-ipv-contra-indicators-prod
