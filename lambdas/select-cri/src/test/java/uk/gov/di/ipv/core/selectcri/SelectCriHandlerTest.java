@@ -716,6 +716,36 @@ class SelectCriHandlerTest {
         assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
     }
 
+    @Test
+    void shouldReturnAddressCriJourneyResponseWhenMJ01MigrationPossible()
+            throws JsonProcessingException, URISyntaxException {
+        mockIpvSessionService();
+
+        String userId = "test-user-id";
+        when(mockClientSessionDetailsDto.getUserId()).thenReturn(userId);
+        when(mockConfigurationService.getCredentialIssuer(CRI_PASSPORT))
+                .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss"));
+        when(mockConfigurationService.getCredentialIssuer(CRI_ADDRESS))
+                .thenReturn(createCriConfig(CRI_ADDRESS, "test-address-iss"));
+        when(mockIpvSessionItem.getCurrentVcStatuses())
+                .thenReturn(List.of(new VcStatusDto("test-passport-iss", true)));
+
+        List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
+                List.of(new VisitedCredentialIssuerDetailsDto(CRI_PASSPORT, true, null));
+
+        when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
+                .thenReturn(visitedCredentialIssuerDetails);
+
+        APIGatewayProxyRequestEvent input = createRequestEvent();
+
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+
+        Map<String, String> responseBody = getResponseBodyAsMap(response);
+
+        assertEquals("/journey/address", responseBody.get("journey"));
+        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+    }
+
     private void mockIpvSessionService() {
 
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(mockClientSessionDetailsDto);

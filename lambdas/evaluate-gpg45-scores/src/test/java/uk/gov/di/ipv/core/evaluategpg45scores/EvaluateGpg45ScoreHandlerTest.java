@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
+import uk.gov.di.ipv.core.library.domain.ContractIndicator;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
@@ -144,7 +145,7 @@ class EvaluateGpg45ScoreHandlerTest {
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
         ipvSessionItem.setIpvSessionId(TEST_SESSION_ID);
         ipvSessionItem.setContraIndicatorMitigationDetails(
-                List.of(new ContraIndicatorMitigationDetailsDto("A01")));
+                List.of(new ContraIndicatorMitigationDetailsDto(ContractIndicator.A01)));
     }
 
     @Test
@@ -533,7 +534,7 @@ class EvaluateGpg45ScoreHandlerTest {
         ipvSessionItem.setContraIndicatorMitigationDetails(
                 List.of(
                         new ContraIndicatorMitigationDetailsDto(
-                                "A01", Collections.emptyList(), false)));
+                                ContractIndicator.A01, Collections.emptyList(), false)));
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);

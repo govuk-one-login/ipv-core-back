@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.domain.MitigationJourneyId;
 
 @DynamoDbBean
 @ExcludeFromGeneratedCoverageReport
@@ -13,6 +12,6 @@ import uk.gov.di.ipv.core.library.domain.MitigationJourneyId;
 @Setter
 @AllArgsConstructor
 public class MitigationJourneyDetailsDto {
-    private MitigationJourneyId mitigationJourneyId;
+    private String mitigationJourneyId;
     private boolean complete;
 }

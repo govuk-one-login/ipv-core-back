@@ -7,8 +7,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
-import uk.gov.di.ipv.core.library.domain.MitigationJourneyId;
-import uk.gov.di.ipv.core.library.dto.MitigationJourneyDetailsDto;
+import uk.gov.di.ipv.core.library.domain.ContractIndicator;
+import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.util.List;
@@ -22,20 +22,22 @@ class MitigationServiceTest {
 
     @Mock private ConfigurationService mockConfigurationService;
     @InjectMocks private MitigationService underTest;
+    private Map<String, ContraIndicatorScore> a01CiScoresMap;
 
     @BeforeEach
-    void setUp() {}
-
-    @Test
-    void shouldTrueWhenA01CIAndMigrationNotComplete() {
-        Map<String, ContraIndicatorScore> ciScoresMap =
+    void setUp() {
+        a01CiScoresMap =
                 Map.of(
                         "A01",
                         new ContraIndicatorScore("A01", 2, -2, null, List.of("MJ01", "MJ02")));
-        when(mockConfigurationService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
+    }
 
-        List<MitigationJourneyDetailsDto> mitigationJourneyDetailsDtoList =
-                List.of(new MitigationJourneyDetailsDto(MitigationJourneyId.A01, false));
-        assertTrue(underTest.isMitigatable(mitigationJourneyDetailsDtoList));
+    @Test
+    void isMitigationPossibleShouldReturnTrueWhenA01CIAndMigrationNotComplete() {
+        when(mockConfigurationService.getContraIndicatorScoresMap()).thenReturn(a01CiScoresMap);
+
+        List<ContraIndicatorMitigationDetailsDto> contraIndicatorMitigationDetailsDtos =
+                List.of(new ContraIndicatorMitigationDetailsDto(ContractIndicator.A01));
+        assertTrue(underTest.isMitigationPossible(contraIndicatorMitigationDetailsDtos));
     }
 }

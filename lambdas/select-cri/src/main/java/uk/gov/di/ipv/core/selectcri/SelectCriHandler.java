@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
@@ -90,6 +91,9 @@ public class SelectCriHandler
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 
             logGovUkSignInJourneyId(ipvSessionId);
+
+            List<ContraIndicatorMitigationDetailsDto> currentMitigationDetails =
+                    ipvSessionItem.getContraIndicatorMitigationDetails();
 
             List<VcStatusDto> currentVcStatuses = ipvSessionItem.getCurrentVcStatuses();
 
