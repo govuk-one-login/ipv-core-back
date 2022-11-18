@@ -99,9 +99,7 @@ public class EvaluateGpg45ScoresHandler
         this.configurationService = new ConfigurationService();
         this.userIdentityService = new UserIdentityService(configurationService);
         this.ipvSessionService = new IpvSessionService(configurationService);
-        this.gpg45ProfileEvaluator =
-                new Gpg45ProfileEvaluator(
-                        new CiStorageService(configurationService), configurationService);
+        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configurationService);
         this.ciStorageService = new CiStorageService(configurationService);
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
@@ -146,15 +144,17 @@ public class EvaluateGpg45ScoresHandler
             boolean ciMitigationJourneysEnabled =
                     Boolean.parseBoolean(
                             configurationService.getSsmParameter(CI_MITIGATION_JOURNEYS_ENABLED));
-            Optional<JourneyResponse> mitigationJourneyResponse =
-                    getNextMitigationJourneyResponse(
-                            ciMitigationJourneysEnabled, ipvSessionItem, ciItems);
+            Optional<JourneyResponse> mitigationJourneyResponse = Optional.empty();
+            if (ciMitigationJourneysEnabled) {
+                mitigationJourneyResponse =
+                        getNextMitigationJourneyResponse(ipvSessionItem, ciItems);
+            }
+
             if (mitigationJourneyResponse.isPresent()) {
                 journeyResponse = mitigationJourneyResponse.get();
             } else {
                 Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
-                        gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
-                                clientSessionDetailsDto, ipAddress);
+                        gpg45ProfileEvaluator.getJourneyResponseForStoredCis(ciItems);
                 if (contraIndicatorErrorJourneyResponse.isEmpty()) {
                     journeyResponse =
                             checkForMatchingGpg45Profile(
@@ -226,59 +226,52 @@ public class EvaluateGpg45ScoresHandler
     }
 
     private Optional<JourneyResponse> getNextMitigationJourneyResponse(
-            boolean ciMitigationJourneysEnabled,
-            IpvSessionItem ipvSessionItem,
-            List<ContraIndicatorItem> ciItems) {
-        if (ciMitigationJourneysEnabled) {
-            List<ContraIndicatorMitigationDetailsDto> currentMitigationDetails =
-                    ipvSessionItem.getContraIndicatorMitigationDetails();
-            boolean ciMitigationInProgress = isCiMitigationInProgress(currentMitigationDetails);
+            IpvSessionItem ipvSessionItem, List<ContraIndicatorItem> ciItems) {
+        List<ContraIndicatorMitigationDetailsDto> currentMitigationDetails =
+                ipvSessionItem.getContraIndicatorMitigationDetails();
+        boolean ciMitigationInProgress = isCiMitigationInProgress(currentMitigationDetails);
 
-            List<ContraIndicatorItem> newCiItems =
-                    ciItems.stream()
-                            .filter(
-                                    ciItem -> {
-                                        if (currentMitigationDetails != null) {
-                                            Optional<ContraIndicatorMitigationDetailsDto>
-                                                    matchingCI =
-                                                            currentMitigationDetails.stream()
-                                                                    .filter(
-                                                                            mitigationDetails ->
-                                                                                    mitigationDetails
-                                                                                            .getCi()
-                                                                                            .equals(
-                                                                                                    ciItem
-                                                                                                            .getCi()))
-                                                                    .findAny();
-                                            return matchingCI.isEmpty();
-                                        }
-                                        return true;
-                                    })
-                            .collect(Collectors.toList());
+        List<ContraIndicatorItem> newCiItems =
+                ciItems.stream()
+                        .filter(
+                                ciItem -> {
+                                    if (currentMitigationDetails != null) {
+                                        Optional<ContraIndicatorMitigationDetailsDto> matchingCI =
+                                                currentMitigationDetails.stream()
+                                                        .filter(
+                                                                mitigationDetails ->
+                                                                        mitigationDetails
+                                                                                .getCi()
+                                                                                .equals(
+                                                                                        ciItem
+                                                                                                .getCi()))
+                                                        .findAny();
+                                        return matchingCI.isEmpty();
+                                    }
+                                    return true;
+                                })
+                        .collect(Collectors.toList());
 
-            if (!newCiItems.isEmpty()) {
-                List<ContraIndicatorMitigationDetailsDto> newMitigationDetails = new ArrayList<>();
+        if (!newCiItems.isEmpty()) {
+            List<ContraIndicatorMitigationDetailsDto> newMitigationDetails = new ArrayList<>();
 
-                if (ipvSessionItem.getContraIndicatorMitigationDetails() != null) {
-                    newMitigationDetails.addAll(
-                            ipvSessionItem.getContraIndicatorMitigationDetails());
-                }
-
-                newCiItems.forEach(
-                        contraIndicatorItem ->
-                                newMitigationDetails.add(
-                                        new ContraIndicatorMitigationDetailsDto(
-                                                contraIndicatorItem.getCi())));
-
-                ipvSessionItem.setContraIndicatorMitigationDetails(newMitigationDetails);
-                ipvSessionService.updateIpvSession(ipvSessionItem);
-
-                return Optional.of(JOURNEY_NEXT);
-            } else if (ciMitigationInProgress) {
-                return Optional.of(JOURNEY_NEXT);
+            if (ipvSessionItem.getContraIndicatorMitigationDetails() != null) {
+                newMitigationDetails.addAll(ipvSessionItem.getContraIndicatorMitigationDetails());
             }
-        }
 
+            newCiItems.forEach(
+                    contraIndicatorItem ->
+                            newMitigationDetails.add(
+                                    new ContraIndicatorMitigationDetailsDto(
+                                            contraIndicatorItem.getCi())));
+
+            ipvSessionItem.setContraIndicatorMitigationDetails(newMitigationDetails);
+            ipvSessionService.updateIpvSession(ipvSessionItem);
+
+            return Optional.of(JOURNEY_NEXT);
+        } else if (ciMitigationInProgress) {
+            return Optional.of(JOURNEY_NEXT);
+        }
         return Optional.empty();
     }
 
