@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_MITIGATION_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ALLOWED_USER_IDS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ENABLED;
@@ -100,7 +101,9 @@ public class SelectCriHandler
             List<ContraIndicatorMitigationDetailsDto> currentMitigationDetails =
                     ipvSessionItem.getContraIndicatorMitigationDetails();
 
-            if (mitigationService.isMitigationPossible(currentMitigationDetails)) {
+            if (Boolean.parseBoolean(
+                            configurationService.getSsmParameter(CI_MITIGATION_JOURNEYS_ENABLED))
+                    && mitigationService.isMitigationPossible(currentMitigationDetails)) {
                 // TODO: Perform Migration Journey
             }
 

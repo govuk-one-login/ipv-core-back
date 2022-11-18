@@ -29,6 +29,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_MITIGATION_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ALLOWED_USER_IDS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ENABLED;
@@ -739,6 +740,8 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getContraIndicatorMitigationDetails())
                 .thenReturn(contraIndicatorMitigationDetailsDtos);
 
+        when(mockConfigurationService.getSsmParameter(CI_MITIGATION_JOURNEYS_ENABLED))
+                .thenReturn("true");
         when(mockMigrationService.isMitigationPossible(contraIndicatorMitigationDetailsDtos))
                 .thenReturn(true);
 

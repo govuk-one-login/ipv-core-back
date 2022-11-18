@@ -11,9 +11,11 @@ import uk.gov.di.ipv.core.library.domain.ContractIndicator;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
@@ -39,5 +41,20 @@ class MitigationServiceTest {
         List<ContraIndicatorMitigationDetailsDto> contraIndicatorMitigationDetailsDtos =
                 List.of(new ContraIndicatorMitigationDetailsDto(ContractIndicator.A01.name()));
         assertTrue(underTest.isMitigationPossible(contraIndicatorMitigationDetailsDtos));
+    }
+
+    @Test
+    void isMitigationPossibleShouldReturnFalseWhenNoCIs() {
+        assertFalse(underTest.isMitigationPossible(Collections.emptyList()));
+    }
+
+    @Test
+    void isMitigationPossibleShouldReturnFalseWhenCIHasNoMitigations() {
+        when(mockConfigurationService.getContraIndicatorScoresMap())
+                .thenReturn(Map.of("A01", new ContraIndicatorScore("A01", 0, 0, null, null)));
+
+        List<ContraIndicatorMitigationDetailsDto> contraIndicatorMitigationDetailsDtos =
+                List.of(new ContraIndicatorMitigationDetailsDto(ContractIndicator.A01.name()));
+        assertFalse(underTest.isMitigationPossible(contraIndicatorMitigationDetailsDtos));
     }
 }
