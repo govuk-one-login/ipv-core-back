@@ -98,7 +98,7 @@ class Gpg45ProfileEvaluatorTest {
                         null);
 
         Map<String, ContraIndicatorScore> ciScoresMap = new HashMap<>();
-        ciScoresMap.put("Y03", new ContraIndicatorScore("Y03", 2, -2, null));
+        ciScoresMap.put("Y03", new ContraIndicatorScore("Y03", 2, -2, null, null));
         when(mockConfigurationService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
         when(mockConfigurationService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
         when(mockClientSessionDetails.getUserId()).thenReturn(TEST_USER_ID);
@@ -137,8 +137,8 @@ class Gpg45ProfileEvaluatorTest {
                         null);
 
         Map<String, ContraIndicatorScore> ciScoresMap = new HashMap<>();
-        ciScoresMap.put("X98", new ContraIndicatorScore("X98", 1, -1, null));
-        ciScoresMap.put("X99", new ContraIndicatorScore("X99", 3, -2, null));
+        ciScoresMap.put("X98", new ContraIndicatorScore("X98", 1, -1, null, null));
+        ciScoresMap.put("X99", new ContraIndicatorScore("X99", 3, -2, null, null));
         when(mockConfigurationService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
         when(mockConfigurationService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
 
@@ -181,8 +181,8 @@ class Gpg45ProfileEvaluatorTest {
                         null);
 
         Map<String, ContraIndicatorScore> ciScoresMap = new HashMap<>();
-        ciScoresMap.put("X98", new ContraIndicatorScore("X98", 1, -1, null));
-        ciScoresMap.put("X99", new ContraIndicatorScore("X99", 3, -2, null));
+        ciScoresMap.put("X98", new ContraIndicatorScore("X98", 1, -1, null, null));
+        ciScoresMap.put("X99", new ContraIndicatorScore("X99", 3, -2, null, null));
         when(mockConfigurationService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
         when(mockConfigurationService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
 

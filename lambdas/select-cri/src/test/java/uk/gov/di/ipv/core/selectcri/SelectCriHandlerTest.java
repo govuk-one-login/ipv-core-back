@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.credentialissuer;
+package uk.gov.di.ipv.core.selectcri;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -18,7 +18,6 @@ import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.selectcri.SelectCriHandler;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -42,7 +41,6 @@ import static uk.gov.di.ipv.core.selectcri.SelectCriHandler.APP_JOURNEY_USER_ID_
 class SelectCriHandlerTest {
 
     public static final String TEST_SESSION_ID = "the-session-id";
-    public static final String TEST_USER_ID = "test-user-id";
     public static final String CRI_PASSPORT = "ukPassport";
     public static final String CRI_FRAUD = "fraud";
     public static final String CRI_KBV = "kbv";
@@ -59,7 +57,7 @@ class SelectCriHandlerTest {
     private SelectCriHandler underTest;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         mockConfigurationServiceMethodCalls();
 
         underTest = new SelectCriHandler(mockConfigurationService, mockIpvSessionService);

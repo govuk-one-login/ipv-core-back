@@ -1,20 +1,18 @@
 package uk.gov.di.ipv.core.library.domain;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class ContraIndicatorScore {
     private String ci;
     private Integer detectedScore;
     private Integer checkedScore;
     private String fidCode;
-
-    public ContraIndicatorScore() {}
-
-    public ContraIndicatorScore(String ci, int detectedScore, int checkedScore, String fidCode) {
-        this.ci = ci;
-        this.detectedScore = detectedScore;
-        this.checkedScore = checkedScore;
-        this.fidCode = fidCode;
-    }
+    private List<String> mitigations;
 }
