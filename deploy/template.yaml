@@ -1785,6 +1785,29 @@ Resources:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub end-mitigation-journey-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
+          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
+          CI_STORAGE_GET_LAMBDA_ARN: !Sub
+            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
+            - contra_indicator_storage_account_id: !FindInMap
+                - EnvironmentConfiguration
+                - !Ref AWS::AccountId
+                - ciStorageAccountId
+              env: !FindInMap
+                - EnvironmentConfiguration
+                - !Ref AWS::AccountId
+                - environment
+          CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: !Sub
+            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:postMitigations-${env}"
+            - contra_indicator_storage_account_id: !FindInMap
+                - EnvironmentConfiguration
+                - !Ref AWS::AccountId
+                - ciStorageAccountId
+              env: !FindInMap
+                - EnvironmentConfiguration
+                - !Ref AWS::AccountId
+                - environment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1805,6 +1828,57 @@ Resources:
                 StringEquals:
                   "lambda:VpcIds":
                     - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
+            - Sid: invokeGetCiFunction
+              Effect: Allow
+              Action:
+                - 'lambda:InvokeFunction'
+              Resource:
+                - !Sub
+                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
+                  - contra_indicator_storage_account_id: !FindInMap
+                      - EnvironmentConfiguration
+                      - !Ref AWS::AccountId
+                      - ciStorageAccountId
+                    env: !FindInMap
+                      - EnvironmentConfiguration
+                      - !Ref AWS::AccountId
+                      - environment
+            - Sid: invokePostCiMitigationFunction
+              Effect: Allow
+              Action:
+                - 'lambda:InvokeFunction'
+              Resource:
+                - !Sub
+                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:postMitigations-${env}"
+                  - contra_indicator_storage_account_id: !FindInMap
+                      - EnvironmentConfiguration
+                      - !Ref AWS::AccountId
+                      - ciStorageAccountId
+                    env: !FindInMap
+                      - EnvironmentConfiguration
+                      - !Ref AWS::AccountId
+                      - environment
+        - KMSDecryptPolicy:
+            KeyId: !Ref DynamoDBKmsKey
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsV2Table
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/*
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
       Events:
         IPVCorePrivateAPI:
           Type: Api

@@ -10,7 +10,7 @@ import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.MapMessage;
+import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -139,7 +139,7 @@ public class EvaluateGpg45ScoresHandler
                             ipAddress);
 
             JourneyResponse journeyResponse;
-            var message = new MapMessage();
+            var message = new StringMapMessage();
 
             boolean ciMitigationJourneysEnabled =
                     Boolean.parseBoolean(
@@ -195,7 +195,7 @@ public class EvaluateGpg45ScoresHandler
     }
 
     private JourneyResponse checkForMatchingGpg45Profile(
-            MapMessage message,
+            StringMapMessage message,
             IpvSessionItem ipvSessionItem,
             List<SignedJWT> credentials,
             String ipAddress)

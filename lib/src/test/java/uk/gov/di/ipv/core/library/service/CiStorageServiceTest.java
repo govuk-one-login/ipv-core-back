@@ -12,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
+import uk.gov.di.ipv.core.library.exceptions.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
 
@@ -23,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_GET_LAMBDA_ARN;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_PUT_LAMBDA_ARN;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 
@@ -30,6 +32,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 class CiStorageServiceTest {
 
     public static final String THE_ARN_OF_THE_PUT_LAMBDA = "the:arn:of:the:put:lambda";
+    public static final String THE_ARN_OF_THE_POST_LAMBDA = "the:arn:of:the:post:lambda";
     public static final String THE_ARN_OF_THE_GET_LAMBDA = "the:arn:of:the:get:lambda";
     public static final String GOVUK_SIGNIN_JOURNEY_ID = "a-journey-id";
     public static final String TEST_USER_ID = "a-user-id";
@@ -157,5 +160,56 @@ class CiStorageServiceTest {
                 () ->
                         ciStorageService.getCIs(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
+    }
+
+    @Test
+    void submitMitigationVCInvokesTheLambdaClient() throws Exception {
+        when(configurationService.getEnvironmentVariable(CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
+                .thenReturn(THE_ARN_OF_THE_POST_LAMBDA);
+        when(lambdaClient.invoke(requestCaptor.capture()))
+                .thenReturn(new InvokeResult().withStatusCode(200));
+
+        ciStorageService.submitMitigatingVcList(
+                List.of(SIGNED_VC_1), GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
+        InvokeRequest request = requestCaptor.getValue();
+
+        assertEquals(THE_ARN_OF_THE_POST_LAMBDA, request.getFunctionName());
+        assertEquals(
+                String.format(
+                        "{\"govuk_signin_journey_id\":\"%s\",\"ip_address\":\"%s\",\"signed_jwts\":[\"%s\"]}",
+                        GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, SIGNED_VC_1),
+                new String(request.getPayload().array(), StandardCharsets.UTF_8));
+    }
+
+    @Test
+    void submitMitigationVCThrowsIfLambdaExecutionFails() {
+        InvokeResult result = new InvokeResult().withStatusCode(500);
+        when(configurationService.getEnvironmentVariable(CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
+                .thenReturn(THE_ARN_OF_THE_POST_LAMBDA);
+        when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(result);
+
+        assertThrows(
+                CiPostMitigationsException.class,
+                () ->
+                        ciStorageService.submitMitigatingVcList(
+                                List.of(SIGNED_VC_1), GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
+    }
+
+    @Test
+    void submitMitigationVCThrowsIfLambdaThrowsAnError() {
+        InvokeResult result =
+                new InvokeResult()
+                        .withStatusCode(200)
+                        .withFunctionError("Unhandled")
+                        .withPayload(ByteBuffer.allocate(0));
+        when(configurationService.getEnvironmentVariable(CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
+                .thenReturn(THE_ARN_OF_THE_POST_LAMBDA);
+        when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(result);
+
+        assertThrows(
+                CiPostMitigationsException.class,
+                () ->
+                        ciStorageService.submitMitigatingVcList(
+                                List.of(SIGNED_VC_1), GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 }
