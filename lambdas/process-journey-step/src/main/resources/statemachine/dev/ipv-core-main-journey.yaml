@@ -35,6 +35,17 @@ END_JOURNEY:
       response:
         type: journey
         journeyStepId: /journey/build-client-oauth-response
+MITIGATION_JOURNEY:
+  name: MITIGATION_JOURNEY
+  parent: null
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: EVALUATE_GPG45_SCORES
+      response:
+        type: journey
+        journeyStepId: /journey/evaluate-gpg45-scores
 
 #child states
 INITIAL_IPV_JOURNEY:
@@ -137,6 +148,20 @@ SELECT_CRI:
       response:
         type: page
         pageId: page-dcmaw-success
+    end-mj01:
+      type: basic
+      name: end-mj01
+      targetState: END_MJ01
+      response:
+        type: journey
+        journeyStepId: /journey/end-mitigation-journey/MJ01
+    end-mj02:
+      type: basic
+      name: end-mj02
+      targetState: END_MJ02
+      response:
+        type: journey
+        journeyStepId: /journey/end-mitigation-journey/MJ02
     fail:
       type: basic
       name: fail
@@ -235,6 +260,12 @@ CRI_DCMAW:
       response:
         type: journey
         journeyStepId: /journey/evaluate-gpg45-scores
+END_MJ01:
+  name: END_MJ01
+  parent: MITIGATION_JOURNEY
+END_MJ02:
+  name: END_MJ02
+  parent: MITIGATION_JOURNEY
 IPV_SUCCESS_PAGE:
   name: IPV_SUCCESS_PAGE
   parent: END_JOURNEY
