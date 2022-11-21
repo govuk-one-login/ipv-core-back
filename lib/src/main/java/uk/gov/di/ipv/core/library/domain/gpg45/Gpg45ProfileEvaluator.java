@@ -14,9 +14,6 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.DcmawCheckMethod;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
-import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
-import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.text.ParseException;
@@ -44,31 +41,24 @@ public class Gpg45ProfileEvaluator {
     private static final Gson gson = new Gson();
     private static final int NO_SCORE = 0;
     private static final String LOG_DESCRIPTION_FIELD = "description";
-    private final CiStorageService ciStorageService;
     private final ConfigurationService configurationService;
 
-    public Gpg45ProfileEvaluator(
-            CiStorageService ciStorageService, ConfigurationService configurationService) {
-        this.ciStorageService = ciStorageService;
+    public Gpg45ProfileEvaluator(ConfigurationService configurationService) {
         this.configurationService = configurationService;
     }
 
     public Optional<JourneyResponse> getJourneyResponseForStoredCis(
-            ClientSessionDetailsDto sessionDetails, String ipAddress) throws CiRetrievalException {
-
-        List<ContraIndicatorItem> ciItems;
-        ciItems =
-                ciStorageService.getCIs(
-                        sessionDetails.getUserId(),
-                        sessionDetails.getGovukSigninJourneyId(),
-                        ipAddress);
+            List<ContraIndicatorItem> ciItems) {
+        List<ContraIndicatorItem> contraIndicatorItems = new ArrayList<>(ciItems);
         LOGGER.info(
                 new MapMessage()
                         .with(LOG_DESCRIPTION_FIELD, "Retrieved user's CI items")
                         .with("numberOfItems", ciItems.size()));
 
         Set<String> ciSet =
-                ciItems.stream().map(ContraIndicatorItem::getCi).collect(Collectors.toSet());
+                contraIndicatorItems.stream()
+                        .map(ContraIndicatorItem::getCi)
+                        .collect(Collectors.toSet());
 
         Map<String, ContraIndicatorScore> contraIndicatorScoresMap =
                 configurationService.getContraIndicatorScoresMap();
@@ -86,8 +76,9 @@ public class Gpg45ProfileEvaluator {
         int ciScoreThreshold =
                 Integer.parseInt(configurationService.getSsmParameter(CI_SCORING_THRESHOLD));
         if (ciScore > ciScoreThreshold) {
-            Collections.sort(ciItems);
-            String lastCiIssuer = ciItems.get(ciItems.size() - 1).getIss();
+            Collections.sort(contraIndicatorItems);
+            String lastCiIssuer =
+                    contraIndicatorItems.get(contraIndicatorItems.size() - 1).getIss();
             String kbvIssuer =
                     configurationService
                             .getCredentialIssuer(configurationService.getSsmParameter(KBV_CRI_ID))

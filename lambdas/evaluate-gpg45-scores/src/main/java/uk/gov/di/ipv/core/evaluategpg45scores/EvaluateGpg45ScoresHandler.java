@@ -13,11 +13,13 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.MapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
@@ -25,6 +27,7 @@ import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
@@ -45,8 +48,10 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_MITIGATION_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
@@ -64,6 +69,7 @@ public class EvaluateGpg45ScoresHandler
     private final UserIdentityService userIdentityService;
     private final IpvSessionService ipvSessionService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
+    private final CiStorageService ciStorageService;
     private final ConfigurationService configurationService;
     private final AuditService auditService;
     private final String addressCriId;
@@ -73,11 +79,13 @@ public class EvaluateGpg45ScoresHandler
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
+            CiStorageService ciStorageService,
             ConfigurationService configurationService,
             AuditService auditService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
+        this.ciStorageService = ciStorageService;
         this.configurationService = configurationService;
         this.auditService = auditService;
 
@@ -86,13 +94,13 @@ public class EvaluateGpg45ScoresHandler
                 configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
+    @ExcludeFromGeneratedCoverageReport
     public EvaluateGpg45ScoresHandler() {
         this.configurationService = new ConfigurationService();
         this.userIdentityService = new UserIdentityService(configurationService);
         this.ipvSessionService = new IpvSessionService(configurationService);
-        this.gpg45ProfileEvaluator =
-                new Gpg45ProfileEvaluator(
-                        new CiStorageService(configurationService), configurationService);
+        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configurationService);
+        this.ciStorageService = new CiStorageService(configurationService);
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
 
@@ -123,46 +131,45 @@ public class EvaluateGpg45ScoresHandler
                     gpg45ProfileEvaluator.parseCredentials(
                             userIdentityService.getUserIssuedCredentials(userId));
 
-            Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
-                    gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
-                            clientSessionDetailsDto, ipAddress);
-            if (contraIndicatorErrorJourneyResponse.isEmpty()) {
-                Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
-                Optional<Gpg45Profile> matchedProfile =
-                        gpg45ProfileEvaluator.getFirstMatchingProfile(
-                                gpg45Scores, ACCEPTED_PROFILES);
-                JourneyResponse journeyResponse;
-                var message = new MapMessage();
+            List<ContraIndicatorItem> ciItems;
+            ciItems =
+                    ciStorageService.getCIs(
+                            clientSessionDetailsDto.getUserId(),
+                            clientSessionDetailsDto.getGovukSigninJourneyId(),
+                            ipAddress);
 
-                if (matchedProfile.isPresent()) {
-                    auditService.sendAuditEvent(
-                            buildProfileMatchedAuditEvent(
-                                    ipvSessionItem,
-                                    matchedProfile.get(),
-                                    gpg45Scores,
-                                    credentials,
-                                    ipAddress));
-                    ipvSessionItem.setVot(VOT_P2);
-                    journeyResponse = JOURNEY_END;
-                    message.with("lambdaResult", "A GPG45 profile has been met")
-                            .with("journeyResponse", JOURNEY_END);
-                } else {
-                    journeyResponse = JOURNEY_NEXT;
-                    message.with("lambdaResult", "No GPG45 profiles have been met")
-                            .with("journeyResponse", JOURNEY_NEXT);
-                }
+            JourneyResponse journeyResponse;
+            var message = new MapMessage();
 
-                updateSuccessfulVcStatuses(ipvSessionItem, credentials);
-
-                LOGGER.info(message);
-
-                return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        HttpStatus.SC_OK, journeyResponse);
-            } else {
-                return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        HttpStatus.SC_OK, contraIndicatorErrorJourneyResponse.get());
+            boolean ciMitigationJourneysEnabled =
+                    Boolean.parseBoolean(
+                            configurationService.getSsmParameter(CI_MITIGATION_JOURNEYS_ENABLED));
+            Optional<JourneyResponse> mitigationJourneyResponse = Optional.empty();
+            if (ciMitigationJourneysEnabled) {
+                mitigationJourneyResponse =
+                        getNextMitigationJourneyResponse(ipvSessionItem, ciItems);
             }
 
+            if (mitigationJourneyResponse.isPresent()) {
+                journeyResponse = mitigationJourneyResponse.get();
+            } else {
+                Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
+                        gpg45ProfileEvaluator.getJourneyResponseForStoredCis(ciItems);
+                if (contraIndicatorErrorJourneyResponse.isEmpty()) {
+                    journeyResponse =
+                            checkForMatchingGpg45Profile(
+                                    message, ipvSessionItem, credentials, ipAddress);
+                } else {
+                    return ApiGatewayResponseGenerator.proxyJsonResponse(
+                            HttpStatus.SC_OK, contraIndicatorErrorJourneyResponse.get());
+                }
+            }
+
+            updateSuccessfulVcStatuses(ipvSessionItem, credentials);
+
+            LOGGER.info(message);
+
+            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, journeyResponse);
         } catch (HttpResponseExceptionWithErrorBody e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getResponseCode(), e.getErrorBody());
@@ -185,6 +192,87 @@ public class EvaluateGpg45ScoresHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
         }
+    }
+
+    private JourneyResponse checkForMatchingGpg45Profile(
+            MapMessage message,
+            IpvSessionItem ipvSessionItem,
+            List<SignedJWT> credentials,
+            String ipAddress)
+            throws UnknownEvidenceTypeException, ParseException, SqsException {
+        Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
+        Optional<Gpg45Profile> matchedProfile =
+                gpg45ProfileEvaluator.getFirstMatchingProfile(gpg45Scores, ACCEPTED_PROFILES);
+
+        if (matchedProfile.isPresent()) {
+            auditService.sendAuditEvent(
+                    buildProfileMatchedAuditEvent(
+                            ipvSessionItem,
+                            matchedProfile.get(),
+                            gpg45Scores,
+                            credentials,
+                            ipAddress));
+            ipvSessionItem.setVot(VOT_P2);
+
+            message.with("lambdaResult", "A GPG45 profile has been met")
+                    .with("journeyResponse", JOURNEY_END);
+            return JOURNEY_END;
+        } else {
+
+            message.with("lambdaResult", "No GPG45 profiles have been met")
+                    .with("journeyResponse", JOURNEY_NEXT);
+            return JOURNEY_NEXT;
+        }
+    }
+
+    private Optional<JourneyResponse> getNextMitigationJourneyResponse(
+            IpvSessionItem ipvSessionItem, List<ContraIndicatorItem> ciItems) {
+        List<ContraIndicatorMitigationDetailsDto> currentMitigationDetails =
+                ipvSessionItem.getContraIndicatorMitigationDetails();
+        boolean ciMitigationInProgress = isCiMitigationInProgress(currentMitigationDetails);
+
+        List<ContraIndicatorItem> newCiItems =
+                ciItems.stream()
+                        .filter(
+                                ciItem -> {
+                                    if (currentMitigationDetails != null) {
+                                        Optional<ContraIndicatorMitigationDetailsDto> matchingCI =
+                                                currentMitigationDetails.stream()
+                                                        .filter(
+                                                                mitigationDetails ->
+                                                                        mitigationDetails
+                                                                                .getCi()
+                                                                                .equals(
+                                                                                        ciItem
+                                                                                                .getCi()))
+                                                        .findAny();
+                                        return matchingCI.isEmpty();
+                                    }
+                                    return true;
+                                })
+                        .collect(Collectors.toList());
+
+        if (!newCiItems.isEmpty()) {
+            List<ContraIndicatorMitigationDetailsDto> newMitigationDetails = new ArrayList<>();
+
+            if (ipvSessionItem.getContraIndicatorMitigationDetails() != null) {
+                newMitigationDetails.addAll(ipvSessionItem.getContraIndicatorMitigationDetails());
+            }
+
+            newCiItems.forEach(
+                    contraIndicatorItem ->
+                            newMitigationDetails.add(
+                                    new ContraIndicatorMitigationDetailsDto(
+                                            contraIndicatorItem.getCi())));
+
+            ipvSessionItem.setContraIndicatorMitigationDetails(newMitigationDetails);
+            ipvSessionService.updateIpvSession(ipvSessionItem);
+
+            return Optional.of(JOURNEY_NEXT);
+        } else if (ciMitigationInProgress) {
+            return Optional.of(JOURNEY_NEXT);
+        }
+        return Optional.empty();
     }
 
     @Tracing
@@ -254,5 +342,17 @@ public class EvaluateGpg45ScoresHandler
             }
         }
         return txnIds;
+    }
+
+    private boolean isCiMitigationInProgress(
+            List<ContraIndicatorMitigationDetailsDto> currentMitigationDetails) {
+        if (currentMitigationDetails != null) {
+            Optional<ContraIndicatorMitigationDetailsDto> inProgressCiMitigation =
+                    currentMitigationDetails.stream()
+                            .filter(ContraIndicatorMitigationDetailsDto::isMitigatable)
+                            .findAny();
+            return inProgressCiMitigation.isPresent();
+        }
+        return false;
     }
 }

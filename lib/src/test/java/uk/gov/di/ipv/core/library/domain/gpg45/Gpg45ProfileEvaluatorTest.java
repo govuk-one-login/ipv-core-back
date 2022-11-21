@@ -13,7 +13,6 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,17 +70,9 @@ class Gpg45ProfileEvaluatorTest {
 
     @Test
     void getJourneyResponseForStoredCisShouldReturnEmptyOptionalIfNoCis() throws Exception {
-        when(mockClientSessionDetails.getUserId()).thenReturn(TEST_USER_ID);
-        when(mockClientSessionDetails.getGovukSigninJourneyId()).thenReturn(TEST_JOURNEY_ID);
-        when(mockCiStorageService.getCIs(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
-                .thenReturn(List.of());
         when(mockConfigurationService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
 
-        assertTrue(
-                evaluator
-                        .getJourneyResponseForStoredCis(
-                                mockClientSessionDetails, TEST_CLIENT_SOURCE_IP)
-                        .isEmpty());
+        assertTrue(evaluator.getJourneyResponseForStoredCis(List.of()).isEmpty());
     }
 
     @Test
@@ -101,16 +92,9 @@ class Gpg45ProfileEvaluatorTest {
         ciScoresMap.put("Y03", new ContraIndicatorScore("Y03", 2, -2, null));
         when(mockConfigurationService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
         when(mockConfigurationService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
-        when(mockClientSessionDetails.getUserId()).thenReturn(TEST_USER_ID);
-        when(mockClientSessionDetails.getGovukSigninJourneyId()).thenReturn(TEST_JOURNEY_ID);
-        when(mockCiStorageService.getCIs(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
-                .thenReturn(List.of(contraIndicatorItem));
 
         assertTrue(
-                evaluator
-                        .getJourneyResponseForStoredCis(
-                                mockClientSessionDetails, TEST_CLIENT_SOURCE_IP)
-                        .isEmpty());
+                evaluator.getJourneyResponseForStoredCis(List.of(contraIndicatorItem)).isEmpty());
     }
 
     @Test
@@ -146,15 +130,10 @@ class Gpg45ProfileEvaluatorTest {
         when(mockConfigurationService.getSsmParameter(KBV_CRI_ID)).thenReturn("kbv");
         when(mockConfigurationService.getCredentialIssuer("kbv")).thenReturn(kbvConfig);
         when(kbvConfig.getAudienceForClients()).thenReturn("kbvIssuer");
-        when(mockClientSessionDetails.getUserId()).thenReturn(TEST_USER_ID);
-        when(mockClientSessionDetails.getGovukSigninJourneyId()).thenReturn(TEST_JOURNEY_ID);
-        when(mockCiStorageService.getCIs(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
-                .thenReturn(new ArrayList<>(List.of(otherCiItem, kbvCiItem)));
 
         assertEquals(
                 Optional.of(JOURNEY_RESPONSE_PYI_KBV_FAIL),
-                evaluator.getJourneyResponseForStoredCis(
-                        mockClientSessionDetails, TEST_CLIENT_SOURCE_IP));
+                evaluator.getJourneyResponseForStoredCis(List.of(otherCiItem, kbvCiItem)));
     }
 
     @Test
@@ -190,15 +169,10 @@ class Gpg45ProfileEvaluatorTest {
         when(mockConfigurationService.getSsmParameter(KBV_CRI_ID)).thenReturn("kbv");
         when(mockConfigurationService.getCredentialIssuer("kbv")).thenReturn(kbvConfig);
         when(kbvConfig.getAudienceForClients()).thenReturn("kbvIssuer");
-        when(mockClientSessionDetails.getUserId()).thenReturn(TEST_USER_ID);
-        when(mockClientSessionDetails.getGovukSigninJourneyId()).thenReturn(TEST_JOURNEY_ID);
-        when(mockCiStorageService.getCIs(TEST_USER_ID, TEST_JOURNEY_ID, TEST_CLIENT_SOURCE_IP))
-                .thenReturn(new ArrayList<>(List.of(otherCiItem, kbvCiItem)));
 
         assertEquals(
                 Optional.of(JOURNEY_RESPONSE_PYI_NO_MATCH),
-                evaluator.getJourneyResponseForStoredCis(
-                        mockClientSessionDetails, TEST_CLIENT_SOURCE_IP));
+                evaluator.getJourneyResponseForStoredCis(List.of(otherCiItem, kbvCiItem)));
     }
 
     @Test

@@ -21,7 +21,8 @@ public enum ConfigurationVariable {
     AUTH_CODE_EXPIRY_SECONDS("/%s/core/self/authCodeExpirySeconds"),
     PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY("/%s/core/clients/%s/publicKeyMaterialForCoreToVerify"),
     CI_SCORING_CONFIG("/%s/core/self/ci-scoring-config"),
-    CI_SCORING_THRESHOLD("/%s/core/self/ciScoringThreshold");
+    CI_SCORING_THRESHOLD("/%s/core/self/ciScoringThreshold"),
+    CI_MITIGATION_JOURNEYS_ENABLED("/%s/core/self/journey/ciMitigationsEnabled");
 
     private final String value;
 
