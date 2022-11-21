@@ -190,6 +190,13 @@ SELECT_CRI:
       response:
         type: journey
         journeyStepId: /journey/end-mitigation-journey/MJ01
+    end-mj02:
+      type: basic
+      name: end-mj02
+      targetState: END_MJ02
+      response:
+        type: journey
+        journeyStepId: /journey/end-mitigation-journey/MJ02
     fail:
       type: basic
       name: fail
@@ -319,6 +326,9 @@ CRI_DCMAW:
         journeyStepId: /journey/evaluate-gpg45-scores
 END_MJ01:
   name: END_MJ01
+  parent: MITIGATION_JOURNEY
+END_MJ02:
+  name: END_MJ02
   parent: MITIGATION_JOURNEY
 IPV_SUCCESS_PAGE:
   name: IPV_SUCCESS_PAGE
