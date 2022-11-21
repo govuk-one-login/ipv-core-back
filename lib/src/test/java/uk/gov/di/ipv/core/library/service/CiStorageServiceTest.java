@@ -176,7 +176,7 @@ class CiStorageServiceTest {
         assertEquals(THE_ARN_OF_THE_POST_LAMBDA, request.getFunctionName());
         assertEquals(
                 String.format(
-                        "{\"govuk_signin_journey_id\":\"%s\",\"ip_address\":\"%s\",\"signed_jwt_list\":[\"%s\"]}",
+                        "{\"govuk_signin_journey_id\":\"%s\",\"ip_address\":\"%s\",\"signed_jwts\":[\"%s\"]}",
                         GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, SIGNED_VC_1),
                 new String(request.getPayload().array(), StandardCharsets.UTF_8));
     }

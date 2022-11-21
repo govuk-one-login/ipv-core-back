@@ -13,6 +13,6 @@ public class PostCiMitigationRequest {
     @SerializedName(value = "ip_address")
     private final String ipAddress;
 
-    @SerializedName(value = "signed_jwt_list")
+    @SerializedName(value = "signed_jwts")
     private final List<String> signedJwtList;
 }

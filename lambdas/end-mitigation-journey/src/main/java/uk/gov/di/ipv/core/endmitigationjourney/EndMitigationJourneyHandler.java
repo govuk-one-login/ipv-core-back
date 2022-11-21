@@ -167,7 +167,6 @@ public class EndMitigationJourneyHandler
             String mitigationId,
             ConfigurationService configurationService)
             throws UnknownMitigationJourneyException {
-        // check mitigation id and call vorrect validation method
         if (mitigationId.equals(MJ01)) {
             return Mj01Validation.validateJourney(credentials, ciItem, configurationService);
         }
