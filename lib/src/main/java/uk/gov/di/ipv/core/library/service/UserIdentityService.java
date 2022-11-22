@@ -13,6 +13,7 @@ import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.MapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.DebugCredentialAttributes;
@@ -110,10 +111,13 @@ public class UserIdentityService {
     public void deleteUserIssuedCredentials(String userId) {
         List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(userId);
         if (!credentialIssuerItems.isEmpty()) {
-            LogHelper.logInfoMessageWithFieldAndValue(
-                    "Deleting existing issued VCs",
-                    LogHelper.LogField.NUMBER_OF_VCS,
-                    String.valueOf(credentialIssuerItems.size()));
+            var message =
+                    new MapMessage()
+                            .with("description", "Deleting existing issued VCs")
+                            .with(
+                                    LogHelper.LogField.NUMBER_OF_VCS.getFieldName(),
+                                    String.valueOf(credentialIssuerItems.size()));
+            LOGGER.info(message);
         }
         for (UserIssuedCredentialsItem item : credentialIssuerItems) {
             dataStore.delete(item.getUserId(), item.getCredentialIssuer());
