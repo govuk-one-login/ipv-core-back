@@ -14,6 +14,7 @@ import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.MapMessage;
+import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.DebugCredentialAttributes;
@@ -54,7 +55,8 @@ public class UserIdentityService {
     private static final String DRIVING_PERMIT_PROPERTY_NAME = "drivingPermit";
     private static final List<String> ADDRESS_CRI_TYPES =
             List.of(ADDRESS_PROPERTY_NAME, "stubAddress");
-    private static final List<String> PASSPORT_CRI_TYPES = List.of("ukPassport", "stubUkPassport");
+    private static final List<String> PASSPORT_CRI_TYPES =
+            List.of("ukPassport", "stubUkPassport", "dcmaw", "stubDcmaw");
     private static final List<String> DRIVING_PERMIT_CRI_TYPES = List.of("dcmaw", "stubDcmaw");
     private static final List<String> EVIDENCE_CRI_TYPES =
             List.of("ukPassport", "stubUkPassport", "dcmaw", "stubDcmaw");
@@ -151,7 +153,8 @@ public class UserIdentityService {
             Optional<JsonNode> addressClaim = generateAddressClaim(credentialIssuerItems);
             addressClaim.ifPresent(userIdentityBuilder::setAddressClaim);
 
-            Optional<JsonNode> passportClaim = generatePassportClaim(credentialIssuerItems);
+            Optional<JsonNode> passportClaim =
+                    generatePassportClaim(credentialIssuerItems, currentVcStatuses);
             passportClaim.ifPresent(userIdentityBuilder::setPassportClaim);
 
             Optional<JsonNode> drivingPermitClaim =
@@ -307,43 +310,44 @@ public class UserIdentityService {
     }
 
     private Optional<JsonNode> generatePassportClaim(
-            List<UserIssuedCredentialsItem> credentialIssuerItems)
+            List<UserIssuedCredentialsItem> credentialIssuerItems,
+            List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
-        Optional<UserIssuedCredentialsItem> passportCredentialItem =
-                credentialIssuerItems.stream()
-                        .filter(
-                                credential ->
-                                        PASSPORT_CRI_TYPES.contains(
-                                                credential.getCredentialIssuer()))
-                        .findFirst();
+        for (UserIssuedCredentialsItem item : credentialIssuerItems) {
+            CredentialIssuerConfig credentialIssuerConfig =
+                    configurationService.getCredentialIssuer(item.getCredentialIssuer());
+            if (PASSPORT_CRI_TYPES.contains(item.getCredentialIssuer())
+                    && isVcSuccessful(
+                            currentVcStatuses, credentialIssuerConfig.getAudienceForClients())) {
+                JsonNode passportNode;
+                try {
+                    passportNode =
+                            objectMapper
+                                    .readTree(
+                                            SignedJWT.parse(item.getCredential())
+                                                    .getPayload()
+                                                    .toString())
+                                    .path(VC_CLAIM)
+                                    .path(VC_CREDENTIAL_SUBJECT)
+                                    .path(PASSPORT_PROPERTY_NAME);
+                    if (passportNode.isMissingNode()) {
+                        StringMapMessage mapMessage =
+                                new StringMapMessage()
+                                        .with("message", "Passport property is missing from VC")
+                                        .with("criIss", item.getCredentialIssuer());
+                        LOGGER.warn(mapMessage);
 
-        if (passportCredentialItem.isPresent()) {
-            JsonNode passportNode;
-            try {
-                passportNode =
-                        objectMapper
-                                .readTree(
-                                        SignedJWT.parse(
-                                                        passportCredentialItem
-                                                                .get()
-                                                                .getCredential())
-                                                .getPayload()
-                                                .toString())
-                                .path(VC_CLAIM)
-                                .path(VC_CREDENTIAL_SUBJECT)
-                                .path(PASSPORT_PROPERTY_NAME);
-                if (passportNode.isMissingNode()) {
-                    LOGGER.error("Passport property is missing from passport VC");
+                        return Optional.empty();
+                    }
+                } catch (JsonProcessingException | ParseException e) {
+                    LOGGER.error(
+                            "Error while parsing Passport CRI credential: '{}'", e.getMessage());
                     throw new HttpResponseExceptionWithErrorBody(
-                            500, ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
                 }
-            } catch (JsonProcessingException | ParseException e) {
-                LOGGER.error("Error while parsing Passport CRI credential: '{}'", e.getMessage());
-                throw new HttpResponseExceptionWithErrorBody(
-                        HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                        ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM);
+                return Optional.of(passportNode);
             }
-            return Optional.of(passportNode);
         }
 
         LOGGER.warn("Failed to find Passport CRI credential");
@@ -378,9 +382,15 @@ public class UserIdentityService {
                     }
 
                     if (drivingPermitNode.isMissingNode()) {
-                        LOGGER.error("Driving Permit property is missing from passport VC");
-                        throw new HttpResponseExceptionWithErrorBody(
-                                500, ErrorResponse.FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM);
+                        StringMapMessage mapMessage =
+                                new StringMapMessage()
+                                        .with(
+                                                "message",
+                                                "Driving Permit property is missing from VC")
+                                        .with("criIss", item.getCredentialIssuer());
+                        LOGGER.warn(mapMessage);
+
+                        return Optional.empty();
                     }
 
                     return Optional.of(drivingPermitNode);
