@@ -3,14 +3,15 @@ package uk.gov.di.ipv.core.library.helpers;
 import com.amazonaws.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.MapMessage;
 import software.amazon.lambda.powertools.logging.LoggingUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 @ExcludeFromGeneratedCoverageReport
 public class LogHelper {
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final String CORE_COMPONENT_ID = "core";
 
+    public static final String CORE_COMPONENT_ID = "core";
     public static final String GOVUK_SIGNIN_JOURNEY_ID_DEFAULT_VALUE = "unknown";
 
     public enum LogField {
@@ -75,24 +76,15 @@ public class LogHelper {
     }
 
     public static void logOauthError(String message, String errorCode, String errorDescription) {
-        LoggingUtils.appendKey(LogField.ERROR_CODE_LOG_FIELD.getFieldName(), errorCode);
-        LoggingUtils.appendKey(
-                LogField.ERROR_DESCRIPTION_LOG_FIELD.getFieldName(), errorDescription);
-        LOGGER.error(message);
-        LoggingUtils.removeKeys(
-                LogField.ERROR_CODE_LOG_FIELD.getFieldName(),
-                LogField.ERROR_DESCRIPTION_LOG_FIELD.getFieldName());
-    }
-
-    public static void logInfoMessageWithFieldAndValue(
-            String message, LogField logField, String logFieldValue) {
-        LoggingUtils.appendKey(logField.getFieldName(), logFieldValue);
-        LOGGER.info(message);
-        LoggingUtils.removeKey(logField.getFieldName());
+        var mapMessage =
+                new MapMessage()
+                        .with(LogField.ERROR_CODE_LOG_FIELD.getFieldName(), errorCode)
+                        .with(LogField.ERROR_DESCRIPTION_LOG_FIELD.getFieldName(), errorDescription)
+                        .with("description", message);
+        LOGGER.error(mapMessage);
     }
 
     private static void attachFieldToLogs(LogField field, String value) {
         LoggingUtils.appendKey(field.getFieldName(), value);
-        LOGGER.info("{} attached to logs", field.getFieldName());
     }
 }
