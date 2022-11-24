@@ -484,7 +484,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenMissingPassportProperty() {
+    void shouldReturnEmptyWhenMissingPassportProperty() throws HttpResponseExceptionWithErrorBody {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
@@ -517,20 +517,11 @@ class UserIdentityServiceTest {
                                 "test-issuer",
                                 URI.create("https://example.com/callback")));
 
-        HttpResponseExceptionWithErrorBody thrownError =
-                assertThrows(
-                        HttpResponseExceptionWithErrorBody.class,
-                        () ->
-                                userIdentityService.generateUserIdentity(
-                                        "user-id-1", "test-sub", "P2", currentVcStatuses));
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity(
+                        "user-id-1", "test-sub", "P2", currentVcStatuses);
 
-        assertEquals(500, thrownError.getResponseCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM.getCode(),
-                thrownError.getErrorBody().get("error"));
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_PASSPORT_CLAIM.getMessage(),
-                thrownError.getErrorBody().get("error_description"));
+        assertNull(credentials.getPassportClaim());
     }
 
     @Test
@@ -1040,7 +1031,8 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldThrowExceptionWhenMissingDrivingPermitProperty() {
+    void shouldReturnEmptyWhenMissingDrivingPermitProperty()
+            throws HttpResponseExceptionWithErrorBody {
         List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
                 List.of(
                         createUserIssuedCredentialsItem(
@@ -1066,20 +1058,11 @@ class UserIdentityServiceTest {
                                 "dcmaw-issuer",
                                 URI.create("https://example.com/callback")));
 
-        HttpResponseExceptionWithErrorBody thrownError =
-                assertThrows(
-                        HttpResponseExceptionWithErrorBody.class,
-                        () ->
-                                userIdentityService.generateUserIdentity(
-                                        "user-id-1", "test-sub", "P2", currentVcStatuses));
+        UserIdentity credentials =
+                userIdentityService.generateUserIdentity(
+                        "user-id-1", "test-sub", "P2", currentVcStatuses);
 
-        assertEquals(500, thrownError.getResponseCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM.getCode(),
-                thrownError.getErrorBody().get("error"));
-        assertEquals(
-                ErrorResponse.FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM.getMessage(),
-                thrownError.getErrorBody().get("error_description"));
+        assertNull(credentials.getDrivingPermitClaim());
     }
 
     @Test
