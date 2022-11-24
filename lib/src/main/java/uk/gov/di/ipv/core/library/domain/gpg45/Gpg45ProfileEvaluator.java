@@ -7,7 +7,7 @@ import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.MapMessage;
+import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -51,7 +51,7 @@ public class Gpg45ProfileEvaluator {
             List<ContraIndicatorItem> ciItems) {
         List<ContraIndicatorItem> contraIndicatorItems = new ArrayList<>(ciItems);
         LOGGER.info(
-                new MapMessage()
+                new StringMapMessage()
                         .with(LOG_DESCRIPTION_FIELD, "Retrieved user's CI items")
                         .with("numberOfItems", ciItems.size()));
 
@@ -69,7 +69,7 @@ public class Gpg45ProfileEvaluator {
             ciScore += scoresConfig.getDetectedScore();
         }
         LOGGER.info(
-                new MapMessage()
+                new StringMapMessage()
                         .with(LOG_DESCRIPTION_FIELD, "Calculated user's CI score")
                         .with("score", ciScore));
 
@@ -101,7 +101,7 @@ public class Gpg45ProfileEvaluator {
                             boolean profileMet = profile.isSatisfiedBy(gpg45Scores);
                             if (profileMet) {
                                 var message =
-                                        new MapMessage()
+                                        new StringMapMessage()
                                                 .with(
                                                         LOG_DESCRIPTION_FIELD,
                                                         "GPG45 profile has been met")

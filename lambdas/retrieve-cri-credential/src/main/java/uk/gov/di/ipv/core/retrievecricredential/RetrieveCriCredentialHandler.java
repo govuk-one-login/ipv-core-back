@@ -10,7 +10,7 @@ import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.MapMessage;
+import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -166,7 +166,7 @@ public class RetrieveCriCredentialHandler
             updateVisitedCredentials(ipvSessionItem, credentialIssuerId, true, null);
 
             var message =
-                    new MapMessage()
+                    new StringMapMessage()
                             .with("lambdaResult", "Successfully retrieved CRI credential.")
                             .with("criId", credentialIssuerId);
             LOGGER.info(message);

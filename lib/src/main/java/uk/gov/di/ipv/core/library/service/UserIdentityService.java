@@ -13,7 +13,6 @@ import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.MapMessage;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
@@ -114,7 +113,7 @@ public class UserIdentityService {
         List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(userId);
         if (!credentialIssuerItems.isEmpty()) {
             var message =
-                    new MapMessage()
+                    new StringMapMessage()
                             .with("description", "Deleting existing issued VCs")
                             .with(
                                     LogHelper.LogField.NUMBER_OF_VCS.getFieldName(),

@@ -7,7 +7,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.MapMessage;
+import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -108,7 +108,7 @@ public class SelectCriHandler
             }
 
             var message =
-                    new MapMessage()
+                    new StringMapMessage()
                             .with("lambdaResult", "Successfully found next step for user")
                             .with("journeyResponse", response.getJourney());
             LOGGER.info(message);
@@ -260,7 +260,7 @@ public class SelectCriHandler
                 return Optional.of(getJourneyResponse(journeyId));
             }
             var message =
-                    new MapMessage()
+                    new StringMapMessage()
                             .with(
                                     "message",
                                     "User has a previous failed visit to a cri due to an oauth error")
@@ -276,7 +276,7 @@ public class SelectCriHandler
             return Optional.of(getJourneyPyiNoMatchResponse());
         } else if (Boolean.FALSE.equals(vc.get().getIsSuccessfulVc())) {
             var message =
-                    new MapMessage()
+                    new StringMapMessage()
                             .with(
                                     "message",
                                     "User has a previous failed visit to a cri due to a failed identity check")

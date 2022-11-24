@@ -12,7 +12,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.MapMessage;
+import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.buildclientoauthresponse.domain.ClientDetails;
@@ -134,7 +134,7 @@ public class BuildClientOauthResponseHandler
                     new AuditEvent(AuditEventTypes.IPV_JOURNEY_END, componentId, auditEventUser));
 
             var message =
-                    new MapMessage()
+                    new StringMapMessage()
                             .with(
                                     "lambdaResult",
                                     "Successfully generated ipv client oauth response.")

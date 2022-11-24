@@ -3,7 +3,7 @@ package uk.gov.di.ipv.core.library.domain;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.MapMessage;
+import org.apache.logging.log4j.message.StringMapMessage;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -48,7 +48,7 @@ public class SharedClaimsResponse {
                 });
 
         var message =
-                new MapMessage()
+                new StringMapMessage()
                         .with("sharedClaims", "built")
                         .with("names", nameSet.size())
                         .with("birthDates", birthDateSet.size())

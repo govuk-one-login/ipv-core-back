@@ -3,7 +3,7 @@ package uk.gov.di.ipv.core.library.helpers;
 import com.amazonaws.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.MapMessage;
+import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.LoggingUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
@@ -77,7 +77,7 @@ public class LogHelper {
 
     public static void logOauthError(String message, String errorCode, String errorDescription) {
         var mapMessage =
-                new MapMessage()
+                new StringMapMessage()
                         .with(LogField.ERROR_CODE_LOG_FIELD.getFieldName(), errorCode)
                         .with(LogField.ERROR_DESCRIPTION_LOG_FIELD.getFieldName(), errorDescription)
                         .with("description", message);
