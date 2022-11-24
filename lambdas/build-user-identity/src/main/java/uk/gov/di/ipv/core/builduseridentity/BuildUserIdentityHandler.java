@@ -12,7 +12,7 @@ import com.nimbusds.oauth2.sdk.token.AccessTokenType;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.MapMessage;
+import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -142,7 +142,7 @@ public class BuildUserIdentityHandler
             ipvSessionService.revokeAccessToken(ipvSessionItem);
 
             var message =
-                    new MapMessage()
+                    new StringMapMessage()
                             .with("lambdaResult", "Successfully generated user identity response.")
                             .with("vot", ipvSessionItem.getVot());
             LOGGER.info(message);

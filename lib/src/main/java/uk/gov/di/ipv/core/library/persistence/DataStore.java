@@ -2,7 +2,7 @@ package uk.gov.di.ipv.core.library.persistence;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.MapMessage;
+import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
@@ -158,7 +158,7 @@ public class DataStore<T extends DynamodbItem> {
         T result = table.getItem(key);
         if (warnOnNull && result == null) {
             var message =
-                    new MapMessage()
+                    new StringMapMessage()
                             .with("datastore", "Null result retrieved from DynamoDB")
                             .with("table", table.describeTable().table().tableName())
                             .with("field", key.partitionKeyValue().toString());

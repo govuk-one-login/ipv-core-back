@@ -16,7 +16,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.MapMessage;
+import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -157,7 +157,7 @@ public class IssueClientAccessTokenHandler
                 BearerAccessToken bearerAccessToken =
                         accessTokenResponse.getTokens().getBearerAccessToken();
                 var message =
-                        new MapMessage()
+                        new StringMapMessage()
                                 .with("accessToken", bearerAccessToken.getValue())
                                 .with(
                                         "sha256AccessToken",
@@ -169,7 +169,7 @@ public class IssueClientAccessTokenHandler
                     ipvSessionItem, accessTokenResponse.getTokens().getBearerAccessToken());
 
             var message =
-                    new MapMessage()
+                    new StringMapMessage()
                             .with(
                                     "lambdaResult",
                                     "Successfully generated IPV client access token.");

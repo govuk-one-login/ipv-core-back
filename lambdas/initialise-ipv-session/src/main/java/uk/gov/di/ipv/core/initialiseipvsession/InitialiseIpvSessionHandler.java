@@ -14,7 +14,7 @@ import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.message.MapMessage;
+import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -149,7 +149,7 @@ public class InitialiseIpvSessionHandler
                     Map.of(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());
 
             var message =
-                    new MapMessage()
+                    new StringMapMessage()
                             .with("lambdaResult", "Successfully generated a new IPV Core session")
                             .with(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());
             LOGGER.info(message);
