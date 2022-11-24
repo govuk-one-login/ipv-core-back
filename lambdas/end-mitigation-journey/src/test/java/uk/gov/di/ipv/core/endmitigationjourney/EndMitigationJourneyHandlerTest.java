@@ -55,6 +55,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IP_ADDRESS_HEADER;
 
@@ -165,7 +166,6 @@ class EndMitigationJourneyHandlerTest {
 
         verify(mockIpvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
         IpvSessionItem updatedSession = ipvSessionItemArgumentCaptor.getValue();
-        updatedSession.getContraIndicatorMitigationDetails().get(0).getMitigationJourneys().get(0);
         MitigationJourneyDetailsDto mitigationJourneyDetails =
                 updatedSession
                         .getContraIndicatorMitigationDetails()
@@ -173,6 +173,63 @@ class EndMitigationJourneyHandlerTest {
                         .getMitigationJourneys()
                         .get(0);
         assertEquals("MJ01", mitigationJourneyDetails.getMitigationJourneyId());
+        assertTrue(mitigationJourneyDetails.isComplete());
+    }
+
+    @Test
+    void shouldSendPostMitigationRequestWhenMJ02JourneyAndHasDcmawVC() throws Exception {
+        List<MitigationJourneyDetailsDto> sessionMitigationJourneyDetails =
+                List.of(
+                        new MitigationJourneyDetailsDto("MJ01", true),
+                        new MitigationJourneyDetailsDto("MJ02", false));
+
+        List<ContraIndicatorMitigationDetailsDto> contraIndicatorMitigationDetails =
+                List.of(
+                        new ContraIndicatorMitigationDetailsDto(
+                                "TEST-01", sessionMitigationJourneyDetails, true));
+        ipvSessionItem.setContraIndicatorMitigationDetails(contraIndicatorMitigationDetails);
+
+        when(mockIpvSessionService.getIpvSession(any())).thenReturn(ipvSessionItem);
+        when(mockCiStorageService.getCIs(any(), any(), any())).thenReturn(contraIndicatorItems);
+
+        List<String> credentials =
+                List.of(
+                        M1B_DCMAW_VC,
+                        M1A_ADDRESS_VC,
+                        generateTestVc(
+                                        "test-fraud-iss",
+                                        Instant.now().minusSeconds(101).toEpochMilli(),
+                                        List.of("TEST-01"))
+                                .serialize());
+        when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(credentials);
+
+        event.setPathParameters(Map.of("mitigationId", "MJ02"));
+
+        APIGatewayProxyResponseEvent response =
+                endMitigationJourneyHandler.handleRequest(event, mockContext);
+
+        ArgumentCaptor<List<String>> mitigatingVcsArguementCaptor =
+                ArgumentCaptor.forClass(List.class);
+        verify(mockCiStorageService)
+                .submitMitigatingVcList(mitigatingVcsArguementCaptor.capture(), any(), any());
+
+        List<String> mitigatingVs = mitigatingVcsArguementCaptor.getValue();
+        SignedJWT signedJWT = SignedJWT.parse(mitigatingVs.get(0));
+
+        assertEquals("test-dcmaw-iss", signedJWT.getJWTClaimsSet().getIssuer());
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+
+        verify(mockIpvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+        IpvSessionItem updatedSession = ipvSessionItemArgumentCaptor.getValue();
+        MitigationJourneyDetailsDto mitigationJourneyDetails =
+                updatedSession
+                        .getContraIndicatorMitigationDetails()
+                        .get(0)
+                        .getMitigationJourneys()
+                        .get(1);
+        assertEquals("MJ02", mitigationJourneyDetails.getMitigationJourneyId());
         assertTrue(mitigationJourneyDetails.isComplete());
     }
 
@@ -209,7 +266,6 @@ class EndMitigationJourneyHandlerTest {
 
         verify(mockIpvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
         IpvSessionItem updatedSession = ipvSessionItemArgumentCaptor.getValue();
-        updatedSession.getContraIndicatorMitigationDetails().get(0).getMitigationJourneys().get(0);
         MitigationJourneyDetailsDto mitigationJourneyDetails =
                 updatedSession
                         .getContraIndicatorMitigationDetails()
@@ -217,6 +273,58 @@ class EndMitigationJourneyHandlerTest {
                         .getMitigationJourneys()
                         .get(0);
         assertEquals("MJ01", mitigationJourneyDetails.getMitigationJourneyId());
+        assertTrue(mitigationJourneyDetails.isComplete());
+    }
+
+    @Test
+    void shouldNotSendPostMitigationRequestWhenMJ02JourneyAndMissingDcmawVC() throws Exception {
+        List<MitigationJourneyDetailsDto> sessionMitigationJourneyDetails =
+                List.of(
+                        new MitigationJourneyDetailsDto("MJ01", true),
+                        new MitigationJourneyDetailsDto("MJ02", false));
+
+        List<ContraIndicatorMitigationDetailsDto> contraIndicatorMitigationDetails =
+                List.of(
+                        new ContraIndicatorMitigationDetailsDto(
+                                "TEST-01", sessionMitigationJourneyDetails, true));
+        ipvSessionItem.setContraIndicatorMitigationDetails(contraIndicatorMitigationDetails);
+
+        when(mockIpvSessionService.getIpvSession(any())).thenReturn(ipvSessionItem);
+        when(mockCiStorageService.getCIs(any(), any(), any())).thenReturn(contraIndicatorItems);
+
+        List<String> credentials =
+                List.of(
+                        M1A_PASSPORT_VC,
+                        M1A_ADDRESS_VC,
+                        generateTestVc(
+                                        "test-fraud-iss",
+                                        Instant.now().minusSeconds(101).toEpochMilli(),
+                                        List.of("TEST-01"))
+                                .serialize());
+        when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(credentials);
+
+        event.setPathParameters(Map.of("mitigationId", "MJ02"));
+
+        APIGatewayProxyResponseEvent response =
+                endMitigationJourneyHandler.handleRequest(event, mockContext);
+
+        ArgumentCaptor<List<String>> mitigatingVcsArguementCaptor =
+                ArgumentCaptor.forClass(List.class);
+        verify(mockCiStorageService, times(0))
+                .submitMitigatingVcList(mitigatingVcsArguementCaptor.capture(), any(), any());
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+
+        verify(mockIpvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+        IpvSessionItem updatedSession = ipvSessionItemArgumentCaptor.getValue();
+        MitigationJourneyDetailsDto mitigationJourneyDetails =
+                updatedSession
+                        .getContraIndicatorMitigationDetails()
+                        .get(0)
+                        .getMitigationJourneys()
+                        .get(1);
+        assertEquals("MJ02", mitigationJourneyDetails.getMitigationJourneyId());
         assertTrue(mitigationJourneyDetails.isComplete());
     }
 
@@ -259,7 +367,6 @@ class EndMitigationJourneyHandlerTest {
 
         verify(mockIpvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
         IpvSessionItem updatedSession = ipvSessionItemArgumentCaptor.getValue();
-        updatedSession.getContraIndicatorMitigationDetails().get(0).getMitigationJourneys().get(0);
         MitigationJourneyDetailsDto mitigationJourneyDetails =
                 updatedSession
                         .getContraIndicatorMitigationDetails()
@@ -305,7 +412,6 @@ class EndMitigationJourneyHandlerTest {
 
         verify(mockIpvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
         IpvSessionItem updatedSession = ipvSessionItemArgumentCaptor.getValue();
-        updatedSession.getContraIndicatorMitigationDetails().get(0).getMitigationJourneys().get(0);
         MitigationJourneyDetailsDto mitigationJourneyDetails =
                 updatedSession
                         .getContraIndicatorMitigationDetails()
@@ -350,7 +456,6 @@ class EndMitigationJourneyHandlerTest {
 
         verify(mockIpvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
         IpvSessionItem updatedSession = ipvSessionItemArgumentCaptor.getValue();
-        updatedSession.getContraIndicatorMitigationDetails().get(0).getMitigationJourneys().get(0);
         MitigationJourneyDetailsDto mitigationJourneyDetails =
                 updatedSession
                         .getContraIndicatorMitigationDetails()
@@ -407,7 +512,6 @@ class EndMitigationJourneyHandlerTest {
 
         verify(mockIpvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
         IpvSessionItem updatedSession = ipvSessionItemArgumentCaptor.getValue();
-        updatedSession.getContraIndicatorMitigationDetails().get(0).getMitigationJourneys().get(0);
         MitigationJourneyDetailsDto mitigationJourneyDetails =
                 updatedSession
                         .getContraIndicatorMitigationDetails()
@@ -502,7 +606,6 @@ class EndMitigationJourneyHandlerTest {
 
         verify(mockIpvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
         IpvSessionItem updatedSession = ipvSessionItemArgumentCaptor.getValue();
-        updatedSession.getContraIndicatorMitigationDetails().get(0).getMitigationJourneys().get(0);
         MitigationJourneyDetailsDto mitigationJourneyDetails =
                 updatedSession
                         .getContraIndicatorMitigationDetails()

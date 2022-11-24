@@ -153,6 +153,53 @@ public class Gpg45ProfileEvaluator {
         return parsedCredentials;
     }
 
+    public Optional<SignedJWT> getCredentialByType(
+            List<SignedJWT> credentials, CredentialEvidenceItem.EvidenceType evidenceType)
+            throws ParseException, UnknownEvidenceTypeException {
+        for (SignedJWT signedJWT : credentials) {
+            List<CredentialEvidenceItem> credentialEvidenceList =
+                    parseCredentialEvidence(signedJWT);
+            for (CredentialEvidenceItem evidenceItem : credentialEvidenceList) {
+                if (evidenceItem.getType().equals(CredentialEvidenceItem.EvidenceType.DCMAW)
+                        && doesDcmawContainEvidenceType(evidenceItem, evidenceType)) {
+                    return Optional.of(signedJWT);
+                }
+
+                if (evidenceItem.getType().equals(evidenceType)) {
+                    return Optional.of(signedJWT);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    private boolean doesDcmawContainEvidenceType(
+            CredentialEvidenceItem evidenceItem, CredentialEvidenceItem.EvidenceType evidenceType)
+            throws UnknownEvidenceTypeException {
+        List<CredentialEvidenceItem> dcmawEvidenceItems =
+                convertDcmawEvidenceToGpg45EvidenceItems(evidenceItem);
+        for (CredentialEvidenceItem dcmawEvidenceItem : dcmawEvidenceItems) {
+            if (dcmawEvidenceItem.getType().equals(evidenceType)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private List<CredentialEvidenceItem> parseCredentialEvidence(SignedJWT signedJWT)
+            throws ParseException {
+        JSONObject vcClaim = (JSONObject) signedJWT.getJWTClaimsSet().getClaim(VC_CLAIM);
+        JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
+
+        if (evidenceArray == null) {
+            return Collections.emptyList();
+        }
+
+        return gson.fromJson(
+                evidenceArray.toJSONString(),
+                new TypeToken<List<CredentialEvidenceItem>>() {}.getType());
+    }
+
     private Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>>
             parseGpg45ScoresFromCredentials(List<SignedJWT> credentials)
                     throws ParseException, UnknownEvidenceTypeException {
@@ -165,16 +212,8 @@ public class Gpg45ProfileEvaluator {
                         CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>());
 
         for (SignedJWT signedJWT : credentials) {
-            JSONObject vcClaim = (JSONObject) signedJWT.getJWTClaimsSet().getClaim(VC_CLAIM);
-            JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
-            if (evidenceArray == null) {
-                continue;
-            }
-
             List<CredentialEvidenceItem> credentialEvidenceList =
-                    gson.fromJson(
-                            evidenceArray.toJSONString(),
-                            new TypeToken<List<CredentialEvidenceItem>>() {}.getType());
+                    parseCredentialEvidence(signedJWT);
             for (CredentialEvidenceItem evidenceItem : credentialEvidenceList) {
                 evidenceItem.setCredentialIss(signedJWT.getJWTClaimsSet().getIssuer());
                 evidenceMap.get(evidenceItem.getType()).add(evidenceItem);

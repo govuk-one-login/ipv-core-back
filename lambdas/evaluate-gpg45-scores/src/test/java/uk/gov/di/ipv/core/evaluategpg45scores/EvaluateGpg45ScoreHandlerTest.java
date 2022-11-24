@@ -187,7 +187,7 @@ class EvaluateGpg45ScoreHandlerTest {
         assertTrue(currentVcStatuses.get(3).getIsSuccessfulVc());
         assertEquals("https://example.com/issuer", currentVcStatuses.get(3).getCriIss());
         assertTrue(currentVcStatuses.get(4).getIsSuccessfulVc());
-        assertEquals("issuer", currentVcStatuses.get(4).getCriIss());
+        assertEquals("test-dcmaw-iss", currentVcStatuses.get(4).getCriIss());
     }
 
     @Test
@@ -570,7 +570,7 @@ class EvaluateGpg45ScoreHandlerTest {
         assertTrue(currentVcStatuses.get(3).getIsSuccessfulVc());
         assertEquals("https://example.com/issuer", currentVcStatuses.get(3).getCriIss());
         assertTrue(currentVcStatuses.get(4).getIsSuccessfulVc());
-        assertEquals("issuer", currentVcStatuses.get(4).getCriIss());
+        assertEquals("test-dcmaw-iss", currentVcStatuses.get(4).getCriIss());
     }
 
     @Test
@@ -617,6 +617,6 @@ class EvaluateGpg45ScoreHandlerTest {
         assertTrue(currentVcStatuses.get(3).getIsSuccessfulVc());
         assertEquals("https://example.com/issuer", currentVcStatuses.get(3).getCriIss());
         assertTrue(currentVcStatuses.get(4).getIsSuccessfulVc());
-        assertEquals("issuer", currentVcStatuses.get(4).getCriIss());
+        assertEquals("test-dcmaw-iss", currentVcStatuses.get(4).getCriIss());
     }
 }

@@ -11,10 +11,12 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.endmitigationjourney.validation.Mj01Validation;
+import uk.gov.di.ipv.core.endmitigationjourney.validation.Mj02Validation;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
@@ -38,6 +40,7 @@ public class EndMitigationJourneyHandler
 
     public static final String MITIGATION_ID = "mitigationId";
     public static final String MJ01 = "MJ01";
+    public static final String MJ02 = "MJ02";
     public static final String MITIGATION_JOURNEY_ID = "mitigationJourneyId";
     public static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
 
@@ -112,10 +115,6 @@ public class EndMitigationJourneyHandler
                                                         configurationService);
 
                                         if (mitigatingVcList.isPresent()) {
-                                            submitMitigatingVcs(
-                                                    mitigatingVcList.get(),
-                                                    ipvSessionItem,
-                                                    ipAddress);
                                             StringMapMessage mapMessage =
                                                     new StringMapMessage()
                                                             .with(
@@ -125,6 +124,10 @@ public class EndMitigationJourneyHandler
                                                                     MITIGATION_JOURNEY_ID,
                                                                     mitigationId);
                                             LOGGER.info(mapMessage);
+                                            submitMitigatingVcs(
+                                                    mitigatingVcList.get(),
+                                                    ipvSessionItem,
+                                                    ipAddress);
                                         } else {
                                             StringMapMessage mapMessage =
                                                     new StringMapMessage()
@@ -169,6 +172,10 @@ public class EndMitigationJourneyHandler
             throws UnknownMitigationJourneyException {
         if (mitigationId.equals(MJ01)) {
             return Mj01Validation.validateJourney(credentials, ciItem, configurationService);
+        } else if (mitigationId.equals(MJ02)) {
+            Gpg45ProfileEvaluator gpg45ProfileEvaluator =
+                    new Gpg45ProfileEvaluator(configurationService);
+            return Mj02Validation.validateJourney(credentials, gpg45ProfileEvaluator);
         }
         throw new UnknownMitigationJourneyException(
                 String.format("Unknown mitigation journey id: %s", mitigationId));
