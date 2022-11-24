@@ -166,7 +166,6 @@ class EndMitigationJourneyHandlerTest {
 
         verify(mockIpvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
         IpvSessionItem updatedSession = ipvSessionItemArgumentCaptor.getValue();
-        updatedSession.getContraIndicatorMitigationDetails().get(0).getMitigationJourneys().get(0);
         MitigationJourneyDetailsDto mitigationJourneyDetails =
                 updatedSession
                         .getContraIndicatorMitigationDetails()
@@ -224,7 +223,6 @@ class EndMitigationJourneyHandlerTest {
 
         verify(mockIpvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
         IpvSessionItem updatedSession = ipvSessionItemArgumentCaptor.getValue();
-        updatedSession.getContraIndicatorMitigationDetails().get(0).getMitigationJourneys().get(0);
         MitigationJourneyDetailsDto mitigationJourneyDetails =
                 updatedSession
                         .getContraIndicatorMitigationDetails()
@@ -268,7 +266,6 @@ class EndMitigationJourneyHandlerTest {
 
         verify(mockIpvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
         IpvSessionItem updatedSession = ipvSessionItemArgumentCaptor.getValue();
-        updatedSession.getContraIndicatorMitigationDetails().get(0).getMitigationJourneys().get(0);
         MitigationJourneyDetailsDto mitigationJourneyDetails =
                 updatedSession
                         .getContraIndicatorMitigationDetails()
@@ -321,7 +318,6 @@ class EndMitigationJourneyHandlerTest {
 
         verify(mockIpvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
         IpvSessionItem updatedSession = ipvSessionItemArgumentCaptor.getValue();
-        updatedSession.getContraIndicatorMitigationDetails().get(0).getMitigationJourneys().get(0);
         MitigationJourneyDetailsDto mitigationJourneyDetails =
                 updatedSession
                         .getContraIndicatorMitigationDetails()
@@ -371,7 +367,6 @@ class EndMitigationJourneyHandlerTest {
 
         verify(mockIpvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
         IpvSessionItem updatedSession = ipvSessionItemArgumentCaptor.getValue();
-        updatedSession.getContraIndicatorMitigationDetails().get(0).getMitigationJourneys().get(0);
         MitigationJourneyDetailsDto mitigationJourneyDetails =
                 updatedSession
                         .getContraIndicatorMitigationDetails()
@@ -417,7 +412,6 @@ class EndMitigationJourneyHandlerTest {
 
         verify(mockIpvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
         IpvSessionItem updatedSession = ipvSessionItemArgumentCaptor.getValue();
-        updatedSession.getContraIndicatorMitigationDetails().get(0).getMitigationJourneys().get(0);
         MitigationJourneyDetailsDto mitigationJourneyDetails =
                 updatedSession
                         .getContraIndicatorMitigationDetails()
@@ -462,7 +456,6 @@ class EndMitigationJourneyHandlerTest {
 
         verify(mockIpvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
         IpvSessionItem updatedSession = ipvSessionItemArgumentCaptor.getValue();
-        updatedSession.getContraIndicatorMitigationDetails().get(0).getMitigationJourneys().get(0);
         MitigationJourneyDetailsDto mitigationJourneyDetails =
                 updatedSession
                         .getContraIndicatorMitigationDetails()
@@ -519,7 +512,6 @@ class EndMitigationJourneyHandlerTest {
 
         verify(mockIpvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
         IpvSessionItem updatedSession = ipvSessionItemArgumentCaptor.getValue();
-        updatedSession.getContraIndicatorMitigationDetails().get(0).getMitigationJourneys().get(0);
         MitigationJourneyDetailsDto mitigationJourneyDetails =
                 updatedSession
                         .getContraIndicatorMitigationDetails()
@@ -614,7 +606,6 @@ class EndMitigationJourneyHandlerTest {
 
         verify(mockIpvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
         IpvSessionItem updatedSession = ipvSessionItemArgumentCaptor.getValue();
-        updatedSession.getContraIndicatorMitigationDetails().get(0).getMitigationJourneys().get(0);
         MitigationJourneyDetailsDto mitigationJourneyDetails =
                 updatedSession
                         .getContraIndicatorMitigationDetails()
