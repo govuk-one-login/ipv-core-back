@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,7 +90,8 @@ class Gpg45ProfileEvaluatorTest {
                         null);
 
         Map<String, ContraIndicatorScore> ciScoresMap = new HashMap<>();
-        ciScoresMap.put("Y03", new ContraIndicatorScore("Y03", 2, -2, null));
+        ciScoresMap.put(
+                "Y03", new ContraIndicatorScore("Y03", 2, -2, null, Collections.emptyList()));
         when(mockConfigurationService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
         when(mockConfigurationService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
 
@@ -121,8 +123,10 @@ class Gpg45ProfileEvaluatorTest {
                         null);
 
         Map<String, ContraIndicatorScore> ciScoresMap = new HashMap<>();
-        ciScoresMap.put("X98", new ContraIndicatorScore("X98", 1, -1, null));
-        ciScoresMap.put("X99", new ContraIndicatorScore("X99", 3, -2, null));
+        ciScoresMap.put(
+                "X98", new ContraIndicatorScore("X98", 1, -1, null, Collections.emptyList()));
+        ciScoresMap.put(
+                "X99", new ContraIndicatorScore("X99", 3, -2, null, Collections.emptyList()));
         when(mockConfigurationService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
         when(mockConfigurationService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
 
@@ -160,8 +164,10 @@ class Gpg45ProfileEvaluatorTest {
                         null);
 
         Map<String, ContraIndicatorScore> ciScoresMap = new HashMap<>();
-        ciScoresMap.put("X98", new ContraIndicatorScore("X98", 1, -1, null));
-        ciScoresMap.put("X99", new ContraIndicatorScore("X99", 3, -2, null));
+        ciScoresMap.put(
+                "X98", new ContraIndicatorScore("X98", 1, -1, null, Collections.emptyList()));
+        ciScoresMap.put(
+                "X99", new ContraIndicatorScore("X99", 3, -2, null, Collections.emptyList()));
         when(mockConfigurationService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
         when(mockConfigurationService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
 
