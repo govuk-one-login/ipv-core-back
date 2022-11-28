@@ -13,6 +13,7 @@ import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -43,7 +44,7 @@ class ClientAuthJwtIdServiceTest {
 
         clientAuthJwtIdService.persistClientAuthJwtId(testJwtId);
 
-        verify(mockDataStore).create(clientAuthJwtIdItemArgCaptor.capture());
+        verify(mockDataStore).create(clientAuthJwtIdItemArgCaptor.capture(), any());
         ClientAuthJwtIdItem capturedClientAuthJwtIdItem = clientAuthJwtIdItemArgCaptor.getValue();
         assertNotNull(capturedClientAuthJwtIdItem);
         assertEquals(testJwtId, capturedClientAuthJwtIdItem.getJwtId());

@@ -263,7 +263,7 @@ class CredentialIssuerServiceTest {
 
         credentialIssuerService.persistUserCredentials(
                 SignedJWT.parse(SIGNED_VC_1), credentialIssuerId, userId);
-        verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture());
+        verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture(), any());
         UserIssuedCredentialsItem userIssuedCredentialsItem =
                 userIssuedCredentialsItemCaptor.getValue();
         assertEquals(userId, userIssuedCredentialsItem.getUserId());
@@ -279,7 +279,7 @@ class CredentialIssuerServiceTest {
         String credentialIssuerId = "cred_issuer_id_1";
         String userId = "user-id-1";
 
-        doThrow(new UnsupportedOperationException()).when(mockDataStore).create(any());
+        doThrow(new UnsupportedOperationException()).when(mockDataStore).create(any(), any());
 
         SignedJWT signedJwt = SignedJWT.parse(SIGNED_VC_1);
         CredentialIssuerException thrown =

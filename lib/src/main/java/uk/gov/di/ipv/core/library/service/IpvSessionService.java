@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_SESSIONS_TABLE_NAME;
 
 public class IpvSessionService {
@@ -95,7 +96,7 @@ public class IpvSessionService {
             ipvSessionItem.setErrorDescription(errorObject.getDescription());
         }
 
-        dataStore.create(ipvSessionItem);
+        dataStore.create(ipvSessionItem, BACKEND_SESSION_TTL);
 
         return ipvSessionItem;
     }
