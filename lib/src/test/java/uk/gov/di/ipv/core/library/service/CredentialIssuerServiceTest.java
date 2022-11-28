@@ -45,10 +45,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.VC_TTL;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DCMAW_SUCCESS_RESPONSE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
@@ -263,7 +265,7 @@ class CredentialIssuerServiceTest {
 
         credentialIssuerService.persistUserCredentials(
                 SignedJWT.parse(SIGNED_VC_1), credentialIssuerId, userId);
-        verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture(), any());
+        verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture(), eq(VC_TTL));
         UserIssuedCredentialsItem userIssuedCredentialsItem =
                 userIssuedCredentialsItemCaptor.getValue();
         assertEquals(userId, userIssuedCredentialsItem.getUserId());

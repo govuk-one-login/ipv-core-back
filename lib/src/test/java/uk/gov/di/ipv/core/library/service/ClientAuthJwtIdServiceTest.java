@@ -13,9 +13,10 @@ import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 
 @ExtendWith(MockitoExtension.class)
 class ClientAuthJwtIdServiceTest {
@@ -44,7 +45,8 @@ class ClientAuthJwtIdServiceTest {
 
         clientAuthJwtIdService.persistClientAuthJwtId(testJwtId);
 
-        verify(mockDataStore).create(clientAuthJwtIdItemArgCaptor.capture(), any());
+        verify(mockDataStore)
+                .create(clientAuthJwtIdItemArgCaptor.capture(), eq(BACKEND_SESSION_TTL));
         ClientAuthJwtIdItem capturedClientAuthJwtIdItem = clientAuthJwtIdItemArgCaptor.getValue();
         assertNotNull(capturedClientAuthJwtIdItem);
         assertEquals(testJwtId, capturedClientAuthJwtIdItem.getJwtId());
