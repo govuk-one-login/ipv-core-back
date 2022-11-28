@@ -15,4 +15,5 @@ include "lib",
 		"lambdas:select-cri",
 		"lambdas:validate-oauth-callback",
 		"lambdas:end-mitigation-journey",
+		"lambdas:build-proven-user-identity-details",
 		"integration-test"
