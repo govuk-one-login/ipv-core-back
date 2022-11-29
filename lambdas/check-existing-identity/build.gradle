@@ -13,18 +13,30 @@ dependencies {
 	implementation "com.amazonaws:aws-java-sdk-sqs:$rootProject.ext.dependencyVersions.awsJavaSdkSqs",
 			"com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
 			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
+			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			project(":lib")
 
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
 
-	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
-	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+	testImplementation "com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson",
+			"org.junit.jupiter:junit-jupiter:5.8.2",
+			"org.mockito:mockito-junit-jupiter:4.2.0",
+			project(":lib").sourceSets.test.output
 }
 
 java {
 	sourceCompatibility = JavaVersion.VERSION_11
 	targetCompatibility = JavaVersion.VERSION_11
+}
+
+task buildZip(type: Zip) {
+	from compileJava
+	from processResources
+	destinationDirectory = file("$rootDir/dist")
+	into("lib") {
+		from configurations.runtimeClasspath
+	}
 }
 
 test {
