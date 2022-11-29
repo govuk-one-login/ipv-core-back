@@ -55,10 +55,31 @@ INITIAL_IPV_JOURNEY:
     next:
       type: basic
       name: next
+      targetState: CHECK_EXISTING_IDENTITY
+      response:
+        type: journey
+        pageId: /journey/check-existing-identity
+CHECK_EXISTING_IDENTITY:
+  name: CHECK_EXISTING_IDENTITY
+  parent: null
+  events:
+    next:
+      type: basic
+      name: next
       targetState: IPV_IDENTITY_START_PAGE
       response:
         type: page
         pageId: page-ipv-identity-start
+    reuse:
+      type: basic
+      name: reuse
+      targetState: IPV_IDENTITY_REUSE_PAGE
+      response:
+        type: page
+        pageId: page-ipv-reuse
+IPV_IDENTITY_REUSE_PAGE:
+  name: IPV_IDENTITY_REUSE_PAGE
+  parent: END_JOURNEY
 IPV_IDENTITY_START_PAGE:
   name: IPV_IDENTITY_START_PAGE
   parent: null
