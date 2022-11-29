@@ -14,7 +14,6 @@ import java.util.Set;
 @EqualsAndHashCode
 public class SharedClaims {
     private Set<Name> name;
-
     private Set<BirthDate> birthDate;
     private Set<Address> address;
 

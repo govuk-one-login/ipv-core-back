@@ -185,7 +185,9 @@ class EvaluateGpg45ScoreHandlerTest {
                 "https://review-f.integration.account.gov.uk",
                 currentVcStatuses.get(2).getCriIss());
         assertTrue(currentVcStatuses.get(3).getIsSuccessfulVc());
-        assertEquals("https://example.com/issuer", currentVcStatuses.get(3).getCriIss());
+        assertEquals(
+                "https://review-k.integration.account.gov.uk",
+                currentVcStatuses.get(3).getCriIss());
         assertTrue(currentVcStatuses.get(4).getIsSuccessfulVc());
         assertEquals("test-dcmaw-iss", currentVcStatuses.get(4).getCriIss());
     }
@@ -568,7 +570,9 @@ class EvaluateGpg45ScoreHandlerTest {
                 "https://review-f.integration.account.gov.uk",
                 currentVcStatuses.get(2).getCriIss());
         assertTrue(currentVcStatuses.get(3).getIsSuccessfulVc());
-        assertEquals("https://example.com/issuer", currentVcStatuses.get(3).getCriIss());
+        assertEquals(
+                "https://review-k.integration.account.gov.uk",
+                currentVcStatuses.get(3).getCriIss());
         assertTrue(currentVcStatuses.get(4).getIsSuccessfulVc());
         assertEquals("test-dcmaw-iss", currentVcStatuses.get(4).getCriIss());
     }
@@ -615,7 +619,9 @@ class EvaluateGpg45ScoreHandlerTest {
                 "https://review-f.integration.account.gov.uk",
                 currentVcStatuses.get(2).getCriIss());
         assertTrue(currentVcStatuses.get(3).getIsSuccessfulVc());
-        assertEquals("https://example.com/issuer", currentVcStatuses.get(3).getCriIss());
+        assertEquals(
+                "https://review-k.integration.account.gov.uk",
+                currentVcStatuses.get(3).getCriIss());
         assertTrue(currentVcStatuses.get(4).getIsSuccessfulVc());
         assertEquals("test-dcmaw-iss", currentVcStatuses.get(4).getCriIss());
     }
