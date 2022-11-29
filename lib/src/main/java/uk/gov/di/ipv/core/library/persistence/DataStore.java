@@ -16,6 +16,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.persistence.item.DynamodbItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
@@ -24,8 +25,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 
 public class DataStore<T extends DynamodbItem> {
 
@@ -62,12 +61,10 @@ public class DataStore<T extends DynamodbItem> {
         return DynamoDbEnhancedClient.builder().dynamoDbClient(client).build();
     }
 
-    public void create(T item) {
+    public void create(T item, ConfigurationVariable tableTtl) {
         item.setTtl(
                 Instant.now()
-                        .plusSeconds(
-                                Long.parseLong(
-                                        configurationService.getSsmParameter(BACKEND_SESSION_TTL)))
+                        .plusSeconds(Long.parseLong(configurationService.getSsmParameter(tableTtl)))
                         .getEpochSecond());
         table.putItem(item);
     }

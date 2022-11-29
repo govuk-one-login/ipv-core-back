@@ -26,6 +26,7 @@ import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 
 public class DataStoreIpvSessionIT {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -97,7 +98,7 @@ public class DataStoreIpvSessionIT {
         ipvSessionItem.setAuthorizationCode("12345");
         ipvSessionItem.setAccessToken("12345");
 
-        ipvSessionItemDataStore.create(ipvSessionItem);
+        ipvSessionItemDataStore.create(ipvSessionItem, BACKEND_SESSION_TTL);
 
         Item savedIpvSession =
                 tableTestHarness.getItem(IPV_SESSION_ID, ipvSessionItem.getIpvSessionId());

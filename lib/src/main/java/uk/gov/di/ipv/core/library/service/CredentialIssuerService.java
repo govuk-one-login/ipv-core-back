@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.VC_TTL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.VCS_CLAIM_NAME;
 
@@ -217,7 +218,7 @@ public class CredentialIssuerService {
         try {
             userIssuedCredentials.setExpirationTime(
                     credential.getJWTClaimsSet().getExpirationTime().toInstant());
-            dataStore.create(userIssuedCredentials);
+            dataStore.create(userIssuedCredentials, VC_TTL);
         } catch (UnsupportedOperationException | java.text.ParseException e) {
             LOGGER.error("Error persisting user credential: {}", e.getMessage(), e);
             throw new CredentialIssuerException(
