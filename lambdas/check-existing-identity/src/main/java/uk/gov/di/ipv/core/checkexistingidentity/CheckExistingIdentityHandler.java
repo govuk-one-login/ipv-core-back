@@ -39,6 +39,7 @@ public class CheckExistingIdentityHandler
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
     public static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
     public static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
+    private static final String VOT_P2 = "P2";
     private static final Logger LOGGER = LogManager.getLogger();
     private final ConfigurationService configurationService;
     private final UserIdentityService userIdentityService;
@@ -112,6 +113,10 @@ public class CheckExistingIdentityHandler
                                             "Matched profile and within CI threshold so returning reuse journey")
                                     .with("profile", matchedProfile.get().getLabel());
                     LOGGER.info(message);
+
+                    ipvSessionItem.setVot(VOT_P2);
+                    ipvSessionService.updateIpvSession(ipvSessionItem);
+
                     return ApiGatewayResponseGenerator.proxyJsonResponse(
                             HttpStatus.SC_OK, JOURNEY_REUSE);
                 }
