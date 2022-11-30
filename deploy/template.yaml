@@ -2022,6 +2022,17 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub check-existing-identity-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
+          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
+          CI_STORAGE_GET_LAMBDA_ARN: !Sub
+            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
+            - contra_indicator_storage_account_id: !FindInMap
+                - EnvironmentConfiguration
+                - !Ref AWS::AccountId
+                - ciStorageAccountId
+              env: !FindInMap
+                - EnvironmentConfiguration
+                - !Ref AWS::AccountId
+                - environment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2053,8 +2064,30 @@ Resources:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
-        - DynamoDBReadPolicy:
+        - DynamoDBCrudPolicy:
             TableName: !Ref UserIssuedCredentialsV2Table
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-scoring-config-*
+        - Statement:
+            - Sid: invokeGetCiFunction
+              Effect: Allow
+              Action:
+                - 'lambda:InvokeFunction'
+              Resource:
+                - !Sub
+                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
+                  - contra_indicator_storage_account_id: !FindInMap
+                      - EnvironmentConfiguration
+                      - !Ref AWS::AccountId
+                      - ciStorageAccountId
+                    env: !FindInMap
+                      - EnvironmentConfiguration
+                      - !Ref AWS::AccountId
+                      - environment
       Events:
         IPVCorePrivateAPI:
           Type: Api
