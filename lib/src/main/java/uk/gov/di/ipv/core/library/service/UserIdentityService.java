@@ -46,19 +46,20 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
 public class UserIdentityService {
+    public static final String NAME_PROPERTY_NAME = "name";
+    public static final String BIRTH_DATE_PROPERTY_NAME = "birthDate";
+    public static final String ADDRESS_PROPERTY_NAME = "address";
+    public static final List<String> ADDRESS_CRI_TYPES =
+            List.of(ADDRESS_PROPERTY_NAME, "stubAddress");
+    public static final List<String> PASSPORT_CRI_TYPES =
+            List.of("ukPassport", "stubUkPassport", "dcmaw", "stubDcmaw");
+    public static final List<String> DRIVING_PERMIT_CRI_TYPES = List.of("dcmaw", "stubDcmaw");
+    public static final List<String> EVIDENCE_CRI_TYPES =
+            List.of("ukPassport", "stubUkPassport", "dcmaw", "stubDcmaw");
+
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String NAME_PROPERTY_NAME = "name";
-    private static final String BIRTH_DATE_PROPERTY_NAME = "birthDate";
-    private static final String ADDRESS_PROPERTY_NAME = "address";
     private static final String PASSPORT_PROPERTY_NAME = "passport";
     private static final String DRIVING_PERMIT_PROPERTY_NAME = "drivingPermit";
-    private static final List<String> ADDRESS_CRI_TYPES =
-            List.of(ADDRESS_PROPERTY_NAME, "stubAddress");
-    private static final List<String> PASSPORT_CRI_TYPES =
-            List.of("ukPassport", "stubUkPassport", "dcmaw", "stubDcmaw");
-    private static final List<String> DRIVING_PERMIT_CRI_TYPES = List.of("dcmaw", "stubDcmaw");
-    private static final List<String> EVIDENCE_CRI_TYPES =
-            List.of("ukPassport", "stubUkPassport", "dcmaw", "stubDcmaw");
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final ConfigurationService configurationService;
@@ -123,6 +124,10 @@ public class UserIdentityService {
         for (UserIssuedCredentialsItem item : credentialIssuerItems) {
             dataStore.delete(item.getUserId(), item.getCredentialIssuer());
         }
+    }
+
+    public List<UserIssuedCredentialsItem> getUserIssuedCredentialItems(String userId) {
+        return dataStore.getItems(userId);
     }
 
     public UserIssuedCredentialsItem getUserIssuedCredential(String userId, String criId) {
@@ -413,7 +418,7 @@ public class UserIdentityService {
                 || !(((JSONArray) input).get(0) instanceof JSONObject);
     }
 
-    private boolean isVcSuccessful(List<VcStatusDto> currentVcStatuses, String criIss) {
+    public boolean isVcSuccessful(List<VcStatusDto> currentVcStatuses, String criIss) {
         return currentVcStatuses.stream()
                 .filter(vcStatusDto -> vcStatusDto.getCriIss().equals(criIss))
                 .findFirst()

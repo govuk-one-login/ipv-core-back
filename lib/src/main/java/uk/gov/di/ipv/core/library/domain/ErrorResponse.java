@@ -48,7 +48,9 @@ public enum ErrorResponse {
     FAILED_TO_DETERMINE_CREDENTIAL_TYPE(1038, "Failed to determine type of credential"),
     FAILED_TO_GET_STORED_CIS(1039, "Failed to get stored CIS"),
     FAILED_TO_SEND_AUDIT_EVENT(1040, "Failed to send audit event"),
-    FAILED_TO_INITIALISE_STATE_MACHINE(1041, "Failed to initialise state machine");
+    FAILED_TO_INITIALISE_STATE_MACHINE(1041, "Failed to initialise state machine"),
+    FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS(
+            1042, "Failed to generate the proven user identity details");
 
     @JsonProperty("code")
     private final int code;
