@@ -132,14 +132,15 @@ public class BuildProvenUserIdentityDetailsHandler
             if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())
                     && userIdentityService.isVcSuccessful(
                             currentVcStatuses, credentialIssuerConfig.getAudienceForClients())) {
-                JsonNode nameNode =
+                JsonNode vcSubjectNode =
                         mapper.readTree(
                                         SignedJWT.parse(item.getCredential())
                                                 .getPayload()
                                                 .toString())
                                 .path(VC_CLAIM)
-                                .path(VC_CREDENTIAL_SUBJECT)
-                                .path(NAME_PROPERTY_NAME);
+                                .path(VC_CREDENTIAL_SUBJECT);
+
+                JsonNode nameNode = vcSubjectNode.path(NAME_PROPERTY_NAME);
 
                 Name name = mapper.convertValue(nameNode.get(0), Name.class);
 
@@ -154,14 +155,7 @@ public class BuildProvenUserIdentityDetailsHandler
                                     }
                                 });
 
-                JsonNode dateOfBirthNode =
-                        mapper.readTree(
-                                        SignedJWT.parse(item.getCredential())
-                                                .getPayload()
-                                                .toString())
-                                .path(VC_CLAIM)
-                                .path(VC_CREDENTIAL_SUBJECT)
-                                .path(BIRTH_DATE_PROPERTY_NAME);
+                JsonNode dateOfBirthNode = vcSubjectNode.path(BIRTH_DATE_PROPERTY_NAME);
 
                 BirthDate birthDate = mapper.convertValue(dateOfBirthNode.get(0), BirthDate.class);
 
