@@ -56,7 +56,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler.SHARED_CLAIMS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
@@ -73,22 +72,22 @@ import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.v
 @ExtendWith(MockitoExtension.class)
 class BuildCriOauthRequestHandlerTest {
 
-    public static final String CRI_ID = "PassportIssuer";
-    public static final String DCMAW_CRI_ID = "dcmaw";
-    public static final String ADDRESS_CRI_ID = "address";
-    public static final String CRI_NAME = "any";
-    public static final String CRI_TOKEN_URL = "http://www.example.com";
-    public static final String CRI_CREDENTIAL_URL = "http://www.example.com/credential";
-    public static final String CRI_AUTHORIZE_URL = "http://www.example.com/authorize";
-    public static final String IPV_ISSUER = "http://www.example.com/issuer";
-    public static final String ADDRESS_ISSUER = "http://www.example.com/address/issuer";
-    public static final String CRI_AUDIENCE = "http://www.example.com/audience";
-    public static final String IPV_CLIENT_ID = "ipv-core";
-    public static final String SESSION_ID = "the-session-id";
-    public static final String VTM = "http://www.example.com/vtm";
-    public static final String TEST_USER_ID = "test-user-id";
-    public static final String OAUTH_STATE = "test-state";
-    public static final String TEST_IP_ADDRESS = "192.168.1.100";
+    private static final String CRI_ID = "PassportIssuer";
+    private static final String DCMAW_CRI_ID = "dcmaw";
+    private static final String ADDRESS_CRI_ID = "address";
+    private static final String CRI_NAME = "any";
+    private static final String CRI_TOKEN_URL = "http://www.example.com";
+    private static final String CRI_CREDENTIAL_URL = "http://www.example.com/credential";
+    private static final String CRI_AUTHORIZE_URL = "http://www.example.com/authorize";
+    private static final String IPV_ISSUER = "http://www.example.com/issuer";
+    private static final String ADDRESS_ISSUER = "http://www.example.com/address/issuer";
+    private static final String CRI_AUDIENCE = "http://www.example.com/audience";
+    private static final String IPV_CLIENT_ID = "ipv-core";
+    private static final String SESSION_ID = "the-session-id";
+    private static final String TEST_USER_ID = "test-user-id";
+    private static final String TEST_IP_ADDRESS = "192.168.1.100";
+
+    private static final String TEST_SHARED_CLAIMS = "shared_claims";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -343,8 +342,8 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(TEST_USER_ID, signedJWT.getJWTClaimsSet().getSubject());
         assertEquals(CRI_AUDIENCE, signedJWT.getJWTClaimsSet().getAudience().get(0));
 
-        assertEquals(3, claimsSet.get(SHARED_CLAIMS).size());
-        JsonNode vcAttributes = claimsSet.get(SHARED_CLAIMS);
+        assertEquals(3, claimsSet.get(TEST_SHARED_CLAIMS).size());
+        JsonNode vcAttributes = claimsSet.get(TEST_SHARED_CLAIMS);
 
         JsonNode address = vcAttributes.get("address");
 
@@ -420,7 +419,7 @@ class BuildCriOauthRequestHandlerTest {
         SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
         JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
 
-        JsonNode sharedClaims = claimsSet.get(SHARED_CLAIMS);
+        JsonNode sharedClaims = claimsSet.get(TEST_SHARED_CLAIMS);
         assertEquals(1, sharedClaims.get("name").size());
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(2, sharedClaims.get("address").size());
@@ -471,7 +470,7 @@ class BuildCriOauthRequestHandlerTest {
         SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
         JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
 
-        JsonNode sharedClaims = claimsSet.get(SHARED_CLAIMS);
+        JsonNode sharedClaims = claimsSet.get(TEST_SHARED_CLAIMS);
         assertEquals(2, sharedClaims.get("name").size());
     }
 
@@ -520,7 +519,7 @@ class BuildCriOauthRequestHandlerTest {
         SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
         JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
 
-        JsonNode names = claimsSet.get(SHARED_CLAIMS).get("name");
+        JsonNode names = claimsSet.get(TEST_SHARED_CLAIMS).get("name");
         JsonNode name1NameParts = names.get(0).get("nameParts");
         JsonNode name2NameParts = names.get(1).get("nameParts");
 
@@ -590,7 +589,7 @@ class BuildCriOauthRequestHandlerTest {
         SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
         JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
 
-        JsonNode sharedClaims = claimsSet.get(SHARED_CLAIMS);
+        JsonNode sharedClaims = claimsSet.get(TEST_SHARED_CLAIMS);
         assertEquals(3, sharedClaims.get("name").size());
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(1, sharedClaims.get("address").size());
@@ -641,7 +640,7 @@ class BuildCriOauthRequestHandlerTest {
         SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
         JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
 
-        JsonNode sharedClaims = claimsSet.get(SHARED_CLAIMS);
+        JsonNode sharedClaims = claimsSet.get(TEST_SHARED_CLAIMS);
         assertEquals(1, sharedClaims.get("name").size());
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(2, sharedClaims.get("address").size());

@@ -58,9 +58,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.ACCEPTED_PROFILES;
-import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.JOURNEY_END;
-import static uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler.JOURNEY_NEXT;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
@@ -77,16 +74,21 @@ class EvaluateGpg45ScoreHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_JOURNEY_ID = "test-journey-id";
     private static final APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-    public static final List<String> CREDENTIALS =
+    private static final List<String> CREDENTIALS =
             List.of(
                     M1A_PASSPORT_VC,
                     M1A_ADDRESS_VC,
                     M1A_FRAUD_VC,
                     M1A_VERIFICATION_VC,
                     M1B_DCMAW_VC);
-    public static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
+    private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
+    private static final String A01 = "A01";
     public static CredentialIssuerConfig addressConfig = null;
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
+    private static final List<Gpg45Profile> ACCEPTED_PROFILES =
+            List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
+    private static final JourneyResponse JOURNEY_END = new JourneyResponse("/journey/end");
+    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
 
     static {
         try {
@@ -144,7 +146,7 @@ class EvaluateGpg45ScoreHandlerTest {
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
         ipvSessionItem.setIpvSessionId(TEST_SESSION_ID);
         ipvSessionItem.setContraIndicatorMitigationDetails(
-                List.of(new ContraIndicatorMitigationDetailsDto("A01")));
+                List.of(new ContraIndicatorMitigationDetailsDto(A01)));
     }
 
     @Test
@@ -371,7 +373,7 @@ class EvaluateGpg45ScoreHandlerTest {
 
         IpvSessionItem ipvSessionItem = ipvSessionItemArgumentCaptor.getValue();
         assertEquals(1, ipvSessionItem.getContraIndicatorMitigationDetails().size());
-        assertEquals("A01", ipvSessionItem.getContraIndicatorMitigationDetails().get(0).getCi());
+        assertEquals(A01, ipvSessionItem.getContraIndicatorMitigationDetails().get(0).getCi());
         assertEquals(
                 Collections.emptyList(),
                 ipvSessionItem
@@ -402,7 +404,7 @@ class EvaluateGpg45ScoreHandlerTest {
                                         "1234",
                                         "test-iss",
                                         "1234",
-                                        "A01",
+                                        A01,
                                         "1234",
                                         "1234"),
                                 new ContraIndicatorItem(
@@ -423,7 +425,7 @@ class EvaluateGpg45ScoreHandlerTest {
 
         IpvSessionItem ipvSessionItem = ipvSessionItemArgumentCaptor.getValue();
         assertEquals(2, ipvSessionItem.getContraIndicatorMitigationDetails().size());
-        assertEquals("A01", ipvSessionItem.getContraIndicatorMitigationDetails().get(0).getCi());
+        assertEquals(A01, ipvSessionItem.getContraIndicatorMitigationDetails().get(0).getCi());
         assertEquals(
                 Collections.emptyList(),
                 ipvSessionItem
@@ -457,7 +459,7 @@ class EvaluateGpg45ScoreHandlerTest {
                                         "1234",
                                         "test-iss",
                                         "1234",
-                                        "A01",
+                                        A01,
                                         "1234",
                                         "1234")));
 
@@ -470,7 +472,7 @@ class EvaluateGpg45ScoreHandlerTest {
 
         IpvSessionItem ipvSessionItem = ipvSessionItemArgumentCaptor.getValue();
         assertEquals(1, ipvSessionItem.getContraIndicatorMitigationDetails().size());
-        assertEquals("A01", ipvSessionItem.getContraIndicatorMitigationDetails().get(0).getCi());
+        assertEquals(A01, ipvSessionItem.getContraIndicatorMitigationDetails().get(0).getCi());
         assertEquals(
                 Collections.emptyList(),
                 ipvSessionItem
@@ -500,7 +502,7 @@ class EvaluateGpg45ScoreHandlerTest {
                                         "1234",
                                         "test-iss",
                                         "1234",
-                                        "A01",
+                                        A01,
                                         "1234",
                                         "1234")));
 
@@ -512,7 +514,7 @@ class EvaluateGpg45ScoreHandlerTest {
 
         IpvSessionItem ipvSessionItem = ipvSessionItemArgumentCaptor.getValue();
         assertEquals(1, ipvSessionItem.getContraIndicatorMitigationDetails().size());
-        assertEquals("A01", ipvSessionItem.getContraIndicatorMitigationDetails().get(0).getCi());
+        assertEquals(A01, ipvSessionItem.getContraIndicatorMitigationDetails().get(0).getCi());
         assertEquals(
                 Collections.emptyList(),
                 ipvSessionItem
@@ -533,7 +535,7 @@ class EvaluateGpg45ScoreHandlerTest {
         ipvSessionItem.setContraIndicatorMitigationDetails(
                 List.of(
                         new ContraIndicatorMitigationDetailsDto(
-                                "A01", Collections.emptyList(), false)));
+                                A01, Collections.emptyList(), false)));
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);

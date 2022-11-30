@@ -51,9 +51,9 @@ public class UserIdentityService {
     public static final String ADDRESS_PROPERTY_NAME = "address";
     public static final List<String> ADDRESS_CRI_TYPES =
             List.of(ADDRESS_PROPERTY_NAME, "stubAddress");
-    public static final List<String> PASSPORT_CRI_TYPES =
+    private static final List<String> PASSPORT_CRI_TYPES =
             List.of("ukPassport", "stubUkPassport", "dcmaw", "stubDcmaw");
-    public static final List<String> DRIVING_PERMIT_CRI_TYPES = List.of("dcmaw", "stubDcmaw");
+    private static final List<String> DRIVING_PERMIT_CRI_TYPES = List.of("dcmaw", "stubDcmaw");
     public static final List<String> EVIDENCE_CRI_TYPES =
             List.of("ukPassport", "stubUkPassport", "dcmaw", "stubDcmaw");
 

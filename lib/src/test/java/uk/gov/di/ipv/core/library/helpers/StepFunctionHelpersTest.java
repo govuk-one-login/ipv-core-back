@@ -9,11 +9,13 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.CODE;
-import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.MESSAGE;
-import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.STATUS_CODE;
 
 class StepFunctionHelpersTest {
+
+    private static final String CODE = "code";
+    private static final String MESSAGE = "message";
+    private static final String STATUS_CODE = "statusCode";
+
     @Test
     void getIpvSessionIdShouldReturnIpvSessionId() throws Exception {
         Map<String, String> input = Map.of("ipvSessionId", "something");

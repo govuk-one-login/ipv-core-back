@@ -59,13 +59,13 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 public class EvaluateGpg45ScoresHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
-    public static final List<Gpg45Profile> ACCEPTED_PROFILES =
+    private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
-    public static final JourneyResponse JOURNEY_END = new JourneyResponse("/journey/end");
-    public static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
-    public static final String VOT_P2 = "P2";
+    private static final JourneyResponse JOURNEY_END = new JourneyResponse("/journey/end");
+    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
+    private static final String VOT_P2 = "P2";
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final int ONLY = 0;
+    private static final int ONLY = 0;
     private final UserIdentityService userIdentityService;
     private final IpvSessionService ipvSessionService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;

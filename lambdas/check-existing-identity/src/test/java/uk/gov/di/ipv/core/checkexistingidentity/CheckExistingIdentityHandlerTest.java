@@ -43,9 +43,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler.ACCEPTED_PROFILES;
-import static uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler.JOURNEY_NEXT;
-import static uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler.JOURNEY_REUSE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
@@ -60,16 +57,21 @@ class CheckExistingIdentityHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_JOURNEY_ID = "test-journey-id";
     private static final APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-    public static final List<String> CREDENTIALS =
+    private static final List<String> CREDENTIALS =
             List.of(
                     M1A_PASSPORT_VC,
                     M1A_ADDRESS_VC,
                     M1A_FRAUD_VC,
                     M1A_VERIFICATION_VC,
                     M1B_DCMAW_VC);
-    public static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
-    public static CredentialIssuerConfig addressConfig = null;
+    private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
+    private static CredentialIssuerConfig addressConfig = null;
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
+
+    private static final List<Gpg45Profile> ACCEPTED_PROFILES =
+            List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
+    private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
+    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
 
     static {
         try {

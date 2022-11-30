@@ -9,12 +9,12 @@ import java.util.Map;
 import java.util.Optional;
 
 public class StepFunctionHelpers {
-    public static final String CODE = "code";
-    public static final String IPV_SESSION_ID = "ipvSessionId";
-    public static final String JOURNEY = "journey";
-    public static final String MESSAGE = "message";
-    public static final String STATUS_CODE = "statusCode";
-    public static final String IP_ADDRESS = "ipAddress";
+    private static final String CODE = "code";
+    private static final String IPV_SESSION_ID = "ipvSessionId";
+    private static final String JOURNEY = "journey";
+    private static final String MESSAGE = "message";
+    private static final String STATUS_CODE = "statusCode";
+    private static final String IP_ADDRESS = "ipAddress";
 
     private StepFunctionHelpers() {
         throw new IllegalStateException("Utility class");

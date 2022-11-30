@@ -6,9 +6,10 @@ import java.util.Base64;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static uk.gov.di.ipv.core.library.helpers.SecureTokenHelper.BYTES_OF_ENTROPY;
 
 class SecureTokenHelperTest {
+    private static final int BYTES_OF_ENTROPY = 32;
+
     @Test
     void generateShouldGiveAB64StringOfKnownLength() {
         String token = SecureTokenHelper.generate();

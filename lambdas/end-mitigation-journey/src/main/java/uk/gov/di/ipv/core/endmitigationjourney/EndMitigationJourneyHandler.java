@@ -38,11 +38,11 @@ import java.util.Optional;
 public class EndMitigationJourneyHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
-    public static final String MITIGATION_ID = "mitigationId";
-    public static final String MJ01 = "MJ01";
-    public static final String MJ02 = "MJ02";
-    public static final String MITIGATION_JOURNEY_ID = "mitigationJourneyId";
-    public static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
+    private static final String MITIGATION_ID = "mitigationId";
+    private static final String MJ01 = "MJ01";
+    private static final String MJ02 = "MJ02";
+    private static final String MITIGATION_JOURNEY_ID = "mitigationJourneyId";
+    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
 
     private static final Logger LOGGER = LogManager.getLogger();
 

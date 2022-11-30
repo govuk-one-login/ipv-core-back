@@ -52,22 +52,22 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_JWT;
-import static uk.gov.di.ipv.core.library.helpers.AuthorizationRequestHelper.SHARED_CLAIMS;
 
 @ExtendWith(MockitoExtension.class)
 class AuthorizationRequestHelperTest {
 
-    public static final String CLIENT_ID_FIELD = "client_id";
-    public static final String IPV_CLIENT_ID_VALUE = "testClientId";
-    public static final String IPV_ISSUER = "http://example.com/issuer";
-    public static final String AUDIENCE = "Audience";
-    public static final String IPV_TOKEN_TTL = "900";
-    public static final String MOCK_CORE_FRONT_CALLBACK_URL = "callbackUri";
-    public static final String TEST_REDIRECT_URI = "http:example.com/callback/criId";
-    public static final String CRI_ID = "cri_id";
-    public static final String TEST_USER_ID = "test-user-id";
-    public static final String TEST_JOURNEY_ID = "test-journey-id";
-    public static final String OAUTH_STATE = SecureTokenHelper.generate();
+    private static final String CLIENT_ID_FIELD = "client_id";
+    private static final String IPV_CLIENT_ID_VALUE = "testClientId";
+    private static final String IPV_ISSUER = "http://example.com/issuer";
+    private static final String AUDIENCE = "Audience";
+    private static final String IPV_TOKEN_TTL = "900";
+    private static final String MOCK_CORE_FRONT_CALLBACK_URL = "callbackUri";
+    private static final String TEST_REDIRECT_URI = "http:example.com/callback/criId";
+    private static final String CRI_ID = "cri_id";
+    private static final String TEST_USER_ID = "test-user-id";
+    private static final String TEST_JOURNEY_ID = "test-journey-id";
+    private static final String TEST_SHARED_CLAIMS = "shared_claims";
+    private static final String OAUTH_STATE = SecureTokenHelper.generate();
 
     private final SharedClaimsResponse sharedClaims =
             new SharedClaimsResponse(
@@ -118,7 +118,7 @@ class AuthorizationRequestHelperTest {
                 TEST_JOURNEY_ID,
                 result.getJWTClaimsSet().getStringClaim("govuk_signin_journey_id"));
         assertEquals(AUDIENCE, result.getJWTClaimsSet().getAudience().get(0));
-        assertEquals(sharedClaims, result.getJWTClaimsSet().getClaims().get(SHARED_CLAIMS));
+        assertEquals(sharedClaims, result.getJWTClaimsSet().getClaims().get(TEST_SHARED_CLAIMS));
         assertEquals(OAUTH_STATE.toString(), result.getJWTClaimsSet().getClaim("state"));
         assertEquals(
                 IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getClaims().get(CLIENT_ID_FIELD));
@@ -141,7 +141,7 @@ class AuthorizationRequestHelperTest {
                         OAUTH_STATE,
                         TEST_USER_ID,
                         TEST_JOURNEY_ID);
-        assertNull(result.getJWTClaimsSet().getClaims().get(SHARED_CLAIMS));
+        assertNull(result.getJWTClaimsSet().getClaims().get(TEST_SHARED_CLAIMS));
     }
 
     @Test

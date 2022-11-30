@@ -62,9 +62,9 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 class CredentialIssuerServiceTest {
 
     private static final String TEST_IPV_SESSION_ID = SecureTokenHelper.generate();
-    public static final String OAUTH_STATE = "oauth-state";
-    public static final String TEST_AUTH_CODE = "test-auth-code";
-    public static final String TEST_IP_ADDRESS = "192.168.1.100";
+    private static final String OAUTH_STATE = "oauth-state";
+    private static final String TEST_AUTH_CODE = "test-auth-code";
+    private static final String TEST_IP_ADDRESS = "192.168.1.100";
 
     @Mock private DataStore<UserIssuedCredentialsItem> mockDataStore;
     @Mock private ConfigurationService mockConfigurationService;
