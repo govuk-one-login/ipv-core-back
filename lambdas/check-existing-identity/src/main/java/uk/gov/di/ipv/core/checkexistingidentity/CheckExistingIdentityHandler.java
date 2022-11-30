@@ -18,11 +18,14 @@ import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -30,8 +33,11 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
 
 public class CheckExistingIdentityHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -115,7 +121,8 @@ public class CheckExistingIdentityHandler
                     LOGGER.info(message);
 
                     ipvSessionItem.setVot(VOT_P2);
-                    ipvSessionService.updateIpvSession(ipvSessionItem);
+
+                    updateSuccessfulVcStatuses(ipvSessionItem, credentials);
 
                     return ApiGatewayResponseGenerator.proxyJsonResponse(
                             HttpStatus.SC_OK, JOURNEY_REUSE);
@@ -150,5 +157,38 @@ public class CheckExistingIdentityHandler
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
         }
+    }
+
+    private void updateSuccessfulVcStatuses(
+            IpvSessionItem ipvSessionItem, List<SignedJWT> credentials) throws ParseException {
+
+        // get list of success vc's
+        List<VcStatusDto> currentVcStatusDtos = ipvSessionItem.getCurrentVcStatuses();
+
+        if (currentVcStatusDtos == null) {
+            currentVcStatusDtos = new ArrayList<>();
+        }
+
+        if (currentVcStatusDtos.size() != credentials.size()) {
+            List<VcStatusDto> updatedStatuses = generateVcSuccessStatuses(credentials);
+            ipvSessionItem.setCurrentVcStatuses(updatedStatuses);
+            ipvSessionService.updateIpvSession(ipvSessionItem);
+        }
+    }
+
+    private List<VcStatusDto> generateVcSuccessStatuses(List<SignedJWT> credentials)
+            throws ParseException {
+        List<VcStatusDto> vcStatuses = new ArrayList<>();
+        String addressCriId = configurationService.getSsmParameter(ADDRESS_CRI_ID);
+
+        for (SignedJWT signedJWT : credentials) {
+
+            CredentialIssuerConfig addressCriConfig =
+                    configurationService.getCredentialIssuer(addressCriId);
+            boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, addressCriConfig);
+
+            vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
+        }
+        return vcStatuses;
     }
 }
