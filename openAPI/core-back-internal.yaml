@@ -264,7 +264,7 @@ paths:
         type: "aws_proxy"
 
   /journey/check-existing-identity:
-    get:
+    post:
       description: "Check Existing Identity"
       responses:
         200:

@@ -2100,7 +2100,7 @@ Resources:
             RestApiId:
               Ref: IPVCorePrivateAPI
             Path: /journey/check-existing-identity
-            Method: GET
+            Method: POST
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
