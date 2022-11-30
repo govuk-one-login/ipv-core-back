@@ -36,7 +36,6 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.KmsRsaDecrypter;
-import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.validation.JarValidator;
 
 import java.text.ParseException;
@@ -60,7 +59,6 @@ public class InitialiseIpvSessionHandler
     private final JarValidator jarValidator;
     private final AuditService auditService;
     private final String componentId;
-    private final UserIdentityService userIdentityService;
 
     @ExcludeFromGeneratedCoverageReport
     public InitialiseIpvSessionHandler() {
@@ -74,7 +72,6 @@ public class InitialiseIpvSessionHandler
                 new AuditService(AuditService.getDefaultSqsClient(), configurationService);
         this.componentId =
                 configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
-        this.userIdentityService = new UserIdentityService(configurationService);
     }
 
     public InitialiseIpvSessionHandler(
@@ -82,8 +79,7 @@ public class InitialiseIpvSessionHandler
             ConfigurationService configurationService,
             KmsRsaDecrypter kmsRsaDecrypter,
             JarValidator jarValidator,
-            AuditService auditService,
-            UserIdentityService userIdentityService) {
+            AuditService auditService) {
         this.ipvSessionService = ipvSessionService;
         this.configurationService = configurationService;
         this.kmsRsaDecrypter = kmsRsaDecrypter;
@@ -91,7 +87,6 @@ public class InitialiseIpvSessionHandler
         this.auditService = auditService;
         this.componentId =
                 configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
-        this.userIdentityService = userIdentityService;
     }
 
     @Override
