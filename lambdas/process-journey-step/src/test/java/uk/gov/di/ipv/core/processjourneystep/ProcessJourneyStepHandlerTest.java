@@ -37,7 +37,7 @@ import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.STATUS_CODE
 class ProcessJourneyStepHandlerTest {
     private static final String NEXT = "/journey/next";
     private static final String ERROR = "error";
-    public static final String REUSE = "/journey/reuse";
+    private static final String REUSE = "/journey/reuse";
     private static final String ACCESS_DENIED = "access-denied";
     private static final String INVALID_STEP = "invalid-step";
 
@@ -57,17 +57,18 @@ class ProcessJourneyStepHandlerTest {
     private static final String DEBUG_EVALUATE_GPG45_SCORES = "DEBUG_EVALUATE_GPG45_SCORES";
     private static final String PYI_NO_MATCH_STATE = "PYI_NO_MATCH";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
-    public static final String END_STATE = "END";
+    private static final String END_STATE = "END";
 
     private static final String IPV_IDENTITY_START_PAGE = "page-ipv-identity-start";
     private static final String PYI_TECHNICAL_ERROR_PAGE = "pyi-technical";
     private static final String PYI_NO_MATCH_PAGE = "pyi-no-match";
     private static final String PRE_KBV_TRANSITION_PAGE = "page-pre-kbv-transition";
-    public static final String JOURNEY_EVALUATE_GPG_45_SCORES = "/journey/evaluate-gpg45-scores";
-    public static final String CHECK_EXISTING_IDENTITY_STATE = "CHECK_EXISTING_IDENTITY";
-    public static final String JOURNEY_CHECK_EXISTING_IDENTITY = "/journey/check-existing-identity";
-    public static final String IPV_IDENTITY_REUSE_PAGE_STATE = "IPV_IDENTITY_REUSE_PAGE";
-    public static final String IPV_IDENTITY_REUSE_PAGE = "page-ipv-reuse";
+    private static final String JOURNEY_EVALUATE_GPG_45_SCORES = "/journey/evaluate-gpg45-scores";
+    private static final String CHECK_EXISTING_IDENTITY_STATE = "CHECK_EXISTING_IDENTITY";
+    private static final String JOURNEY_CHECK_EXISTING_IDENTITY =
+            "/journey/check-existing-identity";
+    private static final String IPV_IDENTITY_REUSE_PAGE_STATE = "IPV_IDENTITY_REUSE_PAGE";
+    private static final String IPV_IDENTITY_REUSE_PAGE = "page-ipv-reuse";
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ConfigurationService mockConfigurationService;
