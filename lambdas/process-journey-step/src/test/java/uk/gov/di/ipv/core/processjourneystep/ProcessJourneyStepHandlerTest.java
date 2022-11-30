@@ -36,6 +36,7 @@ import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.STATUS_CODE
 class ProcessJourneyStepHandlerTest {
     private static final String NEXT = "/journey/next";
     private static final String ERROR = "error";
+    public static final String REUSE = "/journey/reuse";
     private static final String ACCESS_DENIED = "access-denied";
     private static final String INVALID_STEP = "invalid-step";
 
@@ -64,6 +65,10 @@ class ProcessJourneyStepHandlerTest {
     private static final String PYI_KBV_FAIL_PAGE = "pyi-kbv-fail";
     private static final String PRE_KBV_TRANSITION_PAGE = "page-pre-kbv-transition";
     public static final String JOURNEY_EVALUATE_GPG_45_SCORES = "/journey/evaluate-gpg45-scores";
+    public static final String CHECK_EXISTING_IDENTITY_STATE = "CHECK_EXISTING_IDENTITY";
+    public static final String JOURNEY_CHECK_EXISTING_IDENTITY = "/journey/check-existing-identity";
+    public static final String IPV_IDENTITY_REUSE_PAGE_STATE = "IPV_IDENTITY_REUSE_PAGE";
+    public static final String IPV_IDENTITY_REUSE_PAGE = "page-ipv-reuse";
 
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
@@ -142,10 +147,27 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @Test
-    void shouldReturnIdentityStartPageResponseWhenRequired() {
+    void shouldReturnCheckExistingIdentityResponseWhenRequired() {
         Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
 
         mockIpvSessionItemAndTimeout(INITIAL_IPV_JOURNEY_STATE);
+
+        Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
+
+        assertEquals(JOURNEY_CHECK_EXISTING_IDENTITY, output.get("journey"));
+
+        ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
+        assertEquals(
+                CHECK_EXISTING_IDENTITY_STATE, sessionArgumentCaptor.getValue().getUserState());
+    }
+
+    @Test
+    void shouldReturnIdentityStartPageResponseWhenRequired() {
+        Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
+
+        mockIpvSessionItemAndTimeout(CHECK_EXISTING_IDENTITY_STATE);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
@@ -156,6 +178,23 @@ class ProcessJourneyStepHandlerTest {
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(
                 IPV_IDENTITY_START_PAGE_STATE, sessionArgumentCaptor.getValue().getUserState());
+    }
+
+    @Test
+    void shouldReturnIdentityReusePageResponseWhenRequired() {
+        Map<String, String> input = Map.of(JOURNEY, REUSE, IPV_SESSION_ID, "1234");
+
+        mockIpvSessionItemAndTimeout(CHECK_EXISTING_IDENTITY_STATE);
+
+        Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
+
+        assertEquals(IPV_IDENTITY_REUSE_PAGE, output.get("page"));
+
+        ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
+        assertEquals(
+                IPV_IDENTITY_REUSE_PAGE_STATE, sessionArgumentCaptor.getValue().getUserState());
     }
 
     @Test

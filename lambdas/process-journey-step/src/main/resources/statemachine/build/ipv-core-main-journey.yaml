@@ -65,7 +65,7 @@ INITIAL_IPV_JOURNEY:
       targetState: CHECK_EXISTING_IDENTITY
       response:
         type: journey
-        pageId: /journey/check-existing-identity
+        journeyStepId: /journey/check-existing-identity
 CHECK_EXISTING_IDENTITY:
   name: CHECK_EXISTING_IDENTITY
   parent: null
