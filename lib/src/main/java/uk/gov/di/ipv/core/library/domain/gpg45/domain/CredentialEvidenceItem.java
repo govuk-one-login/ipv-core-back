@@ -130,7 +130,6 @@ public class CredentialEvidenceItem {
     private boolean isDcmaw() {
         return strengthScore != null
                 && validityScore != null
-                && activityHistoryScore != null
                 && identityFraudScore == null
                 && verificationScore == null
                 && (checkDetails != null || failedCheckDetails != null);
