@@ -92,9 +92,7 @@ public class CredentialEvidenceItem {
                 && identityFraudScore == null
                 && strengthScore == null
                 && validityScore == null
-                && verificationScore == null
-                && checkDetails == null
-                && failedCheckDetails == null;
+                && verificationScore == null;
     }
 
     private boolean isIdentityFraud() {
@@ -102,9 +100,7 @@ public class CredentialEvidenceItem {
                 && activityHistoryScore == null
                 && strengthScore == null
                 && validityScore == null
-                && verificationScore == null
-                && checkDetails == null
-                && failedCheckDetails == null;
+                && verificationScore == null;
     }
 
     private boolean isEvidence() {
@@ -122,9 +118,7 @@ public class CredentialEvidenceItem {
                 && activityHistoryScore == null
                 && identityFraudScore == null
                 && strengthScore == null
-                && validityScore == null
-                && checkDetails == null
-                && failedCheckDetails == null;
+                && validityScore == null;
     }
 
     private boolean isDcmaw() {
