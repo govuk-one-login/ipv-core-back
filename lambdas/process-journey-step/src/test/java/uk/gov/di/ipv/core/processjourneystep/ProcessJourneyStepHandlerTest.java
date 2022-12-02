@@ -151,7 +151,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"dev", "build", "staging", "integration"})
+    @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturnCheckExistingIdentityResponseWhenRequired(String environment) {
         Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
 
@@ -190,7 +190,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"dev", "build", "staging", "integration"})
+    @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturnIdentityReusePageResponseWhenRequired(String environment) {
         Map<String, String> input = Map.of(JOURNEY, REUSE, IPV_SESSION_ID, "1234");
 
@@ -208,7 +208,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"dev", "build", "staging", "integration"})
+    @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturnEvaluateGpg45ScoresWhenIpvIdentityStartPageState(String environment) {
         Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
 
