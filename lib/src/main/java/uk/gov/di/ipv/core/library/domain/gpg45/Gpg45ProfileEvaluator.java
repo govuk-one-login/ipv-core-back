@@ -233,11 +233,13 @@ public class Gpg45ProfileEvaluator {
                         dcmawEvidenceItem.getValidityScore(),
                         dcmawEvidenceItem.getCi()));
 
-        gpg45CredentialItems.add(
-                new CredentialEvidenceItem(
-                        CredentialEvidenceItem.EvidenceType.ACTIVITY,
-                        dcmawEvidenceItem.getActivityHistoryScore(),
-                        Collections.emptyList()));
+        if (dcmawEvidenceItem.getActivityHistoryScore() != null) {
+            gpg45CredentialItems.add(
+                    new CredentialEvidenceItem(
+                            CredentialEvidenceItem.EvidenceType.ACTIVITY,
+                            dcmawEvidenceItem.getActivityHistoryScore(),
+                            Collections.emptyList()));
+        }
 
         int dcmawVerificationScore;
         List<DcmawCheckMethod> checkDetails = dcmawEvidenceItem.getCheckDetails();
