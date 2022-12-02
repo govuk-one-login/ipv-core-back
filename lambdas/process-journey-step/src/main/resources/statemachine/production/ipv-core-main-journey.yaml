@@ -66,10 +66,31 @@ IPV_IDENTITY_START_PAGE:
     next:
       type: basic
       name: next
+      targetState: CHECK_EXISTING_IDENTITY
+      response:
+        type: journey
+        journeyStepId: /journey/check-existing-identity
+CHECK_EXISTING_IDENTITY:
+  name: CHECK_EXISTING_IDENTITY
+  parent: null
+  events:
+    next:
+      type: basic
+      name: next
       targetState: EVALUATE_GPG45_SCORES
       response:
         type: journey
         journeyStepId: /journey/evaluate-gpg45-scores
+    reuse:
+      type: basic
+      name: reuse
+      targetState: IPV_IDENTITY_REUSE_PAGE
+      response:
+        type: page
+        pageId: page-ipv-reuse
+IPV_IDENTITY_REUSE_PAGE:
+  name: IPV_IDENTITY_REUSE_PAGE
+  parent: END_JOURNEY
 EVALUATE_GPG45_SCORES:
   name: EVALUATE_GPG45_SCORES
   parent: null
