@@ -815,11 +815,11 @@ class UserIdentityServiceTest {
 
         when(mockDataStore.getItems(userId)).thenReturn(credentialItem);
 
-        List<String> retrievedCredentialItem =
-                userIdentityService.getUserIssuedCredentialIssuers(userId);
+        var vcStoreItems = userIdentityService.getVcStoreItems(userId);
 
         assertTrue(
-                retrievedCredentialItem.stream()
+                vcStoreItems.stream()
+                        .map(VcStoreItem::getCredentialIssuer)
                         .anyMatch(item -> testCredentialIssuer.equals(item)));
     }
 

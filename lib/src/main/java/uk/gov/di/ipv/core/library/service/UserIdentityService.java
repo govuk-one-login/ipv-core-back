@@ -425,12 +425,5 @@ public class UserIdentityService {
                 .orElseThrow()
                 .getIsSuccessfulVc();
     }
-
-    public List<String> getUserIssuedCredentialIssuers(String userId) {
-        List<VcStoreItem> credentialIssuerItems = dataStore.getItems(userId);
-
-        return credentialIssuerItems.stream()
-                .map(VcStoreItem::getCredentialIssuer)
-                .collect(Collectors.toList());
-    }
+    
 }
