@@ -2025,6 +2025,7 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CI_STORAGE_GET_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
             - contra_indicator_storage_account_id: !FindInMap
@@ -2074,6 +2075,8 @@ Resources:
             ParameterName: !Sub ${Environment}/core/self/*
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-scoring-config-*
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
         - Statement:
             - Sid: invokeGetCiFunction
               Effect: Allow
