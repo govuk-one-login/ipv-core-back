@@ -28,7 +28,7 @@ import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
-import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
+import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -63,7 +63,7 @@ public class UserIdentityService {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final ConfigurationService configurationService;
-    private final DataStore<UserIssuedCredentialsItem> dataStore;
+    private final DataStore<VcStoreItem> dataStore;
 
     @ExcludeFromGeneratedCoverageReport
     public UserIdentityService(ConfigurationService configurationService) {
@@ -73,7 +73,7 @@ public class UserIdentityService {
                 new DataStore<>(
                         this.configurationService.getEnvironmentVariable(
                                 USER_ISSUED_CREDENTIALS_TABLE_NAME),
-                        UserIssuedCredentialsItem.class,
+                        VcStoreItem.class,
                         DataStore.getClient(isRunningLocally),
                         isRunningLocally,
                         configurationService);
@@ -81,67 +81,67 @@ public class UserIdentityService {
 
     public UserIdentityService(
             ConfigurationService configurationService,
-            DataStore<UserIssuedCredentialsItem> dataStore) {
+            DataStore<VcStoreItem> dataStore) {
         this.configurationService = configurationService;
         this.dataStore = dataStore;
     }
 
     public List<String> getUserIssuedCredentials(String userId) {
-        List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(userId);
+        List<VcStoreItem> credentialIssuerItems = dataStore.getItems(userId);
 
         return credentialIssuerItems.stream()
-                .map(UserIssuedCredentialsItem::getCredential)
+                .map(VcStoreItem::getCredential)
                 .collect(Collectors.toList());
     }
 
-    public void deleteUserIssuedCredentialsIfAnyExpired(String userId) {
+    public void deleteVcStoreItemsIfAnyExpired(String userId) {
         Instant nowPlusSessionTimeout =
                 Instant.now()
                         .plusSeconds(
                                 Long.parseLong(
                                         configurationService.getSsmParameter(
                                                 BACKEND_SESSION_TIMEOUT)));
-        List<UserIssuedCredentialsItem> expiredUserIssuedCredentials =
+        List<VcStoreItem> expiredVcStoreItems =
                 this.dataStore.getItemsWithAttributeLessThanOrEqualValue(
                         userId, "expirationTime", nowPlusSessionTimeout.toString());
-        if (!expiredUserIssuedCredentials.isEmpty()) {
+        if (!expiredVcStoreItems.isEmpty()) {
             LOGGER.info("Found VCs due to expire within session timeout");
-            deleteUserIssuedCredentials(userId);
+            deleteVcStoreItems(userId);
         }
     }
 
-    public void deleteUserIssuedCredentials(String userId) {
-        List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(userId);
-        if (!credentialIssuerItems.isEmpty()) {
+    public void deleteVcStoreItems(String userId) {
+        List<VcStoreItem> vcStoreItems = dataStore.getItems(userId);
+        if (!vcStoreItems.isEmpty()) {
             var message =
                     new StringMapMessage()
                             .with("description", "Deleting existing issued VCs")
                             .with(
                                     LogHelper.LogField.NUMBER_OF_VCS.getFieldName(),
-                                    String.valueOf(credentialIssuerItems.size()));
+                                    String.valueOf(vcStoreItems.size()));
             LOGGER.info(message);
         }
-        for (UserIssuedCredentialsItem item : credentialIssuerItems) {
+        for (VcStoreItem item : vcStoreItems) {
             dataStore.delete(item.getUserId(), item.getCredentialIssuer());
         }
     }
 
-    public List<UserIssuedCredentialsItem> getUserIssuedCredentialItems(String userId) {
+    public List<VcStoreItem> getVcStoreItems(String userId) {
         return dataStore.getItems(userId);
     }
 
-    public UserIssuedCredentialsItem getUserIssuedCredential(String userId, String criId) {
+    public VcStoreItem getVcStoreItem(String userId, String criId) {
         return dataStore.getItem(userId, criId);
     }
 
     public UserIdentity generateUserIdentity(
             String userId, String sub, String vot, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
-        List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(userId);
+        List<VcStoreItem> credentialIssuerItems = dataStore.getItems(userId);
 
         List<String> vcJwts =
                 credentialIssuerItems.stream()
-                        .map(UserIssuedCredentialsItem::getCredential)
+                        .map(VcStoreItem::getCredential)
                         .collect(Collectors.toList());
 
         String vtm = configurationService.getSsmParameter(CORE_VTM_CLAIM);
@@ -170,7 +170,7 @@ public class UserIdentityService {
     }
 
     public Map<String, String> getUserIssuedDebugCredentials(String userId) {
-        List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(userId);
+        List<VcStoreItem> credentialIssuerItems = dataStore.getItems(userId);
         Map<String, String> userIssuedDebugCredentials = new HashMap<>();
         Gson gson = new Gson();
 
@@ -206,10 +206,10 @@ public class UserIdentityService {
     }
 
     private Optional<IdentityClaim> generateIdentityClaim(
-            List<UserIssuedCredentialsItem> credentialIssuerItems,
+            List<VcStoreItem> credentialIssuerItems,
             List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
-        for (UserIssuedCredentialsItem item : credentialIssuerItems) {
+        for (VcStoreItem item : credentialIssuerItems) {
             CredentialIssuerConfig credentialIssuerConfig =
                     configurationService.getCredentialIssuer(item.getCredentialIssuer());
             if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())
@@ -274,9 +274,9 @@ public class UserIdentityService {
     }
 
     private Optional<JsonNode> generateAddressClaim(
-            List<UserIssuedCredentialsItem> credentialIssuerItems)
+            List<VcStoreItem> credentialIssuerItems)
             throws HttpResponseExceptionWithErrorBody {
-        Optional<UserIssuedCredentialsItem> addressCredentialItem =
+        Optional<VcStoreItem> addressCredentialItem =
                 credentialIssuerItems.stream()
                         .filter(
                                 credential ->
@@ -314,10 +314,10 @@ public class UserIdentityService {
     }
 
     private Optional<JsonNode> generatePassportClaim(
-            List<UserIssuedCredentialsItem> credentialIssuerItems,
+            List<VcStoreItem> credentialIssuerItems,
             List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
-        for (UserIssuedCredentialsItem item : credentialIssuerItems) {
+        for (VcStoreItem item : credentialIssuerItems) {
             CredentialIssuerConfig credentialIssuerConfig =
                     configurationService.getCredentialIssuer(item.getCredentialIssuer());
             if (PASSPORT_CRI_TYPES.contains(item.getCredentialIssuer())
@@ -359,10 +359,10 @@ public class UserIdentityService {
     }
 
     private Optional<JsonNode> generateDrivingPermitClaim(
-            List<UserIssuedCredentialsItem> credentialIssuerItems,
+            List<VcStoreItem> credentialIssuerItems,
             List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
-        for (UserIssuedCredentialsItem item : credentialIssuerItems) {
+        for (VcStoreItem item : credentialIssuerItems) {
             CredentialIssuerConfig credentialIssuerConfig =
                     configurationService.getCredentialIssuer(item.getCredentialIssuer());
             if (DRIVING_PERMIT_CRI_TYPES.contains(item.getCredentialIssuer())
@@ -427,10 +427,10 @@ public class UserIdentityService {
     }
 
     public List<String> getUserIssuedCredentialIssuers(String userId) {
-        List<UserIssuedCredentialsItem> credentialIssuerItems = dataStore.getItems(userId);
+        List<VcStoreItem> credentialIssuerItems = dataStore.getItems(userId);
 
         return credentialIssuerItems.stream()
-                .map(UserIssuedCredentialsItem::getCredentialIssuer)
+                .map(VcStoreItem::getCredentialIssuer)
                 .collect(Collectors.toList());
     }
 }

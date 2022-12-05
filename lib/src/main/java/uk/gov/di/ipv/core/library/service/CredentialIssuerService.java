@@ -29,7 +29,7 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
-import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
+import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
 import java.io.IOException;
 import java.net.URI;
@@ -50,7 +50,7 @@ public class CredentialIssuerService {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String API_KEY_HEADER = "x-api-key";
 
-    private final DataStore<UserIssuedCredentialsItem> dataStore;
+    private final DataStore<VcStoreItem> dataStore;
     private final ConfigurationService configurationService;
     private final JWSSigner signer;
 
@@ -63,14 +63,14 @@ public class CredentialIssuerService {
                 new DataStore<>(
                         this.configurationService.getEnvironmentVariable(
                                 USER_ISSUED_CREDENTIALS_TABLE_NAME),
-                        UserIssuedCredentialsItem.class,
+                        VcStoreItem.class,
                         DataStore.getClient(isRunningLocally),
                         isRunningLocally,
                         configurationService);
     }
 
     public CredentialIssuerService(
-            DataStore<UserIssuedCredentialsItem> dataStore,
+            DataStore<VcStoreItem> dataStore,
             ConfigurationService configurationService,
             JWSSigner signer) {
         this.configurationService = configurationService;
@@ -210,7 +210,7 @@ public class CredentialIssuerService {
 
     public void persistUserCredentials(
             SignedJWT credential, String credentialIssuerId, String userId) {
-        UserIssuedCredentialsItem userIssuedCredentials = new UserIssuedCredentialsItem();
+        VcStoreItem userIssuedCredentials = new VcStoreItem();
         userIssuedCredentials.setUserId(userId);
         userIssuedCredentials.setCredentialIssuer(credentialIssuerId);
         userIssuedCredentials.setCredential(credential.serialize());

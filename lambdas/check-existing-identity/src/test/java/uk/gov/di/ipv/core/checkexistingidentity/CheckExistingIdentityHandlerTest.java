@@ -148,7 +148,7 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
         assertEquals(JOURNEY_REUSE, journeyResponse);
-        verify(userIdentityService, never()).deleteUserIssuedCredentials(TEST_USER_ID);
+        verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
     }
 
     @Test
@@ -165,7 +165,7 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
         assertEquals(JOURNEY_REUSE, journeyResponse);
-        verify(userIdentityService, never()).deleteUserIssuedCredentials(TEST_USER_ID);
+        verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
     }
 
     @Test
@@ -182,7 +182,7 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
         assertEquals(JOURNEY_NEXT, journeyResponse);
-        verify(userIdentityService).deleteUserIssuedCredentials(TEST_USER_ID);
+        verify(userIdentityService).deleteVcStoreItems(TEST_USER_ID);
     }
 
     @Test
@@ -197,7 +197,7 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
         assertEquals("/journey/next", journeyResponse.getJourney());
-        verify(userIdentityService).deleteUserIssuedCredentials(TEST_USER_ID);
+        verify(userIdentityService).deleteVcStoreItems(TEST_USER_ID);
     }
 
     @Test

@@ -91,7 +91,7 @@ public class CheckExistingIdentityHandler
             String govukSigninJourneyId = clientSessionDetailsDto.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            userIdentityService.deleteUserIssuedCredentialsIfAnyExpired(userId);
+            userIdentityService.deleteVcStoreItemsIfAnyExpired(userId);
 
             List<SignedJWT> credentials =
                     gpg45ProfileEvaluator.parseCredentials(
@@ -136,7 +136,7 @@ public class CheckExistingIdentityHandler
                                     "Failed to match profile so clearing VCs and returning next");
             LOGGER.info(message);
 
-            userIdentityService.deleteUserIssuedCredentials(userId);
+            userIdentityService.deleteVcStoreItems(userId);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, JOURNEY_NEXT);
         } catch (HttpResponseExceptionWithErrorBody e) {

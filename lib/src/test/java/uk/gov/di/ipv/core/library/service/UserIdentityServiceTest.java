@@ -16,7 +16,7 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
-import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
+import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
 import java.net.URI;
 import java.time.Instant;
@@ -57,7 +57,7 @@ class UserIdentityServiceTest {
 
     @Mock private ConfigurationService mockConfigurationService;
 
-    @Mock private DataStore<UserIssuedCredentialsItem> mockDataStore;
+    @Mock private DataStore<VcStoreItem> mockDataStore;
 
     private UserIdentityService userIdentityService;
 
@@ -68,7 +68,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldReturnCredentialsFromDataStore() throws HttpResponseExceptionWithErrorBody {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
@@ -78,7 +78,7 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         when(mockConfigurationService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
@@ -106,21 +106,21 @@ class UserIdentityServiceTest {
     void shouldReturnCredentialFromDataStoreForSpecificCri() {
         String ipvSessionId = "ipvSessionId";
         String criId = "criId";
-        UserIssuedCredentialsItem credentialItem =
+        VcStoreItem credentialItem =
                 createUserIssuedCredentialsItem(
                         "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now());
 
         when(mockDataStore.getItem(ipvSessionId, criId)).thenReturn(credentialItem);
 
-        UserIssuedCredentialsItem retrievedCredentialItem =
-                userIdentityService.getUserIssuedCredential(ipvSessionId, criId);
+        VcStoreItem retrievedCredentialItem =
+                userIdentityService.getVcStoreItem(ipvSessionId, criId);
 
         assertEquals(credentialItem, retrievedCredentialItem);
     }
 
     @Test
     void shouldReturnDebugCredentialsFromDataStore() {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1",
@@ -133,7 +133,7 @@ class UserIdentityServiceTest {
                                 SIGNED_VC_2,
                                 Instant.parse("2022-01-25T12:28:56.414849Z")));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         Map<String, String> credentials =
                 userIdentityService.getUserIssuedDebugCredentials("user-id-1");
@@ -150,7 +150,7 @@ class UserIdentityServiceTest {
     void shouldReturnDebugCredentialsFromDataStoreWhenMissingAGpg45Score() throws Exception {
         Map<String, Object> credentialVcClaim = vcClaim(Map.of("test", "test-value"));
         credentialVcClaim.put(VC_EVIDENCE, List.of());
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1",
@@ -165,7 +165,7 @@ class UserIdentityServiceTest {
                                         credentialVcClaim, "https://issuer.example.com"),
                                 Instant.parse("2022-01-25T12:28:56.414849Z")));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         Map<String, String> credentials =
                 userIdentityService.getUserIssuedDebugCredentials("user-id-1");
@@ -180,7 +180,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldReturnDebugCredentialsEvenIfFailingToParseCredentialJson() {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1",
@@ -188,7 +188,7 @@ class UserIdentityServiceTest {
                                 "invalid-verifiable-credential",
                                 Instant.parse("2022-01-25T12:28:56.414849Z")));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         Map<String, String> credentials =
                 userIdentityService.getUserIssuedDebugCredentials("user-id-1");
@@ -203,7 +203,7 @@ class UserIdentityServiceTest {
             throws Exception {
         Map<String, Object> credentialVcClaim = vcClaim(Map.of("test", "test-value"));
         credentialVcClaim.put(VC_EVIDENCE, "This should be a list of objects...");
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1",
@@ -212,7 +212,7 @@ class UserIdentityServiceTest {
                                         credentialVcClaim, "https://issuer.example.com"),
                                 Instant.parse("2022-01-25T12:28:56.414849Z")));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         Map<String, String> credentials =
                 userIdentityService.getUserIssuedDebugCredentials("user-id-1");
@@ -225,7 +225,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldSetVotClaimToP2OnSuccessfulIdentityCheck()
             throws HttpResponseExceptionWithErrorBody {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
@@ -239,7 +239,7 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         when(mockConfigurationService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
@@ -263,7 +263,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldSetIdentityClaimWhenVotIsP2() throws HttpResponseExceptionWithErrorBody, Exception {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
@@ -277,7 +277,7 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         when(mockConfigurationService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
@@ -306,7 +306,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldNotSetIdentityClaimWhenVotIsP0() throws HttpResponseExceptionWithErrorBody {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
@@ -316,7 +316,7 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -327,7 +327,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldThrowExceptionWhenMissingNameProperty() {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1",
@@ -342,7 +342,7 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         when(mockConfigurationService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
@@ -375,7 +375,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldThrowExceptionWhenMissingBirthDateProperty() {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1",
@@ -390,7 +390,7 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         when(mockConfigurationService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
@@ -423,7 +423,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldSetPassportClaimWhenVotIsP2() throws HttpResponseExceptionWithErrorBody {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
@@ -437,7 +437,7 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         when(mockConfigurationService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
@@ -464,7 +464,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldNotSetPassportClaimWhenVotIsP0() throws HttpResponseExceptionWithErrorBody {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
@@ -474,7 +474,7 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -485,7 +485,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldReturnEmptyWhenMissingPassportProperty() throws HttpResponseExceptionWithErrorBody {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1",
@@ -502,7 +502,7 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         when(mockConfigurationService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
@@ -555,7 +555,7 @@ class UserIdentityServiceTest {
     @Test
     void generateUserIdentityShouldSetAddressClaimOnUserIdentity()
             throws Exception, HttpResponseExceptionWithErrorBody {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
@@ -569,7 +569,7 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         when(mockConfigurationService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
@@ -605,7 +605,7 @@ class UserIdentityServiceTest {
 
     @Test
     void generateUserIdentityShouldThrowIfAddressVCIsMissingAddressProperty() {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
@@ -622,7 +622,7 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         when(mockConfigurationService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
@@ -655,7 +655,7 @@ class UserIdentityServiceTest {
 
     @Test
     void generateUserIdentityShouldThrowIfAddressVCCanNotBeParsed() {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
@@ -669,7 +669,7 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         when(mockConfigurationService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
@@ -702,7 +702,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldNotSetAddressClaimWhenVotIsP0() throws HttpResponseExceptionWithErrorBody {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
@@ -714,7 +714,7 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -725,14 +725,14 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldReturnListOfVcsForSharedAttributes() {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "fraud", SIGNED_VC_2, Instant.now()));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         List<String> vcList = userIdentityService.getUserIssuedCredentials("user-id-1");
 
@@ -744,7 +744,7 @@ class UserIdentityServiceTest {
     void shouldDeleteExistingVCsIfAnyDueToExpireWithinSessionTimeout() {
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "a-users-id", "ukPassport", SIGNED_VC_1, Instant.now()),
@@ -752,17 +752,17 @@ class UserIdentityServiceTest {
                                 "a-users-id", "fraud", SIGNED_VC_2, Instant.now()),
                         createUserIssuedCredentialsItem(
                                 "a-users-id", "sausages", SIGNED_VC_3, Instant.now()));
-        when(mockDataStore.getItems("a-users-id")).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems("a-users-id")).thenReturn(vcStoreItems);
 
-        List<UserIssuedCredentialsItem> expiredUserIssuedCredentialsItemList =
+        List<VcStoreItem> expiredVcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "a-users-id", "fraud", SIGNED_VC_2, Instant.now()));
         when(mockDataStore.getItemsWithAttributeLessThanOrEqualValue(
                         eq("a-users-id"), eq("expirationTime"), anyString()))
-                .thenReturn(expiredUserIssuedCredentialsItemList);
+                .thenReturn(expiredVcStoreItems);
 
-        userIdentityService.deleteUserIssuedCredentialsIfAnyExpired("a-users-id");
+        userIdentityService.deleteVcStoreItemsIfAnyExpired("a-users-id");
 
         verify(mockDataStore).delete("a-users-id", "ukPassport");
         verify(mockDataStore).delete("a-users-id", "fraud");
@@ -773,20 +773,20 @@ class UserIdentityServiceTest {
     void shouldNotDeleteExistingVCsIfNoneAreDueToExpireWithinSessionTimeout() {
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        List<UserIssuedCredentialsItem> expiredUserIssuedCredentialsItemList =
+        List<VcStoreItem> expiredVcStoreItems =
                 Collections.emptyList();
         when(mockDataStore.getItemsWithAttributeLessThanOrEqualValue(
                         eq("a-users-id"), eq("expirationTime"), anyString()))
-                .thenReturn(expiredUserIssuedCredentialsItemList);
+                .thenReturn(expiredVcStoreItems);
 
-        userIdentityService.deleteUserIssuedCredentialsIfAnyExpired("a-users-id");
+        userIdentityService.deleteVcStoreItemsIfAnyExpired("a-users-id");
 
         verify(mockDataStore, Mockito.times(0)).delete(anyString(), anyString());
     }
 
     @Test
     void shouldDeleteAllExistingVCs() {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "a-users-id", "ukPassport", SIGNED_VC_1, Instant.now()),
@@ -795,9 +795,9 @@ class UserIdentityServiceTest {
                         createUserIssuedCredentialsItem(
                                 "a-users-id", "sausages", SIGNED_VC_3, Instant.now()));
 
-        when(mockDataStore.getItems("a-users-id")).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems("a-users-id")).thenReturn(vcStoreItems);
 
-        userIdentityService.deleteUserIssuedCredentials("a-users-id");
+        userIdentityService.deleteVcStoreItems("a-users-id");
 
         verify(mockDataStore).delete("a-users-id", "ukPassport");
         verify(mockDataStore).delete("a-users-id", "fraud");
@@ -808,7 +808,7 @@ class UserIdentityServiceTest {
     void shouldReturnCredentialIssuersFromDataStoreForSpecificUserId() {
         String userId = "userId";
         String testCredentialIssuer = "ukPassport";
-        List<UserIssuedCredentialsItem> credentialItem =
+        List<VcStoreItem> credentialItem =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1", testCredentialIssuer, SIGNED_VC_1, Instant.now()));
@@ -825,7 +825,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldSetDrivingPermitClaimWhenVotIsP2() throws HttpResponseExceptionWithErrorBody {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "dcmaw", SIGNED_DCMAW_VC, Instant.now()),
@@ -839,7 +839,7 @@ class UserIdentityServiceTest {
                         new VcStatusDto("test-issuer", true),
                         new VcStatusDto("dcmaw-issuer", true));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         when(mockConfigurationService.getCredentialIssuer("dcmaw"))
                 .thenReturn(
                         new CredentialIssuerConfig(
@@ -867,7 +867,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldNotSetDrivingPermitClaimWhenVotIsP0() throws HttpResponseExceptionWithErrorBody {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "dcmaw", SIGNED_DCMAW_VC, Instant.now()),
@@ -881,7 +881,7 @@ class UserIdentityServiceTest {
                         new VcStatusDto("test-issuer", true),
                         new VcStatusDto("dcmaw-issuer", true));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -895,7 +895,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldNotSetDrivingPermitClaimWhenDrivingPermitVCIsMissing()
             throws HttpResponseExceptionWithErrorBody {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
@@ -909,7 +909,7 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         when(mockConfigurationService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
@@ -936,7 +936,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldNotSetDrivingPermitClaimWhenDrivingPermitVCFailed()
             throws HttpResponseExceptionWithErrorBody {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "dcmaw", SIGNED_DCMAW_VC, Instant.now()),
@@ -954,7 +954,7 @@ class UserIdentityServiceTest {
                         new VcStatusDto("test-issuer", true),
                         new VcStatusDto("dcmaw-issuer", false));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         when(mockConfigurationService.getCredentialIssuer("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
@@ -1033,7 +1033,7 @@ class UserIdentityServiceTest {
     @Test
     void shouldReturnEmptyWhenMissingDrivingPermitProperty()
             throws HttpResponseExceptionWithErrorBody {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1",
@@ -1043,7 +1043,7 @@ class UserIdentityServiceTest {
 
         List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("dcmaw-issuer", true));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         when(mockConfigurationService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
@@ -1067,7 +1067,7 @@ class UserIdentityServiceTest {
 
     @Test
     void generateUserIdentityShouldThrowIfDcmawVCCanNotBeParsed() {
-        List<UserIssuedCredentialsItem> userIssuedCredentialsItemList =
+        List<VcStoreItem> vcStoreItems =
                 List.of(
                         createUserIssuedCredentialsItem(
                                 "user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
@@ -1082,7 +1082,7 @@ class UserIdentityServiceTest {
 
         List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("dcmaw-issuer", true));
 
-        when(mockDataStore.getItems(anyString())).thenReturn(userIssuedCredentialsItemList);
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
         when(mockConfigurationService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
@@ -1113,14 +1113,14 @@ class UserIdentityServiceTest {
                 thrownException.getErrorBody().get("error_description"));
     }
 
-    private UserIssuedCredentialsItem createUserIssuedCredentialsItem(
+    private VcStoreItem createUserIssuedCredentialsItem(
             String userId, String credentialIssuer, String credential, Instant dateCreated) {
-        UserIssuedCredentialsItem userIssuedCredentialsItem = new UserIssuedCredentialsItem();
-        userIssuedCredentialsItem.setUserId(userId);
-        userIssuedCredentialsItem.setCredentialIssuer(credentialIssuer);
-        userIssuedCredentialsItem.setCredential(credential);
-        userIssuedCredentialsItem.setDateCreated(dateCreated);
-        userIssuedCredentialsItem.setExpirationTime(dateCreated.plusSeconds(1000L));
-        return userIssuedCredentialsItem;
+        VcStoreItem vcStoreItem = new VcStoreItem();
+        vcStoreItem.setUserId(userId);
+        vcStoreItem.setCredentialIssuer(credentialIssuer);
+        vcStoreItem.setCredential(credential);
+        vcStoreItem.setDateCreated(dateCreated);
+        vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
+        return vcStoreItem;
     }
 }

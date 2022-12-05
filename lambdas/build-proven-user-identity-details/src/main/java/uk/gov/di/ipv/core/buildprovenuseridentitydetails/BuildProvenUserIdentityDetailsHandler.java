@@ -30,7 +30,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
+import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -88,8 +88,8 @@ public class BuildProvenUserIdentityDetailsHandler
                     ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            List<UserIssuedCredentialsItem> credentials =
-                    userIdentityService.getUserIssuedCredentialItems(
+            List<VcStoreItem> credentials =
+                    userIdentityService.getVcStoreItems(
                             ipvSessionItem.getClientSessionDetails().getUserId());
 
             List<VcStatusDto> currentVcStatuses = generateCurrentVcStatuses(credentials);
@@ -123,10 +123,10 @@ public class BuildProvenUserIdentityDetailsHandler
     }
 
     private NameAndDateOfBirth getProvenIdentityNameAndDateOfBirth(
-            List<UserIssuedCredentialsItem> credentialIssuerItems,
+            List<VcStoreItem> credentialIssuerItems,
             List<VcStatusDto> currentVcStatuses)
             throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException {
-        for (UserIssuedCredentialsItem item : credentialIssuerItems) {
+        for (VcStoreItem item : credentialIssuerItems) {
             CredentialIssuerConfig credentialIssuerConfig =
                     configurationService.getCredentialIssuer(item.getCredentialIssuer());
             if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())
@@ -168,10 +168,10 @@ public class BuildProvenUserIdentityDetailsHandler
     }
 
     private Address getProvenIdentityAddress(
-            List<UserIssuedCredentialsItem> credentialIssuerItems,
+            List<VcStoreItem> credentialIssuerItems,
             List<VcStatusDto> currentVcStatuses)
             throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException {
-        for (UserIssuedCredentialsItem item : credentialIssuerItems) {
+        for (VcStoreItem item : credentialIssuerItems) {
             CredentialIssuerConfig credentialIssuerConfig =
                     configurationService.getCredentialIssuer(item.getCredentialIssuer());
             if (ADDRESS_CRI_TYPES.contains(item.getCredentialIssuer())
@@ -209,11 +209,11 @@ public class BuildProvenUserIdentityDetailsHandler
                 "Failed to find current address of proven user identity");
     }
 
-    private List<VcStatusDto> generateCurrentVcStatuses(List<UserIssuedCredentialsItem> credentials)
+    private List<VcStatusDto> generateCurrentVcStatuses(List<VcStoreItem> credentials)
             throws ParseException {
         List<VcStatusDto> vcStatuses = new ArrayList<>();
 
-        for (UserIssuedCredentialsItem item : credentials) {
+        for (VcStoreItem item : credentials) {
             SignedJWT signedJWT = SignedJWT.parse(item.getCredential());
             String addressCriId =
                     configurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID);

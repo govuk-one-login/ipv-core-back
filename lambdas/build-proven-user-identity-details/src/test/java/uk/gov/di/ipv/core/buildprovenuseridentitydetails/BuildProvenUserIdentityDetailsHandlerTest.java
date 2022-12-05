@@ -16,7 +16,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
+import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -71,7 +71,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
-        when(mockUserIdentityService.getUserIssuedCredentialItems(TEST_USER_ID))
+        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
                                 createUserIssuedCredentialsItem(
@@ -134,7 +134,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
-        when(mockUserIdentityService.getUserIssuedCredentialItems(TEST_USER_ID))
+        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
                                 createUserIssuedCredentialsItem(
@@ -201,7 +201,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
-        when(mockUserIdentityService.getUserIssuedCredentialItems(TEST_USER_ID))
+        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
                                 createUserIssuedCredentialsItem(
@@ -278,7 +278,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "https://review-a.integration.account.gov.uk",
                                 URI.create("https://example.com/callback")));
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
-        when(mockUserIdentityService.getUserIssuedCredentialItems(TEST_USER_ID))
+        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
                                 createUserIssuedCredentialsItem(
@@ -314,7 +314,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
-        when(mockUserIdentityService.getUserIssuedCredentialItems(TEST_USER_ID))
+        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
                                 createUserIssuedCredentialsItem(
@@ -406,7 +406,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
-        when(mockUserIdentityService.getUserIssuedCredentialItems(TEST_USER_ID))
+        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
                                 createUserIssuedCredentialsItem(
@@ -520,7 +520,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     void shouldReceive500ResponseCodeWhenFailedToParseVc() throws Exception {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
-        when(mockUserIdentityService.getUserIssuedCredentialItems(TEST_USER_ID))
+        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
                                 createUserIssuedCredentialsItem(
@@ -559,14 +559,14 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         return input;
     }
 
-    private UserIssuedCredentialsItem createUserIssuedCredentialsItem(
+    private VcStoreItem createUserIssuedCredentialsItem(
             String userId, String credentialIssuer, String credential, Instant dateCreated) {
-        UserIssuedCredentialsItem userIssuedCredentialsItem = new UserIssuedCredentialsItem();
-        userIssuedCredentialsItem.setUserId(userId);
-        userIssuedCredentialsItem.setCredentialIssuer(credentialIssuer);
-        userIssuedCredentialsItem.setCredential(credential);
-        userIssuedCredentialsItem.setDateCreated(dateCreated);
-        userIssuedCredentialsItem.setExpirationTime(dateCreated.plusSeconds(1000L));
-        return userIssuedCredentialsItem;
+        VcStoreItem vcStoreItem = new VcStoreItem();
+        vcStoreItem.setUserId(userId);
+        vcStoreItem.setCredentialIssuer(credentialIssuer);
+        vcStoreItem.setCredential(credential);
+        vcStoreItem.setDateCreated(dateCreated);
+        vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
+        return vcStoreItem;
     }
 }

@@ -9,7 +9,7 @@ import java.time.Instant;
 
 @DynamoDbBean
 @ExcludeFromGeneratedCoverageReport
-public class UserIssuedCredentialsItem implements DynamodbItem {
+public class VcStoreItem implements DynamodbItem {
 
     private String userId;
     private String credentialIssuer;
