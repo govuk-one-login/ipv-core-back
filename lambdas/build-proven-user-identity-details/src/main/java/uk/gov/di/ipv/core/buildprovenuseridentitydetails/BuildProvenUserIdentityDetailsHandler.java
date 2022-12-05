@@ -123,8 +123,7 @@ public class BuildProvenUserIdentityDetailsHandler
     }
 
     private NameAndDateOfBirth getProvenIdentityNameAndDateOfBirth(
-            List<VcStoreItem> credentialIssuerItems,
-            List<VcStatusDto> currentVcStatuses)
+            List<VcStoreItem> credentialIssuerItems, List<VcStatusDto> currentVcStatuses)
             throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException {
         for (VcStoreItem item : credentialIssuerItems) {
             CredentialIssuerConfig credentialIssuerConfig =
@@ -168,8 +167,7 @@ public class BuildProvenUserIdentityDetailsHandler
     }
 
     private Address getProvenIdentityAddress(
-            List<VcStoreItem> credentialIssuerItems,
-            List<VcStatusDto> currentVcStatuses)
+            List<VcStoreItem> credentialIssuerItems, List<VcStatusDto> currentVcStatuses)
             throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException {
         for (VcStoreItem item : credentialIssuerItems) {
             CredentialIssuerConfig credentialIssuerConfig =

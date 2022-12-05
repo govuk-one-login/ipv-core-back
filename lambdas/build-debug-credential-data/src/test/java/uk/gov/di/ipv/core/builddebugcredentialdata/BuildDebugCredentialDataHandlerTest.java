@@ -25,7 +25,6 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.builddebugcredentialdata.TestFixtures.SIGNED_VC_1;
 import static uk.gov.di.ipv.core.builddebugcredentialdata.TestFixtures.SIGNED_VC_2;
 
-
 @ExtendWith(MockitoExtension.class)
 public class BuildDebugCredentialDataHandlerTest {
 
@@ -62,8 +61,7 @@ public class BuildDebugCredentialDataHandlerTest {
                                 SIGNED_VC_2,
                                 Instant.parse("2022-01-25T12:28:56.414849Z")));
 
-        when(mockUserIdentityService.getVcStoreItems(userId))
-                .thenReturn(vcStoreItems);
+        when(mockUserIdentityService.getVcStoreItems(userId)).thenReturn(vcStoreItems);
         BuildDebugCredentialDataHandler buildDebugCredentialDataHandler =
                 new BuildDebugCredentialDataHandler(
                         mockUserIdentityService, mockConfigurationService, mockIpvSessionService);
@@ -75,9 +73,12 @@ public class BuildDebugCredentialDataHandlerTest {
 
         var gson = new Gson();
         Map<String, String> map = gson.fromJson(response.getBody(), Map.class);
-        assertEquals("{\"attributes\":{\"userId\":\"a-user-id\",\"dateCreated\":\"2022-01-25T12:28:56.414849Z\"},\"evidence\":{\"validityScore\":2,\"strengthScore\":4,\"txn\":\"1e0f28c5-6329-46f0-bf0e-833cb9b58c9e\",\"type\":\"IdentityCheck\"}}", map.get("criOne"));
-        assertEquals("{\"attributes\":{\"userId\":\"a-user-id\",\"dateCreated\":\"2022-01-25T12:28:56.414849Z\"},\"evidence\":{\"txn\":\"some-uuid\",\"identityFraudScore\":1,\"type\":\"CriStubCheck\"}}", map.get("criTwo"));
-
+        assertEquals(
+                "{\"attributes\":{\"userId\":\"a-user-id\",\"dateCreated\":\"2022-01-25T12:28:56.414849Z\"},\"evidence\":{\"validityScore\":2,\"strengthScore\":4,\"txn\":\"1e0f28c5-6329-46f0-bf0e-833cb9b58c9e\",\"type\":\"IdentityCheck\"}}",
+                map.get("criOne"));
+        assertEquals(
+                "{\"attributes\":{\"userId\":\"a-user-id\",\"dateCreated\":\"2022-01-25T12:28:56.414849Z\"},\"evidence\":{\"txn\":\"some-uuid\",\"identityFraudScore\":1,\"type\":\"CriStubCheck\"}}",
+                map.get("criTwo"));
     }
 
     @Test
@@ -118,5 +119,4 @@ public class BuildDebugCredentialDataHandlerTest {
         vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
         return vcStoreItem;
     }
-
 }

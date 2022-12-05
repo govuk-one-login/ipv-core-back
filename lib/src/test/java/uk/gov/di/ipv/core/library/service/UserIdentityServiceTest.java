@@ -665,8 +665,7 @@ class UserIdentityServiceTest {
     void shouldNotDeleteExistingVCsIfNoneAreDueToExpireWithinSessionTimeout() {
         when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
-        List<VcStoreItem> expiredVcStoreItems =
-                Collections.emptyList();
+        List<VcStoreItem> expiredVcStoreItems = Collections.emptyList();
         when(mockDataStore.getItemsWithAttributeLessThanOrEqualValue(
                         eq("a-users-id"), eq("expirationTime"), anyString()))
                 .thenReturn(expiredVcStoreItems);

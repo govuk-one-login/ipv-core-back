@@ -71,8 +71,7 @@ public class UserIdentityService {
     }
 
     public UserIdentityService(
-            ConfigurationService configurationService,
-            DataStore<VcStoreItem> dataStore) {
+            ConfigurationService configurationService, DataStore<VcStoreItem> dataStore) {
         this.configurationService = configurationService;
         this.dataStore = dataStore;
     }
@@ -161,8 +160,7 @@ public class UserIdentityService {
     }
 
     private Optional<IdentityClaim> generateIdentityClaim(
-            List<VcStoreItem> credentialIssuerItems,
-            List<VcStatusDto> currentVcStatuses)
+            List<VcStoreItem> credentialIssuerItems, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : credentialIssuerItems) {
             CredentialIssuerConfig credentialIssuerConfig =
@@ -228,8 +226,7 @@ public class UserIdentityService {
         return Optional.empty();
     }
 
-    private Optional<JsonNode> generateAddressClaim(
-            List<VcStoreItem> credentialIssuerItems)
+    private Optional<JsonNode> generateAddressClaim(List<VcStoreItem> credentialIssuerItems)
             throws HttpResponseExceptionWithErrorBody {
         Optional<VcStoreItem> addressCredentialItem =
                 credentialIssuerItems.stream()
@@ -269,8 +266,7 @@ public class UserIdentityService {
     }
 
     private Optional<JsonNode> generatePassportClaim(
-            List<VcStoreItem> credentialIssuerItems,
-            List<VcStatusDto> currentVcStatuses)
+            List<VcStoreItem> credentialIssuerItems, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : credentialIssuerItems) {
             CredentialIssuerConfig credentialIssuerConfig =
@@ -314,8 +310,7 @@ public class UserIdentityService {
     }
 
     private Optional<JsonNode> generateDrivingPermitClaim(
-            List<VcStoreItem> credentialIssuerItems,
-            List<VcStatusDto> currentVcStatuses)
+            List<VcStoreItem> credentialIssuerItems, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : credentialIssuerItems) {
             CredentialIssuerConfig credentialIssuerConfig =
@@ -374,5 +369,4 @@ public class UserIdentityService {
                 .orElseThrow()
                 .getIsSuccessfulVc();
     }
-
 }

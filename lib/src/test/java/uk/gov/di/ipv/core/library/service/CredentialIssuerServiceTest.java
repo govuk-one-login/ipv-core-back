@@ -266,13 +266,10 @@ class CredentialIssuerServiceTest {
         credentialIssuerService.persistUserCredentials(
                 SignedJWT.parse(SIGNED_VC_1), credentialIssuerId, userId);
         verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture(), eq(VC_TTL));
-        VcStoreItem vcStoreItem =
-                userIssuedCredentialsItemCaptor.getValue();
+        VcStoreItem vcStoreItem = userIssuedCredentialsItemCaptor.getValue();
         assertEquals(userId, vcStoreItem.getUserId());
         assertEquals(credentialIssuerId, vcStoreItem.getCredentialIssuer());
-        assertEquals(
-                Instant.parse("2022-05-20T12:50:54Z"),
-                vcStoreItem.getExpirationTime());
+        assertEquals(Instant.parse("2022-05-20T12:50:54Z"), vcStoreItem.getExpirationTime());
         assertEquals(SIGNED_VC_1, vcStoreItem.getCredential());
     }
 

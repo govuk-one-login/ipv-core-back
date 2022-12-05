@@ -80,7 +80,7 @@ public class BuildDebugCredentialDataHandler
 
     public Map<String, String> getUserIssuedDebugCredentials(String userId) {
         var vcStoreItems = userIdentityService.getVcStoreItems(userId);
-                
+
         Map<String, String> userIssuedDebugCredentials = new HashMap<>();
         Gson gson = new Gson();
 
@@ -88,7 +88,8 @@ public class BuildDebugCredentialDataHandler
                 vcStoreItem -> {
                     DebugCredentialAttributes attributes =
                             new DebugCredentialAttributes(
-                                    vcStoreItem.getUserId(), vcStoreItem.getDateCreated().toString());
+                                    vcStoreItem.getUserId(),
+                                    vcStoreItem.getDateCreated().toString());
                     UserIssuedDebugCredential debugCredential =
                             new UserIssuedDebugCredential(attributes);
 
