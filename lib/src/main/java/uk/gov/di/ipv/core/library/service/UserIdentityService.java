@@ -77,11 +77,9 @@ public class UserIdentityService {
     }
 
     public List<String> getUserIssuedCredentials(String userId) {
-        List<VcStoreItem> credentialIssuerItems = dataStore.getItems(userId);
+        List<VcStoreItem> vcStoreItems = dataStore.getItems(userId);
 
-        return credentialIssuerItems.stream()
-                .map(VcStoreItem::getCredential)
-                .collect(Collectors.toList());
+        return vcStoreItems.stream().map(VcStoreItem::getCredential).collect(Collectors.toList());
     }
 
     public void deleteVcStoreItemsIfAnyExpired(String userId) {
@@ -127,12 +125,10 @@ public class UserIdentityService {
     public UserIdentity generateUserIdentity(
             String userId, String sub, String vot, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
-        List<VcStoreItem> credentialIssuerItems = dataStore.getItems(userId);
+        List<VcStoreItem> vcStoreItems = dataStore.getItems(userId);
 
         List<String> vcJwts =
-                credentialIssuerItems.stream()
-                        .map(VcStoreItem::getCredential)
-                        .collect(Collectors.toList());
+                vcStoreItems.stream().map(VcStoreItem::getCredential).collect(Collectors.toList());
 
         String vtm = configurationService.getSsmParameter(CORE_VTM_CLAIM);
 
@@ -141,18 +137,18 @@ public class UserIdentityService {
 
         if (vot.equals(VectorOfTrust.P2.toString())) {
             Optional<IdentityClaim> identityClaim =
-                    generateIdentityClaim(credentialIssuerItems, currentVcStatuses);
+                    generateIdentityClaim(vcStoreItems, currentVcStatuses);
             identityClaim.ifPresent(userIdentityBuilder::setIdentityClaim);
 
-            Optional<JsonNode> addressClaim = generateAddressClaim(credentialIssuerItems);
+            Optional<JsonNode> addressClaim = generateAddressClaim(vcStoreItems);
             addressClaim.ifPresent(userIdentityBuilder::setAddressClaim);
 
             Optional<JsonNode> passportClaim =
-                    generatePassportClaim(credentialIssuerItems, currentVcStatuses);
+                    generatePassportClaim(vcStoreItems, currentVcStatuses);
             passportClaim.ifPresent(userIdentityBuilder::setPassportClaim);
 
             Optional<JsonNode> drivingPermitClaim =
-                    generateDrivingPermitClaim(credentialIssuerItems, currentVcStatuses);
+                    generateDrivingPermitClaim(vcStoreItems, currentVcStatuses);
             drivingPermitClaim.ifPresent(userIdentityBuilder::setDrivingPermitClaim);
         }
 
@@ -160,9 +156,9 @@ public class UserIdentityService {
     }
 
     private Optional<IdentityClaim> generateIdentityClaim(
-            List<VcStoreItem> credentialIssuerItems, List<VcStatusDto> currentVcStatuses)
+            List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
-        for (VcStoreItem item : credentialIssuerItems) {
+        for (VcStoreItem item : vcStoreItems) {
             CredentialIssuerConfig credentialIssuerConfig =
                     configurationService.getCredentialIssuer(item.getCredentialIssuer());
             if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())
@@ -226,10 +222,10 @@ public class UserIdentityService {
         return Optional.empty();
     }
 
-    private Optional<JsonNode> generateAddressClaim(List<VcStoreItem> credentialIssuerItems)
+    private Optional<JsonNode> generateAddressClaim(List<VcStoreItem> vcStoreItems)
             throws HttpResponseExceptionWithErrorBody {
         Optional<VcStoreItem> addressCredentialItem =
-                credentialIssuerItems.stream()
+                vcStoreItems.stream()
                         .filter(
                                 credential ->
                                         ADDRESS_CRI_TYPES.contains(
@@ -266,9 +262,9 @@ public class UserIdentityService {
     }
 
     private Optional<JsonNode> generatePassportClaim(
-            List<VcStoreItem> credentialIssuerItems, List<VcStatusDto> currentVcStatuses)
+            List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
-        for (VcStoreItem item : credentialIssuerItems) {
+        for (VcStoreItem item : vcStoreItems) {
             CredentialIssuerConfig credentialIssuerConfig =
                     configurationService.getCredentialIssuer(item.getCredentialIssuer());
             if (PASSPORT_CRI_TYPES.contains(item.getCredentialIssuer())
@@ -310,9 +306,9 @@ public class UserIdentityService {
     }
 
     private Optional<JsonNode> generateDrivingPermitClaim(
-            List<VcStoreItem> credentialIssuerItems, List<VcStatusDto> currentVcStatuses)
+            List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
-        for (VcStoreItem item : credentialIssuerItems) {
+        for (VcStoreItem item : vcStoreItems) {
             CredentialIssuerConfig credentialIssuerConfig =
                     configurationService.getCredentialIssuer(item.getCredentialIssuer());
             if (DRIVING_PERMIT_CRI_TYPES.contains(item.getCredentialIssuer())

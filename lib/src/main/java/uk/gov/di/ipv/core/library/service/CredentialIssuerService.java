@@ -210,15 +210,15 @@ public class CredentialIssuerService {
 
     public void persistUserCredentials(
             SignedJWT credential, String credentialIssuerId, String userId) {
-        VcStoreItem userIssuedCredentials = new VcStoreItem();
-        userIssuedCredentials.setUserId(userId);
-        userIssuedCredentials.setCredentialIssuer(credentialIssuerId);
-        userIssuedCredentials.setCredential(credential.serialize());
-        userIssuedCredentials.setDateCreated(Instant.now());
+        VcStoreItem vcStoreItem = new VcStoreItem();
+        vcStoreItem.setUserId(userId);
+        vcStoreItem.setCredentialIssuer(credentialIssuerId);
+        vcStoreItem.setCredential(credential.serialize());
+        vcStoreItem.setDateCreated(Instant.now());
         try {
-            userIssuedCredentials.setExpirationTime(
+            vcStoreItem.setExpirationTime(
                     credential.getJWTClaimsSet().getExpirationTime().toInstant());
-            dataStore.create(userIssuedCredentials, VC_TTL);
+            dataStore.create(vcStoreItem, VC_TTL);
         } catch (UnsupportedOperationException | java.text.ParseException e) {
             LOGGER.error("Error persisting user credential: {}", e.getMessage(), e);
             throw new CredentialIssuerException(
