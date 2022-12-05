@@ -22,7 +22,6 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -35,7 +34,6 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC_MISSING_ADDRESS_PROPERTY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_DCMAW_VC;
@@ -47,8 +45,6 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_3;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_4;
-import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
-import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.vcClaim;
 
 @ExtendWith(MockitoExtension.class)
 class UserIdentityServiceTest {
@@ -116,110 +112,6 @@ class UserIdentityServiceTest {
                 userIdentityService.getVcStoreItem(ipvSessionId, criId);
 
         assertEquals(credentialItem, retrievedCredentialItem);
-    }
-
-    @Test
-    void shouldReturnDebugCredentialsFromDataStore() {
-        List<VcStoreItem> vcStoreItems =
-                List.of(
-                        createUserIssuedCredentialsItem(
-                                "user-id-1",
-                                "ukPassport",
-                                SIGNED_VC_1,
-                                Instant.parse("2022-01-25T12:28:56.414849Z")),
-                        createUserIssuedCredentialsItem(
-                                "user-id-1",
-                                "fraud",
-                                SIGNED_VC_2,
-                                Instant.parse("2022-01-25T12:28:56.414849Z")));
-
-        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-
-        Map<String, String> credentials =
-                userIdentityService.getUserIssuedDebugCredentials("user-id-1");
-
-        assertEquals(
-                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849Z\"},\"evidence\":{\"validityScore\":2,\"strengthScore\":4,\"txn\":\"1e0f28c5-6329-46f0-bf0e-833cb9b58c9e\",\"type\":\"IdentityCheck\"}}",
-                credentials.get("ukPassport"));
-        assertEquals(
-                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849Z\"},\"evidence\":{\"txn\":\"some-uuid\",\"identityFraudScore\":1,\"type\":\"CriStubCheck\"}}",
-                credentials.get("fraud"));
-    }
-
-    @Test
-    void shouldReturnDebugCredentialsFromDataStoreWhenMissingAGpg45Score() throws Exception {
-        Map<String, Object> credentialVcClaim = vcClaim(Map.of("test", "test-value"));
-        credentialVcClaim.put(VC_EVIDENCE, List.of());
-        List<VcStoreItem> vcStoreItems =
-                List.of(
-                        createUserIssuedCredentialsItem(
-                                "user-id-1",
-                                "ukPassport",
-                                generateVerifiableCredential(
-                                        credentialVcClaim, "https://issuer.example.com"),
-                                Instant.parse("2022-01-25T12:28:56.414849Z")),
-                        createUserIssuedCredentialsItem(
-                                "user-id-1",
-                                "fraud",
-                                generateVerifiableCredential(
-                                        credentialVcClaim, "https://issuer.example.com"),
-                                Instant.parse("2022-01-25T12:28:56.414849Z")));
-
-        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-
-        Map<String, String> credentials =
-                userIdentityService.getUserIssuedDebugCredentials("user-id-1");
-
-        assertEquals(
-                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849Z\"}}",
-                credentials.get("ukPassport"));
-        assertEquals(
-                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849Z\"}}",
-                credentials.get("fraud"));
-    }
-
-    @Test
-    void shouldReturnDebugCredentialsEvenIfFailingToParseCredentialJson() {
-        List<VcStoreItem> vcStoreItems =
-                List.of(
-                        createUserIssuedCredentialsItem(
-                                "user-id-1",
-                                "ukPassport",
-                                "invalid-verifiable-credential",
-                                Instant.parse("2022-01-25T12:28:56.414849Z")));
-
-        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-
-        Map<String, String> credentials =
-                userIdentityService.getUserIssuedDebugCredentials("user-id-1");
-
-        assertEquals(
-                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849Z\"}}",
-                credentials.get("ukPassport"));
-    }
-
-    @Test
-    void shouldReturnDebugCredentialsEvenIfFailingToParseGpg45ScoreParamFromJson()
-            throws Exception {
-        Map<String, Object> credentialVcClaim = vcClaim(Map.of("test", "test-value"));
-        credentialVcClaim.put(VC_EVIDENCE, "This should be a list of objects...");
-        List<VcStoreItem> vcStoreItems =
-                List.of(
-                        createUserIssuedCredentialsItem(
-                                "user-id-1",
-                                "ukPassport",
-                                generateVerifiableCredential(
-                                        credentialVcClaim, "https://issuer.example.com"),
-                                Instant.parse("2022-01-25T12:28:56.414849Z")));
-
-        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-
-        Map<String, String> credentials =
-                userIdentityService.getUserIssuedDebugCredentials("user-id-1");
-
-        assertEquals(
-                "{\"attributes\":{\"userId\":\"user-id-1\",\"dateCreated\":\"2022-01-25T12:28:56.414849Z\"}}",
-                credentials.get("ukPassport"));
     }
 
     @Test

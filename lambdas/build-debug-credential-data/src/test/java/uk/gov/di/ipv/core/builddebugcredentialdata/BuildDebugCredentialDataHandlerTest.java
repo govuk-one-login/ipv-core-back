@@ -11,14 +11,20 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.builddebugcredentialdata.TestFixtures.SIGNED_VC_1;
+import static uk.gov.di.ipv.core.builddebugcredentialdata.TestFixtures.SIGNED_VC_2;
+
 
 @ExtendWith(MockitoExtension.class)
 public class BuildDebugCredentialDataHandlerTest {
@@ -42,13 +48,22 @@ public class BuildDebugCredentialDataHandlerTest {
         clientSessionDetailsDto.setUserId(userId);
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
         when(mockIpvSessionService.getIpvSession(ipvSessionId)).thenReturn(ipvSessionItem);
-        Map<String, String> userIssuedCredentials =
-                Map.of(
-                        "criOne", "credential issued by criOne",
-                        "criTwo", "credential issued by criTwo",
-                        "criThree", "credential issued by criThree");
-        when(mockUserIdentityService.getUserIssuedDebugCredentials(userId))
-                .thenReturn(userIssuedCredentials);
+
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createUserIssuedCredentialsItem(
+                                userId,
+                                "criOne",
+                                SIGNED_VC_1,
+                                Instant.parse("2022-01-25T12:28:56.414849Z")),
+                        createUserIssuedCredentialsItem(
+                                userId,
+                                "criTwo",
+                                SIGNED_VC_2,
+                                Instant.parse("2022-01-25T12:28:56.414849Z")));
+
+        when(mockUserIdentityService.getVcStoreItems(userId))
+                .thenReturn(vcStoreItems);
         BuildDebugCredentialDataHandler buildDebugCredentialDataHandler =
                 new BuildDebugCredentialDataHandler(
                         mockUserIdentityService, mockConfigurationService, mockIpvSessionService);
@@ -57,7 +72,12 @@ public class BuildDebugCredentialDataHandlerTest {
                 buildDebugCredentialDataHandler.handleRequest(event, mockContext);
 
         assertEquals(200, response.getStatusCode());
-        assertEquals(gson.toJson(userIssuedCredentials), response.getBody());
+
+        var gson = new Gson();
+        Map<String, String> map = gson.fromJson(response.getBody(), Map.class);
+        assertEquals("{\"attributes\":{\"userId\":\"a-user-id\",\"dateCreated\":\"2022-01-25T12:28:56.414849Z\"},\"evidence\":{\"validityScore\":2,\"strengthScore\":4,\"txn\":\"1e0f28c5-6329-46f0-bf0e-833cb9b58c9e\",\"type\":\"IdentityCheck\"}}", map.get("criOne"));
+        assertEquals("{\"attributes\":{\"userId\":\"a-user-id\",\"dateCreated\":\"2022-01-25T12:28:56.414849Z\"},\"evidence\":{\"txn\":\"some-uuid\",\"identityFraudScore\":1,\"type\":\"CriStubCheck\"}}", map.get("criTwo"));
+
     }
 
     @Test
@@ -87,4 +107,16 @@ public class BuildDebugCredentialDataHandlerTest {
 
         assertEquals(400, response.getStatusCode());
     }
+
+    private VcStoreItem createUserIssuedCredentialsItem(
+            String userId, String credentialIssuer, String credential, Instant dateCreated) {
+        VcStoreItem vcStoreItem = new VcStoreItem();
+        vcStoreItem.setUserId(userId);
+        vcStoreItem.setCredentialIssuer(credentialIssuer);
+        vcStoreItem.setCredential(credential);
+        vcStoreItem.setDateCreated(dateCreated);
+        vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
+        return vcStoreItem;
+    }
+
 }
