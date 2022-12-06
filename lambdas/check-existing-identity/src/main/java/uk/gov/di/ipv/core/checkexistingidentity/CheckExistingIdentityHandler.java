@@ -9,6 +9,8 @@ import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
+import software.amazon.lambda.powertools.logging.Logging;
+import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -76,6 +78,8 @@ public class CheckExistingIdentityHandler
     }
 
     @Override
+    @Tracing
+    @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent event, Context context) {
         LogHelper.attachComponentIdToLogs();
@@ -159,6 +163,7 @@ public class CheckExistingIdentityHandler
         }
     }
 
+    @Tracing
     private void updateSuccessfulVcStatuses(
             IpvSessionItem ipvSessionItem, List<SignedJWT> credentials) throws ParseException {
 
@@ -176,6 +181,7 @@ public class CheckExistingIdentityHandler
         }
     }
 
+    @Tracing
     private List<VcStatusDto> generateVcSuccessStatuses(List<SignedJWT> credentials)
             throws ParseException {
         List<VcStatusDto> vcStatuses = new ArrayList<>();

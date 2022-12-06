@@ -13,6 +13,8 @@ import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import software.amazon.lambda.powertools.logging.Logging;
+import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.NameAndDateOfBirth;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.ProvenUserIdentityDetails;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.exceptions.ProvenUserIdentityDetailsException;
@@ -75,6 +77,8 @@ public class BuildProvenUserIdentityDetailsHandler
     }
 
     @Override
+    @Tracing
+    @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
@@ -122,6 +126,7 @@ public class BuildProvenUserIdentityDetailsHandler
         }
     }
 
+    @Tracing
     private NameAndDateOfBirth getProvenIdentityNameAndDateOfBirth(
             List<VcStoreItem> credentialIssuerItems, List<VcStatusDto> currentVcStatuses)
             throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException {
@@ -166,6 +171,7 @@ public class BuildProvenUserIdentityDetailsHandler
                 "Failed to find name and date of birth of proven user identity");
     }
 
+    @Tracing
     private Address getProvenIdentityAddress(
             List<VcStoreItem> credentialIssuerItems, List<VcStatusDto> currentVcStatuses)
             throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException {
@@ -207,6 +213,7 @@ public class BuildProvenUserIdentityDetailsHandler
                 "Failed to find current address of proven user identity");
     }
 
+    @Tracing
     private List<VcStatusDto> generateCurrentVcStatuses(List<VcStoreItem> credentials)
             throws ParseException {
         List<VcStatusDto> vcStatuses = new ArrayList<>();
