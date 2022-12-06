@@ -22,7 +22,7 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
-import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
+import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
 import java.net.URI;
 import java.security.KeyFactory;
@@ -66,7 +66,7 @@ class CredentialIssuerServiceTest {
     public static final String TEST_AUTH_CODE = "test-auth-code";
     public static final String TEST_IP_ADDRESS = "192.168.1.100";
 
-    @Mock private DataStore<UserIssuedCredentialsItem> mockDataStore;
+    @Mock private DataStore<VcStoreItem> mockDataStore;
     @Mock private ConfigurationService mockConfigurationService;
 
     private CredentialIssuerService credentialIssuerService;
@@ -257,8 +257,8 @@ class CredentialIssuerServiceTest {
 
     @Test
     void expectedSuccessWhenSaveCredentials() throws Exception {
-        ArgumentCaptor<UserIssuedCredentialsItem> userIssuedCredentialsItemCaptor =
-                ArgumentCaptor.forClass(UserIssuedCredentialsItem.class);
+        ArgumentCaptor<VcStoreItem> userIssuedCredentialsItemCaptor =
+                ArgumentCaptor.forClass(VcStoreItem.class);
 
         String credentialIssuerId = "cred_issuer_id_1";
         String userId = "user-id-1";
@@ -266,14 +266,11 @@ class CredentialIssuerServiceTest {
         credentialIssuerService.persistUserCredentials(
                 SignedJWT.parse(SIGNED_VC_1), credentialIssuerId, userId);
         verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture(), eq(VC_TTL));
-        UserIssuedCredentialsItem userIssuedCredentialsItem =
-                userIssuedCredentialsItemCaptor.getValue();
-        assertEquals(userId, userIssuedCredentialsItem.getUserId());
-        assertEquals(credentialIssuerId, userIssuedCredentialsItem.getCredentialIssuer());
-        assertEquals(
-                Instant.parse("2022-05-20T12:50:54Z"),
-                userIssuedCredentialsItem.getExpirationTime());
-        assertEquals(SIGNED_VC_1, userIssuedCredentialsItem.getCredential());
+        VcStoreItem vcStoreItem = userIssuedCredentialsItemCaptor.getValue();
+        assertEquals(userId, vcStoreItem.getUserId());
+        assertEquals(credentialIssuerId, vcStoreItem.getCredentialIssuer());
+        assertEquals(Instant.parse("2022-05-20T12:50:54Z"), vcStoreItem.getExpirationTime());
+        assertEquals(SIGNED_VC_1, vcStoreItem.getCredential());
     }
 
     @Test

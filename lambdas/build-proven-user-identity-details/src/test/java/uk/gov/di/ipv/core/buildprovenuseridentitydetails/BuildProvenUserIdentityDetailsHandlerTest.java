@@ -16,7 +16,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.UserIssuedCredentialsItem;
+import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -71,16 +71,16 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
-        when(mockUserIdentityService.getUserIssuedCredentialItems(TEST_USER_ID))
+        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "ukPassport", M1A_PASSPORT_VC, Instant.now()),
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "address", M1A_ADDRESS_VC, Instant.now()),
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "fraud", M1A_FRAUD_VC, Instant.now()),
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
         when(mockConfigurationService.getCredentialIssuer("ukPassport"))
@@ -134,19 +134,19 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
-        when(mockUserIdentityService.getUserIssuedCredentialItems(TEST_USER_ID))
+        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "ukPassport", M1A_PASSPORT_VC, Instant.now()),
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1",
                                         "address",
                                         M1A_MULTI_ADDRESS_VC,
                                         Instant.now()),
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "fraud", M1A_FRAUD_VC, Instant.now()),
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
         when(mockConfigurationService.getCredentialIssuer("ukPassport"))
@@ -201,19 +201,19 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
-        when(mockUserIdentityService.getUserIssuedCredentialItems(TEST_USER_ID))
+        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "ukPassport", M1A_PASSPORT_VC, Instant.now()),
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1",
                                         "address",
                                         M1A_MULTI_ADDRESS_VC_WITHOUT_VALID_FROM_FIELD,
                                         Instant.now()),
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "fraud", M1A_FRAUD_VC, Instant.now()),
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
         when(mockConfigurationService.getCredentialIssuer("ukPassport"))
@@ -278,14 +278,14 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "https://review-a.integration.account.gov.uk",
                                 URI.create("https://example.com/callback")));
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
-        when(mockUserIdentityService.getUserIssuedCredentialItems(TEST_USER_ID))
+        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "address", M1A_ADDRESS_VC, Instant.now()),
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "fraud", M1A_FRAUD_VC, Instant.now()),
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
@@ -314,14 +314,14 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
-        when(mockUserIdentityService.getUserIssuedCredentialItems(TEST_USER_ID))
+        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "ukPassport", M1A_PASSPORT_VC, Instant.now()),
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "fraud", M1A_FRAUD_VC, Instant.now()),
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
         when(mockConfigurationService.getCredentialIssuer("ukPassport"))
@@ -406,19 +406,19 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
-        when(mockUserIdentityService.getUserIssuedCredentialItems(TEST_USER_ID))
+        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1",
                                         "ukPassport",
                                         M1A_FAILED_PASSPORT_VC,
                                         Instant.now()),
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "address", M1A_ADDRESS_VC, Instant.now()),
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "fraud", M1A_FRAUD_VC, Instant.now()),
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
         when(mockConfigurationService.getCredentialIssuer("ukPassport"))
@@ -520,19 +520,19 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     void shouldReceive500ResponseCodeWhenFailedToParseVc() throws Exception {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
-        when(mockUserIdentityService.getUserIssuedCredentialItems(TEST_USER_ID))
+        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1",
                                         "ukPassport",
                                         "invalid-credential",
                                         Instant.now()),
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "address", M1A_ADDRESS_VC, Instant.now()),
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "fraud", M1A_FRAUD_VC, Instant.now()),
-                                createUserIssuedCredentialsItem(
+                                createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
@@ -559,14 +559,14 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         return input;
     }
 
-    private UserIssuedCredentialsItem createUserIssuedCredentialsItem(
+    private VcStoreItem createVcStoreItem(
             String userId, String credentialIssuer, String credential, Instant dateCreated) {
-        UserIssuedCredentialsItem userIssuedCredentialsItem = new UserIssuedCredentialsItem();
-        userIssuedCredentialsItem.setUserId(userId);
-        userIssuedCredentialsItem.setCredentialIssuer(credentialIssuer);
-        userIssuedCredentialsItem.setCredential(credential);
-        userIssuedCredentialsItem.setDateCreated(dateCreated);
-        userIssuedCredentialsItem.setExpirationTime(dateCreated.plusSeconds(1000L));
-        return userIssuedCredentialsItem;
+        VcStoreItem vcStoreItem = new VcStoreItem();
+        vcStoreItem.setUserId(userId);
+        vcStoreItem.setCredentialIssuer(credentialIssuer);
+        vcStoreItem.setCredential(credential);
+        vcStoreItem.setDateCreated(dateCreated);
+        vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
+        return vcStoreItem;
     }
 }
