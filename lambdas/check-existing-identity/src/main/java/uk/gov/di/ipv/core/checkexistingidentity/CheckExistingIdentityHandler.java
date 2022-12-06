@@ -4,6 +4,8 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.nimbusds.jose.shaded.json.JSONArray;
+import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
@@ -13,6 +15,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.auditing.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -44,6 +47,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
 
 public class CheckExistingIdentityHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -52,6 +58,7 @@ public class CheckExistingIdentityHandler
     public static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
     public static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
     private static final String VOT_P2 = "P2";
+    private static final int ONLY = 0;
     private static final Logger LOGGER = LogManager.getLogger();
     private final ConfigurationService configurationService;
     private final UserIdentityService userIdentityService;
@@ -131,6 +138,14 @@ public class CheckExistingIdentityHandler
                         gpg45ProfileEvaluator.getFirstMatchingProfile(
                                 gpg45Scores, ACCEPTED_PROFILES);
                 if (matchedProfile.isPresent()) {
+                    auditService.sendAuditEvent(
+                            buildProfileMatchedAuditEvent(
+                                    ipvSessionItem,
+                                    matchedProfile.get(),
+                                    gpg45Scores,
+                                    credentials,
+                                    ipAddress));
+
                     var message =
                             new StringMapMessage()
                                     .with(
@@ -227,5 +242,41 @@ public class CheckExistingIdentityHandler
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
         }
         return vcStatuses;
+    }
+
+    private AuditEvent buildProfileMatchedAuditEvent(
+            IpvSessionItem ipvSessionItem,
+            Gpg45Profile gpg45Profile,
+            Gpg45Scores gpg45Scores,
+            List<SignedJWT> credentials,
+            String ipAddress)
+            throws ParseException {
+        AuditEventUser auditEventUser =
+                new AuditEventUser(
+                        ipvSessionItem.getClientSessionDetails().getUserId(),
+                        ipvSessionItem.getIpvSessionId(),
+                        ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId(),
+                        ipAddress);
+        return new AuditEvent(
+                AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
+                componentId,
+                auditEventUser,
+                new AuditExtensionGpg45ProfileMatched(
+                        gpg45Profile, gpg45Scores, extractTxnIdsFromCredentials(credentials)));
+    }
+
+    private List<String> extractTxnIdsFromCredentials(List<SignedJWT> credentials)
+            throws ParseException {
+        List<String> txnIds = new ArrayList<>();
+        for (SignedJWT credential : credentials) {
+            var jwtClaimsSet = credential.getJWTClaimsSet();
+            var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
+            var evidences = (JSONArray) vc.get(VC_EVIDENCE);
+            if (evidences != null) { // not all VCs have an evidence block
+                var evidence = (JSONObject) evidences.get(ONLY);
+                txnIds.add(evidence.getAsString(VC_EVIDENCE_TXN));
+            }
+        }
+        return txnIds;
     }
 }

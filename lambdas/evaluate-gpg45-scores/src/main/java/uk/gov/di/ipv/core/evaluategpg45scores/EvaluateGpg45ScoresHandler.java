@@ -65,7 +65,7 @@ public class EvaluateGpg45ScoresHandler
     public static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
     public static final String VOT_P2 = "P2";
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final int ONLY = 0;
+    private static final int ONLY = 0;
     private final UserIdentityService userIdentityService;
     private final IpvSessionService ipvSessionService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;

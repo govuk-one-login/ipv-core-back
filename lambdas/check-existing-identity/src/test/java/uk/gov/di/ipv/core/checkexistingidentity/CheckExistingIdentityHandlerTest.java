@@ -50,6 +50,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler.ACCEPTED_PROFILES;
@@ -161,10 +162,13 @@ class CheckExistingIdentityHandlerTest {
 
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
                 ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
+        verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
+        assertEquals(
+                AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
+                auditEventArgumentCaptor.getAllValues().get(0).getEventName());
         assertEquals(
                 AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
-                auditEventArgumentCaptor.getValue().getEventName());
+                auditEventArgumentCaptor.getAllValues().get(1).getEventName());
     }
 
     @Test
@@ -186,7 +190,7 @@ class CheckExistingIdentityHandlerTest {
 
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
                 ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
+        verify(auditService, times(2)).sendAuditEvent(auditEventArgumentCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
                 auditEventArgumentCaptor.getValue().getEventName());
