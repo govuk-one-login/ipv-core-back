@@ -48,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -331,5 +332,29 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(ErrorResponse.FAILED_TO_GET_STORED_CIS.getCode(), responseMap.get("code"));
         assertEquals(
                 ErrorResponse.FAILED_TO_GET_STORED_CIS.getMessage(), responseMap.get("message"));
+    }
+
+    @Test
+    void shouldReturn500IfFailedToSendAuditEvent() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
+                .thenReturn(Optional.empty());
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
+                .thenReturn(Optional.of(Gpg45Profile.M1A));
+        doThrow(new SqsException("test error"))
+                .when(auditService)
+                .sendAuditEvent((AuditEvent) any());
+
+        var response = checkExistingIdentityHandler.handleRequest(event, context);
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        Map<String, Object> responseMap =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getCode(), responseMap.get("code"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getMessage(), responseMap.get("message"));
     }
 }
