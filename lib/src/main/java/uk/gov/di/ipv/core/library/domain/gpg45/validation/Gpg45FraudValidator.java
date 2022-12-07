@@ -4,7 +4,6 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 
 public class Gpg45FraudValidator {
-    public static final String A01 = "A01";
 
     @ExcludeFromGeneratedCoverageReport
     private Gpg45FraudValidator() {

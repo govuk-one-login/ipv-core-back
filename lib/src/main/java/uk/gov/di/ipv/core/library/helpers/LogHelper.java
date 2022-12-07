@@ -10,8 +10,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 @ExcludeFromGeneratedCoverageReport
 public class LogHelper {
     private static final Logger LOGGER = LogManager.getLogger();
-
-    public static final String CORE_COMPONENT_ID = "core";
+    private static final String CORE_COMPONENT_ID = "core";
     public static final String GOVUK_SIGNIN_JOURNEY_ID_DEFAULT_VALUE = "unknown";
 
     public enum LogField {

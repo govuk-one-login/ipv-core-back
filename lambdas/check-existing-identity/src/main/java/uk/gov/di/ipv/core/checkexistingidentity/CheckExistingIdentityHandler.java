@@ -41,10 +41,10 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CR
 
 public class CheckExistingIdentityHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
-    public static final List<Gpg45Profile> ACCEPTED_PROFILES =
+    private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
-    public static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
-    public static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
+    private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
+    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
     private static final String VOT_P2 = "P2";
     private static final Logger LOGGER = LogManager.getLogger();
     private final ConfigurationService configurationService;

@@ -9,6 +9,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
+import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -28,15 +29,18 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
-import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator.JOURNEY_RESPONSE_PYI_KBV_FAIL;
-import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator.JOURNEY_RESPONSE_PYI_NO_MATCH;
 
 @ExtendWith(MockitoExtension.class)
 class Gpg45ProfileEvaluatorTest {
 
-    public static final String TEST_USER_ID = "test-user-id";
-    public static final String TEST_JOURNEY_ID = "test-journey-id";
-    public static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
+    private static final String TEST_USER_ID = "test-user-id";
+    private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
+    private static final JourneyResponse JOURNEY_RESPONSE_PYI_NO_MATCH =
+            new JourneyResponse(JOURNEY_PYI_NO_MATCH);
+    private static final String JOURNEY_PYI_KBV_FAIL = "/journey/pyi-kbv-fail";
+    private static final JourneyResponse JOURNEY_RESPONSE_PYI_KBV_FAIL =
+            new JourneyResponse(JOURNEY_PYI_KBV_FAIL);
+
     @Mock CiStorageService mockCiStorageService;
     @Mock ConfigurationService mockConfigurationService;
     @Mock ClientSessionDetailsDto mockClientSessionDetails;

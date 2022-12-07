@@ -56,18 +56,18 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PU
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATORS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
-import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.CODE;
-import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.MESSAGE;
-import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.STATUS_CODE;
 
 @ExtendWith(MockitoExtension.class)
 class RetrieveCriCredentialHandlerTest {
-    public static final String ACCESS_TOKEN = "Bearer dGVzdAo=";
-    public static final String CREDENTIAL_ISSUER_ID = "PassportIssuer";
-    public static final String ADDRESS_CRI_JOURNEY_ID = "address";
-    public static final String TEST_USER_ID = "test-user-id";
-    public static final String TEST_STATE = "test-state";
-    public static final String TEST_IP_ADDRESS = "192.168.1.100";
+    private static final String ACCESS_TOKEN = "Bearer dGVzdAo=";
+    private static final String CREDENTIAL_ISSUER_ID = "PassportIssuer";
+    private static final String ADDRESS_CRI_JOURNEY_ID = "address";
+    private static final String TEST_USER_ID = "test-user-id";
+    private static final String TEST_STATE = "test-state";
+    private static final String TEST_IP_ADDRESS = "192.168.1.100";
+    private static final String CODE = "code";
+    private static final String MESSAGE = "message";
+    private static final String STATUS_CODE = "statusCode";
 
     @Mock private Context context;
     @Mock private CredentialIssuerService credentialIssuerService;

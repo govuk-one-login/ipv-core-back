@@ -43,9 +43,9 @@ public class SelectCriHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String CRI_START_JOURNEY = "/journey/%s";
-    public static final String JOURNEY_FAIL = "/journey/fail";
-    public static final String DCMAW_SUCCESS_PAGE = "dcmaw-success";
-    public static final String APP_JOURNEY_USER_ID_PREFIX = "urn:uuid:app-journey-user-";
+    private static final String JOURNEY_FAIL = "/journey/fail";
+    private static final String DCMAW_SUCCESS_PAGE = "dcmaw-success";
+    private static final String APP_JOURNEY_USER_ID_PREFIX = "urn:uuid:app-journey-user-";
 
     private final ConfigurationService configurationService;
     private final IpvSessionService ipvSessionService;

@@ -37,9 +37,9 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK_2;
 @ExtendWith(MockitoExtension.class)
 class VerifiableCredentialJwtValidatorTest {
 
-    public static final String AUDIENCE = "https://example.com/audience";
-    public static final String ISSUER = "https://example.com/issuer";
-    public static final String SUBJECT = "https://example.com/subject";
+    private static final String AUDIENCE = "https://example.com/audience";
+    private static final String ISSUER = "https://example.com/issuer";
+    private static final String SUBJECT = "https://example.com/subject";
 
     private final ECDSASigner signer = getSigner();
 

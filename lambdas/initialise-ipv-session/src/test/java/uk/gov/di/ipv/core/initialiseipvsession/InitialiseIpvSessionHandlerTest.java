@@ -61,7 +61,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 @ExtendWith(MockitoExtension.class)
 class InitialiseIpvSessionHandlerTest {
 
-    public static final String TEST_IP_ADDRESS = "192.168.1.100";
+    private static final String TEST_IP_ADDRESS = "192.168.1.100";
     @Mock private Context mockContext;
 
     @Mock private IpvSessionService mockIpvSessionService;

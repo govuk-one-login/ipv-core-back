@@ -63,12 +63,11 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 public class BuildCriOauthRequestHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final String CRI_ID = "criId";
-    public static final int OK = 200;
-    public static final String SHARED_CLAIMS = "shared_claims";
-    public static final String DCMAW_CRI_ID = "dcmaw";
-    public static final String STUB_DCMAW_CRI_ID = "stubDcmaw";
-    public static final JourneyResponse ERROR_JOURNEY = new JourneyResponse("/journey/error");
+    private static final String CRI_ID = "criId";
+    private static final int OK = 200;
+    private static final String DCMAW_CRI_ID = "dcmaw";
+    private static final String STUB_DCMAW_CRI_ID = "stubDcmaw";
+    private static final JourneyResponse ERROR_JOURNEY = new JourneyResponse("/journey/error");
 
     private final ObjectMapper mapper = new ObjectMapper();
 

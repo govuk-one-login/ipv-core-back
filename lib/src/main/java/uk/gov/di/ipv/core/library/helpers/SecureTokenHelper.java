@@ -9,7 +9,7 @@ public class SecureTokenHelper {
         throw new IllegalStateException("Utility class");
     }
 
-    public static final int BYTES_OF_ENTROPY = 32;
+    private static final int BYTES_OF_ENTROPY = 32;
     private static final SecureRandom random = new SecureRandom();
     private static final Base64.Encoder b64Encoder = Base64.getUrlEncoder().withoutPadding();
 

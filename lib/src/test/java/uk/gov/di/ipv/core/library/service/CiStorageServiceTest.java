@@ -31,12 +31,12 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 @ExtendWith(MockitoExtension.class)
 class CiStorageServiceTest {
 
-    public static final String THE_ARN_OF_THE_PUT_LAMBDA = "the:arn:of:the:put:lambda";
-    public static final String THE_ARN_OF_THE_POST_LAMBDA = "the:arn:of:the:post:lambda";
-    public static final String THE_ARN_OF_THE_GET_LAMBDA = "the:arn:of:the:get:lambda";
-    public static final String GOVUK_SIGNIN_JOURNEY_ID = "a-journey-id";
-    public static final String TEST_USER_ID = "a-user-id";
-    public static final String CLIENT_SOURCE_IP = "a-client-source-ip";
+    private static final String THE_ARN_OF_THE_PUT_LAMBDA = "the:arn:of:the:put:lambda";
+    private static final String THE_ARN_OF_THE_POST_LAMBDA = "the:arn:of:the:post:lambda";
+    private static final String THE_ARN_OF_THE_GET_LAMBDA = "the:arn:of:the:get:lambda";
+    private static final String GOVUK_SIGNIN_JOURNEY_ID = "a-journey-id";
+    private static final String TEST_USER_ID = "a-user-id";
+    private static final String CLIENT_SOURCE_IP = "a-client-source-ip";
     @Captor ArgumentCaptor<InvokeRequest> requestCaptor;
 
     @Mock AWSLambda lambdaClient;

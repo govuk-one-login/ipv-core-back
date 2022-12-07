@@ -15,10 +15,11 @@ import java.util.List;
 public class UserIdentity {
 
     public static final String VCS_CLAIM_NAME = "https://vocab.account.gov.uk/v1/credentialJWT";
-    public static final String IDENTITY_CLAIM_NAME = "https://vocab.account.gov.uk/v1/coreIdentity";
     public static final String ADDRESS_CLAIM_NAME = "https://vocab.account.gov.uk/v1/address";
-    public static final String PASSPORT_CLAIM_NAME = "https://vocab.account.gov.uk/v1/passport";
-    public static final String DRIVING_PERMIT_CLAIM_NAME =
+    private static final String IDENTITY_CLAIM_NAME =
+            "https://vocab.account.gov.uk/v1/coreIdentity";
+    private static final String PASSPORT_CLAIM_NAME = "https://vocab.account.gov.uk/v1/passport";
+    private static final String DRIVING_PERMIT_CLAIM_NAME =
             "https://vocab.account.gov.uk/v1/drivingPermit";
 
     @JsonProperty(VCS_CLAIM_NAME)

@@ -49,7 +49,7 @@ public class ConfigurationService {
     private static final String CLIENT_REDIRECT_URL_SEPARATOR = ",";
     private static final String API_KEY = "apiKey";
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final String PRODUCTION_ENV = "production";
+    private static final String PRODUCTION_ENV = "production";
     private final SSMProvider ssmProvider;
     private final SecretsManagerClient secretsManagerClient;
     private final ObjectMapper objectMapper = new ObjectMapper();

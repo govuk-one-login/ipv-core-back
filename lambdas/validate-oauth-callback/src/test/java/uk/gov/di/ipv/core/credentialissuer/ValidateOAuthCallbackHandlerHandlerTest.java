@@ -38,9 +38,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
-import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.CODE;
-import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.MESSAGE;
-import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.STATUS_CODE;
 
 @ExtendWith(MockitoExtension.class)
 class ValidateOAuthCallbackHandlerHandlerTest {
@@ -48,13 +45,16 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     private static final String TEST_CREDENTIAL_ISSUER_ID = "PassportIssuer";
     private static final String TEST_AUTHORIZATION_CODE = "test-authorization-code";
     private static final String TEST_OAUTH_STATE = "oauth-state";
-    public static final String TEST_REDIRECT_URI = "https://redirect.example.com";
+    private static final String TEST_REDIRECT_URI = "https://redirect.example.com";
     private static final String TEST_OAUTH_ACCESS_DENIED_ERROR = OAuth2Error.ACCESS_DENIED_CODE;
     private static final String TEST_OAUTH_SERVER_ERROR = OAuth2Error.SERVER_ERROR_CODE;
     private static final String TEST_ERROR_DESCRIPTION = "test error description";
     private static final String TEST_SESSION_ID = SecureTokenHelper.generate();
-    public static final String TEST_USER_ID = "test-user-id";
-    public static final String TEST_IP_ADDRESS = "192.168.1.100";
+    private static final String TEST_USER_ID = "test-user-id";
+    private static final String TEST_IP_ADDRESS = "192.168.1.100";
+    private static final String CODE = "code";
+    private static final String MESSAGE = "message";
+    private static final String STATUS_CODE = "statusCode";
     private static CredentialIssuerConfig credentialIssuerConfig;
     private static IpvSessionItem ipvSessionItem;
     @Mock private Context context;

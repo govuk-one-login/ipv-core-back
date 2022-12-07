@@ -33,7 +33,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SE
 
 public class AuthorizationRequestHelper {
 
-    public static final String SHARED_CLAIMS = "shared_claims";
+    private static final String SHARED_CLAIMS = "shared_claims";
 
     private AuthorizationRequestHelper() {}
 

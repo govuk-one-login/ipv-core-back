@@ -34,11 +34,10 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.util.Map;
 
-import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.JOURNEY;
-
 public class RetrieveCriOauthAccessTokenHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final String JOURNEY = "journey";
     private static final Map<String, Object> JOURNEY_CREDENTIAL =
             Map.of(JOURNEY, "/journey/cri/credential");
     private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, "/journey/error");

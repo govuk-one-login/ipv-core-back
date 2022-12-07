@@ -26,7 +26,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DER_SIGNATURE;
 @ExtendWith(MockitoExtension.class)
 class KmsEs256SignerTest {
 
-    public static final String KEY_ID = "test";
+    private static final String KEY_ID = "test";
 
     @Mock private AWSKMS kmsClient;
     @Mock private SignResult signResult;

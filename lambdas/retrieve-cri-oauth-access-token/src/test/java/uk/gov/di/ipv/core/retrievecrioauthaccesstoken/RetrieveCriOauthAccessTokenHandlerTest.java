@@ -45,15 +45,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
-import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.IPV_SESSION_ID;
 
 @ExtendWith(MockitoExtension.class)
 class RetrieveCriOauthAccessTokenHandlerTest {
 
-    public static final String OAUTH_STATE = "oauth-state";
-    public static final String CREDENTIAL_ISSUER_ID = "PassportIssuer";
-    public static final String TEST_USER_ID = "test-user-id";
-    public static final String TEST_AUTH_CODE = "test-auth-code";
+    private static final String OAUTH_STATE = "oauth-state";
+    private static final String CREDENTIAL_ISSUER_ID = "PassportIssuer";
+    private static final String IPV_SESSION_ID = "ipvSessionId";
+    private static final String TEST_USER_ID = "test-user-id";
+    private static final String TEST_AUTH_CODE = "test-auth-code";
 
     @Mock private Context context;
     @Mock private CredentialIssuerService credentialIssuerService;

@@ -27,11 +27,6 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
-import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.CODE;
-import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.IPV_SESSION_ID;
-import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.JOURNEY;
-import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.MESSAGE;
-import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.STATUS_CODE;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessJourneyStepHandlerTest {
@@ -69,6 +64,11 @@ class ProcessJourneyStepHandlerTest {
             "/journey/check-existing-identity";
     private static final String IPV_IDENTITY_REUSE_PAGE_STATE = "IPV_IDENTITY_REUSE_PAGE";
     private static final String IPV_IDENTITY_REUSE_PAGE = "page-ipv-reuse";
+    private static final String CODE = "code";
+    private static final String IPV_SESSION_ID = "ipvSessionId";
+    private static final String JOURNEY = "journey";
+    private static final String MESSAGE = "message";
+    private static final String STATUS_CODE = "statusCode";
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ConfigurationService mockConfigurationService;

@@ -25,8 +25,8 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY
 public class ConfigurationServicePublicKeySelector implements ClientCredentialsSelector<Object> {
 
     private static final Base64.Decoder decoder = Base64.getDecoder();
-    public static final String ES256 = "ES256";
-    public static final String RS256 = "RS256";
+    private static final String ES256 = "ES256";
+    private static final String RS256 = "RS256";
 
     private final ConfigurationService configurationService;
 

@@ -56,8 +56,8 @@ class BuildUserIdentityHandlerTest {
 
     private static final String TEST_IPV_SESSION_ID = SecureTokenHelper.generate();
     private static final String TEST_ACCESS_TOKEN = "test-access-token";
-    public static final String VTM = "http://www.example.com/vtm";
-    public static final String TEST_IP_ADDRESS = "192.168.1.100";
+    private static final String VTM = "http://www.example.com/vtm";
+    private static final String TEST_IP_ADDRESS = "192.168.1.100";
 
     @Mock private Context mockContext;
     @Mock private UserIdentityService mockUserIdentityService;

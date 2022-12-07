@@ -35,12 +35,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.JOURNEY;
-
 public class ValidateOAuthCallbackHandler
         implements RequestHandler<CredentialIssuerRequestDto, Map<String, Object>> {
 
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final String JOURNEY = "journey";
     private static final Map<String, Object> JOURNEY_ACCESS_TOKEN =
             Map.of(JOURNEY, "/journey/cri/access-token");
     private static final Map<String, Object> JOURNEY_ACCESS_DENIED =

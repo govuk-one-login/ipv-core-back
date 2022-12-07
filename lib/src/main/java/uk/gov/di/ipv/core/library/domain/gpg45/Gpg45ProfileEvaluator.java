@@ -31,11 +31,11 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
 public class Gpg45ProfileEvaluator {
-    public static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
-    public static final JourneyResponse JOURNEY_RESPONSE_PYI_NO_MATCH =
+    private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
+    private static final JourneyResponse JOURNEY_RESPONSE_PYI_NO_MATCH =
             new JourneyResponse(JOURNEY_PYI_NO_MATCH);
-    public static final String JOURNEY_PYI_KBV_FAIL = "/journey/pyi-kbv-fail";
-    public static final JourneyResponse JOURNEY_RESPONSE_PYI_KBV_FAIL =
+    private static final String JOURNEY_PYI_KBV_FAIL = "/journey/pyi-kbv-fail";
+    private static final JourneyResponse JOURNEY_RESPONSE_PYI_KBV_FAIL =
             new JourneyResponse(JOURNEY_PYI_KBV_FAIL);
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson gson = new Gson();

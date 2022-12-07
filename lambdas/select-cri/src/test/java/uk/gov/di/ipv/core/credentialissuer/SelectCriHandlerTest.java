@@ -36,18 +36,17 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_SHOU
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
-import static uk.gov.di.ipv.core.selectcri.SelectCriHandler.APP_JOURNEY_USER_ID_PREFIX;
 
 @ExtendWith(MockitoExtension.class)
 class SelectCriHandlerTest {
 
-    public static final String TEST_SESSION_ID = "the-session-id";
-    public static final String TEST_USER_ID = "test-user-id";
-    public static final String CRI_PASSPORT = "ukPassport";
-    public static final String CRI_FRAUD = "fraud";
-    public static final String CRI_KBV = "kbv";
-    public static final String CRI_ADDRESS = "address";
-    public static final String CRI_DCMAW = "dcmaw";
+    private static final String TEST_SESSION_ID = "the-session-id";
+    private static final String CRI_PASSPORT = "ukPassport";
+    private static final String CRI_FRAUD = "fraud";
+    private static final String CRI_KBV = "kbv";
+    private static final String CRI_ADDRESS = "address";
+    private static final String CRI_DCMAW = "dcmaw";
+    private static final String APP_JOURNEY_USER_ID_PREFIX = "urn:uuid:app-journey-user-";
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock private Context context;
