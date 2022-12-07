@@ -4,7 +4,6 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.amazonaws.util.StringUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -39,8 +38,9 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
@@ -103,10 +103,11 @@ public class BuildProvenUserIdentityDetailsHandler
             provenUserIdentityDetailsBuilder.setName(nameAndDateOfBirth.getName());
             provenUserIdentityDetailsBuilder.setDateOfBirth(nameAndDateOfBirth.getDateOfBirth());
 
-            provenUserIdentityDetailsBuilder.setAddressDetails(
-                    getProvenIdentityAddress(credentials, currentVcStatuses));
+            List<Address> addresses = getProvenIdentityAddresses(credentials, currentVcStatuses);
+            provenUserIdentityDetailsBuilder.setAddressDetails(addresses.get(0));
+            provenUserIdentityDetailsBuilder.setAddresses(addresses);
 
-            LOGGER.info("Successfully retrived proven identity response");
+            LOGGER.info("Successfully retrieved proven identity response");
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, provenUserIdentityDetailsBuilder.build());
@@ -172,7 +173,7 @@ public class BuildProvenUserIdentityDetailsHandler
     }
 
     @Tracing
-    private Address getProvenIdentityAddress(
+    private List<Address> getProvenIdentityAddresses(
             List<VcStoreItem> credentialIssuerItems, List<VcStatusDto> currentVcStatuses)
             throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException {
         for (VcStoreItem item : credentialIssuerItems) {
@@ -193,24 +194,17 @@ public class BuildProvenUserIdentityDetailsHandler
                 List<Address> addressList =
                         mapper.convertValue(addressNode, new TypeReference<>() {});
 
-                if (addressList.size() > 1) {
-                    Optional<Address> currentAddress =
-                            addressList.stream()
-                                    .filter(
-                                            address ->
-                                                    StringUtils.isNullOrEmpty(
-                                                            address.getValidUntil()))
-                                    .findFirst();
-
-                    return currentAddress.orElseGet(() -> addressList.get(0));
-                } else {
-                    return addressList.get(0);
-                }
+                return addressList.stream()
+                        .sorted(
+                                Comparator.comparing(
+                                        Address::getValidUntil,
+                                        Comparator.nullsFirst(Comparator.reverseOrder())))
+                        .collect(Collectors.toList());
             }
         }
-        LOGGER.error("Failed to find current address of proven user identity");
+        LOGGER.error("Failed to find addresses of proven user identity");
         throw new ProvenUserIdentityDetailsException(
-                "Failed to find current address of proven user identity");
+                "Failed to find addresses of proven user identity");
     }
 
     @Tracing
