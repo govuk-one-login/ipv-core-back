@@ -124,7 +124,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         assertEquals(200, response.getStatusCode());
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
         assertEquals("1959-08-23", provenUserIdentityDetails.getDateOfBirth());
-        assertEquals("BA2 5AA", provenUserIdentityDetails.getAddressDetails().getPostalCode());
         assertEquals("BA2 5AA", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
     }
 
@@ -192,7 +191,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         assertEquals(200, response.getStatusCode());
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
         assertEquals("1959-08-23", provenUserIdentityDetails.getDateOfBirth());
-        assertEquals("CA14 5PH", provenUserIdentityDetails.getAddressDetails().getPostalCode());
         assertEquals(3, addresses.size());
         assertEquals("CA14 5PH", addresses.get(0).getPostalCode());
         assertEquals("TE5 7ER", addresses.get(1).getPostalCode());
@@ -263,7 +261,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         assertEquals(200, response.getStatusCode());
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
         assertEquals("1959-08-23", provenUserIdentityDetails.getDateOfBirth());
-        assertEquals("BA2 5AA", provenUserIdentityDetails.getAddressDetails().getPostalCode());
         assertEquals("BA2 5AA", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
     }
 

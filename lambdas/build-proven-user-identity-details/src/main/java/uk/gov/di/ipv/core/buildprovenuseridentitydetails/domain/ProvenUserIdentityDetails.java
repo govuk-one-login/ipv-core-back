@@ -9,16 +9,13 @@ import java.util.List;
 public class ProvenUserIdentityDetails {
     private String name;
     private String dateOfBirth;
-    private Address addressDetails;
     private List<Address> addresses;
 
     public ProvenUserIdentityDetails() {}
 
-    public ProvenUserIdentityDetails(
-            String name, String dateOfBirth, Address addressDetails, List<Address> addresses) {
+    public ProvenUserIdentityDetails(String name, String dateOfBirth, List<Address> addresses) {
         this.name = name;
         this.dateOfBirth = dateOfBirth;
-        this.addressDetails = addressDetails;
         this.addresses = addresses;
     }
 
@@ -30,10 +27,6 @@ public class ProvenUserIdentityDetails {
         return dateOfBirth;
     }
 
-    public Address getAddressDetails() {
-        return addressDetails;
-    }
-
     public List<Address> getAddresses() {
         return addresses;
     }
@@ -41,16 +34,10 @@ public class ProvenUserIdentityDetails {
     public static class Builder {
         private String name;
         private String dateOfBirth;
-        private Address addressDetails;
         private List<Address> addresses;
 
         public Builder setDateOfBirth(String dateOfBirth) {
             this.dateOfBirth = dateOfBirth;
-            return this;
-        }
-
-        public Builder setAddressDetails(Address addressDetails) {
-            this.addressDetails = addressDetails;
             return this;
         }
 
@@ -65,7 +52,7 @@ public class ProvenUserIdentityDetails {
         }
 
         public ProvenUserIdentityDetails build() {
-            return new ProvenUserIdentityDetails(name, dateOfBirth, addressDetails, addresses);
+            return new ProvenUserIdentityDetails(name, dateOfBirth, addresses);
         }
     }
 }
