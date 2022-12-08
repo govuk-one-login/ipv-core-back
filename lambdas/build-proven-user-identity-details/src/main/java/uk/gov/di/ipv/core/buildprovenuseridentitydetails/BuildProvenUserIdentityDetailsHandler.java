@@ -104,7 +104,6 @@ public class BuildProvenUserIdentityDetailsHandler
             provenUserIdentityDetailsBuilder.setDateOfBirth(nameAndDateOfBirth.getDateOfBirth());
 
             List<Address> addresses = getProvenIdentityAddresses(credentials, currentVcStatuses);
-            provenUserIdentityDetailsBuilder.setAddressDetails(addresses.get(0));
             provenUserIdentityDetailsBuilder.setAddresses(addresses);
 
             LOGGER.info("Successfully retrieved proven identity response");
