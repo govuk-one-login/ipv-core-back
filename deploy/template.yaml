@@ -71,7 +71,6 @@ Mappings:
       criReturnStepFunctionLogLevel: ALL
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      CoreEncryptionKeyArn: "arn:aws:kms:eu-west-2:130355686670:key/879dced2-3aa7-49c5-98f5-e8445558015f"
     "457601271792": # Build
       provisionedConcurrency: 0
       ciStorageAccountId: 755415363251 # di-ipv-contra-indicators-build
@@ -79,7 +78,6 @@ Mappings:
       criReturnStepFunctionLogLevel: ALL
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      CoreEncryptionKeyArn: "arn:aws:kms:eu-west-2:457601271792:key/475348cd-b09f-4a7b-b9fc-22d7e330a1a3"
     "335257547869": # Staging
       provisionedConcurrency: 1
       ciStorageAccountId: 265689800486 # di-ipv-contra-indicators-staging
@@ -87,7 +85,6 @@ Mappings:
       criReturnStepFunctionLogLevel: ALL
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      CoreEncryptionKeyArn: "arn:aws:kms:eu-west-2:335257547869:key/39988878-5ce4-435f-a7fa-02a545fef80b"
     "991138514218": # Integration
       provisionedConcurrency: 1
       ciStorageAccountId: 697519714716 # di-ipv-contra-indicators-integration
@@ -95,7 +92,6 @@ Mappings:
       criReturnStepFunctionLogLevel: ERROR
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      CoreEncryptionKeyArn: "arn:aws:kms:eu-west-2:991138514218:key/21549055-e36b-4fd3-97dc-717589e2bf3e"
     "075701497069": # Production
       provisionedConcurrency: 1
       ciStorageAccountId: 442136572379 # di-ipv-contra-indicators-prod
@@ -103,7 +99,6 @@ Mappings:
       criReturnStepFunctionLogLevel: ERROR
       pgw500ErrorLimit: 10
       egw500ErrorLimit: 1
-      CoreEncryptionKeyArn: "arn:aws:kms:eu-west-2:075701497069:key/312fa64a-15f2-4400-becb-d5550492623a"
   SecurityGroups:
     PrefixListIds:
       dynamodb: "pl-b3a742da"
@@ -532,7 +527,7 @@ Resources:
                 - 'kms:Decrypt'
                 - 'kms:GenerateDataKey'
               Resource:
-                - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, CoreEncryptionKeyArn ]
+                - !ImportValue CoreEncryptionKeyArn
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
