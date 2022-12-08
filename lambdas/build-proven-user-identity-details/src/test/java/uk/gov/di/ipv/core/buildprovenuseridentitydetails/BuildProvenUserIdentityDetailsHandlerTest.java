@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.ProvenUserIdentityDetails;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -124,10 +125,11 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
         assertEquals("1959-08-23", provenUserIdentityDetails.getDateOfBirth());
         assertEquals("BA2 5AA", provenUserIdentityDetails.getAddressDetails().getPostalCode());
+        assertEquals("BA2 5AA", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
     }
 
     @Test
-    void shouldReceive200ResponseCodeProvenUserIdentityDetailsWithCorrectCurrentAddress()
+    void shouldReceive200ResponseCodeProvenUserIdentityDetailsWithCorrectlyOrderedAddressHistory()
             throws Exception {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
@@ -186,10 +188,15 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         ProvenUserIdentityDetails provenUserIdentityDetails =
                 objectMapper.readValue(response.getBody(), ProvenUserIdentityDetails.class);
 
+        List<Address> addresses = provenUserIdentityDetails.getAddresses();
         assertEquals(200, response.getStatusCode());
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
         assertEquals("1959-08-23", provenUserIdentityDetails.getDateOfBirth());
         assertEquals("CA14 5PH", provenUserIdentityDetails.getAddressDetails().getPostalCode());
+        assertEquals(3, addresses.size());
+        assertEquals("CA14 5PH", addresses.get(0).getPostalCode());
+        assertEquals("TE5 7ER", addresses.get(1).getPostalCode());
+        assertEquals("BA2 5AA", addresses.get(2).getPostalCode());
     }
 
     @Test
@@ -257,6 +264,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
         assertEquals("1959-08-23", provenUserIdentityDetails.getDateOfBirth());
         assertEquals("BA2 5AA", provenUserIdentityDetails.getAddressDetails().getPostalCode());
+        assertEquals("BA2 5AA", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
     }
 
     @Test
