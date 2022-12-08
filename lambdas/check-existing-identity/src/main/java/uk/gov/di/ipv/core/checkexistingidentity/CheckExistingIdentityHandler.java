@@ -158,14 +158,14 @@ public class CheckExistingIdentityHandler
                 }
             }
 
-            var message =
-                    new StringMapMessage()
-                            .with(
-                                    "message",
-                                    "Failed to match profile so clearing VCs and returning next");
-            LOGGER.info(message);
-
             if (!credentials.isEmpty()) {
+                var message =
+                        new StringMapMessage()
+                                .with(
+                                        "message",
+                                        "Failed to match profile so clearing VCs and returning next");
+                LOGGER.info(message);
+
                 auditService.sendAuditEvent(
                         new AuditEvent(
                                 AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
@@ -173,6 +173,9 @@ public class CheckExistingIdentityHandler
                                 auditEventUser));
 
                 userIdentityService.deleteVcStoreItems(userId);
+            } else {
+                var message = new StringMapMessage().with("message", "New user so returning next");
+                LOGGER.info(message);
             }
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, JOURNEY_NEXT);
