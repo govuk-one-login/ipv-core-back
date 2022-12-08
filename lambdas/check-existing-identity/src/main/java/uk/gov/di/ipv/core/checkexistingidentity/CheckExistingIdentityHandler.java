@@ -12,6 +12,10 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.auditing.AuditEvent;
+import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -24,11 +28,13 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -54,18 +60,24 @@ public class CheckExistingIdentityHandler
     private final IpvSessionService ipvSessionService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final CiStorageService ciStorageService;
+    private final AuditService auditService;
+    private final String componentId;
 
     public CheckExistingIdentityHandler(
             ConfigurationService configurationService,
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
-            CiStorageService ciStorageService) {
+            CiStorageService ciStorageService,
+            AuditService auditService) {
         this.configurationService = configurationService;
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.ciStorageService = ciStorageService;
+        this.auditService = auditService;
+        this.componentId =
+                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -75,6 +87,10 @@ public class CheckExistingIdentityHandler
         this.ipvSessionService = new IpvSessionService(configurationService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configurationService);
         this.ciStorageService = new CiStorageService(configurationService);
+        this.auditService =
+                new AuditService(AuditService.getDefaultSqsClient(), configurationService);
+        componentId =
+                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @Override
@@ -94,6 +110,9 @@ public class CheckExistingIdentityHandler
 
             String govukSigninJourneyId = clientSessionDetailsDto.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
+
+            AuditEventUser auditEventUser =
+                    new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
             userIdentityService.deleteVcStoreItemsIfAnyExpired(userId);
 
@@ -124,6 +143,12 @@ public class CheckExistingIdentityHandler
                                     .with("profile", matchedProfile.get().getLabel());
                     LOGGER.info(message);
 
+                    auditService.sendAuditEvent(
+                            new AuditEvent(
+                                    AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
+                                    componentId,
+                                    auditEventUser));
+
                     ipvSessionItem.setVot(VOT_P2);
 
                     updateSuccessfulVcStatuses(ipvSessionItem, credentials);
@@ -140,7 +165,15 @@ public class CheckExistingIdentityHandler
                                     "Failed to match profile so clearing VCs and returning next");
             LOGGER.info(message);
 
-            userIdentityService.deleteVcStoreItems(userId);
+            if (!credentials.isEmpty()) {
+                auditService.sendAuditEvent(
+                        new AuditEvent(
+                                AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
+                                componentId,
+                                auditEventUser));
+
+                userIdentityService.deleteVcStoreItems(userId);
+            }
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, JOURNEY_NEXT);
         } catch (HttpResponseExceptionWithErrorBody e) {
@@ -160,6 +193,10 @@ public class CheckExistingIdentityHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
+        } catch (SqsException e) {
+            LOGGER.error("Failed to send audit event to SQS queue", e);
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
         }
     }
 
