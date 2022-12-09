@@ -52,7 +52,7 @@ public class ProcessJourneyStepHandler
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public ProcessJourneyStepHandler() throws IOException {
+    public ProcessJourneyStepHandler() {
         this.configurationService = new ConfigurationService();
         this.ipvSessionService = new IpvSessionService(configurationService);
     }

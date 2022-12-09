@@ -54,9 +54,9 @@ public class BuildProvenUserIdentityDetailsHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private IpvSessionService ipvSessionService;
-    private UserIdentityService userIdentityService;
-    private ConfigurationService configurationService;
+    private final IpvSessionService ipvSessionService;
+    private final UserIdentityService userIdentityService;
+    private final ConfigurationService configurationService;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -82,8 +82,8 @@ public class BuildProvenUserIdentityDetailsHandler
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
-        ProvenUserIdentityDetails.Builder provenUserIdentityDetailsBuilder =
-                new ProvenUserIdentityDetails.Builder();
+        ProvenUserIdentityDetails.ProvenUserIdentityDetailsBuilder
+                provenUserIdentityDetailsBuilder = ProvenUserIdentityDetails.builder();
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(input.getHeaders());
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
@@ -100,11 +100,11 @@ public class BuildProvenUserIdentityDetailsHandler
 
             NameAndDateOfBirth nameAndDateOfBirth =
                     getProvenIdentityNameAndDateOfBirth(credentials, currentVcStatuses);
-            provenUserIdentityDetailsBuilder.setName(nameAndDateOfBirth.getName());
-            provenUserIdentityDetailsBuilder.setDateOfBirth(nameAndDateOfBirth.getDateOfBirth());
+            provenUserIdentityDetailsBuilder.name(nameAndDateOfBirth.getName());
+            provenUserIdentityDetailsBuilder.dateOfBirth(nameAndDateOfBirth.getDateOfBirth());
 
             List<Address> addresses = getProvenIdentityAddresses(credentials, currentVcStatuses);
-            provenUserIdentityDetailsBuilder.setAddresses(addresses);
+            provenUserIdentityDetailsBuilder.addresses(addresses);
 
             LOGGER.info("Successfully retrieved proven identity response");
 

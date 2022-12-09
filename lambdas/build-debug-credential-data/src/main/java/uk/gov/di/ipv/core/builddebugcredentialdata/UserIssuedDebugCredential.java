@@ -1,10 +1,16 @@
 package uk.gov.di.ipv.core.builddebugcredentialdata;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
 public class UserIssuedDebugCredential {
 
     private DebugCredentialAttributes attributes;
@@ -12,22 +18,5 @@ public class UserIssuedDebugCredential {
 
     public UserIssuedDebugCredential(DebugCredentialAttributes attributes) {
         this.attributes = attributes;
-        this.evidence = null;
-    }
-
-    public DebugCredentialAttributes getAttributes() {
-        return attributes;
-    }
-
-    public void setAttributes(DebugCredentialAttributes attributes) {
-        this.attributes = attributes;
-    }
-
-    public Map<String, Object> getEvidence() {
-        return evidence;
-    }
-
-    public void setEvidence(Map<String, Object> evidence) {
-        this.evidence = evidence;
     }
 }
