@@ -152,6 +152,8 @@ public class EvaluateGpg45ScoresHandler
 
             if (mitigationJourneyResponse.isPresent()) {
                 journeyResponse = mitigationJourneyResponse.get();
+                message.with("message", "Returning mitigation journey response")
+                        .with("mitigationJourneyResponse", journeyResponse.toString());
             } else {
                 Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
                         gpg45ProfileEvaluator.getJourneyResponseForStoredCis(ciItems);
@@ -160,6 +162,11 @@ public class EvaluateGpg45ScoresHandler
                             checkForMatchingGpg45Profile(
                                     message, ipvSessionItem, credentials, ipAddress);
                 } else {
+                    message.with("message", "Returning CI error response")
+                            .with(
+                                    "errorJourneyResponse",
+                                    contraIndicatorErrorJourneyResponse.get().toString());
+                    LOGGER.info(message);
                     return ApiGatewayResponseGenerator.proxyJsonResponse(
                             HttpStatus.SC_OK, contraIndicatorErrorJourneyResponse.get());
                 }
