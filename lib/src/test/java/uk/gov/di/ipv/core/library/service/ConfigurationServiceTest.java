@@ -10,15 +10,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.DecryptionFailureException;
-import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
-import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
 import software.amazon.awssdk.services.secretsmanager.model.InternalServiceErrorException;
 import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterException;
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
+import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
@@ -77,7 +75,7 @@ class ConfigurationServiceTest {
 
     @Mock SSMProvider ssmProvider2;
 
-    @Mock SecretsManagerClient secretsManagerClient;
+    @Mock SecretsProvider secretsProvider;
 
     private ConfigurationService configurationService;
 
@@ -85,7 +83,7 @@ class ConfigurationServiceTest {
 
     @BeforeEach
     void setUp() {
-        configurationService = new ConfigurationService(ssmProvider, secretsManagerClient);
+        configurationService = new ConfigurationService(ssmProvider, secretsProvider);
     }
 
     @Test
@@ -345,10 +343,7 @@ class ConfigurationServiceTest {
     @Test
     void shouldGetSecretValueFromSecretsManager() {
         Map<String, String> apiKeySecret = Map.of("apiKey", "api-key-value");
-        GetSecretValueResponse response =
-                GetSecretValueResponse.builder().secretString(gson.toJson(apiKeySecret)).build();
-        when(secretsManagerClient.getSecretValue((GetSecretValueRequest) any()))
-                .thenReturn(response);
+        when(secretsProvider.get(any())).thenReturn(gson.toJson(apiKeySecret));
 
         String apiKey = configurationService.getCriPrivateApiKey("ukPassport");
 
@@ -359,8 +354,7 @@ class ConfigurationServiceTest {
     void shouldReturnNullOnDecryptionFailureFromSecretsManager() {
         DecryptionFailureException decryptionFailureException =
                 DecryptionFailureException.builder().message("Test decryption error").build();
-        when(secretsManagerClient.getSecretValue((GetSecretValueRequest) any()))
-                .thenThrow(decryptionFailureException);
+        when(secretsProvider.get(any())).thenThrow(decryptionFailureException);
 
         String apiKey = configurationService.getCriPrivateApiKey("ukPassport");
 
@@ -373,8 +367,7 @@ class ConfigurationServiceTest {
                 InternalServiceErrorException.builder()
                         .message("Test internal service error")
                         .build();
-        when(secretsManagerClient.getSecretValue((GetSecretValueRequest) any()))
-                .thenThrow(internalServiceErrorException);
+        when(secretsProvider.get(any())).thenThrow(internalServiceErrorException);
 
         String apiKey = configurationService.getCriPrivateApiKey("ukPassport");
 
@@ -385,8 +378,7 @@ class ConfigurationServiceTest {
     void shouldReturnNullOnInvalidParameterExceptionFromSecretsManager() {
         InvalidParameterException invalidParameterException =
                 InvalidParameterException.builder().message("Test invalid parameter error").build();
-        when(secretsManagerClient.getSecretValue((GetSecretValueRequest) any()))
-                .thenThrow(invalidParameterException);
+        when(secretsProvider.get(any())).thenThrow(invalidParameterException);
 
         String apiKey = configurationService.getCriPrivateApiKey("ukPassport");
 
@@ -397,8 +389,7 @@ class ConfigurationServiceTest {
     void shouldReturnNullOnInvalidRequestExceptionFromSecretsManager() {
         InvalidRequestException invalidRequestException =
                 InvalidRequestException.builder().message("Test invalid request error").build();
-        when(secretsManagerClient.getSecretValue((GetSecretValueRequest) any()))
-                .thenThrow(invalidRequestException);
+        when(secretsProvider.get(any())).thenThrow(invalidRequestException);
 
         String apiKey = configurationService.getCriPrivateApiKey("ukPassport");
 
@@ -411,8 +402,7 @@ class ConfigurationServiceTest {
                 ResourceNotFoundException.builder()
                         .message("Test resource not found error")
                         .build();
-        when(secretsManagerClient.getSecretValue((GetSecretValueRequest) any()))
-                .thenThrow(resourceNotFoundException);
+        when(secretsProvider.get(any())).thenThrow(resourceNotFoundException);
 
         String apiKey = configurationService.getCriPrivateApiKey("ukPassport");
 
@@ -438,10 +428,7 @@ class ConfigurationServiceTest {
     void shouldGetContraIndicatorScoresMap() {
         String scoresJsonString =
                 "[{ \"ci\": \"X01\", \"detectedScore\": 3, \"checkedScore\": -3, \"fidCode\": \"YZ01\" }, { \"ci\": \"Z03\", \"detectedScore\": 5, \"checkedScore\": -3 }]";
-        GetSecretValueResponse response =
-                GetSecretValueResponse.builder().secretString(scoresJsonString).build();
-        when(secretsManagerClient.getSecretValue((GetSecretValueRequest) any()))
-                .thenReturn(response);
+        when(secretsProvider.get(any())).thenReturn(scoresJsonString);
 
         Map<String, ContraIndicatorScore> scoresMap =
                 configurationService.getContraIndicatorScoresMap();

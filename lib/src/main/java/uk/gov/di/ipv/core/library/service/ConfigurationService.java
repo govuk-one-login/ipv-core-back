@@ -9,8 +9,6 @@ import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.model.DecryptionFailureException;
-import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
-import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
 import software.amazon.awssdk.services.secretsmanager.model.InternalServiceErrorException;
 import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterException;
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
@@ -18,6 +16,7 @@ import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundExce
 import software.amazon.awssdk.services.ssm.SsmClient;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
+import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
@@ -51,13 +50,12 @@ public class ConfigurationService {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String PRODUCTION_ENV = "production";
     private final SSMProvider ssmProvider;
-    private final SecretsManagerClient secretsManagerClient;
+    private final SecretsProvider secretsProvider;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public ConfigurationService(
-            SSMProvider ssmProvider, SecretsManagerClient secretsManagerClient) {
+    public ConfigurationService(SSMProvider ssmProvider, SecretsProvider secretsProvider) {
         this.ssmProvider = ssmProvider;
-        this.secretsManagerClient = secretsManagerClient;
+        this.secretsProvider = secretsProvider;
     }
 
     public ConfigurationService() {
@@ -70,12 +68,13 @@ public class ConfigurationService {
                                     .region(Region.EU_WEST_2)
                                     .build());
 
-            this.secretsManagerClient =
-                    SecretsManagerClient.builder()
-                            .endpointOverride(URI.create(LOCALHOST_URI))
-                            .httpClient(UrlConnectionHttpClient.create())
-                            .region(Region.EU_WEST_2)
-                            .build();
+            this.secretsProvider =
+                    ParamManager.getSecretsProvider(
+                            SecretsManagerClient.builder()
+                                    .endpointOverride(URI.create(LOCALHOST_URI))
+                                    .httpClient(UrlConnectionHttpClient.create())
+                                    .region(Region.EU_WEST_2)
+                                    .build());
         } else {
             this.ssmProvider =
                     ParamManager.getSsmProvider(
@@ -84,10 +83,12 @@ public class ConfigurationService {
                                             .build())
                             .defaultMaxAge(3, MINUTES);
 
-            this.secretsManagerClient =
-                    SecretsManagerClient.builder()
-                            .httpClient(UrlConnectionHttpClient.create())
-                            .build();
+            this.secretsProvider =
+                    ParamManager.getSecretsProvider(
+                                    SecretsManagerClient.builder()
+                                            .httpClient(UrlConnectionHttpClient.create())
+                                            .build())
+                            .defaultMaxAge(3, MINUTES);
         }
     }
 
@@ -207,20 +208,16 @@ public class ConfigurationService {
     }
 
     public String getCriPrivateApiKey(String criId) {
-        GetSecretValueRequest valueRequest =
-                GetSecretValueRequest.builder()
-                        .secretId(
-                                String.format(
-                                        "%s/credential-issuers/%s/api-key",
-                                        getEnvironmentVariable(ENVIRONMENT), criId))
-                        .build();
-
+        String secretId =
+                String.format(
+                        "%s/credential-issuers/%s/api-key",
+                        getEnvironmentVariable(ENVIRONMENT), criId);
         try {
-            String secretManagerKeyValueJson = getSecretsManagerValue(valueRequest);
+            String secretValue = getSecretValue(secretId);
 
-            if (secretManagerKeyValueJson != null) {
+            if (secretValue != null) {
                 Map<String, String> secret =
-                        objectMapper.readValue(secretManagerKeyValueJson, new TypeReference<>() {});
+                        objectMapper.readValue(secretValue, new TypeReference<>() {});
                 return secret.get(API_KEY);
             }
             return null;
@@ -233,15 +230,12 @@ public class ConfigurationService {
     }
 
     public Map<String, ContraIndicatorScore> getContraIndicatorScoresMap() {
-        GetSecretValueRequest valueRequest =
-                GetSecretValueRequest.builder()
-                        .secretId(
-                                String.format(
-                                        ConfigurationVariable.CI_SCORING_CONFIG.getValue(),
-                                        getEnvironmentVariable(ENVIRONMENT)))
-                        .build();
+        String secretId =
+                String.format(
+                        ConfigurationVariable.CI_SCORING_CONFIG.getValue(),
+                        getEnvironmentVariable(ENVIRONMENT));
         try {
-            String secretValue = getSecretsManagerValue(valueRequest);
+            String secretValue = getSecretValue(secretId);
             List<ContraIndicatorScore> scoresList =
                     objectMapper.readValue(secretValue, new TypeReference<>() {});
             Map<String, ContraIndicatorScore> scoresMap = new HashMap<>();
@@ -256,11 +250,9 @@ public class ConfigurationService {
         }
     }
 
-    private String getSecretsManagerValue(GetSecretValueRequest valueRequest) {
+    private String getSecretValue(String secretId) {
         try {
-            GetSecretValueResponse valueResponse =
-                    secretsManagerClient.getSecretValue(valueRequest);
-            return valueResponse.secretString();
+            return secretsProvider.get(secretId);
         } catch (DecryptionFailureException e) {
             LOGGER.error(
                     "Secrets manager failed to decrypt the protected secret using the configured KMS key because: {}",
@@ -270,7 +262,7 @@ public class ConfigurationService {
         } catch (InvalidParameterException e) {
             LOGGER.error(
                     "An invalid value was provided for the param value: {}, details: {}",
-                    valueRequest.secretId(),
+                    secretId,
                     e.getMessage());
         } catch (InvalidRequestException e) {
             LOGGER.error(
@@ -279,7 +271,7 @@ public class ConfigurationService {
         } catch (ResourceNotFoundException e) {
             LOGGER.warn(
                     "Failed to find the resource within Secrets manager: {}, details: {}",
-                    valueRequest.secretId(),
+                    secretId,
                     e.getMessage());
         }
         return null;

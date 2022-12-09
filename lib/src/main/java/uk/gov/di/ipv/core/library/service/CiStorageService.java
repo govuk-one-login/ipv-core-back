@@ -116,7 +116,6 @@ public class CiStorageService {
 
         String jsonResponse = new String(result.getPayload().array(), StandardCharsets.UTF_8);
         GetCiResponse response = gson.fromJson(jsonResponse, GetCiResponse.class);
-
         return response.getContraIndicators();
     }
 
