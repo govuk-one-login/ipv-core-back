@@ -25,7 +25,7 @@ public class IpvSessionService {
     private static final String INITIAL_IPV_JOURNEY_STATE = "INITIAL_IPV_JOURNEY";
     private static final String FAILED_CLIENT_JAR_STATE = "FAILED_CLIENT_JAR";
     private static final String DEBUG_EVALUATE_GPG45_SCORES_STATE = "DEBUG_EVALUATE_GPG45_SCORES";
-    private static final String VOT_P0 = "P0";
+    private static final String VOT_P0 = "P02";
 
     private final DataStore<IpvSessionItem> dataStore;
     private final ConfigurationService configurationService;

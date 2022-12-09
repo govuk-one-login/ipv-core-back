@@ -14,15 +14,17 @@ dependencies {
 	implementation "com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
 			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
-			"com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson",
-			project(":lib")
+			"com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson"
+
+	compileOnly(project(":lib"))
 
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
 
 	testImplementation "com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson",
 			"org.junit.jupiter:junit-jupiter:5.8.2",
-			"org.mockito:mockito-junit-jupiter:4.2.0"
+			"org.mockito:mockito-junit-jupiter:4.2.0",
+			compileOnly(project(":lib"))
 }
 
 java {

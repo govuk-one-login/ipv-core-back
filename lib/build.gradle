@@ -39,17 +39,26 @@ java {
 	withSourcesJar()
 }
 
-tasks.withType(Jar).configureEach { Jar jar ->
-	jar.preserveFileTimestamps = false
-	jar.reproducibleFileOrder = true
-}
-
-tasks.named('jar') {
-	manifest {
-		attributes('Implementation-Title': project.name,
-		'Implementation-Version': project.version)
+task buildZip(type: Zip) {
+	from compileJava
+	from processResources
+	destinationDirectory = file("$rootDir/dist")
+	into('lib') {
+		from configurations.runtimeClasspath
 	}
 }
+
+//tasks.withType(Jar).configureEach { Jar jar ->
+//	jar.preserveFileTimestamps = false
+//	jar.reproducibleFileOrder = true
+//}
+//
+//tasks.named('jar') {
+//	manifest {
+//		attributes('Implementation-Title': project.name,
+//		'Implementation-Version': project.version)
+//	}
+//}
 
 test {
 	useJUnitPlatform ()

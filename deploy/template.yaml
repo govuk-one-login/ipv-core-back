@@ -292,6 +292,17 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref IPVCoreExternalAPILogGroup
 
+  IpvCoreCommonLibLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: ipv-core-lib
+      Description: IPV Core shared lib
+      CompatibleRuntimes:
+        - java11
+      ContentUri: ../lib
+    Metadata:
+      BuildMethod: java11
+
   IssueClientAccessTokenFunction:
     Type: AWS::Serverless::Function
     DependsOn:
@@ -309,6 +320,8 @@ Resources:
         - arm64
       MemorySize: 2048
       Tracing: Active
+      Layers:
+        - !Ref IpvCoreCommonLibLayer
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -394,6 +407,8 @@ Resources:
         - arm64
       MemorySize: 2048
       Tracing: Active
+      Layers:
+        - !Ref IpvCoreCommonLibLayer
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -486,6 +501,8 @@ Resources:
         - arm64
       MemorySize: 2048
       Tracing: Active
+      Layers:
+        - !Ref IpvCoreCommonLibLayer
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -587,6 +604,8 @@ Resources:
         - arm64
       MemorySize: 2048
       Tracing: Active
+      Layers:
+        - !Ref IpvCoreCommonLibLayer
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -721,6 +740,8 @@ Resources:
         - arm64
       MemorySize: 2048
       Tracing: Active
+      Layers:
+        - !Ref IpvCoreCommonLibLayer
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -855,6 +876,8 @@ Resources:
         - arm64
       MemorySize: 3008
       Tracing: Active
+      Layers:
+        - !Ref IpvCoreCommonLibLayer
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -962,6 +985,8 @@ Resources:
         - arm64
       MemorySize: 2048
       Tracing: Active
+      Layers:
+        - !Ref IpvCoreCommonLibLayer
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -1062,6 +1087,8 @@ Resources:
         - arm64
       MemorySize: 2048
       Tracing: Active
+      Layers:
+        - !Ref IpvCoreCommonLibLayer
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -1141,6 +1168,8 @@ Resources:
         - arm64
       MemorySize: 2048
       Tracing: Active
+      Layers:
+        - !Ref IpvCoreCommonLibLayer
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -1404,6 +1433,8 @@ Resources:
         - arm64
       MemorySize: 2048
       Tracing: Active
+      Layers:
+        - !Ref IpvCoreCommonLibLayer
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -1477,6 +1508,8 @@ Resources:
         - arm64
       MemorySize: 2048
       Tracing: Active
+      Layers:
+        - !Ref IpvCoreCommonLibLayer
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -1602,6 +1635,8 @@ Resources:
         - arm64
       MemorySize: 2048
       Tracing: Active
+      Layers:
+        - !Ref IpvCoreCommonLibLayer
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -1687,6 +1722,8 @@ Resources:
         - arm64
       MemorySize: 2048
       Tracing: Active
+      Layers:
+        - !Ref IpvCoreCommonLibLayer
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -1782,6 +1819,8 @@ Resources:
         - arm64
       MemorySize: 2048
       Tracing: Active
+      Layers:
+        - !Ref IpvCoreCommonLibLayer
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -1929,6 +1968,8 @@ Resources:
         - arm64
       MemorySize: 2048
       Tracing: Active
+      Layers:
+        - !Ref IpvCoreCommonLibLayer
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -2022,6 +2063,8 @@ Resources:
         - arm64
       MemorySize: 2048
       Tracing: Active
+      Layers:
+        - !Ref IpvCoreCommonLibLayer
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
@@ -2127,7 +2170,6 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref CheckExistingIdentityFunctionLogGroup
-
 
   UserIssuedCredentialsV2Table:
     Type: AWS::DynamoDB::Table

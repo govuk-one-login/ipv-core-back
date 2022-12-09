@@ -12,8 +12,9 @@ repositories {
 dependencies {
 
 	implementation "com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
-			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
-			project(":lib")
+			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents"
+
+	compileOnly(project(":lib"))
 
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
@@ -21,7 +22,8 @@ dependencies {
 	testImplementation "com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			"org.junit.jupiter:junit-jupiter:5.8.2",
 			"org.mockito:mockito-junit-jupiter:4.1.0",
-			project(":lib").sourceSets.test.output
+			project(":lib").sourceSets.test.output,
+			compileOnly(project(":lib"))
 }
 
 java {
