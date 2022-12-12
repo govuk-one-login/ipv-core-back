@@ -35,6 +35,9 @@ Parameters:
     Description: "The ARN of the permissions boundary to apply when creating IAM roles"
     Type: String
     Default: "none"
+  Alias:
+    Type: String
+    Default: "live"
 
 Conditions:
   AddProvisionedConcurrency: !Not
@@ -368,7 +371,10 @@ Resources:
             RestApiId: !Ref IPVCoreExternalAPI
             Path: /token
             Method: POST
-      AutoPublishAlias: live
+      AutoPublishAlias: !If
+        - IsDevelopment
+        - !Ref AWS:NoValue
+        - "live"
       ProvisionedConcurrencyConfig:
         !If
           - AddProvisionedConcurrency
@@ -524,6 +530,7 @@ Resources:
               Action:
                 - 'lambda:CreateFunction'
                 - 'lambda:UpdateFunctionConfiguration'
+                - 'lambda:GetLayerVersion'
               Resource:
                 - "*"
               Condition:
@@ -2170,6 +2177,7 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref CheckExistingIdentityFunctionLogGroup
+
 
   UserIssuedCredentialsV2Table:
     Type: AWS::DynamoDB::Table

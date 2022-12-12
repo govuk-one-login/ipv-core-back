@@ -96,6 +96,7 @@ public class InitialiseIpvSessionHandler
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
 
+        LOGGER.info("Hello world");
         try {
             String ipAddress = RequestHelper.getIpAddress(input);
             Map<String, String> sessionParams =
