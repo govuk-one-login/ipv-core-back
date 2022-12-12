@@ -17,6 +17,10 @@ Globals:
       - UsePermissionsBoundary
       - !Ref PermissionsBoundary
       - !Ref AWS::NoValue
+        #AutoPublishAlias: !If
+        #- PublishAlias
+        #- !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, publishAlias ]
+        #- !Ref AWS::NoValue
 
 Parameters:
   Environment:
@@ -35,9 +39,6 @@ Parameters:
     Description: "The ARN of the permissions boundary to apply when creating IAM roles"
     Type: String
     Default: "none"
-  Alias:
-    Type: String
-    Default: "live"
 
 Conditions:
   AddProvisionedConcurrency: !Not
@@ -61,6 +62,10 @@ Conditions:
       - Fn::Equals:
           - !Ref PermissionsBoundary
           - "none"
+  PublishAlias: !Not
+    - !Equals
+      - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, publishAlias ]
+      - "none"
 
 # The AWS Account Id is used in the following mapping section because we have
 # multiple developer environments and it is undesirable to have to keep this
@@ -75,6 +80,7 @@ Mappings:
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
       CoreEncryptionKeyArn: "arn:aws:kms:eu-west-2:130355686670:key/879dced2-3aa7-49c5-98f5-e8445558015f"
+      publishAlias: live
     "457601271792": # Build
       provisionedConcurrency: 0
       ciStorageAccountId: 755415363251 # di-ipv-contra-indicators-build
@@ -83,6 +89,7 @@ Mappings:
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
       CoreEncryptionKeyArn: "arn:aws:kms:eu-west-2:457601271792:key/475348cd-b09f-4a7b-b9fc-22d7e330a1a3"
+      publishAlias: live
     "335257547869": # Staging
       provisionedConcurrency: 1
       ciStorageAccountId: 265689800486 # di-ipv-contra-indicators-staging
@@ -91,6 +98,7 @@ Mappings:
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
       CoreEncryptionKeyArn: "arn:aws:kms:eu-west-2:335257547869:key/39988878-5ce4-435f-a7fa-02a545fef80b"
+      publishAlias: live
     "991138514218": # Integration
       provisionedConcurrency: 1
       ciStorageAccountId: 697519714716 # di-ipv-contra-indicators-integration
@@ -99,6 +107,7 @@ Mappings:
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
       CoreEncryptionKeyArn: "arn:aws:kms:eu-west-2:991138514218:key/21549055-e36b-4fd3-97dc-717589e2bf3e"
+      publishAlias: live
     "075701497069": # Production
       provisionedConcurrency: 1
       ciStorageAccountId: 442136572379 # di-ipv-contra-indicators-prod
@@ -107,6 +116,7 @@ Mappings:
       pgw500ErrorLimit: 10
       egw500ErrorLimit: 1
       CoreEncryptionKeyArn: "arn:aws:kms:eu-west-2:075701497069:key/312fa64a-15f2-4400-becb-d5550492623a"
+      publishAlias: live
   SecurityGroups:
     PrefixListIds:
       dynamodb: "pl-b3a742da"
@@ -371,10 +381,6 @@ Resources:
             RestApiId: !Ref IPVCoreExternalAPI
             Path: /token
             Method: POST
-      AutoPublishAlias: !If
-        - IsDevelopment
-        - !Ref AWS:NoValue
-        - "live"
       ProvisionedConcurrencyConfig:
         !If
           - AddProvisionedConcurrency
