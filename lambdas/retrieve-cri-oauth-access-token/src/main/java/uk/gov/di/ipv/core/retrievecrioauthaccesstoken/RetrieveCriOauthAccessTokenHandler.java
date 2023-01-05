@@ -120,7 +120,6 @@ public class RetrieveCriOauthAccessTokenHandler
                             auditEventUser));
 
             setIpvSessionItemAccessToken(ipvSessionItem, accessToken);
-            setVisitedCredentials(ipvSessionItem, credentialIssuerId, true, null);
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
             var message =
