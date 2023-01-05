@@ -40,6 +40,9 @@ jobs:
       - name: Set up SAM cli
         uses: aws-actions/setup-sam@v1
 
+      - name: sam fix https://github.com/aws/aws-sam-cli/issues/4527
+        run: $(dirname $(readlink $(which sam)))/pip install --force-reinstall "cryptography==38.0.4"
+
       - name: Set up AWS creds For Integration Tests
         uses: aws-actions/configure-aws-credentials@v1
         with:
