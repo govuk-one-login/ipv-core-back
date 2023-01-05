@@ -34,8 +34,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -213,50 +211,6 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         Map<String, Object> output = handler.handleRequest(input, context);
 
         assertEquals("/journey/error", output.get("journey"));
-    }
-
-    @Test
-    void shouldUpdateSessionWithDetailsOfVisitedCri() {
-        Map<String, String> input = Map.of(IPV_SESSION_ID, sessionId);
-
-        JSONObject testCredential = new JSONObject();
-        testCredential.appendField("foo", "bar");
-
-        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
-                .thenReturn(passportIssuer);
-
-        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
-                .thenReturn(testComponentId);
-
-        when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
-
-        when(credentialIssuerService.exchangeCodeForToken(
-                        TEST_AUTH_CODE, passportIssuer, testApiKey))
-                .thenReturn(new BearerAccessToken());
-
-        IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId("someIpvSessionId");
-        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
-        ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
-        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-
-        handler.handleRequest(input, context);
-
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
-        var updatedIpvSessionItem = ipvSessionItemArgumentCaptor.getValue();
-        assertEquals(1, updatedIpvSessionItem.getVisitedCredentialIssuerDetails().size());
-        assertEquals(
-                passportIssuerId,
-                updatedIpvSessionItem.getVisitedCredentialIssuerDetails().get(0).getCriId());
-        assertTrue(
-                updatedIpvSessionItem
-                        .getVisitedCredentialIssuerDetails()
-                        .get(0)
-                        .isReturnedWithVc());
-        assertNull(
-                updatedIpvSessionItem.getVisitedCredentialIssuerDetails().get(0).getOauthError());
     }
 
     @Test

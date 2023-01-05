@@ -35,6 +35,7 @@ import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +43,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -68,6 +70,7 @@ class RetrieveCriCredentialHandlerTest {
     private static final String CODE = "code";
     private static final String MESSAGE = "message";
     private static final String STATUS_CODE = "statusCode";
+    private static final String passportIssuerId = CREDENTIAL_ISSUER_ID;
 
     @Mock private Context context;
     @Mock private CredentialIssuerService credentialIssuerService;
@@ -162,6 +165,38 @@ class RetrieveCriCredentialHandlerTest {
                 .validate(any(SignedJWT.class), eq(testPassportIssuer), eq(TEST_USER_ID));
 
         assertEquals("/journey/next", output.get("journey"));
+    }
+
+    @Test
+    void shouldUpdateSessionWithDetailsOfVisitedCri() throws ParseException {
+        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
+                .thenReturn(testPassportIssuer);
+        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
+                .thenReturn(testComponentId);
+        when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
+        when(credentialIssuerService.getVerifiableCredential(
+                        testBearerAccessToken, testPassportIssuer, testApiKey))
+                .thenReturn(List.of(SignedJWT.parse(SIGNED_VC_1)));
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId("someIpvSessionId");
+        ipvSessionItem.setClientSessionDetails(testClientSessionDetailsDto);
+        ipvSessionItem.setCredentialIssuerSessionDetails(
+                new CredentialIssuerSessionDetailsDto(
+                        CREDENTIAL_ISSUER_ID, TEST_STATE, ACCESS_TOKEN));
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
+        handler.handleRequest(testInput, context);
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+        var visitedCredentialIssuerDetails =
+                ipvSessionItemArgumentCaptor.getValue().getVisitedCredentialIssuerDetails();
+        assertEquals(1, visitedCredentialIssuerDetails.size());
+        assertEquals(passportIssuerId, visitedCredentialIssuerDetails.get(0).getCriId());
+        assertTrue(visitedCredentialIssuerDetails.get(0).isReturnedWithVc());
+        assertNull(visitedCredentialIssuerDetails.get(0).getOauthError());
     }
 
     @Test
