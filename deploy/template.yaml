@@ -97,8 +97,8 @@ Mappings:
       ciStorageAccountId: 442136572379 # di-ipv-contra-indicators-prod
       environment: production
       criReturnStepFunctionLogLevel: ERROR
-      pgw500ErrorLimit: 10
-      egw500ErrorLimit: 1
+      pgw500ErrorLimit: 20
+      egw500ErrorLimit: 2
   SecurityGroups:
     PrefixListIds:
       dynamodb: "pl-b3a742da"
