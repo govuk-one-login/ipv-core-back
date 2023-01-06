@@ -183,7 +183,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     }
 
     @Test
-    void shouldReceive400ResponseCodeIfOAuthStateNotPresent() {
+    void shouldReceive400ResponseCodeIfOAuthStateNotPresentInRequest() {
         CredentialIssuerRequestDto credentialIssuerRequestWithoutState =
                 validCredentialIssuerRequestDto();
         credentialIssuerRequestWithoutState.setState(null);
@@ -194,6 +194,21 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.MISSING_OAUTH_STATE.getCode(), output.get(CODE));
         assertEquals(ErrorResponse.MISSING_OAUTH_STATE.getMessage(), output.get(MESSAGE));
+    }
+
+    @Test
+    void shouldReceive400ResponseCodeIfOAuthStateNotPresentInSession() {
+        CredentialIssuerRequestDto credentialIssuerRequest = validCredentialIssuerRequestDto();
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setCredentialIssuerSessionDetails(null);
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
+        Map<String, Object> output = underTest.handleRequest(credentialIssuerRequest, context);
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
+        assertEquals(ErrorResponse.INVALID_OAUTH_STATE.getCode(), output.get(CODE));
+        assertEquals(ErrorResponse.INVALID_OAUTH_STATE.getMessage(), output.get(MESSAGE));
     }
 
     @Test

@@ -193,7 +193,7 @@ public class ValidateOAuthCallbackHandler
         }
 
         String persistedOauthState = getPersistedOauthState(request);
-        if (!request.getState().equals(persistedOauthState)) {
+        if (persistedOauthState == null || !request.getState().equals(persistedOauthState)) {
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_OAUTH_STATE);
         }
@@ -215,10 +215,14 @@ public class ValidateOAuthCallbackHandler
 
     @Tracing
     private String getPersistedOauthState(CredentialIssuerRequestDto request) {
-        return ipvSessionService
-                .getIpvSession(request.getIpvSessionId())
-                .getCredentialIssuerSessionDetails()
-                .getState();
+        CredentialIssuerSessionDetailsDto credentialIssuerSessionDetails =
+                ipvSessionService
+                        .getIpvSession(request.getIpvSessionId())
+                        .getCredentialIssuerSessionDetails();
+        if (credentialIssuerSessionDetails != null) {
+            return credentialIssuerSessionDetails.getState();
+        }
+        return null;
     }
 
     @Tracing
