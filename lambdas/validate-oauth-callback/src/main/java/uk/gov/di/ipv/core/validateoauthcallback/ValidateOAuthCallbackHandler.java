@@ -8,6 +8,7 @@ import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -112,6 +113,12 @@ public class ValidateOAuthCallbackHandler
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
+            var mapMessage =
+                    new StringMapMessage()
+                            .with("message", "Successfully validated oauth callback")
+                            .with("criId", request.getCredentialIssuerId());
+            LOGGER.info(mapMessage);
+
             return JOURNEY_ACCESS_TOKEN;
         } catch (HttpResponseExceptionWithErrorBody e) {
             ErrorResponse errorResponse = e.getErrorResponse();
@@ -193,7 +200,7 @@ public class ValidateOAuthCallbackHandler
         }
 
         String persistedOauthState = getPersistedOauthState(request);
-        if (!request.getState().equals(persistedOauthState)) {
+        if (persistedOauthState == null || !request.getState().equals(persistedOauthState)) {
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_OAUTH_STATE);
         }
@@ -215,10 +222,14 @@ public class ValidateOAuthCallbackHandler
 
     @Tracing
     private String getPersistedOauthState(CredentialIssuerRequestDto request) {
-        return ipvSessionService
-                .getIpvSession(request.getIpvSessionId())
-                .getCredentialIssuerSessionDetails()
-                .getState();
+        CredentialIssuerSessionDetailsDto credentialIssuerSessionDetails =
+                ipvSessionService
+                        .getIpvSession(request.getIpvSessionId())
+                        .getCredentialIssuerSessionDetails();
+        if (credentialIssuerSessionDetails != null) {
+            return credentialIssuerSessionDetails.getState();
+        }
+        return null;
     }
 
     @Tracing

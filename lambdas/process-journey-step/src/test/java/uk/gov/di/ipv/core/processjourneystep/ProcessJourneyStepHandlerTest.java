@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
@@ -23,6 +24,7 @@ import java.time.Instant;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -613,6 +615,33 @@ class ProcessJourneyStepHandlerTest {
         assertEquals(END_STATE, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals("/journey/build-client-oauth-response", output.get("journey"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
+    void shouldClearOauthSessionIfItExists(String environment) {
+        Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setCreationDateTime(Instant.now().toString());
+        ipvSessionItem.setUserState(IPV_IDENTITY_START_PAGE_STATE);
+        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+        ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
+        ipvSessionItem.setCredentialIssuerSessionDetails(
+                new CredentialIssuerSessionDetailsDto("some-cri", "some-state"));
+
+        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockConfigurationService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
+                .thenReturn(environment);
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
+        Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
+
+        ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
+        assertNull(sessionArgumentCaptor.getValue().getCredentialIssuerSessionDetails());
     }
 
     private void mockIpvSessionItemAndTimeout(String validateOauthCallback, String environment) {

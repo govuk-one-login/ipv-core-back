@@ -12,6 +12,7 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
@@ -121,6 +122,10 @@ public class ProcessJourneyStepHandler
                     journeyStep,
                     ipvSessionItem);
 
+            clearOauthSessionIfExists(ipvSessionItem);
+
+            ipvSessionService.updateIpvSession(ipvSessionItem);
+
             return stateMachineResult.getJourneyStepResponse().value(configurationService);
         } catch (UnknownStateException e) {
             LOGGER.error("Unknown journey state: {}", ipvSessionItem.getUserState());
@@ -140,7 +145,6 @@ public class ProcessJourneyStepHandler
             String journeyStep,
             IpvSessionItem ipvSessionItem) {
         ipvSessionItem.setUserState(updatedStateValue);
-        ipvSessionService.updateIpvSession(ipvSessionItem);
         var message =
                 new StringMapMessage()
                         .with("journeyEngine", "State transition")
@@ -148,6 +152,15 @@ public class ProcessJourneyStepHandler
                         .with("from", oldState)
                         .with("to", updatedStateValue);
         LOGGER.info(message);
+    }
+
+    @Tracing
+    private void clearOauthSessionIfExists(IpvSessionItem ipvSessionItem) {
+        CredentialIssuerSessionDetailsDto credentialIssuerSessionDetails =
+                ipvSessionItem.getCredentialIssuerSessionDetails();
+        if (credentialIssuerSessionDetails != null) {
+            ipvSessionItem.setCredentialIssuerSessionDetails(null);
+        }
     }
 
     @Tracing
