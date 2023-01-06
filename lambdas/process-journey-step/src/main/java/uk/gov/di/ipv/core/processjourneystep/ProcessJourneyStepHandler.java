@@ -123,11 +123,11 @@ public class ProcessJourneyStepHandler
 
             return stateMachineResult.getJourneyStepResponse().value(configurationService);
         } catch (UnknownStateException e) {
-            LOGGER.warn("Unknown journey state: {}", ipvSessionItem.getUserState());
+            LOGGER.error("Unknown journey state: {}", ipvSessionItem.getUserState());
             throw new JourneyEngineException(
                     "Invalid journey state encountered, failed to execute journey engine step.");
         } catch (UnknownEventException e) {
-            LOGGER.warn("Unknown journey event: {}", journeyStep);
+            LOGGER.error("Unknown journey event: {}", journeyStep);
             throw new JourneyEngineException(
                     "Invalid journey event provided, failed to execute journey engine step.");
         }
