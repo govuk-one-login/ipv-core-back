@@ -38,7 +38,6 @@ public class ErrorResponse implements JourneyStepResponse {
     }
 
     public Map<String, Object> value(String id) {
-        // TODO: Come up with a better way of converting httpsStatusCode to an Integer.
         return Map.of(
                 "type",
                 ERROR,
