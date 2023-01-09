@@ -71,6 +71,7 @@ Mappings:
       criReturnStepFunctionLogLevel: ALL
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
+      SigningKeyArn: 'arn:aws:kms:eu-west-2:130355686670:key/bd5a6526-86f2-4715-a585-2ebe08e94f7e'
     "457601271792": # Build
       provisionedConcurrency: 0
       ciStorageAccountId: 755415363251 # di-ipv-contra-indicators-build
@@ -78,6 +79,7 @@ Mappings:
       criReturnStepFunctionLogLevel: ALL
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
+      SigningKeyArn: 'arn:aws:kms:eu-west-2:457601271792:key/d9bc4ba5-05b9-4fe6-93cf-c8668e2fc81f'
     "335257547869": # Staging
       provisionedConcurrency: 1
       ciStorageAccountId: 265689800486 # di-ipv-contra-indicators-staging
@@ -85,6 +87,7 @@ Mappings:
       criReturnStepFunctionLogLevel: ALL
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
+      SigningKeyArn: 'arn:aws:kms:eu-west-2:335257547869:key/7245f035-4d8e-4c47-8fe1-ab42caf98646'
     "991138514218": # Integration
       provisionedConcurrency: 1
       ciStorageAccountId: 697519714716 # di-ipv-contra-indicators-integration
@@ -92,6 +95,7 @@ Mappings:
       criReturnStepFunctionLogLevel: ERROR
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
+      SigningKeyArn: 'arn:aws:kms:eu-west-2:991138514218:key/ca1801ca-993a-41ff-ba6c-223f4940b358'
     "075701497069": # Production
       provisionedConcurrency: 1
       ciStorageAccountId: 442136572379 # di-ipv-contra-indicators-prod
@@ -99,6 +103,7 @@ Mappings:
       criReturnStepFunctionLogLevel: ERROR
       pgw500ErrorLimit: 20
       egw500ErrorLimit: 2
+      SigningKeyArn: 'arn:aws:kms:eu-west-2:075701497069:key/dfd17b33-7ea6-4dc9-9ec2-fe2be1f6fb00'
   SecurityGroups:
     PrefixListIds:
       dynamodb: "pl-b3a742da"
@@ -646,7 +651,7 @@ Resources:
               Action:
                 - 'kms:sign'
               Resource:
-                - !ImportValue SigningKeyArn
+                - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, SigningKeyArn]
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -780,7 +785,7 @@ Resources:
               Action:
                 - 'kms:sign'
               Resource:
-                - !ImportValue SigningKeyArn
+                - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, SigningKeyArn]
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
@@ -902,7 +907,7 @@ Resources:
               Action:
                 - 'kms:sign'
               Resource:
-                - !ImportValue SigningKeyArn
+                - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, SigningKeyArn]
             - Sid: kmsAuditEventQueueEncryptionKeyPermission
               Effect: Allow
               Action:
