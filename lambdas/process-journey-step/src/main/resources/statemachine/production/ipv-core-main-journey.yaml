@@ -1,7 +1,18 @@
 #parent states
+ATTEMPT_RECOVERY_STATE:
+  name: ATTEMPT_RECOVERY_STATE
+  parent: null
+  events:
+    attempt-recovery:
+      type: basic
+      name: attempt-recover
+      targetState: EVALUATE_GPG45_SCORES
+      response:
+        type: journey
+        journeyStepId: /journey/evaluate-gpg45-scores
 CRI_STATE:
   name: CRI_STATE
-  parent: null
+  parent: ATTEMPT_RECOVERY_STATE
   events:
     next:
       type: basic
@@ -26,7 +37,7 @@ CRI_STATE:
         pageId: pyi-no-match
 END_JOURNEY:
   name: END_JOURNEY
-  parent: null
+  parent: ATTEMPT_RECOVERY_STATE
   events:
     next:
       type: basic
@@ -37,7 +48,7 @@ END_JOURNEY:
         journeyStepId: /journey/build-client-oauth-response
 MITIGATION_JOURNEY:
   name: MITIGATION_JOURNEY
-  parent: null
+  parent: ATTEMPT_RECOVERY_STATE
   events:
     next:
       type: basic
@@ -50,7 +61,7 @@ MITIGATION_JOURNEY:
 #child states
 INITIAL_IPV_JOURNEY:
   name: INIT
-  parent: null
+  parent: ATTEMPT_RECOVERY_STATE
   events:
     next:
       type: basic
@@ -61,7 +72,7 @@ INITIAL_IPV_JOURNEY:
         pageId: page-ipv-identity-start
 IPV_IDENTITY_START_PAGE:
   name: IPV_IDENTITY_START_PAGE
-  parent: null
+  parent: ATTEMPT_RECOVERY_STATE
   events:
     next:
       type: basic
@@ -72,7 +83,7 @@ IPV_IDENTITY_START_PAGE:
         journeyStepId: /journey/check-existing-identity
 CHECK_EXISTING_IDENTITY:
   name: CHECK_EXISTING_IDENTITY
-  parent: null
+  parent: ATTEMPT_RECOVERY_STATE
   events:
     next:
       type: basic
@@ -93,7 +104,7 @@ IPV_IDENTITY_REUSE_PAGE:
   parent: END_JOURNEY
 EVALUATE_GPG45_SCORES:
   name: EVALUATE_GPG45_SCORES
-  parent: null
+  parent: ATTEMPT_RECOVERY_STATE
   events:
     next:
       type: basic
@@ -125,7 +136,7 @@ EVALUATE_GPG45_SCORES:
         pageId: pyi-kbv-fail
 SELECT_CRI:
   name: SELECT_CRI
-  parent: null
+  parent: ATTEMPT_RECOVERY_STATE
   events:
     ukPassport:
       type: basic
@@ -225,7 +236,7 @@ CRI_KBV:
   parent: CRI_STATE
 PASSPORT_DOC_CHECK_PAGE:
   name: PASSPORT_DOC_CHECK_PAGE
-  parent: null
+  parent: ATTEMPT_RECOVERY_STATE
   events:
     next:
       type: basic
@@ -243,7 +254,7 @@ PASSPORT_DOC_CHECK_PAGE:
         journeyStepId: /journey/build-client-oauth-response
 PRE_KBV_TRANSITION_PAGE:
   name: PRE_KBV_TRANSITION_PAGE
-  parent: null
+  parent: ATTEMPT_RECOVERY_STATE
   events:
     next:
       type: basic
@@ -254,7 +265,7 @@ PRE_KBV_TRANSITION_PAGE:
         journeyStepId: /journey/cri/build-oauth-request/kbv
 POST_DCMAW_SUCCESS_PAGE:
   name: POST_DCMAW_SUCCESS_PAGE
-  parent: null
+  parent: ATTEMPT_RECOVERY_STATE
   events:
     next:
       type: basic
@@ -324,7 +335,7 @@ DEBUG_PAGE:
 
 DEBUG_EVALUATE_GPG45_SCORES:
   name: DEBUG_EVALUATE_GPG45_SCORES
-  parent: null
+  parent: ATTEMPT_RECOVERY_STATE
   events:
     next:
       type: basic
@@ -356,7 +367,7 @@ DEBUG_EVALUATE_GPG45_SCORES:
         pageId: pyi-kbv-fail
 DEBUG_PYI_NO_MATCH:
   name: DEBUG_PYI_NO_MATCH
-  parent: null
+  parent: ATTEMPT_RECOVERY_STATE
   events:
     next:
       type: basic
@@ -367,7 +378,7 @@ DEBUG_PYI_NO_MATCH:
         pageId: page-ipv-debug
 DEBUG_PYI_KBV_FAIL:
   name: DEBUG_PYI_KBV_FAIL
-  parent: null
+  parent: ATTEMPT_RECOVERY_STATE
   events:
     next:
       type: basic
