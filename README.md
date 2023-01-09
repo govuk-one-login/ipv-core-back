@@ -120,3 +120,27 @@ core/deploy/dns-zones/template.yaml:20:3
 Checkov..............................................(no files to check)Skipped
 - hook id: checkov
 ```
+
+# SAM (Serverless Application Model)
+
+## Build
+```
+sam build --cached --parallel
+```
+
+As part of the build stage tests are disabled. To enable them run the following:
+```
+# Build with Unit Tests and Integration Tests
+GRADLE_SAM_EXECUTE_TEST=1 sam build -cached --parallel
+```
+
+## Deploy
+```
+sam deploy --debug --config-file ./samconfig.toml --config-env dev-{{environment}}
+```
+
+## Sync
+```
+sam sync --watch --config-file samconfig.toml --config-env {{environment}} --stack-name core-back-dev-{{environment}} --region eu-west-2
+```
+
