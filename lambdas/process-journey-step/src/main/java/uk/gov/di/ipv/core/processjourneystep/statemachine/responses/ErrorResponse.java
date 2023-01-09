@@ -1,37 +1,20 @@
 package uk.gov.di.ipv.core.processjourneystep.statemachine.responses;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.util.Map;
 
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class ErrorResponse implements JourneyStepResponse {
 
-    public static final String ERROR = "error";
+    private static final String ERROR = "error";
     private String pageId;
     private String httpStatusCode;
-
-    public ErrorResponse() {}
-
-    public ErrorResponse(String pageId, String httpStatusCode) {
-        this.pageId = pageId;
-        this.httpStatusCode = httpStatusCode;
-    }
-
-    public String getPageId() {
-        return pageId;
-    }
-
-    public void setPageId(String pageId) {
-        this.pageId = pageId;
-    }
-
-    public String getHttpStatusCode() {
-        return httpStatusCode;
-    }
-
-    public void setHttpStatusCode(String httpStatusCode) {
-        this.httpStatusCode = httpStatusCode;
-    }
 
     public Map<String, Object> value(ConfigurationService configurationService) {
         return value(pageId);
