@@ -15,6 +15,8 @@ class StepFunctionHelpersTest {
     private static final String CODE = "code";
     private static final String MESSAGE = "message";
     private static final String STATUS_CODE = "statusCode";
+    private static final String TYPE = "type";
+    private static final String PAGE = "page";
 
     @Test
     void getIpvSessionIdShouldReturnIpvSessionId() throws Exception {
@@ -73,5 +75,17 @@ class StepFunctionHelpersTest {
                 expected,
                 StepFunctionHelpers.generateErrorOutputMap(
                         400, ErrorResponse.CREDENTIAL_SUBJECT_MISSING));
+    }
+
+    @Test
+    void generatePageOutputMapShouldGenerateAPageOutputMap() {
+        Map<String, Object> expected =
+                Map.of(
+                        TYPE, "error",
+                        STATUS_CODE, 400,
+                        PAGE, "some-page");
+
+        assertEquals(
+                expected, StepFunctionHelpers.generatePageOutputMap("error", 400, "some-page"));
     }
 }

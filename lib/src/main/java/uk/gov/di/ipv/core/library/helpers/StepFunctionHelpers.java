@@ -15,6 +15,8 @@ public class StepFunctionHelpers {
     private static final String MESSAGE = "message";
     private static final String STATUS_CODE = "statusCode";
     private static final String IP_ADDRESS = "ipAddress";
+    private static final String TYPE = "type";
+    private static final String PAGE = "page";
 
     private StepFunctionHelpers() {
         throw new IllegalStateException("Utility class");
@@ -57,6 +59,15 @@ public class StepFunctionHelpers {
         output.put(STATUS_CODE, statusCode);
         output.put(MESSAGE, errorResponse.getMessage());
         output.put(CODE, errorResponse.getCode());
+        return output;
+    }
+
+    public static Map<String, Object> generatePageOutputMap(
+            String type, int statusCode, String pageId) {
+        Map<String, Object> output = new HashMap<>();
+        output.put(TYPE, type);
+        output.put(STATUS_CODE, statusCode);
+        output.put(PAGE, pageId);
         return output;
     }
 }
