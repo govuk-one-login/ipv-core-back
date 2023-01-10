@@ -4,8 +4,8 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 
 @ExcludeFromGeneratedCoverageReport
 public class NameAndDateOfBirth {
-    private String name;
-    private String dateOfBirth;
+    private final String name;
+    private final String dateOfBirth;
 
     public NameAndDateOfBirth(String name, String dateOfBirth) {
         this.name = name;

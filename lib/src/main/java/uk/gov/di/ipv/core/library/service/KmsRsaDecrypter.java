@@ -39,11 +39,6 @@ public class KmsRsaDecrypter implements JWEDecrypter {
         this.kmsClient = AWSKMSClientBuilder.defaultClient();
     }
 
-    public KmsRsaDecrypter(String keyId, AWSKMS kmsClient) {
-        this.keyId = keyId;
-        this.kmsClient = kmsClient;
-    }
-
     @Override
     public byte[] decrypt(
             JWEHeader header,

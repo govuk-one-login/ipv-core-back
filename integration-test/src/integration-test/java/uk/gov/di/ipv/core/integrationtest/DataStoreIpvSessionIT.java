@@ -89,14 +89,7 @@ public class DataStoreIpvSessionIT {
 
     @Test
     void shouldPutIpvSessionIntoTable() {
-        IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
-        ipvSessionItem.setUserState(INITIAL_IPV_JOURNEY_STATE);
-        ipvSessionItem.setCreationDateTime(new Date().toString());
-        ipvSessionItem.setClientSessionDetails(generateClientSessionDetails());
-        ipvSessionItem.setCredentialIssuerSessionDetails(generateCredentialIssuerSessionDetails());
-        ipvSessionItem.setAuthorizationCode("12345");
-        ipvSessionItem.setAccessToken("12345");
+        IpvSessionItem ipvSessionItem = setUpIpvSessionItem();
 
         ipvSessionItemDataStore.create(ipvSessionItem, BACKEND_SESSION_TTL);
 
@@ -136,8 +129,7 @@ public class DataStoreIpvSessionIT {
                 credentialIssuerSessionDetailsDto.getState());
     }
 
-    @Test
-    void shouldReadIpvSessionFromTable() throws JsonProcessingException {
+    private IpvSessionItem setUpIpvSessionItem() {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setUserState(INITIAL_IPV_JOURNEY_STATE);
@@ -146,6 +138,12 @@ public class DataStoreIpvSessionIT {
         ipvSessionItem.setCredentialIssuerSessionDetails(generateCredentialIssuerSessionDetails());
         ipvSessionItem.setAuthorizationCode("12345");
         ipvSessionItem.setAccessToken("12345");
+        return ipvSessionItem;
+    }
+
+    @Test
+    void shouldReadIpvSessionFromTable() throws JsonProcessingException {
+        IpvSessionItem ipvSessionItem = setUpIpvSessionItem();
 
         Item item = Item.fromJSON(OBJECT_MAPPER.writeValueAsString(ipvSessionItem));
         tableTestHarness.putItem(item);
@@ -177,14 +175,7 @@ public class DataStoreIpvSessionIT {
 
     @Test
     void shouldUpdateIpvSessionInTable() throws JsonProcessingException {
-        IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
-        ipvSessionItem.setUserState(INITIAL_IPV_JOURNEY_STATE);
-        ipvSessionItem.setCreationDateTime(new Date().toString());
-        ipvSessionItem.setClientSessionDetails(generateClientSessionDetails());
-        ipvSessionItem.setCredentialIssuerSessionDetails(generateCredentialIssuerSessionDetails());
-        ipvSessionItem.setAuthorizationCode("12345");
-        ipvSessionItem.setAccessToken("12345");
+        IpvSessionItem ipvSessionItem = setUpIpvSessionItem();
 
         Item item = Item.fromJSON(OBJECT_MAPPER.writeValueAsString(ipvSessionItem));
         tableTestHarness.putItem(item);

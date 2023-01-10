@@ -9,7 +9,7 @@ import java.util.Map;
 
 public class StateMachine {
 
-    private Map<String, State> states;
+    private final Map<String, State> states;
 
     public StateMachine(StateMachineInitializer initializer) throws IOException {
         this.states = initializer.initialize();

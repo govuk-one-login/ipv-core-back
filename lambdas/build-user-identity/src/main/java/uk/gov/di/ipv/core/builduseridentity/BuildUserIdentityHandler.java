@@ -121,11 +121,10 @@ public class BuildUserIdentityHandler
                             clientSessionDetails.getGovukSigninJourneyId(),
                             null);
 
-            String sub = userId;
             UserIdentity userIdentity =
                     userIdentityService.generateUserIdentity(
                             userId,
-                            sub,
+                            userId,
                             ipvSessionItem.getVot(),
                             ipvSessionItem.getCurrentVcStatuses());
 

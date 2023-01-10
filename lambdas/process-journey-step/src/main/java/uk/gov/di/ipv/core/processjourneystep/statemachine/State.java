@@ -1,5 +1,8 @@
 package uk.gov.di.ipv.core.processjourneystep.statemachine;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.events.Event;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.exceptions.UnknownEventException;
@@ -10,12 +13,13 @@ import java.util.Map;
 import java.util.Optional;
 
 @ExcludeFromGeneratedCoverageReport
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class State {
     private String name;
     private State parent;
     private Map<String, Event> events = new HashMap<>();
-
-    public State() {}
 
     public State(String name) {
         this.name = name;
@@ -36,29 +40,5 @@ public class State {
             return parent.getEvent(eventName);
         }
         return Optional.ofNullable(event);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public State getParent() {
-        return parent;
-    }
-
-    public void setParent(State parent) {
-        this.parent = parent;
-    }
-
-    public Map<String, Event> getEvents() {
-        return events;
-    }
-
-    public void setEvents(Map<String, Event> events) {
-        this.events = events;
     }
 }

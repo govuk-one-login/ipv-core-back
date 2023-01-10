@@ -19,7 +19,7 @@ public class CredentialEvidenceItem {
     private Integer verificationScore;
     private List<DcmawCheckMethod> checkDetails;
     private List<DcmawCheckMethod> failedCheckDetails;
-    private List<String> ci;
+    private final List<String> ci;
 
     public CredentialEvidenceItem(EvidenceType evidenceType, int score, List<String> ci) {
         if (EvidenceType.ACTIVITY.equals(evidenceType)) {

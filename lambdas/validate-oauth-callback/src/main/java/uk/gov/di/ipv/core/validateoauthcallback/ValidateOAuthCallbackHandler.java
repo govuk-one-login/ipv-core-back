@@ -100,7 +100,7 @@ public class ValidateOAuthCallbackHandler
             LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
 
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-            if (request.getError().isPresent()) {
+            if (request.getError() != null) {
                 return sendOauthErrorJourneyResponse(ipvSessionItem, request);
             }
 
@@ -146,8 +146,8 @@ public class ValidateOAuthCallbackHandler
     @Tracing
     private Map<String, Object> sendOauthErrorJourneyResponse(
             IpvSessionItem ipvSessionItem, CredentialIssuerRequestDto request) throws SqsException {
-        String error = request.getError().orElse(null);
-        String errorDescription = request.getErrorDescription().orElse(null);
+        String error = request.getError();
+        String errorDescription = request.getErrorDescription();
 
         AuditExtensionErrorParams extensions =
                 new AuditExtensionErrorParams.Builder()
