@@ -70,8 +70,7 @@ class ProcessJourneyStepHandlerTest {
     private static final String JOURNEY = "journey";
     private static final String MESSAGE = "message";
     private static final String STATUS_CODE = "statusCode";
-    public static final String HTTP_STATUS_CODE_500 = "500";
-    public static final String HTTP_STATUS_CODE = "httpStatusCode";
+    public static final int HTTP_STATUS_CODE_500 = 500;
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ConfigurationService mockConfigurationService;
@@ -277,8 +276,8 @@ class ProcessJourneyStepHandlerTest {
         assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(ERROR, output.get("type"));
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("pageId"));
-        assertEquals(HTTP_STATUS_CODE_500, output.get(HTTP_STATUS_CODE));
+        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
+        assertEquals(HTTP_STATUS_CODE_500, output.get(STATUS_CODE));
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
     }
 
@@ -332,8 +331,8 @@ class ProcessJourneyStepHandlerTest {
         assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(ERROR, output.get("type"));
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("pageId"));
-        assertEquals(HTTP_STATUS_CODE_500, output.get(HTTP_STATUS_CODE));
+        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
+        assertEquals(HTTP_STATUS_CODE_500, output.get(STATUS_CODE));
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
     }
 
@@ -425,8 +424,8 @@ class ProcessJourneyStepHandlerTest {
         assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(ERROR, output.get("type"));
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("pageId"));
-        assertEquals(HTTP_STATUS_CODE_500, output.get(HTTP_STATUS_CODE));
+        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
+        assertEquals(HTTP_STATUS_CODE_500, output.get(STATUS_CODE));
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
     }
 
@@ -480,8 +479,8 @@ class ProcessJourneyStepHandlerTest {
         assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(ERROR, output.get("type"));
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("pageId"));
-        assertEquals(HTTP_STATUS_CODE_500, output.get(HTTP_STATUS_CODE));
+        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
+        assertEquals(HTTP_STATUS_CODE_500, output.get(STATUS_CODE));
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
     }
 
@@ -553,8 +552,8 @@ class ProcessJourneyStepHandlerTest {
         assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(ERROR, output.get("type"));
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("pageId"));
-        assertEquals(HTTP_STATUS_CODE_500, output.get(HTTP_STATUS_CODE));
+        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
+        assertEquals(HTTP_STATUS_CODE_500, output.get(STATUS_CODE));
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
     }
 
@@ -643,7 +642,7 @@ class ProcessJourneyStepHandlerTest {
 
         assertEquals(ERROR, output.get("type"));
         assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("pageId"));
-        assertEquals(HTTP_STATUS_CODE_500, output.get(HTTP_STATUS_CODE));
+        assertEquals(HTTP_STATUS_CODE_500, output.get(STATUS_CODE));
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
     }
 

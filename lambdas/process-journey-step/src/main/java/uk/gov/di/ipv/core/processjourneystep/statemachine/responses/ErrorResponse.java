@@ -14,21 +14,13 @@ public class ErrorResponse implements JourneyStepResponse {
 
     private static final String ERROR = "error";
     private String pageId;
-    private String httpStatusCode;
+    private String statusCode;
 
     public Map<String, Object> value(ConfigurationService configurationService) {
         return value(pageId);
     }
 
     public Map<String, Object> value(String id) {
-        return Map.of(
-                "type",
-                ERROR,
-                "pageId",
-                id,
-                "httpStatusCode",
-                httpStatusCode,
-                "statusCode",
-                Integer.parseInt(httpStatusCode));
+        return Map.of("type", ERROR, "page", id, "statusCode", Integer.parseInt(statusCode));
     }
 }
