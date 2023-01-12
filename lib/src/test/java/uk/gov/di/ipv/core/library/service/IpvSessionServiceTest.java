@@ -94,6 +94,23 @@ class IpvSessionServiceTest {
     }
 
     @Test
+    void shouldRetryGettingSessionItemByAccessToken() {
+        String ipvSessionID = SecureTokenHelper.generate();
+        String accessToken = "56789";
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(ipvSessionID);
+
+        when(mockDataStore.getItemByIndex(eq("accessToken"), anyString()))
+                .thenReturn(null, ipvSessionItem);
+
+        IpvSessionItem result =
+                ipvSessionService.getIpvSessionByAccessToken(accessToken).orElseThrow();
+
+        assertEquals(result, ipvSessionItem);
+    }
+
+    @Test
     void shouldCreateSessionItem() {
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
