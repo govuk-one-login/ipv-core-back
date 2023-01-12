@@ -55,6 +55,8 @@ public class ValidateOAuthCallbackHandler
                     OAuth2Error.INVALID_SCOPE_CODE,
                     OAuth2Error.SERVER_ERROR_CODE,
                     OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE);
+    private static final String PYI_TECHNICAL_UNRECOVERABLE_ERROR_PAGE_ID =
+            "pyi-technical-unrecoverable";
     private final ConfigurationService configurationService;
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
@@ -122,11 +124,18 @@ public class ValidateOAuthCallbackHandler
             return JOURNEY_ACCESS_TOKEN;
         } catch (HttpResponseExceptionWithErrorBody e) {
             ErrorResponse errorResponse = e.getErrorResponse();
-
             LogHelper.logOauthError(
                     "Error in validate oauth callback lambda",
                     errorResponse.getCode(),
                     errorResponse.getMessage());
+
+            if (errorResponse == ErrorResponse.INVALID_OAUTH_STATE) {
+                return StepFunctionHelpers.generatePageOutputMap(
+                        "error",
+                        HttpStatus.SC_BAD_REQUEST,
+                        PYI_TECHNICAL_UNRECOVERABLE_ERROR_PAGE_ID);
+            }
+
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_BAD_REQUEST, errorResponse);
         } catch (SqsException e) {

@@ -55,6 +55,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     private static final String CODE = "code";
     private static final String MESSAGE = "message";
     private static final String STATUS_CODE = "statusCode";
+    private static final String TYPE = "type";
+    private static final String PAGE = "page";
     private static CredentialIssuerConfig credentialIssuerConfig;
     private static IpvSessionItem ipvSessionItem;
     @Mock private Context context;
@@ -197,7 +199,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     }
 
     @Test
-    void shouldReceive400ResponseCodeIfOAuthStateNotPresentInSession() {
+    void shouldReceive400ResponseWithPageIdIfOAuthStateNotPresentInSession() {
         CredentialIssuerRequestDto credentialIssuerRequest = validCredentialIssuerRequestDto();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
@@ -207,12 +209,12 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         Map<String, Object> output = underTest.handleRequest(credentialIssuerRequest, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
-        assertEquals(ErrorResponse.INVALID_OAUTH_STATE.getCode(), output.get(CODE));
-        assertEquals(ErrorResponse.INVALID_OAUTH_STATE.getMessage(), output.get(MESSAGE));
+        assertEquals("pyi-technical-unrecoverable", output.get(PAGE));
+        assertEquals("error", output.get(TYPE));
     }
 
     @Test
-    void shouldReceive400ResponseCodeIfOAuthStateNotValid() {
+    void shouldReceive400ResponseWithPageIdIfOAuthStateNotValid() {
         CredentialIssuerRequestDto credentialIssuerRequestWithInvalidState =
                 validCredentialIssuerRequestDto();
         credentialIssuerRequestWithInvalidState.setState("not-correct-state");
@@ -223,8 +225,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 underTest.handleRequest(credentialIssuerRequestWithInvalidState, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
-        assertEquals(ErrorResponse.INVALID_OAUTH_STATE.getCode(), output.get(CODE));
-        assertEquals(ErrorResponse.INVALID_OAUTH_STATE.getMessage(), output.get(MESSAGE));
+        assertEquals("pyi-technical-unrecoverable", output.get(PAGE));
+        assertEquals("error", output.get(TYPE));
     }
 
     @Test
