@@ -36,6 +36,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ATTEMPT_RECOVERY_ENABLED;
+
 public class ValidateOAuthCallbackHandler
         implements RequestHandler<CredentialIssuerRequestDto, Map<String, Object>> {
 
@@ -57,6 +59,7 @@ public class ValidateOAuthCallbackHandler
                     OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE);
     private static final String PYI_TECHNICAL_UNRECOVERABLE_ERROR_PAGE_ID =
             "pyi-technical-unrecoverable";
+    private static final String PYI_ATTEMPT_RECOVERY_PAGE_ID = "pyi-attempt-recovery";
     private final ConfigurationService configurationService;
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
@@ -130,10 +133,15 @@ public class ValidateOAuthCallbackHandler
                     errorResponse.getMessage());
 
             if (errorResponse == ErrorResponse.INVALID_OAUTH_STATE) {
+                boolean attemptRecoveryEnabled =
+                        Boolean.parseBoolean(
+                                configurationService.getSsmParameter(ATTEMPT_RECOVERY_ENABLED));
                 return StepFunctionHelpers.generatePageOutputMap(
                         "error",
                         HttpStatus.SC_BAD_REQUEST,
-                        PYI_TECHNICAL_UNRECOVERABLE_ERROR_PAGE_ID);
+                        attemptRecoveryEnabled
+                                ? PYI_ATTEMPT_RECOVERY_PAGE_ID
+                                : PYI_TECHNICAL_UNRECOVERABLE_ERROR_PAGE_ID);
             }
 
             return StepFunctionHelpers.generateErrorOutputMap(
