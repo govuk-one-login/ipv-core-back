@@ -317,6 +317,70 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         assertEquals("/journey/error", output.get("journey"));
     }
 
+    @Test
+    void shouldNotReturnAttemptRecoveryIfFeatureFlagIsDisabled() {
+        CredentialIssuerRequestDto credentialIssuerRequestWithOtherError =
+                validCredentialIssuerRequestDto();
+        credentialIssuerRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
+        credentialIssuerRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
+
+        ipvSessionItem.setCredentialIssuerSessionDetails(null);
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(
+                        ConfigurationVariable.ATTEMPT_RECOVERY_ENABLED))
+                .thenReturn("false");
+
+        Map<String, Object> output =
+                underTest.handleRequest(credentialIssuerRequestWithOtherError, context);
+
+        assertEquals("/journey/error", output.get("journey"));
+    }
+
+    @Test
+    void shouldAttemptRecoveryErrorResponseWhenOauthSessionIsNull() {
+        CredentialIssuerRequestDto credentialIssuerRequestWithOtherError =
+                validCredentialIssuerRequestDto();
+        credentialIssuerRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
+        credentialIssuerRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
+
+        ipvSessionItem.setCredentialIssuerSessionDetails(null);
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(
+                        ConfigurationVariable.ATTEMPT_RECOVERY_ENABLED))
+                .thenReturn("true");
+
+        Map<String, Object> output =
+                underTest.handleRequest(credentialIssuerRequestWithOtherError, context);
+
+        assertEquals("error", output.get("type"));
+        assertEquals("pyi-attempt-recovery", output.get("page"));
+        assertEquals(400, output.get("statusCode"));
+    }
+
+    @Test
+    void shouldAttemptRecoveryErrorResponseWhenOauthSessionIsForDifferentCri() {
+        CredentialIssuerRequestDto credentialIssuerRequestWithOtherError =
+                validCredentialIssuerRequestDto();
+        credentialIssuerRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
+        credentialIssuerRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
+
+        CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto =
+                new CredentialIssuerSessionDetailsDto();
+        credentialIssuerSessionDetailsDto.setCriId("test");
+        ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(
+                        ConfigurationVariable.ATTEMPT_RECOVERY_ENABLED))
+                .thenReturn("true");
+
+        Map<String, Object> output =
+                underTest.handleRequest(credentialIssuerRequestWithOtherError, context);
+
+        assertEquals("error", output.get("type"));
+        assertEquals("pyi-attempt-recovery", output.get("page"));
+        assertEquals(400, output.get("statusCode"));
+    }
+
     private CredentialIssuerRequestDto validCredentialIssuerRequestDto() {
         return new CredentialIssuerRequestDto(
                 TEST_AUTHORIZATION_CODE,
