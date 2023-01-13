@@ -177,11 +177,6 @@ public class ValidateOAuthCallbackHandler
             LOGGER.warn("Unknown Oauth error code received");
         }
 
-        ipvSessionItem.addVisitedCredentialIssuerDetails(
-                new VisitedCredentialIssuerDetailsDto(
-                        request.getCredentialIssuerId(), false, error));
-        ipvSessionService.updateIpvSession(ipvSessionItem);
-
         boolean attemptRecoveryEnabled =
                 Boolean.parseBoolean(
                         configurationService.getSsmParameter(
@@ -200,6 +195,11 @@ public class ValidateOAuthCallbackHandler
             return StepFunctionHelpers.generatePageOutputMap(
                     "error", HttpStatus.SC_BAD_REQUEST, PYI_ATTEMPT_RECOVERY_PAGE_ID);
         }
+
+        ipvSessionItem.addVisitedCredentialIssuerDetails(
+                new VisitedCredentialIssuerDetailsDto(
+                        request.getCredentialIssuerId(), false, error));
+        ipvSessionService.updateIpvSession(ipvSessionItem);
 
         if (OAuth2Error.ACCESS_DENIED_CODE.equals(error)) {
             LOGGER.info("OAuth access_denied");
