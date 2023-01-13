@@ -182,6 +182,25 @@ public class ValidateOAuthCallbackHandler
                         request.getCredentialIssuerId(), false, error));
         ipvSessionService.updateIpvSession(ipvSessionItem);
 
+        boolean attemptRecoveryEnabled =
+                Boolean.parseBoolean(
+                        configurationService.getSsmParameter(
+                                ConfigurationVariable.ATTEMPT_RECOVERY_ENABLED));
+        if (attemptRecoveryEnabled
+                && (ipvSessionItem.getCredentialIssuerSessionDetails() == null
+                        || !ipvSessionItem
+                                .getCredentialIssuerSessionDetails()
+                                .getCriId()
+                                .equals(request.getCredentialIssuerId()))) {
+            var message =
+                    new StringMapMessage()
+                            .with("criId", request.getCredentialIssuerId())
+                            .with("message", "Oauth error from unexpected CRI");
+            LOGGER.warn(message);
+            return StepFunctionHelpers.generatePageOutputMap(
+                    "error", HttpStatus.SC_BAD_REQUEST, PYI_ATTEMPT_RECOVERY_PAGE_ID);
+        }
+
         if (OAuth2Error.ACCESS_DENIED_CODE.equals(error)) {
             LOGGER.info("OAuth access_denied");
             return JOURNEY_ACCESS_DENIED;
