@@ -381,6 +381,35 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         assertEquals(400, output.get("statusCode"));
     }
 
+    @Test
+    void shouldNotUpdateSessionOnAttemptRecoveryError() {
+        CredentialIssuerRequestDto credentialIssuerRequestWithOtherError =
+                validCredentialIssuerRequestDto();
+        credentialIssuerRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
+        credentialIssuerRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
+
+        CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto =
+                new CredentialIssuerSessionDetailsDto();
+        credentialIssuerSessionDetailsDto.setCriId("test");
+        ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(
+                        ConfigurationVariable.ATTEMPT_RECOVERY_ENABLED))
+                .thenReturn("true");
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockIpvSessionService, times(0))
+                .updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+
+        Map<String, Object> output =
+                underTest.handleRequest(credentialIssuerRequestWithOtherError, context);
+
+        assertEquals("error", output.get("type"));
+        assertEquals("pyi-attempt-recovery", output.get("page"));
+        assertEquals(400, output.get("statusCode"));
+    }
+
     private CredentialIssuerRequestDto validCredentialIssuerRequestDto() {
         return new CredentialIssuerRequestDto(
                 TEST_AUTHORIZATION_CODE,
