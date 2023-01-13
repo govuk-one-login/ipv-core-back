@@ -12,6 +12,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -205,6 +206,9 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setCredentialIssuerSessionDetails(null);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(
+                        ConfigurationVariable.ATTEMPT_RECOVERY_ENABLED))
+                .thenReturn("false");
 
         Map<String, Object> output = underTest.handleRequest(credentialIssuerRequest, context);
 
@@ -220,12 +224,34 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         credentialIssuerRequestWithInvalidState.setState("not-correct-state");
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(
+                        ConfigurationVariable.ATTEMPT_RECOVERY_ENABLED))
+                .thenReturn("false");
 
         Map<String, Object> output =
                 underTest.handleRequest(credentialIssuerRequestWithInvalidState, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals("pyi-technical-unrecoverable", output.get(PAGE));
+        assertEquals("error", output.get(TYPE));
+    }
+
+    @Test
+    void shouldReceive400ResponseWithAttemptRecoveryPageIfEnabledAndOAuthStateNotValid() {
+        CredentialIssuerRequestDto credentialIssuerRequestWithInvalidState =
+                validCredentialIssuerRequestDto();
+        credentialIssuerRequestWithInvalidState.setState("not-correct-state");
+
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigurationService.getSsmParameter(
+                        ConfigurationVariable.ATTEMPT_RECOVERY_ENABLED))
+                .thenReturn("true");
+
+        Map<String, Object> output =
+                underTest.handleRequest(credentialIssuerRequestWithInvalidState, context);
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
+        assertEquals("pyi-attempt-recovery", output.get(PAGE));
         assertEquals("error", output.get(TYPE));
     }
 
