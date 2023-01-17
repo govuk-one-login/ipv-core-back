@@ -244,7 +244,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"build", "staging", "integration", "production"})
+    @ValueSource(strings = {"staging", "integration", "production"})
     void shouldReturnCriErrorPageResponseIfPassportCriErrors(String environment) {
         Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
 
@@ -261,7 +261,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"dev"})
+    @ValueSource(strings = {"dev", "build"})
     @Disabled("Disabled while we stage out ErrorResponse in Journey Engine.")
     void shouldReturnCriErrorPageResponseIfPassportCriErrorsOnDev(String environment) {
         Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
@@ -299,7 +299,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"build", "staging", "integration", "production"})
+    @ValueSource(strings = {"staging", "integration", "production"})
     void shouldReturnCriErrorPageResponseIfAddressCriErrors(String environment) {
         Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
 
@@ -316,8 +316,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"dev"})
-    @Disabled("Disabled while we stage out ErrorResponse in Journey Engine.")
+    @ValueSource(strings = {"dev", "build"})
     void shouldReturnCriErrorPageResponseIfAddressCriErrorsOnDev(String environment) {
         Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
 
@@ -392,7 +391,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"build", "staging", "integration", "production"})
+    @ValueSource(strings = {"staging", "integration", "production"})
     void shouldReturnCriErrorPageResponseIfFraudCriFails(String environment) {
         Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
 
@@ -409,8 +408,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"dev"})
-    @Disabled("Disabled while we stage out ErrorResponse in Journey Engine.")
+    @ValueSource(strings = {"dev", "build"})
     void shouldReturnCriErrorPageResponseIfFraudCriFailsOnDev(String environment) {
         Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
 
@@ -447,7 +445,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"build", "staging", "integration", "production"})
+    @ValueSource(strings = {"staging", "integration", "production"})
     void shouldReturnCriErrorPageResponseIfKbvCriErrors(String environment) {
         Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
 
@@ -464,8 +462,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"dev"})
-    @Disabled("Disabled while we stage out ErrorResponse in Journey Engine.")
+    @ValueSource(strings = {"dev", "build"})
     void shouldReturnCriErrorPageResponseIfKbvCriErrorsOnDev(String environment) {
         Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
 
@@ -486,7 +483,6 @@ class ProcessJourneyStepHandlerTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
-    @Disabled("Disabled while we stage out ErrorResponse in Journey Engine.")
     void shouldReturnEndSessionJourneyResponseWhenRequired(String environment) {
         Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
 
@@ -520,7 +516,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"build", "staging", "integration", "production"})
+    @ValueSource(strings = {"staging", "integration", "production"})
     void shouldReturnPYITechnicalPageIfErrorOccursOnDebugJourney(String environment) {
         Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
 
@@ -537,8 +533,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"dev"})
-    @Disabled("Disabled while we stage out ErrorResponse in Journey Engine.")
+    @ValueSource(strings = {"dev", "build"})
     void shouldReturnPYITechnicalPageIfErrorOccursOnDebugJourneyOnDev(String environment) {
         Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
 
@@ -609,7 +604,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"build", "staging", "integration", "production"})
+    @ValueSource(strings = {"staging", "integration", "production"})
     void shouldReturnPYITechnicalPageIfCriStateReceivesError(String environment) {
         Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
 
@@ -626,8 +621,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"dev"})
-    @Disabled("Disabled while we stage out ErrorResponse in Journey Engine.")
+    @ValueSource(strings = {"dev", "build"})
     void shouldReturnPYITechnicalPageIfCriStateReceivesErrorOnDev(String environment) {
         Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
 
@@ -641,7 +635,7 @@ class ProcessJourneyStepHandlerTest {
         assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals(ERROR, output.get("type"));
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("pageId"));
+        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
         assertEquals(HTTP_STATUS_CODE_500, output.get(STATUS_CODE));
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
     }
