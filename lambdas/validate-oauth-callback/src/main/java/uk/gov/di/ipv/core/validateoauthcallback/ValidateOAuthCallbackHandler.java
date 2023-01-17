@@ -36,8 +36,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ATTEMPT_RECOVERY_ENABLED;
-
 public class ValidateOAuthCallbackHandler
         implements RequestHandler<CredentialIssuerRequestDto, Map<String, Object>> {
 
@@ -57,8 +55,6 @@ public class ValidateOAuthCallbackHandler
                     OAuth2Error.INVALID_SCOPE_CODE,
                     OAuth2Error.SERVER_ERROR_CODE,
                     OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE);
-    private static final String PYI_TECHNICAL_UNRECOVERABLE_ERROR_PAGE_ID =
-            "pyi-technical-unrecoverable";
     private static final String PYI_ATTEMPT_RECOVERY_PAGE_ID = "pyi-attempt-recovery";
     private final ConfigurationService configurationService;
     private final IpvSessionService ipvSessionService;
@@ -133,15 +129,8 @@ public class ValidateOAuthCallbackHandler
                     errorResponse.getMessage());
 
             if (errorResponse == ErrorResponse.INVALID_OAUTH_STATE) {
-                boolean attemptRecoveryEnabled =
-                        Boolean.parseBoolean(
-                                configurationService.getSsmParameter(ATTEMPT_RECOVERY_ENABLED));
                 return StepFunctionHelpers.generatePageOutputMap(
-                        "error",
-                        HttpStatus.SC_BAD_REQUEST,
-                        attemptRecoveryEnabled
-                                ? PYI_ATTEMPT_RECOVERY_PAGE_ID
-                                : PYI_TECHNICAL_UNRECOVERABLE_ERROR_PAGE_ID);
+                        "error", HttpStatus.SC_BAD_REQUEST, PYI_ATTEMPT_RECOVERY_PAGE_ID);
             }
 
             return StepFunctionHelpers.generateErrorOutputMap(
@@ -177,16 +166,11 @@ public class ValidateOAuthCallbackHandler
             LOGGER.warn("Unknown Oauth error code received");
         }
 
-        boolean attemptRecoveryEnabled =
-                Boolean.parseBoolean(
-                        configurationService.getSsmParameter(
-                                ConfigurationVariable.ATTEMPT_RECOVERY_ENABLED));
-        if (attemptRecoveryEnabled
-                && (ipvSessionItem.getCredentialIssuerSessionDetails() == null
-                        || !ipvSessionItem
-                                .getCredentialIssuerSessionDetails()
-                                .getCriId()
-                                .equals(request.getCredentialIssuerId()))) {
+        if (ipvSessionItem.getCredentialIssuerSessionDetails() == null
+                || !ipvSessionItem
+                        .getCredentialIssuerSessionDetails()
+                        .getCriId()
+                        .equals(request.getCredentialIssuerId())) {
             var message =
                     new StringMapMessage()
                             .with("criId", request.getCredentialIssuerId())

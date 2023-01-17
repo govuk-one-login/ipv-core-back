@@ -23,8 +23,7 @@ public enum ConfigurationVariable {
     CI_SCORING_CONFIG("/%s/core/self/ci-scoring-config"),
     CI_SCORING_THRESHOLD("/%s/core/self/ciScoringThreshold"),
     CI_MITIGATION_JOURNEYS_ENABLED("/%s/core/self/journey/ciMitigationsEnabled"),
-    VC_TTL("/%s/core/self/vcTtl"),
-    ATTEMPT_RECOVERY_ENABLED("/%s/core/self/journey/attemptRecoveryEnabled");
+    VC_TTL("/%s/core/self/vcTtl");
 
     private final String value;
 
