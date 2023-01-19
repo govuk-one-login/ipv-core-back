@@ -20,6 +20,9 @@ import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.processjourneystep.utils.ProcessJourneyStepEvents;
+import uk.gov.di.ipv.core.processjourneystep.utils.ProcessJourneyStepPages;
+import uk.gov.di.ipv.core.processjourneystep.utils.ProcessJourneyStepStates;
 
 import java.time.Instant;
 import java.util.Map;
@@ -33,48 +36,16 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SE
 
 @ExtendWith(MockitoExtension.class)
 class ProcessJourneyStepHandlerTest {
-    private static final String NEXT = "/journey/next";
-    private static final String ERROR = "error";
-    private static final String REUSE = "/journey/reuse";
-    private static final String ACCESS_DENIED = "access-denied";
-    private static final String INVALID_STEP = "invalid-step";
-    private static final String INITIAL_IPV_JOURNEY_STATE = "INITIAL_IPV_JOURNEY";
-    private static final String IPV_IDENTITY_START_PAGE_STATE = "IPV_IDENTITY_START_PAGE";
-    private static final String SELECT_CRI_STATE = "SELECT_CRI";
-    private static final String CRI_UK_PASSPORT_STATE = "CRI_UK_PASSPORT";
-    private static final String CRI_ADDRESS_STATE = "CRI_ADDRESS";
-    private static final String CRI_FRAUD_STATE = "CRI_FRAUD";
-    private static final String CRI_KBV_STATE = "CRI_KBV";
-    private static final String CRI_DCMAW_STATE = "CRI_DCMAW";
-    private static final String CRI_ERROR_STATE = "CRI_ERROR";
-    private static final String EVALUATE_GPG45_SCORES = "EVALUATE_GPG45_SCORES";
-    private static final String PRE_KBV_TRANSITION_PAGE_STATE = "PRE_KBV_TRANSITION_PAGE";
-    private static final String IPV_SUCCESS_PAGE_STATE = "IPV_SUCCESS_PAGE";
-    private static final String DEBUG_PAGE_STATE = "DEBUG_PAGE";
-    private static final String DEBUG_EVALUATE_GPG45_SCORES = "DEBUG_EVALUATE_GPG45_SCORES";
-    private static final String PYI_NO_MATCH_STATE = "PYI_NO_MATCH";
-    private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
-    private static final String END_STATE = "END";
-    private static final String IPV_IDENTITY_START_PAGE = "page-ipv-identity-start";
-    private static final String PYI_TECHNICAL_ERROR_PAGE = "pyi-technical";
-    private static final String PYI_NO_MATCH_PAGE = "pyi-no-match";
-    private static final String PRE_KBV_TRANSITION_PAGE = "page-pre-kbv-transition";
-    private static final String JOURNEY_EVALUATE_GPG_45_SCORES = "/journey/evaluate-gpg45-scores";
-    private static final String CHECK_EXISTING_IDENTITY_STATE = "CHECK_EXISTING_IDENTITY";
-    private static final String JOURNEY_CHECK_EXISTING_IDENTITY =
-            "/journey/check-existing-identity";
-    private static final String IPV_IDENTITY_REUSE_PAGE_STATE = "IPV_IDENTITY_REUSE_PAGE";
-    private static final String IPV_IDENTITY_REUSE_PAGE = "page-ipv-reuse";
     private static final String CODE = "code";
     private static final String IPV_SESSION_ID = "ipvSessionId";
     private static final String JOURNEY = "journey";
     private static final String MESSAGE = "message";
     private static final String STATUS_CODE = "statusCode";
-    public static final int HTTP_STATUS_CODE_500 = 500;
+    private static final int HTTP_STATUS_CODE_500 = 500;
+
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ConfigurationService mockConfigurationService;
-    @Mock private IpvSessionItem mockIpvSessionItem;
 
     private ProcessJourneyStepHandler processJourneyStepHandler;
     private ClientSessionDetailsDto clientSessionDetailsDto;
@@ -101,7 +72,7 @@ class ProcessJourneyStepHandlerTest {
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturn400OnMissingJourneyStepParam() {
-        Map<String, String> input = Map.of(JOURNEY, NEXT);
+        Map<String, String> input = Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_NEXT);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
@@ -113,7 +84,8 @@ class ProcessJourneyStepHandlerTest {
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturn400WhenInvalidSessionIdProvided() {
-        Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_NEXT, IPV_SESSION_ID, "1234");
 
         when(mockIpvSessionService.getIpvSession("1234")).thenReturn(null);
 
@@ -127,9 +99,11 @@ class ProcessJourneyStepHandlerTest {
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturn500WhenUnknownJourneyEngineStepProvided(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, INVALID_STEP, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.INVALID_STEP, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(INITIAL_IPV_JOURNEY_STATE, environment);
+        mockIpvSessionItemAndTimeout(
+                ProcessJourneyStepStates.INITIAL_IPV_JOURNEY_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
@@ -141,7 +115,8 @@ class ProcessJourneyStepHandlerTest {
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturn500WhenUserIsInUnknownState(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, INVALID_STEP, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.INVALID_STEP, IPV_SESSION_ID, "1234");
 
         mockIpvSessionItemAndTimeout("INVALID-STATE", environment);
 
@@ -155,128 +130,153 @@ class ProcessJourneyStepHandlerTest {
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturnCheckExistingIdentityResponseWhenRequired(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_NEXT, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(IPV_IDENTITY_START_PAGE_STATE, environment);
+        mockIpvSessionItemAndTimeout(
+                ProcessJourneyStepStates.IPV_IDENTITY_START_PAGE_STATE, environment);
 
         when(mockConfigurationService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
                 .thenReturn(environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
-        assertEquals(JOURNEY_CHECK_EXISTING_IDENTITY, output.get("journey"));
+        assertEquals(
+                ProcessJourneyStepEvents.JOURNEY_CHECK_EXISTING_IDENTITY, output.get("journey"));
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(
-                CHECK_EXISTING_IDENTITY_STATE, sessionArgumentCaptor.getValue().getUserState());
+                ProcessJourneyStepStates.CHECK_EXISTING_IDENTITY_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturnIdentityStartPageResponseWhenRequired(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_NEXT, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(INITIAL_IPV_JOURNEY_STATE, environment);
+        mockIpvSessionItemAndTimeout(
+                ProcessJourneyStepStates.INITIAL_IPV_JOURNEY_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
-        assertEquals(IPV_IDENTITY_START_PAGE, output.get("page"));
+        assertEquals(ProcessJourneyStepPages.IPV_IDENTITY_START_PAGE, output.get("page"));
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(
-                IPV_IDENTITY_START_PAGE_STATE, sessionArgumentCaptor.getValue().getUserState());
+                ProcessJourneyStepStates.IPV_IDENTITY_START_PAGE_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturnIdentityReusePageResponseWhenRequired(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, REUSE, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_REUSE, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(CHECK_EXISTING_IDENTITY_STATE, environment);
+        mockIpvSessionItemAndTimeout(
+                ProcessJourneyStepStates.CHECK_EXISTING_IDENTITY_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
-        assertEquals(IPV_IDENTITY_REUSE_PAGE, output.get("page"));
+        assertEquals(ProcessJourneyStepPages.IPV_IDENTITY_REUSE_PAGE, output.get("page"));
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(
-                IPV_IDENTITY_REUSE_PAGE_STATE, sessionArgumentCaptor.getValue().getUserState());
+                ProcessJourneyStepStates.IPV_IDENTITY_REUSE_PAGE_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturnEvaluateGpg45ScoresWhenIpvIdentityStartPageState(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_NEXT, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(CHECK_EXISTING_IDENTITY_STATE, environment);
+        mockIpvSessionItemAndTimeout(
+                ProcessJourneyStepStates.CHECK_EXISTING_IDENTITY_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.EVALUATE_GPG45_SCORES,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(JOURNEY_EVALUATE_GPG_45_SCORES, output.get("journey"));
+        assertEquals(
+                ProcessJourneyStepEvents.JOURNEY_EVALUATE_GPG_45_SCORES, output.get("journey"));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturnEvaluateGpg45ScoresWhenCriUkPassportState(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_NEXT, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(CRI_UK_PASSPORT_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.CRI_UK_PASSPORT_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.EVALUATE_GPG45_SCORES,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(JOURNEY_EVALUATE_GPG_45_SCORES, output.get("journey"));
+        assertEquals(
+                ProcessJourneyStepEvents.JOURNEY_EVALUATE_GPG_45_SCORES, output.get("journey"));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"staging", "integration", "production"})
     void shouldReturnCriErrorPageResponseIfPassportCriErrors(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.ERROR, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(CRI_UK_PASSPORT_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.CRI_UK_PASSPORT_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.CRI_ERROR_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
+        assertEquals(ProcessJourneyStepPages.PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build"})
     @Disabled("Disabled while we stage out ErrorResponse in Journey Engine.")
     void shouldReturnCriErrorPageResponseIfPassportCriErrorsOnDev(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.ERROR, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(CRI_UK_PASSPORT_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.CRI_UK_PASSPORT_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.CRI_ERROR_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(ERROR, output.get("type"));
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
+        assertEquals(ProcessJourneyStepEvents.ERROR, output.get("type"));
+        assertEquals(ProcessJourneyStepPages.PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
         assertEquals(HTTP_STATUS_CODE_500, output.get(STATUS_CODE));
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
     }
@@ -284,53 +284,63 @@ class ProcessJourneyStepHandlerTest {
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturnEvaluateGpg45ScoresWhenCriAddressState(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_NEXT, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(CRI_ADDRESS_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.CRI_ADDRESS_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.EVALUATE_GPG45_SCORES,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(JOURNEY_EVALUATE_GPG_45_SCORES, output.get("journey"));
+        assertEquals(
+                ProcessJourneyStepEvents.JOURNEY_EVALUATE_GPG_45_SCORES, output.get("journey"));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"staging", "integration", "production"})
     void shouldReturnCriErrorPageResponseIfAddressCriErrors(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.ERROR, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(CRI_ADDRESS_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.CRI_ADDRESS_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.CRI_ERROR_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
+        assertEquals(ProcessJourneyStepPages.PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build"})
     void shouldReturnCriErrorPageResponseIfAddressCriErrorsOnDev(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.ERROR, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(CRI_ADDRESS_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.CRI_ADDRESS_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.CRI_ERROR_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(ERROR, output.get("type"));
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
+        assertEquals(ProcessJourneyStepEvents.ERROR, output.get("type"));
+        assertEquals(ProcessJourneyStepPages.PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
         assertEquals(HTTP_STATUS_CODE_500, output.get(STATUS_CODE));
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
     }
@@ -338,18 +348,22 @@ class ProcessJourneyStepHandlerTest {
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturnEvaluateGpg45ScoresWhenCriFraudState(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_NEXT, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(CRI_FRAUD_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.CRI_FRAUD_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.EVALUATE_GPG45_SCORES,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(JOURNEY_EVALUATE_GPG_45_SCORES, output.get("journey"));
+        assertEquals(
+                ProcessJourneyStepEvents.JOURNEY_EVALUATE_GPG_45_SCORES, output.get("journey"));
     }
 
     @ParameterizedTest
@@ -360,7 +374,7 @@ class ProcessJourneyStepHandlerTest {
                         JOURNEY, "kbv",
                         IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(SELECT_CRI_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.SELECT_CRI_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
@@ -368,24 +382,29 @@ class ProcessJourneyStepHandlerTest {
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
         assertEquals(
-                PRE_KBV_TRANSITION_PAGE_STATE, sessionArgumentCaptor.getValue().getUserState());
+                ProcessJourneyStepStates.PRE_KBV_TRANSITION_PAGE_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(PRE_KBV_TRANSITION_PAGE, output.get("page"));
+        assertEquals(ProcessJourneyStepPages.PRE_KBV_TRANSITION_PAGE, output.get("page"));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"staging", "integration", "production"})
     void shouldReturnCriKbvJourneyResponseWhenRequired(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_NEXT, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(PRE_KBV_TRANSITION_PAGE_STATE, environment);
+        mockIpvSessionItemAndTimeout(
+                ProcessJourneyStepStates.PRE_KBV_TRANSITION_PAGE_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(CRI_KBV_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.CRI_KBV_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals("/journey/cri/build-oauth-request/kbv", output.get("journey"));
     }
@@ -393,36 +412,42 @@ class ProcessJourneyStepHandlerTest {
     @ParameterizedTest
     @ValueSource(strings = {"staging", "integration", "production"})
     void shouldReturnCriErrorPageResponseIfFraudCriFails(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.ERROR, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(CRI_FRAUD_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.CRI_FRAUD_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.CRI_ERROR_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
+        assertEquals(ProcessJourneyStepPages.PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build"})
     void shouldReturnCriErrorPageResponseIfFraudCriFailsOnDev(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.ERROR, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(CRI_FRAUD_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.CRI_FRAUD_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.CRI_ERROR_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(ERROR, output.get("type"));
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
+        assertEquals(ProcessJourneyStepEvents.ERROR, output.get("type"));
+        assertEquals(ProcessJourneyStepPages.PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
         assertEquals(HTTP_STATUS_CODE_500, output.get(STATUS_CODE));
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
     }
@@ -430,53 +455,63 @@ class ProcessJourneyStepHandlerTest {
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturnEvaluateGpg45ScoresWhenCriKbvState(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_NEXT, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(CRI_KBV_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.CRI_KBV_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.EVALUATE_GPG45_SCORES,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(JOURNEY_EVALUATE_GPG_45_SCORES, output.get("journey"));
+        assertEquals(
+                ProcessJourneyStepEvents.JOURNEY_EVALUATE_GPG_45_SCORES, output.get("journey"));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"staging", "integration", "production"})
     void shouldReturnCriErrorPageResponseIfKbvCriErrors(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.ERROR, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(CRI_KBV_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.CRI_KBV_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.CRI_ERROR_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
+        assertEquals(ProcessJourneyStepPages.PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build"})
     void shouldReturnCriErrorPageResponseIfKbvCriErrorsOnDev(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.ERROR, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(CRI_KBV_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.CRI_KBV_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.CRI_ERROR_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(ERROR, output.get("type"));
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
+        assertEquals(ProcessJourneyStepEvents.ERROR, output.get("type"));
+        assertEquals(ProcessJourneyStepPages.PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
         assertEquals(HTTP_STATUS_CODE_500, output.get(STATUS_CODE));
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
     }
@@ -484,16 +519,19 @@ class ProcessJourneyStepHandlerTest {
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturnEndSessionJourneyResponseWhenRequired(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_NEXT, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(IPV_SUCCESS_PAGE_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.IPV_SUCCESS_PAGE_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(END_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.END_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals("/journey/build-client-oauth-response", output.get("journey"));
     }
@@ -501,53 +539,63 @@ class ProcessJourneyStepHandlerTest {
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturnDebugEvaluateGpg45ScoresJourneyWhenRequired(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_NEXT, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(DEBUG_PAGE_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.DEBUG_PAGE_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(DEBUG_EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.DEBUG_EVALUATE_GPG45_SCORES,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(JOURNEY_EVALUATE_GPG_45_SCORES, output.get("journey"));
+        assertEquals(
+                ProcessJourneyStepEvents.JOURNEY_EVALUATE_GPG_45_SCORES, output.get("journey"));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"staging", "integration", "production"})
     void shouldReturnPYITechnicalPageIfErrorOccursOnDebugJourney(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.ERROR, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(DEBUG_PAGE_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.DEBUG_PAGE_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.CRI_ERROR_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
+        assertEquals(ProcessJourneyStepPages.PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build"})
     void shouldReturnPYITechnicalPageIfErrorOccursOnDebugJourneyOnDev(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.ERROR, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(DEBUG_PAGE_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.DEBUG_PAGE_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.CRI_ERROR_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(ERROR, output.get("type"));
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
+        assertEquals(ProcessJourneyStepEvents.ERROR, output.get("type"));
+        assertEquals(ProcessJourneyStepPages.PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
         assertEquals(HTTP_STATUS_CODE_500, output.get(STATUS_CODE));
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
     }
@@ -555,33 +603,39 @@ class ProcessJourneyStepHandlerTest {
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturnPYINoMatchPageIfAccessDeniedOccursOnDebugJourney(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, ACCESS_DENIED, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.ACCESS_DENIED, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(DEBUG_PAGE_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.DEBUG_PAGE_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(PYI_NO_MATCH_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.PYI_NO_MATCH_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(PYI_NO_MATCH_PAGE, output.get("page"));
+        assertEquals(ProcessJourneyStepPages.PYI_NO_MATCH_PAGE, output.get("page"));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturnErrorPageResponseWhenRequired(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_NEXT, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(CRI_ERROR_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.CRI_ERROR_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(END_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.END_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals("/journey/build-client-oauth-response", output.get("journey"));
     }
@@ -589,53 +643,62 @@ class ProcessJourneyStepHandlerTest {
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturnPYINoMatchPageIfCriStateReceivesAccessDenied(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, ACCESS_DENIED, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.ACCESS_DENIED, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(CRI_UK_PASSPORT_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.CRI_UK_PASSPORT_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(PYI_NO_MATCH_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.PYI_NO_MATCH_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(PYI_NO_MATCH_PAGE, output.get("page"));
+        assertEquals(ProcessJourneyStepPages.PYI_NO_MATCH_PAGE, output.get("page"));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"staging", "integration", "production"})
     void shouldReturnPYITechnicalPageIfCriStateReceivesError(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.ERROR, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(CRI_FRAUD_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.CRI_FRAUD_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.CRI_ERROR_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
+        assertEquals(ProcessJourneyStepPages.PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build"})
     void shouldReturnPYITechnicalPageIfCriStateReceivesErrorOnDev(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, ERROR, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.ERROR, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(CRI_FRAUD_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.CRI_FRAUD_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(CRI_ERROR_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.CRI_ERROR_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(ERROR, output.get("type"));
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
+        assertEquals(ProcessJourneyStepEvents.ERROR, output.get("type"));
+        assertEquals(ProcessJourneyStepPages.PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
         assertEquals(HTTP_STATUS_CODE_500, output.get(STATUS_CODE));
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
     }
@@ -644,47 +707,75 @@ class ProcessJourneyStepHandlerTest {
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturnPyiNoMatchPageIfInSelectCRIStateAndReturnsPyiNoMatchJourney(
             String environment) {
-        Map<String, String> input = Map.of(JOURNEY, PYI_NO_MATCH_PAGE, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepPages.PYI_NO_MATCH_PAGE, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(SELECT_CRI_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.SELECT_CRI_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(PYI_NO_MATCH_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.PYI_NO_MATCH_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(PYI_NO_MATCH_PAGE, output.get("page"));
+        assertEquals(ProcessJourneyStepPages.PYI_NO_MATCH_PAGE, output.get("page"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"dev", "build"})
+    void shouldReturnPYITechnicalErrorIfSelectCRIReturnsFail(String environment) {
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.FAIL, IPV_SESSION_ID, "1234");
+
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.SELECT_CRI_STATE, environment);
+
+        Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
+
+        ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
+        assertEquals(
+                ProcessJourneyStepStates.SELECT_CRI_ERROR_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(ProcessJourneyStepPages.PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
+        assertEquals(HTTP_STATUS_CODE_500, output.get(STATUS_CODE));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturnEvaluateGpg45ScoresJourneyIfInDcmawStateReturnsAccessDeniedResponse(
             String environment) {
-        Map<String, String> input = Map.of(JOURNEY, ACCESS_DENIED, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.ACCESS_DENIED, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(CRI_DCMAW_STATE, environment);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.CRI_DCMAW_STATE, environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(EVALUATE_GPG45_SCORES, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.EVALUATE_GPG45_SCORES,
+                sessionArgumentCaptor.getValue().getUserState());
 
-        assertEquals(JOURNEY_EVALUATE_GPG_45_SCORES, output.get("journey"));
+        assertEquals(
+                ProcessJourneyStepEvents.JOURNEY_EVALUATE_GPG_45_SCORES, output.get("journey"));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturnErrorPageIfSessionHasExpired(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_NEXT, IPV_SESSION_ID, "1234");
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
-        ipvSessionItem.setUserState(CRI_UK_PASSPORT_STATE);
+        ipvSessionItem.setUserState(ProcessJourneyStepStates.CRI_UK_PASSPORT_STATE);
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
         ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
 
@@ -702,24 +793,27 @@ class ProcessJourneyStepHandlerTest {
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
 
         IpvSessionItem capturedIpvSessionItem = sessionArgumentCaptor.getValue();
-        assertEquals(CORE_SESSION_TIMEOUT_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.CORE_SESSION_TIMEOUT_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
         assertEquals(OAuth2Error.ACCESS_DENIED.getCode(), capturedIpvSessionItem.getErrorCode());
         assertEquals(
                 OAuth2Error.ACCESS_DENIED.getDescription(),
                 capturedIpvSessionItem.getErrorDescription());
 
-        assertEquals(PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
+        assertEquals(ProcessJourneyStepPages.PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldReturnSessionEndJourneyIfStateIsSessionTimeout(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_NEXT, IPV_SESSION_ID, "1234");
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
-        ipvSessionItem.setUserState(CORE_SESSION_TIMEOUT_STATE);
+        ipvSessionItem.setUserState(ProcessJourneyStepStates.CORE_SESSION_TIMEOUT_STATE);
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
         ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
 
@@ -733,7 +827,9 @@ class ProcessJourneyStepHandlerTest {
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertEquals(END_STATE, sessionArgumentCaptor.getValue().getUserState());
+        assertEquals(
+                ProcessJourneyStepStates.END_STATE,
+                sessionArgumentCaptor.getValue().getUserState());
 
         assertEquals("/journey/build-client-oauth-response", output.get("journey"));
     }
@@ -741,12 +837,13 @@ class ProcessJourneyStepHandlerTest {
     @ParameterizedTest
     @ValueSource(strings = {"dev", "build", "staging", "integration", "production"})
     void shouldClearOauthSessionIfItExists(String environment) {
-        Map<String, String> input = Map.of(JOURNEY, NEXT, IPV_SESSION_ID, "1234");
+        Map<String, String> input =
+                Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_NEXT, IPV_SESSION_ID, "1234");
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
-        ipvSessionItem.setUserState(IPV_IDENTITY_START_PAGE_STATE);
+        ipvSessionItem.setUserState(ProcessJourneyStepStates.IPV_IDENTITY_START_PAGE_STATE);
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
         ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
         ipvSessionItem.setCredentialIssuerSessionDetails(
