@@ -12,7 +12,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -200,52 +199,27 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     }
 
     @Test
-    void shouldReceive400ResponseWithPageIdIfOAuthStateNotPresentInSession() {
+    void shouldReceive400ResponseWithAttemptRecoveryPageIfOAuthStateNotPresentInSession() {
         CredentialIssuerRequestDto credentialIssuerRequest = validCredentialIssuerRequestDto();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setCredentialIssuerSessionDetails(null);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getSsmParameter(
-                        ConfigurationVariable.ATTEMPT_RECOVERY_ENABLED))
-                .thenReturn("false");
 
         Map<String, Object> output = underTest.handleRequest(credentialIssuerRequest, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
-        assertEquals("pyi-technical-unrecoverable", output.get(PAGE));
+        assertEquals("pyi-attempt-recovery", output.get(PAGE));
         assertEquals("error", output.get(TYPE));
     }
 
     @Test
-    void shouldReceive400ResponseWithPageIdIfOAuthStateNotValid() {
+    void shouldReceive400ResponseWithAttemptRecoveryPageIfOAuthStateNotValid() {
         CredentialIssuerRequestDto credentialIssuerRequestWithInvalidState =
                 validCredentialIssuerRequestDto();
         credentialIssuerRequestWithInvalidState.setState("not-correct-state");
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getSsmParameter(
-                        ConfigurationVariable.ATTEMPT_RECOVERY_ENABLED))
-                .thenReturn("false");
-
-        Map<String, Object> output =
-                underTest.handleRequest(credentialIssuerRequestWithInvalidState, context);
-
-        assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
-        assertEquals("pyi-technical-unrecoverable", output.get(PAGE));
-        assertEquals("error", output.get(TYPE));
-    }
-
-    @Test
-    void shouldReceive400ResponseWithAttemptRecoveryPageIfEnabledAndOAuthStateNotValid() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithInvalidState =
-                validCredentialIssuerRequestDto();
-        credentialIssuerRequestWithInvalidState.setState("not-correct-state");
-
-        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getSsmParameter(
-                        ConfigurationVariable.ATTEMPT_RECOVERY_ENABLED))
-                .thenReturn("true");
 
         Map<String, Object> output =
                 underTest.handleRequest(credentialIssuerRequestWithInvalidState, context);
@@ -318,25 +292,6 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     }
 
     @Test
-    void shouldNotReturnAttemptRecoveryIfFeatureFlagIsDisabled() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithOtherError =
-                validCredentialIssuerRequestDto();
-        credentialIssuerRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
-        credentialIssuerRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
-
-        ipvSessionItem.setCredentialIssuerSessionDetails(null);
-        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getSsmParameter(
-                        ConfigurationVariable.ATTEMPT_RECOVERY_ENABLED))
-                .thenReturn("false");
-
-        Map<String, Object> output =
-                underTest.handleRequest(credentialIssuerRequestWithOtherError, context);
-
-        assertEquals("/journey/error", output.get("journey"));
-    }
-
-    @Test
     void shouldAttemptRecoveryErrorResponseWhenOauthSessionIsNull() {
         CredentialIssuerRequestDto credentialIssuerRequestWithOtherError =
                 validCredentialIssuerRequestDto();
@@ -345,9 +300,6 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
         ipvSessionItem.setCredentialIssuerSessionDetails(null);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getSsmParameter(
-                        ConfigurationVariable.ATTEMPT_RECOVERY_ENABLED))
-                .thenReturn("true");
 
         Map<String, Object> output =
                 underTest.handleRequest(credentialIssuerRequestWithOtherError, context);
@@ -369,9 +321,6 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         credentialIssuerSessionDetailsDto.setCriId("test");
         ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getSsmParameter(
-                        ConfigurationVariable.ATTEMPT_RECOVERY_ENABLED))
-                .thenReturn("true");
 
         Map<String, Object> output =
                 underTest.handleRequest(credentialIssuerRequestWithOtherError, context);
@@ -393,9 +342,6 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         credentialIssuerSessionDetailsDto.setCriId("test");
         ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getSsmParameter(
-                        ConfigurationVariable.ATTEMPT_RECOVERY_ENABLED))
-                .thenReturn("true");
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
