@@ -26,8 +26,9 @@ CRI_STATE:
       name: error
       targetState: CRI_ERROR
       response:
-        type: page
+        type: error
         pageId: pyi-technical
+        statusCode: 500
     access-denied:
       type: basic
       name: access-denied
@@ -199,8 +200,9 @@ SELECT_CRI:
       name: fail
       targetState: SELECT_CRI_ERROR
       response:
-        type: page
+        type: error
         pageId: pyi-technical
+        statusCode: 500
     pyi-no-match:
       type: basic
       name: pyi-no-match
