@@ -35,3 +35,6 @@ build
 
 # Ignore AWS SAM folder
 */**/.aws-sam
+
+# Ignore node/TS output
+node_modules

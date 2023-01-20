@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >-
+  This creates the necessary serverless components for the delete user data lambda.
+
+Parameters:
+  Environment:
+    Type: String
+
+Resources:
+  DeleteUserDataFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "delete-user-data-${Environment}"
+      Handler: index.handler
+      Runtime: nodejs18.x
+      PackageType: Zip
+      CodeUri: ../lambdas/delete-user-data/
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Tracing: Active
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: "es2022"
+        Sourcemap: true
+        EntryPoints:
+          - src/index.ts
