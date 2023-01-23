@@ -48,8 +48,8 @@ ext {
 		lombok:'1.18.22',
 		nimbusdsOauth2OidcSdk:'9.27',
 		powertoolsParameters:'1.11.0',
-		powertoolsLogging:'1.12.2',
-		powertoolsTracing:'1.12.0'
+		powertoolsLogging:'1.13.0',
+		powertoolsTracing:'1.13.0'
 	]
 }
 
