@@ -10,15 +10,6 @@ capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev\" VpcStackName=\"network-shared-development\""
 parallel = "true"
 
-[dev-tomw.deploy.parameters]
-stack_name = "core-back-dev-tomw"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
-s3_prefix = "tom-core-back-stack"
-region = "eu-west-2"
-capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-tomw\" VpcStackName=\"network-shared-development\""
-parallel = "true"
-
 [dev-danh.deploy.parameters]
 stack_name = "core-back-dev-danh"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
@@ -64,24 +55,6 @@ capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-amrits\" VpcStackName=\"network-shared-development\""
 parallel = "true"
 
-[dev-lait.deploy.parameters]
-stack_name = "core-back-dev-lait"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
-s3_prefix = "lait-core-back-stack"
-region = "eu-west-2"
-capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-lait\" VpcStackName=\"network-shared-development\""
-parallel = "true"
-
-[dev-sunild.deploy.parameters]
-stack_name = "core-back-dev-sunild"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
-s3_prefix = "sunild-core-back-stack"
-region = "eu-west-2"
-capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-sunild\" VpcStackName=\"network-shared-development\""
-parallel = "true"
-
 [dev-kerrr.deploy.parameters]
 stack_name = "core-back-dev-kerrr"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
@@ -89,15 +62,6 @@ s3_prefix = "kerrr-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-kerrr\" VpcStackName=\"network-shared-development\""
-parallel = "true"
-
-[dev-ianj.deploy.parameters]
-stack_name = "core-back-dev-ianj"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
-s3_prefix = "ianj-core-back-stack"
-region = "eu-west-2"
-capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-ianj\" VpcStackName=\"network-shared-development\""
 parallel = "true"
 
 [dev-derrenw.deploy.parameters]
@@ -127,24 +91,6 @@ capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-vamh\" VpcStackName=\"network-shared-development\""
 parallel = "true"
 
-[dev-wojciecho.deploy.parameters]
-stack_name = "core-back-dev-wojciecho"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
-s3_prefix = "wojciecho-core-back-stack"
-region = "eu-west-2"
-capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-wojciecho\" VpcStackName=\"network-shared-development\""
-parallel = "true"
-
-[dev-aprilm.deploy.parameters]
-stack_name = "core-back-dev-aprilm"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
-s3_prefix = "aprilm-core-back-stack"
-region = "eu-west-2"
-capabilities = "CAPABILITY_IAM"
-parameter_overrides = "Environment=\"dev-aprilm\" VpcStackName=\"network-shared-development\""
-parallel = "true"
-
 [dev-tobys.deploy.parameters]
 stack_name = "core-back-dev-tobys"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
@@ -152,4 +98,13 @@ s3_prefix = "tobys-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-tobys\" VpcStackName=\"network-shared-development\""
+parallel = "true"
+
+[dev-jithinj.deploy.parameters]
+stack_name = "core-back-dev-jithinj"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
+s3_prefix = "jithinj-core-back-stack"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev-jithinj\" VpcStackName=\"network-shared-development\""
 parallel = "true"
