@@ -1,0 +1,30 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": [
+    "@typescript-eslint"
+  ],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended"
+  ],
+  "rules": {
+    "no-console": 1
+  },
+  "overrides": [
+    {
+      "files": ["**/*.test.ts"],
+      "plugins": ["jest"],
+      "extends": ["plugin:jest/recommended", "plugin:jest/style"],
+      "rules": {
+        "jest/consistent-test-it": ["error", { "fn": "test" }],
+        "jest/prefer-hooks-in-order": ["error"],
+        "jest/prefer-hooks-on-top": ["error"],
+        "jest/prefer-lowercase-title": ["error", { "ignore": ["describe"] }],
+        "jest/prefer-strict-equal": ["error"]
+      }
+    }
+  ]
+}
