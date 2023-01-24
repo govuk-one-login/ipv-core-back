@@ -1,5 +1,5 @@
 
-name: gradle test and build
+name: build and test
 
 on:
   push:
@@ -9,7 +9,33 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  build:
+  test-node-delete-user-data:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./lambdas/delete-user-data
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: npm
+          cache-dependency-path: '**/package-lock.json'  # Need this so it looks in lambdas/delete-user-data for the package-lock
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Linting
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm run test
+
+  test-java:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
