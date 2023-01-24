@@ -277,6 +277,21 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     }
 
     @Test
+    void shouldReceiveTemporarilyUnavailableJourneyResponseWhenOauthErrorTemporarilyUnavailable() {
+        CredentialIssuerRequestDto credentialIssuerRequestWithAccessDenied =
+                validCredentialIssuerRequestDto();
+        credentialIssuerRequestWithAccessDenied.setError(OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE);
+        credentialIssuerRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
+
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
+        Map<String, Object> output =
+                underTest.handleRequest(credentialIssuerRequestWithAccessDenied, context);
+
+        assertEquals("/journey/temporarily-unavailable", output.get("journey"));
+    }
+
+    @Test
     void shouldReceiveJourneyErrorJourneyResponseWhenAnyOtherOauthError() {
         CredentialIssuerRequestDto credentialIssuerRequestWithOtherError =
                 validCredentialIssuerRequestDto();

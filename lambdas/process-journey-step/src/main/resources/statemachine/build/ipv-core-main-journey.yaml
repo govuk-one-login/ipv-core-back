@@ -43,6 +43,13 @@ CRI_STATE:
       response:
         type: page
         pageId: pyi-no-match
+    temporarily-unavailable:
+      type: basic
+      name: temporarily-unavailable
+      targetState: PYI_NO_MATCH
+      response:
+        type: page
+        pageId: pyi-no-match
 END_JOURNEY:
   name: END_JOURNEY
   parent: ATTEMPT_RECOVERY_STATE
@@ -290,6 +297,13 @@ CRI_DCMAW:
     access-denied:
       type: basic
       name: access-denied
+      targetState: EVALUATE_GPG45_SCORES
+      response:
+        type: journey
+        journeyStepId: /journey/evaluate-gpg45-scores
+    temporarily-unavailable:
+      type: basic
+      name: temporarily-unavailable
       targetState: EVALUATE_GPG45_SCORES
       response:
         type: journey
