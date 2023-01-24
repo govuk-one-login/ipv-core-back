@@ -62,6 +62,7 @@ public class CheckExistingIdentityHandler
     private static final String VOT_P2 = "P2";
     private static final int ONLY = 0;
     private static final Logger LOGGER = LogManager.getLogger();
+    public static final String CANDIDATE_KEY = "message";
     private final ConfigurationService configurationService;
     private final UserIdentityService userIdentityService;
     private final IpvSessionService ipvSessionService;
@@ -153,7 +154,7 @@ public class CheckExistingIdentityHandler
                     var message =
                             new StringMapMessage()
                                     .with(
-                                            "message",
+                                            CANDIDATE_KEY,
                                             "Matched profile and within CI threshold so returning reuse journey")
                                     .with("profile", matchedProfile.get().getLabel());
                     LOGGER.info(message);
@@ -177,7 +178,7 @@ public class CheckExistingIdentityHandler
                 var message =
                         new StringMapMessage()
                                 .with(
-                                        "message",
+                                        CANDIDATE_KEY,
                                         "Failed to match profile so clearing VCs and returning next");
                 LOGGER.info(message);
 
@@ -189,7 +190,8 @@ public class CheckExistingIdentityHandler
 
                 userIdentityService.deleteVcStoreItems(userId);
             } else {
-                var message = new StringMapMessage().with("message", "New user so returning next");
+                var message =
+                        new StringMapMessage().with(CANDIDATE_KEY, "New user so returning next");
                 LOGGER.info(message);
             }
 

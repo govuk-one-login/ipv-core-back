@@ -17,11 +17,19 @@ public class AuditService {
     private final AmazonSQS sqs;
     private final String queueUrl;
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private ObjectMapper objectMapper;
 
     public AuditService(AmazonSQS sqs, ConfigurationService configurationService) {
         this.sqs = sqs;
-        queueUrl = configurationService.getEnvironmentVariable(SQS_AUDIT_EVENT_QUEUE_URL);
+        this.queueUrl = configurationService.getEnvironmentVariable(SQS_AUDIT_EVENT_QUEUE_URL);
+        this.objectMapper = new ObjectMapper();
+    }
+
+    public AuditService(
+            AmazonSQS sqs, ConfigurationService configurationService, ObjectMapper objectMapper) {
+        this.sqs = sqs;
+        this.queueUrl = configurationService.getEnvironmentVariable(SQS_AUDIT_EVENT_QUEUE_URL);
+        this.objectMapper = objectMapper;
     }
 
     public static AmazonSQS getDefaultSqsClient() {
