@@ -6,6 +6,39 @@ Description: >-
 Parameters:
   Environment:
     Type: String
+# VpcStackName:
+#   Description: >
+#     The name of the stack that defines the VPC in which this container will
+#     run.
+#   Type: String
+# CodeSigningConfigArn:
+#   Type: String
+#   Description: >
+#     The ARN of the Code Signing Config to use, provided by the deployment pipeline
+#   Default: "none"
+# PermissionsBoundary:
+#   Description: "The ARN of the permissions boundary to apply when creating IAM roles"
+#   Type: String
+#   Default: "none"
+
+#Conditions:
+#  IsBuild: !Not
+#    - !Or
+#      - !Equals [ !Ref Environment, "dev" ]
+#      - !Equals [ !Ref Environment, "staging" ]
+#      - !Equals [ !Ref Environment, "integration" ]
+#      - !Equals [ !Ref Environment, "production" ]
+#  IsNotDevelopment: !Not [ !Condition IsBuild ]
+#  UseCodeSigning:
+#    Fn::Not:
+#      - Fn::Equals:
+#          - !Ref CodeSigningConfigArn
+#          - "none"
+#  UsePermissionsBoundary:
+#    Fn::Not:
+#      - Fn::Equals:
+#          - !Ref PermissionsBoundary
+#          - "none"
 
 Resources:
   DeleteUserDataFunction:
