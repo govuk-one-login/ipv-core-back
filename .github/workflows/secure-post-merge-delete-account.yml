@@ -35,7 +35,8 @@ jobs:
         run: curl -fsSL https://esbuild.github.io/dl/latest | sh
 
       - name: add esbuild to path
-        run: echo "${GITHUB_WORSPACE}" >> $GITHUB_PATH
+        run: echo "${GITHUB_WORKSPACE}" >> $GITHUB_PATH
+
 
       - name: check esbuild works
         run: esbuild --version
