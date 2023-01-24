@@ -6,6 +6,7 @@ on:
       - main
     paths-ignore:
       - 'deploy-delete-user-data/**'
+      - '.github/secure-post-merge-delete-account.yml'
 
 jobs:
   deploy:

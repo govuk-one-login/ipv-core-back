@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'deploy-delete-user-data/**'
+      - '.github/secure-post-merge-delete-account.yml'
 
 jobs:
   deploy:
@@ -29,6 +30,9 @@ jobs:
 
       - name: Set up SAM cli
         uses: aws-actions/setup-sam@v1
+
+      - name: Set up esbuild
+        run: curl -fsSL https://esbuild.github.io/dl/latest | sh
 
       - name: sam fix https://github.com/aws/aws-sam-cli/issues/4527
         run: $(dirname $(readlink $(which sam)))/pip install --force-reinstall "cryptography==38.0.4"
