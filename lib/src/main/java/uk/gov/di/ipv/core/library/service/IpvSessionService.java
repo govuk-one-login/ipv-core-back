@@ -4,6 +4,8 @@ import com.nimbusds.oauth2.sdk.ErrorObject;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
@@ -26,6 +28,8 @@ public class IpvSessionService {
     private static final String FAILED_CLIENT_JAR_STATE = "FAILED_CLIENT_JAR";
     private static final String DEBUG_EVALUATE_GPG45_SCORES_STATE = "DEBUG_EVALUATE_GPG45_SCORES";
     private static final String VOT_P0 = "P0";
+
+    private static final Logger LOGGER = LogManager.getLogger();
 
     private final DataStore<IpvSessionItem> dataStore;
     private final ConfigurationService configurationService;
@@ -61,8 +65,32 @@ public class IpvSessionService {
     }
 
     public Optional<IpvSessionItem> getIpvSessionByAccessToken(String accessToken) {
-        IpvSessionItem ipvSessionItem =
-                dataStore.getItemByIndex("accessToken", DigestUtils.sha256Hex(accessToken));
+
+        IpvSessionItem ipvSessionItem = null;
+
+        // Simple back off and retry
+        var attempts = 0;
+        while (attempts < 7) {
+            ipvSessionItem =
+                    dataStore.getItemByIndex("accessToken", DigestUtils.sha256Hex(accessToken));
+
+            if (ipvSessionItem == null) {
+                var backoff = (long) (10 * Math.pow(2, attempts++));
+                try {
+                    Thread.sleep(backoff);
+                } catch (InterruptedException e) {
+                    LOGGER.warn(
+                            "getIpvSessionByAccessToken() backoff and retry sleep was interrupted");
+                    Thread.currentThread().interrupt();
+                }
+            } else {
+                break;
+            }
+        }
+
+        if (attempts > 0) {
+            LOGGER.warn("getIpvSessionByAccessToken() required retries");
+        }
         return Optional.ofNullable(ipvSessionItem);
     }
 
