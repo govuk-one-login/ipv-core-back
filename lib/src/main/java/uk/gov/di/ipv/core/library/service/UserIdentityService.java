@@ -132,24 +132,24 @@ public class UserIdentityService {
 
         String vtm = configurationService.getSsmParameter(CORE_VTM_CLAIM);
 
-        UserIdentity.Builder userIdentityBuilder =
-                new UserIdentity.Builder().setVcs(vcJwts).setSub(sub).setVot(vot).setVtm(vtm);
+        UserIdentity.UserIdentityBuilder userIdentityBuilder =
+                UserIdentity.builder().vcs(vcJwts).sub(sub).vot(vot).vtm(vtm);
 
         if (vot.equals(VectorOfTrust.P2.toString())) {
             Optional<IdentityClaim> identityClaim =
                     generateIdentityClaim(vcStoreItems, currentVcStatuses);
-            identityClaim.ifPresent(userIdentityBuilder::setIdentityClaim);
+            identityClaim.ifPresent(userIdentityBuilder::identityClaim);
 
             Optional<JsonNode> addressClaim = generateAddressClaim(vcStoreItems);
-            addressClaim.ifPresent(userIdentityBuilder::setAddressClaim);
+            addressClaim.ifPresent(userIdentityBuilder::addressClaim);
 
             Optional<JsonNode> passportClaim =
                     generatePassportClaim(vcStoreItems, currentVcStatuses);
-            passportClaim.ifPresent(userIdentityBuilder::setPassportClaim);
+            passportClaim.ifPresent(userIdentityBuilder::passportClaim);
 
             Optional<JsonNode> drivingPermitClaim =
                     generateDrivingPermitClaim(vcStoreItems, currentVcStatuses);
-            drivingPermitClaim.ifPresent(userIdentityBuilder::setDrivingPermitClaim);
+            drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
         }
 
         return userIdentityBuilder.build();

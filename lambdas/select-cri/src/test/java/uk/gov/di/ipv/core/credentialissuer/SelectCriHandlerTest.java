@@ -58,7 +58,7 @@ class SelectCriHandlerTest {
     private SelectCriHandler underTest;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         mockConfigurationServiceMethodCalls();
 
         underTest = new SelectCriHandler(mockConfigurationService, mockIpvSessionService);

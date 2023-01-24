@@ -220,7 +220,7 @@ public class ValidateOAuthCallbackHandler
         }
 
         String persistedOauthState = getPersistedOauthState(request);
-        if (persistedOauthState == null || !request.getState().equals(persistedOauthState)) {
+        if (!request.getState().equals(persistedOauthState)) {
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_OAUTH_STATE);
         }

@@ -24,7 +24,7 @@ dependencies {
 			"software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters"
 
-	testImplementation "com.github.tomakehurst:wiremock-jre8:2.31.0",
+	testImplementation "com.github.tomakehurst:wiremock-jre8:2.35.0",
 			"org.junit.jupiter:junit-jupiter:5.8.2",
 			"org.mockito:mockito-junit-jupiter:4.1.0",
 			"uk.org.webcompere:system-stubs-jupiter:1.1.0"
