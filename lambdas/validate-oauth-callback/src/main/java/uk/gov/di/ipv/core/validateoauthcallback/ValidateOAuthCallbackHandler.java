@@ -45,6 +45,8 @@ public class ValidateOAuthCallbackHandler
             Map.of(JOURNEY, "/journey/cri/access-token");
     private static final Map<String, Object> JOURNEY_ACCESS_DENIED =
             Map.of(JOURNEY, "/journey/access-denied");
+    private static final Map<String, Object> JOURNEY_TEMPORARILY_UNAVAILABLE =
+            Map.of(JOURNEY, "/journey/temporarily-unavailable");
     private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, "/journey/error");
     private static final List<String> ALLOWED_OAUTH_ERROR_CODES =
             Arrays.asList(
@@ -185,11 +187,13 @@ public class ValidateOAuthCallbackHandler
                         request.getCredentialIssuerId(), false, error));
         ipvSessionService.updateIpvSession(ipvSessionItem);
 
+        LogHelper.logOauthError("OAuth error received from CRI", error, errorDescription);
+
         if (OAuth2Error.ACCESS_DENIED_CODE.equals(error)) {
-            LOGGER.info("OAuth access_denied");
             return JOURNEY_ACCESS_DENIED;
+        } else if (OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE.equals(error)) {
+            return JOURNEY_TEMPORARILY_UNAVAILABLE;
         } else {
-            LogHelper.logOauthError("OAuth error received from CRI", error, errorDescription);
             return JOURNEY_ERROR;
         }
     }
