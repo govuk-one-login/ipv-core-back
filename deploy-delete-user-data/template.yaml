@@ -11,17 +11,17 @@ Parameters:
 #     The name of the stack that defines the VPC in which this container will
 #     run.
 #   Type: String
-# CodeSigningConfigArn:
-#   Type: String
-#   Description: >
-#     The ARN of the Code Signing Config to use, provided by the deployment pipeline
-#   Default: "none"
-# PermissionsBoundary:
-#   Description: "The ARN of the permissions boundary to apply when creating IAM roles"
-#   Type: String
-#   Default: "none"
+  CodeSigningConfigArn:
+    Type: String
+    Description: >
+      The ARN of the Code Signing Config to use, provided by the deployment pipeline
+    Default: "none"
+  PermissionsBoundary:
+    Description: "The ARN of the permissions boundary to apply when creating IAM roles"
+    Type: String
+    Default: "none"
 
-#Conditions:
+Conditions:
 #  IsBuild: !Not
 #    - !Or
 #      - !Equals [ !Ref Environment, "dev" ]
@@ -29,17 +29,18 @@ Parameters:
 #      - !Equals [ !Ref Environment, "integration" ]
 #      - !Equals [ !Ref Environment, "production" ]
 #  IsNotDevelopment: !Not [ !Condition IsBuild ]
-#  UseCodeSigning:
-#    Fn::Not:
-#      - Fn::Equals:
-#          - !Ref CodeSigningConfigArn
-#          - "none"
-#  UsePermissionsBoundary:
-#    Fn::Not:
-#      - Fn::Equals:
-#          - !Ref PermissionsBoundary
-#          - "none"
+  UseCodeSigning:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref CodeSigningConfigArn
+          - "none"
+  UsePermissionsBoundary:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref PermissionsBoundary
+          - "none"
 
+#Mapping for SNS Topic ARN
 
 Resources:
   DeleteUserDataFunction:
@@ -57,6 +58,14 @@ Resources:
       Environment:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
+      PermissionsBoundary: !If
+        - UsePermissionsBoundary
+        - !Ref PermissionsBoundary
+        - !Ref AWS::NoValue
+      CodeSigningConfigArn: !If
+        - UseCodeSigning
+        - !Ref CodeSigningConfigArn
+        - !Ref AWS::NoValue
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -65,3 +74,21 @@ Resources:
         Sourcemap: true
         EntryPoints:
           - src/index.ts
+
+  #SNS Subscription
+# DeleteAccountSNSSubscription:
+#   Type: AWS::SNS::Subscription
+#   Parameters:
+#     #DeliveryPolicy:
+#     Endpoint: !Ref DeleteUserDataFunction
+#     Protocol: lambda
+#     RedrivePolicy:
+
+
+
+  #Build only SNS Topic
+  #DLQ for SNS Subsciption
+  #DLQ for Lambda
+  #Alarm for DLQ
+  #Alarm for other DLQ
+  #A way to replay the DQLs
