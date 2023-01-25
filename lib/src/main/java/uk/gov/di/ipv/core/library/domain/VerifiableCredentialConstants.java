@@ -1,6 +1,9 @@
 package uk.gov.di.ipv.core.library.domain;
 
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+
 public class VerifiableCredentialConstants {
+    @ExcludeFromGeneratedCoverageReport
     private VerifiableCredentialConstants() {
         throw new IllegalStateException("Utility class");
     }

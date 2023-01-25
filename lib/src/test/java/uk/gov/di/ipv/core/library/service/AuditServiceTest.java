@@ -18,6 +18,9 @@ import uk.gov.di.ipv.core.library.auditing.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.SQS_AUDIT_EVENT_QUEUE_URL;
@@ -42,7 +45,7 @@ class AuditServiceTest {
 
     @Test
     void shouldSendMessageToSqsQueue() throws JsonProcessingException, SqsException {
-        auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START, null);
+        auditService.sendAuditEvent(AuditEventTypes.IPV_JOURNEY_START);
 
         ArgumentCaptor<SendMessageRequest> sqsSendMessageRequestCaptor =
                 ArgumentCaptor.forClass(SendMessageRequest.class);
@@ -131,5 +134,22 @@ class AuditServiceTest {
         assertEquals(
                 "someGovukSigninJourneyId",
                 messageBody.get("user").get("govuk_signin_journey_id").asText());
+    }
+
+    @Test
+    void shouldThrowSQSException() throws JsonProcessingException {
+        ObjectMapper mockObjectMapper = mock(ObjectMapper.class);
+        AuditService underTest =
+                new AuditService(mockSqs, mockConfigurationService, mockObjectMapper);
+        when(mockObjectMapper.writeValueAsString(any(AuditEvent.class)))
+                .thenThrow(new JsonProcessingException("") {});
+        assertThrows(
+                SqsException.class,
+                () ->
+                        underTest.sendAuditEvent(
+                                new AuditEvent(
+                                        AuditEventTypes.IPV_JOURNEY_START,
+                                        "{\\}",
+                                        new AuditEventUser("1234", "1234", "1234", "1.1.1.1"))));
     }
 }

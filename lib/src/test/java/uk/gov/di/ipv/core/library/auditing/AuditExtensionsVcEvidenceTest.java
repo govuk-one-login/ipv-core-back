@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 class AuditExtensionsVcEvidenceTest {
 
     @Test
-    public void shouldInitWithNullEvidence() throws JsonProcessingException {
+    void shouldInitWithNullEvidence() throws JsonProcessingException {
         var auditExtensions =
                 new AuditExtensionsVcEvidence("http://issuer.example.com", null, false);
         assertNull(auditExtensions.getEvidence());

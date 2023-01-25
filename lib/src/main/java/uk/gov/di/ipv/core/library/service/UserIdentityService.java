@@ -42,11 +42,15 @@ public class UserIdentityService {
     public static final String ADDRESS_PROPERTY_NAME = "address";
     public static final List<String> ADDRESS_CRI_TYPES =
             List.of(ADDRESS_PROPERTY_NAME, "stubAddress");
+    public static final String UK_PASSPORT = "ukPassport";
+    public static final String STUB_UK_PASSPORT = "stubUkPassport";
+    public static final String DCMAW = "dcmaw";
+    public static final String STUB_DCMAW = "stubDcmaw";
     private static final List<String> PASSPORT_CRI_TYPES =
-            List.of("ukPassport", "stubUkPassport", "dcmaw", "stubDcmaw");
-    private static final List<String> DRIVING_PERMIT_CRI_TYPES = List.of("dcmaw", "stubDcmaw");
+            List.of(UK_PASSPORT, STUB_UK_PASSPORT, DCMAW, STUB_DCMAW);
+    private static final List<String> DRIVING_PERMIT_CRI_TYPES = List.of(DCMAW, STUB_DCMAW);
     public static final List<String> EVIDENCE_CRI_TYPES =
-            List.of("ukPassport", "stubUkPassport", "dcmaw", "stubDcmaw");
+            List.of(UK_PASSPORT, STUB_UK_PASSPORT, DCMAW, STUB_DCMAW);
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String PASSPORT_PROPERTY_NAME = "passport";

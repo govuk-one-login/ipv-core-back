@@ -1,10 +1,13 @@
 package uk.gov.di.ipv.core.library.helpers;
 
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+
 import java.security.SecureRandom;
 import java.util.Base64;
 
 public class SecureTokenHelper {
 
+    @ExcludeFromGeneratedCoverageReport
     private SecureTokenHelper() {
         throw new IllegalStateException("Utility class");
     }
