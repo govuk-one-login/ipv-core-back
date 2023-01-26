@@ -22,12 +22,12 @@ Parameters:
     Default: "none"
 
 Conditions:
-#  IsBuild: !Not
-#    - !Or
-#      - !Equals [ !Ref Environment, "dev" ]
-#      - !Equals [ !Ref Environment, "staging" ]
-#      - !Equals [ !Ref Environment, "integration" ]
-#      - !Equals [ !Ref Environment, "production" ]
+  IsBuild: !Not
+    - !Or
+      - !Equals [ !Ref Environment, "dev" ]
+      - !Equals [ !Ref Environment, "staging" ]
+      - !Equals [ !Ref Environment, "integration" ]
+      - !Equals [ !Ref Environment, "production" ]
 #  IsNotDevelopment: !Not [ !Condition IsBuild ]
   UseCodeSigning:
     Fn::Not:
@@ -41,6 +41,13 @@ Conditions:
           - "none"
 
 #Mapping for SNS Topic ARN
+Mappings:
+  DeleteAccountSNSTopic:
+    Environment:
+      build: "" #this will always be blank
+      staging: "" #arn to be provided by auth
+      integration: "" #arn to be provided by auth
+      production: "" #arn to be provided by auth
 
 Resources:
   DeleteUserDataFunction:
@@ -76,19 +83,41 @@ Resources:
         EntryPoints:
           - src/index.ts
 
-  #SNS Subscription
-# DeleteAccountSNSSubscription:
-#   Type: AWS::SNS::Subscription
-#   Parameters:
-#     #DeliveryPolicy:
-#     Endpoint: !Ref DeleteUserDataFunction
-#     Protocol: lambda
-#     RedrivePolicy:
+#SNS Subscription
+  DeleteAccountSNSSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      #DeliveryPolicy:
+      Endpoint: !GetAtt DeleteUserDataFunction.Arn
+      Protocol: lambda
+      RedrivePolicy: !Sub "{ \"deadLetterTargetArn\": \"arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:DeleteAccountSNSDLQ\" }"
 
+      TopicArn:
+        !If
+        - IsBuild
+        - !GetAtt BuildOnlyDeleteAccountSNSTopic.TopicArn
+        - !FindInMap
+          - DeleteAccountSNSTopic
+          - Environment
+          - !Ref Environment
 
+#Build only SNS Topic
+  BuildOnlyDeleteAccountSNSTopic:
+    Condition: IsBuild
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub BuildOnlyDeleteAccountSNSTopic-${Environment}
 
-  #Build only SNS Topic
-  #DLQ for SNS Subsciption
+#DLQ for SNS Subsciption
+  DeleteAccountSNSDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 1209600
+      #RedriveAllowPolicy:
+      #  redrivePermission : byQueue
+      #  sourceQueueArns : !Ref DeleteAccountSNSSubscription
+      QueueName: DeleteAccountSNSDLQ
+
   #DLQ for Lambda
   #Alarm for DLQ
   #Alarm for other DLQ
