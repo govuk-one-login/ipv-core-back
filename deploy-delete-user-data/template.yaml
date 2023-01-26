@@ -90,8 +90,8 @@ Resources:
       #DeliveryPolicy:
       Endpoint: !GetAtt DeleteUserDataFunction.Arn
       Protocol: lambda
-     #RedrivePolicy: !Sub | #https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-configure-dead-letter-queue-redrive.html
-     #  { "deadLetterTargetArn": "!Ref DeleteAccountSNSDeadLetterQueue" }
+      RedrivePolicy: !Sub "{ \"deadLetterTargetArn\": \"arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:DeleteAccountSNSDLQ\" }"
+
       TopicArn:
         !If
         - IsBuild
@@ -108,8 +108,16 @@ Resources:
     Properties:
       TopicName: !Sub BuildOnlyDeleteAccountSNSTopic-${Environment}
 
-#
-  #DLQ for SNS Subsciption
+#DLQ for SNS Subsciption
+  DeleteAccountSNSDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 1209600
+      #RedriveAllowPolicy:
+      #  redrivePermission : byQueue
+      #  sourceQueueArns : !Ref DeleteAccountSNSSubscription
+      QueueName: DeleteAccountSNSDLQ
+
   #DLQ for Lambda
   #Alarm for DLQ
   #Alarm for other DLQ
