@@ -76,9 +76,10 @@ Resources:
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
+        UseNpmCi: true
         Minify: true
-        Target: "es2022"
-        Sourcemap: true
+        Target: "node18"
+        Sourcemap: true  # Required to preserve error stack traces to TS source
         EntryPoints:
           - src/index.ts
 

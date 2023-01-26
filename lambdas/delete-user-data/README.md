@@ -22,16 +22,18 @@ This uses `esbuild-jest` to transpile and run the tests on the fly. Note it will
 
 In VSCode you can use an extension such as "Jest Runner" to run and debug individual tests within the IDE.
 
-### Build and deploy
+### Build and invoke locally
 
-Build and deploy with AWS SAM CLI:
+Build via AWS SAM CLI:
 
-```sam build```
+```npm run build```
 
-Deploy TBC.
+Invoke the function locally with the sample SNS event:
 
-### Run locally
+```npm run local-invoke``
 
-After building with SAM, invoke the function locally:
+### Deploy
 
-```sam local invoke DeleteUserDataFunction```
+To build and deploy to the build env, run the script from the `deploy-delete-user-data` directory where the template lives:
+
+```aws-vault exec <core-build-profile> -- sh ./deploy.sh```

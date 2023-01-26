@@ -19,6 +19,7 @@
       "plugins": ["jest"],
       "extends": ["plugin:jest/recommended", "plugin:jest/style"],
       "rules": {
+        "@typescript-eslint/no-explicit-any": "off",
         "jest/consistent-test-it": ["error", { "fn": "test" }],
         "jest/prefer-hooks-in-order": ["error"],
         "jest/prefer-hooks-on-top": ["error"],

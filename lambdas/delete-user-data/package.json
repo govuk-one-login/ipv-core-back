@@ -5,7 +5,9 @@
   "scripts": {
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
-    "test": "jest"
+    "test": "jest --verbose",
+    "build": "sam build -t ../../deploy-delete-user-data/template.yaml",
+    "local-invoke": "sam local invoke DeleteUserDataFunction -e sample-sns-event.json"
   },
   "devDependencies": {
     "@types/aws-lambda": "8.10.109",
