@@ -1,7 +1,7 @@
 #!/bin/bash
 
-sam build
-sam validate --lint
+sam build &&
+sam validate --lint &&
 sam deploy --template-file ./.aws-sam/build/template.yaml \
 --resolve-s3 \
 --stack-name account-delete \
