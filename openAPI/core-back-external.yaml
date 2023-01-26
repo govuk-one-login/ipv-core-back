@@ -54,7 +54,7 @@ paths:
         type: "aws"
         httpMethod: "GET"
         uri:
-          Fn::Sub: 'arn:aws:apigateway:${AWS::Region}:ssm:action/GetParametersByPath&Path=/${Environment}/deploy/core/outputs/'
+          Fn::Sub: 'arn:aws:apigateway:${AWS::Region}:ssm:action/GetParametersByPath&Path=/deploy/core/outputs/'
         credentials:
           Fn::GetAtt: ["JWKSParamRole", "Arn"]
         responses:
