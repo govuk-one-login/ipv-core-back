@@ -6,11 +6,11 @@ Description: >-
 Parameters:
   Environment:
     Type: String
-# VpcStackName:
-#   Description: >
-#     The name of the stack that defines the VPC in which this container will
-#     run.
-#   Type: String
+  VpcStackName:
+   Description: >
+     The name of the stack that defines the VPC in which this container will
+     run.
+   Type: String
   CodeSigningConfigArn:
     Type: String
     Description: >
@@ -50,6 +50,27 @@ Mappings:
       production: "" #arn to be provided by auth
 
 Resources:
+  LambdaSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: >-
+        Core Back Lambda Security Group outbound permissions ruleset
+      SecurityGroupEgress:
+        - CidrIp: 0.0.0.0/0
+          Description: Allow outbound HTTPS traffic to Internet - Network Firewall will allow only to CRIs
+          FromPort: 443
+          IpProtocol: tcp
+          ToPort: 443
+      SecurityGroupIngress:
+        - CidrIp:
+            Fn::ImportValue: !Sub ${VpcStackName}-VpcCidr
+          Description: Allow inbound traffic from vpc cidr to port 443
+          FromPort: 443
+          IpProtocol: tcp
+          ToPort: 443
+      VpcId:
+        Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+
   DeleteUserDataFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -73,6 +94,28 @@ Resources:
         - UseCodeSigning
         - !Ref CodeSigningConfigArn
         - !Ref AWS::NoValue
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: { }
+        - Statement:
+            - Sid: EnforceStayinSpecificVpc
+              Effect: Allow
+              Action:
+                - 'lambda:CreateFunction'
+                - 'lambda:UpdateFunctionConfiguration'
+              Resource:
+                - "*"
+              Condition:
+                StringEquals:
+                  "lambda:VpcIds":
+                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+        - KMSDecryptPolicy:
+            KeyId: !ImportValue DynamoDBKmsKey
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
