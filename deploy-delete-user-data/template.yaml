@@ -86,6 +86,24 @@ Resources:
       Environment:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
+      DeadLetterQueue:
+        TargetArn: !GetAtt DeleteAccountLambdaDLQ.Arn
+        Type: SQS
+      Events:
+        SNSEvent:
+          Type: SNS
+          Properties:
+            RedrivePolicy: !Sub "{ \"deadLetterTargetArn\": \"arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:DeleteAccountSNSDLQ\" }"
+            SqsSubscription: true
+            Topic:
+              !If
+              - IsBuild
+              - !GetAtt BuildOnlyDeleteAccountSNSTopic.TopicArn
+              - !FindInMap
+                - DeleteAccountSNSTopic
+                - Environment
+                - !Ref Environment
+
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
@@ -126,23 +144,23 @@ Resources:
         EntryPoints:
           - src/index.ts
 
-#SNS Subscription
-  DeleteAccountSNSSubscription:
-    Type: AWS::SNS::Subscription
-    Properties:
-      #DeliveryPolicy:
-      Endpoint: !GetAtt DeleteUserDataFunction.Arn
-      Protocol: lambda
-      RedrivePolicy: !Sub "{ \"deadLetterTargetArn\": \"arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:DeleteAccountSNSDLQ\" }"
-
-      TopicArn:
-        !If
-        - IsBuild
-        - !GetAtt BuildOnlyDeleteAccountSNSTopic.TopicArn
-        - !FindInMap
-          - DeleteAccountSNSTopic
-          - Environment
-          - !Ref Environment
+##SNS Subscription
+#  DeleteAccountSNSSubscription:
+#    Type: AWS::SNS::Subscription
+#    Properties:
+#      #DeliveryPolicy:
+#      Endpoint: !GetAtt DeleteUserDataFunction.Arn
+#      Protocol: lambda
+#      RedrivePolicy: !Sub "{ \"deadLetterTargetArn\": \"arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:DeleteAccountSNSDLQ\" }"
+#
+#      TopicArn:
+#        !If
+#        - IsBuild
+#        - !GetAtt BuildOnlyDeleteAccountSNSTopic.TopicArn
+#        - !FindInMap
+#          - DeleteAccountSNSTopic
+#          - Environment
+#          - !Ref Environment
 
 #Build only SNS Topic
   BuildOnlyDeleteAccountSNSTopic:
@@ -156,12 +174,159 @@ Resources:
     Type: AWS::SQS::Queue
     Properties:
       MessageRetentionPeriod: 1209600
-      #RedriveAllowPolicy:
-      #  redrivePermission : byQueue
-      #  sourceQueueArns : !Ref DeleteAccountSNSSubscription
       QueueName: DeleteAccountSNSDLQ
+      RedriveAllowPolicy:
+        redrivePermission: allowAll
 
-  #DLQ for Lambda
-  #Alarm for DLQ
-  #Alarm for other DLQ
+#SNSDLQ Policy
+  DeleteAccountSNSDLQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref DeleteAccountSNSDLQ
+      PolicyDocument:
+        Statement:
+          -
+            Effect: Allow
+            Action:
+              - SQS:SendMessage
+              - SQS:ReceiveMessage
+            Resource: !GetAtt DeleteAccountSNSDLQ.Arn
+            Principal:
+              Service: sns.amazonaws.com
+
+#DLQ for Lambda
+  DeleteAccountLambdaDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 1209600
+      QueueName: DeleteAccountLambdaDLQ
+
+#Policy for Lambda DLQ
+  DeleteAccountLambdaDLQueuePolicy:
+    Type: AWS::SQS::QueuePolicy
+    Properties:
+      Queues:
+        - !Ref DeleteAccountLambdaDLQ
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action:
+              - SQS:SendMessage
+              - SQS:ReceiveMessage
+            Resource: !GetAtt DeleteAccountLambdaDLQ.Arn
+            Principal:
+              Service: sns.amazonaws.com
+
+#Alarm for DLQ
+  DeleteAccountSNSDLQAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+         - !Ref DLQAlarmsSNSTopic
+      AlarmDescription: "Delete Account SNS Topic Dead Letter Queue Alarm"
+      AlarmName: !Join
+        - "-"
+        - - !Ref AWS::StackName
+          - "DeleteAccountSNSDLQAlarm"
+          - Fn::Select:
+              - 4
+              - Fn::Split:
+                  - "-"
+                  - Fn::Select:
+                      - 2
+                      - Fn::Split:
+                          - "/"
+                          - Ref: AWS::StackId
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 1
+      DatapointsToAlarm: 1
+      EvaluationPeriods: 1
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: e1
+          Label: Sum-of-SQS-DQL-Messages
+          ReturnData: true
+          Expression: SUM(METRICS())
+        - Id: m1
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/SQS
+              MetricName: NumberOfMessagesReceived
+              Dimensions:
+                - Name: QueueName
+                  Value: !GetAtt DeleteAccountSNSDLQ.QueueName
+            Period: 300
+            Stat: Sum
+
+#Alarm for other DLQ
+  DeleteAccountLambdaDLQAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+       - !Ref DLQAlarmsSNSTopic
+      AlarmDescription: "Delete Account SNS Topic Dead Letter Queue Alarm"
+      AlarmName: !Join
+        - "-"
+        - - !Ref AWS::StackName
+          - "DeleteAccountLambdaDLQAlarm"
+          - Fn::Select:
+              - 4
+              - Fn::Split:
+                  - "-"
+                  - Fn::Select:
+                      - 2
+                      - Fn::Split:
+                          - "/"
+                          - Ref: AWS::StackId
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 1
+      DatapointsToAlarm: 1
+      EvaluationPeriods: 1
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: e1
+          Label: Sum-of-SQS-DQL-Messages
+          ReturnData: true
+          Expression: SUM(METRICS())
+        - Id: m1
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/SQS
+              MetricName: NumberOfMessagesReceived
+              Dimensions:
+                - Name: QueueName
+                  Value: !GetAtt DeleteAccountLambdaDLQ.QueueName
+            Period: 300
+            Stat: Sum
+
+# SNS Topic for DLQ Alarms
+  DLQAlarmsSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Join
+        - "-"
+        - - !Ref AWS::StackName
+          - "DLQAlarmsSNSTopic"
+          - Fn::Select:
+              - 4
+              - Fn::Split:
+                  - "-"
+                  - Fn::Select:
+                      - 2
+                      - Fn::Split:
+                          - "/"
+                          - Ref: AWS::StackId
+      Subscription:
+        - Endpoint: tobias.saunders@digital.cabinet-office.gov.uk
+          Protocol: email
+        - Endpoint: kerr.rainey@digital.cabinet-office.gov.uk
+          Protocol: email
+        - Endpoint: vam.hedayati@digital.cabinet-office.gov.uk
+          Protocol: email
+
   #A way to replay the DQLs
