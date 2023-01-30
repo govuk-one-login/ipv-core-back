@@ -10,6 +10,8 @@
     "local-invoke": "sam local invoke DeleteUserDataFunction -e sample-sns-event.json"
   },
   "devDependencies": {
+    "@aws-sdk/client-dynamodb": "3.259.0",
+    "@aws-sdk/lib-dynamodb": "3.259.0",
     "@swc/jest": "0.2.24",
     "@types/aws-lambda": "8.10.109",
     "@types/jest": "29.2.6",

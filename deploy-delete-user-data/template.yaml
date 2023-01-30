@@ -86,6 +86,7 @@ Resources:
       Environment:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Sub user-issued-credentials-v2-${Environment}
       DeadLetterQueue:
         TargetArn: !GetAtt DeleteAccountLambdaDLQ.Arn
         Type: SQS
@@ -134,6 +135,8 @@ Resources:
                     - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
             KeyId: !ImportValue DynamoDBKmsKey
+        - DynamoDBCrudPolicy:
+            TableName: !Sub user-issued-credentials-v2-${Environment}
     Metadata:
       BuildMethod: esbuild
       BuildProperties:

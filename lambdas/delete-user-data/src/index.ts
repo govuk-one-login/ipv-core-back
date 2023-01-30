@@ -1,4 +1,5 @@
 import { SQSEvent } from "aws-lambda";
+import { deleteVCs } from "./delete-data";
 import { readSNSMessage } from "./read-message";
 
 export const handler = async (event: SQSEvent): Promise<void> => {
@@ -6,5 +7,5 @@ export const handler = async (event: SQSEvent): Promise<void> => {
     throw new TypeError("no event provided");
   }
   const message = readSNSMessage(event.Records[0].body);
-  console.log("User id requiring account deletion:", message.user_id);
+  await deleteVCs(message.user_id);
 };
