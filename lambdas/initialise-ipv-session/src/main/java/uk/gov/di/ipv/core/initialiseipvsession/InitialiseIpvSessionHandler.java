@@ -95,7 +95,7 @@ public class InitialiseIpvSessionHandler
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
-        var test_message = new StringMapMessage().with("TEST", "Test Message 1");
+        var test_message = new StringMapMessage().with("TEST", "Test Message 11");
         LOGGER.info(test_message);
         try {
             String ipAddress = RequestHelper.getIpAddress(input);
