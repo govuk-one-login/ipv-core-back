@@ -1,5 +1,16 @@
 package uk.gov.di.ipv.core.library.fixtures;
 
+import com.nimbusds.jose.EncryptionMethod;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWEAlgorithm;
+import com.nimbusds.jose.JWEHeader;
+import com.nimbusds.jose.JWEObject;
+import com.nimbusds.jose.Payload;
+import com.nimbusds.jose.crypto.RSAEncrypter;
+import com.nimbusds.jwt.SignedJWT;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+
 import java.util.List;
 import java.util.Map;
 
@@ -220,4 +231,21 @@ public interface TestFixtures {
 
     String DER_SIGNATURE =
             "MEYCIQDnbeWakZ7xcj2NmlXyv2gr_qcewMibItnKT9NDo2xY8gIhANGye8Itd-0sy1W7ejQz9volzX7UU0zBrHuMFTzb_jNz";
+
+    static JWEObject createJweObject(RSAEncrypter rsaEncrypter, SignedJWT signedJWT)
+            throws HttpResponseExceptionWithErrorBody {
+        try {
+            JWEObject jweObject =
+                    new JWEObject(
+                            new JWEHeader.Builder(
+                                            JWEAlgorithm.RSA_OAEP_256, EncryptionMethod.A256GCM)
+                                    .contentType("JWT")
+                                    .build(),
+                            new Payload(signedJWT));
+            jweObject.encrypt(rsaEncrypter);
+            return jweObject;
+        } catch (JOSEException e) {
+            throw new HttpResponseExceptionWithErrorBody(500, ErrorResponse.FAILED_TO_ENCRYPT_JWT);
+        }
+    }
 }
