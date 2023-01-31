@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.validation;
+package uk.gov.di.ipv.core.library.credentialissuer.validation;
 
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
+import uk.gov.di.ipv.core.library.credentialissuer.exceptions.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 

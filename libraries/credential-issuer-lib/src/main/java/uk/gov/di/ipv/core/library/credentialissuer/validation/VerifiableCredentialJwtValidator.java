@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.validation;
+package uk.gov.di.ipv.core.library.credentialissuer.validation;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
@@ -13,7 +13,7 @@ import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
+import uk.gov.di.ipv.core.library.credentialissuer.exceptions.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 

@@ -19,7 +19,9 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
+import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerService;
+import uk.gov.di.ipv.core.library.credentialissuer.exceptions.CredentialIssuerException;
+import uk.gov.di.ipv.core.library.credentialissuer.validation.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -35,9 +37,7 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
-import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 
 import java.text.ParseException;
 import java.util.List;
@@ -64,7 +64,8 @@ public class RetrieveCriCredentialHandler
     private String componentId;
 
     public RetrieveCriCredentialHandler(
-            CredentialIssuerService credentialIssuerService,
+            uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerService
+                    credentialIssuerService,
             IpvSessionService ipvSessionService,
             ConfigurationService configurationService,
             AuditService auditService,

@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.service;
+package uk.gov.di.ipv.core.library.credentialissuer;
 
 import com.nimbusds.common.contenttype.ContentType;
 import com.nimbusds.jose.JOSEException;
@@ -22,14 +22,18 @@ import org.apache.http.HttpHeaders;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
+import uk.gov.di.ipv.core.library.credentialissuer.exceptions.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ClientAuthClaims;
-import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
+import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.io.IOException;
 import java.net.URI;
@@ -39,11 +43,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.VC_TTL;
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
-import static uk.gov.di.ipv.core.library.domain.UserIdentity.VCS_CLAIM_NAME;
 
 public class CredentialIssuerService {
 
@@ -62,7 +61,7 @@ public class CredentialIssuerService {
         this.dataStore =
                 new DataStore<>(
                         this.configurationService.getEnvironmentVariable(
-                                USER_ISSUED_CREDENTIALS_TABLE_NAME),
+                                EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME),
                         VcStoreItem.class,
                         DataStore.getClient(isRunningLocally),
                         isRunningLocally,
@@ -92,7 +91,7 @@ public class CredentialIssuerService {
                             dateTime.plusSeconds(
                                             Long.parseLong(
                                                     configurationService.getSsmParameter(
-                                                            JWT_TTL_SECONDS)))
+                                                            ConfigurationVariable.JWT_TTL_SECONDS)))
                                     .toEpochSecond(),
                             SecureTokenHelper.generate());
             SignedJWT signedClientJwt =
@@ -184,7 +183,7 @@ public class CredentialIssuerService {
                     ContentType.parse(responseContentType))) {
                 JSONObject vcJson = response.getContentAsJSONObject();
 
-                JSONArray vcArray = (JSONArray) vcJson.get(VCS_CLAIM_NAME);
+                JSONArray vcArray = (JSONArray) vcJson.get(UserIdentity.VCS_CLAIM_NAME);
                 List<SignedJWT> vcJwts = new ArrayList<>();
                 for (Object vc : vcArray) {
                     vcJwts.add(SignedJWT.parse(vc.toString()));
@@ -218,7 +217,7 @@ public class CredentialIssuerService {
         try {
             vcStoreItem.setExpirationTime(
                     credential.getJWTClaimsSet().getExpirationTime().toInstant());
-            dataStore.create(vcStoreItem, VC_TTL);
+            dataStore.create(vcStoreItem, ConfigurationVariable.VC_TTL);
         } catch (UnsupportedOperationException | java.text.ParseException e) {
             LOGGER.error("Error persisting user credential: {}", e.getMessage(), e);
             throw new CredentialIssuerException(
