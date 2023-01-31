@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.helpers;
+package uk.gov.di.ipv.core.library.authorizationrequest;
 
 import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.JOSEException;
@@ -17,6 +17,7 @@ import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -27,9 +28,6 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Objects;
-
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 
 public class AuthorizationRequestHelper {
 
@@ -63,14 +61,17 @@ public class AuthorizationRequestHelper {
         JWTClaimsSet.Builder claimsSetBuilder =
                 new JWTClaimsSet.Builder(authClaimsSet)
                         .audience(credentialIssuerConfig.getAudienceForClients())
-                        .issuer(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
+                        .issuer(
+                                configurationService.getSsmParameter(
+                                        ConfigurationVariable.AUDIENCE_FOR_CLIENTS))
                         .issueTime(Date.from(now))
                         .expirationTime(
                                 Date.from(
                                         now.plus(
                                                 Long.parseLong(
                                                         configurationService.getSsmParameter(
-                                                                JWT_TTL_SECONDS)),
+                                                                ConfigurationVariable
+                                                                        .JWT_TTL_SECONDS)),
                                                 ChronoUnit.SECONDS)))
                         .notBeforeTime(Date.from(now))
                         .subject(userId)

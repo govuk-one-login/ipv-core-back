@@ -1,0 +1,27 @@
+plugins {
+	id 'java'
+}
+
+group 'org.example'
+version 'unspecified'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation "com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
+			project(":lib")
+	testImplementation "com.github.tomakehurst:wiremock-jre8:2.35.0",
+			"org.junit.jupiter:junit-jupiter:5.8.2",
+			"org.mockito:mockito-junit-jupiter:4.1.0",
+			"uk.org.webcompere:system-stubs-jupiter:1.1.0",
+			project(":lib").sourceSets.test.output
+
+	compileOnly "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
+	annotationProcessor "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
+}
+
+test {
+	useJUnitPlatform()
+}

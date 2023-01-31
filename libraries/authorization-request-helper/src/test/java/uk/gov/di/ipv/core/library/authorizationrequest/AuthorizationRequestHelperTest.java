@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.helpers;
+package uk.gov.di.ipv.core.library.authorizationrequest;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWEObject;
@@ -22,6 +22,8 @@ import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 
 import java.net.URI;
@@ -47,11 +49,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_JWT;
 
 @ExtendWith(MockitoExtension.class)
 class AuthorizationRequestHelperTest {
@@ -123,7 +120,7 @@ class AuthorizationRequestHelperTest {
         assertEquals(
                 IPV_CLIENT_ID_VALUE, result.getJWTClaimsSet().getClaims().get(CLIENT_ID_FIELD));
         assertEquals(TEST_REDIRECT_URI, result.getJWTClaimsSet().getClaims().get("redirect_uri"));
-        assertTrue(result.verify(new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK))));
+        assertTrue(result.verify(new ECDSAVerifier(ECKey.parse(TestFixtures.EC_PUBLIC_JWK))));
     }
 
     @Test
@@ -171,7 +168,7 @@ class AuthorizationRequestHelperTest {
                     HttpResponseExceptionWithErrorBody {
         JWEObject result =
                 AuthorizationRequestHelper.createJweObject(
-                        rsaEncrypter, SignedJWT.parse(SIGNED_JWT));
+                        rsaEncrypter, SignedJWT.parse(TestFixtures.SIGNED_JWT));
 
         assertEquals(JWEObject.State.ENCRYPTED, result.getState());
 
@@ -196,7 +193,8 @@ class AuthorizationRequestHelperTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 AuthorizationRequestHelper.createJweObject(
-                                        mock(RSAEncrypter.class), SignedJWT.parse(SIGNED_JWT)));
+                                        mock(RSAEncrypter.class),
+                                        SignedJWT.parse(TestFixtures.SIGNED_JWT)));
         assertEquals(500, exception.getResponseCode());
         assertEquals("Failed to encrypt JWT", exception.getErrorReason());
     }
@@ -215,7 +213,8 @@ class AuthorizationRequestHelperTest {
         return KeyFactory.getInstance("RSA")
                 .generatePrivate(
                         new PKCS8EncodedKeySpec(
-                                Base64.getDecoder().decode(RSA_ENCRYPTION_PRIVATE_KEY)));
+                                Base64.getDecoder()
+                                        .decode(TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY)));
     }
 
     private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
@@ -223,12 +222,12 @@ class AuthorizationRequestHelperTest {
                 KeyFactory.getInstance("EC")
                         .generatePrivate(
                                 new PKCS8EncodedKeySpec(
-                                        Base64.getDecoder().decode(EC_PRIVATE_KEY)));
+                                        Base64.getDecoder().decode(TestFixtures.EC_PRIVATE_KEY)));
     }
 
     private PublicKey getEncryptionPublicKey()
             throws NoSuchAlgorithmException, ParseException, InvalidKeySpecException {
-        RSAKey rsaKey = RSAKey.parse(RSA_ENCRYPTION_PUBLIC_JWK);
+        RSAKey rsaKey = RSAKey.parse(TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK);
         RSAPublicKeySpec rsaPublicKeySpec =
                 new RSAPublicKeySpec(
                         rsaKey.getModulus().decodeToBigInteger(),
