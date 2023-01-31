@@ -1,19 +1,19 @@
-import { SNSEvent } from "aws-lambda";
+import { SQSEvent } from "aws-lambda";
 import { handler } from "../src";
-import { buildMockSnsEvent } from "./mock-sns-event";
+import { buildMockSQSEvent } from "./mock-sqs-event";
 
 describe("handler", () => {
-  let mockSnsEvent: SNSEvent;
+  let mockSQSEvent: SQSEvent;
   beforeEach(() => {
-    mockSnsEvent = buildMockSnsEvent();
+    mockSQSEvent = buildMockSQSEvent();
   });
 
-  test("reads an incoming SNS notification", async () => {
-    await expect(handler(mockSnsEvent)).resolves.toBeUndefined();
+  test("reads an incoming SQS event", async () => {
+    await expect(handler(mockSQSEvent)).resolves.toBeUndefined();
   });
 
-  test("throws error if not an SNS notification", async () => {
-    mockSnsEvent = { body: { user_id: "123" } } as any;
-    await expect(handler(mockSnsEvent)).rejects.toThrow(TypeError);
+  test("throws error if no event found", async () => {
+    mockSQSEvent = { something: "else" } as any;
+    await expect(handler(mockSQSEvent)).rejects.toThrow(TypeError);
   });
 });
