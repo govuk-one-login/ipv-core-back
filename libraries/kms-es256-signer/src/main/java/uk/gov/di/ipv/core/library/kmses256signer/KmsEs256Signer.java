@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.helpers;
+package uk.gov.di.ipv.core.library.kmses256signer;
 
 import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.AWSKMSClientBuilder;
@@ -13,6 +13,7 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.crypto.impl.ECDSA;
 import com.nimbusds.jose.jca.JCAContext;
 import com.nimbusds.jose.util.Base64URL;
+import org.apache.commons.codec.digest.MessageDigestAlgorithms;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 import java.nio.ByteBuffer;
@@ -20,9 +21,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Set;
-
-import static com.nimbusds.jose.JWSAlgorithm.ES256;
-import static org.apache.commons.codec.digest.MessageDigestAlgorithms.SHA_256;
 
 public class KmsEs256Signer implements JWSSigner {
 
@@ -48,7 +46,8 @@ public class KmsEs256Signer implements JWSSigner {
         byte[] signingInputHash;
 
         try {
-            signingInputHash = MessageDigest.getInstance(SHA_256).digest(signingInput);
+            signingInputHash =
+                    MessageDigest.getInstance(MessageDigestAlgorithms.SHA_256).digest(signingInput);
         } catch (NoSuchAlgorithmException e) {
             throw new JOSEException(e.getMessage());
         }
@@ -65,14 +64,14 @@ public class KmsEs256Signer implements JWSSigner {
         byte[] concatSignature =
                 ECDSA.transcodeSignatureToConcat(
                         signResult.getSignature().array(),
-                        ECDSA.getSignatureByteArrayLength(ES256));
+                        ECDSA.getSignatureByteArrayLength(JWSAlgorithm.ES256));
 
         return new Base64URL(b64UrlEncoder.encodeToString(concatSignature));
     }
 
     @Override
     public Set<JWSAlgorithm> supportedJWSAlgorithms() {
-        return Set.of(ES256);
+        return Set.of(JWSAlgorithm.ES256);
     }
 
     @Override

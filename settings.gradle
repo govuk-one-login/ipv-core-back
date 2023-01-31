@@ -19,4 +19,5 @@ include "lib",
 		"lambdas:check-existing-identity",
 		"integration-test",
 		"libraries:credential-issuer-lib",
-		"libraries:authorization-request-helper"
+		"libraries:authorization-request-helper",
+		"libraries:kms-es256-signer"
