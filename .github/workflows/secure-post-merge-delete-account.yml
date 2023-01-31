@@ -7,6 +7,7 @@ on:
     paths:
       - 'deploy-delete-user-data/**'
       - '.github/workflows/secure-post-merge-delete-account.yml'
+      - 'lambdas/delete-user-data/**'
 
 jobs:
   deploy:
