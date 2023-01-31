@@ -2343,7 +2343,7 @@ Outputs:
     Description: Core Back DynamoDB KMS Key Export
     Value: !Ref DynamoDBKmsKey
     Export:
-      Name: DynamoDBKmsKey
+      Name: !Sub "DynamoDBKmsKey-${Environment}"
   CoreBackDynamoDBKmsKey:
     Description: Core Back DynamoDB KMS Key Export
     Value: !Ref DynamoDBKmsKey
