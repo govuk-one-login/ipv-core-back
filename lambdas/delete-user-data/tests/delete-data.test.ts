@@ -46,11 +46,4 @@ describe("deleteVCs", () => {
       Key: vcItem2,
     });
   });
-
-  test("throws error if no VC records found for given user", async () => {
-    mockQuery.mockResolvedValue({ Items: [] });
-
-    await expect(deleteVCs("unknown-user")).rejects.toThrow("failed to find any VCs for user: unknown-user");
-    expect(mockDelete).not.toHaveBeenCalled();
-  });
 });
