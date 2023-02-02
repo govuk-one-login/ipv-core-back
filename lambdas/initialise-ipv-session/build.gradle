@@ -12,9 +12,11 @@ repositories {
 dependencies {
 
 	implementation "com.amazonaws:aws-java-sdk-sqs:$rootProject.ext.dependencyVersions.awsJavaSdkSqs",
+			"com.amazonaws:aws-java-sdk-kms:$rootProject.ext.dependencyVersions.awsJavcSdkKms",
 			"com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
 			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
+			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters",
 			project(":lib")
 
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",

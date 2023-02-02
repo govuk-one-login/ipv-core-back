@@ -19,7 +19,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
@@ -92,16 +91,6 @@ class CredentialIssuerServiceTest {
                                         .withBody(
                                                 "{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n")));
 
-        CredentialIssuerRequestDto credentialIssuerRequestDto =
-                new CredentialIssuerRequestDto(
-                        "1234",
-                        "cred_issuer_id_1",
-                        TEST_IPV_SESSION_ID,
-                        "http://www.example.com/redirect",
-                        OAUTH_STATE,
-                        null,
-                        null,
-                        TEST_IP_ADDRESS);
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
 
@@ -126,16 +115,6 @@ class CredentialIssuerServiceTest {
                                         .withBody(
                                                 "{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n")));
 
-        CredentialIssuerRequestDto credentialIssuerRequestDto =
-                new CredentialIssuerRequestDto(
-                        "1234",
-                        "dcmaw",
-                        TEST_IPV_SESSION_ID,
-                        "http://www.example.com/redirect",
-                        OAUTH_STATE,
-                        null,
-                        null,
-                        TEST_IP_ADDRESS);
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
 
@@ -160,16 +139,6 @@ class CredentialIssuerServiceTest {
                                         .withBody(
                                                 "{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n")));
 
-        CredentialIssuerRequestDto credentialIssuerRequestDto =
-                new CredentialIssuerRequestDto(
-                        "1234",
-                        "cred_issuer_id_1",
-                        TEST_IPV_SESSION_ID,
-                        "http://www.example.com/redirect",
-                        OAUTH_STATE,
-                        null,
-                        null,
-                        TEST_IP_ADDRESS);
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
 
@@ -196,16 +165,6 @@ class CredentialIssuerServiceTest {
                                                 "Content-Type", "application/json;charset=utf-8")
                                         .withBody(errorJson)));
 
-        CredentialIssuerRequestDto credentialIssuerRequestDto =
-                new CredentialIssuerRequestDto(
-                        "1234",
-                        "cred_issuer_id_1",
-                        TEST_IPV_SESSION_ID,
-                        "http://www.example.com/redirect",
-                        OAUTH_STATE,
-                        null,
-                        null,
-                        TEST_IP_ADDRESS);
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
 
@@ -231,16 +190,6 @@ class CredentialIssuerServiceTest {
                                         .withBody(
                                                 "{\"access_token\":\"d09rUXQZ-4AjT6DNsRXj00KBt7Pqh8tFXBq8ul6KYQ4\",\"token_type\":\"Bearer\",\"expires_in\":3600}\n")));
 
-        CredentialIssuerRequestDto credentialIssuerRequestDto =
-                new CredentialIssuerRequestDto(
-                        "1234",
-                        "cred_issuer_id_1",
-                        TEST_IPV_SESSION_ID,
-                        "http://www.example.com/redirect",
-                        OAUTH_STATE,
-                        null,
-                        null,
-                        TEST_IP_ADDRESS);
         CredentialIssuerConfig credentialIssuerConfig =
                 getStubCredentialIssuerConfig(wmRuntimeInfo);
         CredentialIssuerException exception =

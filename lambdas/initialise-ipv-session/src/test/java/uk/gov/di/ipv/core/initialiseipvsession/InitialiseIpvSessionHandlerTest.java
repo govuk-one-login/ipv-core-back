@@ -23,23 +23,22 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
+import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
+import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
+import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
-import uk.gov.di.ipv.core.library.exceptions.JarValidationException;
-import uk.gov.di.ipv.core.library.exceptions.RecoverableJarValidationException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
-import uk.gov.di.ipv.core.library.helpers.AuthorizationRequestHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.service.KmsRsaDecrypter;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.validation.JarValidator;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -97,7 +96,7 @@ class InitialiseIpvSessionHandlerTest {
         signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.ES256), claimsSet);
         signedJWT.sign(new ECDSASigner(getPrivateKey()));
         signedEncryptedJwt =
-                AuthorizationRequestHelper.createJweObject(
+                TestFixtures.createJweObject(
                         new RSAEncrypter(RSAKey.parse(TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK)),
                         signedJWT);
 

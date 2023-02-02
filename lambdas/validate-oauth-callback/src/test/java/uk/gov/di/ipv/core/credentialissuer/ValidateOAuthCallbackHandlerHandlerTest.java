@@ -15,7 +15,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerRequestDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -24,6 +23,7 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.validateoauthcallback.ValidateOAuthCallbackHandler;
+import uk.gov.di.ipv.core.validateoauthcallback.dto.CredentialIssuerRequestDto;
 
 import java.net.URI;
 import java.net.URISyntaxException;
