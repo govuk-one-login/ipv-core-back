@@ -18,6 +18,6 @@ include "lib",
 		"lambdas:build-proven-user-identity-details",
 		"lambdas:check-existing-identity",
 		"integration-test",
-		"libraries:credential-issuer-lib",
-		"libraries:authorization-request-helper",
-		"libraries:kms-es256-signer"
+		"libs:credential-issuer-lib",
+		"libs:authorization-request-helper",
+		"libs:kms-es256-signer"
