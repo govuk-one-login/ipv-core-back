@@ -1,4 +1,6 @@
-package uk.gov.di.ipv.core.library.domain;
+package uk.gov.di.ipv.core.library.credentialissuer.exceptions;
+
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 
 public class CredentialIssuerException extends RuntimeException {
 
