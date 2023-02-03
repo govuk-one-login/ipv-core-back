@@ -1,10 +1,13 @@
-import { SNSEvent } from "aws-lambda";
-import { readMessage } from "./read-message";
+import { Context, SQSEvent } from "aws-lambda";
+import { deleteVCs } from "./delete-data";
+import { logger } from "./logger";
+import { readSNSMessage } from "./read-message";
 
-export const handler = async (event: SNSEvent): Promise<void> => {
-  if (!event?.Records?.[0].Sns) {
-    throw new TypeError("no SNS event provided");
+export const handler = async (event: SQSEvent, context: Context): Promise<void> => {
+  logger.addContext(context);
+  if (!event?.Records?.[0].body) {
+    throw new TypeError("no event provided");
   }
-  const message = readMessage(event);
-  console.log("User id requiring account deletion:", message.user_id);
+  const message = readSNSMessage(event.Records[0].body);
+  await deleteVCs(message.user_id);
 };

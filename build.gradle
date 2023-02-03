@@ -37,6 +37,7 @@ ext {
 		awsJavaSdkDynamodb:'1.12.389',
 		awsJavaSdkLambda:'1.12.290',
 		awsJavaSdkSqs:'1.12.197',
+		awsJavcSdkKms:'1.12.395',
 		awsLambdaJavaCore:'1.2.1',
 		awsLambdaJavaEvents:'3.11.0',
 		awsLambdaJavaLog4j2:'1.5.1',

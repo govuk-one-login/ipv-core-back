@@ -89,6 +89,7 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           DECRYPTION_KEY: !FindInMap [ DeleteAccountKMSKey, Environment, !Ref Environment]
           IPV_DECRYPTION_KEY: !GetAtt IPVSnsKmsKey.Arn
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Sub user-issued-credentials-v2-${Environment}
 
       DeadLetterQueue:
         TargetArn: !GetAtt DeleteAccountLambdaDLQ.Arn
@@ -155,7 +156,9 @@ Resources:
                   "lambda:VpcIds":
                     - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
-            KeyId: !ImportValue DynamoDBKmsKey
+            KeyId: !ImportValue CoreBackDynamoDBKmsKey
+        - DynamoDBCrudPolicy:
+            TableName: !Sub user-issued-credentials-v2-${Environment}
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
@@ -165,6 +168,21 @@ Resources:
         Sourcemap: true  # Required to preserve error stack traces to TS source
         EntryPoints:
           - src/index.ts
+
+  DeleteUserDataFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+      LogGroupName: !Sub "/aws/lambda/delete-user-data-${Environment}"
+      KmsKeyId: !ImportValue CoreBackLoggingKmsKeyArn
+
+  DeleteUserDataFunctionSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref DeleteUserDataFunctionLogGroup
 
 #IPV delete account topic
   IPVDeleteAccountSNSTopic:

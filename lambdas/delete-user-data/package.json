@@ -10,12 +10,15 @@
     "local-invoke": "sam local invoke DeleteUserDataFunction -e sample-sns-event.json"
   },
   "devDependencies": {
+    "@aws-lambda-powertools/commons": "1.5.1",
+    "@aws-sdk/client-dynamodb": "3.259.0",
+    "@aws-sdk/lib-dynamodb": "3.259.0",
+    "@swc/jest": "0.2.24",
     "@types/aws-lambda": "8.10.109",
     "@types/jest": "29.2.6",
     "@types/node": "18.11.18",
     "@typescript-eslint/eslint-plugin": "5.48.2",
     "@typescript-eslint/parser": "5.48.2",
-    "esbuild-jest": "0.5.0",
     "eslint": "8.32.0",
     "eslint-config-prettier": "8.6.0",
     "eslint-plugin-jest": "27.2.1",
@@ -26,7 +29,10 @@
   },
   "jest": {
     "transform": {
-      "^.+\\.ts?$": "esbuild-jest"
+      "^.+\\.ts?$": "@swc/jest"
     }
+  },
+  "dependencies": {
+    "@aws-lambda-powertools/logger": "1.5.1"
   }
 }

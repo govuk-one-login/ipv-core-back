@@ -1,19 +1,27 @@
-import { SNSEvent } from "aws-lambda";
+import { SQSEvent } from "aws-lambda";
+import { ContextExamples } from "@aws-lambda-powertools/commons";
 import { handler } from "../src";
-import { buildMockSnsEvent } from "./mock-sns-event";
+import { deleteVCs } from "../src/delete-data";
+import { buildMockSQSEvent } from "./mock-sqs-event";
+
+jest.mock("../src/delete-data");
+const mockDeleteVCs = deleteVCs as jest.Mocked<typeof deleteVCs>;
 
 describe("handler", () => {
-  let mockSnsEvent: SNSEvent;
+  const mockContext = ContextExamples.helloworldContext;
+  let mockSQSEvent: SQSEvent;
   beforeEach(() => {
-    mockSnsEvent = buildMockSnsEvent();
+    mockSQSEvent = buildMockSQSEvent();
   });
 
-  test("reads an incoming SNS notification", async () => {
-    await expect(handler(mockSnsEvent)).resolves.toBeUndefined();
+  test("deletes VCs for user id in incoming SNS message", async () => {
+    await handler(mockSQSEvent, mockContext);
+
+    expect(mockDeleteVCs).toHaveBeenCalledWith("123");
   });
 
-  test("throws error if not an SNS notification", async () => {
-    mockSnsEvent = { body: { user_id: "123" } } as any;
-    await expect(handler(mockSnsEvent)).rejects.toThrow(TypeError);
+  test("throws error if no event found", async () => {
+    mockSQSEvent = { something: "else" } as any;
+    await expect(handler(mockSQSEvent, mockContext)).rejects.toThrow(TypeError);
   });
 });

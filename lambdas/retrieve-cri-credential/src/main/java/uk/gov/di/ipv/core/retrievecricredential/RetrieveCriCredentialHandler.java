@@ -37,7 +37,7 @@ import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigurationService;
 import uk.gov.di.ipv.core.library.service.CredentialIssuerService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
+import uk.gov.di.ipv.core.retrievecricredential.validation.VerifiableCredentialJwtValidator;
 
 import java.text.ParseException;
 import java.util.List;

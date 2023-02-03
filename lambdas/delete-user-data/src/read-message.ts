@@ -1,8 +1,9 @@
-import { SNSEvent } from "aws-lambda";
+import { SNSMessage } from "aws-lambda";
 import { Message } from "./types";
 
-export const readMessage = (event: SNSEvent): Message => {
-  const message: unknown = JSON.parse(event.Records[0].Sns.Message);
+export const readSNSMessage = (body: string): Message => {
+  const snsBody = JSON.parse(body) as SNSMessage;
+  const message = JSON.parse(snsBody.Message);
   validateMessage(message);
   return message;
 };
