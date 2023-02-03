@@ -156,7 +156,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/delete-user-data-${Environment}"
-      KmsKeyId: !ImportValue CoreBackLoggingKmsKey
+      KmsKeyId: !ImportValue CoreBackLoggingKmsKeyArn
 
   DeleteUserDataFunctionSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
