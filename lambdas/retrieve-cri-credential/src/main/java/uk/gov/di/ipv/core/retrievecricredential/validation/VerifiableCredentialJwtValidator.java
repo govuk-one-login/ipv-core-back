@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:lambdas/retrieve-cri-credential/src/main/java/uk/gov/di/ipv/core/retrievecricredential/validation/VerifiableCredentialJwtValidator.java
 package uk.gov.di.ipv.core.retrievecricredential.validation;
-========
-package uk.gov.di.ipv.core.library.credentialissuer.validation;
->>>>>>>> 9a4f3be9 (PYIC-2389: Move CredentialIssuerService into its own library.):libraries/credential-issuer-lib/src/main/java/uk/gov/di/ipv/core/library/credentialissuer/validation/VerifiableCredentialJwtValidator.java
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.crypto.ECDSAVerifier;

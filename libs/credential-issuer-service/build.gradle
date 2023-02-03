@@ -1,5 +1,6 @@
 plugins {
-	id "java"
+	// Apply the java-library plugin for API and implementation separation.
+	id 'java-library'
 	id "idea"
 	id "jacoco"
 }
@@ -34,11 +35,22 @@ dependencies {
 java {
 	sourceCompatibility = JavaVersion.VERSION_11
 	targetCompatibility = JavaVersion.VERSION_11
+	withSourcesJar()
+}
+
+tasks.withType(Jar).configureEach { Jar jar ->
+	jar.preserveFileTimestamps = false
+	jar.reproducibleFileOrder = true
+}
+
+tasks.named('jar') {
+	manifest {
+		attributes('Implementation-Title': project.name,
+		'Implementation-Version': project.version)
+	}
 }
 
 test {
-	// Configures environment variable to avoid initialization of AWS X-Ray segments for each tests
-	environment "LAMBDA_TASK_ROOT", "handler"
 	useJUnitPlatform ()
 	finalizedBy jacocoTestReport
 }

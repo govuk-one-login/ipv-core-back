@@ -18,4 +18,4 @@ include "lib",
 		"lambdas:build-proven-user-identity-details",
 		"lambdas:check-existing-identity",
 		"integration-test",
-		"libraries:credential-issuer-lib"
+		"libs:credential-issuer-service"
