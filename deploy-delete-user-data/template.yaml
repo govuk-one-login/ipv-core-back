@@ -104,14 +104,22 @@ Resources:
           Type: SNS
           Properties:
             RedrivePolicy: !Sub "{ \"deadLetterTargetArn\": \"arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:DeleteAccountSNSDLQ\" }"
-            SqsSubscription: true
+            SqsSubscription:
+              BatchSize: 5
+              Enabled: true
+              QueueArn: !GetAtt DeleteAccountSQSQueue.Arn
+              QueueUrl: !Ref DeleteAccountSQSQueue
             Topic: !GetAtt IPVDeleteAccountSNSTopic.TopicArn
 
         SNSEvent:
           Type: SNS
           Properties:
             RedrivePolicy: !Sub "{ \"deadLetterTargetArn\": \"arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:DeleteAccountSNSDLQ\" }"
-            SqsSubscription: true
+            SqsSubscription:
+              BatchSize: 5
+              Enabled: true
+              QueueArn: !GetAtt IPVDeleteAccountSQSQueue.Arn
+              QueueUrl: !Ref IPVDeleteAccountSQSQueue
             Topic: !FindInMap [ DeleteAccountSNSTopic, Environment, !Ref Environment]
 
         SNSDLQEvent:
@@ -235,6 +243,24 @@ Resources:
             Action: kms:*
             Resource:
               - "*"
+
+#Delete Account Queue
+  DeleteAccountSQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 1209600
+      VisibilityTimeout: 60
+      QueueName: DeleteAccountSQSQueue
+      RedrivePolicy: !Sub "{ \"deadLetterTargetArn\": \"arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:DeleteAccountSNSDLQ\", \"maxReceiveCount\": \"5\" }"
+
+#Delete Account Queue
+  IPVDeleteAccountSQSQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      MessageRetentionPeriod: 1209600
+      VisibilityTimeout: 60
+      QueueName: IPVDeleteAccountSQSQueue
+      RedrivePolicy: !Sub "{ \"deadLetterTargetArn\": \"arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:DeleteAccountSNSDLQ\", \"maxReceiveCount\": \"5\" }"
 
 #DLQ for SNS Subsciption
   DeleteAccountSNSDLQ:
