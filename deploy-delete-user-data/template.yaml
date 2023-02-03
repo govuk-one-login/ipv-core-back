@@ -138,7 +138,7 @@ Resources:
                   "lambda:VpcIds":
                     - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
-            KeyId: !ImportValue DynamoDBKmsKey
+            KeyId: !ImportValue CoreBackDynamoDBKmsKey
         - DynamoDBCrudPolicy:
             TableName: !Sub user-issued-credentials-v2-${Environment}
     Metadata:
@@ -156,7 +156,7 @@ Resources:
     Properties:
       RetentionInDays: 14
       LogGroupName: !Sub "/aws/lambda/delete-user-data-${Environment}"
-      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+      KmsKeyId: !ImportValue CoreBackLoggingKmsKey
 
   DeleteUserDataFunctionSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter

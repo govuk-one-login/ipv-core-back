@@ -2344,3 +2344,13 @@ Outputs:
     Value: !Ref DynamoDBKmsKey
     Export:
       Name: DynamoDBKmsKey
+  CoreBackDynamoDBKmsKey:
+    Description: Core Back DynamoDB KMS Key Export
+    Value: !Ref DynamoDBKmsKey
+    Export:
+      Name: CoreBackDynamoDBKmsKey
+  CoreBackLoggingKmsKey:
+    Description: Core Back Logging KMS Key Export
+    Value: !GetAtt LoggingKmsKey.Arn
+    Export:
+      Name: CoreBackLoggingKmsKey
