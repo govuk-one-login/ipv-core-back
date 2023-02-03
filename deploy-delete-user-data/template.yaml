@@ -1,5 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Transform: AWS::Serverless-2016-10-31
+Transform:
+  - AWS::Serverless-2016-10-31
 Description: >-
   This creates the necessary serverless components for the delete user data lambda.
 
@@ -22,13 +23,6 @@ Parameters:
     Default: "none"
 
 Conditions:
-  IsBuild: !Not
-    - !Or
-      - !Equals [ !Ref Environment, "dev" ]
-      - !Equals [ !Ref Environment, "staging" ]
-      - !Equals [ !Ref Environment, "integration" ]
-      - !Equals [ !Ref Environment, "production" ]
-#  IsNotDevelopment: !Not [ !Condition IsBuild ]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -44,10 +38,17 @@ Conditions:
 Mappings:
   DeleteAccountSNSTopic:
     Environment:
-      build: "" #this will always be blank
-      staging: "" #arn to be provided by auth
-      integration: "" #arn to be provided by auth
-      production: "" #arn to be provided by auth
+      build: "arn:aws:sns:eu-west-2:301577035144:UserAccountDeletion"
+      staging: "arn:aws:sns:eu-west-2:539729775994:UserAccountDeletion"
+      integration: "arn:aws:sns:eu-west-2:666500506359:UserAccountDeletion"
+      production: "arn:aws:sns:eu-west-2:026991849909:UserAccountDeletion"
+  DeleteAccountKMSKey:
+    Environment:
+      build: "arn:aws:kms:eu-west-2:301577035144:key/90536499-8009-4fbd-b559-0127309e40ef"
+      staging: "arn:aws:kms:eu-west-2:539729775994:key/d33e9077-8d66-4f63-99a1-f90e29b4aabe"
+      integration: "arn:aws:kms:eu-west-2:666500506359:key/c54f60d4-122d-44d8-a5d6-d9e984df9f49"
+      production: "arn:aws:kms:eu-west-2:026991849909:key/80c5c2c9-4ff0-4fba-92de-5189957490e9"
+
 
 Resources:
   LambdaSecurityGroup:
@@ -86,23 +87,44 @@ Resources:
       Environment:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
+          DECRYPTION_KEY: !FindInMap [ DeleteAccountKMSKey, Environment, !Ref Environment]
+          IPV_DECRYPTION_KEY: !GetAtt IPVSnsKmsKey.Arn
+
       DeadLetterQueue:
         TargetArn: !GetAtt DeleteAccountLambdaDLQ.Arn
         Type: SQS
       Events:
+        IPVSNSEvent:
+          Type: SNS
+          Properties:
+            RedrivePolicy: !Sub "{ \"deadLetterTargetArn\": \"arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:DeleteAccountSNSDLQ\" }"
+            SqsSubscription: true
+            Topic: !GetAtt IPVDeleteAccountSNSTopic.TopicArn
+
         SNSEvent:
           Type: SNS
           Properties:
             RedrivePolicy: !Sub "{ \"deadLetterTargetArn\": \"arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:DeleteAccountSNSDLQ\" }"
             SqsSubscription: true
-            Topic:
-              !If
-              - IsBuild
-              - !GetAtt BuildOnlyDeleteAccountSNSTopic.TopicArn
-              - !FindInMap
-                - DeleteAccountSNSTopic
-                - Environment
-                - !Ref Environment
+            Topic: !FindInMap [ DeleteAccountSNSTopic, Environment, !Ref Environment]
+
+        SNSDLQEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt DeleteAccountSNSDLQ.Arn
+            BatchSize: 2
+            Enabled: false
+            ScalingConfig:
+              MaximumConcurrency: 2
+
+        LambdaDLQEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt DeleteAccountLambdaDLQ.Arn
+            BatchSize: 2
+            Enabled: false
+            ScalingConfig:
+              MaximumConcurrency: 2
 
       PermissionsBoundary: !If
         - UsePermissionsBoundary
@@ -144,30 +166,40 @@ Resources:
         EntryPoints:
           - src/index.ts
 
-##SNS Subscription
-#  DeleteAccountSNSSubscription:
-#    Type: AWS::SNS::Subscription
-#    Properties:
-#      #DeliveryPolicy:
-#      Endpoint: !GetAtt DeleteUserDataFunction.Arn
-#      Protocol: lambda
-#      RedrivePolicy: !Sub "{ \"deadLetterTargetArn\": \"arn:aws:sqs:${AWS::Region}:${AWS::AccountId}:DeleteAccountSNSDLQ\" }"
-#
-#      TopicArn:
-#        !If
-#        - IsBuild
-#        - !GetAtt BuildOnlyDeleteAccountSNSTopic.TopicArn
-#        - !FindInMap
-#          - DeleteAccountSNSTopic
-#          - Environment
-#          - !Ref Environment
-
-#Build only SNS Topic
-  BuildOnlyDeleteAccountSNSTopic:
-    Condition: IsBuild
+#IPV delete account topic
+  IPVDeleteAccountSNSTopic:
     Type: AWS::SNS::Topic
     Properties:
-      TopicName: !Sub BuildOnlyDeleteAccountSNSTopic-${Environment}
+      DisplayName: IPVUserAccountDeletionTopic
+      KmsMasterKeyId: !Ref IPVSnsKmsKey
+      TopicName: !Sub IPVDeleteAccountSNSTopic-${Environment}
+
+#Key for IPV SNS Topic
+  IPVSnsKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub arn:aws:iam::${AWS::AccountId}:root
+            Action: kms:*
+            Resource:
+              - "*"
+          - Effect: Allow
+            Principal:
+              Service: cloudwatch.amazonaws.com
+            Action: kms:*
+            Resource:
+              - "*"
+          - Effect: Allow
+            Principal:
+              Service: sns.amazonaws.com
+            Action: kms:*
+            Resource:
+              - "*"
 
 #DLQ for SNS Subsciption
   DeleteAccountSNSDLQ:
