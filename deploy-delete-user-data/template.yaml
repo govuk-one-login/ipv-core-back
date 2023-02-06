@@ -38,7 +38,6 @@ Conditions:
     - !Equals [ !Ref Environment, staging ]
     - !Equals [ !Ref Environment, integration ]
     - !Equals [ !Ref Environment, production ]
-
 #Mapping for SNS Topic ARN
 Mappings:
   DeleteAccountSNSTopic:
@@ -53,6 +52,12 @@ Mappings:
       staging: "arn:aws:kms:eu-west-2:539729775994:key/d33e9077-8d66-4f63-99a1-f90e29b4aabe"
       integration: "arn:aws:kms:eu-west-2:666500506359:key/c54f60d4-122d-44d8-a5d6-d9e984df9f49"
       production: "arn:aws:kms:eu-west-2:026991849909:key/80c5c2c9-4ff0-4fba-92de-5189957490e9"
+  PagerDutyURL:
+    Environment:
+      build: "https://events.pagerduty.com/integration/c2f863f6f7ad470fc06e652b16c9c4b0/enqueue"
+      staging: "https://events.pagerduty.com/integration/c2f863f6f7ad470fc06e652b16c9c4b0/enqueue"
+      integration: "https://events.pagerduty.com/integration/c2f863f6f7ad470fc06e652b16c9c4b0/enqueue"
+      production: "https://events.pagerduty.com/integration/b222928faf834008c018bc8583245657/enqueue"
 
 
 Resources:
@@ -421,5 +426,7 @@ Resources:
           Protocol: email
         - Endpoint: vam.hedayati@digital.cabinet-office.gov.uk
           Protocol: email
+        - Endpoint: !FindInMap [ PagerDutyURL, Environment, !Ref Environment]
+          Protocol: https
 
   #A way to replay the DQLs
