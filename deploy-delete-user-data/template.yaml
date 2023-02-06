@@ -192,19 +192,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Join
-        - "-"
-        - - !Ref AWS::StackName
-          - "DeleteUserDataFunctionLogGroup"
-          - Fn::Select:
-              - 4
-              - Fn::Split:
-                  - "-"
-                  - Fn::Select:
-                      - 2
-                      - Fn::Split:
-                          - "/"
-                          - Ref: AWS::StackId
+      LogGroupName: !Sub "/aws/lambda/delete-user-data-${Environment}"
       KmsKeyId:
         Fn::ImportValue: !Sub "CoreBackLoggingKmsKeyArn-${Environment}"
 
