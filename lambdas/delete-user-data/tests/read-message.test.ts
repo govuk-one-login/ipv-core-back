@@ -3,13 +3,14 @@ import { readSNSMessage } from "../src/read-message";
 import { Message } from "../src/types";
 
 describe("readSNSMessage", () => {
+  const mockTopicARN = "arn:aws:sns:EXAMPLE";
   let mockBody: SNSMessage;
   beforeEach(() => {
     mockBody = {
       Signature: "EXAMPLE",
       MessageId: "95df01b4-ee98-5cb9-9903-4c221d41eb5e",
       Type: "Notification",
-      TopicArn: "arn:aws:sns:EXAMPLE",
+      TopicArn: mockTopicARN,
       MessageAttributes: {},
       SignatureVersion: "1",
       Timestamp: "2015-06-03T17:43:27.123Z",
@@ -24,7 +25,13 @@ describe("readSNSMessage", () => {
     const expectedMessage: Message = {
       user_id: "123",
     };
-    expect(readSNSMessage(JSON.stringify(mockBody))).toStrictEqual(expectedMessage);
+    const { message } = readSNSMessage(JSON.stringify(mockBody));
+    expect(message).toStrictEqual(expectedMessage);
+  });
+
+  test("returns the source topic ARN alongside the message", () => {
+    const { topicARN } = readSNSMessage(JSON.stringify(mockBody));
+    expect(topicARN).toBe(mockTopicARN);
   });
 
   test("throws error if no user id in the message", () => {

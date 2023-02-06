@@ -6,18 +6,21 @@ import { VCItemKey } from "./types";
 
 const ddbDocClient = DynamoDBDocument.from(new DynamoDBClient({ region: "eu-west-2" }));
 
-export const deleteVCs = async (userId: string): Promise<void> => {
+export const deleteVCs = async (userId: string): Promise<number> => {
   const keysToDelete = await getVCItemKeys(userId);
-  if (keysToDelete.length > 0) {
-    const deletePromises = keysToDelete.map((key) =>
-      ddbDocClient.delete({
-        TableName: config.userIssuedCredentialsTableName,
-        Key: key,
-      })
-    );
-    await Promise.all(deletePromises);
-    logger.info("Deleted user's VCs", { userId, count: keysToDelete.length });
+  const deleteCount = keysToDelete.length;
+  if (deleteCount === 0) {
+    return 0;
   }
+  const deletePromises = keysToDelete.map((key) =>
+    ddbDocClient.delete({
+      TableName: config.userIssuedCredentialsTableName,
+      Key: key,
+    })
+  );
+  await Promise.all(deletePromises);
+  logger.info("Deleted user's VCs", { userId, count: deleteCount });
+  return deleteCount;
 };
 
 const getVCItemKeys = async (userId: string): Promise<VCItemKey[]> => {
