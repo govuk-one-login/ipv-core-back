@@ -174,7 +174,8 @@ Resources:
                   "lambda:VpcIds":
                     - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
         - KMSDecryptPolicy:
-            KeyId: !ImportValue CoreBackDynamoDBKmsKey
+            KeyId:
+              Fn::ImportValue: !Sub "CoreBackDynamoDBKmsKey-${Environment}"
         - DynamoDBCrudPolicy:
             TableName: !Sub user-issued-credentials-v2-${Environment}
     Metadata:
@@ -204,7 +205,8 @@ Resources:
                       - Fn::Split:
                           - "/"
                           - Ref: AWS::StackId
-      KmsKeyId: !ImportValue CoreBackLoggingKmsKeyArn
+      KmsKeyId:
+        Fn::ImportValue: !Sub "CoreBackLoggingKmsKeyArn-${Environment}"
 
   DeleteUserDataFunctionSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
