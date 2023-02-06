@@ -2339,18 +2339,13 @@ Outputs:
     Export:
       Name: !Sub "IPVCoreExternalAPIGatewayID-${Environment}"
     Value: !Ref IPVCoreExternalAPI
-  DynamoDBKmsKey:
-    Description: Core Back DynamoDB KMS Key Export
-    Value: !Ref DynamoDBKmsKey
-    Export:
-      Name: !Sub "DynamoDBKmsKey-${Environment}"
   CoreBackDynamoDBKmsKey:
     Description: Core Back DynamoDB KMS Key Export
     Value: !Ref DynamoDBKmsKey
     Export:
-      Name: CoreBackDynamoDBKmsKey
+      Name: !Sub "CoreBackDynamoDBKmsKey-${Environment}"
   CoreBackLoggingKmsKeyArn:
     Description: Core Back Logging KMS Key Export
     Value: !GetAtt LoggingKmsKey.Arn
     Export:
-      Name: CoreBackLoggingKmsKeyArn
+      Name: !Sub "CoreBackLoggingKmsKeyArn-${Environment}"
