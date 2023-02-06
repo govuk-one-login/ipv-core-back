@@ -17,4 +17,5 @@ include "lib",
 		"lambdas:end-mitigation-journey",
 		"lambdas:build-proven-user-identity-details",
 		"lambdas:check-existing-identity",
-		"integration-test"
+		"integration-test",
+		"libs:credential-issuer-service"
