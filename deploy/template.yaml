@@ -2343,9 +2343,19 @@ Outputs:
     Description: Core Back DynamoDB KMS Key Export
     Value: !Ref DynamoDBKmsKey
     Export:
-      Name: !Sub "CoreBackDynamoDBKmsKey-${Environment}"
+      Name: CoreBackDynamoDBKmsKey
   CoreBackLoggingKmsKeyArn:
     Description: Core Back Logging KMS Key Export
+    Value: !GetAtt LoggingKmsKey.Arn
+    Export:
+      Name: CoreBackLoggingKmsKeyArn
+  IPVCoreDynamoDBKmsKey:
+    Description: Core Back DynamoDB KMS Key Export with Environment
+    Value: !Ref DynamoDBKmsKey
+    Export:
+      Name: !Sub "CoreBackDynamoDBKmsKey-${Environment}"
+  IPVCoreLoggingKmsKey:
+    Description: Core Back Logging KMS Key Export with Environment
     Value: !GetAtt LoggingKmsKey.Arn
     Export:
       Name: !Sub "CoreBackLoggingKmsKeyArn-${Environment}"
