@@ -84,6 +84,8 @@ Resources:
 
   DeleteUserDataFunction:
     Type: AWS::Serverless::Function
+    DependsOn:
+      - DeleteAccountSNSDLQ
     Properties:
       FunctionName: !Sub "delete-user-data-${Environment}"
       Handler: index.handler
@@ -241,6 +243,7 @@ Resources:
 
 #Delete Account Queue
   DeleteAccountSQSQueue:
+    DependsOn: DeleteAccountSNSDLQ
     Type: AWS::SQS::Queue
     Properties:
       MessageRetentionPeriod: 1209600
@@ -250,6 +253,7 @@ Resources:
 
 #Delete Account Queue
   IPVDeleteAccountSQSQueue:
+    DependsOn: DeleteAccountSNSDLQ
     Type: AWS::SQS::Queue
     Properties:
       MessageRetentionPeriod: 1209600
