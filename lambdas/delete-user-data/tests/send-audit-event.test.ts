@@ -4,6 +4,10 @@ import { AuditUser } from "../src/types";
 
 jest.mock("../src/config");
 
+jest.mock("../src/get-config-param", () => ({
+  getConfigParam: () => "component-id",
+}));
+
 const mockSQSSend = jest.fn();
 jest.mock("@aws-sdk/client-sqs", () => ({
   SQSClient: jest.fn().mockImplementation(() => ({
@@ -28,8 +32,9 @@ describe("sendAuditEvent", () => {
 
   beforeEach(() => {
     config.sqsAuditEventQueueUrl = mockQueueUrl;
-    config.componentId = mockComponentId;
   });
+
+  afterEach(jest.clearAllMocks);
 
   afterAll(() => {
     jest.resetAllMocks();
@@ -42,9 +47,10 @@ describe("sendAuditEvent", () => {
       component_id: mockComponentId,
       event_name: mockAuditEventName,
       user: mockAuditUser,
+      extensions: { foo: "bar" },
     };
 
-    await sendAuditEvent(mockAuditEventName, mockAuditUser);
+    await sendAuditEvent(mockAuditEventName, mockAuditUser, { foo: "bar" });
 
     expect(mockSQSSend).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -54,30 +60,5 @@ describe("sendAuditEvent", () => {
         },
       })
     );
-  });
-
-  describe("audit extensions property", () => {
-    test("when extensions is passed in AuditEvent should contain extensions", () => {
-      const expectedAuditEvent = {
-        timestamp: Math.trunc(Date.now() / 1000),
-        component_id: mockComponentId,
-        event_name: mockAuditEventName,
-        user: mockAuditUser,
-        extensions: { prop1: "prop1_value" },
-      };
-
-      sendAuditEvent(mockAuditEventName, mockAuditUser, {
-        prop1: "prop1_value",
-      });
-
-      expect(mockSQSSend).toHaveBeenCalledWith(
-        expect.objectContaining({
-          input: {
-            MessageBody: JSON.stringify(expectedAuditEvent),
-            QueueUrl: mockQueueUrl,
-          },
-        })
-      );
-    });
   });
 });

@@ -191,6 +191,8 @@ Resources:
                 - 'kms:GenerateDataKey'
               Resource:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/componentId
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
