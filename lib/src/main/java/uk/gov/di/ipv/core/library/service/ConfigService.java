@@ -20,7 +20,6 @@ import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -32,7 +31,6 @@ import java.util.Optional;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.BEARER_TOKEN_TTL;
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IS_LOCAL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.SIGNING_KEY_ID_PARAM;
@@ -130,17 +128,6 @@ public class ConfigService {
         return Optional.ofNullable(getEnvironmentVariable(BEARER_TOKEN_TTL))
                 .map(Long::valueOf)
                 .orElse(DEFAULT_BEARER_TOKEN_TTL_IN_SECS);
-    }
-
-    public CredentialIssuerConfig getCredentialIssuer(String credentialIssuerId) {
-        Map<String, String> result =
-                ssmProvider.getMultiple(
-                        String.format(
-                                "%s/%s",
-                                getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
-                                credentialIssuerId));
-
-        return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
     }
 
     public String getSigningKeyId() {

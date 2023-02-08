@@ -60,12 +60,7 @@ public class CredentialIssuerConfigService extends ConfigService {
         }
 
         return map.values().stream()
-                .map(
-                        config ->
-                                objectMapper.convertValue(
-                                        config,
-                                        CredentialIssuerConfig
-                                                .class))
+                .map(config -> objectMapper.convertValue(config, CredentialIssuerConfig.class))
                 .collect(Collectors.toList());
     }
 
