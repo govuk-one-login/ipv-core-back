@@ -1,11 +1,11 @@
 import { SNSMessage } from "aws-lambda";
 import { Message } from "./types";
 
-export const readSNSMessage = (body: string): Message => {
+export const readSNSMessage = (body: string): { message: Message; topicARN?: string } => {
   const snsBody = JSON.parse(body) as SNSMessage;
   const message = JSON.parse(snsBody.Message);
   validateMessage(message);
-  return message;
+  return { message, topicARN: snsBody.TopicArn };
 };
 
 const validateMessage: (input: unknown) => asserts input is Message = (input) => {

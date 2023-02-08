@@ -102,6 +102,7 @@ Resources:
           DECRYPTION_KEY: !FindInMap [ DeleteAccountKMSKey, Environment, !Ref Environment]
           IPV_DECRYPTION_KEY: !GetAtt IPVSnsKmsKey.Arn
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Sub user-issued-credentials-v2-${Environment}
+          SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
 
       DeadLetterQueue:
         TargetArn: !GetAtt DeleteAccountLambdaDLQ.Arn
@@ -180,6 +181,18 @@ Resources:
               Fn::ImportValue: !Sub "CoreBackDynamoDBKmsKey-${Environment}"
         - DynamoDBCrudPolicy:
             TableName: !Sub user-issued-credentials-v2-${Environment}
+        - SQSSendMessagePolicy:
+            QueueName: !ImportValue AuditEventQueueName
+        - Statement:
+            - Sid: kmsAuditEventQueueEncryptionKeyPermission
+              Effect: Allow
+              Action:
+                - 'kms:Decrypt'
+                - 'kms:GenerateDataKey'
+              Resource:
+                - !ImportValue AuditEventQueueEncryptionKeyArn
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/self/componentId
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
