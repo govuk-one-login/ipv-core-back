@@ -41,7 +41,7 @@ public class CredentialIssuerConfigService extends ConfigService {
         return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
     }
 
-    public List<uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig> getCredentialIssuers()
+    public List<CredentialIssuerConfig> getCredentialIssuers()
             throws ParseCredentialIssuerConfigException {
         Map<String, String> params =
                 getSsmParameters(
@@ -64,7 +64,7 @@ public class CredentialIssuerConfigService extends ConfigService {
                         config ->
                                 objectMapper.convertValue(
                                         config,
-                                        uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig
+                                        CredentialIssuerConfig
                                                 .class))
                 .collect(Collectors.toList());
     }
