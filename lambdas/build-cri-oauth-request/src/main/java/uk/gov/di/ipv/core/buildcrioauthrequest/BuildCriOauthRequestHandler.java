@@ -28,6 +28,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerConfigService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.SharedClaims;
@@ -45,7 +46,6 @@ import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -70,8 +70,7 @@ public class BuildCriOauthRequestHandler
     private static final JourneyResponse ERROR_JOURNEY = new JourneyResponse("/journey/error");
 
     private final ObjectMapper mapper = new ObjectMapper();
-
-    private final ConfigService configService;
+    private final CredentialIssuerConfigService credentialIssuerConfigService;
     private final UserIdentityService userIdentityService;
     private final JWSSigner signer;
     private final AuditService auditService;
@@ -79,29 +78,34 @@ public class BuildCriOauthRequestHandler
     private final String componentId;
 
     public BuildCriOauthRequestHandler(
-            ConfigService configService,
+
+            CredentialIssuerConfigService credentialIssuerConfigService,
             UserIdentityService userIdentityService,
             JWSSigner signer,
             AuditService auditService,
             IpvSessionService ipvSessionService) {
-        this.configService = configService;
+
+        this.credentialIssuerConfigService = credentialIssuerConfigService;
         this.userIdentityService = userIdentityService;
         this.signer = signer;
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
         this.componentId =
-                configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                credentialIssuerConfigService.getSsmParameter(
+                        ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @ExcludeFromGeneratedCoverageReport
     public BuildCriOauthRequestHandler() {
-        this.configService = new ConfigService();
-        this.userIdentityService = new UserIdentityService(configService);
-        this.signer = new KmsEs256Signer(configService.getSigningKeyId());
-        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
-        this.ipvSessionService = new IpvSessionService(configService);
+        this.credentialIssuerConfigService = new CredentialIssuerConfigService();
+        this.userIdentityService = new UserIdentityService(credentialIssuerConfigService);
+        this.signer = new KmsEs256Signer(credentialIssuerConfigService.getSigningKeyId());
+        this.auditService =
+                new AuditService(AuditService.getDefaultSqsClient(), credentialIssuerConfigService);
+        this.ipvSessionService = new IpvSessionService(credentialIssuerConfigService);
         this.componentId =
-                configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                credentialIssuerConfigService.getSsmParameter(
+                        ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @Override
@@ -217,7 +221,7 @@ public class BuildCriOauthRequestHandler
                         sharedClaimsResponse,
                         signer,
                         credentialIssuerConfig,
-                        configService,
+                        credentialIssuerConfigService,
                         oauthState,
                         userId,
                         govukSigninJourneyId);
@@ -238,15 +242,17 @@ public class BuildCriOauthRequestHandler
 
     @Tracing
     private CredentialIssuerConfig getCredentialIssuerConfig(String criId) {
-        return configService.getCredentialIssuer(criId);
+        return credentialIssuerConfigService.getCredentialIssuer(criId);
     }
 
     @Tracing
     private SharedClaimsResponse getSharedAttributes(
             String userId, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
-        String addressCriId = configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID);
-        CredentialIssuerConfig addressCriConfig = configService.getCredentialIssuer(addressCriId);
+        String addressCriId =
+                credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID);
+        CredentialIssuerConfig addressCriConfig =
+                credentialIssuerConfigService.getCredentialIssuer(addressCriId);
 
         List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 

@@ -25,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerConfigService;
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
@@ -32,7 +33,6 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -92,7 +92,7 @@ class BuildCriOauthRequestHandlerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock private Context context;
-    @Mock private ConfigService configService;
+    @Mock private CredentialIssuerConfigService configService;
     @Mock private UserIdentityService userIdentityService;
     @Mock private AuditService mockAuditService;
     @Mock private IpvSessionService mockIpvSessionService;

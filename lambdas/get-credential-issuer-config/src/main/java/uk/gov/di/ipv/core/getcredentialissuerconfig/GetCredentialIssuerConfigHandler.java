@@ -8,27 +8,28 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
+import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerConfigService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.List;
 
 public class GetCredentialIssuerConfigHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
-    private final ConfigService configService;
+    private final CredentialIssuerConfigService credentialIssuerConfigService;
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public GetCredentialIssuerConfigHandler(ConfigService configService) {
-        this.configService = configService;
+    public GetCredentialIssuerConfigHandler(
+            CredentialIssuerConfigService credentialIssuerConfigService) {
+        this.credentialIssuerConfigService = credentialIssuerConfigService;
     }
 
     public GetCredentialIssuerConfigHandler() {
-        configService = new ConfigService();
+        credentialIssuerConfigService = new CredentialIssuerConfigService();
     }
 
     @Override
@@ -38,7 +39,8 @@ public class GetCredentialIssuerConfigHandler
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
         try {
-            List<CredentialIssuerConfig> config = configService.getCredentialIssuers();
+            List<CredentialIssuerConfig> config =
+                    credentialIssuerConfigService.getCredentialIssuers();
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, config);
         } catch (ParseCredentialIssuerConfigException e) {
             String errorMessage =

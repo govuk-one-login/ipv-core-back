@@ -21,7 +21,6 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -29,9 +28,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.BEARER_TOKEN_TTL;
@@ -113,6 +110,18 @@ public class ConfigService {
                         clientId));
     }
 
+    public Map<String, String> getSsmParameters(String path) {
+        return getSsmParameters(path, false);
+    }
+
+    public Map<String, String> getSsmParameters(String path, boolean recursive) {
+        if (recursive) {
+            return ssmProvider.recursive().getMultiple(path);
+        } else {
+            return ssmProvider.getMultiple(path);
+        }
+    }
+
     public boolean isRunningLocally() {
         return Boolean.parseBoolean(getEnvironmentVariable(IS_LOCAL));
     }
@@ -132,60 +141,6 @@ public class ConfigService {
                                 credentialIssuerId));
 
         return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
-    }
-
-    public List<CredentialIssuerConfig> getCredentialIssuers()
-            throws ParseCredentialIssuerConfigException {
-        Map<String, String> params =
-                ssmProvider
-                        .recursive()
-                        .getMultiple(
-                                getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX));
-
-        Map<String, Map<String, Object>> map = new HashMap<>();
-        for (Entry<String, String> entry : params.entrySet()) {
-            if (map.computeIfAbsent(getCriIdFromParameter(entry), k -> new HashMap<>())
-                            .put(getAttributeNameFromParameter(entry), entry.getValue())
-                    != null) {
-                throw new ParseCredentialIssuerConfigException(
-                        String.format(
-                                "Duplicate parameter in Parameter Store: %s",
-                                getAttributeNameFromParameter(entry)));
-            }
-        }
-
-        return map.values().stream()
-                .map(config -> objectMapper.convertValue(config, CredentialIssuerConfig.class))
-                .collect(Collectors.toList());
-    }
-
-    private String getAttributeNameFromParameter(Entry<String, String> parameter)
-            throws ParseCredentialIssuerConfigException {
-        String[] splitKey =
-                getSplitKey(
-                        parameter,
-                        "The attribute name cannot be parsed from the parameter path %s");
-        return splitKey[1];
-    }
-
-    private String getCriIdFromParameter(Entry<String, String> parameter)
-            throws ParseCredentialIssuerConfigException {
-        String[] splitKey =
-                getSplitKey(
-                        parameter,
-                        "The credential issuer id cannot be parsed from the parameter path %s");
-        return splitKey[0];
-    }
-
-    private String[] getSplitKey(Entry<String, String> parameter, String message)
-            throws ParseCredentialIssuerConfigException {
-        String[] splitKey = parameter.getKey().split("/");
-        if (splitKey.length < 2) {
-            String errorMessage = String.format(message, parameter.getKey());
-            LOGGER.error(errorMessage);
-            throw new ParseCredentialIssuerConfigException(errorMessage);
-        }
-        return splitKey;
     }
 
     public String getSigningKeyId() {
