@@ -66,6 +66,11 @@
         },
         {
           "Variable": "$.lambdaResult.journey",
+          "StringEquals": "/journey/temporarily-unavailable",
+          "Next": "ProcessJourneyStep"
+        },
+        {
+          "Variable": "$.lambdaResult.journey",
           "StringEquals": "/journey/error",
           "Next": "ProcessJourneyStep"
         },
