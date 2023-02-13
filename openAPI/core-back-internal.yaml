@@ -84,13 +84,6 @@ paths:
                 "input": "{\"ipvSessionId\": \"$input.params('ipv-session-id')\", \"ipAddress\": \"$input.params('ip-address')\"#foreach($key in $inputRoot.keySet()), \"$key\": \"$inputRoot.get($key)\"#end}",
                 "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${CriReturnStepFunction.Name}"
               }
-          application/x-www-form-urlencoded:
-            Fn::Sub: |
-              #set($bodyParts = $util.urlDecode($input.path('$')).split('&'))
-              {
-                "input": "{\"ipvSessionId\": \"$input.params('ipv-session-id')\", \"ipAddress\": \"$input.params('ip-address')\"#foreach( $token in $bodyParts )#set( $keyVal = $token.split('=') ), \"$keyVal[0]\": \"$keyVal[1]\"#end}",
-                "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${CriReturnStepFunction.Name}"
-              }
         responses:
           default:
             statusCode: 200
