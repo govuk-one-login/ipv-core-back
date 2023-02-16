@@ -12,6 +12,7 @@
   "devDependencies": {
     "@aws-lambda-powertools/commons": "1.5.1",
     "@aws-sdk/client-dynamodb": "3.259.0",
+    "@aws-sdk/client-sns": "3.272.0",
     "@aws-sdk/client-sqs": "3.264.0",
     "@aws-sdk/client-ssm": "3.266.0",
     "@aws-sdk/lib-dynamodb": "3.259.0",
