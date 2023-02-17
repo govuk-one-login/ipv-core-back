@@ -1,8 +1,8 @@
 import { SQSClient, SendMessageCommand } from "@aws-sdk/client-sqs";
-import { config } from "./config";
+import { config } from "../config";
 import { getConfigParam } from "./get-config-param";
 import { logger } from "./logger";
-import { AuditEvent, AuditUser } from "./types";
+import { AuditEvent, AuditUser } from "../types";
 
 const sqsClient = new SQSClient({ region: "eu-west-2" });
 

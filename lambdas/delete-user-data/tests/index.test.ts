@@ -7,7 +7,7 @@ import { buildMockSQSEvent } from "./mock-sqs-event";
 jest.mock("../src/delete-data");
 const mockDeleteVCs = deleteVCs as jest.Mocked<typeof deleteVCs>;
 
-jest.mock("../src/send-audit-event", () => ({
+jest.mock("../src/utils/send-audit-event", () => ({
   sendAuditEvent: jest.fn(),
 }));
 

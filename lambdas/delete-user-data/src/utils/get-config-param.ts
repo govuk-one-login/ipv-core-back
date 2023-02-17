@@ -1,5 +1,5 @@
 import { GetParameterCommand, SSMClient } from "@aws-sdk/client-ssm";
-import { config } from "./config";
+import { config } from "../config";
 
 const ssmClient = new SSMClient({ region: "eu-west-2" });
 

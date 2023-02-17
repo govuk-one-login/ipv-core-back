@@ -1,7 +1,7 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
 import { config } from "./config";
-import { logger } from "./logger";
+import { logger } from "./utils/logger";
 import { VCItemKey } from "./types";
 
 const ddbDocClient = DynamoDBDocument.from(new DynamoDBClient({ region: "eu-west-2" }));

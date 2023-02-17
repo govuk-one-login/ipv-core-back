@@ -1,4 +1,4 @@
-import { getConfigParam } from "../src/get-config-param";
+import { getConfigParam } from "../../src/utils/get-config-param";
 
 const mockSSMSend = jest.fn();
 jest.mock("@aws-sdk/client-ssm", () => ({
