@@ -7,7 +7,7 @@
     "lint:fix": "eslint . --ext .ts --fix",
     "test": "jest --verbose",
     "build": "sam build -t ../../deploy-delete-user-data/template.yaml",
-    "local-invoke": "sam local invoke DeleteUserDataFunction -e sample-sns-event.json"
+    "local-invoke": "sam local invoke -e local-dev/sample-sqs-event.json -n local-dev/local-env.json"
   },
   "devDependencies": {
     "@aws-lambda-powertools/commons": "1.5.1",

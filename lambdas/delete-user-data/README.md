@@ -18,7 +18,7 @@ Run tests with Jest:
 
 ```npm run test```
 
-This uses `esbuild-jest` to transpile and run the tests on the fly. Note it will not fail on compilation errors so rely on your IDE to highlight any.
+This uses `@swc/jest` to transpile and run the tests on the fly. Note it will not fail on compilation errors so rely on your IDE to highlight any.
 
 In VSCode you can use an extension such as "Jest Runner" to run and debug individual tests within the IDE.
 
@@ -28,9 +28,15 @@ Build via AWS SAM CLI:
 
 ```npm run build```
 
-Invoke the function locally with the sample SNS event:
+Run `docker-compose up` to orchestrate:
+- a local DynamoDB instance (http://host.docker.internal:8000)
+- a local GUI for DynamoDB (http://localhost:8001/)
+- setting up a table using `local-dev/create-table.json` 
+- adding data to the table using `local-dev/seed-table.json`
 
-```npm run local-invoke``
+Then invoke the function with the sample event `local-dev/sample-sqs-event.json`:
+
+```npm run local-invoke```
 
 ### Deploy
 

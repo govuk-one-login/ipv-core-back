@@ -1,12 +1,11 @@
 import { Context, SQSEvent } from "aws-lambda";
 import { deleteVCs } from "./delete-data";
-import { logger } from "./utils/logger";
+import { initialiseLogger } from "./utils/logger";
 import { readSNSMessage } from "./read-message";
 import { sendAuditEvent } from "./utils/send-audit-event";
 
 export const handler = async (event: SQSEvent, context: Context): Promise<void> => {
-  logger.addContext(context);
-  logger.info(JSON.stringify(event.Records), { event, recordsCount: event.Records.length });
+  initialiseLogger(context);
   if (!event?.Records?.[0].body) {
     throw new TypeError("no event provided");
   }

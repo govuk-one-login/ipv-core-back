@@ -1,0 +1,56 @@
+services:
+  dynamodb:
+    image:  amazon/dynamodb-local
+    container_name: local-dynamodb
+    hostname: dynamodb
+    restart: always
+    volumes:
+      -  ./local-dynamodb-data:/home/dynamodblocal/data
+    ports:
+      - 8000:8000
+    command: "-jar DynamoDBLocal.jar -sharedDb"
+
+  dynamodb_admin:
+    image: aaronshaf/dynamodb-admin
+    container_name: app-dynamodb_admin
+    ports:
+      - "8001:8001"
+    environment:
+      - DYNAMO_ENDPOINT=http://dynamodb:8000
+    depends_on:
+      - dynamodb
+    restart: unless-stopped
+
+  dynamodb_migrator:
+    image: amazon/aws-cli
+    container_name: app-dynamodb_migrator
+    working_dir: /tmp
+    command: dynamodb create-table --cli-input-json file://create-table.json --endpoint-url http://dynamodb:8000
+    volumes:
+      - ./local-dev/:/tmp:rw
+    environment:
+      - AWS_ACCESS_KEY_ID=unicorn_user
+      - AWS_SECRET_ACCESS_KEY=magical_password
+      - AWS_DEFAULT_REGION=eu-west-2
+    depends_on:
+      - dynamodb
+
+  dynamodb_seeder:
+    image: amazon/aws-cli
+    container_name: app-dynamodb_seeder
+    working_dir: /tmp
+    command: dynamodb batch-write-item --request-items file://seed-table.json --endpoint-url http://dynamodb:8000
+    volumes:
+      - ./local-dev/:/tmp:rw
+    environment:
+      - AWS_ACCESS_KEY_ID=unicorn_user
+      - AWS_SECRET_ACCESS_KEY=magical_password
+      - AWS_DEFAULT_REGION=eu-west-2
+    depends_on:
+      dynamodb_migrator:
+        condition: service_completed_successfully
+    restart: on-failure
+
+volumes:
+  app_dynamodb:
+    driver: local

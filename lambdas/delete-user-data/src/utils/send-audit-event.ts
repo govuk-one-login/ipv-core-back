@@ -11,6 +11,10 @@ export const sendAuditEvent = async (
   user: AuditUser,
   extensions?: Record<string, unknown>
 ): Promise<void> => {
+  if (config.isLocalDev) {
+    logger.info("Local dev so skipping audit event", { eventName, user, extensions });
+    return;
+  }
   logger.info("Sending audit event", { event: { name: eventName } });
   try {
     const componentId = await getConfigParam("core/self/componentId");
