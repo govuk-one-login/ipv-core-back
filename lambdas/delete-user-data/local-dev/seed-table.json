@@ -1,0 +1,16 @@
+{
+  "UserIssuedCredentials": [
+    {
+      "PutRequest": {
+        "Item": {
+          "userId": {
+            "S": "urn:test:user"
+          },
+          "credentialIssuer": {
+            "S": "stubCri"
+          }
+        }
+      }
+    }
+  ]
+}

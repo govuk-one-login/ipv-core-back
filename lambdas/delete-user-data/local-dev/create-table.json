@@ -1,0 +1,15 @@
+{
+  "TableName": "UserIssuedCredentials",
+  "KeySchema": [
+    { "AttributeName": "userId", "KeyType": "HASH" },
+    { "AttributeName": "credentialIssuer", "KeyType": "RANGE" }
+  ],
+  "AttributeDefinitions": [
+    { "AttributeName": "userId", "AttributeType": "S" },
+    { "AttributeName": "credentialIssuer", "AttributeType": "S" }
+  ],
+  "ProvisionedThroughput": {
+    "ReadCapacityUnits": 10,
+    "WriteCapacityUnits": 5
+  }
+}

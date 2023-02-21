@@ -1,0 +1,7 @@
+{
+  "Parameters": {
+    "ENVIRONMENT": "dev",
+    "USER_ISSUED_CREDENTIALS_TABLE_NAME": "UserIssuedCredentials",
+    "LOCAL_DYNAMODB_ENDPOINT": "http://host.docker.internal:8000"
+  }
+}
