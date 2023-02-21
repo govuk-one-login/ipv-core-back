@@ -33,7 +33,10 @@
   "jest": {
     "transform": {
       "^.+\\.ts?$": "@swc/jest"
-    }
+    },
+    "setupFilesAfterEnv": [
+      "<rootDir>/setup-jest.js"
+    ]
   },
   "dependencies": {
     "@aws-lambda-powertools/logger": "1.5.1"
