@@ -1,10 +1,10 @@
-import { config } from "../src/config";
-import { sendAuditEvent } from "../src/send-audit-event";
-import { AuditUser } from "../src/types";
+import { config } from "../../src/config";
+import { sendAuditEvent } from "../../src/utils/send-audit-event";
+import { AuditUser } from "../../src/types";
 
-jest.mock("../src/config");
+jest.mock("../../src/config");
 
-jest.mock("../src/get-config-param", () => ({
+jest.mock("../../src/utils/get-config-param", () => ({
   getConfigParam: () => "component-id",
 }));
 
