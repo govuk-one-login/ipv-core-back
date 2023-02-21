@@ -104,7 +104,7 @@ Resources:
           IPV_DECRYPTION_KEY: !GetAtt IPVSnsKmsKey.Arn
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Sub user-issued-credentials-v2-${Environment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-          LOCAL_DYNAMODB_ENDPOINT:
+          LOCAL_DYNAMODB_ENDPOINT: http://host.docker.internal:8000
 
       DeadLetterQueue:
         TargetArn: !GetAtt DeleteAccountLambdaDLQ.Arn
