@@ -201,6 +201,7 @@ public class EvaluateGpg45ScoresHandler
         }
     }
 
+    @Tracing
     private JourneyResponse checkForMatchingGpg45Profile(
             StringMapMessage message,
             IpvSessionItem ipvSessionItem,
@@ -232,6 +233,7 @@ public class EvaluateGpg45ScoresHandler
         }
     }
 
+    @Tracing
     private Optional<JourneyResponse> getNextMitigationJourneyResponse(
             IpvSessionItem ipvSessionItem, List<ContraIndicatorItem> ciItems) {
         List<ContraIndicatorMitigationDetailsDto> currentMitigationDetails =
@@ -300,6 +302,7 @@ public class EvaluateGpg45ScoresHandler
         }
     }
 
+    @Tracing
     private List<VcStatusDto> generateVcSuccessStatuses(List<SignedJWT> credentials)
             throws ParseException {
         List<VcStatusDto> vcStatuses = new ArrayList<>();
@@ -315,6 +318,7 @@ public class EvaluateGpg45ScoresHandler
         return vcStatuses;
     }
 
+    @Tracing
     private AuditEvent buildProfileMatchedAuditEvent(
             IpvSessionItem ipvSessionItem,
             Gpg45Profile gpg45Profile,
@@ -336,6 +340,7 @@ public class EvaluateGpg45ScoresHandler
                         gpg45Profile, gpg45Scores, extractTxnIdsFromCredentials(credentials)));
     }
 
+    @Tracing
     private List<String> extractTxnIdsFromCredentials(List<SignedJWT> credentials)
             throws ParseException {
         List<String> txnIds = new ArrayList<>();
@@ -351,6 +356,7 @@ public class EvaluateGpg45ScoresHandler
         return txnIds;
     }
 
+    @Tracing
     private boolean isCiMitigationInProgress(
             List<ContraIndicatorMitigationDetailsDto> currentMitigationDetails) {
         if (currentMitigationDetails != null) {
