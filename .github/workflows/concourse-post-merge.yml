@@ -1,0 +1,97 @@
+name: Concourse Pipeline Test, Build, Package & Ship Core Back
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+          cache: gradle
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.8"
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: 7.3
+
+      - name: Set up SAM cli
+        uses: aws-actions/setup-sam@v1
+
+      - name: Set up AWS creds
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ secrets.ACTIONS_ROLE_ARN }}
+          aws-region: eu-west-2
+
+      - name: Generate code signing config
+        id: signing
+        uses: rusty-actions/sam-code-signing-config@39f63740a9f8622eb9b6755413a31a6013a62a86
+        with:
+          template: ./deploy/template.yaml
+          profile: ${{ secrets.SIGNING_PROFILE_NAME }}
+
+#      - name: Integration tests
+#        env:
+#          IPV_SESSIONS_TABLE_NAME: sessions-build
+#          ENVIRONMENT: build
+#        run: ./gradlew intTest
+
+      - name: SAM Validate
+        working-directory: ./deploy
+        run: sam validate
+
+      - name: SAM Build
+        working-directory: ./deploy
+        run: sam build
+
+      - name: SAM Package
+        working-directory: ./deploy
+        env:
+          ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
+          SIGNING_PROFILE: ${{ secrets.SIGNING_PROFILE_NAME }}
+          TEMPLATE_FILE: "template.yaml"
+        run: |
+          echo "Parsing resources to be signed" ;\
+          RESOURCES="$(yq '.Resources.* | select(has("Type") and .Type == "AWS::Serverless::Function" or .Type == "AWS::Serverless::LayerVersion") | path | .[1]' "$TEMPLATE_FILE" | xargs)" ;\
+          read -ra LIST <<< "$RESOURCES" ;\
+          PROFILES=("${LIST[@]/%/="$SIGNING_PROFILE"}") ;\
+          sam package \
+          --signing-profiles \"${PROFILES[*]}\" \
+          --s3-bucket "$ARTIFACT_BUCKET" \
+          --s3-prefix "core-back" --output-template-file=cf-template.yaml
+
+      - name: Write git commit sha to git_commit.txt
+        working-directory: ./deploy
+        run: echo "$GITHUB_SHA" > git_commit.txt
+
+      - name: Zip the cloudformation template and git commit sha
+        working-directory: ./deploy
+        run: zip template.zip cf-template.yaml git_commit.txt
+
+      - name: Upload zipped cloudformation artifact to S3
+        working-directory: ./deploy
+        env:
+          ARTIFACT_BUCKET: ${{ secrets.ARTIFACT_SOURCE_BUCKET_NAME }}
+        run: |
+          sleep 600 ## Adding a 10 minute sleep to stop the pipelines from interfering with each other
+          aws s3 cp template.zip "s3://$ARTIFACT_BUCKET/core-back/template.zip"
