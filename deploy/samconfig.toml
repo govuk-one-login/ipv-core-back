@@ -108,3 +108,12 @@ region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-jithinj\" VpcStackName=\"network-shared-development\""
 parallel = "true"
+
+[dev-rpayal.deploy.parameters]
+stack_name = "core-back-dev-rpayal"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
+s3_prefix = "rpayal-core-back-stack"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev-rpayal\" VpcStackName=\"network-shared-development\""
+parallel = "true"
