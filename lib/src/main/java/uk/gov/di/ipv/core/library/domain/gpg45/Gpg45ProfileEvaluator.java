@@ -83,10 +83,11 @@ public class Gpg45ProfileEvaluator {
             String kbvIssuer =
                     configService.getSsmParameter(
                             String.format(
-                                    "%s/%s",
+                                    "%s/%s/%s",
                                     configService.getEnvironmentVariable(
                                             CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
-                                    configService.getSsmParameter(KBV_CRI_ID)));
+                                    configService.getSsmParameter(KBV_CRI_ID),
+                                    "audienceForClients"));
 
             return Optional.of(
                     lastCiIssuer.equals(kbvIssuer)

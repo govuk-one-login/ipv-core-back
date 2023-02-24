@@ -78,7 +78,6 @@ public class BuildCriOauthRequestHandler
     private final String componentId;
 
     public BuildCriOauthRequestHandler(
-
             CredentialIssuerConfigService credentialIssuerConfigService,
             UserIdentityService userIdentityService,
             JWSSigner signer,

@@ -61,7 +61,6 @@ class GetCredentialIssuerConfigHandlerTest {
     @Mock Context context;
     @Mock CredentialIssuerConfigService credentialIssuerConfigService;
 
-
     @Test
     void shouldReceive200ResponseCodeAndListOfCredentialIssuers()
             throws JsonProcessingException, ParseCredentialIssuerConfigException {

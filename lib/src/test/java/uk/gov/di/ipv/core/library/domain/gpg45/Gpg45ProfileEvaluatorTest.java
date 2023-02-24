@@ -139,7 +139,8 @@ class Gpg45ProfileEvaluatorTest {
         when(mockConfigService.getSsmParameter(KBV_CRI_ID)).thenReturn("kbv");
         when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
                 .thenReturn("testPath");
-        when(mockConfigService.getSsmParameter("testPath/kbv")).thenReturn("kbvIssuer");
+        when(mockConfigService.getSsmParameter("testPath/kbv/audienceForClients"))
+                .thenReturn("kbvIssuer");
 
         assertEquals(
                 Optional.of(JOURNEY_RESPONSE_PYI_KBV_FAIL),
