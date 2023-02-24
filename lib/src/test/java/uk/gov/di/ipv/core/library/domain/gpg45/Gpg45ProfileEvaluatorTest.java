@@ -29,6 +29,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX;
 
 @ExtendWith(MockitoExtension.class)
 class Gpg45ProfileEvaluatorTest {
@@ -135,11 +136,10 @@ class Gpg45ProfileEvaluatorTest {
                 "X99", new ContraIndicatorScore("X99", 3, -2, null, Collections.emptyList()));
         when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
-
-        CredentialIssuerConfig kbvConfig = mock(CredentialIssuerConfig.class);
         when(mockConfigService.getSsmParameter(KBV_CRI_ID)).thenReturn("kbv");
-        when(mockConfigService.getCredentialIssuer("kbv")).thenReturn(kbvConfig);
-        when(kbvConfig.getAudienceForClients()).thenReturn("kbvIssuer");
+        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
+                .thenReturn("testPath");
+        when(mockConfigService.getSsmParameter("testPath/kbv")).thenReturn("kbvIssuer");
 
         assertEquals(
                 Optional.of(JOURNEY_RESPONSE_PYI_KBV_FAIL),
@@ -179,8 +179,8 @@ class Gpg45ProfileEvaluatorTest {
 
         CredentialIssuerConfig kbvConfig = mock(CredentialIssuerConfig.class);
         when(mockConfigService.getSsmParameter(KBV_CRI_ID)).thenReturn("kbv");
-        when(mockConfigService.getCredentialIssuer("kbv")).thenReturn(kbvConfig);
-        when(kbvConfig.getAudienceForClients()).thenReturn("kbvIssuer");
+        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
+                .thenReturn("test");
 
         assertEquals(
                 Optional.of(JOURNEY_RESPONSE_PYI_NO_MATCH),

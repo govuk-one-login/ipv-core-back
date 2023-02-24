@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
@@ -80,9 +81,12 @@ public class Gpg45ProfileEvaluator {
             String lastCiIssuer =
                     contraIndicatorItems.get(contraIndicatorItems.size() - 1).getIss();
             String kbvIssuer =
-                    configService
-                            .getCredentialIssuer(configService.getSsmParameter(KBV_CRI_ID))
-                            .getAudienceForClients();
+                    configService.getSsmParameter(
+                            String.format(
+                                    "%s/%s",
+                                    configService.getEnvironmentVariable(
+                                            CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
+                                    configService.getSsmParameter(KBV_CRI_ID)));
 
             return Optional.of(
                     lastCiIssuer.equals(kbvIssuer)

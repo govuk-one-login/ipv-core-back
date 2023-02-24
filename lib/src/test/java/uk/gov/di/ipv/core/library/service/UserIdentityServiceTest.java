@@ -12,13 +12,11 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
-import java.net.URI;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
@@ -33,6 +31,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC_MISSING_ADDRESS_PROPERTY;
@@ -72,21 +71,12 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getCredentialIssuer(anyString()))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
-                                true,
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "test-issuer",
-                                URI.create("https://example.com/callback")));
+        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
+                .thenReturn("testPath");
+        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
+                .thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -125,21 +115,12 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getCredentialIssuer(anyString()))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
-                                true,
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "test-issuer",
-                                URI.create("https://example.com/callback")));
+        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
+                .thenReturn("testPath");
+        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
+                .thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -160,21 +141,12 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getCredentialIssuer(anyString()))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
-                                true,
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "test-issuer",
-                                URI.create("https://example.com/callback")));
+        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
+                .thenReturn("testPath");
+        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
+                .thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -222,21 +194,12 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getCredentialIssuer(anyString()))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
-                                true,
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "test-issuer",
-                                URI.create("https://example.com/callback")));
+        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
+                .thenReturn("testPath");
+        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
+                .thenReturn("test-issuer");
 
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
@@ -269,21 +232,12 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getCredentialIssuer(anyString()))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
-                                true,
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "test-issuer",
-                                URI.create("https://example.com/callback")));
+        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
+                .thenReturn("testPath");
+        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
+                .thenReturn("test-issuer");
 
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
@@ -303,6 +257,8 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldSetPassportClaimWhenVotIsP2() throws HttpResponseExceptionWithErrorBody {
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem("user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
@@ -314,20 +270,10 @@ class UserIdentityServiceTest {
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getCredentialIssuer(anyString()))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
-                                true,
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "test-issuer",
-                                URI.create("https://example.com/callback")));
+        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
+                .thenReturn("testPath");
+        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
+                .thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -374,21 +320,12 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getCredentialIssuer(anyString()))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
-                                true,
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "test-issuer",
-                                URI.create("https://example.com/callback")));
+        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
+                .thenReturn("testPath");
+        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
+                .thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -439,21 +376,12 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getCredentialIssuer(anyString()))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
-                                true,
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "test-issuer",
-                                URI.create("https://example.com/callback")));
+        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
+                .thenReturn("testPath");
+        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
+                .thenReturn("test-issuer");
 
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
@@ -490,21 +418,12 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getCredentialIssuer(anyString()))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
-                                true,
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "test-issuer",
-                                URI.create("https://example.com/callback")));
+        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
+                .thenReturn("testPath");
+        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
+                .thenReturn("test-issuer");
 
         HttpResponseExceptionWithErrorBody thrownException =
                 assertThrows(
@@ -534,21 +453,12 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getCredentialIssuer(anyString()))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
-                                true,
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "test-issuer",
-                                URI.create("https://example.com/callback")));
+        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
+                .thenReturn("testPath");
+        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
+                .thenReturn("test-issuer");
 
         HttpResponseExceptionWithErrorBody thrownException =
                 assertThrows(
@@ -689,21 +599,12 @@ class UserIdentityServiceTest {
                         new VcStatusDto("test-issuer", true),
                         new VcStatusDto("dcmaw-issuer", true));
 
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getCredentialIssuer("dcmaw"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
-                                true,
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "dcmaw-issuer",
-                                URI.create("https://example.com/callback")));
+        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
+                .thenReturn("testPath");
+        when(mockConfigService.getSsmParameter("testPath/dcmaw/audienceForClients"))
+                .thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -753,21 +654,12 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getCredentialIssuer(anyString()))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
-                                true,
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "test-issuer",
-                                URI.create("https://example.com/callback")));
+        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
+                .thenReturn("testPath");
+        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
+                .thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -794,77 +686,20 @@ class UserIdentityServiceTest {
                         new VcStatusDto("test-issuer", true),
                         new VcStatusDto("dcmaw-issuer", false));
 
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getCredentialIssuer("ukPassport"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
-                                true,
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "test-issuer",
-                                URI.create("https://example.com/callback")));
-        when(mockConfigService.getCredentialIssuer("fraud"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
-                                true,
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "test-issuer",
-                                URI.create("https://example.com/callback")));
-        when(mockConfigService.getCredentialIssuer("address"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
-                                true,
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "test-issuer",
-                                URI.create("https://example.com/callback")));
-        when(mockConfigService.getCredentialIssuer("kbv"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
-                                true,
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "test-issuer",
-                                URI.create("https://example.com/callback")));
-        when(mockConfigService.getCredentialIssuer("dcmaw"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
-                                true,
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "dcmaw-issuer",
-                                URI.create("https://example.com/callback")));
+        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
+                .thenReturn("testPath");
+        when(mockConfigService.getSsmParameter("testPath/dcmaw/audienceForClients"))
+                .thenReturn("dcmaw-issuer");
+        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
+                .thenReturn("test-issuer");
+        when(mockConfigService.getSsmParameter("testPath/fraud/audienceForClients"))
+                .thenReturn("test-issuer");
+        when(mockConfigService.getSsmParameter("testPath/address/audienceForClients"))
+                .thenReturn("test-issuer");
+        when(mockConfigService.getSsmParameter("testPath/kbv/audienceForClients"))
+                .thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -888,21 +723,12 @@ class UserIdentityServiceTest {
 
         List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("dcmaw-issuer", true));
 
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getCredentialIssuer(anyString()))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
-                                true,
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "dcmaw-issuer",
-                                URI.create("https://example.com/callback")));
+        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
+                .thenReturn("testPath");
+        when(mockConfigService.getSsmParameter("testPath/dcmaw/audienceForClients"))
+                .thenReturn("dcmaw-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -923,21 +749,11 @@ class UserIdentityServiceTest {
 
         List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("dcmaw-issuer", true));
 
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getCredentialIssuer(anyString()))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
-                                true,
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "dcmaw-issuer",
-                                URI.create("https://example.com/callback")));
+        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
+                .thenReturn("testPath");
+        when(mockConfigService.getSsmParameter(anyString())).thenReturn("dcmaw-issuer");
 
         HttpResponseExceptionWithErrorBody thrownException =
                 assertThrows(

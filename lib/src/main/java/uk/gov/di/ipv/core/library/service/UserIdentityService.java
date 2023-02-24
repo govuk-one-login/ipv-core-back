@@ -17,7 +17,6 @@ import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -32,6 +31,7 @@ import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
@@ -161,11 +161,10 @@ public class UserIdentityService {
             List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : vcStoreItems) {
-            CredentialIssuerConfig credentialIssuerConfig =
-                    configService.getCredentialIssuer(item.getCredentialIssuer());
+            String audienceForClients = getAudienceForClients(item);
+
             if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())
-                    && isVcSuccessful(
-                            currentVcStatuses, credentialIssuerConfig.getAudienceForClients())) {
+                    && isVcSuccessful(currentVcStatuses, audienceForClients)) {
                 try {
                     JsonNode nameNode =
                             objectMapper
@@ -267,11 +266,9 @@ public class UserIdentityService {
             List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : vcStoreItems) {
-            CredentialIssuerConfig credentialIssuerConfig =
-                    configService.getCredentialIssuer(item.getCredentialIssuer());
+            String audienceForClients = getAudienceForClients(item);
             if (PASSPORT_CRI_TYPES.contains(item.getCredentialIssuer())
-                    && isVcSuccessful(
-                            currentVcStatuses, credentialIssuerConfig.getAudienceForClients())) {
+                    && isVcSuccessful(currentVcStatuses, audienceForClients)) {
                 JsonNode passportNode;
                 try {
                     passportNode =
@@ -311,11 +308,9 @@ public class UserIdentityService {
             List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : vcStoreItems) {
-            CredentialIssuerConfig credentialIssuerConfig =
-                    configService.getCredentialIssuer(item.getCredentialIssuer());
+            String audienceForClients = getAudienceForClients(item);
             if (DRIVING_PERMIT_CRI_TYPES.contains(item.getCredentialIssuer())
-                    && isVcSuccessful(
-                            currentVcStatuses, credentialIssuerConfig.getAudienceForClients())) {
+                    && isVcSuccessful(currentVcStatuses, audienceForClients)) {
                 JsonNode drivingPermitNode;
                 try {
                     drivingPermitNode =
@@ -358,6 +353,16 @@ public class UserIdentityService {
         }
         LOGGER.warn("Failed to find Driving Permit CRI credential");
         return Optional.empty();
+    }
+
+    private String getAudienceForClients(VcStoreItem item) {
+        return configService.getSsmParameter(
+                String.format(
+                        "%s/%s/%s",
+                        configService.getEnvironmentVariable(
+                                CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
+                        item.getCredentialIssuer(),
+                        "audienceForClients"));
     }
 
     public boolean isVcSuccessful(List<VcStatusDto> currentVcStatuses, String criIss) {
