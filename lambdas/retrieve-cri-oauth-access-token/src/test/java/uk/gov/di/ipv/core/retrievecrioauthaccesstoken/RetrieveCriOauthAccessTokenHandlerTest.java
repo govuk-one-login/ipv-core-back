@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
+import uk.gov.di.ipv.core.library.exceptions.JourneyError;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -34,6 +35,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
@@ -101,7 +103,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     @Test
-    void shouldReceiveJourneyResponseOnSuccessfulRequest() throws SqsException {
+    void shouldReceiveSuccessResponseOnSuccessfulRequest() throws SqsException {
         Map<String, String> input = Map.of(IPV_SESSION_ID, sessionId);
 
         JSONObject testCredential = new JSONObject();
@@ -121,11 +123,11 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         assertEquals(
                 AuditEventTypes.IPV_CRI_ACCESS_TOKEN_EXCHANGED, auditEvents.get(0).getEventName());
 
-        assertEquals("/journey/cri/credential", output.get("journey"));
+        assertEquals("success", output.get("result"));
     }
 
     @Test
-    void shouldReceiveErrorJourneyResponseIfCredentialIssuerServiceThrowsException() {
+    void shouldThrowJourneyErrorIfCredentialIssuerServiceThrowsException() {
         Map<String, String> input = Map.of(IPV_SESSION_ID, sessionId);
 
         when(credentialIssuerService.exchangeCodeForToken(
@@ -143,9 +145,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         when(ipvSessionItem.getCredentialIssuerSessionDetails())
                 .thenReturn(credentialIssuerSessionDetailsDto);
 
-        Map<String, Object> output = handler.handleRequest(input, context);
-
-        assertEquals("/journey/error", output.get("journey"));
+        assertThrows(JourneyError.class, () -> handler.handleRequest(input, context));
     }
 
     @Test
@@ -192,7 +192,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     @Test
-    void shouldReceiveErrorJourneyResponseIfSqsExceptionIsThrown() throws SqsException {
+    void shouldThrowJourneyErrorIfSqsExceptionIsThrown() throws SqsException {
         Map<String, String> input = Map.of(IPV_SESSION_ID, sessionId);
 
         JSONObject testCredential = new JSONObject();
@@ -208,9 +208,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                 .when(auditService)
                 .sendAuditEvent(any(AuditEvent.class));
 
-        Map<String, Object> output = handler.handleRequest(input, context);
-
-        assertEquals("/journey/error", output.get("journey"));
+        assertThrows(JourneyError.class, () -> handler.handleRequest(input, context));
     }
 
     @Test
@@ -237,7 +235,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
-        handler.handleRequest(input, context);
+        assertThrows(JourneyError.class, () -> handler.handleRequest(input, context));
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -280,7 +278,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
-        handler.handleRequest(input, context);
+        assertThrows(JourneyError.class, () -> handler.handleRequest(input, context));
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);

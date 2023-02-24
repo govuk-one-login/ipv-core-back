@@ -15,16 +15,22 @@
         "ipAddress.$": "$.ipAddress",
         "journey.$": "$.lambdaResult.journey"
       },
+      "Catch": [
+        {
+          "ErrorEquals": ["uk.gov.di.ipv.core.library.exceptions.JourneyError"],
+          "ResultPath": "$.error",
+          "Next": "ProcessJourneyStep-JourneyError"
+        }
+      ],
       "ResultPath": "$.lambdaResult",
-      "Next": "RouteJourneyResponse"
+      "Next": "RetrieveCriCredential"
     },
     "RetrieveCriCredential": {
       "Type": "Task",
       "Resource": "${RetrieveCriCredentialFunctionArn}",
       "Parameters": {
         "ipvSessionId.$": "$.ipvSessionId",
-        "ipAddress.$": "$.ipAddress",
-        "journey.$": "$.lambdaResult.journey"
+        "ipAddress.$": "$.ipAddress"
       },
       "ResultPath": "$.lambdaResult",
       "Next": "RouteJourneyResponse"
@@ -39,6 +45,17 @@
       },
       "ResultPath": "$.lambdaResult",
       "Next": "RouteJourneyResponse"
+    },
+    "ProcessJourneyStep-JourneyError": {
+      "Type": "Task",
+      "Resource": "${IPVProcessJourneyStepFunctionArn}",
+      "Parameters": {
+        "ipvSessionId.$": "$.ipvSessionId",
+        "ipAddress.$": "$.ipAddress",
+        "journey": "journey/error"
+      },
+      "ResultPath": "$.lambdaResult",
+      "Next": "ReturnToFrontend"
     },
     "ReturnToFrontend": {
       "Type": "Succeed",
@@ -78,11 +95,6 @@
           "Variable": "$.lambdaResult.journey",
           "StringEquals": "/journey/cri/access-token",
           "Next": "RetrieveCriOauthAccessToken"
-        },
-        {
-          "Variable": "$.lambdaResult.journey",
-          "StringEquals": "/journey/cri/credential",
-          "Next": "RetrieveCriCredential"
         }
       ],
       "Default": "ReturnToFrontend"
