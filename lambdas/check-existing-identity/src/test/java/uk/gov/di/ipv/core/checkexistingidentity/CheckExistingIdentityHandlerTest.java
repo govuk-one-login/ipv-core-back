@@ -89,6 +89,7 @@ class CheckExistingIdentityHandlerTest {
                     new CredentialIssuerConfig(
                             "address",
                             "address",
+                            true,
                             new URI("http://example.com/token"),
                             new URI("http://example.com/credential"),
                             new URI("http://example.com/authorize"),

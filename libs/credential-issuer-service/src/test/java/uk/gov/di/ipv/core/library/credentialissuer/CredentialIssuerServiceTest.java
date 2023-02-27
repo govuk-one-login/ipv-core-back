@@ -380,6 +380,7 @@ class CredentialIssuerServiceTest {
         return new CredentialIssuerConfig(
                 "StubPassport",
                 "any",
+                true,
                 URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/token"),
                 URI.create(
                         "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/credentials/issue"),

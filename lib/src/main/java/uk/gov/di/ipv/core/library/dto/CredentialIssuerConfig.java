@@ -16,6 +16,7 @@ public class CredentialIssuerConfig {
 
     private String id;
     private String name;
+    private Boolean enabled;
     private URI tokenUrl;
     private URI credentialUrl;
     private URI authorizeUrl;
@@ -31,6 +32,7 @@ public class CredentialIssuerConfig {
     public CredentialIssuerConfig(
             String id,
             String name,
+            Boolean enabled,
             URI tokenUrl,
             URI credentialUrl,
             URI authorizeUrl,
@@ -41,6 +43,7 @@ public class CredentialIssuerConfig {
             URI ipvCoreRedirectUrl) {
         this.id = id;
         this.name = name;
+        this.enabled = enabled;
         this.tokenUrl = tokenUrl;
         this.credentialUrl = credentialUrl;
         this.authorizeUrl = authorizeUrl;
@@ -53,6 +56,10 @@ public class CredentialIssuerConfig {
 
     public String getId() {
         return id;
+    }
+
+    public Boolean getEnabled() {
+        return enabled;
     }
 
     public URI getTokenUrl() {

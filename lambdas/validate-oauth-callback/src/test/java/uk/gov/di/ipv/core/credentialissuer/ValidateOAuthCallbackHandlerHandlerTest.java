@@ -71,6 +71,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 new CredentialIssuerConfig(
                         TEST_SESSION_ID,
                         "any",
+                        true,
                         new URI("http://www.example.com"),
                         new URI("http://www.example.com/credential"),
                         new URI("http://www.example.com/authorize"),
