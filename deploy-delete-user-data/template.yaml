@@ -438,4 +438,9 @@ Resources:
         - Endpoint: !FindInMap [ PagerDutyURL, Environment, !Ref Environment]
           Protocol: https
 
-  #A way to replay the DQLs
+Outputs:
+  IPVCoreSNSKey:
+    Description: IPVCoreDeleteUserSNSTopicKeyArn
+    Value: !GetAtt IPVSnsKmsKey.Arn
+    Export:
+      Name: !Sub "IPVCoreDeleteUserSNSTopicKeyArn-${Environment}"
