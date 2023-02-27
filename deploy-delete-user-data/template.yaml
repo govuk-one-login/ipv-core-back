@@ -256,6 +256,12 @@ Resources:
             Resource:
               - "*"
 
+  IPVSnsKmsKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub alias/IPVCoreDeleteUserSNSTopicKey
+      TargetKeyId: !Ref IPVSnsKmsKey
+
 #Delete Account Queue
   DeleteAccountSQSQueue:
     DependsOn: DeleteAccountSNSDLQ
