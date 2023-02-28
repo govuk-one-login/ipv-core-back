@@ -34,16 +34,16 @@ public class CiStorageService {
     private static final Gson gson = new Gson();
     private static final String FAILED_LAMBDA_MESSAGE = "Lambda execution failed";
     private final AWSLambda lambdaClient;
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
 
-    public CiStorageService(ConfigurationService configurationService) {
+    public CiStorageService(ConfigService configService) {
         this.lambdaClient = AWSLambdaClientBuilder.defaultClient();
-        this.configurationService = configurationService;
+        this.configService = configService;
     }
 
-    public CiStorageService(AWSLambda lambdaClient, ConfigurationService configurationService) {
+    public CiStorageService(AWSLambda lambdaClient, ConfigService configService) {
         this.lambdaClient = lambdaClient;
-        this.configurationService = configurationService;
+        this.configService = configService;
     }
 
     public void submitVC(
@@ -52,8 +52,7 @@ public class CiStorageService {
         InvokeRequest request =
                 new InvokeRequest()
                         .withFunctionName(
-                                configurationService.getEnvironmentVariable(
-                                        CI_STORAGE_PUT_LAMBDA_ARN))
+                                configService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
                         .withPayload(
                                 gson.toJson(
                                         new PutCiRequest(
@@ -76,7 +75,7 @@ public class CiStorageService {
         InvokeRequest request =
                 new InvokeRequest()
                         .withFunctionName(
-                                configurationService.getEnvironmentVariable(
+                                configService.getEnvironmentVariable(
                                         CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
                         .withPayload(
                                 gson.toJson(
@@ -100,8 +99,7 @@ public class CiStorageService {
         InvokeRequest request =
                 new InvokeRequest()
                         .withFunctionName(
-                                configurationService.getEnvironmentVariable(
-                                        CI_STORAGE_GET_LAMBDA_ARN))
+                                configService.getEnvironmentVariable(CI_STORAGE_GET_LAMBDA_ARN))
                         .withPayload(
                                 gson.toJson(
                                         new GetCiRequest(govukSigninJourneyId, ipAddress, userId)));

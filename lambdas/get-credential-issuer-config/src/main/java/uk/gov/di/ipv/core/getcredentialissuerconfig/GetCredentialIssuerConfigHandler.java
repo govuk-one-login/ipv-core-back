@@ -13,22 +13,22 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.List;
 
 public class GetCredentialIssuerConfigHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public GetCredentialIssuerConfigHandler(ConfigurationService configurationService) {
-        this.configurationService = configurationService;
+    public GetCredentialIssuerConfigHandler(ConfigService configService) {
+        this.configService = configService;
     }
 
     public GetCredentialIssuerConfigHandler() {
-        configurationService = new ConfigurationService();
+        configService = new ConfigService();
     }
 
     @Override
@@ -38,7 +38,7 @@ public class GetCredentialIssuerConfigHandler
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
         try {
-            List<CredentialIssuerConfig> config = configurationService.getCredentialIssuers();
+            List<CredentialIssuerConfig> config = configService.getCredentialIssuers();
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, config);
         } catch (ParseCredentialIssuerConfigException e) {
             String errorMessage =

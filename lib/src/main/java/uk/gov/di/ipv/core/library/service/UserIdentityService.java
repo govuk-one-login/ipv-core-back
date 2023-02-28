@@ -57,26 +57,25 @@ public class UserIdentityService {
     private static final String DRIVING_PERMIT_PROPERTY_NAME = "drivingPermit";
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
     private final DataStore<VcStoreItem> dataStore;
 
     @ExcludeFromGeneratedCoverageReport
-    public UserIdentityService(ConfigurationService configurationService) {
-        this.configurationService = configurationService;
-        boolean isRunningLocally = this.configurationService.isRunningLocally();
+    public UserIdentityService(ConfigService configService) {
+        this.configService = configService;
+        boolean isRunningLocally = this.configService.isRunningLocally();
         this.dataStore =
                 new DataStore<>(
-                        this.configurationService.getEnvironmentVariable(
+                        this.configService.getEnvironmentVariable(
                                 USER_ISSUED_CREDENTIALS_TABLE_NAME),
                         VcStoreItem.class,
                         DataStore.getClient(isRunningLocally),
                         isRunningLocally,
-                        configurationService);
+                        configService);
     }
 
-    public UserIdentityService(
-            ConfigurationService configurationService, DataStore<VcStoreItem> dataStore) {
-        this.configurationService = configurationService;
+    public UserIdentityService(ConfigService configService, DataStore<VcStoreItem> dataStore) {
+        this.configService = configService;
         this.dataStore = dataStore;
     }
 
@@ -91,8 +90,7 @@ public class UserIdentityService {
                 Instant.now()
                         .plusSeconds(
                                 Long.parseLong(
-                                        configurationService.getSsmParameter(
-                                                BACKEND_SESSION_TIMEOUT)));
+                                        configService.getSsmParameter(BACKEND_SESSION_TIMEOUT)));
         List<VcStoreItem> expiredVcStoreItems =
                 this.dataStore.getItemsWithAttributeLessThanOrEqualValue(
                         userId, "expirationTime", nowPlusSessionTimeout.toString());
@@ -134,7 +132,7 @@ public class UserIdentityService {
         List<String> vcJwts =
                 vcStoreItems.stream().map(VcStoreItem::getCredential).collect(Collectors.toList());
 
-        String vtm = configurationService.getSsmParameter(CORE_VTM_CLAIM);
+        String vtm = configService.getSsmParameter(CORE_VTM_CLAIM);
 
         UserIdentity.UserIdentityBuilder userIdentityBuilder =
                 UserIdentity.builder().vcs(vcJwts).sub(sub).vot(vot).vtm(vtm);
@@ -164,7 +162,7 @@ public class UserIdentityService {
             throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : vcStoreItems) {
             CredentialIssuerConfig credentialIssuerConfig =
-                    configurationService.getCredentialIssuer(item.getCredentialIssuer());
+                    configService.getCredentialIssuer(item.getCredentialIssuer());
             if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())
                     && isVcSuccessful(
                             currentVcStatuses, credentialIssuerConfig.getAudienceForClients())) {
@@ -270,7 +268,7 @@ public class UserIdentityService {
             throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : vcStoreItems) {
             CredentialIssuerConfig credentialIssuerConfig =
-                    configurationService.getCredentialIssuer(item.getCredentialIssuer());
+                    configService.getCredentialIssuer(item.getCredentialIssuer());
             if (PASSPORT_CRI_TYPES.contains(item.getCredentialIssuer())
                     && isVcSuccessful(
                             currentVcStatuses, credentialIssuerConfig.getAudienceForClients())) {
@@ -314,7 +312,7 @@ public class UserIdentityService {
             throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : vcStoreItems) {
             CredentialIssuerConfig credentialIssuerConfig =
-                    configurationService.getCredentialIssuer(item.getCredentialIssuer());
+                    configService.getCredentialIssuer(item.getCredentialIssuer());
             if (DRIVING_PERMIT_CRI_TYPES.contains(item.getCredentialIssuer())
                     && isVcSuccessful(
                             currentVcStatuses, credentialIssuerConfig.getAudienceForClients())) {

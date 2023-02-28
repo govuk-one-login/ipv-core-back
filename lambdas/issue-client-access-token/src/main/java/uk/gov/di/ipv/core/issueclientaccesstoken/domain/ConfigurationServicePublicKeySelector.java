@@ -10,7 +10,7 @@ import com.nimbusds.oauth2.sdk.auth.verifier.ClientCredentialsSelector;
 import com.nimbusds.oauth2.sdk.auth.verifier.Context;
 import com.nimbusds.oauth2.sdk.auth.verifier.InvalidClientException;
 import com.nimbusds.oauth2.sdk.id.ClientID;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.io.ByteArrayInputStream;
 import java.security.PublicKey;
@@ -28,10 +28,10 @@ public class ConfigurationServicePublicKeySelector implements ClientCredentialsS
     private static final String ES256 = "ES256";
     private static final String RS256 = "RS256";
 
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
 
-    public ConfigurationServicePublicKeySelector(ConfigurationService configurationService) {
-        this.configurationService = configurationService;
+    public ConfigurationServicePublicKeySelector(ConfigService configService) {
+        this.configService = configService;
     }
 
     @Override
@@ -52,8 +52,7 @@ public class ConfigurationServicePublicKeySelector implements ClientCredentialsS
         JWSAlgorithm algorithm = jwsHeader.getAlgorithm();
         String clientId = claimedClientID.getValue();
         String publicKeyMaterial =
-                configurationService.getSsmParameter(
-                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, clientId);
+                configService.getSsmParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, clientId);
 
         try {
             switch (algorithm.toString()) {

@@ -14,7 +14,7 @@ import uk.gov.di.ipv.core.getcredentialissuerconfig.GetCredentialIssuerConfigHan
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.net.URI;
 import java.util.List;
@@ -60,15 +60,15 @@ class GetCredentialIssuerConfigHandlerTest {
 
     @Mock Context context;
 
-    @Mock ConfigurationService configurationService;
+    @Mock ConfigService configService;
 
     @Test
     void shouldReceive200ResponseCodeAndListOfCredentialIssuers()
             throws JsonProcessingException, ParseCredentialIssuerConfigException {
-        when(configurationService.getCredentialIssuers()).thenReturn(credentialIssuerConfigList);
+        when(configService.getCredentialIssuers()).thenReturn(credentialIssuerConfigList);
 
         GetCredentialIssuerConfigHandler underTest =
-                new GetCredentialIssuerConfigHandler(configurationService);
+                new GetCredentialIssuerConfigHandler(configService);
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
 
@@ -83,11 +83,11 @@ class GetCredentialIssuerConfigHandlerTest {
     @Test
     void shouldReceive500ResponseCodeIfUnableToGetCredentialIssuers()
             throws JsonProcessingException, ParseCredentialIssuerConfigException {
-        when(configurationService.getCredentialIssuers())
+        when(configService.getCredentialIssuers())
                 .thenThrow(new ParseCredentialIssuerConfigException("Something went wrong"));
 
         GetCredentialIssuerConfigHandler underTest =
-                new GetCredentialIssuerConfigHandler(configurationService);
+                new GetCredentialIssuerConfigHandler(configService);
         APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);

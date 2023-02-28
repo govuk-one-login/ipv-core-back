@@ -17,7 +17,7 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processjourneystep.exceptions.JourneyEngineException;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.StateMachine;
@@ -41,20 +41,20 @@ public class ProcessJourneyStepHandler
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
 
     private final IpvSessionService ipvSessionService;
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
 
     private StateMachine stateMachine;
 
     public ProcessJourneyStepHandler(
-            IpvSessionService ipvSessionService, ConfigurationService configurationService) {
+            IpvSessionService ipvSessionService, ConfigService configService) {
         this.ipvSessionService = ipvSessionService;
-        this.configurationService = configurationService;
+        this.configService = configService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public ProcessJourneyStepHandler() {
-        this.configurationService = new ConfigurationService();
-        this.ipvSessionService = new IpvSessionService(configurationService);
+        this.configService = new ConfigService();
+        this.ipvSessionService = new IpvSessionService(configService);
     }
 
     @Override
@@ -77,7 +77,7 @@ public class ProcessJourneyStepHandler
             this.stateMachine =
                     new StateMachine(
                             new StateMachineInitializer(
-                                    configurationService.getEnvironmentVariable(
+                                    configService.getEnvironmentVariable(
                                             EnvironmentVariable.ENVIRONMENT),
                                     ipvSessionItem.getJourneyType()));
 
@@ -106,7 +106,7 @@ public class ProcessJourneyStepHandler
         String currentUserState = ipvSessionItem.getUserState();
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(currentUserState, ipvSessionItem);
-            return new PageResponse(PYIC_TECHNICAL_ERROR_PAGE_ID).value(configurationService);
+            return new PageResponse(PYIC_TECHNICAL_ERROR_PAGE_ID).value(configService);
         }
 
         try {
@@ -126,7 +126,7 @@ public class ProcessJourneyStepHandler
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            return stateMachineResult.getJourneyStepResponse().value(configurationService);
+            return stateMachineResult.getJourneyStepResponse().value(configService);
         } catch (UnknownStateException e) {
             LOGGER.error("Unknown journey state: {}", ipvSessionItem.getUserState());
             throw new JourneyEngineException(
@@ -186,7 +186,7 @@ public class ProcessJourneyStepHandler
                                 Instant.now()
                                         .minusSeconds(
                                                 Long.parseLong(
-                                                        configurationService.getSsmParameter(
+                                                        configService.getSsmParameter(
                                                                 BACKEND_SESSION_TIMEOUT))));
     }
 }

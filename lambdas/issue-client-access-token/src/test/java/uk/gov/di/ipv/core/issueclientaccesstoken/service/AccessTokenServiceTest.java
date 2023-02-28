@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.net.URI;
@@ -24,19 +24,19 @@ import static uk.gov.di.ipv.core.issueclientaccesstoken.service.AccessTokenServi
 
 @ExtendWith(MockitoExtension.class)
 class AccessTokenServiceTest {
-    @Mock private ConfigurationService mockConfigurationService;
+    @Mock private ConfigService mockConfigService;
 
     private AccessTokenService accessTokenService;
 
     @BeforeEach
     void setUp() {
-        this.accessTokenService = new AccessTokenService(mockConfigurationService);
+        this.accessTokenService = new AccessTokenService(mockConfigService);
     }
 
     @Test
     void shouldReturnSuccessfulTokenResponseOnSuccessfulExchange() {
         long testTokenTtl = 2400L;
-        when(mockConfigurationService.getBearerAccessTokenTtl()).thenReturn(testTokenTtl);
+        when(mockConfigService.getBearerAccessTokenTtl()).thenReturn(testTokenTtl);
 
         TokenResponse response = accessTokenService.generateAccessToken();
 

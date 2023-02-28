@@ -29,7 +29,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.util.Map;
@@ -42,31 +42,29 @@ public class RetrieveCriOauthAccessTokenHandler
             Map.of(JOURNEY, "/journey/cri/credential");
     private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, "/journey/error");
     private final CredentialIssuerService credentialIssuerService;
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
     private final AuditService auditService;
     private final IpvSessionService ipvSessionService;
 
     public RetrieveCriOauthAccessTokenHandler(
             CredentialIssuerService credentialIssuerService,
-            ConfigurationService configurationService,
+            ConfigService configService,
             IpvSessionService ipvSessionService,
             AuditService auditService) {
         this.credentialIssuerService = credentialIssuerService;
-        this.configurationService = configurationService;
+        this.configService = configService;
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public RetrieveCriOauthAccessTokenHandler() {
-        this.configurationService = new ConfigurationService();
+        this.configService = new ConfigService();
         this.credentialIssuerService =
                 new CredentialIssuerService(
-                        configurationService,
-                        new KmsEs256Signer(configurationService.getSigningKeyId()));
-        this.auditService =
-                new AuditService(AuditService.getDefaultSqsClient(), configurationService);
-        this.ipvSessionService = new IpvSessionService(configurationService);
+                        configService, new KmsEs256Signer(configService.getSigningKeyId()));
+        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
+        this.ipvSessionService = new IpvSessionService(configService);
     }
 
     @Override
@@ -96,8 +94,7 @@ public class RetrieveCriOauthAccessTokenHandler
             CredentialIssuerConfig credentialIssuerConfig =
                     getCredentialIssuerConfig(credentialIssuerId);
 
-            String apiKey =
-                    configurationService.getCriPrivateApiKey(credentialIssuerConfig.getId());
+            String apiKey = configService.getCriPrivateApiKey(credentialIssuerConfig.getId());
 
             BearerAccessToken accessToken =
                     credentialIssuerService.exchangeCodeForToken(
@@ -110,8 +107,7 @@ public class RetrieveCriOauthAccessTokenHandler
                             clientSessionDetailsDto.getGovukSigninJourneyId(),
                             ipAddress);
             String componentId =
-                    configurationService.getSsmParameter(
-                            ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                    configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
 
             auditService.sendAuditEvent(
                     new AuditEvent(
@@ -166,7 +162,7 @@ public class RetrieveCriOauthAccessTokenHandler
 
     @Tracing
     private CredentialIssuerConfig getCredentialIssuerConfig(String criId) {
-        return configurationService.getCredentialIssuer(criId);
+        return configService.getCredentialIssuer(criId);
     }
 
     @Tracing

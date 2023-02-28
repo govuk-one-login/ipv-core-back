@@ -51,7 +51,7 @@ class UserIdentityServiceTest {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Mock private ConfigurationService mockConfigurationService;
+    @Mock private ConfigService mockConfigService;
 
     @Mock private DataStore<VcStoreItem> mockDataStore;
 
@@ -59,7 +59,7 @@ class UserIdentityServiceTest {
 
     @BeforeEach
     void setUp() {
-        userIdentityService = new UserIdentityService(mockConfigurationService, mockDataStore);
+        userIdentityService = new UserIdentityService(mockConfigService, mockDataStore);
     }
 
     @Test
@@ -73,7 +73,7 @@ class UserIdentityServiceTest {
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigurationService.getCredentialIssuer(anyString()))
+        when(mockConfigService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -126,7 +126,7 @@ class UserIdentityServiceTest {
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigurationService.getCredentialIssuer(anyString()))
+        when(mockConfigService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -161,7 +161,7 @@ class UserIdentityServiceTest {
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigurationService.getCredentialIssuer(anyString()))
+        when(mockConfigService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -223,7 +223,7 @@ class UserIdentityServiceTest {
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigurationService.getCredentialIssuer(anyString()))
+        when(mockConfigService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -270,7 +270,7 @@ class UserIdentityServiceTest {
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigurationService.getCredentialIssuer(anyString()))
+        when(mockConfigService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -314,7 +314,7 @@ class UserIdentityServiceTest {
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigurationService.getCredentialIssuer(anyString()))
+        when(mockConfigService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -375,7 +375,7 @@ class UserIdentityServiceTest {
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigurationService.getCredentialIssuer(anyString()))
+        when(mockConfigService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -399,7 +399,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldSetSubClaimOnUserIdentity() throws HttpResponseExceptionWithErrorBody {
-        when(mockConfigurationService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -413,7 +413,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldSetVtmClaimOnUserIdentity() throws HttpResponseExceptionWithErrorBody {
-        when(mockConfigurationService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -440,7 +440,7 @@ class UserIdentityServiceTest {
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigurationService.getCredentialIssuer(anyString()))
+        when(mockConfigService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -491,7 +491,7 @@ class UserIdentityServiceTest {
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigurationService.getCredentialIssuer(anyString()))
+        when(mockConfigService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -535,7 +535,7 @@ class UserIdentityServiceTest {
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigurationService.getCredentialIssuer(anyString()))
+        when(mockConfigService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -604,7 +604,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldDeleteExistingVCsIfAnyDueToExpireWithinSessionTimeout() {
-        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
         List<VcStoreItem> vcStoreItems =
                 List.of(
@@ -628,7 +628,7 @@ class UserIdentityServiceTest {
 
     @Test
     void shouldNotDeleteExistingVCsIfNoneAreDueToExpireWithinSessionTimeout() {
-        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
 
         List<VcStoreItem> expiredVcStoreItems = Collections.emptyList();
         when(mockDataStore.getItemsWithAttributeLessThanOrEqualValue(
@@ -690,7 +690,7 @@ class UserIdentityServiceTest {
                         new VcStatusDto("dcmaw-issuer", true));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigurationService.getCredentialIssuer("dcmaw"))
+        when(mockConfigService.getCredentialIssuer("dcmaw"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -754,7 +754,7 @@ class UserIdentityServiceTest {
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigurationService.getCredentialIssuer(anyString()))
+        when(mockConfigService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -795,7 +795,7 @@ class UserIdentityServiceTest {
                         new VcStatusDto("dcmaw-issuer", false));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigurationService.getCredentialIssuer("ukPassport"))
+        when(mockConfigService.getCredentialIssuer("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -809,7 +809,7 @@ class UserIdentityServiceTest {
                                 "test-jwk",
                                 "test-issuer",
                                 URI.create("https://example.com/callback")));
-        when(mockConfigurationService.getCredentialIssuer("fraud"))
+        when(mockConfigService.getCredentialIssuer("fraud"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -823,7 +823,7 @@ class UserIdentityServiceTest {
                                 "test-jwk",
                                 "test-issuer",
                                 URI.create("https://example.com/callback")));
-        when(mockConfigurationService.getCredentialIssuer("address"))
+        when(mockConfigService.getCredentialIssuer("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -837,7 +837,7 @@ class UserIdentityServiceTest {
                                 "test-jwk",
                                 "test-issuer",
                                 URI.create("https://example.com/callback")));
-        when(mockConfigurationService.getCredentialIssuer("kbv"))
+        when(mockConfigService.getCredentialIssuer("kbv"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -851,7 +851,7 @@ class UserIdentityServiceTest {
                                 "test-jwk",
                                 "test-issuer",
                                 URI.create("https://example.com/callback")));
-        when(mockConfigurationService.getCredentialIssuer("dcmaw"))
+        when(mockConfigService.getCredentialIssuer("dcmaw"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -889,7 +889,7 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("dcmaw-issuer", true));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigurationService.getCredentialIssuer(anyString()))
+        when(mockConfigService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -924,7 +924,7 @@ class UserIdentityServiceTest {
         List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("dcmaw-issuer", true));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigurationService.getCredentialIssuer(anyString()))
+        when(mockConfigService.getCredentialIssuer(anyString()))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",

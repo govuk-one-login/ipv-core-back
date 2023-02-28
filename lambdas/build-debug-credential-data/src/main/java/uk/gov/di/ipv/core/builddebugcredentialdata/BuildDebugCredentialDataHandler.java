@@ -21,7 +21,7 @@ import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -36,24 +36,24 @@ public class BuildDebugCredentialDataHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private final UserIdentityService userIdentityService;
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
     private static final Logger LOGGER = LogManager.getLogger();
 
     public BuildDebugCredentialDataHandler(
             UserIdentityService userIdentityService,
-            ConfigurationService configurationService,
+            ConfigService configService,
             IpvSessionService ipvSessionService) {
         this.userIdentityService = userIdentityService;
-        this.configurationService = configurationService;
+        this.configService = configService;
         this.ipvSessionService = ipvSessionService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public BuildDebugCredentialDataHandler() {
-        this.configurationService = new ConfigurationService();
-        this.userIdentityService = new UserIdentityService(configurationService);
-        this.ipvSessionService = new IpvSessionService(configurationService);
+        this.configService = new ConfigService();
+        this.userIdentityService = new UserIdentityService(configService);
+        this.ipvSessionService = new IpvSessionService(configService);
     }
 
     @Override

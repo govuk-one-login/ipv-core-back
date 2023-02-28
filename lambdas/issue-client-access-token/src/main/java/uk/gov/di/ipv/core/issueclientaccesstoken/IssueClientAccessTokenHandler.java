@@ -30,7 +30,7 @@ import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
@@ -43,28 +43,27 @@ public class IssueClientAccessTokenHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private final AccessTokenService accessTokenService;
     private final IpvSessionService sessionService;
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
     private final TokenRequestValidator tokenRequestValidator;
 
     public IssueClientAccessTokenHandler(
             AccessTokenService accessTokenService,
             IpvSessionService sessionService,
-            ConfigurationService configurationService,
+            ConfigService configService,
             TokenRequestValidator tokenRequestValidator) {
         this.accessTokenService = accessTokenService;
         this.sessionService = sessionService;
-        this.configurationService = configurationService;
+        this.configService = configService;
         this.tokenRequestValidator = tokenRequestValidator;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public IssueClientAccessTokenHandler() {
-        this.configurationService = new ConfigurationService();
-        this.accessTokenService = new AccessTokenService(configurationService);
-        this.sessionService = new IpvSessionService(configurationService);
+        this.configService = new ConfigService();
+        this.accessTokenService = new AccessTokenService(configService);
+        this.sessionService = new IpvSessionService(configService);
         this.tokenRequestValidator =
-                new TokenRequestValidator(
-                        configurationService, new ClientAuthJwtIdService(configurationService));
+                new TokenRequestValidator(configService, new ClientAuthJwtIdService(configService));
     }
 
     @Override
@@ -115,7 +114,7 @@ public class IssueClientAccessTokenHandler
 
             if (authorizationCodeMetadata.isExpired(
                     Long.parseLong(
-                            configurationService.getSsmParameter(
+                            configService.getSsmParameter(
                                     ConfigurationVariable.AUTH_CODE_EXPIRY_SECONDS)))) {
                 ErrorObject error =
                         OAuth2Error.INVALID_GRANT.setDescription("Authorization code expired");
@@ -152,7 +151,7 @@ public class IssueClientAccessTokenHandler
 
             if ("integration"
                     .equals(
-                            configurationService.getEnvironmentVariable(
+                            configService.getEnvironmentVariable(
                                     EnvironmentVariable.ENVIRONMENT))) {
                 BearerAccessToken bearerAccessToken =
                         accessTokenResponse.getTokens().getBearerAccessToken();

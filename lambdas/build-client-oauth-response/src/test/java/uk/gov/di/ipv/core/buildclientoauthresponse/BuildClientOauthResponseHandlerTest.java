@@ -28,7 +28,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
@@ -64,7 +64,7 @@ class BuildClientOauthResponseHandlerTest {
 
     @Mock private Context context;
     @Mock private IpvSessionService mockSessionService;
-    @Mock private ConfigurationService mockConfigurationService;
+    @Mock private ConfigService mockConfigService;
     @Mock private AuthRequestValidator mockAuthRequestValidator;
     @Mock private AuditService mockAuditService;
 
@@ -77,7 +77,7 @@ class BuildClientOauthResponseHandlerTest {
         handler =
                 new BuildClientOauthResponseHandler(
                         mockSessionService,
-                        mockConfigurationService,
+                        mockConfigService,
                         mockAuthRequestValidator,
                         mockAuditService);
     }

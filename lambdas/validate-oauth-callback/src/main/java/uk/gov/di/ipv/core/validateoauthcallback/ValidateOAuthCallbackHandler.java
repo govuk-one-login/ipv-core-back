@@ -28,7 +28,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.validateoauthcallback.dto.CredentialIssuerRequestDto;
 
@@ -58,32 +58,29 @@ public class ValidateOAuthCallbackHandler
                     OAuth2Error.SERVER_ERROR_CODE,
                     OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE);
     private static final String PYI_ATTEMPT_RECOVERY_PAGE_ID = "pyi-attempt-recovery";
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
     private final String componentId;
 
     public ValidateOAuthCallbackHandler(
-            ConfigurationService configurationService,
+            ConfigService configService,
             IpvSessionService ipvSessionService,
             AuditService auditService) {
-        this.configurationService = configurationService;
+        this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.auditService = auditService;
         this.componentId =
-                this.configurationService.getSsmParameter(
-                        ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                this.configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @ExcludeFromGeneratedCoverageReport
     public ValidateOAuthCallbackHandler() {
-        this.configurationService = new ConfigurationService();
-        this.ipvSessionService = new IpvSessionService(configurationService);
-        this.auditService =
-                new AuditService(AuditService.getDefaultSqsClient(), configurationService);
+        this.configService = new ConfigService();
+        this.ipvSessionService = new IpvSessionService(configService);
+        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.componentId =
-                this.configurationService.getSsmParameter(
-                        ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                this.configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @Override
@@ -258,7 +255,7 @@ public class ValidateOAuthCallbackHandler
 
     @Tracing
     private CredentialIssuerConfig getCredentialIssuerConfig(CredentialIssuerRequestDto request) {
-        return configurationService.getCredentialIssuer(request.getCredentialIssuerId());
+        return configService.getCredentialIssuer(request.getCredentialIssuerId());
     }
 
     @Tracing

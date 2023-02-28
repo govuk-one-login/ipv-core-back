@@ -5,7 +5,7 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.awssdk.utils.StringUtils;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.util.List;
@@ -22,10 +22,10 @@ public class AuthRequestValidator {
     private static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
 
-    public AuthRequestValidator(ConfigurationService configurationService) {
-        this.configurationService = configurationService;
+    public AuthRequestValidator(ConfigService configService) {
+        this.configService = configService;
     }
 
     public ValidationResult<ErrorResponse> validateRequest(
@@ -64,7 +64,7 @@ public class AuthRequestValidator {
             String clientId =
                     getOnlyValueOrThrow(
                             queryStringParameters.getOrDefault(CLIENT_ID_PARAM, List.of()));
-            List<String> clientRedirectUrls = configurationService.getClientRedirectUrls(clientId);
+            List<String> clientRedirectUrls = configService.getClientRedirectUrls(clientId);
 
             if (!clientRedirectUrls.contains(redirectUrl)) {
                 LOGGER.error("Invalid redirect URL for client_id {}: '{}'", clientId, redirectUrl);

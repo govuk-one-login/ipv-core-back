@@ -31,7 +31,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -45,32 +45,31 @@ public class BuildUserIdentityHandler
 
     private final UserIdentityService userIdentityService;
     private final IpvSessionService ipvSessionService;
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
     private final AuditService auditService;
     private final String componentId;
 
     public BuildUserIdentityHandler(
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
-            ConfigurationService configurationService,
+            ConfigService configService,
             AuditService auditService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
-        this.configurationService = configurationService;
+        this.configService = configService;
         this.auditService = auditService;
         this.componentId =
-                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @ExcludeFromGeneratedCoverageReport
     public BuildUserIdentityHandler() {
-        this.configurationService = new ConfigurationService();
-        this.userIdentityService = new UserIdentityService(configurationService);
-        this.ipvSessionService = new IpvSessionService(configurationService);
-        this.auditService =
-                new AuditService(AuditService.getDefaultSqsClient(), configurationService);
+        this.configService = new ConfigService();
+        this.userIdentityService = new UserIdentityService(configService);
+        this.ipvSessionService = new IpvSessionService(configService);
+        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.componentId =
-                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @Override

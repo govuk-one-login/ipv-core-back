@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.Map;
 
@@ -16,7 +16,7 @@ public class JourneyResponse implements JourneyStepResponse {
 
     private String journeyStepId;
 
-    public Map<String, Object> value(ConfigurationService configurationService) {
+    public Map<String, Object> value(ConfigService configService) {
         return value(journeyStepId);
     }
 

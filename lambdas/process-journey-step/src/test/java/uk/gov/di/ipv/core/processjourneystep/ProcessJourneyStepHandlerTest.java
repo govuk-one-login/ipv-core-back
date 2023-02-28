@@ -17,7 +17,7 @@ import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processjourneystep.utils.ProcessJourneyStepEvents;
 import uk.gov.di.ipv.core.processjourneystep.utils.ProcessJourneyStepPages;
@@ -44,7 +44,7 @@ class ProcessJourneyStepHandlerTest {
 
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
-    @Mock private ConfigurationService mockConfigurationService;
+    @Mock private ConfigService mockConfigService;
 
     private ProcessJourneyStepHandler processJourneyStepHandler;
     private ClientSessionDetailsDto clientSessionDetailsDto;
@@ -52,7 +52,7 @@ class ProcessJourneyStepHandlerTest {
     @BeforeEach
     void setUp() {
         processJourneyStepHandler =
-                new ProcessJourneyStepHandler(mockIpvSessionService, mockConfigurationService);
+                new ProcessJourneyStepHandler(mockIpvSessionService, mockConfigService);
         clientSessionDetailsDto = new ClientSessionDetailsDto();
     }
 
@@ -135,7 +135,7 @@ class ProcessJourneyStepHandlerTest {
         mockIpvSessionItemAndTimeout(
                 ProcessJourneyStepStates.IPV_IDENTITY_START_PAGE_STATE, environment);
 
-        when(mockConfigurationService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
+        when(mockConfigService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
                 .thenReturn(environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
@@ -615,9 +615,9 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("99");
-        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("99");
-        when(mockConfigurationService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
+        when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("99");
+        when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("99");
+        when(mockConfigService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
                 .thenReturn(environment);
         when(mockIpvSessionService.getIpvSession("1234")).thenReturn(ipvSessionItem);
 
@@ -654,7 +654,7 @@ class ProcessJourneyStepHandlerTest {
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockIpvSessionService.getIpvSession("1234")).thenReturn(ipvSessionItem);
-        when(mockConfigurationService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
+        when(mockConfigService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
                 .thenReturn(environment);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
@@ -684,8 +684,8 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setCredentialIssuerSessionDetails(
                 new CredentialIssuerSessionDetailsDto("some-cri", "some-state"));
 
-        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
-        when(mockConfigurationService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
+        when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockConfigService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
                 .thenReturn(environment);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -705,8 +705,8 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
         ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
 
-        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
-        when(mockConfigurationService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
+        when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockConfigService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
                 .thenReturn(environment);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
     }

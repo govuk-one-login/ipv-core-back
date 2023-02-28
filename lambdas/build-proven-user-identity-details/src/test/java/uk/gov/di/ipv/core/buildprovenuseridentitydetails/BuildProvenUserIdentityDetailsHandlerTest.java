@@ -18,7 +18,7 @@ import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -45,7 +45,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
 
     @Mock private Context context;
-    @Mock private ConfigurationService mockConfigurationService;
+    @Mock private ConfigService mockConfigService;
     @Mock private UserIdentityService mockUserIdentityService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private IpvSessionItem mockIpvSessionItem;
@@ -58,7 +58,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     void setUp() {
         underTest =
                 new BuildProvenUserIdentityDetailsHandler(
-                        mockIpvSessionService, mockUserIdentityService, mockConfigurationService);
+                        mockIpvSessionService, mockUserIdentityService, mockConfigService);
 
         clientSessionDetailsDto = new ClientSessionDetailsDto();
         clientSessionDetailsDto.setUserId(TEST_USER_ID);
@@ -69,7 +69,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     void shouldReceive200ResponseCodeProvenUserIdentityDetails() throws Exception {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockConfigurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
@@ -84,7 +84,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
-        when(mockConfigurationService.getCredentialIssuer("ukPassport"))
+        when(mockConfigService.getCredentialIssuer("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -99,7 +99,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "https://review-p.integration.account.gov.uk",
                                 URI.create("https://example.com/callback")));
 
-        when(mockConfigurationService.getCredentialIssuer("address"))
+        when(mockConfigService.getCredentialIssuer("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -134,7 +134,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
             throws Exception {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockConfigurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
@@ -152,7 +152,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
-        when(mockConfigurationService.getCredentialIssuer("ukPassport"))
+        when(mockConfigService.getCredentialIssuer("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -167,7 +167,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "https://review-p.integration.account.gov.uk",
                                 URI.create("https://example.com/callback")));
 
-        when(mockConfigurationService.getCredentialIssuer("address"))
+        when(mockConfigService.getCredentialIssuer("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -207,7 +207,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                     throws Exception {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockConfigurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
@@ -225,7 +225,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
-        when(mockConfigurationService.getCredentialIssuer("ukPassport"))
+        when(mockConfigService.getCredentialIssuer("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -240,7 +240,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "https://review-p.integration.account.gov.uk",
                                 URI.create("https://example.com/callback")));
 
-        when(mockConfigurationService.getCredentialIssuer("address"))
+        when(mockConfigService.getCredentialIssuer("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -273,9 +273,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     @Test
     void shouldReceive400ResponseCodeWhenEvidenceVcIsMissing() throws Exception {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockConfigurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
-        when(mockConfigurationService.getCredentialIssuer("address"))
+        when(mockConfigService.getCredentialIssuer("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -323,7 +323,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     void shouldReceive400ResponseCodeWhenAddressVcIsMissing() throws Exception {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockConfigurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
@@ -336,7 +336,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
-        when(mockConfigurationService.getCredentialIssuer("ukPassport"))
+        when(mockConfigService.getCredentialIssuer("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -351,7 +351,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "https://review-p.integration.account.gov.uk",
                                 URI.create("https://example.com/callback")));
 
-        when(mockConfigurationService.getCredentialIssuer("address"))
+        when(mockConfigService.getCredentialIssuer("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -366,7 +366,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "https://review-a.integration.account.gov.uk",
                                 URI.create("https://example.com/callback")));
 
-        when(mockConfigurationService.getCredentialIssuer("fraud"))
+        when(mockConfigService.getCredentialIssuer("fraud"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -381,7 +381,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "https://review-f.integration.account.gov.uk",
                                 URI.create("https://example.com/callback")));
 
-        when(mockConfigurationService.getCredentialIssuer("kbv"))
+        when(mockConfigService.getCredentialIssuer("kbv"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -419,7 +419,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     void shouldReceive400ResponseCodeWhenEvidenceVcIsNotSuccessful() throws Exception {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockConfigurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
@@ -437,7 +437,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
-        when(mockConfigurationService.getCredentialIssuer("ukPassport"))
+        when(mockConfigService.getCredentialIssuer("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -452,7 +452,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "https://review-p.integration.account.gov.uk",
                                 URI.create("https://example.com/callback")));
 
-        when(mockConfigurationService.getCredentialIssuer("address"))
+        when(mockConfigService.getCredentialIssuer("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -467,7 +467,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "https://review-a.integration.account.gov.uk",
                                 URI.create("https://example.com/callback")));
 
-        when(mockConfigurationService.getCredentialIssuer("fraud"))
+        when(mockConfigService.getCredentialIssuer("fraud"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -482,7 +482,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "https://review-f.integration.account.gov.uk",
                                 URI.create("https://example.com/callback")));
 
-        when(mockConfigurationService.getCredentialIssuer("kbv"))
+        when(mockConfigService.getCredentialIssuer("kbv"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",

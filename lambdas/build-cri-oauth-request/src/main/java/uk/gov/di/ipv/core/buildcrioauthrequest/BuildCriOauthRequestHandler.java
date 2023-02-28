@@ -45,7 +45,7 @@ import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -71,7 +71,7 @@ public class BuildCriOauthRequestHandler
 
     private final ObjectMapper mapper = new ObjectMapper();
 
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
     private final UserIdentityService userIdentityService;
     private final JWSSigner signer;
     private final AuditService auditService;
@@ -79,30 +79,29 @@ public class BuildCriOauthRequestHandler
     private final String componentId;
 
     public BuildCriOauthRequestHandler(
-            ConfigurationService configurationService,
+            ConfigService configService,
             UserIdentityService userIdentityService,
             JWSSigner signer,
             AuditService auditService,
             IpvSessionService ipvSessionService) {
-        this.configurationService = configurationService;
+        this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.signer = signer;
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
         this.componentId =
-                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @ExcludeFromGeneratedCoverageReport
     public BuildCriOauthRequestHandler() {
-        this.configurationService = new ConfigurationService();
-        this.userIdentityService = new UserIdentityService(configurationService);
-        this.signer = new KmsEs256Signer(configurationService.getSigningKeyId());
-        this.auditService =
-                new AuditService(AuditService.getDefaultSqsClient(), configurationService);
-        this.ipvSessionService = new IpvSessionService(configurationService);
+        this.configService = new ConfigService();
+        this.userIdentityService = new UserIdentityService(configService);
+        this.signer = new KmsEs256Signer(configService.getSigningKeyId());
+        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
+        this.ipvSessionService = new IpvSessionService(configService);
         this.componentId =
-                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @Override
@@ -218,7 +217,7 @@ public class BuildCriOauthRequestHandler
                         sharedClaimsResponse,
                         signer,
                         credentialIssuerConfig,
-                        configurationService,
+                        configService,
                         oauthState,
                         userId,
                         govukSigninJourneyId);
@@ -239,17 +238,15 @@ public class BuildCriOauthRequestHandler
 
     @Tracing
     private CredentialIssuerConfig getCredentialIssuerConfig(String criId) {
-        return configurationService.getCredentialIssuer(criId);
+        return configService.getCredentialIssuer(criId);
     }
 
     @Tracing
     private SharedClaimsResponse getSharedAttributes(
             String userId, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
-        String addressCriId =
-                configurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID);
-        CredentialIssuerConfig addressCriConfig =
-                configurationService.getCredentialIssuer(addressCriId);
+        String addressCriId = configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID);
+        CredentialIssuerConfig addressCriConfig = configService.getCredentialIssuer(addressCriId);
 
         List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 

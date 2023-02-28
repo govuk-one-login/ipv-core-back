@@ -32,25 +32,24 @@ public class IpvSessionService {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final DataStore<IpvSessionItem> dataStore;
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
 
     @ExcludeFromGeneratedCoverageReport
-    public IpvSessionService(ConfigurationService configurationService) {
-        this.configurationService = configurationService;
-        boolean isRunningLocally = this.configurationService.isRunningLocally();
+    public IpvSessionService(ConfigService configService) {
+        this.configService = configService;
+        boolean isRunningLocally = this.configService.isRunningLocally();
         dataStore =
                 new DataStore<>(
-                        this.configurationService.getEnvironmentVariable(IPV_SESSIONS_TABLE_NAME),
+                        this.configService.getEnvironmentVariable(IPV_SESSIONS_TABLE_NAME),
                         IpvSessionItem.class,
                         DataStore.getClient(isRunningLocally),
                         isRunningLocally,
-                        configurationService);
+                        configService);
     }
 
-    public IpvSessionService(
-            DataStore<IpvSessionItem> dataStore, ConfigurationService configurationService) {
+    public IpvSessionService(DataStore<IpvSessionItem> dataStore, ConfigService configService) {
         this.dataStore = dataStore;
-        this.configurationService = configurationService;
+        this.configService = configService;
     }
 
     public IpvSessionItem getIpvSession(String ipvSessionId) {

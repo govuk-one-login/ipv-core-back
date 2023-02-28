@@ -40,7 +40,7 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IS_LOCAL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.SIGNING_KEY_ID_PARAM;
 
-public class ConfigurationService {
+public class ConfigService {
 
     public static final int LOCALHOST_PORT = 4567;
     private static final String LOCALHOST_URI = "http://localhost:" + LOCALHOST_PORT;
@@ -52,12 +52,12 @@ public class ConfigurationService {
     private final SecretsProvider secretsProvider;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public ConfigurationService(SSMProvider ssmProvider, SecretsProvider secretsProvider) {
+    public ConfigService(SSMProvider ssmProvider, SecretsProvider secretsProvider) {
         this.ssmProvider = ssmProvider;
         this.secretsProvider = secretsProvider;
     }
 
-    public ConfigurationService() {
+    public ConfigService() {
         if (isRunningLocally()) {
             this.ssmProvider =
                     ParamManager.getSsmProvider(

@@ -20,7 +20,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.validateoauthcallback.ValidateOAuthCallbackHandler;
 import uk.gov.di.ipv.core.validateoauthcallback.dto.CredentialIssuerRequestDto;
@@ -60,7 +60,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     private static CredentialIssuerConfig credentialIssuerConfig;
     private static IpvSessionItem ipvSessionItem;
     @Mock private Context context;
-    @Mock private ConfigurationService mockConfigurationService;
+    @Mock private ConfigService mockConfigService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private AuditService mockAuditService;
     @InjectMocks private ValidateOAuthCallbackHandler underTest;
@@ -100,7 +100,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldPersistAuthorizationCodeInIPVSessionTable() throws Exception {
-        when(mockConfigurationService.getCredentialIssuer(TEST_CREDENTIAL_ISSUER_ID))
+        when(mockConfigService.getCredentialIssuer(TEST_CREDENTIAL_ISSUER_ID))
                 .thenReturn(credentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -232,7 +232,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldUpdateSessionWithDetailsOfFailedVisitedCriOnSqsException() throws Exception {
-        when(mockConfigurationService.getCredentialIssuer(TEST_CREDENTIAL_ISSUER_ID))
+        when(mockConfigService.getCredentialIssuer(TEST_CREDENTIAL_ISSUER_ID))
                 .thenReturn(credentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 

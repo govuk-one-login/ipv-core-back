@@ -39,7 +39,7 @@ import uk.gov.di.ipv.core.library.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -63,7 +63,7 @@ public class CheckExistingIdentityHandler
     private static final int ONLY = 0;
     private static final Logger LOGGER = LogManager.getLogger();
     public static final String CANDIDATE_KEY = "message";
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
     private final UserIdentityService userIdentityService;
     private final IpvSessionService ipvSessionService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
@@ -72,33 +72,31 @@ public class CheckExistingIdentityHandler
     private final String componentId;
 
     public CheckExistingIdentityHandler(
-            ConfigurationService configurationService,
+            ConfigService configService,
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
             CiStorageService ciStorageService,
             AuditService auditService) {
-        this.configurationService = configurationService;
+        this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.ciStorageService = ciStorageService;
         this.auditService = auditService;
         this.componentId =
-                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @ExcludeFromGeneratedCoverageReport
     public CheckExistingIdentityHandler() {
-        this.configurationService = new ConfigurationService();
-        this.userIdentityService = new UserIdentityService(configurationService);
-        this.ipvSessionService = new IpvSessionService(configurationService);
-        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configurationService);
-        this.ciStorageService = new CiStorageService(configurationService);
-        this.auditService =
-                new AuditService(AuditService.getDefaultSqsClient(), configurationService);
-        componentId =
-                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+        this.configService = new ConfigService();
+        this.userIdentityService = new UserIdentityService(configService);
+        this.ipvSessionService = new IpvSessionService(configService);
+        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService);
+        this.ciStorageService = new CiStorageService(configService);
+        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
+        componentId = configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @Override
@@ -242,12 +240,12 @@ public class CheckExistingIdentityHandler
     private List<VcStatusDto> generateVcSuccessStatuses(List<SignedJWT> credentials)
             throws ParseException {
         List<VcStatusDto> vcStatuses = new ArrayList<>();
-        String addressCriId = configurationService.getSsmParameter(ADDRESS_CRI_ID);
+        String addressCriId = configService.getSsmParameter(ADDRESS_CRI_ID);
 
         for (SignedJWT signedJWT : credentials) {
 
             CredentialIssuerConfig addressCriConfig =
-                    configurationService.getCredentialIssuer(addressCriId);
+                    configService.getCredentialIssuer(addressCriId);
             boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, addressCriConfig);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));

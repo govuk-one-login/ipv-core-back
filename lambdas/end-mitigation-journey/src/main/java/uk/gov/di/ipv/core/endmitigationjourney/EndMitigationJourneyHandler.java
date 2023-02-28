@@ -27,7 +27,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -49,25 +49,25 @@ public class EndMitigationJourneyHandler
     private UserIdentityService userIdentityService;
     private IpvSessionService ipvSessionService;
     private CiStorageService ciStorageService;
-    private ConfigurationService configurationService;
+    private ConfigService configService;
 
     public EndMitigationJourneyHandler(
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
             CiStorageService ciStorageService,
-            ConfigurationService configurationService) {
+            ConfigService configService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.ciStorageService = ciStorageService;
-        this.configurationService = configurationService;
+        this.configService = configService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public EndMitigationJourneyHandler() {
-        this.configurationService = new ConfigurationService();
-        this.userIdentityService = new UserIdentityService(configurationService);
-        this.ipvSessionService = new IpvSessionService(configurationService);
-        this.ciStorageService = new CiStorageService(configurationService);
+        this.configService = new ConfigService();
+        this.userIdentityService = new UserIdentityService(configService);
+        this.ipvSessionService = new IpvSessionService(configService);
+        this.ciStorageService = new CiStorageService(configService);
     }
 
     @Override
@@ -112,7 +112,7 @@ public class EndMitigationJourneyHandler
                                                         credentials,
                                                         ciItem.get(),
                                                         mitigationId,
-                                                        configurationService);
+                                                        configService);
 
                                         if (mitigatingVcList.isPresent()) {
                                             StringMapMessage mapMessage =
@@ -168,13 +168,12 @@ public class EndMitigationJourneyHandler
             List<String> credentials,
             ContraIndicatorItem ciItem,
             String mitigationId,
-            ConfigurationService configurationService)
+            ConfigService configService)
             throws UnknownMitigationJourneyException {
         if (mitigationId.equals(MJ01)) {
-            return Mj01Validation.validateJourney(credentials, ciItem, configurationService);
+            return Mj01Validation.validateJourney(credentials, ciItem, configService);
         } else if (mitigationId.equals(MJ02)) {
-            Gpg45ProfileEvaluator gpg45ProfileEvaluator =
-                    new Gpg45ProfileEvaluator(configurationService);
+            Gpg45ProfileEvaluator gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService);
             return Mj02Validation.validateJourney(credentials, gpg45ProfileEvaluator);
         }
         throw new UnknownMitigationJourneyException(

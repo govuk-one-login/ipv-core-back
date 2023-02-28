@@ -11,7 +11,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -32,11 +32,9 @@ public class Mj01Validation {
     public static Optional<List<String>> validateJourney(
             List<String> credentials,
             ContraIndicatorItem contraIndicatorItem,
-            ConfigurationService configurationService) {
-        String fraudCriId =
-                configurationService.getSsmParameter(ConfigurationVariable.FRAUD_CRI_ID);
-        CredentialIssuerConfig fraudCriConfig =
-                configurationService.getCredentialIssuer(fraudCriId);
+            ConfigService configService) {
+        String fraudCriId = configService.getSsmParameter(ConfigurationVariable.FRAUD_CRI_ID);
+        CredentialIssuerConfig fraudCriConfig = configService.getCredentialIssuer(fraudCriId);
 
         List<String> mitigatingVcList = new ArrayList<>();
 

@@ -15,7 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.net.URI;
 import java.security.KeyFactory;
@@ -42,12 +42,11 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1_PASSPORT_VC_MI
 @ExtendWith(MockitoExtension.class)
 class Mj01ValidationTest {
 
-    @Mock private ConfigurationService mockConfigurationService;
+    @Mock private ConfigService mockConfigService;
 
     @Test
     void shouldReturnListIfFraudVcFound() throws Exception {
-        when(mockConfigurationService.getCredentialIssuer(any()))
-                .thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
 
         List<String> credentials =
                 List.of(
@@ -75,8 +74,7 @@ class Mj01ValidationTest {
                         "1234");
 
         Optional<List<String>> result =
-                Mj01Validation.validateJourney(
-                        credentials, contraIndicatorItem, mockConfigurationService);
+                Mj01Validation.validateJourney(credentials, contraIndicatorItem, mockConfigService);
 
         assertTrue(result.isPresent());
         SignedJWT fraudJwt = SignedJWT.parse(result.get().get(0));
@@ -86,8 +84,7 @@ class Mj01ValidationTest {
 
     @Test
     void shouldReturnEmptyOptionalIfFraudVcMissing() throws Exception {
-        when(mockConfigurationService.getCredentialIssuer(any()))
-                .thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
 
         List<String> credentials =
                 List.of(
@@ -110,16 +107,14 @@ class Mj01ValidationTest {
                         "1234");
 
         Optional<List<String>> result =
-                Mj01Validation.validateJourney(
-                        credentials, contraIndicatorItem, mockConfigurationService);
+                Mj01Validation.validateJourney(credentials, contraIndicatorItem, mockConfigService);
 
         assertTrue(result.isEmpty());
     }
 
     @Test
     void shouldReturnOptionalEmptyIfFraudVcStillContainsCi() throws Exception {
-        when(mockConfigurationService.getCredentialIssuer(any()))
-                .thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
 
         List<String> credentials =
                 List.of(
@@ -147,16 +142,14 @@ class Mj01ValidationTest {
                         "1234");
 
         Optional<List<String>> result =
-                Mj01Validation.validateJourney(
-                        credentials, contraIndicatorItem, mockConfigurationService);
+                Mj01Validation.validateJourney(credentials, contraIndicatorItem, mockConfigService);
 
         assertTrue(result.isEmpty());
     }
 
     @Test
     void shouldReturnOptionalEmptyIfVcIsMissingEvidence() throws Exception {
-        when(mockConfigurationService.getCredentialIssuer(any()))
-                .thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
 
         List<String> credentials = List.of(M1_PASSPORT_VC_MISSING_EVIDENCE);
 
@@ -171,16 +164,14 @@ class Mj01ValidationTest {
                         "1234");
 
         Optional<List<String>> result =
-                Mj01Validation.validateJourney(
-                        credentials, contraIndicatorItem, mockConfigurationService);
+                Mj01Validation.validateJourney(credentials, contraIndicatorItem, mockConfigService);
 
         assertTrue(result.isEmpty());
     }
 
     @Test
     void shouldReturnOptionalEmptyIfVcCannotBeParsed() throws Exception {
-        when(mockConfigurationService.getCredentialIssuer(any()))
-                .thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
 
         List<String> credentials = List.of("invalid-jwt");
 
@@ -195,8 +186,7 @@ class Mj01ValidationTest {
                         "1234");
 
         Optional<List<String>> result =
-                Mj01Validation.validateJourney(
-                        credentials, contraIndicatorItem, mockConfigurationService);
+                Mj01Validation.validateJourney(credentials, contraIndicatorItem, mockConfigService);
 
         assertTrue(result.isEmpty());
     }

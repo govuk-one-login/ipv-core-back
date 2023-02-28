@@ -23,7 +23,7 @@ import software.amazon.awssdk.services.dynamodb.model.DescribeTableResponse;
 import software.amazon.awssdk.services.dynamodb.model.TableDescription;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.AuthorizationCodeItem;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.time.Instant;
 import java.util.stream.Stream;
@@ -46,7 +46,7 @@ class DataStoreTest {
     @Mock private PageIterable<AuthorizationCodeItem> mockPageIterable;
     @Mock private DynamoDbIndex<AuthorizationCodeItem> mockIndex;
     @Mock private SdkIterable<Page<AuthorizationCodeItem>> mockIterable;
-    @Mock private ConfigurationService mockConfigurationService;
+    @Mock private ConfigService mockConfigService;
 
     private AuthorizationCodeItem authorizationCodeItem;
     private DataStore<AuthorizationCodeItem> dataStore;
@@ -69,12 +69,12 @@ class DataStoreTest {
                         AuthorizationCodeItem.class,
                         mockDynamoDbEnhancedClient,
                         false,
-                        mockConfigurationService);
+                        mockConfigService);
     }
 
     @Test
     void shouldPutItemIntoDynamoDbTable() {
-        when(mockConfigurationService.getSsmParameter(BACKEND_SESSION_TTL)).thenReturn("7200");
+        when(mockConfigService.getSsmParameter(BACKEND_SESSION_TTL)).thenReturn("7200");
 
         dataStore.create(authorizationCodeItem, BACKEND_SESSION_TTL);
 

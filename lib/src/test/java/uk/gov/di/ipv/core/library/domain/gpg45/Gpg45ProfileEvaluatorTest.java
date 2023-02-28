@@ -14,7 +14,7 @@ import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,7 +42,7 @@ class Gpg45ProfileEvaluatorTest {
             new JourneyResponse(JOURNEY_PYI_KBV_FAIL);
 
     @Mock CiStorageService mockCiStorageService;
-    @Mock ConfigurationService mockConfigurationService;
+    @Mock ConfigService mockConfigService;
     @Mock ClientSessionDetailsDto mockClientSessionDetails;
     @InjectMocks Gpg45ProfileEvaluator evaluator;
 
@@ -77,7 +77,7 @@ class Gpg45ProfileEvaluatorTest {
 
     @Test
     void getJourneyResponseForStoredCisShouldReturnEmptyOptionalIfNoCis() throws Exception {
-        when(mockConfigurationService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
 
         assertTrue(evaluator.getJourneyResponseForStoredCis(List.of()).isEmpty());
     }
@@ -98,8 +98,8 @@ class Gpg45ProfileEvaluatorTest {
         Map<String, ContraIndicatorScore> ciScoresMap = new HashMap<>();
         ciScoresMap.put(
                 "Y03", new ContraIndicatorScore("Y03", 2, -2, null, Collections.emptyList()));
-        when(mockConfigurationService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
-        when(mockConfigurationService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
+        when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
 
         assertTrue(
                 evaluator.getJourneyResponseForStoredCis(List.of(contraIndicatorItem)).isEmpty());
@@ -133,12 +133,12 @@ class Gpg45ProfileEvaluatorTest {
                 "X98", new ContraIndicatorScore("X98", 1, -1, null, Collections.emptyList()));
         ciScoresMap.put(
                 "X99", new ContraIndicatorScore("X99", 3, -2, null, Collections.emptyList()));
-        when(mockConfigurationService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
-        when(mockConfigurationService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
+        when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
 
         CredentialIssuerConfig kbvConfig = mock(CredentialIssuerConfig.class);
-        when(mockConfigurationService.getSsmParameter(KBV_CRI_ID)).thenReturn("kbv");
-        when(mockConfigurationService.getCredentialIssuer("kbv")).thenReturn(kbvConfig);
+        when(mockConfigService.getSsmParameter(KBV_CRI_ID)).thenReturn("kbv");
+        when(mockConfigService.getCredentialIssuer("kbv")).thenReturn(kbvConfig);
         when(kbvConfig.getAudienceForClients()).thenReturn("kbvIssuer");
 
         assertEquals(
@@ -174,12 +174,12 @@ class Gpg45ProfileEvaluatorTest {
                 "X98", new ContraIndicatorScore("X98", 1, -1, null, Collections.emptyList()));
         ciScoresMap.put(
                 "X99", new ContraIndicatorScore("X99", 3, -2, null, Collections.emptyList()));
-        when(mockConfigurationService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
-        when(mockConfigurationService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
+        when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
 
         CredentialIssuerConfig kbvConfig = mock(CredentialIssuerConfig.class);
-        when(mockConfigurationService.getSsmParameter(KBV_CRI_ID)).thenReturn("kbv");
-        when(mockConfigurationService.getCredentialIssuer("kbv")).thenReturn(kbvConfig);
+        when(mockConfigService.getSsmParameter(KBV_CRI_ID)).thenReturn("kbv");
+        when(mockConfigService.getCredentialIssuer("kbv")).thenReturn(kbvConfig);
         when(kbvConfig.getAudienceForClients()).thenReturn("kbvIssuer");
 
         assertEquals(

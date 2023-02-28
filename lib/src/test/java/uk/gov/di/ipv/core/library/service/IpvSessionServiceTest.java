@@ -34,7 +34,7 @@ class IpvSessionServiceTest {
 
     @Mock private DataStore<IpvSessionItem> mockDataStore;
 
-    @Mock private ConfigurationService mockConfigurationService;
+    @Mock private ConfigService mockConfigService;
 
     @InjectMocks private IpvSessionService ipvSessionService;
 

@@ -22,7 +22,7 @@ import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.text.ParseException;
@@ -47,7 +47,7 @@ public class SelectCriHandler
     private static final String DCMAW_SUCCESS_PAGE = "dcmaw-success";
     private static final String APP_JOURNEY_USER_ID_PREFIX = "urn:uuid:app-journey-user-";
 
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
     private final String passportCriId;
     private final String fraudCriId;
@@ -55,28 +55,27 @@ public class SelectCriHandler
     private final String addressCriId;
     private final String dcmawCriId;
 
-    public SelectCriHandler(
-            ConfigurationService configurationService, IpvSessionService ipvSessionService) {
-        this.configurationService = configurationService;
+    public SelectCriHandler(ConfigService configService, IpvSessionService ipvSessionService) {
+        this.configService = configService;
         this.ipvSessionService = ipvSessionService;
 
-        passportCriId = configurationService.getSsmParameter(PASSPORT_CRI_ID);
-        fraudCriId = configurationService.getSsmParameter(FRAUD_CRI_ID);
-        kbvCriId = configurationService.getSsmParameter(KBV_CRI_ID);
-        addressCriId = configurationService.getSsmParameter(ADDRESS_CRI_ID);
-        dcmawCriId = configurationService.getSsmParameter(DCMAW_CRI_ID);
+        passportCriId = configService.getSsmParameter(PASSPORT_CRI_ID);
+        fraudCriId = configService.getSsmParameter(FRAUD_CRI_ID);
+        kbvCriId = configService.getSsmParameter(KBV_CRI_ID);
+        addressCriId = configService.getSsmParameter(ADDRESS_CRI_ID);
+        dcmawCriId = configService.getSsmParameter(DCMAW_CRI_ID);
     }
 
     @ExcludeFromGeneratedCoverageReport
     public SelectCriHandler() {
-        this.configurationService = new ConfigurationService();
-        this.ipvSessionService = new IpvSessionService(configurationService);
+        this.configService = new ConfigService();
+        this.ipvSessionService = new IpvSessionService(configService);
 
-        passportCriId = configurationService.getSsmParameter(PASSPORT_CRI_ID);
-        fraudCriId = configurationService.getSsmParameter(FRAUD_CRI_ID);
-        kbvCriId = configurationService.getSsmParameter(KBV_CRI_ID);
-        addressCriId = configurationService.getSsmParameter(ADDRESS_CRI_ID);
-        dcmawCriId = configurationService.getSsmParameter(DCMAW_CRI_ID);
+        passportCriId = configService.getSsmParameter(PASSPORT_CRI_ID);
+        fraudCriId = configService.getSsmParameter(FRAUD_CRI_ID);
+        kbvCriId = configService.getSsmParameter(KBV_CRI_ID);
+        addressCriId = configService.getSsmParameter(ADDRESS_CRI_ID);
+        dcmawCriId = configService.getSsmParameter(DCMAW_CRI_ID);
     }
 
     @Override
@@ -242,13 +241,13 @@ public class SelectCriHandler
             String journeyId,
             String userId)
             throws ParseException {
-        CredentialIssuerConfig criConfig = configurationService.getCredentialIssuer(criId);
+        CredentialIssuerConfig criConfig = configService.getCredentialIssuer(criId);
 
         Optional<VcStatusDto> vc = getVc(currentVcStatuses, criConfig.getAudienceForClients());
         if (vc.isEmpty()) {
             if (userHasNotVisited(visitedCredentialIssuers, criId)) {
                 CredentialIssuerConfig passportConfig =
-                        configurationService.getCredentialIssuer(passportCriId);
+                        configService.getCredentialIssuer(passportCriId);
                 if (criId.equals(dcmawCriId)
                         && getVc(currentVcStatuses, passportConfig.getAudienceForClients())
                                 .isPresent()) {
@@ -311,17 +310,16 @@ public class SelectCriHandler
     }
 
     private boolean shouldSendUserToApp(String userId) {
-        boolean dcmawEnabled =
-                Boolean.parseBoolean(configurationService.getSsmParameter(DCMAW_ENABLED));
+        boolean dcmawEnabled = Boolean.parseBoolean(configService.getSsmParameter(DCMAW_ENABLED));
         if (dcmawEnabled) {
             boolean shouldSendAllUsers =
                     Boolean.parseBoolean(
-                            configurationService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS));
+                            configService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS));
             if (!shouldSendAllUsers) {
                 if (userId.startsWith(APP_JOURNEY_USER_ID_PREFIX)) {
                     return true;
                 }
-                String userIds = configurationService.getSsmParameter(DCMAW_ALLOWED_USER_IDS);
+                String userIds = configService.getSsmParameter(DCMAW_ALLOWED_USER_IDS);
                 List<String> dcmawAllowedUserIds = Arrays.asList(userIds.split(","));
                 return dcmawAllowedUserIds.contains(userId);
             }

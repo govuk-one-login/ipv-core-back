@@ -10,21 +10,20 @@ import com.nimbusds.oauth2.sdk.TokenResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import com.nimbusds.oauth2.sdk.token.Tokens;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 public class AccessTokenService {
     protected static final Scope DEFAULT_SCOPE = new Scope("user-credentials");
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
 
-    public AccessTokenService(ConfigurationService configurationService) {
-        this.configurationService = configurationService;
+    public AccessTokenService(ConfigService configService) {
+        this.configService = configService;
     }
 
     public TokenResponse generateAccessToken() {
         AccessToken accessToken =
-                new BearerAccessToken(
-                        configurationService.getBearerAccessTokenTtl(), DEFAULT_SCOPE);
+                new BearerAccessToken(configService.getBearerAccessTokenTtl(), DEFAULT_SCOPE);
         return new AccessTokenResponse(new Tokens(accessToken, null));
     }
 
