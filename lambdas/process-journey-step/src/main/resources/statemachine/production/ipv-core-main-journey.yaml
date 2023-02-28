@@ -153,6 +153,20 @@ SELECT_CRI:
       response:
         type: page
         pageId: page-passport-doc-check
+    ukDrivingLicence:
+      type: basic
+      name: ukDrivingLicence
+      targetState: DRIVING_LICENCE_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-driving-licence-doc-check
+    ukPassportAndDrivingLicence:
+      type: basic
+      name: ukPassportAndDrivingLicence
+      targetState: PASSPORT_AND_DRIVING_LICENCE_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-passport-and-driving-licence-doc-check
     address:
       type: basic
       name: address
@@ -234,6 +248,12 @@ SELECT_CRI:
 CRI_UK_PASSPORT:
   name: CRI_UK_PASSPORT
   parent: CRI_STATE
+CRI_UK_DRIVING_LICENCE:
+  name: CRI_UK_DRIVING_LICENCE
+  parent: CRI_STATE
+CRI_UK_PASSPORT_AND_DRIVING_LICENCE:
+  name: CRI_UK_PASSPORT_AND_DRIVING_LICENCE
+  parent: CRI_STATE
 CRI_ADDRESS:
   name: CRI_ADDRESS
   parent: CRI_STATE
@@ -254,6 +274,42 @@ PASSPORT_DOC_CHECK_PAGE:
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/ukPassport
+    end:
+      type: basic
+      name: end
+      targetState: END
+      response:
+        type: journey
+        journeyStepId: /journey/build-client-oauth-response
+DRIVING_LICENCE_DOC_CHECK_PAGE:
+  name: DRIVING_LICENCE_DOC_CHECK_PAGE
+  parent: ATTEMPT_RECOVERY_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_UK_DRIVING_LICENCE
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/ukDrivingLicence
+    end:
+      type: basic
+      name: end
+      targetState: END
+      response:
+        type: journey
+        journeyStepId: /journey/build-client-oauth-response
+PASSPORT_AND_DRIVING_LICENCE_DOC_CHECK_PAGE:
+  name: PASSPORT_AND_DRIVING_LICENCE_DOC_CHECK_PAGE
+  parent: ATTEMPT_RECOVERY_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_UK_PASSPORT_AND_DRIVING_LICENCE
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/ukPassportAndDrivingLicence
     end:
       type: basic
       name: end
