@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.helpers;
+package uk.gov.di.ipv.core.library.kmses256signer;
 
 import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.model.SignRequest;
