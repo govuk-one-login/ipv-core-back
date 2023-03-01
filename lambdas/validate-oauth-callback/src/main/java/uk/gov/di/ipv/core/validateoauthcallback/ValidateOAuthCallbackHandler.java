@@ -30,14 +30,14 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.validateoauthcallback.dto.CredentialIssuerRequestDto;
+import uk.gov.di.ipv.core.validateoauthcallback.dto.CriCallbackRequest;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 public class ValidateOAuthCallbackHandler
-        implements RequestHandler<CredentialIssuerRequestDto, Map<String, Object>> {
+        implements RequestHandler<CriCallbackRequest, Map<String, Object>> {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String JOURNEY = "journey";
@@ -86,7 +86,7 @@ public class ValidateOAuthCallbackHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(CredentialIssuerRequestDto request, Context context) {
+    public Map<String, Object> handleRequest(CriCallbackRequest request, Context context) {
         LogHelper.attachComponentIdToLogs();
 
         IpvSessionItem ipvSessionItem = null;
@@ -150,7 +150,7 @@ public class ValidateOAuthCallbackHandler
 
     @Tracing
     private Map<String, Object> sendOauthErrorJourneyResponse(
-            IpvSessionItem ipvSessionItem, CredentialIssuerRequestDto request) throws SqsException {
+            IpvSessionItem ipvSessionItem, CriCallbackRequest request) throws SqsException {
         String error = request.getError();
         String errorDescription = request.getErrorDescription();
 
@@ -196,8 +196,7 @@ public class ValidateOAuthCallbackHandler
     }
 
     @Tracing
-    private void validate(CredentialIssuerRequestDto request)
-            throws HttpResponseExceptionWithErrorBody {
+    private void validate(CriCallbackRequest request) throws HttpResponseExceptionWithErrorBody {
 
         if (StringUtils.isBlank(request.getAuthorizationCode())) {
             throw new HttpResponseExceptionWithErrorBody(
@@ -242,7 +241,7 @@ public class ValidateOAuthCallbackHandler
     }
 
     @Tracing
-    private String getPersistedOauthState(CredentialIssuerRequestDto request) {
+    private String getPersistedOauthState(CriCallbackRequest request) {
         CredentialIssuerSessionDetailsDto credentialIssuerSessionDetails =
                 ipvSessionService
                         .getIpvSession(request.getIpvSessionId())
@@ -254,7 +253,7 @@ public class ValidateOAuthCallbackHandler
     }
 
     @Tracing
-    private CredentialIssuerConfig getCredentialIssuerConfig(CredentialIssuerRequestDto request) {
+    private CredentialIssuerConfig getCredentialIssuerConfig(CriCallbackRequest request) {
         return configService.getCredentialIssuer(request.getCredentialIssuerId());
     }
 

@@ -23,7 +23,7 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.validateoauthcallback.ValidateOAuthCallbackHandler;
-import uk.gov.di.ipv.core.validateoauthcallback.dto.CredentialIssuerRequestDto;
+import uk.gov.di.ipv.core.validateoauthcallback.dto.CriCallbackRequest;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -129,7 +129,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldReceive400ResponseCodeIfAuthorizationCodeNotPresent() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithoutAuthCode =
+        CriCallbackRequest credentialIssuerRequestWithoutAuthCode =
                 validCredentialIssuerRequestDto();
         credentialIssuerRequestWithoutAuthCode.setAuthorizationCode(null);
 
@@ -143,8 +143,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldReceive400ResponseCodeIfCredentialIssuerNotPresent() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithoutCriId =
-                validCredentialIssuerRequestDto();
+        CriCallbackRequest credentialIssuerRequestWithoutCriId = validCredentialIssuerRequestDto();
         credentialIssuerRequestWithoutCriId.setCredentialIssuerId(null);
 
         Map<String, Object> output =
@@ -157,7 +156,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldReceive400ResponseCodeIfCredentialIssuerNotInPermittedSet() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithInvalidCriId =
+        CriCallbackRequest credentialIssuerRequestWithInvalidCriId =
                 validCredentialIssuerRequestDto();
         credentialIssuerRequestWithInvalidCriId.setCredentialIssuerId("an invalid id");
 
@@ -173,7 +172,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldReceive400ResponseCodeIfSessionIdNotPresent() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithoutSessionId =
+        CriCallbackRequest credentialIssuerRequestWithoutSessionId =
                 validCredentialIssuerRequestDto();
         credentialIssuerRequestWithoutSessionId.setIpvSessionId(null);
 
@@ -187,8 +186,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldReceive400ResponseCodeIfOAuthStateNotPresentInRequest() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithoutState =
-                validCredentialIssuerRequestDto();
+        CriCallbackRequest credentialIssuerRequestWithoutState = validCredentialIssuerRequestDto();
         credentialIssuerRequestWithoutState.setState(null);
 
         Map<String, Object> output =
@@ -201,7 +199,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldReceive400ResponseWithAttemptRecoveryPageIfOAuthStateNotPresentInSession() {
-        CredentialIssuerRequestDto credentialIssuerRequest = validCredentialIssuerRequestDto();
+        CriCallbackRequest credentialIssuerRequest = validCredentialIssuerRequestDto();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setCredentialIssuerSessionDetails(null);
@@ -216,7 +214,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldReceive400ResponseWithAttemptRecoveryPageIfOAuthStateNotValid() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithInvalidState =
+        CriCallbackRequest credentialIssuerRequestWithInvalidState =
                 validCredentialIssuerRequestDto();
         credentialIssuerRequestWithInvalidState.setState("not-correct-state");
 
@@ -264,7 +262,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldReceiveAccessDeniedJourneyResponseWhenOauthErrorAccessDenied() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithAccessDenied =
+        CriCallbackRequest credentialIssuerRequestWithAccessDenied =
                 validCredentialIssuerRequestDto();
         credentialIssuerRequestWithAccessDenied.setError(TEST_OAUTH_ACCESS_DENIED_ERROR);
         credentialIssuerRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
@@ -279,7 +277,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldReceiveTemporarilyUnavailableJourneyResponseWhenOauthErrorTemporarilyUnavailable() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithAccessDenied =
+        CriCallbackRequest credentialIssuerRequestWithAccessDenied =
                 validCredentialIssuerRequestDto();
         credentialIssuerRequestWithAccessDenied.setError(OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE);
         credentialIssuerRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
@@ -294,7 +292,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldReceiveJourneyErrorJourneyResponseWhenAnyOtherOauthError() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithOtherError =
+        CriCallbackRequest credentialIssuerRequestWithOtherError =
                 validCredentialIssuerRequestDto();
         credentialIssuerRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
         credentialIssuerRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
@@ -309,7 +307,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldAttemptRecoveryErrorResponseWhenOauthSessionIsNull() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithOtherError =
+        CriCallbackRequest credentialIssuerRequestWithOtherError =
                 validCredentialIssuerRequestDto();
         credentialIssuerRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
         credentialIssuerRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
@@ -327,7 +325,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldAttemptRecoveryErrorResponseWhenOauthSessionIsForDifferentCri() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithOtherError =
+        CriCallbackRequest credentialIssuerRequestWithOtherError =
                 validCredentialIssuerRequestDto();
         credentialIssuerRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
         credentialIssuerRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
@@ -348,7 +346,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldNotUpdateSessionOnAttemptRecoveryError() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithOtherError =
+        CriCallbackRequest credentialIssuerRequestWithOtherError =
                 validCredentialIssuerRequestDto();
         credentialIssuerRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
         credentialIssuerRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
@@ -372,8 +370,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         assertEquals(400, output.get("statusCode"));
     }
 
-    private CredentialIssuerRequestDto validCredentialIssuerRequestDto() {
-        return new CredentialIssuerRequestDto(
+    private CriCallbackRequest validCredentialIssuerRequestDto() {
+        return new CriCallbackRequest(
                 TEST_AUTHORIZATION_CODE,
                 TEST_CREDENTIAL_ISSUER_ID,
                 TEST_SESSION_ID,
