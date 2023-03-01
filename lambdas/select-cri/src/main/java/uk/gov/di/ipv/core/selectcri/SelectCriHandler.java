@@ -241,17 +241,14 @@ public class SelectCriHandler
             String journeyId,
             String userId)
             throws ParseException {
-        CredentialIssuerConfig criConfig = configService.getCredentialIssuer(criId);
 
+        CredentialIssuerConfig criConfig = configService.getCredentialIssuer(criId);
         Optional<VcStatusDto> vc = getVc(currentVcStatuses, criConfig.getAudienceForClients());
+
         if (vc.isEmpty()) {
             if (userHasNotVisited(visitedCredentialIssuers, criId)) {
-                CredentialIssuerConfig passportConfig =
-                        configService.getCredentialIssuer(passportCriId);
-                if (criId.equals(dcmawCriId)
-                        && getVc(currentVcStatuses, passportConfig.getAudienceForClients())
-                                .isPresent()) {
-                    LOGGER.info("User already has a passport VC so continuing a web journey");
+                if (criId.equals(dcmawCriId) && hasPassportVc(currentVcStatuses)) {
+                    LOGGER.info("User already has a passport VC, continuing a web journey");
                     return Optional.of(
                             getNextWebJourneyCri(
                                     visitedCredentialIssuers, currentVcStatuses, userId));
@@ -261,23 +258,23 @@ public class SelectCriHandler
             var message =
                     new StringMapMessage()
                             .with(
-                                    "message",
+                                    "description",
                                     "User has a previous failed visit to a cri due to an oauth error")
                             .with("criId", criId);
             LOGGER.info(message);
 
-            if (criId.equals(dcmawCriId)) {
-                LOGGER.info("Reverting app user to the web journey");
-                return Optional.of(
-                        getNextWebJourneyCri(visitedCredentialIssuers, currentVcStatuses, userId));
-            }
+            return Optional.of(
+                    criId.equals(dcmawCriId)
+                            ? getNextWebJourneyCri(
+                                    visitedCredentialIssuers, currentVcStatuses, userId)
+                            : getJourneyPyiNoMatchResponse());
+        }
 
-            return Optional.of(getJourneyPyiNoMatchResponse());
-        } else if (Boolean.FALSE.equals(vc.get().getIsSuccessfulVc())) {
+        if (Boolean.FALSE.equals(vc.get().getIsSuccessfulVc())) {
             var message =
                     new StringMapMessage()
                             .with(
-                                    "message",
+                                    "description",
                                     "User has a previous failed visit to a cri due to a failed identity check")
                             .with("criId", criId);
             LOGGER.info(message);
@@ -291,8 +288,14 @@ public class SelectCriHandler
             }
             return Optional.of(getJourneyPyiNoMatchResponse());
         }
-
         return Optional.empty();
+    }
+
+    private boolean hasPassportVc(List<VcStatusDto> currentVcStatuses) {
+        CredentialIssuerConfig passportConfig = configService.getCredentialIssuer(passportCriId);
+        Optional<VcStatusDto> passportVc =
+                getVc(currentVcStatuses, passportConfig.getAudienceForClients());
+        return passportVc.isPresent();
     }
 
     private Optional<VcStatusDto> getVc(List<VcStatusDto> currentVcStatuses, String criIss) {
