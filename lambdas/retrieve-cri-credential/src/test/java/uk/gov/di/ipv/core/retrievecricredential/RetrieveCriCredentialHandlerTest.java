@@ -98,6 +98,7 @@ class RetrieveCriCredentialHandlerTest {
                     new CredentialIssuerConfig(
                             "address",
                             "address",
+                            true,
                             new URI("http://example.com/token"),
                             new URI("http://example.com/credential"),
                             new URI("http://example.com/authorize"),
@@ -117,6 +118,7 @@ class RetrieveCriCredentialHandlerTest {
                 new CredentialIssuerConfig(
                         CREDENTIAL_ISSUER_ID,
                         "any",
+                        true,
                         new URI("https://www.example.com"),
                         new URI("https://www.example.com/credential"),
                         new URI("https://www.example.com/authorize"),

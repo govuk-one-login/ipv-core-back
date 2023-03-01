@@ -121,6 +121,7 @@ class BuildCriOauthRequestHandlerTest {
                 new CredentialIssuerConfig(
                         CRI_ID,
                         CRI_NAME,
+                        true,
                         new URI(CRI_TOKEN_URL),
                         new URI(CRI_CREDENTIAL_URL),
                         new URI(CRI_AUTHORIZE_URL),
@@ -134,6 +135,7 @@ class BuildCriOauthRequestHandlerTest {
                 new CredentialIssuerConfig(
                         ADDRESS_CRI_ID,
                         CRI_NAME,
+                        true,
                         new URI(CRI_TOKEN_URL),
                         new URI(CRI_CREDENTIAL_URL),
                         new URI(CRI_AUTHORIZE_URL),
@@ -147,6 +149,7 @@ class BuildCriOauthRequestHandlerTest {
                 new CredentialIssuerConfig(
                         DCMAW_CRI_ID,
                         CRI_NAME,
+                        true,
                         new URI(CRI_TOKEN_URL),
                         new URI(CRI_CREDENTIAL_URL),
                         new URI(CRI_AUTHORIZE_URL),

@@ -133,6 +133,7 @@ class ConfigurationServiceTest {
                 new CredentialIssuerConfig(
                         "passportCri",
                         "",
+                        true,
                         URI.create(TEST_TOKEN_URL),
                         URI.create(TEST_CREDENTIAL_URL),
                         URI.create(TEST_CREDENTIAL_URL),

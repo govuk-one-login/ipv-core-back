@@ -15,7 +15,7 @@ public enum ConfigurationVariable {
     JWT_TTL_SECONDS("/%s/core/self/jwtTtlSeconds"),
     MAX_ALLOWED_AUTH_CLIENT_TTL("/%s/core/self/maxAllowedAuthClientTtl"),
     PASSPORT_CRI_ID("/%s/core/self/journey/passportCriId"),
-    DCMAW_ENABLED("/%s/core/self/journey/dcmawEnabled"),
+    DCMAW_ENABLED("/%s/core/credentialIssuers/dcmaw/enabled"),
     DCMAW_SHOULD_SEND_ALL_USERS("/%s/core/self/journey/dcmawShouldSendAllUsers"),
     DCMAW_ALLOWED_USER_IDS("/%s/core/self/journey/dcmawAllowedUserIds"),
     AUTH_CODE_EXPIRY_SECONDS("/%s/core/self/authCodeExpirySeconds"),

@@ -78,6 +78,7 @@ class UserIdentityServiceTest {
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
+                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -130,6 +131,7 @@ class UserIdentityServiceTest {
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
+                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -164,6 +166,7 @@ class UserIdentityServiceTest {
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
+                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -225,6 +228,7 @@ class UserIdentityServiceTest {
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
+                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -271,6 +275,7 @@ class UserIdentityServiceTest {
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
+                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -314,6 +319,7 @@ class UserIdentityServiceTest {
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
+                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -374,6 +380,7 @@ class UserIdentityServiceTest {
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
+                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -438,6 +445,7 @@ class UserIdentityServiceTest {
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
+                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -488,6 +496,7 @@ class UserIdentityServiceTest {
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
+                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -531,6 +540,7 @@ class UserIdentityServiceTest {
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
+                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -685,6 +695,7 @@ class UserIdentityServiceTest {
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
+                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -748,6 +759,7 @@ class UserIdentityServiceTest {
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
+                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -788,6 +800,7 @@ class UserIdentityServiceTest {
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
+                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -801,6 +814,7 @@ class UserIdentityServiceTest {
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
+                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -814,6 +828,7 @@ class UserIdentityServiceTest {
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
+                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -827,6 +842,7 @@ class UserIdentityServiceTest {
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
+                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -840,6 +856,7 @@ class UserIdentityServiceTest {
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
+                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -877,6 +894,7 @@ class UserIdentityServiceTest {
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
+                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -911,6 +929,7 @@ class UserIdentityServiceTest {
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
+                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
