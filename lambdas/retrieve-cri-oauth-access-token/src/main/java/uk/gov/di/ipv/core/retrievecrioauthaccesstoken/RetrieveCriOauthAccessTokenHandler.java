@@ -4,7 +4,6 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -22,7 +21,9 @@ import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
+import uk.gov.di.ipv.core.library.exceptions.BadRequestError;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.JourneyError;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -37,10 +38,6 @@ import java.util.Map;
 public class RetrieveCriOauthAccessTokenHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String JOURNEY = "journey";
-    private static final Map<String, Object> JOURNEY_CREDENTIAL =
-            Map.of(JOURNEY, "/journey/cri/credential");
-    private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, "/journey/error");
     private final CredentialIssuerService credentialIssuerService;
     private final ConfigService configService;
     private final AuditService auditService;
@@ -70,7 +67,8 @@ public class RetrieveCriOauthAccessTokenHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(Map<String, String> input, Context context) {
+    public Map<String, Object> handleRequest(Map<String, String> input, Context context)
+            throws JourneyError {
         LogHelper.attachComponentIdToLogs();
         IpvSessionItem ipvSessionItem = null;
         String credentialIssuerId = null;
@@ -124,7 +122,7 @@ public class RetrieveCriOauthAccessTokenHandler
                             .with("criId", credentialIssuerId);
             LOGGER.info(message);
 
-            return JOURNEY_CREDENTIAL;
+            return Map.of("result", "success");
         } catch (CredentialIssuerException e) {
             if (ipvSessionItem != null) {
                 setVisitedCredentials(
@@ -132,7 +130,7 @@ public class RetrieveCriOauthAccessTokenHandler
                 ipvSessionService.updateIpvSession(ipvSessionItem);
             }
 
-            return JOURNEY_ERROR;
+            throw new JourneyError();
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
 
@@ -140,15 +138,14 @@ public class RetrieveCriOauthAccessTokenHandler
                     ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            return JOURNEY_ERROR;
+            throw new JourneyError();
         } catch (HttpResponseExceptionWithErrorBody e) {
             ErrorResponse errorResponse = e.getErrorResponse();
             LogHelper.logOauthError(
                     "Error in credential issuer return lambda",
                     errorResponse.getCode(),
                     errorResponse.getMessage());
-            return StepFunctionHelpers.generateErrorOutputMap(
-                    HttpStatus.SC_BAD_REQUEST, errorResponse);
+            throw new BadRequestError();
         }
     }
 
