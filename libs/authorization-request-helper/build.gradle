@@ -1,0 +1,54 @@
+plugins {
+	// Apply the java-library plugin for API and implementation separation.
+	id 'java-library'
+	id "idea"
+	id "jacoco"
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation "com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
+			project(":lib")
+
+	testImplementation "com.github.tomakehurst:wiremock-jre8:2.35.0",
+			"org.junit.jupiter:junit-jupiter:5.8.2",
+			"org.mockito:mockito-junit-jupiter:4.1.0",
+			"uk.org.webcompere:system-stubs-jupiter:1.1.0",
+			project(":lib").sourceSets.test.output
+
+	compileOnly "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
+	annotationProcessor "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_11
+	targetCompatibility = JavaVersion.VERSION_11
+	withSourcesJar()
+}
+
+tasks.withType(Jar).configureEach { Jar jar ->
+	jar.preserveFileTimestamps = false
+	jar.reproducibleFileOrder = true
+}
+
+tasks.named('jar') {
+	manifest {
+		attributes('Implementation-Title': project.name,
+		'Implementation-Version': project.version)
+	}
+}
+
+test {
+	useJUnitPlatform ()
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required.set(true)
+	}
+}

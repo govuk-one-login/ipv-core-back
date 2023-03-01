@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.buildcrioauthrequest.helpers;
+package uk.gov.di.ipv.core.library.authorizationrequest;
 
 import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.JOSEException;
