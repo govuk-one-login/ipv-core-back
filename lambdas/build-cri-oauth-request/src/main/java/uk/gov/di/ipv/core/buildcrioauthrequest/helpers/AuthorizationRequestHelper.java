@@ -21,7 +21,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -41,7 +41,7 @@ public class AuthorizationRequestHelper {
             SharedClaimsResponse sharedClaims,
             JWSSigner signer,
             CredentialIssuerConfig credentialIssuerConfig,
-            ConfigurationService configurationService,
+            ConfigService configService,
             String oauthState,
             String userId,
             String govukSigninJourneyId)
@@ -63,13 +63,13 @@ public class AuthorizationRequestHelper {
         JWTClaimsSet.Builder claimsSetBuilder =
                 new JWTClaimsSet.Builder(authClaimsSet)
                         .audience(credentialIssuerConfig.getAudienceForClients())
-                        .issuer(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
+                        .issuer(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
                         .issueTime(Date.from(now))
                         .expirationTime(
                                 Date.from(
                                         now.plus(
                                                 Long.parseLong(
-                                                        configurationService.getSsmParameter(
+                                                        configService.getSsmParameter(
                                                                 JWT_TTL_SECONDS)),
                                                 ChronoUnit.SECONDS)))
                         .notBeforeTime(Date.from(now))

@@ -33,7 +33,7 @@ import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.io.IOException;
 import java.net.URI;
@@ -50,29 +50,27 @@ public class CredentialIssuerService {
     private static final String API_KEY_HEADER = "x-api-key";
 
     private final DataStore<VcStoreItem> dataStore;
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
     private final JWSSigner signer;
 
     @ExcludeFromGeneratedCoverageReport
-    public CredentialIssuerService(ConfigurationService configurationService, JWSSigner signer) {
-        this.configurationService = configurationService;
+    public CredentialIssuerService(ConfigService configService, JWSSigner signer) {
+        this.configService = configService;
         this.signer = signer;
-        boolean isRunningLocally = this.configurationService.isRunningLocally();
+        boolean isRunningLocally = this.configService.isRunningLocally();
         this.dataStore =
                 new DataStore<>(
-                        this.configurationService.getEnvironmentVariable(
+                        this.configService.getEnvironmentVariable(
                                 EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME),
                         VcStoreItem.class,
                         DataStore.getClient(isRunningLocally),
                         isRunningLocally,
-                        configurationService);
+                        configService);
     }
 
     public CredentialIssuerService(
-            DataStore<VcStoreItem> dataStore,
-            ConfigurationService configurationService,
-            JWSSigner signer) {
-        this.configurationService = configurationService;
+            DataStore<VcStoreItem> dataStore, ConfigService configService, JWSSigner signer) {
+        this.configService = configService;
         this.signer = signer;
         this.dataStore = dataStore;
     }
@@ -90,7 +88,7 @@ public class CredentialIssuerService {
                             config.getAudienceForClients(),
                             dateTime.plusSeconds(
                                             Long.parseLong(
-                                                    configurationService.getSsmParameter(
+                                                    configService.getSsmParameter(
                                                             ConfigurationVariable.JWT_TTL_SECONDS)))
                                     .toEpochSecond(),
                             SecureTokenHelper.generate());

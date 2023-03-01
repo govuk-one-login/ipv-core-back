@@ -32,7 +32,7 @@ import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -56,24 +56,24 @@ public class BuildProvenUserIdentityDetailsHandler
 
     private final IpvSessionService ipvSessionService;
     private final UserIdentityService userIdentityService;
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
     public BuildProvenUserIdentityDetailsHandler(
             IpvSessionService ipvSessionService,
             UserIdentityService userIdentityService,
-            ConfigurationService configurationService) {
+            ConfigService configService) {
         this.ipvSessionService = ipvSessionService;
         this.userIdentityService = userIdentityService;
-        this.configurationService = configurationService;
+        this.configService = configService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public BuildProvenUserIdentityDetailsHandler() {
-        this.configurationService = new ConfigurationService();
-        this.ipvSessionService = new IpvSessionService(configurationService);
-        this.userIdentityService = new UserIdentityService(configurationService);
+        this.configService = new ConfigService();
+        this.ipvSessionService = new IpvSessionService(configService);
+        this.userIdentityService = new UserIdentityService(configService);
     }
 
     @Override
@@ -132,7 +132,7 @@ public class BuildProvenUserIdentityDetailsHandler
             throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException {
         for (VcStoreItem item : credentialIssuerItems) {
             CredentialIssuerConfig credentialIssuerConfig =
-                    configurationService.getCredentialIssuer(item.getCredentialIssuer());
+                    configService.getCredentialIssuer(item.getCredentialIssuer());
             if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())
                     && userIdentityService.isVcSuccessful(
                             currentVcStatuses, credentialIssuerConfig.getAudienceForClients())) {
@@ -177,7 +177,7 @@ public class BuildProvenUserIdentityDetailsHandler
             throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException {
         for (VcStoreItem item : credentialIssuerItems) {
             CredentialIssuerConfig credentialIssuerConfig =
-                    configurationService.getCredentialIssuer(item.getCredentialIssuer());
+                    configService.getCredentialIssuer(item.getCredentialIssuer());
             if (ADDRESS_CRI_TYPES.contains(item.getCredentialIssuer())
                     && userIdentityService.isVcSuccessful(
                             currentVcStatuses, credentialIssuerConfig.getAudienceForClients())) {
@@ -214,9 +214,9 @@ public class BuildProvenUserIdentityDetailsHandler
         for (VcStoreItem item : credentials) {
             SignedJWT signedJWT = SignedJWT.parse(item.getCredential());
             String addressCriId =
-                    configurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID);
+                    configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID);
             CredentialIssuerConfig addressCriConfig =
-                    configurationService.getCredentialIssuer(addressCriId);
+                    configService.getCredentialIssuer(addressCriId);
             boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, addressCriConfig);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));

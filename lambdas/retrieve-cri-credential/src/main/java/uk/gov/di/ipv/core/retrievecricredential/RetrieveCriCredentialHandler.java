@@ -35,7 +35,7 @@ import uk.gov.di.ipv.core.library.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.retrievecricredential.validation.VerifiableCredentialJwtValidator;
 
@@ -56,7 +56,7 @@ public class RetrieveCriCredentialHandler
 
     private final CredentialIssuerService credentialIssuerService;
     private final IpvSessionService ipvSessionService;
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
     private final AuditService auditService;
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     private final CiStorageService ciStorageService;
@@ -66,13 +66,13 @@ public class RetrieveCriCredentialHandler
     public RetrieveCriCredentialHandler(
             CredentialIssuerService credentialIssuerService,
             IpvSessionService ipvSessionService,
-            ConfigurationService configurationService,
+            ConfigService configService,
             AuditService auditService,
             VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
             CiStorageService ciStorageService) {
         this.credentialIssuerService = credentialIssuerService;
         this.ipvSessionService = ipvSessionService;
-        this.configurationService = configurationService;
+        this.configService = configService;
         this.auditService = auditService;
         this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
         this.ciStorageService = ciStorageService;
@@ -80,16 +80,14 @@ public class RetrieveCriCredentialHandler
 
     @ExcludeFromGeneratedCoverageReport
     public RetrieveCriCredentialHandler() {
-        this.configurationService = new ConfigurationService();
+        this.configService = new ConfigService();
         this.credentialIssuerService =
                 new CredentialIssuerService(
-                        configurationService,
-                        new KmsEs256Signer(configurationService.getSigningKeyId()));
-        this.ipvSessionService = new IpvSessionService(configurationService);
-        this.auditService =
-                new AuditService(AuditService.getDefaultSqsClient(), configurationService);
+                        configService, new KmsEs256Signer(configService.getSigningKeyId()));
+        this.ipvSessionService = new IpvSessionService(configService);
+        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator();
-        this.ciStorageService = new CiStorageService(configurationService);
+        this.ciStorageService = new CiStorageService(configService);
     }
 
     @Override
@@ -129,14 +127,12 @@ public class RetrieveCriCredentialHandler
                             clientSessionDetailsDto.getGovukSigninJourneyId(),
                             ipAddress);
             this.componentId =
-                    configurationService.getSsmParameter(
-                            ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                    configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
 
             CredentialIssuerConfig credentialIssuerConfig =
-                    configurationService.getCredentialIssuer(credentialIssuerId);
+                    configService.getCredentialIssuer(credentialIssuerId);
 
-            String apiKey =
-                    configurationService.getCriPrivateApiKey(credentialIssuerConfig.getId());
+            String apiKey = configService.getCriPrivateApiKey(credentialIssuerConfig.getId());
 
             List<SignedJWT> verifiableCredentials =
                     credentialIssuerService.getVerifiableCredential(
@@ -150,9 +146,9 @@ public class RetrieveCriCredentialHandler
             for (SignedJWT vc : verifiableCredentials) {
                 verifiableCredentialJwtValidator.validate(vc, credentialIssuerConfig, userId);
 
-                String addressCriId = configurationService.getSsmParameter(ADDRESS_CRI_ID);
+                String addressCriId = configService.getSsmParameter(ADDRESS_CRI_ID);
                 CredentialIssuerConfig addressCriConfig =
-                        configurationService.getCredentialIssuer(addressCriId);
+                        configService.getCredentialIssuer(addressCriId);
                 boolean isSuccessful = VcHelper.isSuccessfulVc(vc, addressCriConfig);
 
                 sendIpvVcReceivedAuditEvent(auditEventUser, vc, isSuccessful);

@@ -29,7 +29,7 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.SQS_AUDIT_EV
 class AuditServiceTest {
 
     @Mock AmazonSQS mockSqs;
-    @Mock ConfigurationService mockConfigurationService;
+    @Mock ConfigService mockConfigService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -37,10 +37,10 @@ class AuditServiceTest {
 
     @BeforeEach
     void setup() {
-        when(mockConfigurationService.getEnvironmentVariable(SQS_AUDIT_EVENT_QUEUE_URL))
+        when(mockConfigService.getEnvironmentVariable(SQS_AUDIT_EVENT_QUEUE_URL))
                 .thenReturn("https://example-queue-url");
 
-        auditService = new AuditService(mockSqs, mockConfigurationService);
+        auditService = new AuditService(mockSqs, mockConfigService);
     }
 
     @Test
@@ -139,8 +139,7 @@ class AuditServiceTest {
     @Test
     void shouldThrowSQSException() throws JsonProcessingException {
         ObjectMapper mockObjectMapper = mock(ObjectMapper.class);
-        AuditService underTest =
-                new AuditService(mockSqs, mockConfigurationService, mockObjectMapper);
+        AuditService underTest = new AuditService(mockSqs, mockConfigService, mockObjectMapper);
         when(mockObjectMapper.writeValueAsString(any(AuditEvent.class)))
                 .thenThrow(new JsonProcessingException("") {});
         assertThrows(

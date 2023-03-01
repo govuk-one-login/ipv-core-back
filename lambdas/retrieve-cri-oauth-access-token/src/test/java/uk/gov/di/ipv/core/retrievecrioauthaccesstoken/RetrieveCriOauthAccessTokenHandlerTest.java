@@ -25,7 +25,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.net.URI;
@@ -56,7 +56,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     @Mock private Context context;
     @Mock private CredentialIssuerService credentialIssuerService;
     @Mock private AuditService auditService;
-    @Mock private static ConfigurationService configurationService;
+    @Mock private static ConfigService configService;
     @Mock private IpvSessionService ipvSessionService;
     @Mock private IpvSessionItem ipvSessionItem;
     @InjectMocks private RetrieveCriOauthAccessTokenHandler handler;
@@ -135,9 +135,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                         new CredentialIssuerException(
                                 HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST));
 
-        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
-                .thenReturn(passportIssuer);
-        when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
+        when(configService.getCredentialIssuer(CREDENTIAL_ISSUER_ID)).thenReturn(passportIssuer);
+        when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
@@ -176,13 +175,11 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     private void mockServiceCallsAndSessionItem() {
-        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
-                .thenReturn(passportIssuer);
+        when(configService.getCredentialIssuer(CREDENTIAL_ISSUER_ID)).thenReturn(passportIssuer);
 
-        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
-                .thenReturn(testComponentId);
+        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(testComponentId);
 
-        when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
+        when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -203,8 +200,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(ipvSessionItem.getCredentialIssuerSessionDetails())
                 .thenReturn(credentialIssuerSessionDetailsDto);
-        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
-                .thenReturn(passportIssuer);
+        when(configService.getCredentialIssuer(CREDENTIAL_ISSUER_ID)).thenReturn(passportIssuer);
         doThrow(new SqsException("Test sqs error"))
                 .when(auditService)
                 .sendAuditEvent(any(AuditEvent.class));
@@ -221,10 +217,9 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         JSONObject testCredential = new JSONObject();
         testCredential.appendField("foo", "bar");
 
-        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
-                .thenReturn(passportIssuer);
+        when(configService.getCredentialIssuer(CREDENTIAL_ISSUER_ID)).thenReturn(passportIssuer);
 
-        when(configurationService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
+        when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
         when(credentialIssuerService.exchangeCodeForToken(
                         TEST_AUTH_CODE, passportIssuer, testApiKey))
@@ -265,11 +260,9 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         JSONObject testCredential = new JSONObject();
         testCredential.appendField("foo", "bar");
 
-        when(configurationService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
-                .thenReturn(passportIssuer);
+        when(configService.getCredentialIssuer(CREDENTIAL_ISSUER_ID)).thenReturn(passportIssuer);
 
-        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
-                .thenReturn(testComponentId);
+        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(testComponentId);
 
         doThrow(new SqsException("Test sqs error"))
                 .when(auditService)

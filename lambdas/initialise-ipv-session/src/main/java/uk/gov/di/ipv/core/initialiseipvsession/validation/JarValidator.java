@@ -19,7 +19,7 @@ import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidatio
 import uk.gov.di.ipv.core.initialiseipvsession.service.KmsRsaDecrypter;
 import uk.gov.di.ipv.core.library.helpers.JwtHelper;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.net.URI;
 import java.text.ParseException;
@@ -38,12 +38,11 @@ public class JarValidator {
     private static final String REDIRECT_URI_CLAIM = "redirect_uri";
 
     private final KmsRsaDecrypter kmsRsaDecrypter;
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
 
-    public JarValidator(
-            KmsRsaDecrypter kmsRsaDecrypter, ConfigurationService configurationService) {
+    public JarValidator(KmsRsaDecrypter kmsRsaDecrypter, ConfigService configService) {
         this.kmsRsaDecrypter = kmsRsaDecrypter;
-        this.configurationService = configurationService;
+        this.configService = configService;
     }
 
     public SignedJWT decryptJWE(JWEObject jweObject) throws JarValidationException {
@@ -82,7 +81,7 @@ public class JarValidator {
 
     private void validateClientId(String clientId) throws JarValidationException {
         try {
-            configurationService.getSsmParameter(CLIENT_ISSUER, clientId);
+            configService.getSsmParameter(CLIENT_ISSUER, clientId);
             LogHelper.attachClientIdToLogs(clientId);
         } catch (ParameterNotFoundException e) {
             LOGGER.error("Unknown client id provided {}", clientId);
@@ -116,7 +115,7 @@ public class JarValidator {
                     concatSignatureJwt.verify(
                             new ECDSAVerifier(
                                     ECKey.parse(
-                                                    configurationService.getSsmParameter(
+                                                    configService.getSsmParameter(
                                                             PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY,
                                                             clientId))
                                             .toECPublicKey()));
@@ -138,8 +137,8 @@ public class JarValidator {
     private JWTClaimsSet getValidatedClaimSet(SignedJWT signedJWT, String clientId)
             throws JarValidationException {
 
-        String criAudience = configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS);
-        String clientIssuer = configurationService.getSsmParameter(CLIENT_ISSUER, clientId);
+        String criAudience = configService.getSsmParameter(AUDIENCE_FOR_CLIENTS);
+        String clientIssuer = configService.getSsmParameter(CLIENT_ISSUER, clientId);
 
         DefaultJWTClaimsVerifier<?> verifier =
                 new DefaultJWTClaimsVerifier<>(
@@ -169,7 +168,7 @@ public class JarValidator {
     }
 
     private void validateMaxAllowedJarTtl(JWTClaimsSet claimsSet) throws JarValidationException {
-        String maxAllowedTtl = configurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL);
+        String maxAllowedTtl = configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL);
         LocalDateTime maximumExpirationTime =
                 LocalDateTime.now().plusSeconds(Long.parseLong(maxAllowedTtl));
         LocalDateTime expirationTime =
@@ -187,7 +186,7 @@ public class JarValidator {
             throws JarValidationException {
         try {
             URI redirectUri = claimsSet.getURIClaim(REDIRECT_URI_CLAIM);
-            List<String> allowedRedirectUris = configurationService.getClientRedirectUrls(clientId);
+            List<String> allowedRedirectUris = configService.getClientRedirectUrls(clientId);
 
             if (redirectUri == null || !allowedRedirectUris.contains(redirectUri.toString())) {
                 LOGGER.error(

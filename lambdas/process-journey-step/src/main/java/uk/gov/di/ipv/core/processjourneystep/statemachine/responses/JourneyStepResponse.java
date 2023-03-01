@@ -2,7 +2,7 @@ package uk.gov.di.ipv.core.processjourneystep.statemachine.responses;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.Map;
 
@@ -14,7 +14,7 @@ import java.util.Map;
     @JsonSubTypes.Type(value = CriResponse.class, name = "cri")
 })
 public interface JourneyStepResponse {
-    Map<String, Object> value(ConfigurationService configurationService);
+    Map<String, Object> value(ConfigService configService);
 
     Map<String, Object> value(String id);
 }

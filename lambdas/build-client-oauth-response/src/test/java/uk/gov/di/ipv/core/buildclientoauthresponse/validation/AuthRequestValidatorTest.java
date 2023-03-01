@@ -6,7 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
 import java.util.Collections;
@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AuthRequestValidatorTest {
 
-    @Mock private ConfigurationService mockConfigurationService;
+    @Mock private ConfigService mockConfigService;
 
     private static final String REDIRECT_URI_PARAM = "redirect_uri";
     private static final String CLIENT_ID_PARAM = "client_id";
@@ -43,12 +43,12 @@ class AuthRequestValidatorTest {
 
     @BeforeEach
     void setUp() {
-        validator = new AuthRequestValidator(mockConfigurationService);
+        validator = new AuthRequestValidator(mockConfigService);
     }
 
     @Test
     void validateRequestReturnsValidResultForValidRequest() {
-        when(mockConfigurationService.getClientRedirectUrls("12345"))
+        when(mockConfigService.getClientRedirectUrls("12345"))
                 .thenReturn(List.of("http://example.com"));
 
         var validationResult =
@@ -139,8 +139,7 @@ class AuthRequestValidatorTest {
                         "https://wrong.example.com",
                         "https://nope.example.com",
                         "https://whoops.example.com");
-        when(mockConfigurationService.getClientRedirectUrls("12345"))
-                .thenReturn(registeredRedirectUrls);
+        when(mockConfigService.getClientRedirectUrls("12345")).thenReturn(registeredRedirectUrls);
 
         var validationResult =
                 validator.validateRequest(VALID_QUERY_STRING_PARAMS, REQUEST_HEADERS);

@@ -40,7 +40,7 @@ import uk.gov.di.ipv.core.library.helpers.VcHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -70,7 +70,7 @@ public class EvaluateGpg45ScoresHandler
     private final IpvSessionService ipvSessionService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final CiStorageService ciStorageService;
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
     private final AuditService auditService;
     private final String addressCriId;
     private final String componentId;
@@ -80,33 +80,30 @@ public class EvaluateGpg45ScoresHandler
             IpvSessionService ipvSessionService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
             CiStorageService ciStorageService,
-            ConfigurationService configurationService,
+            ConfigService configService,
             AuditService auditService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.ciStorageService = ciStorageService;
-        this.configurationService = configurationService;
+        this.configService = configService;
         this.auditService = auditService;
 
-        addressCriId = configurationService.getSsmParameter(ADDRESS_CRI_ID);
-        componentId =
-                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+        addressCriId = configService.getSsmParameter(ADDRESS_CRI_ID);
+        componentId = configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @ExcludeFromGeneratedCoverageReport
     public EvaluateGpg45ScoresHandler() {
-        this.configurationService = new ConfigurationService();
-        this.userIdentityService = new UserIdentityService(configurationService);
-        this.ipvSessionService = new IpvSessionService(configurationService);
-        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configurationService);
-        this.ciStorageService = new CiStorageService(configurationService);
-        this.auditService =
-                new AuditService(AuditService.getDefaultSqsClient(), configurationService);
+        this.configService = new ConfigService();
+        this.userIdentityService = new UserIdentityService(configService);
+        this.ipvSessionService = new IpvSessionService(configService);
+        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService);
+        this.ciStorageService = new CiStorageService(configService);
+        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
 
-        addressCriId = configurationService.getSsmParameter(ADDRESS_CRI_ID);
-        componentId =
-                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+        addressCriId = configService.getSsmParameter(ADDRESS_CRI_ID);
+        componentId = configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @Override
@@ -143,7 +140,7 @@ public class EvaluateGpg45ScoresHandler
 
             boolean ciMitigationJourneysEnabled =
                     Boolean.parseBoolean(
-                            configurationService.getSsmParameter(CI_MITIGATION_JOURNEYS_ENABLED));
+                            configService.getSsmParameter(CI_MITIGATION_JOURNEYS_ENABLED));
             Optional<JourneyResponse> mitigationJourneyResponse = Optional.empty();
             if (ciMitigationJourneysEnabled) {
                 mitigationJourneyResponse =
@@ -310,7 +307,7 @@ public class EvaluateGpg45ScoresHandler
         for (SignedJWT signedJWT : credentials) {
 
             CredentialIssuerConfig addressCriConfig =
-                    configurationService.getCredentialIssuer(addressCriId);
+                    configService.getCredentialIssuer(addressCriId);
             boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, addressCriConfig);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));

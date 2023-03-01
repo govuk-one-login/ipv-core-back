@@ -35,7 +35,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.text.ParseException;
@@ -53,7 +53,7 @@ public class InitialiseIpvSessionHandler
     private static final String REQUEST_PARAM_KEY = "request";
     private static final String IS_DEBUG_JOURNEY_PARAM_KEY = "isDebugJourney";
 
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
     private final KmsRsaDecrypter kmsRsaDecrypter;
     private final JarValidator jarValidator;
@@ -62,31 +62,29 @@ public class InitialiseIpvSessionHandler
 
     @ExcludeFromGeneratedCoverageReport
     public InitialiseIpvSessionHandler() {
-        this.configurationService = new ConfigurationService();
-        this.ipvSessionService = new IpvSessionService(configurationService);
+        this.configService = new ConfigService();
+        this.ipvSessionService = new IpvSessionService(configService);
         this.kmsRsaDecrypter =
-                new KmsRsaDecrypter(
-                        configurationService.getSsmParameter(JAR_KMS_ENCRYPTION_KEY_ID));
-        this.jarValidator = new JarValidator(kmsRsaDecrypter, configurationService);
-        this.auditService =
-                new AuditService(AuditService.getDefaultSqsClient(), configurationService);
+                new KmsRsaDecrypter(configService.getSsmParameter(JAR_KMS_ENCRYPTION_KEY_ID));
+        this.jarValidator = new JarValidator(kmsRsaDecrypter, configService);
+        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.componentId =
-                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     public InitialiseIpvSessionHandler(
             IpvSessionService ipvSessionService,
-            ConfigurationService configurationService,
+            ConfigService configService,
             KmsRsaDecrypter kmsRsaDecrypter,
             JarValidator jarValidator,
             AuditService auditService) {
         this.ipvSessionService = ipvSessionService;
-        this.configurationService = configurationService;
+        this.configService = configService;
         this.kmsRsaDecrypter = kmsRsaDecrypter;
         this.jarValidator = jarValidator;
         this.auditService = auditService;
         this.componentId =
-                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @Override

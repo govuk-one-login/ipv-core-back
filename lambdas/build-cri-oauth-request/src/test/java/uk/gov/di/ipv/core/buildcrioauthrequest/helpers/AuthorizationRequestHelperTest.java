@@ -23,7 +23,7 @@ import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.net.URI;
 import java.security.KeyFactory;
@@ -82,7 +82,7 @@ class AuthorizationRequestHelperTest {
 
     @Mock CredentialIssuerConfig credentialIssuerConfig;
 
-    @Mock ConfigurationService configurationService;
+    @Mock ConfigService configService;
 
     private RSAEncrypter rsaEncrypter;
 
@@ -108,7 +108,7 @@ class AuthorizationRequestHelperTest {
                         sharedClaims,
                         signer,
                         credentialIssuerConfig,
-                        configurationService,
+                        configService,
                         OAUTH_STATE,
                         TEST_USER_ID,
                         TEST_JOURNEY_ID);
@@ -138,7 +138,7 @@ class AuthorizationRequestHelperTest {
                         null,
                         signer,
                         credentialIssuerConfig,
-                        configurationService,
+                        configService,
                         OAUTH_STATE,
                         TEST_USER_ID,
                         TEST_JOURNEY_ID);
@@ -158,7 +158,7 @@ class AuthorizationRequestHelperTest {
                                         null,
                                         jwsSigner,
                                         credentialIssuerConfig,
-                                        configurationService,
+                                        configService,
                                         OAUTH_STATE,
                                         TEST_USER_ID,
                                         TEST_JOURNEY_ID));
@@ -207,8 +207,8 @@ class AuthorizationRequestHelperTest {
     }
 
     private void setupConfigurationServiceMock() {
-        when(configurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn(IPV_TOKEN_TTL);
-        when(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
+        when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn(IPV_TOKEN_TTL);
+        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
     }
 
     private PrivateKey getEncryptionPrivateKey()

@@ -32,7 +32,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.net.URISyntaxException;
@@ -45,33 +45,32 @@ public class BuildClientOauthResponseHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
     private final IpvSessionService sessionService;
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
     private final AuthRequestValidator authRequestValidator;
     private final AuditService auditService;
     private final String componentId;
 
     @ExcludeFromGeneratedCoverageReport
     public BuildClientOauthResponseHandler() {
-        this.configurationService = new ConfigurationService();
-        this.sessionService = new IpvSessionService(configurationService);
-        this.authRequestValidator = new AuthRequestValidator(configurationService);
-        this.auditService =
-                new AuditService(AuditService.getDefaultSqsClient(), configurationService);
+        this.configService = new ConfigService();
+        this.sessionService = new IpvSessionService(configService);
+        this.authRequestValidator = new AuthRequestValidator(configService);
+        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.componentId =
-                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     public BuildClientOauthResponseHandler(
             IpvSessionService sessionService,
-            ConfigurationService configurationService,
+            ConfigService configService,
             AuthRequestValidator authRequestValidator,
             AuditService auditService) {
         this.sessionService = sessionService;
-        this.configurationService = configurationService;
+        this.configService = configService;
         this.authRequestValidator = authRequestValidator;
         this.auditService = auditService;
         this.componentId =
-                configurationService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @Override

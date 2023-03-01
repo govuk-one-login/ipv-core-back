@@ -19,7 +19,6 @@ import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
@@ -30,8 +29,6 @@ import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getAllServeEvents;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
@@ -56,10 +53,10 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_C
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
-@WireMockTest(httpPort = ConfigurationService.LOCALHOST_PORT)
+@WireMockTest(httpPort = ConfigService.LOCALHOST_PORT)
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SystemStubsExtension.class)
-class ConfigurationServiceTest {
+class ConfigServiceTest {
 
     private static final String TEST_TOKEN_URL = "testTokenUrl";
     private static final String TEST_CREDENTIAL_URL = "testCredentialUrl";
@@ -77,13 +74,13 @@ class ConfigurationServiceTest {
 
     @Mock SecretsProvider secretsProvider;
 
-    private ConfigurationService configurationService;
+    private ConfigService configService;
 
     private final Gson gson = new Gson();
 
     @BeforeEach
     void setUp() {
-        configurationService = new ConfigurationService(ssmProvider, secretsProvider);
+        configService = new ConfigService(ssmProvider, secretsProvider);
     }
 
     @Test
@@ -98,7 +95,7 @@ class ConfigurationServiceTest {
                 "software.amazon.awssdk.http.service.impl",
                 "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
 
-        SSMProvider ssmProvider = new ConfigurationService().getSsmProvider();
+        SSMProvider ssmProvider = new ConfigService().getSsmProvider();
         assertThrows(NullPointerException.class, () -> ssmProvider.get("any-old-thing"));
 
         HashMap requestBody =
@@ -127,7 +124,7 @@ class ConfigurationServiceTest {
         when(ssmProvider.getMultiple("/dev/core/credentialIssuers/passportCri"))
                 .thenReturn(credentialIssuerParameters);
 
-        CredentialIssuerConfig result = configurationService.getCredentialIssuer("passportCri");
+        CredentialIssuerConfig result = configService.getCredentialIssuer("passportCri");
 
         CredentialIssuerConfig expected =
                 new CredentialIssuerConfig(
@@ -149,108 +146,13 @@ class ConfigurationServiceTest {
     }
 
     @Test
-    void shouldGetAllCredentialIssuersFromParameterStore()
-            throws ParseCredentialIssuerConfigException {
-
-        environmentVariables.set(
-                "CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "/dev/core/credentialIssuers/");
-        HashMap<String, String> response = new HashMap<>();
-        response.put("passportCri/tokenUrl", "passportTokenUrl");
-        response.put("passportCri/authorizeUrl", "passportAuthUrl");
-        response.put("passportCri/id", "passportCri");
-        response.put("passportCri/name", "passportIssuer");
-        response.put("stubCri/tokenUrl", "stubTokenUrl");
-        response.put("stubCri/authorizeUrl", "stubAuthUrl");
-        response.put("stubCri/id", "stubCri");
-        response.put("stubCri/name", "stubIssuer");
-
-        when(ssmProvider.recursive()).thenReturn(ssmProvider2);
-        when(ssmProvider2.getMultiple("/dev/core/credentialIssuers/")).thenReturn(response);
-        List<CredentialIssuerConfig> result = configurationService.getCredentialIssuers();
-
-        assertEquals(2, result.size());
-
-        Optional<CredentialIssuerConfig> passportIssuerConfig =
-                result.stream()
-                        .filter(config -> Objects.equals(config.getId(), "passportCri"))
-                        .findFirst();
-        assertTrue(passportIssuerConfig.isPresent());
-        assertEquals("passportTokenUrl", passportIssuerConfig.get().getTokenUrl().toString());
-        assertEquals("passportAuthUrl", passportIssuerConfig.get().getAuthorizeUrl().toString());
-        assertEquals("passportCri", passportIssuerConfig.get().getId());
-
-        Optional<CredentialIssuerConfig> stubIssuerConfig =
-                result.stream()
-                        .filter(config -> Objects.equals(config.getId(), "stubCri"))
-                        .findFirst();
-        assertTrue(stubIssuerConfig.isPresent());
-        assertEquals("stubTokenUrl", stubIssuerConfig.get().getTokenUrl().toString());
-        assertEquals("stubAuthUrl", stubIssuerConfig.get().getAuthorizeUrl().toString());
-        assertEquals("stubCri", stubIssuerConfig.get().getId());
-    }
-
-    @Test
-    void shouldThrowExceptionWhenCriConfigIsIncorrect() {
-        environmentVariables.set(
-                "CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "/dev/core/credentialIssuers/");
-        HashMap<String, String> response = new HashMap<>();
-        response.put("incorrectPathName", "passportTokenUrl");
-        response.put("passportCri/authorizeUrl", "passportAuthUrl");
-        response.put("passportCri/id", "passportCri");
-        response.put("passportCri/name", "passportIssuer");
-
-        when(ssmProvider.recursive()).thenReturn(ssmProvider2);
-        when(ssmProvider2.getMultiple("/dev/core/credentialIssuers/")).thenReturn(response);
-        ParseCredentialIssuerConfigException exception =
-                assertThrows(
-                        ParseCredentialIssuerConfigException.class,
-                        () -> configurationService.getCredentialIssuers());
-        assertEquals(
-                "The credential issuer id cannot be parsed from the parameter path incorrectPathName",
-                exception.getMessage());
-    }
-
-    @Test
-    void shouldGetAllCredentialIssuersFromParameterStoreNewAndIgnoreInExistingFields()
-            throws ParseCredentialIssuerConfigException {
-
-        environmentVariables.set(
-                "CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "/dev/core/credentialIssuers/");
-        HashMap<String, String> response = new HashMap<>();
-        response.put("passportCri/id", "passportCri");
-        response.put("passportCri/tokenUrl", "passportTokenUrl");
-        response.put("stubCri/id", "stubCri");
-        response.put("stubCri/tokenUrl", "stubTokenUrl");
-        // This will be ignored - not in pojo
-        response.put("stubCri/ipclientid", "stubIpClient");
-
-        when(ssmProvider.recursive()).thenReturn(ssmProvider2);
-        when(ssmProvider2.getMultiple("/dev/core/credentialIssuers/")).thenReturn(response);
-        List<CredentialIssuerConfig> result = configurationService.getCredentialIssuers();
-
-        Optional<CredentialIssuerConfig> passportIssuerConfig =
-                result.stream()
-                        .filter(config -> Objects.equals(config.getId(), "passportCri"))
-                        .findFirst();
-        assertTrue(passportIssuerConfig.isPresent());
-        assertEquals("passportTokenUrl", passportIssuerConfig.get().getTokenUrl().toString());
-
-        Optional<CredentialIssuerConfig> stubIssuerConfig =
-                result.stream()
-                        .filter(config -> Objects.equals(config.getId(), "stubCri"))
-                        .findFirst();
-        assertTrue(stubIssuerConfig.isPresent());
-        assertEquals("stubTokenUrl", stubIssuerConfig.get().getTokenUrl().toString());
-    }
-
-    @Test
     void shouldReturnListOfClientRedirectUrls() {
         environmentVariables.set("ENVIRONMENT", "test");
         when(ssmProvider.get("/test/core/clients/aClientId/validRedirectUrls"))
                 .thenReturn(
                         "one.example.com/callback,two.example.com/callback,three.example.com/callback");
 
-        var fetchedClientRedirectUrls = configurationService.getClientRedirectUrls("aClientId");
+        var fetchedClientRedirectUrls = configService.getClientRedirectUrls("aClientId");
 
         var expectedRedirectUrls =
                 List.of(
@@ -268,8 +170,7 @@ class ConfigurationServiceTest {
 
         assertEquals(
                 TEST_CERT,
-                configurationService.getSsmParameter(
-                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "aClientId"));
+                configService.getSsmParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "aClientId"));
     }
 
     @Test
@@ -277,8 +178,7 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String clientIssuer = "aClientIssuer";
         when(ssmProvider.get("/test/core/clients/aClientId/issuer")).thenReturn(clientIssuer);
-        assertEquals(
-                clientIssuer, configurationService.getSsmParameter(CLIENT_ISSUER, "aClientId"));
+        assertEquals(clientIssuer, configService.getSsmParameter(CLIENT_ISSUER, "aClientId"));
     }
 
     @Test
@@ -286,8 +186,7 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String clientIssuer = "aClientTokenTtl";
         when(ssmProvider.get("/test/core/self/maxAllowedAuthClientTtl")).thenReturn(clientIssuer);
-        assertEquals(
-                clientIssuer, configurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL));
+        assertEquals(clientIssuer, configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL));
     }
 
     @Test
@@ -296,9 +195,7 @@ class ConfigurationServiceTest {
         String coreFrontCallbackUrl = "aCoreFrontCallbackUrl";
         when(ssmProvider.get("/test/core/self/coreFrontCallbackUrl"))
                 .thenReturn(coreFrontCallbackUrl);
-        assertEquals(
-                coreFrontCallbackUrl,
-                configurationService.getSsmParameter(CORE_FRONT_CALLBACK_URL));
+        assertEquals(coreFrontCallbackUrl, configService.getSsmParameter(CORE_FRONT_CALLBACK_URL));
     }
 
     @Test
@@ -306,7 +203,7 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String coreVtmClaim = "aCoreVtmClaim";
         when(ssmProvider.get("/test/core/self/coreVtmClaim")).thenReturn(coreVtmClaim);
-        assertEquals(coreVtmClaim, configurationService.getSsmParameter(CORE_VTM_CLAIM));
+        assertEquals(coreVtmClaim, configService.getSsmParameter(CORE_VTM_CLAIM));
     }
 
     @Test
@@ -314,7 +211,7 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String passportCriId = "ukPassport";
         when(ssmProvider.get("/test/core/self/journey/passportCriId")).thenReturn(passportCriId);
-        assertEquals(passportCriId, configurationService.getSsmParameter(PASSPORT_CRI_ID));
+        assertEquals(passportCriId, configService.getSsmParameter(PASSPORT_CRI_ID));
     }
 
     @Test
@@ -322,7 +219,7 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String addressCriId = "address";
         when(ssmProvider.get("/test/core/self/journey/addressCriId")).thenReturn(addressCriId);
-        assertEquals(addressCriId, configurationService.getSsmParameter(ADDRESS_CRI_ID));
+        assertEquals(addressCriId, configService.getSsmParameter(ADDRESS_CRI_ID));
     }
 
     @Test
@@ -330,7 +227,7 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String fraudCriId = "fraud";
         when(ssmProvider.get("/test/core/self/journey/fraudCriId")).thenReturn(fraudCriId);
-        assertEquals(fraudCriId, configurationService.getSsmParameter(FRAUD_CRI_ID));
+        assertEquals(fraudCriId, configService.getSsmParameter(FRAUD_CRI_ID));
     }
 
     @Test
@@ -338,7 +235,7 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String kbvCriId = "kbv";
         when(ssmProvider.get("/test/core/self/journey/kbvCriId")).thenReturn(kbvCriId);
-        assertEquals(kbvCriId, configurationService.getSsmParameter(KBV_CRI_ID));
+        assertEquals(kbvCriId, configService.getSsmParameter(KBV_CRI_ID));
     }
 
     @Test
@@ -346,7 +243,7 @@ class ConfigurationServiceTest {
         Map<String, String> apiKeySecret = Map.of("apiKey", "api-key-value");
         when(secretsProvider.get(any())).thenReturn(gson.toJson(apiKeySecret));
 
-        String apiKey = configurationService.getCriPrivateApiKey("ukPassport");
+        String apiKey = configService.getCriPrivateApiKey("ukPassport");
 
         assertEquals("api-key-value", apiKey);
     }
@@ -357,7 +254,7 @@ class ConfigurationServiceTest {
                 DecryptionFailureException.builder().message("Test decryption error").build();
         when(secretsProvider.get(any())).thenThrow(decryptionFailureException);
 
-        String apiKey = configurationService.getCriPrivateApiKey("ukPassport");
+        String apiKey = configService.getCriPrivateApiKey("ukPassport");
 
         assertNull(apiKey);
     }
@@ -370,7 +267,7 @@ class ConfigurationServiceTest {
                         .build();
         when(secretsProvider.get(any())).thenThrow(internalServiceErrorException);
 
-        String apiKey = configurationService.getCriPrivateApiKey("ukPassport");
+        String apiKey = configService.getCriPrivateApiKey("ukPassport");
 
         assertNull(apiKey);
     }
@@ -381,7 +278,7 @@ class ConfigurationServiceTest {
                 InvalidParameterException.builder().message("Test invalid parameter error").build();
         when(secretsProvider.get(any())).thenThrow(invalidParameterException);
 
-        String apiKey = configurationService.getCriPrivateApiKey("ukPassport");
+        String apiKey = configService.getCriPrivateApiKey("ukPassport");
 
         assertNull(apiKey);
     }
@@ -392,7 +289,7 @@ class ConfigurationServiceTest {
                 InvalidRequestException.builder().message("Test invalid request error").build();
         when(secretsProvider.get(any())).thenThrow(invalidRequestException);
 
-        String apiKey = configurationService.getCriPrivateApiKey("ukPassport");
+        String apiKey = configService.getCriPrivateApiKey("ukPassport");
 
         assertNull(apiKey);
     }
@@ -405,7 +302,7 @@ class ConfigurationServiceTest {
                         .build();
         when(secretsProvider.get(any())).thenThrow(resourceNotFoundException);
 
-        String apiKey = configurationService.getCriPrivateApiKey("ukPassport");
+        String apiKey = configService.getCriPrivateApiKey("ukPassport");
 
         assertNull(apiKey);
     }
@@ -415,14 +312,14 @@ class ConfigurationServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         String ttl = "7200";
         when(ssmProvider.get("/test/core/self/backendSessionTimeout")).thenReturn(ttl);
-        assertEquals(ttl, configurationService.getSsmParameter(BACKEND_SESSION_TIMEOUT));
+        assertEquals(ttl, configService.getSsmParameter(BACKEND_SESSION_TIMEOUT));
     }
 
     @Test
     void shouldReturnBackendSessionTtl() {
         environmentVariables.set("ENVIRONMENT", "test");
         when(ssmProvider.get("/test/core/self/backendSessionTtl")).thenReturn("7200");
-        assertEquals("7200", configurationService.getSsmParameter(BACKEND_SESSION_TTL));
+        assertEquals("7200", configService.getSsmParameter(BACKEND_SESSION_TTL));
     }
 
     @Test
@@ -431,8 +328,7 @@ class ConfigurationServiceTest {
                 "[{ \"ci\": \"X01\", \"detectedScore\": 3, \"checkedScore\": -3, \"fidCode\": \"YZ01\" }, { \"ci\": \"Z03\", \"detectedScore\": 5, \"checkedScore\": -3 }]";
         when(secretsProvider.get(any())).thenReturn(scoresJsonString);
 
-        Map<String, ContraIndicatorScore> scoresMap =
-                configurationService.getContraIndicatorScoresMap();
+        Map<String, ContraIndicatorScore> scoresMap = configService.getContraIndicatorScoresMap();
 
         assertEquals(2, scoresMap.size());
         assertTrue(scoresMap.containsKey("X01"));

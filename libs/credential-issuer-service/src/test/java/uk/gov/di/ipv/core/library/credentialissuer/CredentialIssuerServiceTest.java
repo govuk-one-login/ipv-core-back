@@ -22,7 +22,7 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.net.URI;
 import java.security.KeyFactory;
@@ -67,7 +67,7 @@ class CredentialIssuerServiceTest {
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
 
     @Mock private DataStore<VcStoreItem> mockDataStore;
-    @Mock private ConfigurationService mockConfigurationService;
+    @Mock private ConfigService mockConfigService;
 
     private CredentialIssuerService credentialIssuerService;
     private final String testApiKey = "test-api-key";
@@ -77,12 +77,12 @@ class CredentialIssuerServiceTest {
         ECDSASigner signer = new ECDSASigner(getPrivateKey());
 
         credentialIssuerService =
-                new CredentialIssuerService(mockDataStore, mockConfigurationService, signer);
+                new CredentialIssuerService(mockDataStore, mockConfigService, signer);
     }
 
     @Test
     void validTokenResponse(WireMockRuntimeInfo wmRuntimeInfo) {
-        when(mockConfigurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         stubFor(
                 post("/token")
                         .willReturn(
@@ -106,7 +106,7 @@ class CredentialIssuerServiceTest {
 
     @Test
     void validTokenResponseForAppJourney(WireMockRuntimeInfo wmRuntimeInfo) {
-        when(mockConfigurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         stubFor(
                 post("/token")
                         .willReturn(
@@ -130,7 +130,7 @@ class CredentialIssuerServiceTest {
 
     @Test
     void validTokenResponseWithoutApiKey(WireMockRuntimeInfo wmRuntimeInfo) {
-        when(mockConfigurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         stubFor(
                 post("/token")
                         .willReturn(
@@ -154,7 +154,7 @@ class CredentialIssuerServiceTest {
 
     @Test
     void tokenErrorResponse(WireMockRuntimeInfo wmRuntimeInfo) {
-        when(mockConfigurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         var errorJson =
                 "{ \"error\": \"invalid_request\", \"error_description\": \"Request was missing the 'redirect_uri' parameter.\", \"error_uri\": \"See the full API docs at https://authorization-server.com/docs/access_token\"}";
         stubFor(
@@ -182,7 +182,7 @@ class CredentialIssuerServiceTest {
 
     @Test
     void invalidHeaderThrowsCredentialIssuerException(WireMockRuntimeInfo wmRuntimeInfo) {
-        when(mockConfigurationService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(mockConfigService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         stubFor(
                 post("/token")
                         .willReturn(

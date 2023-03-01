@@ -31,7 +31,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -110,7 +110,7 @@ class CheckExistingIdentityHandlerTest {
     @Mock private IpvSessionService ipvSessionService;
     @Mock private Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     @Mock private CiStorageService ciStorageService;
-    @Mock private ConfigurationService configurationService;
+    @Mock private ConfigService configService;
     @Mock private AuditService auditService;
     @InjectMocks private CheckExistingIdentityHandler checkExistingIdentityHandler;
 
@@ -151,9 +151,9 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
-        when(configurationService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
+        when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
-        when(configurationService.getCredentialIssuer("address")).thenReturn(addressConfig);
+        when(configService.getCredentialIssuer("address")).thenReturn(addressConfig);
 
         var response = checkExistingIdentityHandler.handleRequest(event, context);
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);

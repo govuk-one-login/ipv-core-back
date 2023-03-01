@@ -17,7 +17,7 @@ import uk.gov.di.ipv.core.issueclientaccesstoken.exception.ClientAuthenticationE
 import uk.gov.di.ipv.core.issueclientaccesstoken.persistance.item.ClientAuthJwtIdItem;
 import uk.gov.di.ipv.core.issueclientaccesstoken.service.ClientAuthJwtIdService;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
@@ -29,17 +29,16 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWE
 public class TokenRequestValidator {
 
     private static final Logger LOGGER = LogManager.getLogger();
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
 
     private final ClientAuthJwtIdService clientAuthJwtIdService;
     private final ClientAuthenticationVerifier<Object> verifier;
 
     public TokenRequestValidator(
-            ConfigurationService configurationService,
-            ClientAuthJwtIdService clientAuthJwtIdService) {
-        this.configurationService = configurationService;
+            ConfigService configService, ClientAuthJwtIdService clientAuthJwtIdService) {
+        this.configService = configService;
         this.clientAuthJwtIdService = clientAuthJwtIdService;
-        this.verifier = getClientAuthVerifier(configurationService);
+        this.verifier = getClientAuthVerifier(configService);
     }
 
     public void authenticateClient(String requestBody) throws ClientAuthenticationException {
@@ -60,7 +59,7 @@ public class TokenRequestValidator {
     private void validateMaxAllowedAuthClientTtl(JWTAuthenticationClaimsSet claimsSet)
             throws InvalidClientException {
         Date expirationTime = claimsSet.getExpirationTime();
-        String maxAllowedTtl = configurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL);
+        String maxAllowedTtl = configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL);
 
         OffsetDateTime offsetDateTime =
                 OffsetDateTime.now().plusSeconds(Long.parseLong(maxAllowedTtl));
@@ -86,11 +85,11 @@ public class TokenRequestValidator {
     }
 
     private ClientAuthenticationVerifier<Object> getClientAuthVerifier(
-            ConfigurationService configurationService) {
+            ConfigService configService) {
 
         return new ClientAuthenticationVerifier<>(
-                new ConfigurationServicePublicKeySelector(configurationService),
-                Set.of(new Audience(configurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS))));
+                new ConfigurationServicePublicKeySelector(configService),
+                Set.of(new Audience(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS))));
     }
 
     private void logWarningJtiHasAlreadyBeenUsed(ClientAuthJwtIdItem clientAuthJwtIdItem) {

@@ -12,7 +12,7 @@ import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -30,7 +30,7 @@ public class BuildDebugCredentialDataHandlerTest {
 
     @Mock private Context mockContext;
     @Mock private UserIdentityService mockUserIdentityService;
-    @Mock private ConfigurationService mockConfigurationService;
+    @Mock private ConfigService mockConfigService;
     @Mock private IpvSessionService mockIpvSessionService;
 
     private final Gson gson = new Gson();
@@ -64,7 +64,7 @@ public class BuildDebugCredentialDataHandlerTest {
         when(mockUserIdentityService.getVcStoreItems(userId)).thenReturn(vcStoreItems);
         BuildDebugCredentialDataHandler buildDebugCredentialDataHandler =
                 new BuildDebugCredentialDataHandler(
-                        mockUserIdentityService, mockConfigurationService, mockIpvSessionService);
+                        mockUserIdentityService, mockConfigService, mockIpvSessionService);
 
         APIGatewayProxyResponseEvent response =
                 buildDebugCredentialDataHandler.handleRequest(event, mockContext);
@@ -87,7 +87,7 @@ public class BuildDebugCredentialDataHandlerTest {
         event.setHeaders(Map.of());
         BuildDebugCredentialDataHandler buildDebugCredentialDataHandler =
                 new BuildDebugCredentialDataHandler(
-                        mockUserIdentityService, mockConfigurationService, mockIpvSessionService);
+                        mockUserIdentityService, mockConfigService, mockIpvSessionService);
 
         APIGatewayProxyResponseEvent response =
                 buildDebugCredentialDataHandler.handleRequest(event, mockContext);
@@ -101,7 +101,7 @@ public class BuildDebugCredentialDataHandlerTest {
         event.setHeaders(Map.of(RequestHelper.IPV_SESSION_ID_HEADER, ""));
         BuildDebugCredentialDataHandler buildDebugCredentialDataHandler =
                 new BuildDebugCredentialDataHandler(
-                        mockUserIdentityService, mockConfigurationService, mockIpvSessionService);
+                        mockUserIdentityService, mockConfigService, mockIpvSessionService);
 
         APIGatewayProxyResponseEvent response =
                 buildDebugCredentialDataHandler.handleRequest(event, mockContext);

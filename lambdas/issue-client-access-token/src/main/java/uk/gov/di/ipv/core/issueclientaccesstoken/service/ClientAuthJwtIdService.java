@@ -3,7 +3,7 @@ package uk.gov.di.ipv.core.issueclientaccesstoken.service;
 import uk.gov.di.ipv.core.issueclientaccesstoken.persistance.item.ClientAuthJwtIdItem;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.time.Instant;
 
@@ -12,26 +12,25 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CLIENT_AUTH_
 
 public class ClientAuthJwtIdService {
     private final DataStore<ClientAuthJwtIdItem> dataStore;
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
 
     @ExcludeFromGeneratedCoverageReport
-    public ClientAuthJwtIdService(ConfigurationService configurationService) {
-        this.configurationService = configurationService;
-        boolean isRunningLocally = this.configurationService.isRunningLocally();
+    public ClientAuthJwtIdService(ConfigService configService) {
+        this.configService = configService;
+        boolean isRunningLocally = this.configService.isRunningLocally();
         this.dataStore =
                 new DataStore<>(
-                        this.configurationService.getEnvironmentVariable(
-                                CLIENT_AUTH_JWT_IDS_TABLE_NAME),
+                        this.configService.getEnvironmentVariable(CLIENT_AUTH_JWT_IDS_TABLE_NAME),
                         ClientAuthJwtIdItem.class,
                         DataStore.getClient(isRunningLocally),
                         isRunningLocally,
-                        configurationService);
+                        configService);
     }
 
     // For tests
     public ClientAuthJwtIdService(
-            ConfigurationService configurationService, DataStore<ClientAuthJwtIdItem> dataStore) {
-        this.configurationService = configurationService;
+            ConfigService configService, DataStore<ClientAuthJwtIdItem> dataStore) {
+        this.configService = configService;
         this.dataStore = dataStore;
     }
 

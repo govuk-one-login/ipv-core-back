@@ -20,7 +20,7 @@ import uk.gov.di.ipv.core.issueclientaccesstoken.exception.ClientAuthenticationE
 import uk.gov.di.ipv.core.issueclientaccesstoken.persistance.item.ClientAuthJwtIdItem;
 import uk.gov.di.ipv.core.issueclientaccesstoken.service.ClientAuthJwtIdService;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -52,7 +52,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY
 class TokenRequestValidatorTest {
 
     private TokenRequestValidator validator;
-    @Mock private ConfigurationService mockConfigurationService;
+    @Mock private ConfigService mockConfigService;
     @Mock private ClientAuthJwtIdService mockClientAuthJwtIdService;
 
     private final String clientId = "di-ipv-orchestrator-stub";
@@ -62,18 +62,17 @@ class TokenRequestValidatorTest {
 
     @BeforeEach
     void setUp() {
-        when(mockConfigurationService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audience);
-        validator = new TokenRequestValidator(mockConfigurationService, mockClientAuthJwtIdService);
+        when(mockConfigService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audience);
+        validator = new TokenRequestValidator(mockConfigService, mockClientAuthJwtIdService);
     }
 
     @Test
     void shouldNotThrowForValidJwtSignedWithRS256()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(mockConfigurationService.getSsmParameter(
+        when(mockConfigService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
-        when(mockConfigurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
-                .thenReturn("2400");
+        when(mockConfigService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
 
         var validQueryParams =
                 getValidQueryParams(generateClientAssertionWithRS256(getValidClaimsSetValues()));
@@ -83,11 +82,10 @@ class TokenRequestValidatorTest {
     @Test
     void shouldNotThrowForValidJwtSignedWithES256()
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
-        when(mockConfigurationService.getSsmParameter(
+        when(mockConfigService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TestFixtures.EC_PUBLIC_JWK);
-        when(mockConfigurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
-                .thenReturn("2400");
+        when(mockConfigService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
 
         var validQueryParams =
                 getValidQueryParams(generateClientAssertionWithES256(getValidClaimsSetValues()));
@@ -96,7 +94,7 @@ class TokenRequestValidatorTest {
 
     @Test
     void shouldThrowIfInvalidSignature() throws Exception {
-        when(mockConfigurationService.getSsmParameter(
+        when(mockConfigService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
 
@@ -185,11 +183,10 @@ class TokenRequestValidatorTest {
     @Test
     void shouldFailWhenClientJWTContainsExpiryClaimTooFarInFuture()
             throws InvalidKeySpecException, NoSuchAlgorithmException, JOSEException {
-        when(mockConfigurationService.getSsmParameter(
+        when(mockConfigService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
-        when(mockConfigurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
-                .thenReturn("2400");
+        when(mockConfigService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
         var expiredClaimsSetValues = new HashMap<>(getValidClaimsSetValues());
         expiredClaimsSetValues.put(
                 JWTClaimNames.EXPIRATION_TIME,
@@ -239,11 +236,10 @@ class TokenRequestValidatorTest {
 
     @Test
     void shouldCheckIfJwtIdIsMissingOrEmpty() throws Exception {
-        when(mockConfigurationService.getSsmParameter(
+        when(mockConfigService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
-        when(mockConfigurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
-                .thenReturn("2400");
+        when(mockConfigService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
         Map<String, Object> claimsSetValues = getClaimsSetValuesMissingJwtId();
         String clientAssertion = generateClientAssertionWithRS256(claimsSetValues);
 
@@ -254,11 +250,10 @@ class TokenRequestValidatorTest {
 
     @Test
     void shouldStoreJwtIdAndCheckItHasNotAlreadyBeenUsed() throws Exception {
-        when(mockConfigurationService.getSsmParameter(
+        when(mockConfigService.getSsmParameter(
                         eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
-        when(mockConfigurationService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL))
-                .thenReturn("2400");
+        when(mockConfigService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("2400");
         Map<String, Object> claimsSetValues = getValidClaimsSetValues();
         String clientAssertion = generateClientAssertionWithRS256(claimsSetValues);
 

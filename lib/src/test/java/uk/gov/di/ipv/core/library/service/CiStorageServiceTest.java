@@ -40,12 +40,12 @@ class CiStorageServiceTest {
     @Captor ArgumentCaptor<InvokeRequest> requestCaptor;
 
     @Mock AWSLambda lambdaClient;
-    @Mock ConfigurationService configurationService;
+    @Mock ConfigService configService;
     @InjectMocks CiStorageService ciStorageService;
 
     @Test
     void submitVCInvokesTheLambdaClient() throws Exception {
-        when(configurationService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
+        when(configService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_PUT_LAMBDA);
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(new InvokeResult().withStatusCode(200));
@@ -65,7 +65,7 @@ class CiStorageServiceTest {
     @Test
     void submitVCThrowsIfLambdaExecutionFails() {
         InvokeResult result = new InvokeResult().withStatusCode(500);
-        when(configurationService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
+        when(configService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_PUT_LAMBDA);
         when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(result);
 
@@ -85,7 +85,7 @@ class CiStorageServiceTest {
                         .withStatusCode(200)
                         .withFunctionError("Unhandled")
                         .withPayload(ByteBuffer.allocate(0));
-        when(configurationService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
+        when(configService.getEnvironmentVariable(CI_STORAGE_PUT_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_PUT_LAMBDA);
         when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(result);
 
@@ -100,7 +100,7 @@ class CiStorageServiceTest {
 
     @Test
     void getCIsInvokesTheLambdaClientToGetTheItems() throws Exception {
-        when(configurationService.getEnvironmentVariable(CI_STORAGE_GET_LAMBDA_ARN))
+        when(configService.getEnvironmentVariable(CI_STORAGE_GET_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_GET_LAMBDA);
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(
@@ -133,7 +133,7 @@ class CiStorageServiceTest {
     @Test
     void getCIsThrowsExceptionIfLambdaExecutionFails() {
         InvokeResult result = new InvokeResult().withStatusCode(500);
-        when(configurationService.getEnvironmentVariable(CI_STORAGE_GET_LAMBDA_ARN))
+        when(configService.getEnvironmentVariable(CI_STORAGE_GET_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_GET_LAMBDA);
         when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(result);
 
@@ -151,7 +151,7 @@ class CiStorageServiceTest {
                         .withStatusCode(200)
                         .withFunctionError("Unhandled")
                         .withPayload(ByteBuffer.allocate(0));
-        when(configurationService.getEnvironmentVariable(CI_STORAGE_GET_LAMBDA_ARN))
+        when(configService.getEnvironmentVariable(CI_STORAGE_GET_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_GET_LAMBDA);
         when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(result);
 
@@ -164,7 +164,7 @@ class CiStorageServiceTest {
 
     @Test
     void submitMitigationVCInvokesTheLambdaClient() throws Exception {
-        when(configurationService.getEnvironmentVariable(CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
+        when(configService.getEnvironmentVariable(CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_POST_LAMBDA);
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(new InvokeResult().withStatusCode(200));
@@ -184,7 +184,7 @@ class CiStorageServiceTest {
     @Test
     void submitMitigationVCThrowsIfLambdaExecutionFails() {
         InvokeResult result = new InvokeResult().withStatusCode(500);
-        when(configurationService.getEnvironmentVariable(CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
+        when(configService.getEnvironmentVariable(CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_POST_LAMBDA);
         when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(result);
 
@@ -202,7 +202,7 @@ class CiStorageServiceTest {
                         .withStatusCode(200)
                         .withFunctionError("Unhandled")
                         .withPayload(ByteBuffer.allocate(0));
-        when(configurationService.getEnvironmentVariable(CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
+        when(configService.getEnvironmentVariable(CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_THE_POST_LAMBDA);
         when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(result);
 

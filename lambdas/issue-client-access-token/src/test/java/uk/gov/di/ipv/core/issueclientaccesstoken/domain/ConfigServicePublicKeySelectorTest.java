@@ -13,7 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.io.ByteArrayInputStream;
 import java.security.PublicKey;
@@ -27,9 +27,9 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 
 @ExtendWith(MockitoExtension.class)
-class ConfigurationServicePublicKeySelectorTest {
+class ConfigServicePublicKeySelectorTest {
 
-    @Mock private ConfigurationService configurationServiceMock;
+    @Mock private ConfigService configServiceMock;
 
     @InjectMocks private ConfigurationServicePublicKeySelector keySelector;
 
@@ -45,13 +45,12 @@ class ConfigurationServicePublicKeySelectorTest {
 
     @Test
     void selectPublicKeysShouldReturnKeys() throws Exception {
-        when(configurationServiceMock.getSsmParameter(
-                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
+        when(configServiceMock.getSsmParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
                 .thenReturn(TestFixtures.EC_PUBLIC_JWK);
-        when(configurationServiceMock.getSsmParameter(
+        when(configServiceMock.getSsmParameter(
                         PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "x509Client"))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
-        when(configurationServiceMock.getSsmParameter(
+        when(configServiceMock.getSsmParameter(
                         PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "misconfiguredClient"))
                 .thenReturn("some nonsense");
 
@@ -97,8 +96,7 @@ class ConfigurationServicePublicKeySelectorTest {
 
     @Test
     void selectPublicKeysShouldThrowIfUnsupportedAlgorithm() {
-        when(configurationServiceMock.getSsmParameter(
-                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
+        when(configServiceMock.getSsmParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
                 .thenReturn(TestFixtures.EC_PUBLIC_JWK);
 
         InvalidClientException exception =
@@ -119,10 +117,9 @@ class ConfigurationServicePublicKeySelectorTest {
 
     @Test
     void selectPublicKeysShouldThrowIfKeyMaterialDoesNotMatchAlgo() {
-        when(configurationServiceMock.getSsmParameter(
-                        PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
+        when(configServiceMock.getSsmParameter(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "jwkClient"))
                 .thenReturn(TestFixtures.RSA_PUBLIC_CERT);
-        when(configurationServiceMock.getSsmParameter(
+        when(configServiceMock.getSsmParameter(
                         PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY, "x509Client"))
                 .thenReturn(TestFixtures.EC_PUBLIC_JWK);
 

@@ -36,7 +36,7 @@ import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -64,7 +64,7 @@ class InitialiseIpvSessionHandlerTest {
     @Mock private Context mockContext;
 
     @Mock private IpvSessionService mockIpvSessionService;
-    @Mock private ConfigurationService mockConfigurationService;
+    @Mock private ConfigService mockConfigService;
     @Mock private KmsRsaDecrypter mockKmsRsaDecrypter;
     @Mock private JarValidator mockJarValidator;
     @Mock private AuditService mockAuditService;

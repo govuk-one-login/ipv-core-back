@@ -14,7 +14,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.DcmawCheckMethod;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
@@ -41,10 +42,10 @@ public class Gpg45ProfileEvaluator {
     private static final Gson gson = new Gson();
     private static final int NO_SCORE = 0;
     private static final String LOG_DESCRIPTION_FIELD = "description";
-    private final ConfigurationService configurationService;
+    private final ConfigService configService;
 
-    public Gpg45ProfileEvaluator(ConfigurationService configurationService) {
-        this.configurationService = configurationService;
+    public Gpg45ProfileEvaluator(ConfigService configService) {
+        this.configService = configService;
     }
 
     public Optional<JourneyResponse> getJourneyResponseForStoredCis(
@@ -61,7 +62,7 @@ public class Gpg45ProfileEvaluator {
                         .collect(Collectors.toSet());
 
         Map<String, ContraIndicatorScore> contraIndicatorScoresMap =
-                configurationService.getContraIndicatorScoresMap();
+                configService.getContraIndicatorScoresMap();
 
         int ciScore = 0;
         for (String ci : ciSet) {
@@ -74,15 +75,19 @@ public class Gpg45ProfileEvaluator {
                         .with("score", ciScore));
 
         int ciScoreThreshold =
-                Integer.parseInt(configurationService.getSsmParameter(CI_SCORING_THRESHOLD));
+                Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
         if (ciScore > ciScoreThreshold) {
             Collections.sort(contraIndicatorItems);
             String lastCiIssuer =
                     contraIndicatorItems.get(contraIndicatorItems.size() - 1).getIss();
             String kbvIssuer =
-                    configurationService
-                            .getCredentialIssuer(configurationService.getSsmParameter(KBV_CRI_ID))
-                            .getAudienceForClients();
+                    configService.getSsmParameter(
+                            String.format(
+                                    "%s/%s/%s",
+                                    configService.getEnvironmentVariable(
+                                            CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
+                                    configService.getSsmParameter(KBV_CRI_ID),
+                                    "audienceForClients"));
 
             return Optional.of(
                     lastCiIssuer.equals(kbvIssuer)

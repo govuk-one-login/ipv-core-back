@@ -25,7 +25,7 @@ import uk.gov.di.ipv.core.issueclientaccesstoken.validation.TokenRequestValidato
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
@@ -49,7 +49,7 @@ class IssueClientAccessTokenHandlerTest {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private IpvSessionItem mockSessionItem;
     private Context context;
-    private ConfigurationService mockConfigurationService;
+    private ConfigService mockConfigService;
     private AccessTokenService mockAccessTokenService;
     private IpvSessionService mockSessionService;
     private TokenRequestValidator mockTokenRequestValidator;
@@ -65,8 +65,8 @@ class IssueClientAccessTokenHandlerTest {
         mockAccessTokenService = mock(AccessTokenService.class);
         when(mockAccessTokenService.generateAccessToken()).thenReturn(tokenResponse);
 
-        mockConfigurationService = mock(ConfigurationService.class);
-        when(mockConfigurationService.getSsmParameter(AUTH_CODE_EXPIRY_SECONDS)).thenReturn("3600");
+        mockConfigService = mock(ConfigService.class);
+        when(mockConfigService.getSsmParameter(AUTH_CODE_EXPIRY_SECONDS)).thenReturn("3600");
 
         mockSessionService = mock(IpvSessionService.class);
 
@@ -78,7 +78,7 @@ class IssueClientAccessTokenHandlerTest {
                 new IssueClientAccessTokenHandler(
                         mockAccessTokenService,
                         mockSessionService,
-                        mockConfigurationService,
+                        mockConfigService,
                         mockTokenRequestValidator);
 
         AuthorizationCodeMetadata mockAuthorizationCodeMetadata = new AuthorizationCodeMetadata();
@@ -209,7 +209,7 @@ class IssueClientAccessTokenHandlerTest {
                         + "&redirect_uri=http://test.com&grant_type=authorization_code&client_id=test_client_id";
         event.setBody(tokenRequestBody);
 
-        when(mockConfigurationService.getSsmParameter(AUTH_CODE_EXPIRY_SECONDS)).thenReturn("0");
+        when(mockConfigService.getSsmParameter(AUTH_CODE_EXPIRY_SECONDS)).thenReturn("0");
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))

@@ -32,7 +32,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.ConfigurationService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -62,7 +62,7 @@ class BuildUserIdentityHandlerTest {
     @Mock private Context mockContext;
     @Mock private UserIdentityService mockUserIdentityService;
     @Mock private IpvSessionService mockIpvSessionService;
-    @Mock private ConfigurationService mockConfigurationService;
+    @Mock private ConfigService mockConfigService;
     @Mock private AuditService mockAuditService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -112,7 +112,7 @@ class BuildUserIdentityHandlerTest {
                 new BuildUserIdentityHandler(
                         mockUserIdentityService,
                         mockIpvSessionService,
-                        mockConfigurationService,
+                        mockConfigService,
                         mockAuditService);
     }
 
