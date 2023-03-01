@@ -19,4 +19,5 @@ include "lib",
 		"lambdas:check-existing-identity",
 		"integration-test",
 		"libs:credential-issuer-service",
-		"libs:kms-es256-signer"
+		"libs:kms-es256-signer",
+		"libs:vc-helper"

@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.helpers;
+package uk.gov.di.ipv.core.library.vchelper;
 
 import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.Test;

@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.helpers;
+package uk.gov.di.ipv.core.library.vchelper;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
