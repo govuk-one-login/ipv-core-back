@@ -72,7 +72,7 @@ Mappings:
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
     "457601271792": # Build
-      provisionedConcurrency: 0
+      provisionedConcurrency: 1
       ciStorageAccountId: 755415363251 # di-ipv-contra-indicators-build
       environment: build
       criReturnStepFunctionLogLevel: ALL
