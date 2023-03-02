@@ -9,7 +9,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class CredentialIssuerRequestDto {
+public class CriCallbackRequest {
     private String authorizationCode;
     private String credentialIssuerId;
     private String ipvSessionId;

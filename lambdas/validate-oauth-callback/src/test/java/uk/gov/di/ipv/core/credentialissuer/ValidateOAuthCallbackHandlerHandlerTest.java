@@ -23,7 +23,7 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.validateoauthcallback.ValidateOAuthCallbackHandler;
-import uk.gov.di.ipv.core.validateoauthcallback.dto.CredentialIssuerRequestDto;
+import uk.gov.di.ipv.core.validateoauthcallback.dto.CriCallbackRequest;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -104,8 +104,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 .thenReturn(credentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
-        Map<String, Object> output =
-                underTest.handleRequest(validCredentialIssuerRequestDto(), context);
+        Map<String, Object> output = underTest.handleRequest(validCriCallbackRequest(), context);
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(mockAuditService, times(1)).sendAuditEvent(auditEventCaptor.capture());
@@ -129,12 +128,11 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldReceive400ResponseCodeIfAuthorizationCodeNotPresent() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithoutAuthCode =
-                validCredentialIssuerRequestDto();
-        credentialIssuerRequestWithoutAuthCode.setAuthorizationCode(null);
+        CriCallbackRequest criCallbackRequestWithoutAuthCode = validCriCallbackRequest();
+        criCallbackRequestWithoutAuthCode.setAuthorizationCode(null);
 
         Map<String, Object> output =
-                underTest.handleRequest(credentialIssuerRequestWithoutAuthCode, context);
+                underTest.handleRequest(criCallbackRequestWithoutAuthCode, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.MISSING_AUTHORIZATION_CODE.getCode(), output.get(CODE));
@@ -143,12 +141,11 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldReceive400ResponseCodeIfCredentialIssuerNotPresent() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithoutCriId =
-                validCredentialIssuerRequestDto();
-        credentialIssuerRequestWithoutCriId.setCredentialIssuerId(null);
+        CriCallbackRequest criCallbackRequestWithoutCriId = validCriCallbackRequest();
+        criCallbackRequestWithoutCriId.setCredentialIssuerId(null);
 
         Map<String, Object> output =
-                underTest.handleRequest(credentialIssuerRequestWithoutCriId, context);
+                underTest.handleRequest(criCallbackRequestWithoutCriId, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID.getCode(), output.get(CODE));
@@ -157,14 +154,13 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldReceive400ResponseCodeIfCredentialIssuerNotInPermittedSet() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithInvalidCriId =
-                validCredentialIssuerRequestDto();
-        credentialIssuerRequestWithInvalidCriId.setCredentialIssuerId("an invalid id");
+        CriCallbackRequest criCallbackRequestWithInvalidCriId = validCriCallbackRequest();
+        criCallbackRequestWithInvalidCriId.setCredentialIssuerId("an invalid id");
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         Map<String, Object> output =
-                underTest.handleRequest(credentialIssuerRequestWithInvalidCriId, context);
+                underTest.handleRequest(criCallbackRequestWithInvalidCriId, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID.getCode(), output.get(CODE));
@@ -173,12 +169,11 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldReceive400ResponseCodeIfSessionIdNotPresent() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithoutSessionId =
-                validCredentialIssuerRequestDto();
-        credentialIssuerRequestWithoutSessionId.setIpvSessionId(null);
+        CriCallbackRequest criCallbackRequestWithoutSessionId = validCriCallbackRequest();
+        criCallbackRequestWithoutSessionId.setIpvSessionId(null);
 
         Map<String, Object> output =
-                underTest.handleRequest(credentialIssuerRequestWithoutSessionId, context);
+                underTest.handleRequest(criCallbackRequestWithoutSessionId, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), output.get(CODE));
@@ -187,12 +182,11 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldReceive400ResponseCodeIfOAuthStateNotPresentInRequest() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithoutState =
-                validCredentialIssuerRequestDto();
-        credentialIssuerRequestWithoutState.setState(null);
+        CriCallbackRequest criCallbackRequestWithoutState = validCriCallbackRequest();
+        criCallbackRequestWithoutState.setState(null);
 
         Map<String, Object> output =
-                underTest.handleRequest(credentialIssuerRequestWithoutState, context);
+                underTest.handleRequest(criCallbackRequestWithoutState, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.MISSING_OAUTH_STATE.getCode(), output.get(CODE));
@@ -201,13 +195,13 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldReceive400ResponseWithAttemptRecoveryPageIfOAuthStateNotPresentInSession() {
-        CredentialIssuerRequestDto credentialIssuerRequest = validCredentialIssuerRequestDto();
+        CriCallbackRequest criCallbackRequest = validCriCallbackRequest();
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setCredentialIssuerSessionDetails(null);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
-        Map<String, Object> output = underTest.handleRequest(credentialIssuerRequest, context);
+        Map<String, Object> output = underTest.handleRequest(criCallbackRequest, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals("pyi-attempt-recovery", output.get(PAGE));
@@ -216,14 +210,13 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldReceive400ResponseWithAttemptRecoveryPageIfOAuthStateNotValid() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithInvalidState =
-                validCredentialIssuerRequestDto();
-        credentialIssuerRequestWithInvalidState.setState("not-correct-state");
+        CriCallbackRequest criCallbackRequestWithInvalidState = validCriCallbackRequest();
+        criCallbackRequestWithInvalidState.setState("not-correct-state");
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         Map<String, Object> output =
-                underTest.handleRequest(credentialIssuerRequestWithInvalidState, context);
+                underTest.handleRequest(criCallbackRequestWithInvalidState, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals("pyi-attempt-recovery", output.get(PAGE));
@@ -242,7 +235,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
-        underTest.handleRequest(validCredentialIssuerRequestDto(), context);
+        underTest.handleRequest(validCriCallbackRequest(), context);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -264,61 +257,57 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldReceiveAccessDeniedJourneyResponseWhenOauthErrorAccessDenied() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithAccessDenied =
-                validCredentialIssuerRequestDto();
-        credentialIssuerRequestWithAccessDenied.setError(TEST_OAUTH_ACCESS_DENIED_ERROR);
-        credentialIssuerRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
+        CriCallbackRequest criCallbackRequestWithAccessDenied = validCriCallbackRequest();
+        criCallbackRequestWithAccessDenied.setError(TEST_OAUTH_ACCESS_DENIED_ERROR);
+        criCallbackRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         Map<String, Object> output =
-                underTest.handleRequest(credentialIssuerRequestWithAccessDenied, context);
+                underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
 
         assertEquals("/journey/access-denied", output.get("journey"));
     }
 
     @Test
     void shouldReceiveTemporarilyUnavailableJourneyResponseWhenOauthErrorTemporarilyUnavailable() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithAccessDenied =
-                validCredentialIssuerRequestDto();
-        credentialIssuerRequestWithAccessDenied.setError(OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE);
-        credentialIssuerRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
+        CriCallbackRequest criCallbackRequestWithAccessDenied = validCriCallbackRequest();
+        criCallbackRequestWithAccessDenied.setError(OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE);
+        criCallbackRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         Map<String, Object> output =
-                underTest.handleRequest(credentialIssuerRequestWithAccessDenied, context);
+                underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
 
         assertEquals("/journey/temporarily-unavailable", output.get("journey"));
     }
 
     @Test
     void shouldReceiveJourneyErrorJourneyResponseWhenAnyOtherOauthError() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithOtherError =
-                validCredentialIssuerRequestDto();
-        credentialIssuerRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
-        credentialIssuerRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
+        CriCallbackRequest criCallbackRequestWithOtherError = validCriCallbackRequest();
+        criCallbackRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
+        criCallbackRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         Map<String, Object> output =
-                underTest.handleRequest(credentialIssuerRequestWithOtherError, context);
+                underTest.handleRequest(criCallbackRequestWithOtherError, context);
 
         assertEquals("/journey/error", output.get("journey"));
     }
 
     @Test
     void shouldAttemptRecoveryErrorResponseWhenOauthSessionIsNull() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithOtherError =
-                validCredentialIssuerRequestDto();
-        credentialIssuerRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
-        credentialIssuerRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
+        CriCallbackRequest criCallbackRequestWithOtherError = validCriCallbackRequest();
+        criCallbackRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
+        criCallbackRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
 
         ipvSessionItem.setCredentialIssuerSessionDetails(null);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         Map<String, Object> output =
-                underTest.handleRequest(credentialIssuerRequestWithOtherError, context);
+                underTest.handleRequest(criCallbackRequestWithOtherError, context);
 
         assertEquals("error", output.get("type"));
         assertEquals("pyi-attempt-recovery", output.get("page"));
@@ -327,10 +316,9 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldAttemptRecoveryErrorResponseWhenOauthSessionIsForDifferentCri() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithOtherError =
-                validCredentialIssuerRequestDto();
-        credentialIssuerRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
-        credentialIssuerRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
+        CriCallbackRequest criCallbackRequestWithOtherError = validCriCallbackRequest();
+        criCallbackRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
+        criCallbackRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
 
         CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto =
                 new CredentialIssuerSessionDetailsDto();
@@ -339,7 +327,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         Map<String, Object> output =
-                underTest.handleRequest(credentialIssuerRequestWithOtherError, context);
+                underTest.handleRequest(criCallbackRequestWithOtherError, context);
 
         assertEquals("error", output.get("type"));
         assertEquals("pyi-attempt-recovery", output.get("page"));
@@ -348,10 +336,9 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldNotUpdateSessionOnAttemptRecoveryError() {
-        CredentialIssuerRequestDto credentialIssuerRequestWithOtherError =
-                validCredentialIssuerRequestDto();
-        credentialIssuerRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
-        credentialIssuerRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
+        CriCallbackRequest criCallbackRequestWithOtherError = validCriCallbackRequest();
+        criCallbackRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
+        criCallbackRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
 
         CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto =
                 new CredentialIssuerSessionDetailsDto();
@@ -365,15 +352,15 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 .updateIpvSession(ipvSessionItemArgumentCaptor.capture());
 
         Map<String, Object> output =
-                underTest.handleRequest(credentialIssuerRequestWithOtherError, context);
+                underTest.handleRequest(criCallbackRequestWithOtherError, context);
 
         assertEquals("error", output.get("type"));
         assertEquals("pyi-attempt-recovery", output.get("page"));
         assertEquals(400, output.get("statusCode"));
     }
 
-    private CredentialIssuerRequestDto validCredentialIssuerRequestDto() {
-        return new CredentialIssuerRequestDto(
+    private CriCallbackRequest validCriCallbackRequest() {
+        return new CriCallbackRequest(
                 TEST_AUTHORIZATION_CODE,
                 TEST_CREDENTIAL_ISSUER_ID,
                 TEST_SESSION_ID,

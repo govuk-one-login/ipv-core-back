@@ -30,14 +30,14 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.validateoauthcallback.dto.CredentialIssuerRequestDto;
+import uk.gov.di.ipv.core.validateoauthcallback.dto.CriCallbackRequest;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 public class ValidateOAuthCallbackHandler
-        implements RequestHandler<CredentialIssuerRequestDto, Map<String, Object>> {
+        implements RequestHandler<CriCallbackRequest, Map<String, Object>> {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String JOURNEY = "journey";
@@ -86,13 +86,13 @@ public class ValidateOAuthCallbackHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public Map<String, Object> handleRequest(CredentialIssuerRequestDto request, Context context) {
+    public Map<String, Object> handleRequest(CriCallbackRequest callbackRequest, Context context) {
         LogHelper.attachComponentIdToLogs();
 
         IpvSessionItem ipvSessionItem = null;
 
         try {
-            String ipvSessionId = request.getIpvSessionId();
+            String ipvSessionId = callbackRequest.getIpvSessionId();
             if (ipvSessionId == null) {
                 throw new HttpResponseExceptionWithErrorBody(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
@@ -100,23 +100,23 @@ public class ValidateOAuthCallbackHandler
             LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
 
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-            if (request.getError() != null) {
-                return sendOauthErrorJourneyResponse(ipvSessionItem, request);
+            if (callbackRequest.getError() != null) {
+                return sendOauthErrorJourneyResponse(ipvSessionItem, callbackRequest);
             }
 
-            validate(request);
+            validate(callbackRequest);
 
-            sendAuditEvent(ipvSessionItem, null, request.getIpAddress());
+            sendAuditEvent(ipvSessionItem, null, callbackRequest.getIpAddress());
 
             setIpvSessionCRIAuthorizationCode(
-                    ipvSessionItem, new AuthorizationCode(request.getAuthorizationCode()));
+                    ipvSessionItem, new AuthorizationCode(callbackRequest.getAuthorizationCode()));
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
             var mapMessage =
                     new StringMapMessage()
                             .with("message", "Successfully validated oauth callback")
-                            .with("criId", request.getCredentialIssuerId());
+                            .with("criId", callbackRequest.getCredentialIssuerId());
             LOGGER.info(mapMessage);
 
             return JOURNEY_ACCESS_TOKEN;
@@ -150,16 +150,16 @@ public class ValidateOAuthCallbackHandler
 
     @Tracing
     private Map<String, Object> sendOauthErrorJourneyResponse(
-            IpvSessionItem ipvSessionItem, CredentialIssuerRequestDto request) throws SqsException {
-        String error = request.getError();
-        String errorDescription = request.getErrorDescription();
+            IpvSessionItem ipvSessionItem, CriCallbackRequest callbackRequest) throws SqsException {
+        String error = callbackRequest.getError();
+        String errorDescription = callbackRequest.getErrorDescription();
 
         AuditExtensionErrorParams extensions =
                 new AuditExtensionErrorParams.Builder()
                         .setErrorCode(error)
                         .setErrorDescription(errorDescription)
                         .build();
-        sendAuditEvent(ipvSessionItem, extensions, request.getIpAddress());
+        sendAuditEvent(ipvSessionItem, extensions, callbackRequest.getIpAddress());
 
         if (!ALLOWED_OAUTH_ERROR_CODES.contains(error)) {
             LOGGER.warn("Unknown Oauth error code received");
@@ -169,10 +169,10 @@ public class ValidateOAuthCallbackHandler
                 || !ipvSessionItem
                         .getCredentialIssuerSessionDetails()
                         .getCriId()
-                        .equals(request.getCredentialIssuerId())) {
+                        .equals(callbackRequest.getCredentialIssuerId())) {
             var message =
                     new StringMapMessage()
-                            .with("criId", request.getCredentialIssuerId())
+                            .with("criId", callbackRequest.getCredentialIssuerId())
                             .with("message", "Oauth error from unexpected CRI");
             LOGGER.warn(message);
             return StepFunctionHelpers.generatePageOutputMap(
@@ -181,7 +181,7 @@ public class ValidateOAuthCallbackHandler
 
         ipvSessionItem.addVisitedCredentialIssuerDetails(
                 new VisitedCredentialIssuerDetailsDto(
-                        request.getCredentialIssuerId(), false, error));
+                        callbackRequest.getCredentialIssuerId(), false, error));
         ipvSessionService.updateIpvSession(ipvSessionItem);
 
         LogHelper.logOauthError("OAuth error received from CRI", error, errorDescription);
@@ -196,37 +196,37 @@ public class ValidateOAuthCallbackHandler
     }
 
     @Tracing
-    private void validate(CredentialIssuerRequestDto request)
+    private void validate(CriCallbackRequest callbackRequest)
             throws HttpResponseExceptionWithErrorBody {
 
-        if (StringUtils.isBlank(request.getAuthorizationCode())) {
+        if (StringUtils.isBlank(callbackRequest.getAuthorizationCode())) {
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_AUTHORIZATION_CODE);
         }
 
-        if (StringUtils.isBlank(request.getCredentialIssuerId())) {
+        if (StringUtils.isBlank(callbackRequest.getCredentialIssuerId())) {
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
         }
-        LogHelper.attachCriIdToLogs(request.getCredentialIssuerId());
+        LogHelper.attachCriIdToLogs(callbackRequest.getCredentialIssuerId());
 
-        if (StringUtils.isBlank(request.getIpvSessionId())) {
+        if (StringUtils.isBlank(callbackRequest.getIpvSessionId())) {
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
         }
 
-        if (StringUtils.isBlank(request.getState())) {
+        if (StringUtils.isBlank(callbackRequest.getState())) {
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_OAUTH_STATE);
         }
 
-        String persistedOauthState = getPersistedOauthState(request);
-        if (!request.getState().equals(persistedOauthState)) {
+        String persistedOauthState = getPersistedOauthState(callbackRequest);
+        if (!callbackRequest.getState().equals(persistedOauthState)) {
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_OAUTH_STATE);
         }
 
-        if (getCredentialIssuerConfig(request) == null) {
+        if (getCredentialIssuerConfig(callbackRequest) == null) {
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
         }
@@ -242,10 +242,10 @@ public class ValidateOAuthCallbackHandler
     }
 
     @Tracing
-    private String getPersistedOauthState(CredentialIssuerRequestDto request) {
+    private String getPersistedOauthState(CriCallbackRequest callbackRequest) {
         CredentialIssuerSessionDetailsDto credentialIssuerSessionDetails =
                 ipvSessionService
-                        .getIpvSession(request.getIpvSessionId())
+                        .getIpvSession(callbackRequest.getIpvSessionId())
                         .getCredentialIssuerSessionDetails();
         if (credentialIssuerSessionDetails != null) {
             return credentialIssuerSessionDetails.getState();
@@ -254,8 +254,8 @@ public class ValidateOAuthCallbackHandler
     }
 
     @Tracing
-    private CredentialIssuerConfig getCredentialIssuerConfig(CredentialIssuerRequestDto request) {
-        return configService.getCredentialIssuer(request.getCredentialIssuerId());
+    private CredentialIssuerConfig getCredentialIssuerConfig(CriCallbackRequest callbackRequest) {
+        return configService.getCredentialIssuer(callbackRequest.getCredentialIssuerId());
     }
 
     @Tracing
