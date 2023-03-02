@@ -35,6 +35,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ALLO
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ENABLED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_SHOULD_SEND_ALL_USERS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DRIVING_LICENCE_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
@@ -46,6 +47,8 @@ public class SelectCriHandler
     private static final String JOURNEY_FAIL = "/journey/fail";
     private static final String DCMAW_SUCCESS_PAGE = "dcmaw-success";
     private static final String APP_JOURNEY_USER_ID_PREFIX = "urn:uuid:app-journey-user-";
+    public static final String CRI_UK_DRIVING_LICENCE = "ukDrivingLicence";
+    public static final String CRI_UK_PASSPORT_AND_DRIVING_LICENCE = "ukPassportAndDrivingLicence";
 
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
@@ -54,6 +57,7 @@ public class SelectCriHandler
     private final String kbvCriId;
     private final String addressCriId;
     private final String dcmawCriId;
+    private final String drivingLicenceCriId;
 
     public SelectCriHandler(ConfigService configService, IpvSessionService ipvSessionService) {
         this.configService = configService;
@@ -64,6 +68,7 @@ public class SelectCriHandler
         kbvCriId = configService.getSsmParameter(KBV_CRI_ID);
         addressCriId = configService.getSsmParameter(ADDRESS_CRI_ID);
         dcmawCriId = configService.getSsmParameter(DCMAW_CRI_ID);
+        drivingLicenceCriId = configService.getSsmParameter(DRIVING_LICENCE_CRI_ID);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -76,6 +81,7 @@ public class SelectCriHandler
         kbvCriId = configService.getSsmParameter(KBV_CRI_ID);
         addressCriId = configService.getSsmParameter(ADDRESS_CRI_ID);
         dcmawCriId = configService.getSsmParameter(DCMAW_CRI_ID);
+        drivingLicenceCriId = configService.getSsmParameter(DRIVING_LICENCE_CRI_ID);
     }
 
     @Override
@@ -253,6 +259,13 @@ public class SelectCriHandler
                             getNextWebJourneyCri(
                                     visitedCredentialIssuers, currentVcStatuses, userId));
                 }
+
+                CredentialIssuerConfig ukDrivingLicenseCriConfig =
+                        configService.getCredentialIssuer(drivingLicenceCriId);
+                if (criId.equals(passportCriId) && ukDrivingLicenseCriConfig.getEnabled()) {
+                    return Optional.of(getJourneyResponse(CRI_UK_PASSPORT_AND_DRIVING_LICENCE));
+                }
+
                 return Optional.of(getJourneyResponse(journeyId));
             }
             var message =
