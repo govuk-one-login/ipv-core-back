@@ -47,8 +47,8 @@ public class SelectCriHandler
     private static final String JOURNEY_FAIL = "/journey/fail";
     private static final String DCMAW_SUCCESS_PAGE = "dcmaw-success";
     private static final String APP_JOURNEY_USER_ID_PREFIX = "urn:uuid:app-journey-user-";
-    public static final String CRI_UK_DRIVING_LICENCE = "ukDrivingLicence";
-    public static final String CRI_UK_PASSPORT_AND_DRIVING_LICENCE = "ukPassportAndDrivingLicence";
+    private static final String UK_PASSPORT_AND_DRIVING_LICENCE_PAGE =
+            "ukPassportAndDrivingLicence";
 
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
@@ -263,7 +263,7 @@ public class SelectCriHandler
                 CredentialIssuerConfig ukDrivingLicenseCriConfig =
                         configService.getCredentialIssuer(drivingLicenceCriId);
                 if (criId.equals(passportCriId) && ukDrivingLicenseCriConfig.getEnabled()) {
-                    return Optional.of(getJourneyResponse(CRI_UK_PASSPORT_AND_DRIVING_LICENCE));
+                    return Optional.of(getJourneyResponse(UK_PASSPORT_AND_DRIVING_LICENCE_PAGE));
                 }
 
                 return Optional.of(getJourneyResponse(journeyId));
