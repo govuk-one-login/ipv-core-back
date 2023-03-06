@@ -49,6 +49,8 @@ public class SelectCriHandler
     private static final String APP_JOURNEY_USER_ID_PREFIX = "urn:uuid:app-journey-user-";
     private static final String UK_PASSPORT_AND_DRIVING_LICENCE_PAGE =
             "ukPassportAndDrivingLicence";
+    private static final String STUB_UK_PASSPORT_AND_DRIVING_LICENCE_PAGE =
+            "stubUkPassportAndDrivingLicence";
 
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
@@ -263,7 +265,7 @@ public class SelectCriHandler
                 CredentialIssuerConfig ukDrivingLicenseCriConfig =
                         configService.getCredentialIssuer(drivingLicenceCriId);
                 if (criId.equals(passportCriId) && ukDrivingLicenseCriConfig.getEnabled()) {
-                    return Optional.of(getJourneyResponse(UK_PASSPORT_AND_DRIVING_LICENCE_PAGE));
+                    return getMultipleDocCheckPage();
                 }
 
                 return Optional.of(getJourneyResponse(journeyId));
@@ -302,6 +304,13 @@ public class SelectCriHandler
             return Optional.of(getJourneyPyiNoMatchResponse());
         }
         return Optional.empty();
+    }
+
+    private Optional<JourneyResponse> getMultipleDocCheckPage() {
+        if (drivingLicenceCriId.startsWith("stub")) {
+            return Optional.of(getJourneyResponse(STUB_UK_PASSPORT_AND_DRIVING_LICENCE_PAGE));
+        }
+        return Optional.of(getJourneyResponse(UK_PASSPORT_AND_DRIVING_LICENCE_PAGE));
     }
 
     private boolean hasPassportVc(List<VcStatusDto> currentVcStatuses) {
