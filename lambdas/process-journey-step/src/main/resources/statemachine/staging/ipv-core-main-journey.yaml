@@ -160,6 +160,34 @@ SELECT_CRI:
       response:
         type: page
         pageId: page-passport-doc-check
+    drivingLicence:
+      type: basic
+      name: drivingLicence
+      targetState: DRIVING_LICENCE_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-driving-licence-doc-check
+    stubDrivingLicence:
+      type: basic
+      name: stubDrivingLicence
+      targetState: STUB_DRIVING_LICENCE_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-driving-licence-doc-check
+    ukPassportAndDrivingLicence:
+      type: basic
+      name: ukPassportAndDrivingLicence
+      targetState: MULTIPLE_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-multiple-doc-check
+    stubUkPassportAndDrivingLicence:
+      type: basic
+      name: stubUkPassportAndDrivingLicence
+      targetState: STUB_MULTIPLE_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-multiple-doc-check
     address:
       type: basic
       name: address
@@ -167,7 +195,7 @@ SELECT_CRI:
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/address
-    stubddress:
+    stubAddress:
       type: basic
       name: stubAddress
       targetState: CRI_ADDRESS
@@ -269,6 +297,9 @@ SELECT_CRI:
 CRI_UK_PASSPORT:
   name: CRI_UK_PASSPORT
   parent: CRI_STATE
+CRI_DRIVING_LICENCE:
+  name: CRI_DRIVING_LICENCE
+  parent: CRI_STATE
 CRI_ADDRESS:
   name: CRI_ADDRESS
   parent: CRI_STATE
@@ -307,6 +338,92 @@ STUB_PASSPORT_DOC_CHECK_PAGE:
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/stubUkPassport
+    end:
+      type: basic
+      name: end
+      targetState: END
+      response:
+        type: journey
+        journeyStepId: /journey/build-client-oauth-response
+DRIVING_LICENCE_DOC_CHECK_PAGE:
+  name: DRIVING_LICENCE_DOC_CHECK_PAGE
+  parent: ATTEMPT_RECOVERY_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_DRIVING_LICENCE
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/drivingLicence
+    end:
+      type: basic
+      name: end
+      targetState: END
+      response:
+        type: journey
+        journeyStepId: /journey/build-client-oauth-response
+STUB_DRIVING_LICENCE_DOC_CHECK_PAGE:
+  name: STUB_DRIVING_LICENCE_DOC_CHECK_PAGE
+  parent: ATTEMPT_RECOVERY_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_DRIVING_LICENCE
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/stubDrivingLicence
+    end:
+      type: basic
+      name: end
+      targetState: END
+      response:
+        type: journey
+        journeyStepId: /journey/build-client-oauth-response
+MULTIPLE_DOC_CHECK_PAGE:
+  name: MULTIPLE_DOC_CHECK_PAGE
+  parent: ATTEMPT_RECOVERY_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_UK_PASSPORT
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/ukPassport
+    drivingLicence:
+      type: basic
+      name: next
+      targetState: CRI_DRIVING_LICENCE
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/drivingLicence
+    end:
+      type: basic
+      name: end
+      targetState: END
+      response:
+        type: journey
+        journeyStepId: /journey/build-client-oauth-response
+STUB_MULTIPLE_DOC_CHECK_PAGE:
+  name: STUB_MULTIPLE_DOC_CHECK_PAGE
+  parent: ATTEMPT_RECOVERY_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_UK_PASSPORT
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/stubUkPassport
+    drivingLicence:
+      type: basic
+      name: next
+      targetState: CRI_DRIVING_LICENCE
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/stubDrivingLicence
     end:
       type: basic
       name: end
