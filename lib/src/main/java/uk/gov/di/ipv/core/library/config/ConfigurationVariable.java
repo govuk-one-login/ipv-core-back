@@ -8,6 +8,7 @@ public enum ConfigurationVariable {
     CLIENT_ISSUER("/%s/core/clients/%s/issuer"),
     CORE_FRONT_CALLBACK_URL("/%s/core/self/coreFrontCallbackUrl"),
     CORE_VTM_CLAIM("/%s/core/self/coreVtmClaim"),
+    DRIVING_LICENCE_CRI_ID("/%s/core/self/journey/drivingLicenceId"),
     FRAUD_CRI_ID("/%s/core/self/journey/fraudCriId"),
     KBV_CRI_ID("/%s/core/self/journey/kbvCriId"),
     DCMAW_CRI_ID("/%s/core/self/journey/dcmawCriId"),
