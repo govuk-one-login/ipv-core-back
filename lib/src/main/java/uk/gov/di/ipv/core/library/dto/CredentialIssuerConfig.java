@@ -16,7 +16,7 @@ public class CredentialIssuerConfig {
 
     private String id;
     private String name;
-    private Boolean enabled;
+    private boolean enabled;
     private URI tokenUrl;
     private URI credentialUrl;
     private URI authorizeUrl;
@@ -58,7 +58,7 @@ public class CredentialIssuerConfig {
         return id;
     }
 
-    public Boolean getEnabled() {
+    public boolean getEnabled() {
         return enabled;
     }
 
