@@ -401,7 +401,7 @@ MULTIPLE_DOC_CHECK_PAGE:
         journeyStepId: /journey/cri/build-oauth-request/ukPassport
     drivingLicence:
       type: basic
-      name: next
+      name: drivingLicence
       targetState: CRI_DRIVING_LICENCE
       response:
         type: journey
@@ -433,7 +433,7 @@ STUB_MULTIPLE_DOC_CHECK_PAGE:
         journeyStepId: /journey/cri/build-oauth-request/stubUkPassport
     drivingLicence:
       type: basic
-      name: next
+      name: drivingLicence
       targetState: CRI_DRIVING_LICENCE
       response:
         type: journey
