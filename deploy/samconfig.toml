@@ -117,3 +117,12 @@ region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-rpayal\" VpcStackName=\"network-shared-development\""
 parallel = "true"
+
+[dev-laurencew.deploy.parameters]
+stack_name = "core-back-dev-laurencew"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"s
+s3_prefix = "laurencew-core-back-stack"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev-laurencew\" VpcStackName=\"network-shared-development\""
+parallel = "true"
