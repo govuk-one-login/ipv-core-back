@@ -135,4 +135,3 @@ region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-talata\" VpcStackName=\"network-shared-development\""
 parallel = "true"
-
