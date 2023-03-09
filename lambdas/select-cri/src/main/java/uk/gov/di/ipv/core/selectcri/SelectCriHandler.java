@@ -144,7 +144,14 @@ public class SelectCriHandler
                         passportCriId,
                         passportCriId,
                         userId);
-        if (passportResponse.isPresent()) {
+        Optional<JourneyResponse> drivingLicenceResponse =
+                getCriResponse(
+                        visitedCredentialIssuers,
+                        currentVcStatuses,
+                        drivingLicenceCriId,
+                        drivingLicenceCriId,
+                        userId);
+        if (passportResponse.isPresent() && drivingLicenceResponse.isPresent()) {
             return passportResponse.get();
         }
 
@@ -255,8 +262,11 @@ public class SelectCriHandler
 
         if (vc.isEmpty()) {
             if (userHasNotVisited(visitedCredentialIssuers, criId)) {
-                if (criId.equals(dcmawCriId) && hasPassportVc(currentVcStatuses)) {
-                    LOGGER.info("User already has a passport VC, continuing a web journey");
+                if (criId.equals(dcmawCriId)
+                        && (hasPassportVc(currentVcStatuses)
+                                || hasDrivingLicenceVc(currentVcStatuses))) {
+                    LOGGER.info(
+                            "User already has a passport or driving licence VC, continuing a web journey");
                     return Optional.of(
                             getNextWebJourneyCri(
                                     visitedCredentialIssuers, currentVcStatuses, userId));
@@ -318,6 +328,14 @@ public class SelectCriHandler
         Optional<VcStatusDto> passportVc =
                 getVc(currentVcStatuses, passportConfig.getAudienceForClients());
         return passportVc.isPresent();
+    }
+
+    private boolean hasDrivingLicenceVc(List<VcStatusDto> currentVcStatuses) {
+        CredentialIssuerConfig drivingLicenceConfig =
+                configService.getCredentialIssuer(drivingLicenceCriId);
+        Optional<VcStatusDto> drivingLicenceVc =
+                getVc(currentVcStatuses, drivingLicenceConfig.getAudienceForClients());
+        return drivingLicenceVc.isPresent();
     }
 
     private Optional<VcStatusDto> getVc(List<VcStatusDto> currentVcStatuses, String criIss) {
