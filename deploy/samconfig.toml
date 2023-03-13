@@ -135,3 +135,12 @@ region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-talata\" VpcStackName=\"network-shared-development\""
 parallel = "true"
+
+[dev-dynatrace.deploy.parameters]
+stack_name = "core-back-dev-dynatrace"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
+s3_prefix = "dynatrace-core-back-stack"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev-dynatrace\" VpcStackName=\"network-shared-development\""
+parallel = "true"
