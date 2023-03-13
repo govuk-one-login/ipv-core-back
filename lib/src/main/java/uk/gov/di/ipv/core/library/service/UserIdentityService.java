@@ -46,11 +46,20 @@ public class UserIdentityService {
     public static final String STUB_UK_PASSPORT = "stubUkPassport";
     public static final String DCMAW = "dcmaw";
     public static final String STUB_DCMAW = "stubDcmaw";
+    public static final String DRIVING_LICENCE = "drivingLicence";
+    public static final String STUB_DRIVING_LICENCE = "stubDrivingLicence";
     private static final List<String> PASSPORT_CRI_TYPES =
             List.of(UK_PASSPORT, STUB_UK_PASSPORT, DCMAW, STUB_DCMAW);
-    private static final List<String> DRIVING_PERMIT_CRI_TYPES = List.of(DCMAW, STUB_DCMAW);
+    private static final List<String> DRIVING_PERMIT_CRI_TYPES =
+            List.of(DCMAW, STUB_DCMAW, DRIVING_LICENCE, STUB_DRIVING_LICENCE);
     public static final List<String> EVIDENCE_CRI_TYPES =
-            List.of(UK_PASSPORT, STUB_UK_PASSPORT, DCMAW, STUB_DCMAW);
+            List.of(
+                    UK_PASSPORT,
+                    STUB_UK_PASSPORT,
+                    DCMAW,
+                    STUB_DCMAW,
+                    DRIVING_LICENCE,
+                    STUB_DRIVING_LICENCE);
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String PASSPORT_PROPERTY_NAME = "passport";
