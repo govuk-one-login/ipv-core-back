@@ -363,8 +363,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void generateUserIdentityShouldSetAddressClaimOnUserIdentity()
-            throws Exception, HttpResponseExceptionWithErrorBody {
+    void generateUserIdentityShouldSetAddressClaimOnUserIdentity() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem("user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
