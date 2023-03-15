@@ -100,11 +100,7 @@ public class VerifiableCredentialJwtValidator {
                                 .issuer(credentialIssuerConfig.getAudienceForClients())
                                 .subject(userId)
                                 .build(),
-                        new HashSet<>(
-                                Arrays.asList(
-                                        JWTClaimNames.EXPIRATION_TIME,
-                                        JWTClaimNames.NOT_BEFORE,
-                                        VC_CLAIM_NAME)));
+                        new HashSet<>(Arrays.asList(JWTClaimNames.NOT_BEFORE, VC_CLAIM_NAME)));
 
         try {
             verifier.verify(verifiableCredential.getJWTClaimsSet(), null);
