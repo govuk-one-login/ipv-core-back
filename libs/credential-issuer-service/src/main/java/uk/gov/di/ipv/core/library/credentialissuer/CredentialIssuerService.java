@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Date;
 
 public class CredentialIssuerService {
 
@@ -207,19 +208,28 @@ public class CredentialIssuerService {
 
     public void persistUserCredentials(
             SignedJWT credential, String credentialIssuerId, String userId) {
-        VcStoreItem vcStoreItem = new VcStoreItem();
-        vcStoreItem.setUserId(userId);
-        vcStoreItem.setCredentialIssuer(credentialIssuerId);
-        vcStoreItem.setCredential(credential.serialize());
-        vcStoreItem.setDateCreated(Instant.now());
-        try {
-            vcStoreItem.setExpirationTime(
-                    credential.getJWTClaimsSet().getExpirationTime().toInstant());
+        try{
+            VcStoreItem vcStoreItem = createVcStoreItem(credential, credentialIssuerId, userId);
             dataStore.create(vcStoreItem, ConfigurationVariable.VC_TTL);
-        } catch (UnsupportedOperationException | java.text.ParseException e) {
+        } catch (Exception e) {
             LOGGER.error("Error persisting user credential: {}", e.getMessage(), e);
             throw new CredentialIssuerException(
                     HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_SAVE_CREDENTIAL);
         }
+    }
+
+    private VcStoreItem createVcStoreItem(SignedJWT credential, String credentialIssuerId, String userId) throws java.text.ParseException {
+        VcStoreItem vcStoreItem = VcStoreItem.builder()
+                .userId(userId)
+                .credentialIssuer(credentialIssuerId)
+                .dateCreated(Instant.now())
+                .credential(credential.serialize())
+                .build();
+
+        Date expirationTime = credential.getJWTClaimsSet().getExpirationTime();
+        if (expirationTime != null){
+            vcStoreItem.setExpirationTime(expirationTime.toInstant());
+        }
+        return vcStoreItem;
     }
 }
