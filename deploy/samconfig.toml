@@ -127,6 +127,15 @@ capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-laurencew\" VpcStackName=\"network-shared-development\""
 parallel = "true"
 
+[dev-chrisp.deploy.parameters]
+stack_name = "core-back-dev-chrisp"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
+s3_prefix = "chrisp-core-back-stack"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev-chrisp\" VpcStackName=\"network-shared-development\""
+parallel = "true"
+
 [dev-talata.deploy.parameters]
 stack_name = "core-back-dev-talata"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
