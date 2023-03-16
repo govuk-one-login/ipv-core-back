@@ -395,11 +395,12 @@ public class UserIdentityService {
         boolean isValid = true;
         try {
                 SignedJWT credentialJWT = SignedJWT.parse(credential);
-                Instant nbf = credentialJWT.getJWTClaimsSet()
-                                        .getNotBeforeTime()
-                                        .toInstant();
-                Instant nbfplus = nbf.plus(vcValidDuration);
-                isValid = nbfplus.isAfter(nowPlusSessionTimeout);
+                isValid = credentialJWT
+                            .getJWTClaimsSet()
+                            .getNotBeforeTime()
+                            .toInstant()
+                            .plus(vcValidDuration)
+                            .isAfter(nowPlusSessionTimeout);
         } catch (ParseException e) {
                 LOGGER.warn("Failed to parse VC");
         }

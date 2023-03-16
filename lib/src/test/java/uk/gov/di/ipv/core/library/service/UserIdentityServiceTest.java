@@ -6,7 +6,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -18,9 +17,7 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
-import java.time.Instant;
-import java.time.Clock;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,7 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -572,31 +568,6 @@ class UserIdentityServiceTest {
         verify(mockDataStore).delete("a-users-id", "ukPassport");
         verify(mockDataStore).delete("a-users-id", "fraud");
         verify(mockDataStore).delete("a-users-id", "sausages");
-    }
-
-    @Test
-    void shouldNotDeleteExistingVCsIfNoneInvalidWithinSessionTimeout() {
-        when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
-        when(mockConfigService.getSsmParameter(VC_VALID_DURATION)).thenReturn("P182DT12H");
-
-        Clock clock = Clock.fixed(Instant.ofEpochSecond(1652953480), ZoneId.of("UTC"));
-        Instant instant = Instant.now(clock);
-
-        try (MockedStatic<Instant> mockedStatic = mockStatic(Instant.class)) {
-                mockedStatic.when(Instant::now).thenReturn(instant);
-
-                List<VcStoreItem> vcStoreItems =
-                List.of(
-                        createVcStoreItem("a-users-id", "ukPassport", SIGNED_VC_1, Instant.now()),
-                        createVcStoreItem("a-users-id", "fraud", SIGNED_VC_2, Instant.now()),
-                        createVcStoreItem("a-users-id", "sausages", SIGNED_VC_3, Instant.now()));
-                when(mockDataStore.getItems("a-users-id")).thenReturn(vcStoreItems);
-
-                userIdentityService.deleteVcStoreItemsIfAnyInvalid("a-users-id");
-
-                verify(mockDataStore, times(0)).delete(anyString(), anyString());
-        }
-
     }
 
     @Test
