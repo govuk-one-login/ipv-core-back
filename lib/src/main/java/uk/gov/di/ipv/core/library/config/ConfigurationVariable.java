@@ -24,7 +24,8 @@ public enum ConfigurationVariable {
     CI_SCORING_CONFIG("/%s/core/self/ci-scoring-config"),
     CI_SCORING_THRESHOLD("/%s/core/self/ciScoringThreshold"),
     CI_MITIGATION_JOURNEYS_ENABLED("/%s/core/self/journey/ciMitigationsEnabled"),
-    VC_TTL("/%s/core/self/vcTtl");
+    VC_TTL("/%s/core/self/vcTtl"),
+    VC_VALID_DURATION("/%s/core/self/vcValidDuration");
 
     private final String value;
 

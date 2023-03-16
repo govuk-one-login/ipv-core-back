@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
 import java.text.ParseException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.VC_VALID_DURATION;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -106,6 +108,21 @@ public class UserIdentityService {
         if (!expiredVcStoreItems.isEmpty()) {
             LOGGER.info("Found VCs due to expire within session timeout");
             deleteVcStoreItems(userId);
+        }
+    }
+
+    public void deleteVcStoreItemsIfAnyInvalid(String userId) {
+        Instant nowPlusSessionTimeout =
+                Instant.now()
+                        .plusSeconds(
+                                Long.parseLong(
+                                        configService.getSsmParameter(BACKEND_SESSION_TIMEOUT)));
+        Duration vcValidDuration = Duration.parse(configService.getSsmParameter(VC_VALID_DURATION));
+        List<String> credentials = getUserIssuedCredentials(userId);
+        credentials.removeIf(credential -> isVcValid(credential, vcValidDuration, nowPlusSessionTimeout));
+        if (!credentials.isEmpty()) {
+                LOGGER.info("Found invalid VCs within session timeout");
+                deleteVcStoreItems(userId);
         }
     }
 
@@ -372,6 +389,21 @@ public class UserIdentityService {
                                 CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
                         item.getCredentialIssuer(),
                         "audienceForClients"));
+    }
+
+    private boolean isVcValid(String credential, Duration vcValidDuration, Instant nowPlusSessionTimeout) {
+        boolean isValid = true;
+        try {
+                SignedJWT credentialJWT = SignedJWT.parse(credential);
+                Instant nbf = credentialJWT.getJWTClaimsSet()
+                                        .getNotBeforeTime()
+                                        .toInstant();
+                Instant nbfplus = nbf.plus(vcValidDuration);
+                isValid = nbfplus.isAfter(nowPlusSessionTimeout);
+        } catch (ParseException e) {
+                LOGGER.warn("Failed to parse VC");
+        }
+        return isValid;
     }
 
     public boolean isVcSuccessful(List<VcStatusDto> currentVcStatuses, String criIss) {

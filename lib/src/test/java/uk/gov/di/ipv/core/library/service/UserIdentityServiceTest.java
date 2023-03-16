@@ -6,8 +6,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
@@ -18,6 +19,8 @@ import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
 import java.time.Instant;
+import java.time.Clock;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 
@@ -27,10 +30,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.VC_VALID_DURATION;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC;
@@ -546,7 +552,51 @@ class UserIdentityServiceTest {
 
         userIdentityService.deleteVcStoreItemsIfAnyExpired("a-users-id");
 
-        verify(mockDataStore, Mockito.times(0)).delete(anyString(), anyString());
+        verify(mockDataStore, times(0)).delete(anyString(), anyString());
+    }
+
+    @Test
+    void shouldDeleteExistingVCsIfAnyInvalidWithinSessionTimeout() {
+        when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockConfigService.getSsmParameter(VC_VALID_DURATION)).thenReturn("P182DT12H");
+
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem("a-users-id", "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem("a-users-id", "fraud", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem("a-users-id", "sausages", SIGNED_VC_3, Instant.now()));
+        when(mockDataStore.getItems("a-users-id")).thenReturn(vcStoreItems);
+
+        userIdentityService.deleteVcStoreItemsIfAnyInvalid("a-users-id");
+
+        verify(mockDataStore).delete("a-users-id", "ukPassport");
+        verify(mockDataStore).delete("a-users-id", "fraud");
+        verify(mockDataStore).delete("a-users-id", "sausages");
+    }
+
+    @Test
+    void shouldNotDeleteExistingVCsIfNoneInvalidWithinSessionTimeout() {
+        when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
+        when(mockConfigService.getSsmParameter(VC_VALID_DURATION)).thenReturn("P182DT12H");
+
+        Clock clock = Clock.fixed(Instant.ofEpochSecond(1652953480), ZoneId.of("UTC"));
+        Instant instant = Instant.now(clock);
+
+        try (MockedStatic<Instant> mockedStatic = mockStatic(Instant.class)) {
+                mockedStatic.when(Instant::now).thenReturn(instant);
+
+                List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem("a-users-id", "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem("a-users-id", "fraud", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem("a-users-id", "sausages", SIGNED_VC_3, Instant.now()));
+                when(mockDataStore.getItems("a-users-id")).thenReturn(vcStoreItems);
+
+                userIdentityService.deleteVcStoreItemsIfAnyInvalid("a-users-id");
+
+                verify(mockDataStore, times(0)).delete(anyString(), anyString());
+        }
+
     }
 
     @Test
