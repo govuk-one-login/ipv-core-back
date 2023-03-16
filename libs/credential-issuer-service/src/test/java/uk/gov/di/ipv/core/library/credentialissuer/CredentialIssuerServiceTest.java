@@ -4,7 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.ECDSASigner;
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
@@ -15,11 +18,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.credentialissuer.exceptions.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -32,6 +35,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Date;
 import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
@@ -43,6 +47,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -60,11 +65,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 @WireMockTest
 @ExtendWith(MockitoExtension.class)
 class CredentialIssuerServiceTest {
-
-    private static final String TEST_IPV_SESSION_ID = SecureTokenHelper.generate();
-    private static final String OAUTH_STATE = "oauth-state";
     private static final String TEST_AUTH_CODE = "test-auth-code";
-    private static final String TEST_IP_ADDRESS = "192.168.1.100";
 
     @Mock private DataStore<VcStoreItem> mockDataStore;
     @Mock private ConfigService mockConfigService;
@@ -224,6 +225,35 @@ class CredentialIssuerServiceTest {
     }
 
     @Test
+    void expectedSuccessWithoutExpWhenSaveCredentials() throws Exception {
+        String credentialIssuerId = "cred_issuer_id_1";
+        String userId = "user-id-1";
+
+        SignedJWT signedJwt =
+                new SignedJWT(
+                        new JWSHeader.Builder(JWSAlgorithm.ES256).build(),
+                        new JWTClaimsSet.Builder()
+                                .subject("testSubject")
+                                .issuer(credentialIssuerId)
+                                .build());
+        signedJwt.sign(new ECDSASigner(getPrivateKey()));
+
+        ArgumentCaptor<VcStoreItem> userIssuedCredentialsItemCaptor =
+                ArgumentCaptor.forClass(VcStoreItem.class);
+
+        credentialIssuerService.persistUserCredentials(signedJwt, credentialIssuerId, userId);
+
+        verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture(), eq(VC_TTL));
+        VcStoreItem vcStoreItem = userIssuedCredentialsItemCaptor.getValue();
+
+        assertNull(vcStoreItem.getExpirationTime());
+        assertEquals(userId, vcStoreItem.getUserId());
+        assertEquals(credentialIssuerId, vcStoreItem.getCredentialIssuer());
+        assertEquals(signedJwt.serialize(), vcStoreItem.getCredential());
+        verify(mockDataStore, Mockito.times(1)).create(any(), any());
+    }
+
+    @Test
     void expectedExceptionWhenSaveCredentials() throws Exception {
         String credentialIssuerId = "cred_issuer_id_1";
         String userId = "user-id-1";
@@ -241,6 +271,52 @@ class CredentialIssuerServiceTest {
         assertNotNull(thrown);
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_SAVE_CREDENTIAL, thrown.getErrorResponse());
+    }
+
+    @Test
+    void expectedExceptionWithoutAnySignerWhenSaveCredentialsForIllegalStateException() {
+        String credentialIssuerId = "cred_issuer_id_1";
+        String userId = "user-id-1";
+
+        SignedJWT signedJwt =
+                new SignedJWT(
+                        new JWSHeader.Builder(JWSAlgorithm.ES256).build(),
+                        new JWTClaimsSet.Builder().expirationTime(new Date()).build());
+
+        CredentialIssuerException thrown =
+                assertThrows(
+                        CredentialIssuerException.class,
+                        () ->
+                                credentialIssuerService.persistUserCredentials(
+                                        signedJwt, credentialIssuerId, userId));
+
+        assertNotNull(thrown);
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_SAVE_CREDENTIAL, thrown.getErrorResponse());
+        verify(mockDataStore, Mockito.times(0)).create(any(), any());
+    }
+
+    @Test
+    void expectedExceptionWhenSaveCredentialsForParseException() throws Exception {
+        String credentialIssuerId = "cred_issuer_id_1";
+        String userId = "user-id-1";
+
+        SignedJWT signedJwt = Mockito.mock(SignedJWT.class);
+
+        when(signedJwt.serialize()).thenReturn("credential-serialize");
+        when(signedJwt.getJWTClaimsSet()).thenThrow(java.text.ParseException.class);
+
+        CredentialIssuerException thrown =
+                assertThrows(
+                        CredentialIssuerException.class,
+                        () ->
+                                credentialIssuerService.persistUserCredentials(
+                                        signedJwt, credentialIssuerId, userId));
+
+        assertNotNull(thrown);
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_SAVE_CREDENTIAL, thrown.getErrorResponse());
+        verify(mockDataStore, Mockito.times(0)).create(any(), any());
     }
 
     @Test
