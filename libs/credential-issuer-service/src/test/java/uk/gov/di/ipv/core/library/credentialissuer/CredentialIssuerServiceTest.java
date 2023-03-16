@@ -35,8 +35,8 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
 import java.util.Base64;
-import java.util.List;
 import java.util.Date;
+import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -47,8 +47,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -223,24 +223,25 @@ class CredentialIssuerServiceTest {
         assertEquals(Instant.parse("2022-05-20T12:50:54Z"), vcStoreItem.getExpirationTime());
         assertEquals(SIGNED_VC_1, vcStoreItem.getCredential());
     }
+
     @Test
     void expectedSuccessWithoutExpWhenSaveCredentials() throws Exception {
         String credentialIssuerId = "cred_issuer_id_1";
         String userId = "user-id-1";
 
-        SignedJWT signedJwt = new SignedJWT(
-                new JWSHeader.Builder(JWSAlgorithm.ES256).build(),
-                new JWTClaimsSet.Builder()
-                        .subject("testSubject")
-                        .issuer(credentialIssuerId)
-                        .build());
+        SignedJWT signedJwt =
+                new SignedJWT(
+                        new JWSHeader.Builder(JWSAlgorithm.ES256).build(),
+                        new JWTClaimsSet.Builder()
+                                .subject("testSubject")
+                                .issuer(credentialIssuerId)
+                                .build());
         signedJwt.sign(new ECDSASigner(getPrivateKey()));
 
         ArgumentCaptor<VcStoreItem> userIssuedCredentialsItemCaptor =
                 ArgumentCaptor.forClass(VcStoreItem.class);
 
-        credentialIssuerService.persistUserCredentials(
-                signedJwt, credentialIssuerId, userId);
+        credentialIssuerService.persistUserCredentials(signedJwt, credentialIssuerId, userId);
 
         verify(mockDataStore).create(userIssuedCredentialsItemCaptor.capture(), eq(VC_TTL));
         VcStoreItem vcStoreItem = userIssuedCredentialsItemCaptor.getValue();
@@ -273,15 +274,14 @@ class CredentialIssuerServiceTest {
     }
 
     @Test
-    void expectedExceptionWithoutAnySignerWhenSaveCredentialsForIllegalStateException(){
+    void expectedExceptionWithoutAnySignerWhenSaveCredentialsForIllegalStateException() {
         String credentialIssuerId = "cred_issuer_id_1";
         String userId = "user-id-1";
 
-        SignedJWT signedJwt = new SignedJWT(
-                new JWSHeader.Builder(JWSAlgorithm.ES256).build(),
-                new JWTClaimsSet.Builder()
-                        .expirationTime(new Date())
-                        .build());
+        SignedJWT signedJwt =
+                new SignedJWT(
+                        new JWSHeader.Builder(JWSAlgorithm.ES256).build(),
+                        new JWTClaimsSet.Builder().expirationTime(new Date()).build());
 
         CredentialIssuerException thrown =
                 assertThrows(

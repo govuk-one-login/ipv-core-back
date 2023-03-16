@@ -41,9 +41,9 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.Date;
 
 public class CredentialIssuerService {
 
@@ -208,7 +208,7 @@ public class CredentialIssuerService {
 
     public void persistUserCredentials(
             SignedJWT credential, String credentialIssuerId, String userId) {
-        try{
+        try {
             VcStoreItem vcStoreItem = createVcStoreItem(credential, credentialIssuerId, userId);
             dataStore.create(vcStoreItem, ConfigurationVariable.VC_TTL);
         } catch (Exception e) {
@@ -218,16 +218,19 @@ public class CredentialIssuerService {
         }
     }
 
-    private VcStoreItem createVcStoreItem(SignedJWT credential, String credentialIssuerId, String userId) throws java.text.ParseException {
-        VcStoreItem vcStoreItem = VcStoreItem.builder()
-                .userId(userId)
-                .credentialIssuer(credentialIssuerId)
-                .dateCreated(Instant.now())
-                .credential(credential.serialize())
-                .build();
+    private VcStoreItem createVcStoreItem(
+            SignedJWT credential, String credentialIssuerId, String userId)
+            throws java.text.ParseException {
+        VcStoreItem vcStoreItem =
+                VcStoreItem.builder()
+                        .userId(userId)
+                        .credentialIssuer(credentialIssuerId)
+                        .dateCreated(Instant.now())
+                        .credential(credential.serialize())
+                        .build();
 
         Date expirationTime = credential.getJWTClaimsSet().getExpirationTime();
-        if (expirationTime != null){
+        if (expirationTime != null) {
             vcStoreItem.setExpirationTime(expirationTime.toInstant());
         }
         return vcStoreItem;
