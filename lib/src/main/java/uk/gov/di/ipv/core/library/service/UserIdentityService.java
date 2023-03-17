@@ -119,10 +119,11 @@ public class UserIdentityService {
                                         configService.getSsmParameter(BACKEND_SESSION_TIMEOUT)));
         Duration vcValidDuration = Duration.parse(configService.getSsmParameter(VC_VALID_DURATION));
         List<String> credentials = getUserIssuedCredentials(userId);
-        credentials.removeIf(credential -> isVcValid(credential, vcValidDuration, nowPlusSessionTimeout));
+        credentials.removeIf(
+                credential -> isVcValid(credential, vcValidDuration, nowPlusSessionTimeout));
         if (!credentials.isEmpty()) {
-                LOGGER.info("Found invalid VCs within session timeout");
-                deleteVcStoreItems(userId);
+            LOGGER.info("Found invalid VCs within session timeout");
+            deleteVcStoreItems(userId);
         }
     }
 
@@ -391,18 +392,20 @@ public class UserIdentityService {
                         "audienceForClients"));
     }
 
-    private boolean isVcValid(String credential, Duration vcValidDuration, Instant nowPlusSessionTimeout) {
+    private boolean isVcValid(
+            String credential, Duration vcValidDuration, Instant nowPlusSessionTimeout) {
         boolean isValid = true;
         try {
-                SignedJWT credentialJWT = SignedJWT.parse(credential);
-                isValid = credentialJWT
+            SignedJWT credentialJWT = SignedJWT.parse(credential);
+            isValid =
+                    credentialJWT
                             .getJWTClaimsSet()
                             .getNotBeforeTime()
                             .toInstant()
                             .plus(vcValidDuration)
                             .isAfter(nowPlusSessionTimeout);
         } catch (ParseException e) {
-                LOGGER.warn("Failed to parse VC");
+            LOGGER.warn("Failed to parse VC");
         }
         return isValid;
     }

@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
@@ -590,8 +589,7 @@ class UserIdentityServiceTest {
         String signedVc = signedJwt.serialize();
 
         List<VcStoreItem> vcStoreItems =
-                List.of(
-                        createVcStoreItem("a-users-id", "ukPassport", signedVc, Instant.now()));
+                List.of(createVcStoreItem("a-users-id", "ukPassport", signedVc, Instant.now()));
         when(mockDataStore.getItems("a-users-id")).thenReturn(vcStoreItems);
 
         userIdentityService.deleteVcStoreItemsIfAnyInvalid("a-users-id");
