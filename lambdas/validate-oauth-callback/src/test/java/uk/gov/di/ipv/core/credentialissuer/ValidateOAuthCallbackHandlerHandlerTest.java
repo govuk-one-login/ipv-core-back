@@ -3,11 +3,10 @@ package uk.gov.di.ipv.core.credentialissuer;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import org.apache.http.HttpStatus;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -37,7 +36,9 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DRIVING_LICENCE_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
 
 @ExtendWith(MockitoExtension.class)
 class ValidateOAuthCallbackHandlerHandlerTest {
@@ -57,29 +58,25 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     private static final String STATUS_CODE = "statusCode";
     private static final String TYPE = "type";
     private static final String PAGE = "page";
+    private static final String CRI_PASSPORT = "ukPassport";
+    private static final String CRI_DRIVING_LICENCE = "drivingLicence";
     private static CredentialIssuerConfig credentialIssuerConfig;
     private static IpvSessionItem ipvSessionItem;
     @Mock private Context context;
     @Mock private ConfigService mockConfigService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private AuditService mockAuditService;
-    @InjectMocks private ValidateOAuthCallbackHandler underTest;
+    private ValidateOAuthCallbackHandler underTest;
 
-    @BeforeAll
-    static void setUp() throws URISyntaxException {
-        credentialIssuerConfig =
-                new CredentialIssuerConfig(
-                        TEST_SESSION_ID,
-                        "any",
-                        true,
-                        new URI("http://www.example.com"),
-                        new URI("http://www.example.com/credential"),
-                        new URI("http://www.example.com/authorize"),
-                        "ipv-core",
-                        "{}",
-                        RSA_ENCRYPTION_PUBLIC_JWK,
-                        "test-audience",
-                        new URI("http://www.example.com/credential-issuers/callback/criId"));
+    @BeforeEach
+    void setUpBeforeEach() throws URISyntaxException {
+        when(mockConfigService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
+                .thenReturn("audience.for.clients");
+        when(mockConfigService.getSsmParameter(PASSPORT_CRI_ID)).thenReturn(CRI_PASSPORT);
+        when(mockConfigService.getSsmParameter(DRIVING_LICENCE_CRI_ID))
+                .thenReturn(CRI_DRIVING_LICENCE);
+
+        credentialIssuerConfig = createCriConfig("criId", "cri.iss.com", true);
 
         ClientSessionDetailsDto clientSessionDetailsDto =
                 new ClientSessionDetailsDto(
@@ -96,6 +93,10 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+
+        underTest =
+                new ValidateOAuthCallbackHandler(
+                        mockConfigService, mockIpvSessionService, mockAuditService);
     }
 
     @Test
@@ -256,17 +257,43 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     }
 
     @Test
-    void shouldReceiveAccessDeniedJourneyResponseWhenOauthErrorAccessDenied() {
+    void shouldReceiveAccessDeniedJourneyResponseWhenOauthErrorAccessDeniedAndOnlyPassportEnabled()
+            throws URISyntaxException {
         CriCallbackRequest criCallbackRequestWithAccessDenied = validCriCallbackRequest();
         criCallbackRequestWithAccessDenied.setError(TEST_OAUTH_ACCESS_DENIED_ERROR);
         criCallbackRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigService.getCredentialIssuer(CRI_PASSPORT))
+                .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss", true));
+        when(mockConfigService.getCredentialIssuer(CRI_DRIVING_LICENCE))
+                .thenReturn(
+                        createCriConfig(CRI_DRIVING_LICENCE, "test-driving-licence-iss", false));
 
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
 
         assertEquals("/journey/access-denied", output.get("journey"));
+    }
+
+    @Test
+    void
+            shouldReceiveAccessDeniedMultiJourneyResponseWhenOauthErrorAccessDeniedAndBothPassportAndDrivingLicenceEnabled()
+                    throws URISyntaxException {
+        CriCallbackRequest criCallbackRequestWithAccessDenied = validCriCallbackRequest();
+        criCallbackRequestWithAccessDenied.setError(TEST_OAUTH_ACCESS_DENIED_ERROR);
+        criCallbackRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
+
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigService.getCredentialIssuer(CRI_PASSPORT))
+                .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss", true));
+        when(mockConfigService.getCredentialIssuer(CRI_DRIVING_LICENCE))
+                .thenReturn(createCriConfig(CRI_DRIVING_LICENCE, "test-driving-licence-iss", true));
+
+        Map<String, Object> output =
+                underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
+
+        assertEquals("/journey/access-denied-multi-doc", output.get("journey"));
     }
 
     @Test
@@ -369,5 +396,21 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 null,
                 null,
                 TEST_IP_ADDRESS);
+    }
+
+    private CredentialIssuerConfig createCriConfig(String criId, String criIss, boolean enabled)
+            throws URISyntaxException {
+        return new CredentialIssuerConfig(
+                criId,
+                criId,
+                enabled,
+                new URI("http://example.com/token"),
+                new URI("http://example.com/credential"),
+                new URI("http://example.com/authorize"),
+                "ipv-core",
+                "test-jwk",
+                "test-jwk",
+                criIss,
+                new URI("http://example.com/redirect"));
     }
 }
