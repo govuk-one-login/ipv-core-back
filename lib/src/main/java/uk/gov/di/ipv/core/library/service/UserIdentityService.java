@@ -97,14 +97,9 @@ public class UserIdentityService {
     }
 
     public void deleteVcStoreItemsIfAnyExpired(String userId) {
-        Instant nowPlusSessionTimeout =
-                Instant.now()
-                        .plusSeconds(
-                                Long.parseLong(
-                                        configService.getSsmParameter(BACKEND_SESSION_TIMEOUT)));
         List<VcStoreItem> expiredVcStoreItems =
                 this.dataStore.getItemsWithAttributeLessThanOrEqualValue(
-                        userId, "expirationTime", nowPlusSessionTimeout.toString());
+                        userId, "expirationTime", nowPlusSessionTimeout().toString());
         if (!expiredVcStoreItems.isEmpty()) {
             LOGGER.info("Found VCs due to expire within session timeout");
             deleteVcStoreItems(userId);
@@ -112,15 +107,10 @@ public class UserIdentityService {
     }
 
     public void deleteVcStoreItemsIfAnyInvalid(String userId) {
-        Instant nowPlusSessionTimeout =
-                Instant.now()
-                        .plusSeconds(
-                                Long.parseLong(
-                                        configService.getSsmParameter(BACKEND_SESSION_TIMEOUT)));
         Duration vcValidDuration = Duration.parse(configService.getSsmParameter(VC_VALID_DURATION));
         List<String> credentials = getUserIssuedCredentials(userId);
         credentials.removeIf(
-                credential -> isVcValid(credential, vcValidDuration, nowPlusSessionTimeout));
+                credential -> isVcValid(credential, vcValidDuration, nowPlusSessionTimeout()));
         if (!credentials.isEmpty()) {
             LOGGER.info("Found invalid VCs within session timeout");
             deleteVcStoreItems(userId);
@@ -390,6 +380,12 @@ public class UserIdentityService {
                                 CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
                         item.getCredentialIssuer(),
                         "audienceForClients"));
+    }
+
+    private Instant nowPlusSessionTimeout() {
+        return Instant.now()
+                .plusSeconds(
+                        Long.parseLong(configService.getSsmParameter(BACKEND_SESSION_TIMEOUT)));
     }
 
     private boolean isVcValid(
