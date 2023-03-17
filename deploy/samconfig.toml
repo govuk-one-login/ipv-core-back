@@ -148,7 +148,7 @@ parallel = "true"
 [dev-shivp.deploy.parameters]
 stack_name = "core-back-dev-shivp"
 s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
-s3_prefix = "dynatrace-core-back-stack"
+s3_prefix = "shivp-core-back-stack"
 region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-shivp\" VpcStackName=\"network-shared-development\""
