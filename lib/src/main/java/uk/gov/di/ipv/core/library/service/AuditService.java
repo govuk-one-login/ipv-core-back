@@ -17,7 +17,7 @@ public class AuditService {
     private final AmazonSQS sqs;
     private final String queueUrl;
 
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     public AuditService(AmazonSQS sqs, ConfigService configService) {
         this.sqs = sqs;

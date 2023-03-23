@@ -27,13 +27,6 @@ public class RequestHelper {
 
     private RequestHelper() {}
 
-    public static <T> T convertRequest(APIGatewayProxyRequestEvent request, Class<T> type) {
-        Map<String, String> map = parseRequestBody(request.getBody());
-        getHeader(request.getHeaders(), IPV_SESSION_ID_HEADER)
-                .ifPresent(h -> map.put("ipv_session_id", h));
-        return objectMapper.convertValue(map, type);
-    }
-
     public static Map<String, String> parseRequestBody(String body) {
         Map<String, String> queryPairs = new HashMap<>();
 

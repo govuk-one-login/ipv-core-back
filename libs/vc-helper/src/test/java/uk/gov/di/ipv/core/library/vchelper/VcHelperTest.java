@@ -30,14 +30,14 @@ class VcHelperTest {
                             "address",
                             "address",
                             true,
-                            new URI("http://example.com/token"),
-                            new URI("http://example.com/credential"),
-                            new URI("http://example.com/authorize"),
+                            new URI("https://example.com/token"),
+                            new URI("https://example.com/credential"),
+                            new URI("https://example.com/authorize"),
                             "ipv-core",
                             "test-jwk",
                             "test-encryption-jwk",
                             "https://review-a.integration.account.gov.uk",
-                            new URI("http://example.com/redirect"));
+                            new URI("https://example.com/redirect"));
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
