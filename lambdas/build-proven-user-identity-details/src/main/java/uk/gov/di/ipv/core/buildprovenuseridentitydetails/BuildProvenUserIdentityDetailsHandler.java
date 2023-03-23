@@ -132,7 +132,7 @@ public class BuildProvenUserIdentityDetailsHandler
             throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException {
         for (VcStoreItem item : credentialIssuerItems) {
             CredentialIssuerConfig credentialIssuerConfig =
-                    configService.getCredentialIssuer(item.getCredentialIssuer());
+                    configService.getCredentialIssuerConnection(item.getCredentialIssuer());
             if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())
                     && userIdentityService.isVcSuccessful(
                             currentVcStatuses, credentialIssuerConfig.getAudienceForClients())) {
@@ -177,7 +177,7 @@ public class BuildProvenUserIdentityDetailsHandler
             throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException {
         for (VcStoreItem item : credentialIssuerItems) {
             CredentialIssuerConfig credentialIssuerConfig =
-                    configService.getCredentialIssuer(item.getCredentialIssuer());
+                    configService.getCredentialIssuerConnection(item.getCredentialIssuer());
             if (ADDRESS_CRI_TYPES.contains(item.getCredentialIssuer())
                     && userIdentityService.isVcSuccessful(
                             currentVcStatuses, credentialIssuerConfig.getAudienceForClients())) {
@@ -216,7 +216,7 @@ public class BuildProvenUserIdentityDetailsHandler
             String addressCriId =
                     configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID);
             CredentialIssuerConfig addressCriConfig =
-                    configService.getCredentialIssuer(addressCriId);
+                    configService.getCredentialIssuerConnection(addressCriId);
             boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, addressCriConfig);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));

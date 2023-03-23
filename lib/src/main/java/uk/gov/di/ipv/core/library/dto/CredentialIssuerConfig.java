@@ -25,7 +25,8 @@ public class CredentialIssuerConfig {
     private String jarEncryptionPublicJwk;
     private String audienceForClients;
     private URI ipvCoreRedirectUrl;
-    private String allowedSharedAttributes;
+    private boolean unavailable;
+    private String activeConnection;
 
     public CredentialIssuerConfig() {}
 
@@ -42,7 +43,8 @@ public class CredentialIssuerConfig {
             String jarEncryptionPublicJwk,
             String audienceForClients,
             URI ipvCoreRedirectUrl,
-            String allowedSharedAttributes) {
+            Boolean unavailable,
+            String activeConnection) {
         this.id = id;
         this.name = name;
         this.enabled = enabled;
@@ -54,7 +56,8 @@ public class CredentialIssuerConfig {
         this.jarEncryptionPublicJwk = jarEncryptionPublicJwk;
         this.audienceForClients = audienceForClients;
         this.ipvCoreRedirectUrl = ipvCoreRedirectUrl;
-        this.allowedSharedAttributes = allowedSharedAttributes;
+        this.unavailable = unavailable;
+        this.activeConnection = activeConnection;
     }
 
     public String getId() {
@@ -136,5 +139,13 @@ public class CredentialIssuerConfig {
 
     public void setId(String credentialIssuerId) {
         this.id = credentialIssuerId;
+    }
+
+    public boolean getUnavailable() {
+        return unavailable;
+    }
+
+    public String getActiveConnection() {
+        return activeConnection;
     }
 }

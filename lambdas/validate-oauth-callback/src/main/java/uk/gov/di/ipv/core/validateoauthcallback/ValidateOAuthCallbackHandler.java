@@ -273,7 +273,7 @@ public class ValidateOAuthCallbackHandler
 
     @Tracing
     private CredentialIssuerConfig getCredentialIssuerConfig(CriCallbackRequest callbackRequest) {
-        return configService.getCredentialIssuer(callbackRequest.getCredentialIssuerId());
+        return configService.getCredentialIssuerConnection(callbackRequest.getCredentialIssuerId());
     }
 
     @Tracing

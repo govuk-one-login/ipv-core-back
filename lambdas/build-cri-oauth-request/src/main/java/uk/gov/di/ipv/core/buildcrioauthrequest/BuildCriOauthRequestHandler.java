@@ -243,7 +243,7 @@ public class BuildCriOauthRequestHandler
 
     @Tracing
     private CredentialIssuerConfig getCredentialIssuerConfig(String criId) {
-        return credentialIssuerConfigService.getCredentialIssuer(criId);
+        return credentialIssuerConfigService.getCredentialIssuerConnection(criId);
     }
 
     @Tracing
@@ -255,7 +255,7 @@ public class BuildCriOauthRequestHandler
         String addressCriId =
                 credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID);
         CredentialIssuerConfig addressCriConfig =
-                credentialIssuerConfigService.getCredentialIssuer(addressCriId);
+                credentialIssuerConfigService.getCredentialIssuerConnection(addressCriId);
 
         List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 

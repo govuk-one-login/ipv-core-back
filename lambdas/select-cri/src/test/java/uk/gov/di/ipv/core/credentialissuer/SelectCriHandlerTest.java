@@ -869,6 +869,7 @@ class SelectCriHandlerTest {
                 "test-jwk",
                 criIss,
                 new URI("http://example.com/redirect"),
-                "name, address");
+                true,
+                "main");
     }
 }

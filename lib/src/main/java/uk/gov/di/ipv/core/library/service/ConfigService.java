@@ -106,6 +106,8 @@ public class ConfigService {
                         configurationVariable.getValue(), getEnvironmentVariable(ENVIRONMENT)));
     }
 
+    // do we add another getSsm to pass in the active connection
+
     public String getSsmParameter(ConfigurationVariable configurationVariable, String clientId) {
         return ssmProvider.get(
                 String.format(
@@ -147,6 +149,19 @@ public class ConfigService {
                                 "%s/%s",
                                 getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
                                 credentialIssuerId));
+        return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
+    }
+
+    public CredentialIssuerConfig getCredentialIssuerConnection(String credentialIssuerId) {
+        CredentialIssuerConfig credentialIssuer = getCredentialIssuer(credentialIssuerId);
+        Map<String, String> result =
+                getSsmParameters(
+                        String.format(
+                                "%s/%s/connections/%s",
+                                getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
+                                credentialIssuerId,
+                                credentialIssuer.getActiveConnection()));
+        result.put("id", credentialIssuerId);
         return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
     }
 

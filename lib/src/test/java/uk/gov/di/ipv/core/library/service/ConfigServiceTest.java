@@ -139,7 +139,8 @@ class ConfigServiceTest {
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "test-audience",
                         URI.create(TEST_REDIRECT_URL),
-                        "name, address");
+                        true,
+                        "main");
 
         assertEquals(expected.getTokenUrl(), result.getTokenUrl());
         assertEquals(expected.getCredentialUrl(), result.getCredentialUrl());
