@@ -255,9 +255,25 @@ SELECT_CRI:
 CRI_UK_PASSPORT:
   name: CRI_UK_PASSPORT
   parent: CRI_STATE
+  events:
+    access-denied-multi-doc:
+      type: basic
+      name: access-denied-multi-doc
+      targetState: MULTIPLE_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-multiple-doc-check
 CRI_DRIVING_LICENCE:
   name: CRI_DRIVING_LICENCE
   parent: CRI_STATE
+  events:
+    access-denied-multi-doc:
+      type: basic
+      name: access-denied-multi-doc
+      targetState: MULTIPLE_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-multiple-doc-check
 CRI_ADDRESS:
   name: CRI_ADDRESS
   parent: CRI_STATE

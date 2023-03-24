@@ -36,6 +36,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DRIVING_LICENCE_CRI_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
+
 public class ValidateOAuthCallbackHandler
         implements RequestHandler<CriCallbackRequest, Map<String, Object>> {
 
@@ -45,6 +48,8 @@ public class ValidateOAuthCallbackHandler
             Map.of(JOURNEY, "/journey/cri/access-token");
     private static final Map<String, Object> JOURNEY_ACCESS_DENIED =
             Map.of(JOURNEY, "/journey/access-denied");
+    private static final Map<String, Object> JOURNEY_ACCESS_DENIED_MULTI =
+            Map.of(JOURNEY, "/journey/access-denied-multi-doc");
     private static final Map<String, Object> JOURNEY_TEMPORARILY_UNAVAILABLE =
             Map.of(JOURNEY, "/journey/temporarily-unavailable");
     private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, "/journey/error");
@@ -62,6 +67,8 @@ public class ValidateOAuthCallbackHandler
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
     private final String componentId;
+    private final String passportCriId;
+    private final String drivingLicenceCriId;
 
     public ValidateOAuthCallbackHandler(
             ConfigService configService,
@@ -72,6 +79,8 @@ public class ValidateOAuthCallbackHandler
         this.auditService = auditService;
         this.componentId =
                 this.configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+        this.passportCriId = configService.getSsmParameter(PASSPORT_CRI_ID);
+        this.drivingLicenceCriId = configService.getSsmParameter(DRIVING_LICENCE_CRI_ID);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -81,6 +90,8 @@ public class ValidateOAuthCallbackHandler
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.componentId =
                 this.configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+        this.passportCriId = configService.getSsmParameter(PASSPORT_CRI_ID);
+        this.drivingLicenceCriId = configService.getSsmParameter(DRIVING_LICENCE_CRI_ID);
     }
 
     @Override
@@ -187,6 +198,13 @@ public class ValidateOAuthCallbackHandler
         LogHelper.logOauthError("OAuth error received from CRI", error, errorDescription);
 
         if (OAuth2Error.ACCESS_DENIED_CODE.equals(error)) {
+            CredentialIssuerConfig passportCriConfig =
+                    configService.getCredentialIssuer(passportCriId);
+            CredentialIssuerConfig ukDrivingLicenseCriConfig =
+                    configService.getCredentialIssuer(drivingLicenceCriId);
+            if (passportCriConfig.getEnabled() && ukDrivingLicenseCriConfig.getEnabled()) {
+                return JOURNEY_ACCESS_DENIED_MULTI;
+            }
             return JOURNEY_ACCESS_DENIED;
         } else if (OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE.equals(error)) {
             return JOURNEY_TEMPORARILY_UNAVAILABLE;
