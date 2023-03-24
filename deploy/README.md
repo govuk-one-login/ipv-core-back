@@ -31,5 +31,5 @@ gds aws di-ipv-dev -- sam build -t template.yaml
 [sam deploy](https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-cli-command-reference-sam-deploy.html) will upload the artifacts built during the `sam build` phase. It'll then create a changeset and deploy any changes into AWS.
 
 ```sh
-gds aws di-ipv-dev -- sam deploy -t template.yaml --config-file samconfig.toml --config-env dev-<your-name>
+gds aws di-ipv-dev -- sam deploy --config-file samconfig.toml --config-env dev-<your-name>
 ```
