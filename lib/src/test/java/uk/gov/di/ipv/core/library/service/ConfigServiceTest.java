@@ -129,7 +129,8 @@ class ConfigServiceTest {
         when(ssmProvider.getMultiple("/dev/core/credentialIssuers/passportCri/connections/stub"))
                 .thenReturn(credentialIssuerParameters);
 
-        CredentialIssuerConfig result = configService.getCredentialIssuerConnection("passportCri");
+        CredentialIssuerConfig result =
+                configService.getCredentialIssuerActiveConnectionConfig("passportCri");
 
         CredentialIssuerConfig expected =
                 new CredentialIssuerConfig(

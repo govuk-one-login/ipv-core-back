@@ -35,7 +35,7 @@ public class Mj01Validation {
             ConfigService configService) {
         String fraudCriId = configService.getSsmParameter(ConfigurationVariable.FRAUD_CRI_ID);
         CredentialIssuerConfig fraudCriConfig =
-                configService.getCredentialIssuerConnection(fraudCriId);
+                configService.getCredentialIssuerActiveConnectionConfig(fraudCriId);
 
         List<String> mitigatingVcList = new ArrayList<>();
 

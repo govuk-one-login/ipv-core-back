@@ -246,7 +246,7 @@ public class CheckExistingIdentityHandler
         for (SignedJWT signedJWT : credentials) {
 
             CredentialIssuerConfig addressCriConfig =
-                    configService.getCredentialIssuerConnection(addressCriId);
+                    configService.getCredentialIssuerActiveConnectionConfig(addressCriId);
             boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, addressCriConfig);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));

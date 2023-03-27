@@ -139,7 +139,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                         new CredentialIssuerException(
                                 HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST));
 
-        when(configService.getCredentialIssuerConnection(CREDENTIAL_ISSUER_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
                 .thenReturn(passportIssuer);
         when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
@@ -178,7 +178,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     private void mockServiceCallsAndSessionItem() {
-        when(configService.getCredentialIssuerConnection(CREDENTIAL_ISSUER_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
                 .thenReturn(passportIssuer);
 
         when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(testComponentId);
@@ -204,7 +204,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(ipvSessionItem.getCredentialIssuerSessionDetails())
                 .thenReturn(credentialIssuerSessionDetailsDto);
-        when(configService.getCredentialIssuerConnection(CREDENTIAL_ISSUER_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
                 .thenReturn(passportIssuer);
         doThrow(new SqsException("Test sqs error"))
                 .when(auditService)
@@ -220,7 +220,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         JSONObject testCredential = new JSONObject();
         testCredential.appendField("foo", "bar");
 
-        when(configService.getCredentialIssuerConnection(CREDENTIAL_ISSUER_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
                 .thenReturn(passportIssuer);
 
         when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
@@ -264,7 +264,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         JSONObject testCredential = new JSONObject();
         testCredential.appendField("foo", "bar");
 
-        when(configService.getCredentialIssuerConnection(CREDENTIAL_ISSUER_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
                 .thenReturn(passportIssuer);
 
         when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(testComponentId);

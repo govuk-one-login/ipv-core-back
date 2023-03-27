@@ -84,7 +84,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
-        when(mockConfigService.getCredentialIssuerConnection("ukPassport"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -101,7 +101,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 true,
                                 "main"));
 
-        when(mockConfigService.getCredentialIssuerConnection("address"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -156,7 +156,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
-        when(mockConfigService.getCredentialIssuerConnection("ukPassport"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -173,7 +173,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 true,
                                 "main"));
 
-        when(mockConfigService.getCredentialIssuerConnection("address"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -233,7 +233,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
-        when(mockConfigService.getCredentialIssuerConnection("ukPassport"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -250,7 +250,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 true,
                                 "main"));
 
-        when(mockConfigService.getCredentialIssuerConnection("address"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -287,7 +287,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
-        when(mockConfigService.getCredentialIssuerConnection("address"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -350,7 +350,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
-        when(mockConfigService.getCredentialIssuerConnection("ukPassport"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -367,7 +367,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 true,
                                 "main"));
 
-        when(mockConfigService.getCredentialIssuerConnection("address"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -384,7 +384,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 true,
                                 "main"));
 
-        when(mockConfigService.getCredentialIssuerConnection("fraud"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("fraud"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -401,7 +401,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 true,
                                 "main"));
 
-        when(mockConfigService.getCredentialIssuerConnection("kbv"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("kbv"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -459,7 +459,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
-        when(mockConfigService.getCredentialIssuerConnection("ukPassport"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -476,7 +476,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 true,
                                 "main"));
 
-        when(mockConfigService.getCredentialIssuerConnection("address"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -493,7 +493,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 true,
                                 "main"));
 
-        when(mockConfigService.getCredentialIssuerConnection("fraud"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("fraud"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
@@ -510,7 +510,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 true,
                                 "main"));
 
-        when(mockConfigService.getCredentialIssuerConnection("kbv"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("kbv"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",

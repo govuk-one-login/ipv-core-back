@@ -260,7 +260,8 @@ public class SelectCriHandler
             String userId)
             throws ParseException {
 
-        CredentialIssuerConfig criConfig = configService.getCredentialIssuerConnection(criId);
+        CredentialIssuerConfig criConfig =
+                configService.getCredentialIssuerActiveConnectionConfig(criId);
         Optional<VcStatusDto> vc = getVc(currentVcStatuses, criConfig.getAudienceForClients());
 
         if (vc.isEmpty()) {
@@ -276,7 +277,8 @@ public class SelectCriHandler
                 }
 
                 CredentialIssuerConfig ukDrivingLicenseCriConfig =
-                        configService.getCredentialIssuerConnection(drivingLicenceCriId);
+                        configService.getCredentialIssuerActiveConnectionConfig(
+                                drivingLicenceCriId);
                 if (criId.equals(passportCriId) && ukDrivingLicenseCriConfig.getEnabled()) {
                     return getMultipleDocCheckPage();
                 }
@@ -321,7 +323,7 @@ public class SelectCriHandler
 
     private Optional<JourneyResponse> getMultipleDocCheckPage() {
         CredentialIssuerConfig drivingLicenceConfig =
-                configService.getCredentialIssuerConnection(drivingLicenceCriId);
+                configService.getCredentialIssuerActiveConnectionConfig(drivingLicenceCriId);
         if (drivingLicenceConfig.getActiveConnection() == "stub") {
             return Optional.of(getJourneyResponse(STUB_UK_PASSPORT_AND_DRIVING_LICENCE_PAGE));
         }
@@ -330,7 +332,7 @@ public class SelectCriHandler
 
     private boolean hasPassportVc(List<VcStatusDto> currentVcStatuses) {
         CredentialIssuerConfig passportConfig =
-                configService.getCredentialIssuerConnection(passportCriId);
+                configService.getCredentialIssuerActiveConnectionConfig(passportCriId);
         Optional<VcStatusDto> passportVc =
                 getVc(currentVcStatuses, passportConfig.getAudienceForClients());
         return passportVc.isPresent();
@@ -338,7 +340,7 @@ public class SelectCriHandler
 
     private boolean hasDrivingLicenceVc(List<VcStatusDto> currentVcStatuses) {
         CredentialIssuerConfig drivingLicenceConfig =
-                configService.getCredentialIssuerConnection(drivingLicenceCriId);
+                configService.getCredentialIssuerActiveConnectionConfig(drivingLicenceCriId);
         Optional<VcStatusDto> drivingLicenceVc =
                 getVc(currentVcStatuses, drivingLicenceConfig.getAudienceForClients());
         return drivingLicenceVc.isPresent();

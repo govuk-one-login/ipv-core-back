@@ -159,7 +159,7 @@ public class RetrieveCriOauthAccessTokenHandler
 
     @Tracing
     private CredentialIssuerConfig getCredentialIssuerConfig(String criId) {
-        return configService.getCredentialIssuerConnection(criId);
+        return configService.getCredentialIssuerActiveConnectionConfig(criId);
     }
 
     @Tracing

@@ -152,7 +152,8 @@ public class ConfigService {
         return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
     }
 
-    public CredentialIssuerConfig getCredentialIssuerConnection(String credentialIssuerId) {
+    public CredentialIssuerConfig getCredentialIssuerActiveConnectionConfig(
+            String credentialIssuerId) {
         CredentialIssuerConfig credentialIssuer = getCredentialIssuer(credentialIssuerId);
         Map<String, String> result =
                 getSsmParameters(

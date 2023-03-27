@@ -154,7 +154,8 @@ class EvaluateGpg45ScoreHandlerTest {
 
     @Test
     void shouldReturnJourneySessionEndIfScoresSatisfyM1AGpg45Profile() throws Exception {
-        when(configService.getCredentialIssuerConnection(any())).thenReturn(addressConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(addressConfig);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
@@ -322,7 +323,8 @@ class EvaluateGpg45ScoreHandlerTest {
                         SignedJWT.parse(M1A_ADDRESS_VC),
                         SignedJWT.parse(M1A_FRAUD_VC),
                         SignedJWT.parse(M1A_VERIFICATION_VC));
-        when(configService.getCredentialIssuerConnection(any())).thenReturn(addressConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(addressConfig);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedM1ACreds);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
@@ -361,7 +363,8 @@ class EvaluateGpg45ScoreHandlerTest {
                         SignedJWT.parse(M1A_PASSPORT_VC),
                         SignedJWT.parse(M1A_ADDRESS_VC),
                         SignedJWT.parse(M1a_FRAUD_VC_WITH_CI_A01));
-        when(configService.getCredentialIssuerConnection(any())).thenReturn(addressConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(addressConfig);
         when(configService.getSsmParameter(ConfigurationVariable.CI_MITIGATION_JOURNEYS_ENABLED))
                 .thenReturn("true");
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedM1ACreds);
@@ -392,7 +395,8 @@ class EvaluateGpg45ScoreHandlerTest {
                         SignedJWT.parse(M1A_PASSPORT_VC_WITH_CI),
                         SignedJWT.parse(M1A_ADDRESS_VC),
                         SignedJWT.parse(M1a_FRAUD_VC_WITH_CI_A01));
-        when(configService.getCredentialIssuerConnection(any())).thenReturn(addressConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(addressConfig);
         when(configService.getSsmParameter(ConfigurationVariable.CI_MITIGATION_JOURNEYS_ENABLED))
                 .thenReturn("true");
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedM1ACreds);
@@ -445,7 +449,8 @@ class EvaluateGpg45ScoreHandlerTest {
                         SignedJWT.parse(M1A_PASSPORT_VC_WITH_CI),
                         SignedJWT.parse(M1A_ADDRESS_VC),
                         SignedJWT.parse(M1a_FRAUD_VC_WITH_CI_A01));
-        when(configService.getCredentialIssuerConnection(any())).thenReturn(addressConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(addressConfig);
         when(configService.getSsmParameter(ConfigurationVariable.CI_MITIGATION_JOURNEYS_ENABLED))
                 .thenReturn("true");
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedM1ACreds);
@@ -488,7 +493,8 @@ class EvaluateGpg45ScoreHandlerTest {
     void shouldNotCheckGpg45ProfileIfMitigationInProgress() throws Exception {
         List<SignedJWT> parsedM1ACreds =
                 List.of(SignedJWT.parse(M1A_PASSPORT_VC), SignedJWT.parse(M1A_ADDRESS_VC));
-        when(configService.getCredentialIssuerConnection(any())).thenReturn(addressConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(addressConfig);
         when(configService.getSsmParameter(ConfigurationVariable.CI_MITIGATION_JOURNEYS_ENABLED))
                 .thenReturn("true");
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedM1ACreds);
@@ -527,7 +533,8 @@ class EvaluateGpg45ScoreHandlerTest {
 
     @Test
     void shouldCheckGpg45ProfileIfMitigationHasCompleted() throws Exception {
-        when(configService.getCredentialIssuerConnection(any())).thenReturn(addressConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(addressConfig);
         when(configService.getSsmParameter(ConfigurationVariable.CI_MITIGATION_JOURNEYS_ENABLED))
                 .thenReturn("true");
         ipvSessionItem.setContraIndicatorMitigationDetails(
@@ -579,7 +586,8 @@ class EvaluateGpg45ScoreHandlerTest {
 
     @Test
     void shouldCheckGpg45ProfileWhenNoNewCiAndNoCurrentMitigationInProgress() throws Exception {
-        when(configService.getCredentialIssuerConnection(any())).thenReturn(addressConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(addressConfig);
         when(configService.getSsmParameter(ConfigurationVariable.CI_MITIGATION_JOURNEYS_ENABLED))
                 .thenReturn("true");
         ipvSessionItem.setContraIndicatorMitigationDetails(Collections.emptyList());
