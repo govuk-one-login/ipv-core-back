@@ -38,7 +38,8 @@ class VcHelperTest {
                             "test-encryption-jwk",
                             "https://review-a.integration.account.gov.uk",
                             new URI("https://example.com/redirect"),
-                            "name, address");
+                            true,
+                            "main");
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }

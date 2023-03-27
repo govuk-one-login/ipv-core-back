@@ -115,6 +115,8 @@ class ConfigServiceTest {
 
         Map<String, String> credentialIssuerParameters =
                 Map.of(
+                        "activeConnection",
+                        "stub",
                         "tokenUrl",
                         TEST_TOKEN_URL,
                         "credentialUrl",
@@ -124,7 +126,10 @@ class ConfigServiceTest {
         when(ssmProvider.getMultiple("/dev/core/credentialIssuers/passportCri"))
                 .thenReturn(credentialIssuerParameters);
 
-        CredentialIssuerConfig result = configService.getCredentialIssuer("passportCri");
+        when(ssmProvider.getMultiple("/dev/core/credentialIssuers/passportCri/connections/stub"))
+                .thenReturn(credentialIssuerParameters);
+
+        CredentialIssuerConfig result = configService.getCredentialIssuerConnection("passportCri");
 
         CredentialIssuerConfig expected =
                 new CredentialIssuerConfig(

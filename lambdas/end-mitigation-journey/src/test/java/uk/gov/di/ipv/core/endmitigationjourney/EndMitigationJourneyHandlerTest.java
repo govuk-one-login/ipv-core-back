@@ -127,7 +127,8 @@ class EndMitigationJourneyHandlerTest {
     void shouldSendPostMitigationRequestWhenMJ01JourneyAndHasFraudVC() throws Exception {
         when(mockIpvSessionService.getIpvSession(any())).thenReturn(ipvSessionItem);
         when(mockCiStorageService.getCIs(any(), any(), any())).thenReturn(contraIndicatorItems);
-        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuerConnection(any()))
+                .thenReturn(getTestFraudCriConfig());
 
         List<String> credentials =
                 List.of(
@@ -236,7 +237,8 @@ class EndMitigationJourneyHandlerTest {
     void shouldNotSendPostMitigationRequestWhenMJ01JourneyAndMissingNewFraudVC() throws Exception {
         when(mockIpvSessionService.getIpvSession(any())).thenReturn(ipvSessionItem);
         when(mockCiStorageService.getCIs(any(), any(), any())).thenReturn(contraIndicatorItems);
-        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuerConnection(any()))
+                .thenReturn(getTestFraudCriConfig());
 
         List<String> credentials =
                 List.of(
@@ -331,7 +333,8 @@ class EndMitigationJourneyHandlerTest {
             throws Exception {
         when(mockIpvSessionService.getIpvSession(any())).thenReturn(ipvSessionItem);
         when(mockCiStorageService.getCIs(any(), any(), any())).thenReturn(contraIndicatorItems);
-        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuerConnection(any()))
+                .thenReturn(getTestFraudCriConfig());
 
         List<String> credentials =
                 List.of(
@@ -378,7 +381,8 @@ class EndMitigationJourneyHandlerTest {
     void shouldNotSendPostMitigationRequestWhenMJ01JourneyAndFraudVcIsBeforeCI() throws Exception {
         when(mockIpvSessionService.getIpvSession(any())).thenReturn(ipvSessionItem);
         when(mockCiStorageService.getCIs(any(), any(), any())).thenReturn(contraIndicatorItems);
-        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuerConnection(any()))
+                .thenReturn(getTestFraudCriConfig());
 
         List<String> credentials =
                 List.of(
@@ -469,7 +473,8 @@ class EndMitigationJourneyHandlerTest {
         doThrow(new CiPostMitigationsException("test error"))
                 .when(mockCiStorageService)
                 .submitMitigatingVcList(any(), any(), any());
-        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuerConnection(any()))
+                .thenReturn(getTestFraudCriConfig());
 
         List<String> credentials =
                 List.of(
@@ -562,7 +567,8 @@ class EndMitigationJourneyHandlerTest {
 
         when(mockIpvSessionService.getIpvSession(any())).thenReturn(ipvSessionItem);
         when(mockCiStorageService.getCIs(any(), any(), any())).thenReturn(contraIndicatorItems);
-        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuerConnection(any()))
+                .thenReturn(getTestFraudCriConfig());
 
         List<String> credentials =
                 List.of(

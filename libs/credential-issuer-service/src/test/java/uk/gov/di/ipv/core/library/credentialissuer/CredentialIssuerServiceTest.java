@@ -469,7 +469,8 @@ class CredentialIssuerServiceTest {
                         "http://localhost:"
                                 + wmRuntimeInfo.getHttpPort()
                                 + "/credential-issuer/callback?id=StubPassport"),
-                "name, address");
+                true,
+                "main");
     }
 
     private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {

@@ -46,7 +46,8 @@ class Mj01ValidationTest {
 
     @Test
     void shouldReturnListIfFraudVcFound() throws Exception {
-        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuerConnection(any()))
+                .thenReturn(getTestFraudCriConfig());
 
         List<String> credentials =
                 List.of(
@@ -84,7 +85,8 @@ class Mj01ValidationTest {
 
     @Test
     void shouldReturnEmptyOptionalIfFraudVcMissing() throws Exception {
-        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuerConnection(any()))
+                .thenReturn(getTestFraudCriConfig());
 
         List<String> credentials =
                 List.of(
@@ -114,7 +116,8 @@ class Mj01ValidationTest {
 
     @Test
     void shouldReturnOptionalEmptyIfFraudVcStillContainsCi() throws Exception {
-        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuerConnection(any()))
+                .thenReturn(getTestFraudCriConfig());
 
         List<String> credentials =
                 List.of(
@@ -149,7 +152,8 @@ class Mj01ValidationTest {
 
     @Test
     void shouldReturnOptionalEmptyIfVcIsMissingEvidence() throws Exception {
-        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuerConnection(any()))
+                .thenReturn(getTestFraudCriConfig());
 
         List<String> credentials = List.of(M1_PASSPORT_VC_MISSING_EVIDENCE);
 
@@ -171,7 +175,8 @@ class Mj01ValidationTest {
 
     @Test
     void shouldReturnOptionalEmptyIfVcCannotBeParsed() throws Exception {
-        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuerConnection(any()))
+                .thenReturn(getTestFraudCriConfig());
 
         List<String> credentials = List.of("invalid-jwt");
 

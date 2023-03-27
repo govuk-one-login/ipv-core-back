@@ -101,7 +101,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldPersistAuthorizationCodeInIPVSessionTable() throws Exception {
-        when(mockConfigService.getCredentialIssuer(TEST_CREDENTIAL_ISSUER_ID))
+        when(mockConfigService.getCredentialIssuerConnection(TEST_CREDENTIAL_ISSUER_ID))
                 .thenReturn(credentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -226,7 +226,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldUpdateSessionWithDetailsOfFailedVisitedCriOnSqsException() throws Exception {
-        when(mockConfigService.getCredentialIssuer(TEST_CREDENTIAL_ISSUER_ID))
+        when(mockConfigService.getCredentialIssuerConnection(TEST_CREDENTIAL_ISSUER_ID))
                 .thenReturn(credentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -264,9 +264,9 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         criCallbackRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigService.getCredentialIssuer(CRI_PASSPORT))
+        when(mockConfigService.getCredentialIssuerConnection(CRI_PASSPORT))
                 .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss", true));
-        when(mockConfigService.getCredentialIssuer(CRI_DRIVING_LICENCE))
+        when(mockConfigService.getCredentialIssuerConnection(CRI_DRIVING_LICENCE))
                 .thenReturn(
                         createCriConfig(CRI_DRIVING_LICENCE, "test-driving-licence-iss", false));
 
@@ -285,9 +285,9 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         criCallbackRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigService.getCredentialIssuer(CRI_PASSPORT))
+        when(mockConfigService.getCredentialIssuerConnection(CRI_PASSPORT))
                 .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss", true));
-        when(mockConfigService.getCredentialIssuer(CRI_DRIVING_LICENCE))
+        when(mockConfigService.getCredentialIssuerConnection(CRI_DRIVING_LICENCE))
                 .thenReturn(createCriConfig(CRI_DRIVING_LICENCE, "test-driving-licence-iss", true));
 
         Map<String, Object> output =

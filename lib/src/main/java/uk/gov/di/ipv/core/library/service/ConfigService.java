@@ -161,8 +161,12 @@ public class ConfigService {
                                 getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
                                 credentialIssuerId,
                                 credentialIssuer.getActiveConnection()));
-        result.put("id", credentialIssuerId);
-        return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
+
+        CredentialIssuerConfig credentialIssuerConfig =
+                new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
+        credentialIssuerConfig.setId(credentialIssuerId);
+
+        return credentialIssuerConfig;
     }
 
     public List<String> getClientRedirectUrls(String clientId) {

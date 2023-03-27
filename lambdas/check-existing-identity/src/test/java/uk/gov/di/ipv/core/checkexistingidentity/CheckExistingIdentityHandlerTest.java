@@ -155,7 +155,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
         when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
-        when(configService.getCredentialIssuer("address")).thenReturn(addressConfig);
+        when(configService.getCredentialIssuerConnection("address")).thenReturn(addressConfig);
 
         var response = checkExistingIdentityHandler.handleRequest(event, context);
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
