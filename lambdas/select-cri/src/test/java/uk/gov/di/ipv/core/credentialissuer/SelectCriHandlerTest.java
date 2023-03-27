@@ -603,6 +603,34 @@ class SelectCriHandlerTest {
     }
 
     @Test
+    void shouldReturnPyiNoMatchErrorJourneyResponseIfUserHasAPreviouslyFailedVisitToDrivingLicence()
+            throws JsonProcessingException, URISyntaxException {
+        mockIpvSessionService();
+
+        when(mockClientSessionDetailsDto.getUserId()).thenReturn("test-user-id");
+        when(mockConfigService.getCredentialIssuer(CRI_PASSPORT))
+                .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss", true));
+        when(mockConfigService.getCredentialIssuer(CRI_DRIVING_LICENCE))
+                .thenReturn(createCriConfig(CRI_DRIVING_LICENCE, "test-driving-licence-iss", true));
+        when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
+                .thenReturn(
+                        List.of(
+                                new VisitedCredentialIssuerDetailsDto(
+                                        "drivingLicence", true, null)));
+        when(mockIpvSessionItem.getCurrentVcStatuses())
+                .thenReturn(List.of(new VcStatusDto("test-driving-licence-iss", false)));
+
+        APIGatewayProxyRequestEvent input = createRequestEvent();
+
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+
+        Map<String, String> responseBody = getResponseBodyAsMap(response);
+
+        assertEquals("/journey/pyi-no-match", responseBody.get("journey"));
+        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+    }
+
+    @Test
     void shouldReturnKbvThinFileErrorJourneyResponseIfUserHasAPreviouslyFailedVisitKbvWithoutCis()
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();

@@ -152,6 +152,9 @@ public class SelectCriHandler
                         drivingLicenceCriId,
                         userId);
         if (passportResponse.isPresent() && drivingLicenceResponse.isPresent()) {
+            if (userHasVisited(visitedCredentialIssuers, drivingLicenceCriId)) {
+                return drivingLicenceResponse.get();
+            }
             return passportResponse.get();
         }
 
@@ -350,6 +353,11 @@ public class SelectCriHandler
     private boolean userHasNotVisited(
             List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuers, String criId) {
         return visitedCredentialIssuers.stream().noneMatch(cri -> cri.getCriId().equals(criId));
+    }
+
+    private boolean userHasVisited(
+            List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuers, String criId) {
+        return visitedCredentialIssuers.stream().anyMatch(cri -> cri.getCriId().equals(criId));
     }
 
     private boolean shouldSendUserToApp(String userId) {
