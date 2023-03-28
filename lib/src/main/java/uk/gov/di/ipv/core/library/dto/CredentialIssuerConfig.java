@@ -25,7 +25,6 @@ public class CredentialIssuerConfig {
     private String jarEncryptionPublicJwk;
     private String audienceForClients;
     private URI ipvCoreRedirectUrl;
-
     private String[] allowedSharedAttr;
 
     public CredentialIssuerConfig() {}
