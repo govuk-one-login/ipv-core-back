@@ -41,6 +41,14 @@ public class SharedClaims {
         return Optional.ofNullable(address);
     }
 
+    public void setName(Set<Name> name) {
+        this.name = name;
+    }
+
+    public void setBirthDate(Set<BirthDate> birthDate) {
+        this.birthDate = birthDate;
+    }
+
     public void setAddress(Set<Address> address) {
         this.address = address;
     }

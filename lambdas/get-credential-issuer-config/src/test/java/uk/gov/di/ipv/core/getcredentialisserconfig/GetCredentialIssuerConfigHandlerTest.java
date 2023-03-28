@@ -42,7 +42,8 @@ class GetCredentialIssuerConfigHandlerTest {
                             EC_PUBLIC_JWK,
                             RSA_ENCRYPTION_PUBLIC_JWK,
                             "test-audience",
-                            URI.create("testRedirectUrl")),
+                            URI.create("testRedirectUrl"),
+                            new String[] {"name", "address"}),
                     new CredentialIssuerConfig(
                             "test2",
                             "Any",
@@ -54,7 +55,8 @@ class GetCredentialIssuerConfigHandlerTest {
                             EC_PUBLIC_JWK,
                             RSA_ENCRYPTION_PUBLIC_JWK,
                             "test-audience",
-                            URI.create("test2RedirectUrl")));
+                            URI.create("test2RedirectUrl"),
+                            new String[] {"name", "address"}));
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

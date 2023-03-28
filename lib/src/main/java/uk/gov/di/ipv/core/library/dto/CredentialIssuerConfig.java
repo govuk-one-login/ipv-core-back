@@ -26,6 +26,8 @@ public class CredentialIssuerConfig {
     private String audienceForClients;
     private URI ipvCoreRedirectUrl;
 
+    private String[] allowedSharedAttr;
+
     public CredentialIssuerConfig() {}
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
@@ -40,7 +42,8 @@ public class CredentialIssuerConfig {
             String vcVerifyingPublicJwk,
             String jarEncryptionPublicJwk,
             String audienceForClients,
-            URI ipvCoreRedirectUrl) {
+            URI ipvCoreRedirectUrl,
+            String[] allowedSharedAttr) {
         this.id = id;
         this.name = name;
         this.enabled = enabled;
@@ -52,6 +55,7 @@ public class CredentialIssuerConfig {
         this.jarEncryptionPublicJwk = jarEncryptionPublicJwk;
         this.audienceForClients = audienceForClients;
         this.ipvCoreRedirectUrl = ipvCoreRedirectUrl;
+        this.allowedSharedAttr = allowedSharedAttr;
     }
 
     public String getId() {
@@ -106,6 +110,10 @@ public class CredentialIssuerConfig {
 
     public URI getIpvCoreRedirectUrl() {
         return ipvCoreRedirectUrl;
+    }
+
+    public String[] getAllowedSharedAttr() {
+        return allowedSharedAttr;
     }
 
     @Override

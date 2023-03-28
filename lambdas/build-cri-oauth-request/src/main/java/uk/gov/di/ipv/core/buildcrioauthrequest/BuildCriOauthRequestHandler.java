@@ -51,11 +51,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.net.URISyntaxException;
 import java.text.ParseException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
@@ -214,7 +210,8 @@ public class BuildCriOauthRequestHandler
             String govukSigninJourneyId,
             List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException {
-        SharedClaimsResponse sharedClaimsResponse = getSharedAttributes(userId, currentVcStatuses);
+        SharedClaimsResponse sharedClaimsResponse =
+                getSharedAttributes(userId, currentVcStatuses, credentialIssuerConfig);
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
                         sharedClaimsResponse,
@@ -246,7 +243,9 @@ public class BuildCriOauthRequestHandler
 
     @Tracing
     private SharedClaimsResponse getSharedAttributes(
-            String userId, List<VcStatusDto> currentVcStatuses)
+            String userId,
+            List<VcStatusDto> currentVcStatuses,
+            CredentialIssuerConfig credentialIssuerConfig)
             throws HttpResponseExceptionWithErrorBody {
         String addressCriId =
                 credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID);
@@ -289,6 +288,7 @@ public class BuildCriOauthRequestHandler
                     } else if (hasAddressVc) {
                         credentialsSharedClaims.setAddress(null);
                     }
+                    chkForAllowedSharedClaimAttrs(credentialsSharedClaims, credentialIssuerConfig);
                     sharedClaimsSet.add(credentialsSharedClaims);
                 }
             } catch (JsonProcessingException e) {
@@ -302,6 +302,20 @@ public class BuildCriOauthRequestHandler
             }
         }
         return SharedClaimsResponse.from(sharedClaimsSet);
+    }
+
+    private void chkForAllowedSharedClaimAttrs(
+            SharedClaims credentialsSharedClaims, CredentialIssuerConfig credentialIssuerConfig) {
+        List allowedSharedAttr = Arrays.asList(credentialIssuerConfig.getAllowedSharedAttr());
+        if (!allowedSharedAttr.contains("name")) {
+            credentialsSharedClaims.setName(null);
+        }
+        if (!allowedSharedAttr.contains("birthDate")) {
+            credentialsSharedClaims.setBirthDate(null);
+        }
+        if (!allowedSharedAttr.contains("address")) {
+            credentialsSharedClaims.setAddress(null);
+        }
     }
 
     @Tracing
