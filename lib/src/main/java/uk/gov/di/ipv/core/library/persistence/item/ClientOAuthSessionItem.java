@@ -9,7 +9,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 @ExcludeFromGeneratedCoverageReport
 @Data
 public class ClientOAuthSessionItem implements DynamodbItem {
-    private String ipvClientOAuthSessionId;
+    private String clientOAuthSessionId;
     private String responseType;
     private String clientId;
     private String redirectUri;
@@ -19,7 +19,7 @@ public class ClientOAuthSessionItem implements DynamodbItem {
     private long ttl;
 
     @DynamoDbPartitionKey
-    public String getIpvClientOAuthSessionId() {
-        return ipvClientOAuthSessionId;
+    public String getClientOAuthSessionId() {
+        return clientOAuthSessionId;
     }
 }
