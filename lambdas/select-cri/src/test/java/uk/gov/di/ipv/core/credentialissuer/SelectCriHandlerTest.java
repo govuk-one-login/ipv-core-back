@@ -869,6 +869,6 @@ class SelectCriHandlerTest {
                 "test-jwk",
                 criIss,
                 new URI("http://example.com/redirect"),
-                new String[] {"name", "address"});
+                "name, address");
     }
 }

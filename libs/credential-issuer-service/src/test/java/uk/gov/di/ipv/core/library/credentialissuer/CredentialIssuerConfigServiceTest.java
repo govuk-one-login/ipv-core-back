@@ -54,6 +54,7 @@ class CredentialIssuerConfigServiceTest {
         response.put("stubCri/authorizeUrl", "stubAuthUrl");
         response.put("stubCri/id", "stubCri");
         response.put("stubCri/name", "stubIssuer");
+        response.put("stubCri/allowedSharedAttributes", "name, birthDate, address");
 
         when(ssmProvider.recursive()).thenReturn(ssmProvider2);
         when(ssmProvider2.getMultiple("/dev/core/credentialIssuers/")).thenReturn(response);
@@ -78,6 +79,8 @@ class CredentialIssuerConfigServiceTest {
         assertEquals("stubTokenUrl", stubIssuerConfig.get().getTokenUrl().toString());
         assertEquals("stubAuthUrl", stubIssuerConfig.get().getAuthorizeUrl().toString());
         assertEquals("stubCri", stubIssuerConfig.get().getId());
+        assertEquals(
+                "name, birthDate, address", stubIssuerConfig.get().getAllowedSharedAttributes());
     }
 
     @Test

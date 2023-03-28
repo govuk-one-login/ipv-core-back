@@ -306,7 +306,9 @@ public class BuildCriOauthRequestHandler
 
     private void chkForAllowedSharedClaimAttrs(
             SharedClaims credentialsSharedClaims, CredentialIssuerConfig credentialIssuerConfig) {
-        List allowedSharedAttr = Arrays.asList(credentialIssuerConfig.getAllowedSharedAttr());
+        List allowedSharedAttr =
+                Arrays.asList(
+                        credentialIssuerConfig.getAllowedSharedAttributes().split("\\s*,\\s*"));
         if (!allowedSharedAttr.contains("name")) {
             credentialsSharedClaims.setName(null);
         }

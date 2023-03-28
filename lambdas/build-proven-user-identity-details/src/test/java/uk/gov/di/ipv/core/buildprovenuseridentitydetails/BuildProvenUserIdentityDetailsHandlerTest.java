@@ -98,7 +98,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "https://review-p.integration.account.gov.uk",
                                 URI.create("https://example.com/callback"),
-                                new String[] {"name", "address"}));
+                                "name, address"));
 
         when(mockConfigService.getCredentialIssuer("address"))
                 .thenReturn(
@@ -114,7 +114,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "https://review-a.integration.account.gov.uk",
                                 URI.create("https://example.com/callback"),
-                                new String[] {"name", "address"}));
+                                "name, address"));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -168,7 +168,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "https://review-p.integration.account.gov.uk",
                                 URI.create("https://example.com/callback"),
-                                new String[] {"name", "address"}));
+                                "name, address"));
 
         when(mockConfigService.getCredentialIssuer("address"))
                 .thenReturn(
@@ -184,7 +184,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "https://review-a.integration.account.gov.uk",
                                 URI.create("https://example.com/callback"),
-                                new String[] {"name", "address"}));
+                                "name, address"));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -243,7 +243,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "https://review-p.integration.account.gov.uk",
                                 URI.create("https://example.com/callback"),
-                                new String[] {"name", "address"}));
+                                "name, address"));
 
         when(mockConfigService.getCredentialIssuer("address"))
                 .thenReturn(
@@ -259,7 +259,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "https://review-a.integration.account.gov.uk",
                                 URI.create("https://example.com/callback"),
-                                new String[] {"name", "address"}));
+                                "name, address"));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -295,7 +295,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "https://review-a.integration.account.gov.uk",
                                 URI.create("https://example.com/callback"),
-                                new String[] {"name", "address"}));
+                                "name, address"));
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
@@ -357,7 +357,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "https://review-p.integration.account.gov.uk",
                                 URI.create("https://example.com/callback"),
-                                new String[] {"name", "address"}));
+                                "name, address"));
 
         when(mockConfigService.getCredentialIssuer("address"))
                 .thenReturn(
@@ -373,7 +373,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "https://review-a.integration.account.gov.uk",
                                 URI.create("https://example.com/callback"),
-                                new String[] {"name", "address"}));
+                                "name, address"));
 
         when(mockConfigService.getCredentialIssuer("fraud"))
                 .thenReturn(
@@ -389,7 +389,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "https://review-f.integration.account.gov.uk",
                                 URI.create("https://example.com/callback"),
-                                new String[] {"name", "address"}));
+                                "name, address"));
 
         when(mockConfigService.getCredentialIssuer("kbv"))
                 .thenReturn(
@@ -405,7 +405,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "https://review-k.integration.account.gov.uk",
                                 URI.create("https://example.com/callback"),
-                                new String[] {"name", "address"}));
+                                "name, address"));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -462,7 +462,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "https://review-p.integration.account.gov.uk",
                                 URI.create("https://example.com/callback"),
-                                new String[] {"name", "address"}));
+                                "name, address"));
 
         when(mockConfigService.getCredentialIssuer("address"))
                 .thenReturn(
@@ -478,7 +478,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "https://review-a.integration.account.gov.uk",
                                 URI.create("https://example.com/callback"),
-                                new String[] {"name", "address"}));
+                                "name, address"));
 
         when(mockConfigService.getCredentialIssuer("fraud"))
                 .thenReturn(
@@ -494,7 +494,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "https://review-f.integration.account.gov.uk",
                                 URI.create("https://example.com/callback"),
-                                new String[] {"name", "address"}));
+                                "name, address"));
 
         when(mockConfigService.getCredentialIssuer("kbv"))
                 .thenReturn(
@@ -510,7 +510,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "https://review-k.integration.account.gov.uk",
                                 URI.create("https://example.com/callback"),
-                                new String[] {"name", "address"}));
+                                "name, address"));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 

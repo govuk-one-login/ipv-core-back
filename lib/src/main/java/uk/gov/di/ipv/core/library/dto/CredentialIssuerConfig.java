@@ -25,7 +25,7 @@ public class CredentialIssuerConfig {
     private String jarEncryptionPublicJwk;
     private String audienceForClients;
     private URI ipvCoreRedirectUrl;
-    private String[] allowedSharedAttr;
+    private String allowedSharedAttributes;
 
     public CredentialIssuerConfig() {}
 
@@ -42,7 +42,7 @@ public class CredentialIssuerConfig {
             String jarEncryptionPublicJwk,
             String audienceForClients,
             URI ipvCoreRedirectUrl,
-            String[] allowedSharedAttr) {
+            String allowedSharedAttributes) {
         this.id = id;
         this.name = name;
         this.enabled = enabled;
@@ -54,7 +54,7 @@ public class CredentialIssuerConfig {
         this.jarEncryptionPublicJwk = jarEncryptionPublicJwk;
         this.audienceForClients = audienceForClients;
         this.ipvCoreRedirectUrl = ipvCoreRedirectUrl;
-        this.allowedSharedAttr = allowedSharedAttr;
+        this.allowedSharedAttributes = allowedSharedAttributes;
     }
 
     public String getId() {
@@ -111,8 +111,8 @@ public class CredentialIssuerConfig {
         return ipvCoreRedirectUrl;
     }
 
-    public String[] getAllowedSharedAttr() {
-        return allowedSharedAttr;
+    public String getAllowedSharedAttributes() {
+        return allowedSharedAttributes;
     }
 
     @Override

@@ -87,7 +87,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "test-audience",
                         new URI("http://www.example.com/credential-issuers/callback/criId"),
-                        new String[] {"name", "address"});
+                        "name, address");
 
         clientSessionDetailsDto =
                 new ClientSessionDetailsDto(

@@ -130,7 +130,7 @@ class BuildCriOauthRequestHandlerTest {
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "http://www.example.com/audience",
                         URI.create("http://www.example.com/callback/criId"),
-                        new String[] {"name", "address", "birthDate"});
+                        "name,address,birthDate");
 
         addressCredentialIssuerConfig =
                 new CredentialIssuerConfig(
@@ -145,7 +145,7 @@ class BuildCriOauthRequestHandlerTest {
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         ADDRESS_ISSUER,
                         URI.create("http://www.example.com/callback/criId"),
-                        new String[] {"name", "address", "birthDate"});
+                        "name, address, birthDate");
 
         dcmawCredentialIssuerConfig =
                 new CredentialIssuerConfig(
@@ -160,7 +160,7 @@ class BuildCriOauthRequestHandlerTest {
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "http://www.example.com/audience",
                         URI.create("http://www.example.com/callback/criId"),
-                        new String[] {"name", "address", "birthDate"});
+                        "name, address, birthDate");
 
         kbvCredentialIssuerConfig =
                 new CredentialIssuerConfig(
@@ -175,7 +175,7 @@ class BuildCriOauthRequestHandlerTest {
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "http://www.example.com/audience",
                         URI.create("http://www.example.com/callback/criId"),
-                        new String[] {"name"});
+                        "name");
 
         clientSessionDetailsDto = new ClientSessionDetailsDto();
         clientSessionDetailsDto.setUserId(TEST_USER_ID);
