@@ -51,12 +51,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.net.URISyntaxException;
 import java.text.ParseException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
@@ -69,6 +64,10 @@ public class BuildCriOauthRequestHandler
     private static final String DCMAW_CRI_ID = "dcmaw";
     private static final String STUB_DCMAW_CRI_ID = "stubDcmaw";
     private static final JourneyResponse ERROR_JOURNEY = new JourneyResponse("/journey/error");
+    public static final String SHARED_CLAIM_ATTR_NAME = "name";
+    public static final String SHARED_CLAIM_ATTR_BIRTH_DATE = "birthDate";
+    public static final String SHARED_CLAIM_ATTR_ADDRESS = "address";
+    public static final String DEFAULT_ALLOWED_SHARED_ATTR = "name,birthDate,address";
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final CredentialIssuerConfigService credentialIssuerConfigService;
@@ -311,16 +310,18 @@ public class BuildCriOauthRequestHandler
 
     private void chkForAllowedSharedClaimAttrs(
             SharedClaims credentialsSharedClaims, CredentialIssuerConfig credentialIssuerConfig) {
+        String allowedSharedAttributes = credentialIssuerConfig.getAllowedSharedAttributes();
         List allowedSharedAttr =
-                Arrays.asList(
-                        credentialIssuerConfig.getAllowedSharedAttributes().split("\\s*,\\s*"));
-        if (!allowedSharedAttr.contains("name")) {
+                allowedSharedAttributes == null
+                        ? Arrays.asList(DEFAULT_ALLOWED_SHARED_ATTR.split("\\s*,\\s*"))
+                        : Arrays.asList(allowedSharedAttributes.split("\\s*,\\s*"));
+        if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_NAME)) {
             credentialsSharedClaims.setName(null);
         }
-        if (!allowedSharedAttr.contains("birthDate")) {
+        if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_BIRTH_DATE)) {
             credentialsSharedClaims.setBirthDate(null);
         }
-        if (!allowedSharedAttr.contains("address")) {
+        if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_ADDRESS)) {
             credentialsSharedClaims.setAddress(null);
         }
     }

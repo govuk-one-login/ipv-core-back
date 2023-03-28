@@ -160,7 +160,7 @@ class BuildCriOauthRequestHandlerTest {
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "http://www.example.com/audience",
                         URI.create("http://www.example.com/callback/criId"),
-                        "name, address, birthDate");
+                        null);
 
         kbvCredentialIssuerConfig =
                 new CredentialIssuerConfig(
