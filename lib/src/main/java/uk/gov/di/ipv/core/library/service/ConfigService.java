@@ -142,26 +142,15 @@ public class ConfigService {
         return ssmProvider.get(getEnvironmentVariable(SIGNING_KEY_ID_PARAM));
     }
 
-    public CredentialIssuerConfig getCredentialIssuer(String credentialIssuerId) {
-        Map<String, String> result =
-                getSsmParameters(
-                        String.format(
-                                "%s/%s",
-                                getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
-                                credentialIssuerId));
-        return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
-    }
-
     public CredentialIssuerConfig getCredentialIssuerActiveConnectionConfig(
             String credentialIssuerId) {
-        CredentialIssuerConfig credentialIssuer = getCredentialIssuer(credentialIssuerId);
         Map<String, String> result =
                 getSsmParameters(
                         String.format(
                                 "%s/%s/connections/%s",
                                 getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
                                 credentialIssuerId,
-                                credentialIssuer.getActiveConnection()));
+                                getActiveConnection(credentialIssuerId)));
 
         CredentialIssuerConfig credentialIssuerConfig =
                 new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
@@ -200,6 +189,36 @@ public class ConfigService {
                     criId);
             return null;
         }
+    }
+
+    public String getActiveConnection(String credentialIssuerId) {
+        return getSsmParameter(
+                String.format(
+                        "%s/%s/activeConnection",
+                        getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
+                        credentialIssuerId));
+    }
+
+    public boolean isUnavailable(String credentialIssuerId) {
+        String unavailable =
+                getSsmParameter(
+                        String.format(
+                                "%s/%s/unavailable",
+                                getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
+                                credentialIssuerId));
+
+        return Boolean.parseBoolean(unavailable);
+    }
+
+    public boolean isEnabled(String credentialIssuerId) {
+        String enabled =
+                getSsmParameter(
+                        String.format(
+                                "%s/%s/enabled",
+                                getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
+                                credentialIssuerId));
+
+        return Boolean.parseBoolean(enabled);
     }
 
     public Map<String, ContraIndicatorScore> getContraIndicatorScoresMap() {

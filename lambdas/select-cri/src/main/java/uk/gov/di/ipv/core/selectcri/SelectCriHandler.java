@@ -276,10 +276,7 @@ public class SelectCriHandler
                                     visitedCredentialIssuers, currentVcStatuses, userId));
                 }
 
-                CredentialIssuerConfig ukDrivingLicenseCriConfig =
-                        configService.getCredentialIssuerActiveConnectionConfig(
-                                drivingLicenceCriId);
-                if (criId.equals(passportCriId) && ukDrivingLicenseCriConfig.getEnabled()) {
+                if (criId.equals(passportCriId) && configService.isEnabled(drivingLicenceCriId)) {
                     return getMultipleDocCheckPage();
                 }
 
