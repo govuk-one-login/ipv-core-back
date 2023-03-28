@@ -106,7 +106,8 @@ class RetrieveCriCredentialHandlerTest {
                             "test-jwk",
                             "test-encryption-jwk",
                             "test-audience",
-                            new URI("http://example.com/redirect"));
+                            new URI("http://example.com/redirect"),
+                            "name, address");
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -126,7 +127,8 @@ class RetrieveCriCredentialHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "test-audience",
-                        new URI("https://www.example.com/credential-issuers/callback/criId"));
+                        new URI("https://www.example.com/credential-issuers/callback/criId"),
+                        "name, address");
 
         testClientSessionDetailsDto =
                 new ClientSessionDetailsDto(

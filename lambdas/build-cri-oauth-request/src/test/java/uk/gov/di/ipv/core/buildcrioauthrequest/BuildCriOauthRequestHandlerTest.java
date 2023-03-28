@@ -51,9 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
@@ -75,6 +73,7 @@ class BuildCriOauthRequestHandlerTest {
     private static final String CRI_ID = "PassportIssuer";
     private static final String DCMAW_CRI_ID = "dcmaw";
     private static final String ADDRESS_CRI_ID = "address";
+    private static final String KBV_CRI_ID = "kbv";
     private static final String CRI_NAME = "any";
     private static final String CRI_TOKEN_URL = "http://www.example.com";
     private static final String CRI_CREDENTIAL_URL = "http://www.example.com/credential";
@@ -101,6 +100,7 @@ class BuildCriOauthRequestHandlerTest {
     private CredentialIssuerConfig credentialIssuerConfig;
     private CredentialIssuerConfig addressCredentialIssuerConfig;
     private CredentialIssuerConfig dcmawCredentialIssuerConfig;
+    private CredentialIssuerConfig kbvCredentialIssuerConfig;
     private BuildCriOauthRequestHandler underTest;
     private ClientSessionDetailsDto clientSessionDetailsDto;
 
@@ -129,7 +129,8 @@ class BuildCriOauthRequestHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "http://www.example.com/audience",
-                        URI.create("http://www.example.com/callback/criId"));
+                        URI.create("http://www.example.com/callback/criId"),
+                        "name,address,birthDate");
 
         addressCredentialIssuerConfig =
                 new CredentialIssuerConfig(
@@ -143,7 +144,8 @@ class BuildCriOauthRequestHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         ADDRESS_ISSUER,
-                        URI.create("http://www.example.com/callback/criId"));
+                        URI.create("http://www.example.com/callback/criId"),
+                        "name, address, birthDate");
 
         dcmawCredentialIssuerConfig =
                 new CredentialIssuerConfig(
@@ -157,7 +159,23 @@ class BuildCriOauthRequestHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "http://www.example.com/audience",
-                        URI.create("http://www.example.com/callback/criId"));
+                        URI.create("http://www.example.com/callback/criId"),
+                        null);
+
+        kbvCredentialIssuerConfig =
+                new CredentialIssuerConfig(
+                        KBV_CRI_ID,
+                        CRI_NAME,
+                        true,
+                        new URI(CRI_TOKEN_URL),
+                        new URI(CRI_CREDENTIAL_URL),
+                        new URI(CRI_AUTHORIZE_URL),
+                        IPV_CLIENT_ID,
+                        "{}",
+                        RSA_ENCRYPTION_PUBLIC_JWK,
+                        "http://www.example.com/audience",
+                        URI.create("http://www.example.com/callback/criId"),
+                        "name");
 
         clientSessionDetailsDto = new ClientSessionDetailsDto();
         clientSessionDetailsDto.setUserId(TEST_USER_ID);
@@ -647,6 +665,59 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(1, sharedClaims.get("name").size());
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(2, sharedClaims.get("address").size());
+    }
+
+    @Test
+    void shouldOnlyAllowCRIConfiguredSharedClaimAttr() throws Exception {
+        when(configService.getCredentialIssuer(CRI_ID)).thenReturn(kbvCredentialIssuerConfig);
+        when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
+        when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
+                .thenReturn(ADDRESS_CRI_ID);
+        when(configService.getCredentialIssuer(ADDRESS_CRI_ID))
+                .thenReturn(addressCredentialIssuerConfig);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+        when(mockIpvSessionItem.getCurrentVcStatuses())
+                .thenReturn(
+                        List.of(
+                                new VcStatusDto(IPV_ISSUER, true),
+                                new VcStatusDto(ADDRESS_ISSUER, true)));
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER),
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_3), ADDRESS_ISSUER)));
+
+        APIGatewayProxyRequestEvent input = createRequestEvent();
+
+        input.setPathParameters(Map.of("criId", CRI_ID));
+        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", TEST_IP_ADDRESS));
+
+        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
+
+        URIBuilder redirectUri = new URIBuilder(responseBody.get("redirectUrl"));
+        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+
+        Optional<NameValuePair> request =
+                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
+
+        assertTrue(request.isPresent());
+        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+
+        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
+        JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
+
+        JsonNode sharedClaims = claimsSet.get(TEST_SHARED_CLAIMS);
+        assertEquals(3, sharedClaims.get("name").size());
+        assertEquals(0, sharedClaims.get("birthDate").size());
+        assertEquals(0, sharedClaims.get("address").size());
     }
 
     private Map<String, Map<String, String>> getResponseBodyAsMap(

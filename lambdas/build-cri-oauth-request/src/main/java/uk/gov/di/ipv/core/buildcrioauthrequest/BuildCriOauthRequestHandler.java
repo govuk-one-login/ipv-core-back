@@ -51,11 +51,7 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.net.URISyntaxException;
 import java.text.ParseException;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
@@ -68,6 +64,11 @@ public class BuildCriOauthRequestHandler
     private static final String DCMAW_CRI_ID = "dcmaw";
     private static final String STUB_DCMAW_CRI_ID = "stubDcmaw";
     private static final JourneyResponse ERROR_JOURNEY = new JourneyResponse("/journey/error");
+    public static final String SHARED_CLAIM_ATTR_NAME = "name";
+    public static final String SHARED_CLAIM_ATTR_BIRTH_DATE = "birthDate";
+    public static final String SHARED_CLAIM_ATTR_ADDRESS = "address";
+    public static final String DEFAULT_ALLOWED_SHARED_ATTR = "name,birthDate,address";
+    public static final String REGEX_COMMA_SEPARATION = "\\s*,\\s*";
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final CredentialIssuerConfigService credentialIssuerConfigService;
@@ -214,7 +215,8 @@ public class BuildCriOauthRequestHandler
             String govukSigninJourneyId,
             List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException {
-        SharedClaimsResponse sharedClaimsResponse = getSharedAttributes(userId, currentVcStatuses);
+        SharedClaimsResponse sharedClaimsResponse =
+                getSharedAttributes(userId, currentVcStatuses, credentialIssuerConfig);
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
                         sharedClaimsResponse,
@@ -246,7 +248,9 @@ public class BuildCriOauthRequestHandler
 
     @Tracing
     private SharedClaimsResponse getSharedAttributes(
-            String userId, List<VcStatusDto> currentVcStatuses)
+            String userId,
+            List<VcStatusDto> currentVcStatuses,
+            CredentialIssuerConfig credentialIssuerConfig)
             throws HttpResponseExceptionWithErrorBody {
         String addressCriId =
                 credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID);
@@ -256,6 +260,8 @@ public class BuildCriOauthRequestHandler
         List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
         Set<SharedClaims> sharedClaimsSet = new HashSet<>();
+        List<String> criAllowedSharedClaimAttrs =
+                getAllowedSharedClaimAttrs(credentialIssuerConfig);
         boolean hasAddressVc = false;
         for (String credential : credentials) {
             try {
@@ -289,6 +295,8 @@ public class BuildCriOauthRequestHandler
                     } else if (hasAddressVc) {
                         credentialsSharedClaims.setAddress(null);
                     }
+                    verifyForAllowedSharedClaimAttrs(
+                            credentialsSharedClaims, criAllowedSharedClaimAttrs);
                     sharedClaimsSet.add(credentialsSharedClaims);
                 }
             } catch (JsonProcessingException e) {
@@ -302,6 +310,27 @@ public class BuildCriOauthRequestHandler
             }
         }
         return SharedClaimsResponse.from(sharedClaimsSet);
+    }
+
+    private void verifyForAllowedSharedClaimAttrs(
+            SharedClaims credentialsSharedClaims, List<String> allowedSharedAttr) {
+        if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_NAME)) {
+            credentialsSharedClaims.setName(null);
+        }
+        if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_BIRTH_DATE)) {
+            credentialsSharedClaims.setBirthDate(null);
+        }
+        if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_ADDRESS)) {
+            credentialsSharedClaims.setAddress(null);
+        }
+    }
+
+    private static List<String> getAllowedSharedClaimAttrs(
+            CredentialIssuerConfig credentialIssuerConfig) {
+        String allowedSharedAttributes = credentialIssuerConfig.getAllowedSharedAttributes();
+        return allowedSharedAttributes == null
+                ? Arrays.asList(DEFAULT_ALLOWED_SHARED_ATTR.split(REGEX_COMMA_SEPARATION))
+                : Arrays.asList(allowedSharedAttributes.split(REGEX_COMMA_SEPARATION));
     }
 
     @Tracing

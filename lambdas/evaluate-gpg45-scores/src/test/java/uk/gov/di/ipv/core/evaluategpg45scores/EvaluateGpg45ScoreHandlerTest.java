@@ -104,7 +104,8 @@ class EvaluateGpg45ScoreHandlerTest {
                             "test-jwk",
                             "test-encryption-jwk",
                             "test-audience",
-                            new URI("http://example.com/redirect"));
+                            new URI("http://example.com/redirect"),
+                            "name, address");
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
