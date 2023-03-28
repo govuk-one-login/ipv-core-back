@@ -68,6 +68,7 @@ public class BuildCriOauthRequestHandler
     public static final String SHARED_CLAIM_ATTR_BIRTH_DATE = "birthDate";
     public static final String SHARED_CLAIM_ATTR_ADDRESS = "address";
     public static final String DEFAULT_ALLOWED_SHARED_ATTR = "name,birthDate,address";
+    public static final String REGEX_COMMA_SEPARATION = "\\s*,\\s*";
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final CredentialIssuerConfigService credentialIssuerConfigService;
@@ -259,6 +260,8 @@ public class BuildCriOauthRequestHandler
         List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
         Set<SharedClaims> sharedClaimsSet = new HashSet<>();
+        List<String> criAllowedSharedClaimAttrs =
+                getAllowedSharedClaimAttrs(credentialIssuerConfig);
         boolean hasAddressVc = false;
         for (String credential : credentials) {
             try {
@@ -292,7 +295,8 @@ public class BuildCriOauthRequestHandler
                     } else if (hasAddressVc) {
                         credentialsSharedClaims.setAddress(null);
                     }
-                    chkForAllowedSharedClaimAttrs(credentialsSharedClaims, credentialIssuerConfig);
+                    verifyForAllowedSharedClaimAttrs(
+                            credentialsSharedClaims, criAllowedSharedClaimAttrs);
                     sharedClaimsSet.add(credentialsSharedClaims);
                 }
             } catch (JsonProcessingException e) {
@@ -308,13 +312,8 @@ public class BuildCriOauthRequestHandler
         return SharedClaimsResponse.from(sharedClaimsSet);
     }
 
-    private void chkForAllowedSharedClaimAttrs(
-            SharedClaims credentialsSharedClaims, CredentialIssuerConfig credentialIssuerConfig) {
-        String allowedSharedAttributes = credentialIssuerConfig.getAllowedSharedAttributes();
-        List allowedSharedAttr =
-                allowedSharedAttributes == null
-                        ? Arrays.asList(DEFAULT_ALLOWED_SHARED_ATTR.split("\\s*,\\s*"))
-                        : Arrays.asList(allowedSharedAttributes.split("\\s*,\\s*"));
+    private void verifyForAllowedSharedClaimAttrs(
+            SharedClaims credentialsSharedClaims, List<String> allowedSharedAttr) {
         if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_NAME)) {
             credentialsSharedClaims.setName(null);
         }
@@ -324,6 +323,14 @@ public class BuildCriOauthRequestHandler
         if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_ADDRESS)) {
             credentialsSharedClaims.setAddress(null);
         }
+    }
+
+    private static List<String> getAllowedSharedClaimAttrs(
+            CredentialIssuerConfig credentialIssuerConfig) {
+        String allowedSharedAttributes = credentialIssuerConfig.getAllowedSharedAttributes();
+        return allowedSharedAttributes == null
+                ? Arrays.asList(DEFAULT_ALLOWED_SHARED_ATTR.split(REGEX_COMMA_SEPARATION))
+                : Arrays.asList(allowedSharedAttributes.split(REGEX_COMMA_SEPARATION));
     }
 
     @Tracing
