@@ -210,6 +210,14 @@ public class ConfigService {
         return Boolean.parseBoolean(unavailable);
     }
 
+    public String getAllowedSharedAttributes(String credentialIssuerId) {
+        return getSsmParameter(
+                String.format(
+                        "%s/%s/allowedSharedAttributes",
+                        getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
+                        credentialIssuerId));
+    }
+
     public boolean isEnabled(String credentialIssuerId) {
         String enabled =
                 getSsmParameter(

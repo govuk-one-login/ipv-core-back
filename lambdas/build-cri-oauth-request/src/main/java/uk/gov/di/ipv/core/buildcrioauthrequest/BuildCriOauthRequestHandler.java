@@ -124,8 +124,8 @@ public class BuildCriOauthRequestHandler
                 return ApiGatewayResponseGenerator.proxyJsonResponse(400, errorResponse.get());
             }
 
-            CredentialIssuerConfig credentialIssuerConfig =
-                    getCredentialIssuerConfig(pathParameters.get(CRI_ID));
+            String criId = pathParameters.get(CRI_ID);
+            CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(criId);
 
             if (credentialIssuerConfig == null) {
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
@@ -150,7 +150,8 @@ public class BuildCriOauthRequestHandler
                             userId,
                             oauthState,
                             govukSigninJourneyId,
-                            currentVcStatuses);
+                            currentVcStatuses,
+                            criId);
 
             CriResponse criResponse = getCriResponse(credentialIssuerConfig, jweObject);
 
@@ -213,10 +214,11 @@ public class BuildCriOauthRequestHandler
             String userId,
             String oauthState,
             String govukSigninJourneyId,
-            List<VcStatusDto> currentVcStatuses)
+            List<VcStatusDto> currentVcStatuses,
+            String criId)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException {
         SharedClaimsResponse sharedClaimsResponse =
-                getSharedAttributes(userId, currentVcStatuses, credentialIssuerConfig);
+                getSharedAttributes(userId, currentVcStatuses, criId);
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
                         sharedClaimsResponse,
@@ -248,9 +250,7 @@ public class BuildCriOauthRequestHandler
 
     @Tracing
     private SharedClaimsResponse getSharedAttributes(
-            String userId,
-            List<VcStatusDto> currentVcStatuses,
-            CredentialIssuerConfig credentialIssuerConfig)
+            String userId, List<VcStatusDto> currentVcStatuses, String criId)
             throws HttpResponseExceptionWithErrorBody {
         String addressCriId =
                 credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID);
@@ -261,8 +261,7 @@ public class BuildCriOauthRequestHandler
         List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
         Set<SharedClaims> sharedClaimsSet = new HashSet<>();
-        List<String> criAllowedSharedClaimAttrs =
-                getAllowedSharedClaimAttrs(credentialIssuerConfig);
+        List<String> criAllowedSharedClaimAttrs = getAllowedSharedClaimAttrs(criId);
         boolean hasAddressVc = false;
         for (String credential : credentials) {
             try {
@@ -326,9 +325,9 @@ public class BuildCriOauthRequestHandler
         }
     }
 
-    private static List<String> getAllowedSharedClaimAttrs(
-            CredentialIssuerConfig credentialIssuerConfig) {
-        String allowedSharedAttributes = credentialIssuerConfig.getAllowedSharedAttributes();
+    private List<String> getAllowedSharedClaimAttrs(String criId) {
+        String allowedSharedAttributes =
+                credentialIssuerConfigService.getAllowedSharedAttributes(criId);
         return allowedSharedAttributes == null
                 ? Arrays.asList(DEFAULT_ALLOWED_SHARED_ATTR.split(REGEX_COMMA_SEPARATION))
                 : Arrays.asList(allowedSharedAttributes.split(REGEX_COMMA_SEPARATION));

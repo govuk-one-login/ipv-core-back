@@ -79,8 +79,6 @@ class CredentialIssuerConfigServiceTest {
         assertEquals("stubTokenUrl", stubIssuerConfig.get().getTokenUrl().toString());
         assertEquals("stubAuthUrl", stubIssuerConfig.get().getAuthorizeUrl().toString());
         assertEquals("stubCri", stubIssuerConfig.get().getId());
-        assertEquals(
-                "name, birthDate, address", stubIssuerConfig.get().getAllowedSharedAttributes());
     }
 
     @Test

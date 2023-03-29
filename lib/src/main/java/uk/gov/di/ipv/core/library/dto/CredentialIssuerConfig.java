@@ -101,10 +101,6 @@ public class CredentialIssuerConfig {
         return ipvCoreRedirectUrl;
     }
 
-    public String getAllowedSharedAttributes() {
-        return allowedSharedAttributes;
-    }
-
     @Override
     public int hashCode() {
         return Objects.hash(id);
