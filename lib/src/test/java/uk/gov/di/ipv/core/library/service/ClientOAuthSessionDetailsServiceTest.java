@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 
 @ExtendWith(MockitoExtension.class)
-public class ClientOAuthSessionDetailsServiceTest {
+class ClientOAuthSessionDetailsServiceTest {
     @Mock private DataStore<ClientOAuthSessionItem> mockDataStore;
 
     @Mock private ConfigService mockConfigService;
