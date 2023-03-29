@@ -34,11 +34,9 @@ import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.service.*;
 
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -64,6 +62,7 @@ class InitialiseIpvSessionHandlerTest {
     @Mock private Context mockContext;
 
     @Mock private IpvSessionService mockIpvSessionService;
+    @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private ConfigService mockConfigService;
     @Mock private KmsRsaDecrypter mockKmsRsaDecrypter;
     @Mock private JarValidator mockJarValidator;
@@ -76,6 +75,7 @@ class InitialiseIpvSessionHandlerTest {
     private static SignedJWT signedJWT;
     private static JWEObject signedEncryptedJwt;
     private static IpvSessionItem ipvSessionItem;
+    private static ClientOAuthSessionItem clientOAuthSessionItem;
 
     @BeforeAll
     static void setUp() throws Exception {
@@ -114,12 +114,23 @@ class InitialiseIpvSessionHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+
+        clientOAuthSessionItem = new ClientOAuthSessionItem();
+        clientOAuthSessionItem.setClientOAuthSessionId(SecureTokenHelper.generate());
+        clientOAuthSessionItem.setResponseType("test-type");
+        clientOAuthSessionItem.setClientId("test-client");
+        clientOAuthSessionItem.setRedirectUri("http://example.com");
+        clientOAuthSessionItem.setState("test-state");
+        clientOAuthSessionItem.setUserId("test-user-id");
+        clientOAuthSessionItem.setGovukSigninJourneyId("test-journey-id");
     }
 
     @Test
     void shouldReturnIpvSessionIdWhenProvidedValidRequest()
             throws JsonProcessingException, JarValidationException, ParseException, SqsException {
         when(mockIpvSessionService.generateIpvSession(any(), any())).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any()))
+                .thenReturn(clientOAuthSessionItem);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(signedJWT.getJWTClaimsSet());
 
@@ -244,6 +255,9 @@ class InitialiseIpvSessionHandlerTest {
     void shouldReturnIpvSessionIdWhenRecoverableErrorFound()
             throws JsonProcessingException, JarValidationException, ParseException {
         when(mockIpvSessionService.generateIpvSession(any(), any())).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.generateErrorClientSessionDetails(
+                        any(), any(), any(), any()))
+                .thenReturn(clientOAuthSessionItem);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenThrow(
                         new RecoverableJarValidationException(

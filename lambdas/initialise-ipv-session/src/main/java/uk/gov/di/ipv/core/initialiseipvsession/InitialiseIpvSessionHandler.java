@@ -33,7 +33,6 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
-import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
@@ -132,8 +131,8 @@ public class InitialiseIpvSessionHandler
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(clientSessionDetailsDto, null);
 
-                    clientOAuthSessionService.generateClientSessionDetails(
-                            claimsSet, sessionParams.get(CLIENT_ID_PARAM_KEY));
+            clientOAuthSessionService.generateClientSessionDetails(
+                    claimsSet, sessionParams.get(CLIENT_ID_PARAM_KEY));
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(
