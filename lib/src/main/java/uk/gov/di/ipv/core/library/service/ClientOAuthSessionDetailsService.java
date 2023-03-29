@@ -21,14 +21,16 @@ public class ClientOAuthSessionDetailsService {
         boolean isRunningLocally = this.configService.isRunningLocally();
         dataStore =
                 new DataStore<>(
-                        this.configService.getEnvironmentVariable(IPV_CLIENT_OAUTH_SESSIONS_TABLE_NAME),
+                        this.configService.getEnvironmentVariable(
+                                IPV_CLIENT_OAUTH_SESSIONS_TABLE_NAME),
                         ClientOAuthSessionItem.class,
                         DataStore.getClient(isRunningLocally),
                         isRunningLocally,
                         configService);
     }
 
-    public ClientOAuthSessionDetailsService(DataStore<ClientOAuthSessionItem> dataStore, ConfigService configService) {
+    public ClientOAuthSessionDetailsService(
+            DataStore<ClientOAuthSessionItem> dataStore, ConfigService configService) {
         this.dataStore = dataStore;
         this.configService = configService;
     }
@@ -55,8 +57,7 @@ public class ClientOAuthSessionDetailsService {
     }
 
     public ClientOAuthSessionItem generateErrorClientSessionDetails(
-            String redirectUri, String clientId, String state, String govukSigninJourneyId
-    ) {
+            String redirectUri, String clientId, String state, String govukSigninJourneyId) {
         ClientOAuthSessionItem clientOAuthSessionErrorItem = new ClientOAuthSessionItem();
         clientOAuthSessionErrorItem.setClientOAuthSessionId(SecureTokenHelper.generate());
         clientOAuthSessionErrorItem.setResponseType(null);

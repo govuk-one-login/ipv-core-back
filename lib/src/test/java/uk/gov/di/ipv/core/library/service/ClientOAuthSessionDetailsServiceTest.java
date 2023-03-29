@@ -23,8 +23,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SE
 
 @ExtendWith(MockitoExtension.class)
 public class ClientOAuthSessionDetailsServiceTest {
-    @Mock
-    private DataStore<ClientOAuthSessionItem> mockDataStore;
+    @Mock private DataStore<ClientOAuthSessionItem> mockDataStore;
 
     @Mock private ConfigService mockConfigService;
 
@@ -45,61 +44,69 @@ public class ClientOAuthSessionDetailsServiceTest {
 
         when(mockDataStore.getItem(clientOAuthSessionId)).thenReturn(clientOAuthSessionItem);
 
-        ClientOAuthSessionItem result = clientOAuthSessionDetailsService.getClientOAuthSession(clientOAuthSessionId);
+        ClientOAuthSessionItem result =
+                clientOAuthSessionDetailsService.getClientOAuthSession(clientOAuthSessionId);
 
-        ArgumentCaptor<String> clientOAuthSessionIDArgumentCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> clientOAuthSessionIDArgumentCaptor =
+                ArgumentCaptor.forClass(String.class);
         verify(mockDataStore).getItem(clientOAuthSessionIDArgumentCaptor.capture());
         assertEquals(clientOAuthSessionId, clientOAuthSessionIDArgumentCaptor.getValue());
-        assertEquals(clientOAuthSessionItem.getClientOAuthSessionId(), result.getClientOAuthSessionId());
+        assertEquals(
+                clientOAuthSessionItem.getClientOAuthSessionId(), result.getClientOAuthSessionId());
         assertEquals(clientOAuthSessionItem.getResponseType(), result.getResponseType());
         assertEquals(clientOAuthSessionItem.getClientId(), result.getClientId());
         assertEquals(clientOAuthSessionItem.getRedirectUri(), result.getRedirectUri());
         assertEquals(clientOAuthSessionItem.getState(), result.getState());
         assertEquals(clientOAuthSessionItem.getUserId(), result.getUserId());
-        assertEquals(clientOAuthSessionItem.getGovukSigninJourneyId(), result.getGovukSigninJourneyId());
+        assertEquals(
+                clientOAuthSessionItem.getGovukSigninJourneyId(), result.getGovukSigninJourneyId());
     }
 
     @Test
     void shouldCreateClientOAuthSessionItem() throws ParseException {
-        JWTClaimsSet testClaimSet = new JWTClaimsSet.Builder()
-                .claim("response_type", "test-type")
-                .claim("redirect_uri", "http://example.com")
-                .claim("state", "test-state")
-                .subject("test-user-id")
-                .build();
+        JWTClaimsSet testClaimSet =
+                new JWTClaimsSet.Builder()
+                        .claim("response_type", "test-type")
+                        .claim("redirect_uri", "http://example.com")
+                        .claim("state", "test-state")
+                        .subject("test-user-id")
+                        .build();
         ClientOAuthSessionItem clientOAuthSessionItem =
-                clientOAuthSessionDetailsService.generateClientSessionDetails(testClaimSet, "test-client");
+                clientOAuthSessionDetailsService.generateClientSessionDetails(
+                        testClaimSet, "test-client");
 
         ArgumentCaptor<ClientOAuthSessionItem> clientOAuthSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(ClientOAuthSessionItem.class);
         verify(mockDataStore)
                 .create(clientOAuthSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
-        assertEquals(clientOAuthSessionItem.getClientOAuthSessionId(),
-                clientOAuthSessionItemArgumentCaptor.getValue().getClientOAuthSessionId()
-                );
         assertEquals(
-                clientOAuthSessionItem.getClientId(), clientOAuthSessionItemArgumentCaptor.getValue().getClientId());
+                clientOAuthSessionItem.getClientOAuthSessionId(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getClientOAuthSessionId());
         assertEquals(
-                clientOAuthSessionItem.getResponseType(), clientOAuthSessionItemArgumentCaptor.getValue().getResponseType());
+                clientOAuthSessionItem.getClientId(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getClientId());
         assertEquals(
-                clientOAuthSessionItem.getRedirectUri(), clientOAuthSessionItemArgumentCaptor.getValue().getRedirectUri());
+                clientOAuthSessionItem.getResponseType(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getResponseType());
         assertEquals(
-                clientOAuthSessionItem.getState(), clientOAuthSessionItemArgumentCaptor.getValue().getState());
+                clientOAuthSessionItem.getRedirectUri(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getRedirectUri());
         assertEquals(
-                clientOAuthSessionItem.getUserId(), clientOAuthSessionItemArgumentCaptor.getValue().getUserId());
+                clientOAuthSessionItem.getState(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getState());
         assertEquals(
-                clientOAuthSessionItem.getGovukSigninJourneyId(), clientOAuthSessionItemArgumentCaptor.getValue().getGovukSigninJourneyId());
+                clientOAuthSessionItem.getUserId(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getUserId());
+        assertEquals(
+                clientOAuthSessionItem.getGovukSigninJourneyId(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getGovukSigninJourneyId());
     }
 
     @Test
     void shouldCreateSessionItemWithErrorObject() {
         ClientOAuthSessionItem clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.generateErrorClientSessionDetails(
-                        "http://example.com",
-                        "test-client",
-                        "test-state",
-                        "test-journey-id"
-                );
+                        "http://example.com", "test-client", "test-state", "test-journey-id");
 
         ArgumentCaptor<ClientOAuthSessionItem> clientOAuthSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(ClientOAuthSessionItem.class);
@@ -108,17 +115,15 @@ public class ClientOAuthSessionDetailsServiceTest {
         assertNotNull(clientOAuthSessionItemArgumentCaptor.getValue().getClientOAuthSessionId());
         assertEquals(
                 clientOAuthSessionItem.getClientOAuthSessionId(),
-                clientOAuthSessionItemArgumentCaptor.getValue().getClientOAuthSessionId()
-                );
+                clientOAuthSessionItemArgumentCaptor.getValue().getClientOAuthSessionId());
         assertEquals(
-                clientOAuthSessionItem.getClientId(), clientOAuthSessionItemArgumentCaptor.getValue().getClientId());
-        assertNull(
-                clientOAuthSessionItem.getResponseType());
+                clientOAuthSessionItem.getClientId(),
+                clientOAuthSessionItemArgumentCaptor.getValue().getClientId());
+        assertNull(clientOAuthSessionItem.getResponseType());
         assertEquals(
                 clientOAuthSessionItem.getRedirectUri(),
                 clientOAuthSessionItemArgumentCaptor.getValue().getRedirectUri());
-        assertNull(
-                clientOAuthSessionItem.getUserId());
+        assertNull(clientOAuthSessionItem.getUserId());
         assertEquals(
                 clientOAuthSessionItem.getState(),
                 clientOAuthSessionItemArgumentCaptor.getValue().getState());

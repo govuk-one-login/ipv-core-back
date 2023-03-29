@@ -132,9 +132,8 @@ public class InitialiseIpvSessionHandler
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(clientSessionDetailsDto, null);
 
-            ClientOAuthSessionItem clientOAuthSessionItem = clientOAuthSessionService.generateClientSessionDetails(
-                    claimsSet,
-                    sessionParams.get(CLIENT_ID_PARAM_KEY));
+                    clientOAuthSessionService.generateClientSessionDetails(
+                            claimsSet, sessionParams.get(CLIENT_ID_PARAM_KEY));
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(
@@ -172,10 +171,7 @@ public class InitialiseIpvSessionHandler
                     ipvSessionService.generateIpvSession(
                             clientSessionDetailsDto, e.getErrorObject());
             clientOAuthSessionService.generateErrorClientSessionDetails(
-                    e.getRedirectUri(),
-                    e.getClientId(),
-                    e.getState(),
-                    e.getGovukSigninJourneyId());
+                    e.getRedirectUri(), e.getClientId(), e.getState(), e.getGovukSigninJourneyId());
 
             Map<String, String> response =
                     Map.of(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());
