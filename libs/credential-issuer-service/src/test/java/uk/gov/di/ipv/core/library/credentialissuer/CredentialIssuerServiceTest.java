@@ -456,7 +456,6 @@ class CredentialIssuerServiceTest {
         return new CredentialIssuerConfig(
                 "StubPassport",
                 "any",
-                true,
                 URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/token"),
                 URI.create(
                         "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/credentials/issue"),
@@ -468,9 +467,7 @@ class CredentialIssuerServiceTest {
                 URI.create(
                         "http://localhost:"
                                 + wmRuntimeInfo.getHttpPort()
-                                + "/credential-issuer/callback?id=StubPassport"),
-                true,
-                "main");
+                                + "/credential-issuer/callback?id=StubPassport"));
     }
 
     private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {

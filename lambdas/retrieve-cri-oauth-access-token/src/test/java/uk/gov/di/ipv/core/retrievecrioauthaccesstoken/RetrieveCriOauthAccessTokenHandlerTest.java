@@ -78,7 +78,6 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                 new CredentialIssuerConfig(
                         CREDENTIAL_ISSUER_ID,
                         "any",
-                        true,
                         new URI("http://www.example.com"),
                         new URI("http://www.example.com/credential"),
                         new URI("http://www.example.com/authorize"),
@@ -86,9 +85,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "test-audience",
-                        new URI("http://www.example.com/credential-issuers/callback/criId"),
-                        true,
-                        "main");
+                        new URI("http://www.example.com/credential-issuers/callback/criId"));
 
         clientSessionDetailsDto =
                 new ClientSessionDetailsDto(

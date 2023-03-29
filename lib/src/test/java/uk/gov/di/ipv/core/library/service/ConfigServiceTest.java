@@ -136,7 +136,6 @@ class ConfigServiceTest {
                 new CredentialIssuerConfig(
                         "passportCri",
                         "",
-                        true,
                         URI.create(TEST_TOKEN_URL),
                         URI.create(TEST_CREDENTIAL_URL),
                         URI.create(TEST_CREDENTIAL_URL),
@@ -144,9 +143,7 @@ class ConfigServiceTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "test-audience",
-                        URI.create(TEST_REDIRECT_URL),
-                        true,
-                        "main");
+                        URI.create(TEST_REDIRECT_URL));
 
         assertEquals(expected.getTokenUrl(), result.getTokenUrl());
         assertEquals(expected.getCredentialUrl(), result.getCredentialUrl());

@@ -200,7 +200,6 @@ class Mj01ValidationTest {
         return new CredentialIssuerConfig(
                 "fraud",
                 "fraud",
-                true,
                 URI.create("http://example.com/token"),
                 URI.create("http://example.com/credential"),
                 URI.create("http://example.com/authorize"),
@@ -208,9 +207,7 @@ class Mj01ValidationTest {
                 "test-jwk",
                 "test-jwk",
                 "test-fraud-iss",
-                URI.create("http://example.com/callback"),
-                true,
-                "main");
+                URI.create("http://example.com/callback"));
     }
 
     private SignedJWT generateTestVc(String iss, long nbf, List<String> cis)

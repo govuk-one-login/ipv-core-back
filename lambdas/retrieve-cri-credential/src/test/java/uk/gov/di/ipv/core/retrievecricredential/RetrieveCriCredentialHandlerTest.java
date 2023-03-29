@@ -98,7 +98,6 @@ class RetrieveCriCredentialHandlerTest {
                     new CredentialIssuerConfig(
                             "address",
                             "address",
-                            true,
                             new URI("http://example.com/token"),
                             new URI("http://example.com/credential"),
                             new URI("http://example.com/authorize"),
@@ -106,9 +105,7 @@ class RetrieveCriCredentialHandlerTest {
                             "test-jwk",
                             "test-encryption-jwk",
                             "test-audience",
-                            new URI("http://example.com/redirect"),
-                            true,
-                            "main");
+                            new URI("http://example.com/redirect"));
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -120,7 +117,6 @@ class RetrieveCriCredentialHandlerTest {
                 new CredentialIssuerConfig(
                         CREDENTIAL_ISSUER_ID,
                         "any",
-                        true,
                         new URI("https://www.example.com"),
                         new URI("https://www.example.com/credential"),
                         new URI("https://www.example.com/authorize"),
@@ -128,9 +124,7 @@ class RetrieveCriCredentialHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "test-audience",
-                        new URI("https://www.example.com/credential-issuers/callback/criId"),
-                        true,
-                        "main");
+                        new URI("https://www.example.com/credential-issuers/callback/criId"));
 
         testClientSessionDetailsDto =
                 new ClientSessionDetailsDto(

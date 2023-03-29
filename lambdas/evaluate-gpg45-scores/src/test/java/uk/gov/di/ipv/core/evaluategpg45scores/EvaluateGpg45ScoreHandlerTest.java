@@ -96,7 +96,6 @@ class EvaluateGpg45ScoreHandlerTest {
                     new CredentialIssuerConfig(
                             "address",
                             "address",
-                            true,
                             new URI("http://example.com/token"),
                             new URI("http://example.com/credential"),
                             new URI("http://example.com/authorize"),
@@ -104,9 +103,7 @@ class EvaluateGpg45ScoreHandlerTest {
                             "test-jwk",
                             "test-encryption-jwk",
                             "test-audience",
-                            new URI("http://example.com/redirect"),
-                            true,
-                            "main");
+                            new URI("http://example.com/redirect"));
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }

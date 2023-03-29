@@ -319,9 +319,7 @@ public class SelectCriHandler
     }
 
     private Optional<JourneyResponse> getMultipleDocCheckPage() {
-        CredentialIssuerConfig drivingLicenceConfig =
-                configService.getCredentialIssuerActiveConnectionConfig(drivingLicenceCriId);
-        if (drivingLicenceConfig.getActiveConnection() == "stub") {
+        if (configService.getActiveConnection(drivingLicenceCriId).equals("stub")) {
             return Optional.of(getJourneyResponse(STUB_UK_PASSPORT_AND_DRIVING_LICENCE_PAGE));
         }
         return Optional.of(getJourneyResponse(UK_PASSPORT_AND_DRIVING_LICENCE_PAGE));

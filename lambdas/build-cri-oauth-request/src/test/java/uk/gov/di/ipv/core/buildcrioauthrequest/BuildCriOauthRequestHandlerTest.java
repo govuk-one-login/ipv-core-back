@@ -121,7 +121,6 @@ class BuildCriOauthRequestHandlerTest {
                 new CredentialIssuerConfig(
                         CRI_ID,
                         CRI_NAME,
-                        true,
                         new URI(CRI_TOKEN_URL),
                         new URI(CRI_CREDENTIAL_URL),
                         new URI(CRI_AUTHORIZE_URL),
@@ -129,15 +128,12 @@ class BuildCriOauthRequestHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "http://www.example.com/audience",
-                        URI.create("http://www.example.com/callback/criId"),
-                        true,
-                        "main");
+                        URI.create("http://www.example.com/callback/criId"));
 
         addressCredentialIssuerConfig =
                 new CredentialIssuerConfig(
                         ADDRESS_CRI_ID,
                         CRI_NAME,
-                        true,
                         new URI(CRI_TOKEN_URL),
                         new URI(CRI_CREDENTIAL_URL),
                         new URI(CRI_AUTHORIZE_URL),
@@ -145,15 +141,12 @@ class BuildCriOauthRequestHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         ADDRESS_ISSUER,
-                        URI.create("http://www.example.com/callback/criId"),
-                        true,
-                        "main");
+                        URI.create("http://www.example.com/callback/criId"));
 
         dcmawCredentialIssuerConfig =
                 new CredentialIssuerConfig(
                         DCMAW_CRI_ID,
                         CRI_NAME,
-                        true,
                         new URI(CRI_TOKEN_URL),
                         new URI(CRI_CREDENTIAL_URL),
                         new URI(CRI_AUTHORIZE_URL),
@@ -161,9 +154,7 @@ class BuildCriOauthRequestHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "http://www.example.com/audience",
-                        URI.create("http://www.example.com/callback/criId"),
-                        true,
-                        "main");
+                        URI.create("http://www.example.com/callback/criId"));
 
         clientSessionDetailsDto = new ClientSessionDetailsDto();
         clientSessionDetailsDto.setUserId(TEST_USER_ID);
