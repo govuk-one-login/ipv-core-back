@@ -9,7 +9,7 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import java.text.ParseException;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_CLIENT_OAUTH_SESSIONS_TABLE_NAME;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CLIENT_OAUTH_SESSIONS_TABLE_NAME;
 
 public class ClientOAuthSessionDetailsService {
     private final DataStore<ClientOAuthSessionItem> dataStore;
@@ -21,8 +21,7 @@ public class ClientOAuthSessionDetailsService {
         boolean isRunningLocally = this.configService.isRunningLocally();
         dataStore =
                 new DataStore<>(
-                        this.configService.getEnvironmentVariable(
-                                IPV_CLIENT_OAUTH_SESSIONS_TABLE_NAME),
+                        this.configService.getEnvironmentVariable(CLIENT_OAUTH_SESSIONS_TABLE_NAME),
                         ClientOAuthSessionItem.class,
                         DataStore.getClient(isRunningLocally),
                         isRunningLocally,
