@@ -33,8 +33,8 @@ public class ClientOAuthSessionDetailsService {
         this.configService = configService;
     }
 
-    public ClientOAuthSessionItem getIpvSession(String ipvSessionId) {
-        return dataStore.getItem(ipvSessionId);
+    public ClientOAuthSessionItem getClientOAuthSession(String clientOAuthSessionId) {
+        return dataStore.getItem(clientOAuthSessionId);
     }
 
     public ClientOAuthSessionItem generateClientSessionDetails(
@@ -71,7 +71,7 @@ public class ClientOAuthSessionDetailsService {
         return clientOAuthSessionErrorItem;
     }
 
-    public void updateIpvSession(ClientOAuthSessionItem updatedIpvSessionItem) {
-        dataStore.update(updatedIpvSessionItem);
+    public void updateClientOAuthSession(ClientOAuthSessionItem updatedClientOAuthSessionItem) {
+        dataStore.update(updatedClientOAuthSessionItem);
     }
 }
