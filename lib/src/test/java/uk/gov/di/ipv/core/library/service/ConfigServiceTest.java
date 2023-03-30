@@ -34,10 +34,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getAllServeEvents;
 import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
@@ -148,6 +145,34 @@ class ConfigServiceTest {
         assertEquals(expected.getTokenUrl(), result.getTokenUrl());
         assertEquals(expected.getCredentialUrl(), result.getCredentialUrl());
         assertEquals("RSA", result.getJarEncryptionPublicJwk().getKeyType().toString());
+    }
+
+    @Test
+    void shouldReturnIsEnabled() {
+        environmentVariables.set("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "passportCri");
+        when(ssmProvider.get("passportCri/aClientId/enabled")).thenReturn("true");
+
+        boolean isEnabled = configService.isEnabled("aClientId");
+        assertTrue(isEnabled);
+    }
+
+    @Test
+    void shouldReturnIsAvailableOrNot() {
+        environmentVariables.set("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "passportCri");
+        when(ssmProvider.get("passportCri/aClientId/unavailable")).thenReturn("false");
+
+        boolean isUnavailable = configService.isUnavailable("aClientId");
+        assertFalse(isUnavailable);
+    }
+
+    @Test
+    void shouldReturnAllowedSharedAttributes() {
+        environmentVariables.set("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "passportCri");
+        when(ssmProvider.get("passportCri/aClientId/allowedSharedAttributes"))
+                .thenReturn("address,name");
+
+        String sharedAttributes = configService.getAllowedSharedAttributes("aClientId");
+        assertEquals("address,name", sharedAttributes);
     }
 
     @Test
