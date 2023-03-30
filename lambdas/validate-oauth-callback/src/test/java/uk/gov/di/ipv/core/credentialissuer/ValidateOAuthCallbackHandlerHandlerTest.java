@@ -256,49 +256,42 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 updatedIpvSessionItem.getVisitedCredentialIssuerDetails().get(0).getOauthError());
     }
 
-    //    @Test
-    //    void
-    // shouldReceiveAccessDeniedJourneyResponseWhenOauthErrorAccessDeniedAndOnlyPassportEnabled()
-    //            throws URISyntaxException {
-    //        CriCallbackRequest criCallbackRequestWithAccessDenied = validCriCallbackRequest();
-    //        criCallbackRequestWithAccessDenied.setError(TEST_OAUTH_ACCESS_DENIED_ERROR);
-    //        criCallbackRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
-    //
-    //        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-    //        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CRI_PASSPORT))
-    //                .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss", true));
-    //        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CRI_DRIVING_LICENCE))
-    //                .thenReturn(
-    //                        createCriConfig(CRI_DRIVING_LICENCE, "test-driving-licence-iss",
-    // false));
-    //
-    //        Map<String, Object> output =
-    //                underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
-    //
-    //        assertEquals("/journey/access-denied", output.get("journey"));
-    //    }
-    //
-    //    @Test
-    //    void
-    //
-    // shouldReceiveAccessDeniedMultiJourneyResponseWhenOauthErrorAccessDeniedAndBothPassportAndDrivingLicenceEnabled()
-    //                    throws URISyntaxException {
-    //        CriCallbackRequest criCallbackRequestWithAccessDenied = validCriCallbackRequest();
-    //        criCallbackRequestWithAccessDenied.setError(TEST_OAUTH_ACCESS_DENIED_ERROR);
-    //        criCallbackRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
-    //
-    //        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-    //        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CRI_PASSPORT))
-    //                .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss", true));
-    //        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CRI_DRIVING_LICENCE))
-    //                .thenReturn(createCriConfig(CRI_DRIVING_LICENCE, "test-driving-licence-iss",
-    // true));
-    //
-    //        Map<String, Object> output =
-    //                underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
-    //
-    //        assertEquals("/journey/access-denied-multi-doc", output.get("journey"));
-    //    }
+    @Test
+    void shouldReceiveAccessDeniedJourneyResponseWhenOauthErrorAccessDeniedAndOnlyPassportEnabled()
+            throws URISyntaxException {
+        CriCallbackRequest criCallbackRequestWithAccessDenied = validCriCallbackRequest();
+        criCallbackRequestWithAccessDenied.setError(TEST_OAUTH_ACCESS_DENIED_ERROR);
+        criCallbackRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
+
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockConfigService.isEnabled(CRI_PASSPORT)).thenReturn(true);
+
+        when(mockConfigService.isEnabled(CRI_DRIVING_LICENCE)).thenReturn(false);
+        Map<String, Object> output =
+                underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
+
+        assertEquals("/journey/access-denied", output.get("journey"));
+    }
+
+    @Test
+    void
+            shouldReceiveAccessDeniedMultiJourneyResponseWhenOauthErrorAccessDeniedAndBothPassportAndDrivingLicenceEnabled()
+                    throws URISyntaxException {
+        CriCallbackRequest criCallbackRequestWithAccessDenied = validCriCallbackRequest();
+        criCallbackRequestWithAccessDenied.setError(TEST_OAUTH_ACCESS_DENIED_ERROR);
+        criCallbackRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
+
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
+        when(mockConfigService.isEnabled(CRI_PASSPORT)).thenReturn(true);
+
+        when(mockConfigService.isEnabled(CRI_DRIVING_LICENCE)).thenReturn(true);
+
+        Map<String, Object> output =
+                underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
+
+        assertEquals("/journey/access-denied-multi-doc", output.get("journey"));
+    }
 
     @Test
     void shouldReceiveTemporarilyUnavailableJourneyResponseWhenOauthErrorTemporarilyUnavailable() {
