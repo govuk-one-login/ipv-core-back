@@ -69,6 +69,7 @@ class ClientOAuthSessionDetailsServiceTest {
                         .claim("response_type", "test-type")
                         .claim("redirect_uri", "http://example.com")
                         .claim("state", "test-state")
+                        .claim("govuk_signin_journey_id", "test-journey-id")
                         .subject("test-user-id")
                         .build();
         ClientOAuthSessionItem clientOAuthSessionItem =

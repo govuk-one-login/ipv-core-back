@@ -48,7 +48,8 @@ public class ClientOAuthSessionDetailsService {
         clientOAuthSessionItem.setRedirectUri(claimsSet.getStringClaim("redirect_uri"));
         clientOAuthSessionItem.setState(claimsSet.getStringClaim("state"));
         clientOAuthSessionItem.setUserId(claimsSet.getSubject());
-        clientOAuthSessionItem.setGovukSigninJourneyId("govuk_signin_journey_id");
+        clientOAuthSessionItem.setGovukSigninJourneyId(
+                claimsSet.getStringClaim("govuk_signin_journey_id"));
 
         dataStore.create(clientOAuthSessionItem, BACKEND_SESSION_TTL);
 
