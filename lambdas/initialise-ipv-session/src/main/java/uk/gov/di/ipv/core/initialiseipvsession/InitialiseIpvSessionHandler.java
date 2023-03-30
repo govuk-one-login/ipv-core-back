@@ -35,6 +35,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
@@ -55,6 +56,8 @@ public class InitialiseIpvSessionHandler
 
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
+    private final ClientOAuthSessionDetailsService clientOAuthSessionService;
+
     private final KmsRsaDecrypter kmsRsaDecrypter;
     private final JarValidator jarValidator;
     private final AuditService auditService;
@@ -64,6 +67,7 @@ public class InitialiseIpvSessionHandler
     public InitialiseIpvSessionHandler() {
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
+        this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.kmsRsaDecrypter =
                 new KmsRsaDecrypter(configService.getSsmParameter(JAR_KMS_ENCRYPTION_KEY_ID));
         this.jarValidator = new JarValidator(kmsRsaDecrypter, configService);
@@ -74,11 +78,13 @@ public class InitialiseIpvSessionHandler
 
     public InitialiseIpvSessionHandler(
             IpvSessionService ipvSessionService,
+            ClientOAuthSessionDetailsService clientOAuthSessionService,
             ConfigService configService,
             KmsRsaDecrypter kmsRsaDecrypter,
             JarValidator jarValidator,
             AuditService auditService) {
         this.ipvSessionService = ipvSessionService;
+        this.clientOAuthSessionService = clientOAuthSessionService;
         this.configService = configService;
         this.kmsRsaDecrypter = kmsRsaDecrypter;
         this.jarValidator = jarValidator;
@@ -125,6 +131,9 @@ public class InitialiseIpvSessionHandler
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(clientSessionDetailsDto, null);
 
+            clientOAuthSessionService.generateClientSessionDetails(
+                    claimsSet, sessionParams.get(CLIENT_ID_PARAM_KEY));
+
             AuditEventUser auditEventUser =
                     new AuditEventUser(
                             ipvSessionItem.getClientSessionDetails().getUserId(),
@@ -160,6 +169,8 @@ public class InitialiseIpvSessionHandler
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
                             clientSessionDetailsDto, e.getErrorObject());
+            clientOAuthSessionService.generateErrorClientSessionDetails(
+                    e.getRedirectUri(), e.getClientId(), e.getState(), e.getGovukSigninJourneyId());
 
             Map<String, String> response =
                     Map.of(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());

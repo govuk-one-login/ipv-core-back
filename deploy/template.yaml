@@ -488,6 +488,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub initialise-ipv-session-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -512,8 +513,12 @@ Resources:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/clients/*
         - SSMParameterReadPolicy:
@@ -2189,13 +2194,13 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
-      TableName: !Sub "client-oauth-sessions-${Environment}"
+      TableName: !Sub "client-oauth-sessions-v2-${Environment}"
       BillingMode: "PAY_PER_REQUEST"
       AttributeDefinitions:
-        - AttributeName: "id"
+        - AttributeName: "clientOAuthSessionId"
           AttributeType: "S"
       KeySchema:
-        - AttributeName: "id"
+        - AttributeName: "clientOAuthSessionId"
           KeyType: "HASH"
       TimeToLiveSpecification:
         AttributeName: "ttl"
