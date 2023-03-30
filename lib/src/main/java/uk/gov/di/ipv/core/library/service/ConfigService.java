@@ -106,8 +106,6 @@ public class ConfigService {
                         configurationVariable.getValue(), getEnvironmentVariable(ENVIRONMENT)));
     }
 
-    // do we add another getSsm to pass in the active connection
-
     public String getSsmParameter(ConfigurationVariable configurationVariable, String clientId) {
         return ssmProvider.get(
                 String.format(

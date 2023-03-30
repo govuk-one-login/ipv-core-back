@@ -12,7 +12,6 @@ public enum ConfigurationVariable {
     FRAUD_CRI_ID("/%s/core/self/journey/fraudCriId"),
     KBV_CRI_ID("/%s/core/self/journey/kbvCriId"),
     DCMAW_CRI_ID("/%s/core/self/journey/dcmawCriId"),
-    DCMAW_CRI_ID_ID("/%s/core/self/journey/dcmawCriId"),
     JAR_KMS_ENCRYPTION_KEY_ID("/%s/core/self/jarKmsEncryptionKeyId"),
     JWT_TTL_SECONDS("/%s/core/self/jwtTtlSeconds"),
     MAX_ALLOWED_AUTH_CLIENT_TTL("/%s/core/self/maxAllowedAuthClientTtl"),
