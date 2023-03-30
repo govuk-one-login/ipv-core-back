@@ -2230,6 +2230,26 @@ Resources:
         SSEType: KMS
         KMSMasterKeyId: !GetAtt DynamoDBKmsKey.Arn
 
+  CriOAuthSessionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
+      TableName: !Sub "cri-oauth-sessions-${Environment}"
+      BillingMode: "PAY_PER_REQUEST"
+      AttributeDefinitions:
+        - AttributeName: "state"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "state"
+          KeyType: "HASH"
+      TimeToLiveSpecification:
+        AttributeName: "ttl"
+        Enabled: true
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !GetAtt DynamoDBKmsKey.Arn
+
   DynamoDBKmsKey:
     Type: AWS::KMS::Key
     Properties:
