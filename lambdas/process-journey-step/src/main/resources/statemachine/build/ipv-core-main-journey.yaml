@@ -377,6 +377,13 @@ CRI_DCMAW:
   name: CRI_DCMAW
   parent: CRI_STATE
   events:
+    access-denied-multi-doc:
+      type: basic
+      name: access-denied-multi-doc
+      targetState: MULTIPLE_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-multiple-doc-check
     access-denied:
       type: basic
       name: access-denied
@@ -394,10 +401,11 @@ CRI_DCMAW:
     error:
       type: basic
       name: error
-      targetState: EVALUATE_GPG45_SCORES
+      targetState: CRI_ERROR
       response:
-        type: journey
-        journeyStepId: /journey/evaluate-gpg45-scores
+        type: error
+        pageId: pyi-technical
+        statusCode: 500
 END_MJ01:
   name: END_MJ01
   parent: MITIGATION_JOURNEY
