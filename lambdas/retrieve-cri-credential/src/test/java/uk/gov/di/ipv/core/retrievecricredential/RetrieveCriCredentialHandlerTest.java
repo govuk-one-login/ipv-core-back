@@ -98,7 +98,6 @@ class RetrieveCriCredentialHandlerTest {
                     new CredentialIssuerConfig(
                             "address",
                             "address",
-                            true,
                             new URI("http://example.com/token"),
                             new URI("http://example.com/credential"),
                             new URI("http://example.com/authorize"),
@@ -106,8 +105,7 @@ class RetrieveCriCredentialHandlerTest {
                             "test-jwk",
                             "test-encryption-jwk",
                             "test-audience",
-                            new URI("http://example.com/redirect"),
-                            "name, address");
+                            new URI("http://example.com/redirect"));
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -119,7 +117,6 @@ class RetrieveCriCredentialHandlerTest {
                 new CredentialIssuerConfig(
                         CREDENTIAL_ISSUER_ID,
                         "any",
-                        true,
                         new URI("https://www.example.com"),
                         new URI("https://www.example.com/credential"),
                         new URI("https://www.example.com/authorize"),
@@ -127,8 +124,7 @@ class RetrieveCriCredentialHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "test-audience",
-                        new URI("https://www.example.com/credential-issuers/callback/criId"),
-                        "name, address");
+                        new URI("https://www.example.com/credential-issuers/callback/criId"));
 
         testClientSessionDetailsDto =
                 new ClientSessionDetailsDto(
@@ -173,7 +169,7 @@ class RetrieveCriCredentialHandlerTest {
 
     @Test
     void shouldUpdateSessionWithDetailsOfVisitedCri() throws ParseException {
-        when(configService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
                 .thenReturn(testPassportIssuer);
         when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(testComponentId);
         when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
@@ -303,7 +299,8 @@ class RetrieveCriCredentialHandlerTest {
                         testBearerAccessToken, testPassportIssuer, testApiKey))
                 .thenReturn(List.of(SignedJWT.parse(SIGNED_ADDRESS_VC)));
         when(configService.getSsmParameter(ADDRESS_CRI_ID)).thenReturn(ADDRESS_CRI_JOURNEY_ID);
-        when(configService.getCredentialIssuer(ADDRESS_CRI_JOURNEY_ID)).thenReturn(addressConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_JOURNEY_ID))
+                .thenReturn(addressConfig);
         mockServiceCallsAndSessionItem();
 
         handler.handleRequest(testInput, context);
@@ -333,9 +330,10 @@ class RetrieveCriCredentialHandlerTest {
                         testBearerAccessToken, testPassportIssuer, testApiKey))
                 .thenReturn(List.of(SignedJWT.parse(SIGNED_ADDRESS_VC)));
         when(configService.getSsmParameter(ADDRESS_CRI_ID)).thenReturn(ADDRESS_CRI_JOURNEY_ID);
-        when(configService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
                 .thenReturn(testPassportIssuer);
-        when(configService.getCredentialIssuer(ADDRESS_CRI_JOURNEY_ID)).thenReturn(addressConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_JOURNEY_ID))
+                .thenReturn(addressConfig);
         when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(testComponentId);
         when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
@@ -373,7 +371,7 @@ class RetrieveCriCredentialHandlerTest {
     }
 
     private void mockServiceCallsAndSessionItem() {
-        when(configService.getCredentialIssuer(CREDENTIAL_ISSUER_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
                 .thenReturn(testPassportIssuer);
         when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(testComponentId);
         when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);

@@ -84,12 +84,11 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
-        when(mockConfigService.getCredentialIssuer("ukPassport"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
-                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -97,15 +96,13 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-p.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                "name, address"));
+                                URI.create("https://example.com/callback")));
 
-        when(mockConfigService.getCredentialIssuer("address"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
-                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -113,8 +110,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-a.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                "name, address"));
+                                URI.create("https://example.com/callback")));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -154,12 +150,11 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
-        when(mockConfigService.getCredentialIssuer("ukPassport"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
-                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -167,15 +162,13 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-p.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                "name, address"));
+                                URI.create("https://example.com/callback")));
 
-        when(mockConfigService.getCredentialIssuer("address"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
-                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -183,8 +176,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-a.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                "name, address"));
+                                URI.create("https://example.com/callback")));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -229,12 +221,11 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
-        when(mockConfigService.getCredentialIssuer("ukPassport"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
-                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -242,15 +233,13 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-p.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                "name, address"));
+                                URI.create("https://example.com/callback")));
 
-        when(mockConfigService.getCredentialIssuer("address"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
-                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -258,8 +247,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-a.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                "name, address"));
+                                URI.create("https://example.com/callback")));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -281,12 +269,11 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
-        when(mockConfigService.getCredentialIssuer("address"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
-                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -294,8 +281,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-a.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                "name, address"));
+                                URI.create("https://example.com/callback")));
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
@@ -343,12 +329,11 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
-        when(mockConfigService.getCredentialIssuer("ukPassport"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
-                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -356,15 +341,13 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-p.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                "name, address"));
+                                URI.create("https://example.com/callback")));
 
-        when(mockConfigService.getCredentialIssuer("address"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
-                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -372,15 +355,13 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-a.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                "name, address"));
+                                URI.create("https://example.com/callback")));
 
-        when(mockConfigService.getCredentialIssuer("fraud"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("fraud"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
-                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -388,15 +369,13 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-f.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                "name, address"));
+                                URI.create("https://example.com/callback")));
 
-        when(mockConfigService.getCredentialIssuer("kbv"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("kbv"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
-                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -404,8 +383,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-k.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                "name, address"));
+                                URI.create("https://example.com/callback")));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -448,12 +426,11 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
-        when(mockConfigService.getCredentialIssuer("ukPassport"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
-                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -461,15 +438,13 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-p.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                "name, address"));
+                                URI.create("https://example.com/callback")));
 
-        when(mockConfigService.getCredentialIssuer("address"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
-                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -477,15 +452,13 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-a.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                "name, address"));
+                                URI.create("https://example.com/callback")));
 
-        when(mockConfigService.getCredentialIssuer("fraud"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("fraud"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
-                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -493,15 +466,13 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-f.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                "name, address"));
+                                URI.create("https://example.com/callback")));
 
-        when(mockConfigService.getCredentialIssuer("kbv"))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("kbv"))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 "test-cri",
                                 "test cri",
-                                true,
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -509,8 +480,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-k.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                "name, address"));
+                                URI.create("https://example.com/callback")));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 

@@ -198,11 +198,8 @@ public class ValidateOAuthCallbackHandler
         LogHelper.logOauthError("OAuth error received from CRI", error, errorDescription);
 
         if (OAuth2Error.ACCESS_DENIED_CODE.equals(error)) {
-            CredentialIssuerConfig passportCriConfig =
-                    configService.getCredentialIssuer(passportCriId);
-            CredentialIssuerConfig ukDrivingLicenseCriConfig =
-                    configService.getCredentialIssuer(drivingLicenceCriId);
-            if (passportCriConfig.getEnabled() && ukDrivingLicenseCriConfig.getEnabled()) {
+            if (configService.isEnabled(passportCriId)
+                    && configService.isEnabled(drivingLicenceCriId)) {
                 return JOURNEY_ACCESS_DENIED_MULTI;
             }
             return JOURNEY_ACCESS_DENIED;
@@ -273,7 +270,8 @@ public class ValidateOAuthCallbackHandler
 
     @Tracing
     private CredentialIssuerConfig getCredentialIssuerConfig(CriCallbackRequest callbackRequest) {
-        return configService.getCredentialIssuer(callbackRequest.getCredentialIssuerId());
+        return configService.getCredentialIssuerActiveConnectionConfig(
+                callbackRequest.getCredentialIssuerId());
     }
 
     @Tracing

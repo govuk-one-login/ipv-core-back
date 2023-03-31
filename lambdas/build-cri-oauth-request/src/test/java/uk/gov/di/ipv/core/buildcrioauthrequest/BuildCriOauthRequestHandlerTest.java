@@ -121,7 +121,6 @@ class BuildCriOauthRequestHandlerTest {
                 new CredentialIssuerConfig(
                         CRI_ID,
                         CRI_NAME,
-                        true,
                         new URI(CRI_TOKEN_URL),
                         new URI(CRI_CREDENTIAL_URL),
                         new URI(CRI_AUTHORIZE_URL),
@@ -129,14 +128,12 @@ class BuildCriOauthRequestHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "http://www.example.com/audience",
-                        URI.create("http://www.example.com/callback/criId"),
-                        "name,address,birthDate");
+                        URI.create("http://www.example.com/callback/criId"));
 
         addressCredentialIssuerConfig =
                 new CredentialIssuerConfig(
                         ADDRESS_CRI_ID,
                         CRI_NAME,
-                        true,
                         new URI(CRI_TOKEN_URL),
                         new URI(CRI_CREDENTIAL_URL),
                         new URI(CRI_AUTHORIZE_URL),
@@ -144,14 +141,12 @@ class BuildCriOauthRequestHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         ADDRESS_ISSUER,
-                        URI.create("http://www.example.com/callback/criId"),
-                        "name, address, birthDate");
+                        URI.create("http://www.example.com/callback/criId"));
 
         dcmawCredentialIssuerConfig =
                 new CredentialIssuerConfig(
                         DCMAW_CRI_ID,
                         CRI_NAME,
-                        true,
                         new URI(CRI_TOKEN_URL),
                         new URI(CRI_CREDENTIAL_URL),
                         new URI(CRI_AUTHORIZE_URL),
@@ -159,14 +154,12 @@ class BuildCriOauthRequestHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "http://www.example.com/audience",
-                        URI.create("http://www.example.com/callback/criId"),
-                        null);
+                        URI.create("http://www.example.com/callback/criId"));
 
         kbvCredentialIssuerConfig =
                 new CredentialIssuerConfig(
                         KBV_CRI_ID,
                         CRI_NAME,
-                        true,
                         new URI(CRI_TOKEN_URL),
                         new URI(CRI_CREDENTIAL_URL),
                         new URI(CRI_AUTHORIZE_URL),
@@ -174,8 +167,7 @@ class BuildCriOauthRequestHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "http://www.example.com/audience",
-                        URI.create("http://www.example.com/callback/criId"),
-                        "name");
+                        URI.create("http://www.example.com/callback/criId"));
 
         clientSessionDetailsDto = new ClientSessionDetailsDto();
         clientSessionDetailsDto.setUserId(TEST_USER_ID);
@@ -204,12 +196,13 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithoutResponseTypeParam()
             throws Exception {
-        when(configService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
+                .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
         when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn(ADDRESS_CRI_ID);
-        when(configService.getCredentialIssuer(ADDRESS_CRI_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
@@ -273,13 +266,13 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithResponseTypeParam()
             throws Exception {
-        when(configService.getCredentialIssuer(DCMAW_CRI_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI_ID))
                 .thenReturn(dcmawCredentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
         when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn(ADDRESS_CRI_ID);
-        when(configService.getCredentialIssuer(ADDRESS_CRI_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
@@ -397,12 +390,13 @@ class BuildCriOauthRequestHandlerTest {
 
     @Test
     void shouldDeduplicateSharedClaims() throws Exception {
-        when(configService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
+                .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
         when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn(ADDRESS_CRI_ID);
-        when(configService.getCredentialIssuer(ADDRESS_CRI_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
@@ -448,12 +442,13 @@ class BuildCriOauthRequestHandlerTest {
 
     @Test
     void shouldNotDeduplicateSharedClaimsIfFullNameDifferent() throws Exception {
-        when(configService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
+                .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
         when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn(ADDRESS_CRI_ID);
-        when(configService.getCredentialIssuer(ADDRESS_CRI_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
@@ -497,12 +492,13 @@ class BuildCriOauthRequestHandlerTest {
 
     @Test
     void shouldDeduplicateNamesThatAppearInDifferentVCs() throws Exception {
-        when(configService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
+                .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
         when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn(ADDRESS_CRI_ID);
-        when(configService.getCredentialIssuer(ADDRESS_CRI_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
@@ -565,12 +561,13 @@ class BuildCriOauthRequestHandlerTest {
 
     @Test
     void shouldRemoveExtraAddressClaimsAndOnlyUseValuesFromTheAddressVC() throws Exception {
-        when(configService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
+                .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
         when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn(ADDRESS_CRI_ID);
-        when(configService.getCredentialIssuer(ADDRESS_CRI_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
@@ -618,12 +615,13 @@ class BuildCriOauthRequestHandlerTest {
 
     @Test
     void shouldNotIncludeFailedVcsInTheSharedClaims() throws Exception {
-        when(configService.getCredentialIssuer(CRI_ID)).thenReturn(credentialIssuerConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
+                .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
         when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn(ADDRESS_CRI_ID);
-        when(configService.getCredentialIssuer(ADDRESS_CRI_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
@@ -669,12 +667,13 @@ class BuildCriOauthRequestHandlerTest {
 
     @Test
     void shouldOnlyAllowCRIConfiguredSharedClaimAttr() throws Exception {
-        when(configService.getCredentialIssuer(CRI_ID)).thenReturn(kbvCredentialIssuerConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
+                .thenReturn(kbvCredentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
         when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn(ADDRESS_CRI_ID);
-        when(configService.getCredentialIssuer(ADDRESS_CRI_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
@@ -716,8 +715,8 @@ class BuildCriOauthRequestHandlerTest {
 
         JsonNode sharedClaims = claimsSet.get(TEST_SHARED_CLAIMS);
         assertEquals(3, sharedClaims.get("name").size());
-        assertEquals(0, sharedClaims.get("birthDate").size());
-        assertEquals(0, sharedClaims.get("address").size());
+        assertEquals(2, sharedClaims.get("birthDate").size());
+        assertEquals(1, sharedClaims.get("address").size());
     }
 
     private Map<String, Map<String, String>> getResponseBodyAsMap(

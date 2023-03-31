@@ -89,7 +89,6 @@ class CheckExistingIdentityHandlerTest {
                     new CredentialIssuerConfig(
                             "address",
                             "address",
-                            true,
                             new URI("http://example.com/token"),
                             new URI("http://example.com/credential"),
                             new URI("http://example.com/authorize"),
@@ -97,8 +96,7 @@ class CheckExistingIdentityHandlerTest {
                             "test-jwk",
                             "test-encryption-jwk",
                             "test-audience",
-                            new URI("http://example.com/redirect"),
-                            "name, address");
+                            new URI("http://example.com/redirect"));
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -154,7 +152,8 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
         when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn("address");
-        when(configService.getCredentialIssuer("address")).thenReturn(addressConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig("address"))
+                .thenReturn(addressConfig);
 
         var response = checkExistingIdentityHandler.handleRequest(event, context);
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);

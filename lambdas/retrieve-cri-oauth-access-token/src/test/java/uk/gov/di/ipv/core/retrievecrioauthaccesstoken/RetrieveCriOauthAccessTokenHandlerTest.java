@@ -78,7 +78,6 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                 new CredentialIssuerConfig(
                         CREDENTIAL_ISSUER_ID,
                         "any",
-                        true,
                         new URI("http://www.example.com"),
                         new URI("http://www.example.com/credential"),
                         new URI("http://www.example.com/authorize"),
@@ -86,8 +85,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "test-audience",
-                        new URI("http://www.example.com/credential-issuers/callback/criId"),
-                        "name, address");
+                        new URI("http://www.example.com/credential-issuers/callback/criId"));
 
         clientSessionDetailsDto =
                 new ClientSessionDetailsDto(
@@ -138,7 +136,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                         new CredentialIssuerException(
                                 HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST));
 
-        when(configService.getCredentialIssuer(CREDENTIAL_ISSUER_ID)).thenReturn(passportIssuer);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
+                .thenReturn(passportIssuer);
         when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
@@ -176,7 +175,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     private void mockServiceCallsAndSessionItem() {
-        when(configService.getCredentialIssuer(CREDENTIAL_ISSUER_ID)).thenReturn(passportIssuer);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
+                .thenReturn(passportIssuer);
 
         when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(testComponentId);
 
@@ -201,7 +201,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         when(ipvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(ipvSessionItem.getCredentialIssuerSessionDetails())
                 .thenReturn(credentialIssuerSessionDetailsDto);
-        when(configService.getCredentialIssuer(CREDENTIAL_ISSUER_ID)).thenReturn(passportIssuer);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
+                .thenReturn(passportIssuer);
         doThrow(new SqsException("Test sqs error"))
                 .when(auditService)
                 .sendAuditEvent(any(AuditEvent.class));
@@ -216,7 +217,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         JSONObject testCredential = new JSONObject();
         testCredential.appendField("foo", "bar");
 
-        when(configService.getCredentialIssuer(CREDENTIAL_ISSUER_ID)).thenReturn(passportIssuer);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
+                .thenReturn(passportIssuer);
 
         when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
@@ -259,7 +261,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         JSONObject testCredential = new JSONObject();
         testCredential.appendField("foo", "bar");
 
-        when(configService.getCredentialIssuer(CREDENTIAL_ISSUER_ID)).thenReturn(passportIssuer);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
+                .thenReturn(passportIssuer);
 
         when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(testComponentId);
 

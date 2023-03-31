@@ -127,7 +127,8 @@ class EndMitigationJourneyHandlerTest {
     void shouldSendPostMitigationRequestWhenMJ01JourneyAndHasFraudVC() throws Exception {
         when(mockIpvSessionService.getIpvSession(any())).thenReturn(ipvSessionItem);
         when(mockCiStorageService.getCIs(any(), any(), any())).thenReturn(contraIndicatorItems);
-        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(getTestFraudCriConfig());
 
         List<String> credentials =
                 List.of(
@@ -236,7 +237,8 @@ class EndMitigationJourneyHandlerTest {
     void shouldNotSendPostMitigationRequestWhenMJ01JourneyAndMissingNewFraudVC() throws Exception {
         when(mockIpvSessionService.getIpvSession(any())).thenReturn(ipvSessionItem);
         when(mockCiStorageService.getCIs(any(), any(), any())).thenReturn(contraIndicatorItems);
-        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(getTestFraudCriConfig());
 
         List<String> credentials =
                 List.of(
@@ -331,7 +333,8 @@ class EndMitigationJourneyHandlerTest {
             throws Exception {
         when(mockIpvSessionService.getIpvSession(any())).thenReturn(ipvSessionItem);
         when(mockCiStorageService.getCIs(any(), any(), any())).thenReturn(contraIndicatorItems);
-        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(getTestFraudCriConfig());
 
         List<String> credentials =
                 List.of(
@@ -378,7 +381,8 @@ class EndMitigationJourneyHandlerTest {
     void shouldNotSendPostMitigationRequestWhenMJ01JourneyAndFraudVcIsBeforeCI() throws Exception {
         when(mockIpvSessionService.getIpvSession(any())).thenReturn(ipvSessionItem);
         when(mockCiStorageService.getCIs(any(), any(), any())).thenReturn(contraIndicatorItems);
-        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(getTestFraudCriConfig());
 
         List<String> credentials =
                 List.of(
@@ -469,7 +473,8 @@ class EndMitigationJourneyHandlerTest {
         doThrow(new CiPostMitigationsException("test error"))
                 .when(mockCiStorageService)
                 .submitMitigatingVcList(any(), any(), any());
-        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(getTestFraudCriConfig());
 
         List<String> credentials =
                 List.of(
@@ -562,7 +567,8 @@ class EndMitigationJourneyHandlerTest {
 
         when(mockIpvSessionService.getIpvSession(any())).thenReturn(ipvSessionItem);
         when(mockCiStorageService.getCIs(any(), any(), any())).thenReturn(contraIndicatorItems);
-        when(mockConfigService.getCredentialIssuer(any())).thenReturn(getTestFraudCriConfig());
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(getTestFraudCriConfig());
 
         List<String> credentials =
                 List.of(
@@ -614,7 +620,6 @@ class EndMitigationJourneyHandlerTest {
         return new CredentialIssuerConfig(
                 "fraud",
                 "fraud",
-                true,
                 URI.create("http://example.com/token"),
                 URI.create("http://example.com/credential"),
                 URI.create("http://example.com/authorize"),
@@ -622,8 +627,7 @@ class EndMitigationJourneyHandlerTest {
                 "test-jwk",
                 "test-jwk",
                 "test-fraud-iss",
-                URI.create("http://example.com/callback"),
-                "name, address");
+                URI.create("http://example.com/callback"));
     }
 
     private SignedJWT generateTestVc(String iss, long nbf, List<String> cis)

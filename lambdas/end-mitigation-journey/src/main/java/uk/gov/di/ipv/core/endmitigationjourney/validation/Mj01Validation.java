@@ -34,7 +34,8 @@ public class Mj01Validation {
             ContraIndicatorItem contraIndicatorItem,
             ConfigService configService) {
         String fraudCriId = configService.getSsmParameter(ConfigurationVariable.FRAUD_CRI_ID);
-        CredentialIssuerConfig fraudCriConfig = configService.getCredentialIssuer(fraudCriId);
+        CredentialIssuerConfig fraudCriConfig =
+                configService.getCredentialIssuerActiveConnectionConfig(fraudCriId);
 
         List<String> mitigatingVcList = new ArrayList<>();
 

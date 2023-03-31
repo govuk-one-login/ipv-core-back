@@ -101,7 +101,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldPersistAuthorizationCodeInIPVSessionTable() throws Exception {
-        when(mockConfigService.getCredentialIssuer(TEST_CREDENTIAL_ISSUER_ID))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
                 .thenReturn(credentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -226,7 +226,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void shouldUpdateSessionWithDetailsOfFailedVisitedCriOnSqsException() throws Exception {
-        when(mockConfigService.getCredentialIssuer(TEST_CREDENTIAL_ISSUER_ID))
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
                 .thenReturn(credentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
@@ -264,12 +264,9 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         criCallbackRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigService.getCredentialIssuer(CRI_PASSPORT))
-                .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss", true));
-        when(mockConfigService.getCredentialIssuer(CRI_DRIVING_LICENCE))
-                .thenReturn(
-                        createCriConfig(CRI_DRIVING_LICENCE, "test-driving-licence-iss", false));
+        when(mockConfigService.isEnabled(CRI_PASSPORT)).thenReturn(true);
 
+        when(mockConfigService.isEnabled(CRI_DRIVING_LICENCE)).thenReturn(false);
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
 
@@ -285,10 +282,10 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         criCallbackRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockConfigService.getCredentialIssuer(CRI_PASSPORT))
-                .thenReturn(createCriConfig(CRI_PASSPORT, "test-passport-iss", true));
-        when(mockConfigService.getCredentialIssuer(CRI_DRIVING_LICENCE))
-                .thenReturn(createCriConfig(CRI_DRIVING_LICENCE, "test-driving-licence-iss", true));
+
+        when(mockConfigService.isEnabled(CRI_PASSPORT)).thenReturn(true);
+
+        when(mockConfigService.isEnabled(CRI_DRIVING_LICENCE)).thenReturn(true);
 
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
@@ -403,7 +400,6 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         return new CredentialIssuerConfig(
                 criId,
                 criId,
-                enabled,
                 new URI("http://example.com/token"),
                 new URI("http://example.com/credential"),
                 new URI("http://example.com/authorize"),
@@ -411,7 +407,6 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 "test-jwk",
                 "test-jwk",
                 criIss,
-                new URI("http://example.com/redirect"),
-                "name, address");
+                new URI("http://www.example.com/credential-issuers/callback/criId"));
     }
 }

@@ -130,7 +130,7 @@ public class RetrieveCriCredentialHandler
                     configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
 
             CredentialIssuerConfig credentialIssuerConfig =
-                    configService.getCredentialIssuer(credentialIssuerId);
+                    configService.getCredentialIssuerActiveConnectionConfig(credentialIssuerId);
 
             String apiKey = configService.getCriPrivateApiKey(credentialIssuerConfig.getId());
 
@@ -148,7 +148,7 @@ public class RetrieveCriCredentialHandler
 
                 String addressCriId = configService.getSsmParameter(ADDRESS_CRI_ID);
                 CredentialIssuerConfig addressCriConfig =
-                        configService.getCredentialIssuer(addressCriId);
+                        configService.getCredentialIssuerActiveConnectionConfig(addressCriId);
                 boolean isSuccessful = VcHelper.isSuccessfulVc(vc, addressCriConfig);
 
                 sendIpvVcReceivedAuditEvent(auditEventUser, vc, isSuccessful);

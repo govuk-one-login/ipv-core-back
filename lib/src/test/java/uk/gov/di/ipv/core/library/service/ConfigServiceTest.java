@@ -35,6 +35,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -115,22 +116,27 @@ class ConfigServiceTest {
 
         Map<String, String> credentialIssuerParameters =
                 Map.of(
+                        "activeConnection",
+                        "stub",
                         "tokenUrl",
                         TEST_TOKEN_URL,
                         "credentialUrl",
                         TEST_CREDENTIAL_URL,
                         "jarEncryptionPublicJwk",
                         RSA_ENCRYPTION_PUBLIC_JWK);
-        when(ssmProvider.getMultiple("/dev/core/credentialIssuers/passportCri"))
+        when(ssmProvider.get("/dev/core/credentialIssuers/passportCri/activeConnection"))
+                .thenReturn("stub");
+
+        when(ssmProvider.getMultiple("/dev/core/credentialIssuers/passportCri/connections/stub"))
                 .thenReturn(credentialIssuerParameters);
 
-        CredentialIssuerConfig result = configService.getCredentialIssuer("passportCri");
+        CredentialIssuerConfig result =
+                configService.getCredentialIssuerActiveConnectionConfig("passportCri");
 
         CredentialIssuerConfig expected =
                 new CredentialIssuerConfig(
                         "passportCri",
                         "",
-                        true,
                         URI.create(TEST_TOKEN_URL),
                         URI.create(TEST_CREDENTIAL_URL),
                         URI.create(TEST_CREDENTIAL_URL),
@@ -138,12 +144,39 @@ class ConfigServiceTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "test-audience",
-                        URI.create(TEST_REDIRECT_URL),
-                        "name, address");
+                        URI.create(TEST_REDIRECT_URL));
 
         assertEquals(expected.getTokenUrl(), result.getTokenUrl());
         assertEquals(expected.getCredentialUrl(), result.getCredentialUrl());
         assertEquals("RSA", result.getJarEncryptionPublicJwk().getKeyType().toString());
+    }
+
+    @Test
+    void shouldReturnIsEnabled() {
+        environmentVariables.set("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "passportCri");
+        when(ssmProvider.get("passportCri/aClientId/enabled")).thenReturn("true");
+
+        boolean isEnabled = configService.isEnabled("aClientId");
+        assertTrue(isEnabled);
+    }
+
+    @Test
+    void shouldReturnIsAvailableOrNot() {
+        environmentVariables.set("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "passportCri");
+        when(ssmProvider.get("passportCri/aClientId/unavailable")).thenReturn("false");
+
+        boolean isUnavailable = configService.isUnavailable("aClientId");
+        assertFalse(isUnavailable);
+    }
+
+    @Test
+    void shouldReturnAllowedSharedAttributes() {
+        environmentVariables.set("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "passportCri");
+        when(ssmProvider.get("passportCri/aClientId/allowedSharedAttributes"))
+                .thenReturn("address,name");
+
+        String sharedAttributes = configService.getAllowedSharedAttributes("aClientId");
+        assertEquals("address,name", sharedAttributes);
     }
 
     @Test

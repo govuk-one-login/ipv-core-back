@@ -29,7 +29,6 @@ class VcHelperTest {
                     new CredentialIssuerConfig(
                             "address",
                             "address",
-                            true,
                             new URI("https://example.com/token"),
                             new URI("https://example.com/credential"),
                             new URI("https://example.com/authorize"),
@@ -37,8 +36,7 @@ class VcHelperTest {
                             "test-jwk",
                             "test-encryption-jwk",
                             "https://review-a.integration.account.gov.uk",
-                            new URI("https://example.com/redirect"),
-                            "name, address");
+                            new URI("https://example.com/redirect"));
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
