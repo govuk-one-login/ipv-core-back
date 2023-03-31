@@ -18,15 +18,18 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerService;
 import uk.gov.di.ipv.core.library.credentialissuer.exceptions.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.JourneyError;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.net.URI;
@@ -61,6 +64,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     @Mock private static ConfigService configService;
     @Mock private IpvSessionService ipvSessionService;
     @Mock private IpvSessionItem ipvSessionItem;
+    @Mock private CriOAuthSessionService criOAuthSessionService;
     @InjectMocks private RetrieveCriOauthAccessTokenHandler handler;
 
     private static CredentialIssuerConfig passportIssuer;
@@ -70,6 +74,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     private static final String passportIssuerId = CREDENTIAL_ISSUER_ID;
     private static final String testApiKey = "test-api-key";
     private static final String testComponentId = "http://ipv-core-test.example.com";
+    private static CriOAuthSessionItem criOAuthSessionItem;
 
     @BeforeAll
     static void setUp() throws URISyntaxException {
@@ -100,6 +105,15 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         credentialIssuerSessionDetailsDto =
                 new CredentialIssuerSessionDetailsDto(CREDENTIAL_ISSUER_ID, OAUTH_STATE);
         credentialIssuerSessionDetailsDto.setAuthorizationCode(TEST_AUTH_CODE);
+
+        criOAuthSessionItem =
+                CriOAuthSessionItem.builder()
+                        .criOAuthSessionId("testState")
+                        .criId("testCRI")
+                        .accessToken("testAccessToken")
+                        .authorizationCode("testAuthorizationCode")
+                        .journeyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY)
+                        .build();
     }
 
     @Test
@@ -123,7 +137,17 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         assertEquals(
                 AuditEventTypes.IPV_CRI_ACCESS_TOKEN_EXCHANGED, auditEvents.get(0).getEventName());
 
+        ArgumentCaptor<CriOAuthSessionItem> criOAuthSessionServiceCaptor =
+                ArgumentCaptor.forClass(CriOAuthSessionItem.class);
+        verify(criOAuthSessionService)
+                .updateCriOAuthSessionItem(criOAuthSessionServiceCaptor.capture());
+        assertEquals(
+                criOAuthSessionItem.getAccessToken(),
+                criOAuthSessionServiceCaptor.getValue().getAccessToken());
+
         assertEquals("success", output.get("result"));
+        verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(anyString());
+        verify(criOAuthSessionService, times(1)).updateCriOAuthSessionItem(any());
     }
 
     @Test
@@ -146,6 +170,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                 .thenReturn(credentialIssuerSessionDetailsDto);
 
         assertThrows(JourneyError.class, () -> handler.handleRequest(input, context));
+        verify(criOAuthSessionService, times(0)).getCriOauthSessionItem(anyString());
     }
 
     @Test
@@ -172,6 +197,9 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         AuditEventUser auditEventUser = auditEvents.get(0).getUser();
         assertEquals(TEST_USER_ID, auditEventUser.getUserId());
         assertEquals(sessionId, auditEventUser.getSessionId());
+
+        verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(anyString());
+        verify(criOAuthSessionService, times(1)).updateCriOAuthSessionItem(any());
     }
 
     private void mockServiceCallsAndSessionItem() {
@@ -188,6 +216,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
         when(ipvSessionItem.getCredentialIssuerSessionDetails())
                 .thenReturn(credentialIssuerSessionDetailsDto);
+        when(criOAuthSessionService.getCriOauthSessionItem(anyString()))
+                .thenReturn(criOAuthSessionItem);
     }
 
     @Test
@@ -208,6 +238,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                 .sendAuditEvent(any(AuditEvent.class));
 
         assertThrows(JourneyError.class, () -> handler.handleRequest(input, context));
+        verify(criOAuthSessionService, times(0)).getCriOauthSessionItem(any());
     }
 
     @Test
@@ -252,6 +283,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         assertEquals(
                 OAuth2Error.SERVER_ERROR_CODE,
                 updatedIpvSessionItem.getVisitedCredentialIssuerDetails().get(0).getOauthError());
+        verify(criOAuthSessionService, times(0)).getCriOauthSessionItem(any());
     }
 
     @Test
@@ -294,5 +326,6 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         assertEquals(
                 OAuth2Error.SERVER_ERROR_CODE,
                 updatedIpvSessionItem.getVisitedCredentialIssuerDetails().get(0).getOauthError());
+        verify(criOAuthSessionService, times(0)).getCriOauthSessionItem(any());
     }
 }

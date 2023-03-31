@@ -46,6 +46,7 @@ import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -76,6 +77,7 @@ public class BuildCriOauthRequestHandler
     private final JWSSigner signer;
     private final AuditService auditService;
     private final IpvSessionService ipvSessionService;
+    private final CriOAuthSessionService criOAuthSessionService;
     private final String componentId;
 
     public BuildCriOauthRequestHandler(
@@ -83,13 +85,15 @@ public class BuildCriOauthRequestHandler
             UserIdentityService userIdentityService,
             JWSSigner signer,
             AuditService auditService,
-            IpvSessionService ipvSessionService) {
+            IpvSessionService ipvSessionService,
+            CriOAuthSessionService criOAuthSessionService) {
 
         this.credentialIssuerConfigService = credentialIssuerConfigService;
         this.userIdentityService = userIdentityService;
         this.signer = signer;
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
+        this.criOAuthSessionService = criOAuthSessionService;
         this.componentId =
                 credentialIssuerConfigService.getSsmParameter(
                         ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
@@ -103,6 +107,7 @@ public class BuildCriOauthRequestHandler
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), credentialIssuerConfigService);
         this.ipvSessionService = new IpvSessionService(credentialIssuerConfigService);
+        this.criOAuthSessionService = new CriOAuthSessionService(credentialIssuerConfigService);
         this.componentId =
                 credentialIssuerConfigService.getSsmParameter(
                         ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
@@ -156,6 +161,9 @@ public class BuildCriOauthRequestHandler
             CriResponse criResponse = getCriResponse(credentialIssuerConfig, jweObject);
 
             persistOauthState(ipvSessionItem, credentialIssuerConfig.getId(), oauthState);
+
+            persistCriOauthState(
+                    oauthState, credentialIssuerConfig.getId(), userId, govukSigninJourneyId);
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
@@ -339,5 +347,12 @@ public class BuildCriOauthRequestHandler
                 new CredentialIssuerSessionDetailsDto(criId, oauthState);
         ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
         ipvSessionService.updateIpvSession(ipvSessionItem);
+    }
+
+    @Tracing
+    private void persistCriOauthState(
+            String oauthState, String criId, String userId, String govukSigninJourneyId) {
+        criOAuthSessionService.persistCriOAuthSession(
+                oauthState, criId, userId, govukSigninJourneyId);
     }
 }
