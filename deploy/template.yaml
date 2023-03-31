@@ -2237,10 +2237,10 @@ Resources:
       TableName: !Sub "cri-oauth-sessions-${Environment}"
       BillingMode: "PAY_PER_REQUEST"
       AttributeDefinitions:
-        - AttributeName: "state"
+        - AttributeName: "criOAuthSessionId"
           AttributeType: "S"
       KeySchema:
-        - AttributeName: "state"
+        - AttributeName: "criOAuthSessionId"
           KeyType: "HASH"
       TimeToLiveSpecification:
         AttributeName: "ttl"
