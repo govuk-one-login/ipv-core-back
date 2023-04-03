@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 
@@ -39,10 +38,11 @@ public class ClientOAuthSessionDetailsService {
     }
 
     public ClientOAuthSessionItem generateClientSessionDetails(
-            JWTClaimsSet claimsSet, String clientId) throws ParseException {
+            String clientOauthSessionId, JWTClaimsSet claimsSet, String clientId)
+            throws ParseException {
         ClientOAuthSessionItem clientOAuthSessionItem = new ClientOAuthSessionItem();
 
-        clientOAuthSessionItem.setClientOAuthSessionId(SecureTokenHelper.generate());
+        clientOAuthSessionItem.setClientOAuthSessionId(clientOauthSessionId);
         clientOAuthSessionItem.setResponseType(claimsSet.getStringClaim("response_type"));
         clientOAuthSessionItem.setClientId(clientId);
         clientOAuthSessionItem.setRedirectUri(claimsSet.getStringClaim("redirect_uri"));
@@ -57,9 +57,13 @@ public class ClientOAuthSessionDetailsService {
     }
 
     public ClientOAuthSessionItem generateErrorClientSessionDetails(
-            String redirectUri, String clientId, String state, String govukSigninJourneyId) {
+            String clientOAuthSessionId,
+            String redirectUri,
+            String clientId,
+            String state,
+            String govukSigninJourneyId) {
         ClientOAuthSessionItem clientOAuthSessionErrorItem = new ClientOAuthSessionItem();
-        clientOAuthSessionErrorItem.setClientOAuthSessionId(SecureTokenHelper.generate());
+        clientOAuthSessionErrorItem.setClientOAuthSessionId(clientOAuthSessionId);
         clientOAuthSessionErrorItem.setResponseType(null);
         clientOAuthSessionErrorItem.setClientId(clientId);
         clientOAuthSessionErrorItem.setRedirectUri(redirectUri);

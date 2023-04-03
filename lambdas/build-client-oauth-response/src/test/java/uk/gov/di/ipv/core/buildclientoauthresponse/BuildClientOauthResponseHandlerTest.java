@@ -26,8 +26,10 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
@@ -65,6 +67,7 @@ class BuildClientOauthResponseHandlerTest {
     @Mock private Context context;
     @Mock private IpvSessionService mockSessionService;
     @Mock private ConfigService mockConfigService;
+    @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
     @Mock private AuthRequestValidator mockAuthRequestValidator;
     @Mock private AuditService mockAuditService;
 
@@ -78,6 +81,7 @@ class BuildClientOauthResponseHandlerTest {
                 new BuildClientOauthResponseHandler(
                         mockSessionService,
                         mockConfigService,
+                        mockClientOAuthSessionService,
                         mockAuthRequestValidator,
                         mockAuditService);
     }
@@ -89,6 +93,8 @@ class BuildClientOauthResponseHandlerTest {
                 .thenReturn(ValidationResult.createValidResult());
         IpvSessionItem ipvSessionItem = generateIpvSessionItem();
         when(mockSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setQueryStringParameters(VALID_QUERY_PARAMS);
@@ -129,6 +135,8 @@ class BuildClientOauthResponseHandlerTest {
         IpvSessionItem ipvSessionItemWithoutState = generateIpvSessionItem();
         ipvSessionItemWithoutState.getClientSessionDetails().setState("");
         when(mockSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItemWithoutState);
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setQueryStringParameters(VALID_QUERY_PARAMS);
@@ -147,6 +155,8 @@ class BuildClientOauthResponseHandlerTest {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(new ValidationResult<>(false, ErrorResponse.MISSING_QUERY_PARAMETERS));
         when(mockSessionService.getIpvSession(anyString())).thenReturn(generateIpvSessionItem());
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setQueryStringParameters(new HashMap<>());
@@ -189,6 +199,8 @@ class BuildClientOauthResponseHandlerTest {
             item.setClientSessionDetails(clientSessionDetailsDto);
 
             when(mockSessionService.getIpvSession(anyString())).thenReturn(item);
+            when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                    .thenReturn(getClientOAuthSessionItem());
 
             APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
             event.setHeaders(TEST_EVENT_HEADERS);
@@ -215,6 +227,8 @@ class BuildClientOauthResponseHandlerTest {
         ipvSessionItemWithError.setErrorCode(OAuth2Error.SERVER_ERROR_CODE);
         ipvSessionItemWithError.setErrorDescription("Test error description");
         when(mockSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItemWithError);
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setQueryStringParameters(VALID_QUERY_PARAMS);
@@ -246,6 +260,8 @@ class BuildClientOauthResponseHandlerTest {
         ipvSessionItemWithError.setClientSessionDetails(clientSessionDetailsDto);
 
         when(mockSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItemWithError);
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
 
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setQueryStringParameters(VALID_QUERY_PARAMS);
@@ -293,5 +309,17 @@ class BuildClientOauthResponseHandlerTest {
                 "test-journey-id",
                 "test-user-id",
                 false);
+    }
+
+    private ClientOAuthSessionItem getClientOAuthSessionItem() {
+        ClientOAuthSessionItem clientOAuthSessionItem = new ClientOAuthSessionItem();
+        clientOAuthSessionItem.setClientOAuthSessionId(SecureTokenHelper.generate());
+        clientOAuthSessionItem.setResponseType("test-type");
+        clientOAuthSessionItem.setClientId("test-client");
+        clientOAuthSessionItem.setRedirectUri("http://example.com");
+        clientOAuthSessionItem.setState("test-state");
+        clientOAuthSessionItem.setUserId("test-user-id");
+        clientOAuthSessionItem.setGovukSigninJourneyId("test-journey-id");
+        return clientOAuthSessionItem;
     }
 }
