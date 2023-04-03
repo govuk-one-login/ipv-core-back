@@ -122,7 +122,7 @@ class ConfigServiceTest {
                         TEST_TOKEN_URL,
                         "credentialUrl",
                         TEST_CREDENTIAL_URL,
-                        "jarEncryptionPublicJwk",
+                        "encryptionKey",
                         RSA_ENCRYPTION_PUBLIC_JWK);
         when(ssmProvider.get("/dev/core/credentialIssuers/passportCri/activeConnection"))
                 .thenReturn("stub");
