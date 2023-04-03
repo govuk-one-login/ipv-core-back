@@ -204,7 +204,7 @@ public class BuildCriOauthRequestHandler
 
         URIBuilder redirectUri =
                 new URIBuilder(credentialIssuerConfig.getAuthorizeUrl())
-                        .addParameter("client_id", credentialIssuerConfig.getIpvClientId())
+                        .addParameter("client_id", credentialIssuerConfig.getClientId())
                         .addParameter("request", jweObject.serialize());
 
         if (credentialIssuerConfig.getId().equals(DCMAW_CRI_ID)
@@ -237,7 +237,7 @@ public class BuildCriOauthRequestHandler
                         govukSigninJourneyId);
 
         RSAEncrypter rsaEncrypter =
-                new RSAEncrypter(credentialIssuerConfig.getJarEncryptionPublicJwk());
+                new RSAEncrypter(credentialIssuerConfig.getEncryptionKey());
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
     }
 
@@ -296,7 +296,7 @@ public class BuildCriOauthRequestHandler
 
                     SharedClaims credentialsSharedClaims =
                             mapper.readValue(credentialSubject.toString(), SharedClaims.class);
-                    if (credentialIss.equals(addressCriConfig.getAudienceForClients())) {
+                    if (credentialIss.equals(addressCriConfig.getComponentId())) {
                         hasAddressVc = true;
                         sharedClaimsSet.forEach(sharedClaims -> sharedClaims.setAddress(null));
                     } else if (hasAddressVc) {

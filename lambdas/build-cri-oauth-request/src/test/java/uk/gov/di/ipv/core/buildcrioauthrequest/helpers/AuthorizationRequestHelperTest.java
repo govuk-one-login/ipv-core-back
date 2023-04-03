@@ -99,8 +99,8 @@ class AuthorizationRequestHelperTest {
             throws JOSEException, ParseException, HttpResponseExceptionWithErrorBody {
         setupCredentialIssuerConfigMock();
         setupConfigurationServiceMock();
-        when(credentialIssuerConfig.getAudienceForClients()).thenReturn(AUDIENCE);
-        when(credentialIssuerConfig.getIpvCoreRedirectUrl())
+        when(credentialIssuerConfig.getComponentId()).thenReturn(AUDIENCE);
+        when(credentialIssuerConfig.getClientCallbackUrl())
                 .thenReturn(URI.create(TEST_REDIRECT_URI));
 
         SignedJWT result =
@@ -203,7 +203,7 @@ class AuthorizationRequestHelperTest {
     }
 
     private void setupCredentialIssuerConfigMock() {
-        when(credentialIssuerConfig.getIpvClientId()).thenReturn(IPV_CLIENT_ID_VALUE);
+        when(credentialIssuerConfig.getClientId()).thenReturn(IPV_CLIENT_ID_VALUE);
     }
 
     private void setupConfigurationServiceMock() {

@@ -148,7 +148,7 @@ class ConfigServiceTest {
 
         assertEquals(expected.getTokenUrl(), result.getTokenUrl());
         assertEquals(expected.getCredentialUrl(), result.getCredentialUrl());
-        assertEquals("RSA", result.getJarEncryptionPublicJwk().getKeyType().toString());
+        assertEquals("RSA", result.getEncryptionKey().getKeyType().toString());
     }
 
     @Test

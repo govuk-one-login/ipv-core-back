@@ -54,15 +54,15 @@ public class AuthorizationRequestHelper {
         JWTClaimsSet authClaimsSet =
                 new AuthorizationRequest.Builder(
                                 ResponseType.CODE,
-                                new ClientID(credentialIssuerConfig.getIpvClientId()))
-                        .redirectionURI(credentialIssuerConfig.getIpvCoreRedirectUrl())
+                                new ClientID(credentialIssuerConfig.getClientId()))
+                        .redirectionURI(credentialIssuerConfig.getClientCallbackUrl())
                         .state(new State(oauthState))
                         .build()
                         .toJWTClaimsSet();
 
         JWTClaimsSet.Builder claimsSetBuilder =
                 new JWTClaimsSet.Builder(authClaimsSet)
-                        .audience(credentialIssuerConfig.getAudienceForClients())
+                        .audience(credentialIssuerConfig.getComponentId())
                         .issuer(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
                         .issueTime(Date.from(now))
                         .expirationTime(
