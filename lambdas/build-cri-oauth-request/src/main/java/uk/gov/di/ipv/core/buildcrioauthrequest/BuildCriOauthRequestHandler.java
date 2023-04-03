@@ -96,7 +96,7 @@ public class BuildCriOauthRequestHandler
         this.criOAuthSessionService = criOAuthSessionService;
         this.componentId =
                 credentialIssuerConfigService.getSsmParameter(
-                        ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                        ConfigurationVariable.COMPONENT_ID);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -110,7 +110,7 @@ public class BuildCriOauthRequestHandler
         this.criOAuthSessionService = new CriOAuthSessionService(credentialIssuerConfigService);
         this.componentId =
                 credentialIssuerConfigService.getSsmParameter(
-                        ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                        ConfigurationVariable.COMPONENT_ID);
     }
 
     @Override

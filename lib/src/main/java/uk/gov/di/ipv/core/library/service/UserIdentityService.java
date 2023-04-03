@@ -181,7 +181,7 @@ public class UserIdentityService {
                     configService.getAudienceForClients(item.getCredentialIssuer());
 
             if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())
-                    && isVcSuccessful(currentVcStatuses, audienceForClients)) {
+                    && isVcSuccessful(currentVcStatuses, componentId)) {
                 try {
                     JsonNode nameNode =
                             objectMapper
@@ -286,7 +286,7 @@ public class UserIdentityService {
             String audienceForClients =
                     configService.getAudienceForClients(item.getCredentialIssuer());
             if (PASSPORT_CRI_TYPES.contains(item.getCredentialIssuer())
-                    && isVcSuccessful(currentVcStatuses, audienceForClients)) {
+                    && isVcSuccessful(currentVcStatuses, componentId)) {
                 JsonNode passportNode;
                 try {
                     passportNode =
@@ -329,7 +329,7 @@ public class UserIdentityService {
             String audienceForClients =
                     configService.getAudienceForClients(item.getCredentialIssuer());
             if (DRIVING_PERMIT_CRI_TYPES.contains(item.getCredentialIssuer())
-                    && isVcSuccessful(currentVcStatuses, audienceForClients)) {
+                    && isVcSuccessful(currentVcStatuses, componentId)) {
                 JsonNode drivingPermitNode;
                 try {
                     drivingPermitNode =

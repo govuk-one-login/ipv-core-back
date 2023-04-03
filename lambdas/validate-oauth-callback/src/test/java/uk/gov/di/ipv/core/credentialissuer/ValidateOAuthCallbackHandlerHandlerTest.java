@@ -38,7 +38,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DRIVING_LICENCE_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
 
@@ -74,7 +74,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @BeforeEach
     void setUpBeforeEach() throws URISyntaxException {
-        when(mockConfigService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
+        when(mockConfigService.getSsmParameter(COMPONENT_ID))
                 .thenReturn("audience.for.clients");
         when(mockConfigService.getSsmParameter(PASSPORT_CRI_ID)).thenReturn(CRI_PASSPORT);
         when(mockConfigService.getSsmParameter(DRIVING_LICENCE_CRI_ID))

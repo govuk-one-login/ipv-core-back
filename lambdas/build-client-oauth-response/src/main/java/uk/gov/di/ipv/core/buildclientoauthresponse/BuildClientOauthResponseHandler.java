@@ -57,7 +57,7 @@ public class BuildClientOauthResponseHandler
         this.authRequestValidator = new AuthRequestValidator(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.componentId =
-                configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     public BuildClientOauthResponseHandler(
@@ -70,7 +70,7 @@ public class BuildClientOauthResponseHandler
         this.authRequestValidator = authRequestValidator;
         this.auditService = auditService;
         this.componentId =
-                configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @Override

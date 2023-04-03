@@ -127,7 +127,7 @@ public class RetrieveCriCredentialHandler
                             clientSessionDetailsDto.getGovukSigninJourneyId(),
                             ipAddress);
             this.componentId =
-                    configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                    configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
 
             CredentialIssuerConfig credentialIssuerConfig =
                     configService.getCredentialIssuerActiveConnectionConfig(credentialIssuerId);

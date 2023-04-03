@@ -45,7 +45,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
 @ExtendWith(MockitoExtension.class)
@@ -204,7 +204,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
                 .thenReturn(passportIssuer);
 
-        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(testComponentId);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
 
         when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
@@ -294,7 +294,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
                 .thenReturn(passportIssuer);
 
-        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(testComponentId);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
 
         doThrow(new SqsException("Test sqs error"))
                 .when(auditService)

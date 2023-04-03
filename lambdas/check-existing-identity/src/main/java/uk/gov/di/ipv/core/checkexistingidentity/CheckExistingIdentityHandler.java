@@ -85,7 +85,7 @@ public class CheckExistingIdentityHandler
         this.ciStorageService = ciStorageService;
         this.auditService = auditService;
         this.componentId =
-                configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -96,7 +96,7 @@ public class CheckExistingIdentityHandler
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService);
         this.ciStorageService = new CiStorageService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
-        componentId = configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+        componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @Override
