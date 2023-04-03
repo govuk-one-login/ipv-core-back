@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.VC_VALID_DURATION;
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
@@ -178,7 +177,8 @@ public class UserIdentityService {
             List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : vcStoreItems) {
-            String audienceForClients = getAudienceForClients(item);
+            String audienceForClients =
+                    configService.getAudienceForClients(item.getCredentialIssuer());
 
             if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())
                     && isVcSuccessful(currentVcStatuses, audienceForClients)) {
@@ -283,7 +283,8 @@ public class UserIdentityService {
             List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : vcStoreItems) {
-            String audienceForClients = getAudienceForClients(item);
+            String audienceForClients =
+                    configService.getAudienceForClients(item.getCredentialIssuer());
             if (PASSPORT_CRI_TYPES.contains(item.getCredentialIssuer())
                     && isVcSuccessful(currentVcStatuses, audienceForClients)) {
                 JsonNode passportNode;
@@ -325,7 +326,8 @@ public class UserIdentityService {
             List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : vcStoreItems) {
-            String audienceForClients = getAudienceForClients(item);
+            String audienceForClients =
+                    configService.getAudienceForClients(item.getCredentialIssuer());
             if (DRIVING_PERMIT_CRI_TYPES.contains(item.getCredentialIssuer())
                     && isVcSuccessful(currentVcStatuses, audienceForClients)) {
                 JsonNode drivingPermitNode;
@@ -370,16 +372,6 @@ public class UserIdentityService {
         }
         LOGGER.warn("Failed to find Driving Permit CRI credential");
         return Optional.empty();
-    }
-
-    private String getAudienceForClients(VcStoreItem item) {
-        return configService.getSsmParameter(
-                String.format(
-                        "%s/%s/%s",
-                        configService.getEnvironmentVariable(
-                                CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
-                        item.getCredentialIssuer(),
-                        "audienceForClients"));
     }
 
     private Instant nowPlusSessionTimeout() {
