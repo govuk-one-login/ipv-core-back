@@ -353,9 +353,9 @@ Resources:
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
-          - AddProvisionedConcurrency
-          - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
-          - !Ref AWS::NoValue
+        - AddProvisionedConcurrency
+        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
+        - !Ref AWS::NoValue
 
   IssueClientAccessTokenFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -396,6 +396,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub build-client-oauth-response-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -422,6 +423,8 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - SQSSendMessagePolicy:
@@ -1036,9 +1039,9 @@ Resources:
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
-          - AddProvisionedConcurrency
-          - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
-          - !Ref AWS::NoValue
+        - AddProvisionedConcurrency
+        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
+        - !Ref AWS::NoValue
 
   BuildUserIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1115,9 +1118,9 @@ Resources:
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
-          - AddProvisionedConcurrency
-          - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
-          - !Ref AWS::NoValue
+        - AddProvisionedConcurrency
+        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
+        - !Ref AWS::NoValue
 
   GetCredentialIssuerFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -1451,9 +1454,9 @@ Resources:
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
-          - AddProvisionedConcurrency
-          - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
-          - !Ref AWS::NoValue
+        - AddProvisionedConcurrency
+        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
+        - !Ref AWS::NoValue
 
   IPVProcessJourneyStepFunctionLogGroup:
     Type: AWS::Logs::LogGroup
@@ -2326,34 +2329,34 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     Condition: IsNotDevelopment
     Properties:
-        AlarmName: PrivateApiGateWay5xxAlarm
-        ActionsEnabled: true
-        AlarmActions:
-          - !ImportValue sns-topics-AlarmTopic
-        OKActions:
-          - !ImportValue sns-topics-AlarmTopic
-        InsufficientDataActions: []
-        EvaluationPeriods: 3
-        DatapointsToAlarm: 3
-        Threshold: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, pgw500ErrorLimit ]
-        ComparisonOperator: GreaterThanThreshold
-        TreatMissingData: notBreaching
-        Metrics:
-            - Id: e1
-              Label: Sum-of-5xx-Errors
-              ReturnData: true
-              Expression: SUM(METRICS())
-            - Id: m1
-              ReturnData: false
-              MetricStat:
-                  Metric:
-                      Namespace: AWS/ApiGateway
-                      MetricName: 5XXError
-                      Dimensions:
-                          - Name: ApiName
-                            Value: !Sub IPV Core Private API Gateway ${Environment}
-                  Period: 300
-                  Stat: Sum
+      AlarmName: PrivateApiGateWay5xxAlarm
+      ActionsEnabled: true
+      AlarmActions:
+        - !ImportValue sns-topics-AlarmTopic
+      OKActions:
+        - !ImportValue sns-topics-AlarmTopic
+      InsufficientDataActions: []
+      EvaluationPeriods: 3
+      DatapointsToAlarm: 3
+      Threshold: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, pgw500ErrorLimit ]
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      Metrics:
+        - Id: e1
+          Label: Sum-of-5xx-Errors
+          ReturnData: true
+          Expression: SUM(METRICS())
+        - Id: m1
+          ReturnData: false
+          MetricStat:
+            Metric:
+              Namespace: AWS/ApiGateway
+              MetricName: 5XXError
+              Dimensions:
+                - Name: ApiName
+                  Value: !Sub IPV Core Private API Gateway ${Environment}
+            Period: 300
+            Stat: Sum
 
   CoreApiExternalGw5xxErrors:
     Type: AWS::CloudWatch::Alarm
