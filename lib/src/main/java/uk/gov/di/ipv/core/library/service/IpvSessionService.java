@@ -98,13 +98,11 @@ public class IpvSessionService {
     }
 
     public IpvSessionItem generateIpvSession(
-            ClientSessionDetailsDto clientSessionDetailsDto,
-            String clientOAuthSessionId,
-            ErrorObject errorObject) {
+            ClientSessionDetailsDto clientSessionDetailsDto, ErrorObject errorObject) {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
-        ipvSessionItem.setClientOAuthSessionId(clientOAuthSessionId);
+
         LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
 
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
