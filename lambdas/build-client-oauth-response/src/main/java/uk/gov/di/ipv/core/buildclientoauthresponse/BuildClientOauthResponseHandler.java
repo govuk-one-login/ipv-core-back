@@ -30,10 +30,8 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
-import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
@@ -48,7 +46,6 @@ public class BuildClientOauthResponseHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private final IpvSessionService sessionService;
     private final ConfigService configService;
-    private final ClientOAuthSessionDetailsService clientOAuthSessionService;
     private final AuthRequestValidator authRequestValidator;
     private final AuditService auditService;
     private final String componentId;
@@ -57,7 +54,6 @@ public class BuildClientOauthResponseHandler
     public BuildClientOauthResponseHandler() {
         this.configService = new ConfigService();
         this.sessionService = new IpvSessionService(configService);
-        this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.authRequestValidator = new AuthRequestValidator(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.componentId =
@@ -67,12 +63,10 @@ public class BuildClientOauthResponseHandler
     public BuildClientOauthResponseHandler(
             IpvSessionService sessionService,
             ConfigService configService,
-            ClientOAuthSessionDetailsService clientOAuthSessionService,
             AuthRequestValidator authRequestValidator,
             AuditService auditService) {
         this.sessionService = sessionService;
         this.configService = configService;
-        this.clientOAuthSessionService = clientOAuthSessionService;
         this.authRequestValidator = authRequestValidator;
         this.auditService = auditService;
         this.componentId =
@@ -92,27 +86,27 @@ public class BuildClientOauthResponseHandler
             String ipAddress = RequestHelper.getIpAddress(input);
             IpvSessionItem ipvSessionItem = sessionService.getIpvSession(ipvSessionId);
             String userId = sessionService.getUserId(ipvSessionId);
+            ClientSessionDetailsDto clientSessionDetailsDto =
+                    ipvSessionItem.getClientSessionDetails();
 
-            ClientOAuthSessionItem clientOAuthSessionItem =
-                    clientOAuthSessionService.getClientOAuthSession(
-                            ipvSessionItem.getClientOAuthSessionId());
-
-            LogHelper.attachClientIdToLogs(clientOAuthSessionItem.getClientId());
+            LogHelper.attachClientIdToLogs(clientSessionDetailsDto.getClientId());
             LogHelper.attachGovukSigninJourneyIdToLogs(
-                    clientOAuthSessionItem.getGovukSigninJourneyId());
+                    clientSessionDetailsDto.getGovukSigninJourneyId());
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(
                             userId,
                             ipvSessionId,
-                            clientOAuthSessionItem.getGovukSigninJourneyId(),
+                            clientSessionDetailsDto.getGovukSigninJourneyId(),
                             ipAddress);
 
             ClientResponse clientResponse;
 
             if (ipvSessionItem.getErrorCode() != null) {
                 clientResponse = generateClientErrorResponse(ipvSessionItem);
+
             } else {
+
                 Map<String, List<String>> authParameters =
                         getAuthParamsAsMap(ipvSessionItem.getClientSessionDetails());
 
