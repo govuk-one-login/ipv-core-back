@@ -12,7 +12,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
@@ -105,7 +104,6 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                         .criId("testCRI")
                         .accessToken("testAccessToken")
                         .authorizationCode(TEST_AUTHORIZATION_CODE)
-                        .journeyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY)
                         .build();
 
         underTest =

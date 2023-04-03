@@ -162,8 +162,7 @@ public class BuildCriOauthRequestHandler
 
             persistOauthState(ipvSessionItem, credentialIssuerConfig.getId(), oauthState);
 
-            persistCriOauthState(
-                    oauthState, credentialIssuerConfig.getId(), userId, govukSigninJourneyId);
+            persistCriOauthState(oauthState, credentialIssuerConfig.getId());
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
@@ -350,9 +349,7 @@ public class BuildCriOauthRequestHandler
     }
 
     @Tracing
-    private void persistCriOauthState(
-            String oauthState, String criId, String userId, String govukSigninJourneyId) {
-        criOAuthSessionService.persistCriOAuthSession(
-                oauthState, criId, userId, govukSigninJourneyId);
+    private void persistCriOauthState(String oauthState, String criId) {
+        criOAuthSessionService.persistCriOAuthSession(oauthState, criId);
     }
 }

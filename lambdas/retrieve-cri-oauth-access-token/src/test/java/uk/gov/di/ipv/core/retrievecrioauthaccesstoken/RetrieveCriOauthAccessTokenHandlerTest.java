@@ -18,7 +18,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerService;
 import uk.gov.di.ipv.core.library.credentialissuer.exceptions.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
@@ -112,7 +111,6 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                         .criId("testCRI")
                         .accessToken("testAccessToken")
                         .authorizationCode("testAuthorizationCode")
-                        .journeyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY)
                         .build();
     }
 

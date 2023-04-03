@@ -3,11 +3,8 @@ package uk.gov.di.ipv.core.library.service;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
-
-import java.time.Instant;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CRI_OAUTH_SESSIONS_TABLE_NAME;
@@ -41,18 +38,10 @@ public class CriOAuthSessionService {
         return dataStore.getItem(criOAuthSessionId);
     }
 
-    public CriOAuthSessionItem persistCriOAuthSession(
-            String state, String criId, String userId, String govukSigninJourneyId) {
+    public CriOAuthSessionItem persistCriOAuthSession(String state, String criId) {
 
         CriOAuthSessionItem criOAuthSessionItem =
-                CriOAuthSessionItem.builder()
-                        .criOAuthSessionId(state)
-                        .criId(criId)
-                        .userId(userId)
-                        .govukSigninJourneyId(govukSigninJourneyId)
-                        .creationDateTime(Instant.now().toString())
-                        .journeyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY)
-                        .build();
+                CriOAuthSessionItem.builder().criOAuthSessionId(state).criId(criId).build();
 
         dataStore.create(criOAuthSessionItem, BACKEND_SESSION_TTL);
         LOGGER.info(
