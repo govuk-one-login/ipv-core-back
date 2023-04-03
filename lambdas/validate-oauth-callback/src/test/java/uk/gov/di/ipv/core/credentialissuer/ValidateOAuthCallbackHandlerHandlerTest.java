@@ -74,8 +74,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @BeforeEach
     void setUpBeforeEach() throws URISyntaxException {
-        when(mockConfigService.getSsmParameter(COMPONENT_ID))
-                .thenReturn("audience.for.clients");
+        when(mockConfigService.getSsmParameter(COMPONENT_ID)).thenReturn("audience.for.clients");
         when(mockConfigService.getSsmParameter(PASSPORT_CRI_ID)).thenReturn(CRI_PASSPORT);
         when(mockConfigService.getSsmParameter(DRIVING_LICENCE_CRI_ID))
                 .thenReturn(CRI_DRIVING_LICENCE);

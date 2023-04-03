@@ -84,8 +84,7 @@ public class CheckExistingIdentityHandler
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.ciStorageService = ciStorageService;
         this.auditService = auditService;
-        this.componentId =
-                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @ExcludeFromGeneratedCoverageReport

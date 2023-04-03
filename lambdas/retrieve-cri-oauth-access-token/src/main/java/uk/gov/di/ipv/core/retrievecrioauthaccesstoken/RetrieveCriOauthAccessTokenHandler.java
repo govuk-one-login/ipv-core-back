@@ -110,8 +110,7 @@ public class RetrieveCriOauthAccessTokenHandler
                             ipvSessionId,
                             clientSessionDetailsDto.getGovukSigninJourneyId(),
                             ipAddress);
-            String componentId =
-                    configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+            String componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
 
             auditService.sendAuditEvent(
                     new AuditEvent(

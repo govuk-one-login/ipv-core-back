@@ -81,8 +81,7 @@ public class ValidateOAuthCallbackHandler
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.auditService = auditService;
-        this.componentId =
-                this.configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+        this.componentId = this.configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
         this.passportCriId = configService.getSsmParameter(PASSPORT_CRI_ID);
         this.drivingLicenceCriId = configService.getSsmParameter(DRIVING_LICENCE_CRI_ID);
         this.criOAuthSessionService = criOAuthSessionService;
@@ -93,8 +92,7 @@ public class ValidateOAuthCallbackHandler
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
-        this.componentId =
-                this.configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+        this.componentId = this.configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
         this.passportCriId = configService.getSsmParameter(PASSPORT_CRI_ID);
         this.drivingLicenceCriId = configService.getSsmParameter(DRIVING_LICENCE_CRI_ID);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);

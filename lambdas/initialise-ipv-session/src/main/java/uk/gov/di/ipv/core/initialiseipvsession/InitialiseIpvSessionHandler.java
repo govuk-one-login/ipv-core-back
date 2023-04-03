@@ -72,8 +72,7 @@ public class InitialiseIpvSessionHandler
                 new KmsRsaDecrypter(configService.getSsmParameter(JAR_KMS_ENCRYPTION_KEY_ID));
         this.jarValidator = new JarValidator(kmsRsaDecrypter, configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
-        this.componentId =
-                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     public InitialiseIpvSessionHandler(
@@ -89,8 +88,7 @@ public class InitialiseIpvSessionHandler
         this.kmsRsaDecrypter = kmsRsaDecrypter;
         this.jarValidator = jarValidator;
         this.auditService = auditService;
-        this.componentId =
-                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @Override

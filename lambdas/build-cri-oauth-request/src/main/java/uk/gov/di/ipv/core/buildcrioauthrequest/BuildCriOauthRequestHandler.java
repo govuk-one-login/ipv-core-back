@@ -95,8 +95,7 @@ public class BuildCriOauthRequestHandler
         this.ipvSessionService = ipvSessionService;
         this.criOAuthSessionService = criOAuthSessionService;
         this.componentId =
-                credentialIssuerConfigService.getSsmParameter(
-                        ConfigurationVariable.COMPONENT_ID);
+                credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -109,8 +108,7 @@ public class BuildCriOauthRequestHandler
         this.ipvSessionService = new IpvSessionService(credentialIssuerConfigService);
         this.criOAuthSessionService = new CriOAuthSessionService(credentialIssuerConfigService);
         this.componentId =
-                credentialIssuerConfigService.getSsmParameter(
-                        ConfigurationVariable.COMPONENT_ID);
+                credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @Override
@@ -236,8 +234,7 @@ public class BuildCriOauthRequestHandler
                         userId,
                         govukSigninJourneyId);
 
-        RSAEncrypter rsaEncrypter =
-                new RSAEncrypter(credentialIssuerConfig.getEncryptionKey());
+        RSAEncrypter rsaEncrypter = new RSAEncrypter(credentialIssuerConfig.getEncryptionKey());
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
     }
 

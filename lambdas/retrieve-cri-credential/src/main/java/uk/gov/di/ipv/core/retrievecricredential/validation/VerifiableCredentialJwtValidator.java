@@ -54,8 +54,7 @@ public class VerifiableCredentialJwtValidator {
         }
 
         try {
-            ECDSAVerifier verifier =
-                    new ECDSAVerifier(credentialIssuerConfig.getSigningKey());
+            ECDSAVerifier verifier = new ECDSAVerifier(credentialIssuerConfig.getSigningKey());
             if (!concatSignatureVerifiableCredential.verify(verifier)) {
                 LOGGER.error("Verifiable credential signature not valid");
                 throw new CredentialIssuerException(
