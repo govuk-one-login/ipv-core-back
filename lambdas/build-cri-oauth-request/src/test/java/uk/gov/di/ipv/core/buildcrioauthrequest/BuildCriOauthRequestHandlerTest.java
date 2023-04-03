@@ -31,8 +31,10 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
+import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -51,7 +53,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
@@ -96,6 +102,7 @@ class BuildCriOauthRequestHandlerTest {
     @Mock private AuditService mockAuditService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private IpvSessionItem mockIpvSessionItem;
+    @Mock private CriOAuthSessionService mockCriOAuthSessionService;
 
     private CredentialIssuerConfig credentialIssuerConfig;
     private CredentialIssuerConfig addressCredentialIssuerConfig;
@@ -103,6 +110,7 @@ class BuildCriOauthRequestHandlerTest {
     private CredentialIssuerConfig kbvCredentialIssuerConfig;
     private BuildCriOauthRequestHandler underTest;
     private ClientSessionDetailsDto clientSessionDetailsDto;
+    private CriOAuthSessionItem criOAuthSessionItem;
 
     @BeforeEach
     void setUp()
@@ -116,7 +124,8 @@ class BuildCriOauthRequestHandlerTest {
                         userIdentityService,
                         signer,
                         mockAuditService,
-                        mockIpvSessionService);
+                        mockIpvSessionService,
+                        mockCriOAuthSessionService);
         credentialIssuerConfig =
                 new CredentialIssuerConfig(
                         CRI_ID,
@@ -172,6 +181,14 @@ class BuildCriOauthRequestHandlerTest {
         clientSessionDetailsDto = new ClientSessionDetailsDto();
         clientSessionDetailsDto.setUserId(TEST_USER_ID);
         clientSessionDetailsDto.setGovukSigninJourneyId("test-journey-id");
+
+        criOAuthSessionItem =
+                CriOAuthSessionItem.builder()
+                        .criOAuthSessionId("testState")
+                        .criId(CRI_ID)
+                        .accessToken("testAccessToken")
+                        .authorizationCode("testAuthorizationCode")
+                        .build();
     }
 
     @Test
@@ -205,6 +222,8 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any()))
+                .thenReturn(criOAuthSessionItem);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(
@@ -218,6 +237,8 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER)));
+        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any()))
+                .thenReturn(criOAuthSessionItem);
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -261,6 +282,7 @@ class BuildCriOauthRequestHandlerTest {
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
+        verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any());
     }
 
     @Test
@@ -288,6 +310,8 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER)));
+        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any()))
+                .thenReturn(criOAuthSessionItem);
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -332,6 +356,7 @@ class BuildCriOauthRequestHandlerTest {
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
+        verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any());
     }
 
     @Test
@@ -412,6 +437,8 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER)));
+        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any()))
+                .thenReturn(criOAuthSessionItem);
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -438,6 +465,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(1, sharedClaims.get("name").size());
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(2, sharedClaims.get("address").size());
+        verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any());
     }
 
     @Test
@@ -464,6 +492,8 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_3), IPV_ISSUER)));
+        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any()))
+                .thenReturn(criOAuthSessionItem);
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -488,6 +518,7 @@ class BuildCriOauthRequestHandlerTest {
 
         JsonNode sharedClaims = claimsSet.get(TEST_SHARED_CLAIMS);
         assertEquals(2, sharedClaims.get("name").size());
+        verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any());
     }
 
     @Test
@@ -514,6 +545,8 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_3), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_4), IPV_ISSUER)));
+        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any()))
+                .thenReturn(criOAuthSessionItem);
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -557,6 +590,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals("Jane", name2NameParts.get(1).get("value").asText());
         assertEquals("FamilyName", name2NameParts.get(2).get("type").asText());
         assertEquals("Doe", name2NameParts.get(2).get("value").asText());
+        verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any());
     }
 
     @Test
@@ -585,6 +619,8 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_3), ADDRESS_ISSUER)));
+        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any()))
+                .thenReturn(criOAuthSessionItem);
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -611,6 +647,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(3, sharedClaims.get("name").size());
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(1, sharedClaims.get("address").size());
+        verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any());
     }
 
     @Test
@@ -637,6 +674,8 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2), ADDRESS_ISSUER)));
+        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any()))
+                .thenReturn(criOAuthSessionItem);
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -663,6 +702,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(1, sharedClaims.get("name").size());
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(2, sharedClaims.get("address").size());
+        verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any());
     }
 
     @Test
@@ -691,6 +731,8 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_3), ADDRESS_ISSUER)));
+        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any()))
+                .thenReturn(criOAuthSessionItem);
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
