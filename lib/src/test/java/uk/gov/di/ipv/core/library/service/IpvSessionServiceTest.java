@@ -122,6 +122,7 @@ class IpvSessionServiceTest {
                                 "test-user-id",
                                 "test-journey-id",
                                 false),
+                        null,
                         null);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
@@ -150,6 +151,7 @@ class IpvSessionServiceTest {
                                 "test-user-id",
                                 "test-journey-id",
                                 true),
+                        null,
                         null);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
@@ -180,6 +182,7 @@ class IpvSessionServiceTest {
                                 "test-user-id",
                                 "test-journey-id",
                                 false),
+                        null,
                         testErrorObject);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
