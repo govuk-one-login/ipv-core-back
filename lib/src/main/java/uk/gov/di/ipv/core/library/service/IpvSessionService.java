@@ -93,10 +93,6 @@ public class IpvSessionService {
         return Optional.ofNullable(ipvSessionItem);
     }
 
-    public String getUserId(String ipvSessionId) {
-        return this.getIpvSession(ipvSessionId).getClientSessionDetails().getUserId();
-    }
-
     public IpvSessionItem generateIpvSession(
             ClientSessionDetailsDto clientSessionDetailsDto, ErrorObject errorObject) {
 
@@ -106,7 +102,6 @@ public class IpvSessionService {
         LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
 
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
-        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         String userState =
                 generateStartingState(clientSessionDetailsDto.isDebugJourney(), errorObject);
