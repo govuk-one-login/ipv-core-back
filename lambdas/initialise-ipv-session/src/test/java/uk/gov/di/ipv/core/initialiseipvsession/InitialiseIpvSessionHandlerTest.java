@@ -117,7 +117,6 @@ class InitialiseIpvSessionHandlerTest {
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
-        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
         clientOAuthSessionItem = new ClientOAuthSessionItem();
         clientOAuthSessionItem.setClientOAuthSessionId(SecureTokenHelper.generate());
