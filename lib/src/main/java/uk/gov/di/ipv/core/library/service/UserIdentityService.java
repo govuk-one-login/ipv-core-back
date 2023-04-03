@@ -177,8 +177,7 @@ public class UserIdentityService {
             List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : vcStoreItems) {
-            String audienceForClients =
-                    configService.getAudienceForClients(item.getCredentialIssuer());
+            String componentId = configService.getComponentId(item.getCredentialIssuer());
 
             if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())
                     && isVcSuccessful(currentVcStatuses, componentId)) {
@@ -283,8 +282,7 @@ public class UserIdentityService {
             List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : vcStoreItems) {
-            String audienceForClients =
-                    configService.getAudienceForClients(item.getCredentialIssuer());
+            String componentId = configService.getComponentId(item.getCredentialIssuer());
             if (PASSPORT_CRI_TYPES.contains(item.getCredentialIssuer())
                     && isVcSuccessful(currentVcStatuses, componentId)) {
                 JsonNode passportNode;
@@ -326,8 +324,7 @@ public class UserIdentityService {
             List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : vcStoreItems) {
-            String audienceForClients =
-                    configService.getAudienceForClients(item.getCredentialIssuer());
+            String componentId = configService.getComponentId(item.getCredentialIssuer());
             if (DRIVING_PERMIT_CRI_TYPES.contains(item.getCredentialIssuer())
                     && isVcSuccessful(currentVcStatuses, componentId)) {
                 JsonNode drivingPermitNode;
