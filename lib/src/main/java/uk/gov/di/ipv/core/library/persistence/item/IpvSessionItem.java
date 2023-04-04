@@ -22,6 +22,7 @@ import java.util.List;
 @Data
 public class IpvSessionItem implements DynamodbItem {
     private String ipvSessionId;
+    private String criOAuthSessionId;
     private String userState;
     private String creationDateTime;
     private ClientSessionDetailsDto clientSessionDetails;

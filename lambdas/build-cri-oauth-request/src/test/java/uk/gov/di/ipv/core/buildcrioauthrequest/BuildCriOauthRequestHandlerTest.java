@@ -94,6 +94,8 @@ class BuildCriOauthRequestHandlerTest {
 
     private static final String TEST_SHARED_CLAIMS = "shared_claims";
 
+    public static final String CRI_OAUTH_SESSION_ID = "cri-oauth-session-id";
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock private Context context;
@@ -184,7 +186,7 @@ class BuildCriOauthRequestHandlerTest {
 
         criOAuthSessionItem =
                 CriOAuthSessionItem.builder()
-                        .criOAuthSessionId("testState")
+                        .criOAuthSessionId(CRI_OAUTH_SESSION_ID)
                         .criId(CRI_ID)
                         .accessToken("testAccessToken")
                         .authorizationCode("testAuthorizationCode")
@@ -222,8 +224,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any()))
-                .thenReturn(criOAuthSessionItem);
         when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(
@@ -282,6 +282,7 @@ class BuildCriOauthRequestHandlerTest {
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
+        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
         verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any());
     }
 
@@ -356,6 +357,7 @@ class BuildCriOauthRequestHandlerTest {
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
+        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
         verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any());
     }
 
@@ -465,6 +467,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(1, sharedClaims.get("name").size());
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(2, sharedClaims.get("address").size());
+        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
         verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any());
     }
 
@@ -518,6 +521,7 @@ class BuildCriOauthRequestHandlerTest {
 
         JsonNode sharedClaims = claimsSet.get(TEST_SHARED_CLAIMS);
         assertEquals(2, sharedClaims.get("name").size());
+        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
         verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any());
     }
 
@@ -590,6 +594,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals("Jane", name2NameParts.get(1).get("value").asText());
         assertEquals("FamilyName", name2NameParts.get(2).get("type").asText());
         assertEquals("Doe", name2NameParts.get(2).get("value").asText());
+        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
         verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any());
     }
 
@@ -647,6 +652,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(3, sharedClaims.get("name").size());
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(1, sharedClaims.get("address").size());
+        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
         verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any());
     }
 
@@ -702,6 +708,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(1, sharedClaims.get("name").size());
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(2, sharedClaims.get("address").size());
+        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
         verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any());
     }
 
@@ -759,6 +766,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(3, sharedClaims.get("name").size());
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(1, sharedClaims.get("address").size());
+        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
     }
 
     private Map<String, Map<String, String>> getResponseBodyAsMap(
