@@ -396,6 +396,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub build-client-oauth-response-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -422,6 +423,8 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - SQSSendMessagePolicy:
