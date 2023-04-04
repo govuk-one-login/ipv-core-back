@@ -345,6 +345,7 @@ public class BuildCriOauthRequestHandler
         CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto =
                 new CredentialIssuerSessionDetailsDto(criId, oauthState);
         ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
+        ipvSessionItem.setCriOAuthSessionId(oauthState);
         ipvSessionService.updateIpvSession(ipvSessionItem);
     }
 
