@@ -84,9 +84,9 @@ public class CredentialIssuerService {
             OffsetDateTime dateTime = OffsetDateTime.now();
             ClientAuthClaims clientAuthClaims =
                     new ClientAuthClaims(
-                            config.getIpvClientId(),
-                            config.getIpvClientId(),
-                            config.getAudienceForClients(),
+                            config.getClientId(),
+                            config.getClientId(),
+                            config.getComponentId(),
                             dateTime.plusSeconds(
                                             Long.parseLong(
                                                     configService.getSsmParameter(
@@ -98,7 +98,7 @@ public class CredentialIssuerService {
 
             ClientAuthentication clientAuthentication = new PrivateKeyJWT(signedClientJwt);
 
-            URI redirectionUri = config.getIpvCoreRedirectUrl();
+            URI redirectionUri = config.getClientCallbackUrl();
 
             TokenRequest tokenRequest =
                     new TokenRequest(

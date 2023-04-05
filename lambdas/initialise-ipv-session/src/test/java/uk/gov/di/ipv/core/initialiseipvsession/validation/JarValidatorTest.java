@@ -44,8 +44,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
@@ -115,7 +115,7 @@ class JarValidatorTest {
                     ParseException {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("1500");
         when(configService.getClientRedirectUrls(anyString()))
@@ -253,7 +253,7 @@ class JarValidatorTest {
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
@@ -299,7 +299,7 @@ class JarValidatorTest {
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
@@ -347,7 +347,7 @@ class JarValidatorTest {
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
@@ -395,7 +395,7 @@ class JarValidatorTest {
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
@@ -443,7 +443,7 @@ class JarValidatorTest {
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
@@ -489,7 +489,7 @@ class JarValidatorTest {
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getClientRedirectUrls(anyString()))
                 .thenReturn(Collections.singletonList(redirectUriClaim));
@@ -535,7 +535,7 @@ class JarValidatorTest {
             throws NoSuchAlgorithmException, InvalidKeySpecException, JOSEException {
         when(configService.getSsmParameter(eq(PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY), anyString()))
                 .thenReturn(EC_PUBLIC_JWK);
-        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audienceClaim);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(audienceClaim);
         when(configService.getSsmParameter(eq(CLIENT_ISSUER), anyString())).thenReturn(issuerClaim);
         when(configService.getSsmParameter(MAX_ALLOWED_AUTH_CLIENT_TTL)).thenReturn("1500");
         when(configService.getClientRedirectUrls(anyString()))

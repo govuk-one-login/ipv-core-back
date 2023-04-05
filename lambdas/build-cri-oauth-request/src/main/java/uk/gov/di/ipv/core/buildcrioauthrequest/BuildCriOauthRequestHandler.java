@@ -95,8 +95,7 @@ public class BuildCriOauthRequestHandler
         this.ipvSessionService = ipvSessionService;
         this.criOAuthSessionService = criOAuthSessionService;
         this.componentId =
-                credentialIssuerConfigService.getSsmParameter(
-                        ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -109,8 +108,7 @@ public class BuildCriOauthRequestHandler
         this.ipvSessionService = new IpvSessionService(credentialIssuerConfigService);
         this.criOAuthSessionService = new CriOAuthSessionService(credentialIssuerConfigService);
         this.componentId =
-                credentialIssuerConfigService.getSsmParameter(
-                        ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @Override
@@ -204,7 +202,7 @@ public class BuildCriOauthRequestHandler
 
         URIBuilder redirectUri =
                 new URIBuilder(credentialIssuerConfig.getAuthorizeUrl())
-                        .addParameter("client_id", credentialIssuerConfig.getIpvClientId())
+                        .addParameter("client_id", credentialIssuerConfig.getClientId())
                         .addParameter("request", jweObject.serialize());
 
         if (credentialIssuerConfig.getId().equals(DCMAW_CRI_ID)
@@ -236,8 +234,7 @@ public class BuildCriOauthRequestHandler
                         userId,
                         govukSigninJourneyId);
 
-        RSAEncrypter rsaEncrypter =
-                new RSAEncrypter(credentialIssuerConfig.getJarEncryptionPublicJwk());
+        RSAEncrypter rsaEncrypter = new RSAEncrypter(credentialIssuerConfig.getEncryptionKey());
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
     }
 
@@ -296,7 +293,7 @@ public class BuildCriOauthRequestHandler
 
                     SharedClaims credentialsSharedClaims =
                             mapper.readValue(credentialSubject.toString(), SharedClaims.class);
-                    if (credentialIss.equals(addressCriConfig.getAudienceForClients())) {
+                    if (credentialIss.equals(addressCriConfig.getComponentId())) {
                         hasAddressVc = true;
                         sharedClaimsSet.forEach(sharedClaims -> sharedClaims.setAddress(null));
                     } else if (hasAddressVc) {
