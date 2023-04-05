@@ -16,7 +16,9 @@ import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processjourneystep.utils.ProcessJourneyStepEvents;
@@ -28,6 +30,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -41,19 +44,34 @@ class ProcessJourneyStepHandlerTest {
     private static final String MESSAGE = "message";
     private static final String STATUS_CODE = "statusCode";
     private static final int HTTP_STATUS_CODE_500 = 500;
-
+    public static final String CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ConfigService mockConfigService;
-
+    @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     private ProcessJourneyStepHandler processJourneyStepHandler;
     private ClientSessionDetailsDto clientSessionDetailsDto;
+    private ClientOAuthSessionItem clientOAuthSessionItem;
 
     @BeforeEach
     void setUp() {
         processJourneyStepHandler =
-                new ProcessJourneyStepHandler(mockIpvSessionService, mockConfigService);
+                new ProcessJourneyStepHandler(
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionDetailsService);
         clientSessionDetailsDto = new ClientSessionDetailsDto();
+
+        clientOAuthSessionItem =
+                ClientOAuthSessionItem.builder()
+                        .clientOAuthSessionId(CLIENT_OAUTH_SESSION_ID)
+                        .responseType("resp-type")
+                        .clientId("test-client")
+                        .redirectUri("http://example.com")
+                        .state("test-state")
+                        .userId("test-user-id")
+                        .govukSigninJourneyId("test-journey-id")
+                        .build();
     }
 
     @ParameterizedTest
@@ -609,6 +627,7 @@ class ProcessJourneyStepHandlerTest {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setClientOAuthSessionId(CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
         ipvSessionItem.setUserState(ProcessJourneyStepStates.CRI_UK_PASSPORT_STATE);
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
@@ -620,6 +639,8 @@ class ProcessJourneyStepHandlerTest {
         when(mockConfigService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
                 .thenReturn(environment);
         when(mockIpvSessionService.getIpvSession("1234")).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
@@ -646,6 +667,7 @@ class ProcessJourneyStepHandlerTest {
                 Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_NEXT, IPV_SESSION_ID, "1234");
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setClientOAuthSessionId(CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
         ipvSessionItem.setUserState(ProcessJourneyStepStates.CORE_SESSION_TIMEOUT_STATE);
@@ -654,6 +676,8 @@ class ProcessJourneyStepHandlerTest {
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockIpvSessionService.getIpvSession("1234")).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
         when(mockConfigService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
                 .thenReturn(environment);
 
@@ -677,6 +701,7 @@ class ProcessJourneyStepHandlerTest {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setClientOAuthSessionId(CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(ProcessJourneyStepStates.IPV_IDENTITY_START_PAGE_STATE);
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
@@ -688,6 +713,8 @@ class ProcessJourneyStepHandlerTest {
         when(mockConfigService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
                 .thenReturn(environment);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
@@ -699,6 +726,7 @@ class ProcessJourneyStepHandlerTest {
 
     private void mockIpvSessionItemAndTimeout(String validateOauthCallback, String environment) {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setClientOAuthSessionId(CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(validateOauthCallback);
@@ -709,5 +737,7 @@ class ProcessJourneyStepHandlerTest {
         when(mockConfigService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
                 .thenReturn(environment);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
     }
 }

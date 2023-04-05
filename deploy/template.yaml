@@ -1423,6 +1423,7 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub session-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1447,6 +1448,8 @@ Resources:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
         - SSMParameterReadPolicy:

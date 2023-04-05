@@ -16,7 +16,9 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processjourneystep.exceptions.JourneyEngineException;
@@ -42,19 +44,23 @@ public class ProcessJourneyStepHandler
 
     private final IpvSessionService ipvSessionService;
     private final ConfigService configService;
-
+    private final ClientOAuthSessionDetailsService clientOAuthSessionService;
     private StateMachine stateMachine;
 
     public ProcessJourneyStepHandler(
-            IpvSessionService ipvSessionService, ConfigService configService) {
+            IpvSessionService ipvSessionService,
+            ConfigService configService,
+            ClientOAuthSessionDetailsService clientOAuthSessionService) {
         this.ipvSessionService = ipvSessionService;
         this.configService = configService;
+        this.clientOAuthSessionService = clientOAuthSessionService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public ProcessJourneyStepHandler() {
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
+        this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
     }
 
     @Override
@@ -74,6 +80,10 @@ public class ProcessJourneyStepHandler
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_ID);
             }
 
+            ClientOAuthSessionItem clientOAuthSessionItem =
+                    clientOAuthSessionService.getClientOAuthSession(
+                            ipvSessionItem.getClientOAuthSessionId());
+
             this.stateMachine =
                     new StateMachine(
                             new StateMachineInitializer(
@@ -82,7 +92,7 @@ public class ProcessJourneyStepHandler
                                     ipvSessionItem.getJourneyType()));
 
             LogHelper.attachGovukSigninJourneyIdToLogs(
-                    ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId());
+                    clientOAuthSessionItem.getGovukSigninJourneyId());
 
             return executeJourneyEvent(journeyStep, ipvSessionItem);
 
