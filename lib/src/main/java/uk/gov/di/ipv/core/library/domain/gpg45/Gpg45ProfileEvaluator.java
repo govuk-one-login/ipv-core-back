@@ -80,7 +80,7 @@ public class Gpg45ProfileEvaluator {
             String lastCiIssuer =
                     contraIndicatorItems.get(contraIndicatorItems.size() - 1).getIss();
             String kbvIssuer =
-                    configService.getAudienceForClients(configService.getSsmParameter(KBV_CRI_ID));
+                    configService.getComponentId(configService.getSsmParameter(KBV_CRI_ID));
 
             return Optional.of(
                     lastCiIssuer.equals(kbvIssuer)

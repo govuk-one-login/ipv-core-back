@@ -60,7 +60,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
@@ -218,7 +218,7 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn(ADDRESS_CRI_ID);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
@@ -292,7 +292,7 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI_ID))
                 .thenReturn(dcmawCredentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn(ADDRESS_CRI_ID);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
@@ -420,7 +420,7 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn(ADDRESS_CRI_ID);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
@@ -476,7 +476,7 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn(ADDRESS_CRI_ID);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
@@ -530,7 +530,7 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn(ADDRESS_CRI_ID);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
@@ -603,7 +603,7 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn(ADDRESS_CRI_ID);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
@@ -661,7 +661,7 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn(ADDRESS_CRI_ID);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
@@ -717,7 +717,7 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
                 .thenReturn(kbvCredentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
                 .thenReturn(ADDRESS_CRI_ID);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))

@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
@@ -99,8 +99,8 @@ class AuthorizationRequestHelperTest {
             throws JOSEException, ParseException, HttpResponseExceptionWithErrorBody {
         setupCredentialIssuerConfigMock();
         setupConfigurationServiceMock();
-        when(credentialIssuerConfig.getAudienceForClients()).thenReturn(AUDIENCE);
-        when(credentialIssuerConfig.getIpvCoreRedirectUrl())
+        when(credentialIssuerConfig.getComponentId()).thenReturn(AUDIENCE);
+        when(credentialIssuerConfig.getClientCallbackUrl())
                 .thenReturn(URI.create(TEST_REDIRECT_URI));
 
         SignedJWT result =
@@ -203,12 +203,12 @@ class AuthorizationRequestHelperTest {
     }
 
     private void setupCredentialIssuerConfigMock() {
-        when(credentialIssuerConfig.getIpvClientId()).thenReturn(IPV_CLIENT_ID_VALUE);
+        when(credentialIssuerConfig.getClientId()).thenReturn(IPV_CLIENT_ID_VALUE);
     }
 
     private void setupConfigurationServiceMock() {
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn(IPV_TOKEN_TTL);
-        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(IPV_ISSUER);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
     }
 
     private PrivateKey getEncryptionPrivateKey()
