@@ -44,7 +44,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 
@@ -62,7 +62,7 @@ class TokenRequestValidatorTest {
 
     @BeforeEach
     void setUp() {
-        when(mockConfigService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(audience);
+        when(mockConfigService.getSsmParameter(COMPONENT_ID)).thenReturn(audience);
         validator = new TokenRequestValidator(mockConfigService, mockClientAuthJwtIdService);
     }
 

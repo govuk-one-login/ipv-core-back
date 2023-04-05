@@ -160,7 +160,7 @@ paths:
       description: Called when the frontend begins the CRI journey.
       responses:
         200:
-          description: "Returns the id, ipvClientId and authorizationUrl for a CRI."
+          description: "Returns the id, clientId and authorizationUrl for a CRI."
           content:
             application/json:
               schema:

@@ -177,11 +177,10 @@ public class UserIdentityService {
             List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : vcStoreItems) {
-            String audienceForClients =
-                    configService.getAudienceForClients(item.getCredentialIssuer());
+            String componentId = configService.getComponentId(item.getCredentialIssuer());
 
             if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())
-                    && isVcSuccessful(currentVcStatuses, audienceForClients)) {
+                    && isVcSuccessful(currentVcStatuses, componentId)) {
                 try {
                     JsonNode nameNode =
                             objectMapper
@@ -283,10 +282,9 @@ public class UserIdentityService {
             List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : vcStoreItems) {
-            String audienceForClients =
-                    configService.getAudienceForClients(item.getCredentialIssuer());
+            String componentId = configService.getComponentId(item.getCredentialIssuer());
             if (PASSPORT_CRI_TYPES.contains(item.getCredentialIssuer())
-                    && isVcSuccessful(currentVcStatuses, audienceForClients)) {
+                    && isVcSuccessful(currentVcStatuses, componentId)) {
                 JsonNode passportNode;
                 try {
                     passportNode =
@@ -326,10 +324,9 @@ public class UserIdentityService {
             List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : vcStoreItems) {
-            String audienceForClients =
-                    configService.getAudienceForClients(item.getCredentialIssuer());
+            String componentId = configService.getComponentId(item.getCredentialIssuer());
             if (DRIVING_PERMIT_CRI_TYPES.contains(item.getCredentialIssuer())
-                    && isVcSuccessful(currentVcStatuses, audienceForClients)) {
+                    && isVcSuccessful(currentVcStatuses, componentId)) {
                 JsonNode drivingPermitNode;
                 try {
                     drivingPermitNode =
