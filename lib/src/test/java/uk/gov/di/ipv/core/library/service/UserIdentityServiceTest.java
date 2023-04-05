@@ -75,7 +75,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
+        when(mockConfigService.getAudienceForClients("ukPassport")).thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -116,7 +116,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
+        when(mockConfigService.getAudienceForClients("ukPassport")).thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -139,7 +139,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
+        when(mockConfigService.getAudienceForClients("ukPassport")).thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -189,7 +189,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
+        when(mockConfigService.getAudienceForClients("ukPassport")).thenReturn("test-issuer");
 
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
@@ -224,7 +224,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
+        when(mockConfigService.getAudienceForClients("ukPassport")).thenReturn("test-issuer");
 
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
@@ -257,7 +257,7 @@ class UserIdentityServiceTest {
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
+        when(mockConfigService.getAudienceForClients("ukPassport")).thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -306,7 +306,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
+        when(mockConfigService.getAudienceForClients("ukPassport")).thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -358,7 +358,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
+        when(mockConfigService.getAudienceForClients("ukPassport")).thenReturn("test-issuer");
 
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
@@ -397,7 +397,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
+        when(mockConfigService.getAudienceForClients("ukPassport")).thenReturn("test-issuer");
 
         HttpResponseExceptionWithErrorBody thrownException =
                 assertThrows(
@@ -429,7 +429,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
+        when(mockConfigService.getAudienceForClients("ukPassport")).thenReturn("test-issuer");
 
         HttpResponseExceptionWithErrorBody thrownException =
                 assertThrows(
@@ -617,7 +617,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId("dcmaw")).thenReturn("test-issuer");
+        when(mockConfigService.getAudienceForClients("dcmaw")).thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -669,7 +669,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
+        when(mockConfigService.getAudienceForClients("ukPassport")).thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -698,11 +698,11 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId("dcmaw")).thenReturn("dcmaw-issuer");
-        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
-        when(mockConfigService.getComponentId("fraud")).thenReturn("test-issuer");
-        when(mockConfigService.getComponentId("address")).thenReturn("test-issuer");
-        when(mockConfigService.getComponentId("kbv")).thenReturn("test-issuer");
+        when(mockConfigService.getAudienceForClients("dcmaw")).thenReturn("dcmaw-issuer");
+        when(mockConfigService.getAudienceForClients("ukPassport")).thenReturn("test-issuer");
+        when(mockConfigService.getAudienceForClients("fraud")).thenReturn("test-issuer");
+        when(mockConfigService.getAudienceForClients("address")).thenReturn("test-issuer");
+        when(mockConfigService.getAudienceForClients("kbv")).thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -728,7 +728,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId("dcmaw")).thenReturn("dcmaw-issuer");
+        when(mockConfigService.getAudienceForClients("dcmaw")).thenReturn("dcmaw-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -751,7 +751,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId(anyString())).thenReturn("dcmaw-issuer");
+        when(mockConfigService.getAudienceForClients(anyString())).thenReturn("dcmaw-issuer");
 
         HttpResponseExceptionWithErrorBody thrownException =
                 assertThrows(

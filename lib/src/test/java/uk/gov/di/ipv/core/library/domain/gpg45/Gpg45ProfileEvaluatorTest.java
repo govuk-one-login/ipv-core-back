@@ -136,7 +136,7 @@ class Gpg45ProfileEvaluatorTest {
         when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
         when(mockConfigService.getSsmParameter(KBV_CRI_ID)).thenReturn("kbv");
-        when(mockConfigService.getComponentId("kbv")).thenReturn("kbvIssuer");
+        when(mockConfigService.getAudienceForClients("kbv")).thenReturn("kbvIssuer");
 
         assertEquals(
                 Optional.of(JOURNEY_RESPONSE_PYI_KBV_FAIL),

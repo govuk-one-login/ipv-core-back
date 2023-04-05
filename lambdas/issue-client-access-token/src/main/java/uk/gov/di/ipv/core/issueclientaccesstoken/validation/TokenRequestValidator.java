@@ -23,7 +23,7 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.Set;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 
 public class TokenRequestValidator {
@@ -89,7 +89,7 @@ public class TokenRequestValidator {
 
         return new ClientAuthenticationVerifier<>(
                 new ConfigurationServicePublicKeySelector(configService),
-                Set.of(new Audience(configService.getSsmParameter(COMPONENT_ID))));
+                Set.of(new Audience(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS))));
     }
 
     private void logWarningJtiHasAlreadyBeenUsed(ClientAuthJwtIdItem clientAuthJwtIdItem) {

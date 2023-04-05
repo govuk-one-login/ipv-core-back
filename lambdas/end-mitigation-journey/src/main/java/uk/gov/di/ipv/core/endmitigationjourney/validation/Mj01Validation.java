@@ -47,7 +47,7 @@ public class Mj01Validation {
                         if (signedJWT
                                 .getJWTClaimsSet()
                                 .getIssuer()
-                                .equals(fraudCriConfig.getComponentId())) {
+                                .equals(fraudCriConfig.getAudienceForClients())) {
                             boolean isAfterCiIssueDate =
                                     signedJWT
                                             .getJWTClaimsSet()
