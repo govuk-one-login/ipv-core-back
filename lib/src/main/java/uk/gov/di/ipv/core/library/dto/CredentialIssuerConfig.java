@@ -19,11 +19,11 @@ public class CredentialIssuerConfig {
     private URI tokenUrl;
     private URI credentialUrl;
     private URI authorizeUrl;
-    private String clientId;
-    private String signingKey;
-    private String encryptionKey;
-    private String componentId;
-    private URI clientCallbackUrl;
+    private String ipvClientId;
+    private String vcVerifyingPublicJwk;
+    private String jarEncryptionPublicJwk;
+    private String audienceForClients;
+    private URI ipvCoreRedirectUrl;
 
     public CredentialIssuerConfig() {}
 
@@ -34,21 +34,21 @@ public class CredentialIssuerConfig {
             URI tokenUrl,
             URI credentialUrl,
             URI authorizeUrl,
-            String clientId,
-            String signingKey,
-            String encryptionKey,
-            String componentId,
-            URI clientCallbackUrl) {
+            String ipvClientId,
+            String vcVerifyingPublicJwk,
+            String jarEncryptionPublicJwk,
+            String audienceForClients,
+            URI ipvCoreRedirectUrl) {
         this.id = id;
         this.name = name;
         this.tokenUrl = tokenUrl;
         this.credentialUrl = credentialUrl;
         this.authorizeUrl = authorizeUrl;
-        this.clientId = clientId;
-        this.signingKey = signingKey;
-        this.encryptionKey = encryptionKey;
-        this.componentId = componentId;
-        this.clientCallbackUrl = clientCallbackUrl;
+        this.ipvClientId = ipvClientId;
+        this.vcVerifyingPublicJwk = vcVerifyingPublicJwk;
+        this.jarEncryptionPublicJwk = jarEncryptionPublicJwk;
+        this.audienceForClients = audienceForClients;
+        this.ipvCoreRedirectUrl = ipvCoreRedirectUrl;
     }
 
     public String getId() {
@@ -71,34 +71,34 @@ public class CredentialIssuerConfig {
         return authorizeUrl;
     }
 
-    public String getClientId() {
-        return clientId;
+    public String getIpvClientId() {
+        return ipvClientId;
     }
 
-    @JsonGetter("signingKey")
-    public String getSigningKeyString() {
-        return signingKey;
+    @JsonGetter("vcVerifyingPublicJwk")
+    public String getVcVerifyingPublicKeyString() {
+        return vcVerifyingPublicJwk;
     }
 
-    public ECKey getSigningKey() throws ParseException {
-        return ECKey.parse(signingKey);
+    public ECKey getVcVerifyingPublicJwk() throws ParseException {
+        return ECKey.parse(vcVerifyingPublicJwk);
     }
 
-    @JsonGetter("encryptionKey")
-    public String getEncryptionKeyString() {
-        return encryptionKey;
+    @JsonGetter("jarEncryptionPublicJwk")
+    public String getJarEncryptionPublicJwkString() {
+        return jarEncryptionPublicJwk;
     }
 
-    public RSAKey getEncryptionKey() throws ParseException {
-        return RSAKey.parse(encryptionKey);
+    public RSAKey getJarEncryptionPublicJwk() throws ParseException {
+        return RSAKey.parse(jarEncryptionPublicJwk);
     }
 
-    public String getComponentId() {
-        return componentId;
+    public String getAudienceForClients() {
+        return audienceForClients;
     }
 
-    public URI getClientCallbackUrl() {
-        return clientCallbackUrl;
+    public URI getIpvCoreRedirectUrl() {
+        return ipvCoreRedirectUrl;
     }
 
     @Override

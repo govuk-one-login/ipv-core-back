@@ -2,10 +2,10 @@ package uk.gov.di.ipv.core.library.config;
 
 public enum ConfigurationVariable {
     ADDRESS_CRI_ID("/%s/core/self/journey/addressCriId"),
+    AUDIENCE_FOR_CLIENTS("/%s/core/self/audienceForClients"),
     BACKEND_SESSION_TIMEOUT("/%s/core/self/backendSessionTimeout"),
     BACKEND_SESSION_TTL("/%s/core/self/backendSessionTtl"),
     CLIENT_ISSUER("/%s/core/clients/%s/issuer"),
-    COMPONENT_ID("/%s/core/self/componentId"),
     CORE_FRONT_CALLBACK_URL("/%s/core/self/coreFrontCallbackUrl"),
     CORE_VTM_CLAIM("/%s/core/self/coreVtmClaim"),
     DRIVING_LICENCE_CRI_ID("/%s/core/self/journey/drivingLicenceId"),

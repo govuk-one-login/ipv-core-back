@@ -54,7 +54,8 @@ public class VerifiableCredentialJwtValidator {
         }
 
         try {
-            ECDSAVerifier verifier = new ECDSAVerifier(credentialIssuerConfig.getSigningKey());
+            ECDSAVerifier verifier =
+                    new ECDSAVerifier(credentialIssuerConfig.getVcVerifyingPublicJwk());
             if (!concatSignatureVerifiableCredential.verify(verifier)) {
                 LOGGER.error("Verifiable credential signature not valid");
                 throw new CredentialIssuerException(
@@ -96,7 +97,7 @@ public class VerifiableCredentialJwtValidator {
         DefaultJWTClaimsVerifier<SimpleSecurityContext> verifier =
                 new DefaultJWTClaimsVerifier<>(
                         new JWTClaimsSet.Builder()
-                                .issuer(credentialIssuerConfig.getComponentId())
+                                .issuer(credentialIssuerConfig.getAudienceForClients())
                                 .subject(userId)
                                 .build(),
                         new HashSet<>(Arrays.asList(JWTClaimNames.NOT_BEFORE, VC_CLAIM_NAME)));

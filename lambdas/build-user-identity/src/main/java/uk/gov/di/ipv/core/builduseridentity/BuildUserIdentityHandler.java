@@ -58,7 +58,8 @@ public class BuildUserIdentityHandler
         this.ipvSessionService = ipvSessionService;
         this.configService = configService;
         this.auditService = auditService;
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+        this.componentId =
+                configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -67,7 +68,8 @@ public class BuildUserIdentityHandler
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+        this.componentId =
+                configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @Override

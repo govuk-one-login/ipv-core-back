@@ -53,7 +53,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATORS;
@@ -171,7 +171,7 @@ class RetrieveCriCredentialHandlerTest {
     void shouldUpdateSessionWithDetailsOfVisitedCri() throws ParseException {
         when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
                 .thenReturn(testPassportIssuer);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
+        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(testComponentId);
         when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
         when(credentialIssuerService.getVerifiableCredential(
                         testBearerAccessToken, testPassportIssuer, testApiKey))
@@ -334,7 +334,7 @@ class RetrieveCriCredentialHandlerTest {
                 .thenReturn(testPassportIssuer);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_JOURNEY_ID))
                 .thenReturn(addressConfig);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
+        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(testComponentId);
         when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
@@ -373,7 +373,7 @@ class RetrieveCriCredentialHandlerTest {
     private void mockServiceCallsAndSessionItem() {
         when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
                 .thenReturn(testPassportIssuer);
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
+        when(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS)).thenReturn(testComponentId);
         when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(ipvSessionItem.getClientSessionDetails()).thenReturn(testClientSessionDetailsDto);

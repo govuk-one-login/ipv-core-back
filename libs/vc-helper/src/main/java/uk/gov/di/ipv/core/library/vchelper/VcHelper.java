@@ -48,7 +48,7 @@ public class VcHelper {
         JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
         if (evidenceArray == null) {
             String vcIss = vc.getJWTClaimsSet().getIssuer();
-            if (vcIss.equals(addressCriConfig.getComponentId())) {
+            if (vcIss.equals(addressCriConfig.getAudienceForClients())) {
                 return true;
             }
             LOGGER.warn("Unexpected missing evidence on VC from issuer: {}", vcIss);

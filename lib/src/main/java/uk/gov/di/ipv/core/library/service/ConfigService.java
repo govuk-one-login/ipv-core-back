@@ -197,11 +197,11 @@ public class ConfigService {
                         credentialIssuerId));
     }
 
-    public String getComponentId(String credentialIssuerId) {
+    public String getAudienceForClients(String credentialIssuerId) {
         String activeConnection = getActiveConnection(credentialIssuerId);
         return getSsmParameter(
                 String.format(
-                        "%s/%s/connections/%s/componentId",
+                        "%s/%s/connections/%s/audienceForClients",
                         getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
                         credentialIssuerId,
                         activeConnection));

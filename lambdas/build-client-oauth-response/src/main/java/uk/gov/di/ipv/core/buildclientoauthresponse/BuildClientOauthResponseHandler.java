@@ -56,7 +56,8 @@ public class BuildClientOauthResponseHandler
         this.sessionService = new IpvSessionService(configService);
         this.authRequestValidator = new AuthRequestValidator(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+        this.componentId =
+                configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     public BuildClientOauthResponseHandler(
@@ -68,7 +69,8 @@ public class BuildClientOauthResponseHandler
         this.configService = configService;
         this.authRequestValidator = authRequestValidator;
         this.auditService = auditService;
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+        this.componentId =
+                configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @Override

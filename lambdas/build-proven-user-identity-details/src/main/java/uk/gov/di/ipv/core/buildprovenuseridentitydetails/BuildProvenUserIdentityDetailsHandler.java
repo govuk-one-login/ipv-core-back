@@ -136,7 +136,7 @@ public class BuildProvenUserIdentityDetailsHandler
                             item.getCredentialIssuer());
             if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())
                     && userIdentityService.isVcSuccessful(
-                            currentVcStatuses, credentialIssuerConfig.getComponentId())) {
+                            currentVcStatuses, credentialIssuerConfig.getAudienceForClients())) {
                 JsonNode vcSubjectNode =
                         mapper.readTree(
                                         SignedJWT.parse(item.getCredential())
@@ -182,7 +182,7 @@ public class BuildProvenUserIdentityDetailsHandler
                             item.getCredentialIssuer());
             if (ADDRESS_CRI_TYPES.contains(item.getCredentialIssuer())
                     && userIdentityService.isVcSuccessful(
-                            currentVcStatuses, credentialIssuerConfig.getComponentId())) {
+                            currentVcStatuses, credentialIssuerConfig.getAudienceForClients())) {
                 JsonNode addressNode =
                         mapper.readTree(
                                         SignedJWT.parse(item.getCredential())

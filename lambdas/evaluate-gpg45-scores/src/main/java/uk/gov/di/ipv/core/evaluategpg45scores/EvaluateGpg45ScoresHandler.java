@@ -90,7 +90,7 @@ public class EvaluateGpg45ScoresHandler
         this.auditService = auditService;
 
         addressCriId = configService.getSsmParameter(ADDRESS_CRI_ID);
-        componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+        componentId = configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -103,7 +103,7 @@ public class EvaluateGpg45ScoresHandler
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
 
         addressCriId = configService.getSsmParameter(ADDRESS_CRI_ID);
-        componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+        componentId = configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
     }
 
     @Override

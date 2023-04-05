@@ -262,7 +262,7 @@ public class SelectCriHandler
 
         CredentialIssuerConfig criConfig =
                 configService.getCredentialIssuerActiveConnectionConfig(criId);
-        Optional<VcStatusDto> vc = getVc(currentVcStatuses, criConfig.getComponentId());
+        Optional<VcStatusDto> vc = getVc(currentVcStatuses, criConfig.getAudienceForClients());
 
         if (vc.isEmpty()) {
             if (userHasNotVisited(visitedCredentialIssuers, criId)) {
@@ -329,7 +329,7 @@ public class SelectCriHandler
         CredentialIssuerConfig passportConfig =
                 configService.getCredentialIssuerActiveConnectionConfig(passportCriId);
         Optional<VcStatusDto> passportVc =
-                getVc(currentVcStatuses, passportConfig.getComponentId());
+                getVc(currentVcStatuses, passportConfig.getAudienceForClients());
         return passportVc.isPresent();
     }
 
@@ -337,7 +337,7 @@ public class SelectCriHandler
         CredentialIssuerConfig drivingLicenceConfig =
                 configService.getCredentialIssuerActiveConnectionConfig(drivingLicenceCriId);
         Optional<VcStatusDto> drivingLicenceVc =
-                getVc(currentVcStatuses, drivingLicenceConfig.getComponentId());
+                getVc(currentVcStatuses, drivingLicenceConfig.getAudienceForClients());
         return drivingLicenceVc.isPresent();
     }
 

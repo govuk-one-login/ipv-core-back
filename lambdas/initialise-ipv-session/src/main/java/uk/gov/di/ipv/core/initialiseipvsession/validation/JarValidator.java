@@ -28,8 +28,8 @@ import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
 
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 
@@ -137,7 +137,7 @@ public class JarValidator {
     private JWTClaimsSet getValidatedClaimSet(SignedJWT signedJWT, String clientId)
             throws JarValidationException {
 
-        String criAudience = configService.getSsmParameter(COMPONENT_ID);
+        String criAudience = configService.getSsmParameter(AUDIENCE_FOR_CLIENTS);
         String clientIssuer = configService.getSsmParameter(CLIENT_ISSUER, clientId);
 
         DefaultJWTClaimsVerifier<?> verifier =
