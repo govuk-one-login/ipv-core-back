@@ -736,6 +736,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub retrieve-cri-credentials-${Environment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CI_STORAGE_PUT_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
             - contra_indicator_storage_account_id: !FindInMap
@@ -772,6 +773,8 @@ Resources:
             TableName: !Ref UserIssuedCredentialsV2Table
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CriOAuthSessionsTable
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
         - SSMParameterReadPolicy:
