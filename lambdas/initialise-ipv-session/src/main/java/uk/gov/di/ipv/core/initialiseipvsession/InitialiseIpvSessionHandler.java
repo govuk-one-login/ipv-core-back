@@ -134,8 +134,11 @@ public class InitialiseIpvSessionHandler
                     ipvSessionService.generateIpvSession(
                             clientSessionDetailsDto, clientOAuthSessionId, null);
 
-            ClientOAuthSessionItem clientOAuthSessionItem = clientOAuthSessionService.generateClientSessionDetails(
-                    clientOAuthSessionId, claimsSet, sessionParams.get(CLIENT_ID_PARAM_KEY));
+            ClientOAuthSessionItem clientOAuthSessionItem =
+                    clientOAuthSessionService.generateClientSessionDetails(
+                            clientOAuthSessionId,
+                            claimsSet,
+                            sessionParams.get(CLIENT_ID_PARAM_KEY));
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(
