@@ -41,6 +41,7 @@ public class ProcessJourneyStepHandler
 
     private final IpvSessionService ipvSessionService;
     private final ConfigService configService;
+
     private StateMachine stateMachine;
 
     public ProcessJourneyStepHandler(
