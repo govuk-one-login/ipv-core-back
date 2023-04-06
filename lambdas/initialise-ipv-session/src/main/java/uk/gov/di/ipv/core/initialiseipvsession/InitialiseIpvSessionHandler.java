@@ -34,6 +34,7 @@ import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
@@ -133,14 +134,14 @@ public class InitialiseIpvSessionHandler
                     ipvSessionService.generateIpvSession(
                             clientSessionDetailsDto, clientOAuthSessionId, null);
 
-            clientOAuthSessionService.generateClientSessionDetails(
+            ClientOAuthSessionItem clientOAuthSessionItem = clientOAuthSessionService.generateClientSessionDetails(
                     clientOAuthSessionId, claimsSet, sessionParams.get(CLIENT_ID_PARAM_KEY));
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(
-                            ipvSessionItem.getClientSessionDetails().getUserId(),
+                            clientOAuthSessionItem.getUserId(),
                             ipvSessionItem.getIpvSessionId(),
-                            clientSessionDetailsDto.getGovukSigninJourneyId(),
+                            clientOAuthSessionItem.getGovukSigninJourneyId(),
                             ipAddress);
 
             auditService.sendAuditEvent(
