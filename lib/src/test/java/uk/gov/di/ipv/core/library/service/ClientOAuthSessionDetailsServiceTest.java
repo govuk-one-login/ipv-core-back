@@ -64,6 +64,7 @@ class ClientOAuthSessionDetailsServiceTest {
 
     @Test
     void shouldCreateClientOAuthSessionItem() throws ParseException {
+        String clientOAuthSessionId = SecureTokenHelper.generate();
         JWTClaimsSet testClaimSet =
                 new JWTClaimsSet.Builder()
                         .claim("response_type", "test-type")
@@ -74,15 +75,13 @@ class ClientOAuthSessionDetailsServiceTest {
                         .build();
         ClientOAuthSessionItem clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.generateClientSessionDetails(
-                        testClaimSet, "test-client");
+                        clientOAuthSessionId, testClaimSet, "test-client");
 
         ArgumentCaptor<ClientOAuthSessionItem> clientOAuthSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(ClientOAuthSessionItem.class);
         verify(mockDataStore)
                 .create(clientOAuthSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
-        assertEquals(
-                clientOAuthSessionItem.getClientOAuthSessionId(),
-                clientOAuthSessionItemArgumentCaptor.getValue().getClientOAuthSessionId());
+        assertEquals(clientOAuthSessionId, clientOAuthSessionItem.getClientOAuthSessionId());
         assertEquals(
                 clientOAuthSessionItem.getClientId(),
                 clientOAuthSessionItemArgumentCaptor.getValue().getClientId());
@@ -105,18 +104,21 @@ class ClientOAuthSessionDetailsServiceTest {
 
     @Test
     void shouldCreateSessionItemWithErrorObject() {
+        String clientOAuthSessionId = SecureTokenHelper.generate();
         ClientOAuthSessionItem clientOAuthSessionItem =
                 clientOAuthSessionDetailsService.generateErrorClientSessionDetails(
-                        "http://example.com", "test-client", "test-state", "test-journey-id");
+                        clientOAuthSessionId,
+                        "http://example.com",
+                        "test-client",
+                        "test-state",
+                        "test-journey-id");
 
         ArgumentCaptor<ClientOAuthSessionItem> clientOAuthSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(ClientOAuthSessionItem.class);
         verify(mockDataStore)
                 .create(clientOAuthSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
         assertNotNull(clientOAuthSessionItemArgumentCaptor.getValue().getClientOAuthSessionId());
-        assertEquals(
-                clientOAuthSessionItem.getClientOAuthSessionId(),
-                clientOAuthSessionItemArgumentCaptor.getValue().getClientOAuthSessionId());
+        assertEquals(clientOAuthSessionId, clientOAuthSessionItem.getClientOAuthSessionId());
         assertEquals(
                 clientOAuthSessionItem.getClientId(),
                 clientOAuthSessionItemArgumentCaptor.getValue().getClientId());

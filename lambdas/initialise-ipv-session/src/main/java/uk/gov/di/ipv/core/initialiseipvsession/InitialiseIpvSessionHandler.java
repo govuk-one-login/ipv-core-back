@@ -33,7 +33,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
-import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
@@ -73,8 +73,7 @@ public class InitialiseIpvSessionHandler
                 new KmsRsaDecrypter(configService.getSsmParameter(JAR_KMS_ENCRYPTION_KEY_ID));
         this.jarValidator = new JarValidator(kmsRsaDecrypter, configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
-        this.componentId =
-                configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     public InitialiseIpvSessionHandler(
@@ -90,8 +89,7 @@ public class InitialiseIpvSessionHandler
         this.kmsRsaDecrypter = kmsRsaDecrypter;
         this.jarValidator = jarValidator;
         this.auditService = auditService;
-        this.componentId =
-                configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @Override
@@ -129,22 +127,25 @@ public class InitialiseIpvSessionHandler
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     clientSessionDetailsDto.getGovukSigninJourneyId());
 
-            IpvSessionItem ipvSessionItem =
-                    ipvSessionService.generateIpvSession(clientSessionDetailsDto, null);
+            String clientOAuthSessionId = SecureTokenHelper.generate();
 
-            ClientOAuthSessionItem clientOAuthSessionItem =
-                    clientOAuthSessionService.generateClientSessionDetails(
-                            claimsSet, sessionParams.get(CLIENT_ID_PARAM_KEY));
+            IpvSessionItem ipvSessionItem =
+                    ipvSessionService.generateIpvSession(
+                            clientSessionDetailsDto, clientOAuthSessionId, null);
+
+            clientOAuthSessionService.generateClientSessionDetails(
+                    clientOAuthSessionId, claimsSet, sessionParams.get(CLIENT_ID_PARAM_KEY));
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(
-                            clientOAuthSessionItem.getUserId(),
+                            ipvSessionItem.getClientSessionDetails().getUserId(),
                             ipvSessionItem.getIpvSessionId(),
-                            clientOAuthSessionItem.getGovukSigninJourneyId(),
+                            clientSessionDetailsDto.getGovukSigninJourneyId(),
                             ipAddress);
 
             auditService.sendAuditEvent(
                     new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, componentId, auditEventUser));
+
             Map<String, String> response =
                     Map.of(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());
 
@@ -160,6 +161,7 @@ public class InitialiseIpvSessionHandler
                     "Recoverable Jar validation failed because: {}",
                     e.getErrorObject().getDescription());
 
+            String clientOAuthSessionId = SecureTokenHelper.generate();
             ClientSessionDetailsDto clientSessionDetailsDto =
                     generateErrorClientSessionDetails(
                             e.getRedirectUri(),
@@ -169,9 +171,13 @@ public class InitialiseIpvSessionHandler
 
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
-                            clientSessionDetailsDto, e.getErrorObject());
+                            clientSessionDetailsDto, clientOAuthSessionId, e.getErrorObject());
             clientOAuthSessionService.generateErrorClientSessionDetails(
-                    e.getRedirectUri(), e.getClientId(), e.getState(), e.getGovukSigninJourneyId());
+                    clientOAuthSessionId,
+                    e.getRedirectUri(),
+                    e.getClientId(),
+                    e.getState(),
+                    e.getGovukSigninJourneyId());
 
             Map<String, String> response =
                     Map.of(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());

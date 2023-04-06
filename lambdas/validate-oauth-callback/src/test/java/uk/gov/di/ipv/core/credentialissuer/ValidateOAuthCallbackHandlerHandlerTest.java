@@ -17,9 +17,11 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.validateoauthcallback.ValidateOAuthCallbackHandler;
 import uk.gov.di.ipv.core.validateoauthcallback.dto.CriCallbackRequest;
@@ -36,7 +38,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DRIVING_LICENCE_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
 
@@ -66,12 +68,13 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     @Mock private ConfigService mockConfigService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private AuditService mockAuditService;
+    @Mock private CriOAuthSessionService mockCriOAuthSessionService;
     private ValidateOAuthCallbackHandler underTest;
+    private CriOAuthSessionItem criOAuthSessionItem;
 
     @BeforeEach
     void setUpBeforeEach() throws URISyntaxException {
-        when(mockConfigService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
-                .thenReturn("audience.for.clients");
+        when(mockConfigService.getSsmParameter(COMPONENT_ID)).thenReturn("audience.for.clients");
         when(mockConfigService.getSsmParameter(PASSPORT_CRI_ID)).thenReturn(CRI_PASSPORT);
         when(mockConfigService.getSsmParameter(DRIVING_LICENCE_CRI_ID))
                 .thenReturn(CRI_DRIVING_LICENCE);
@@ -94,9 +97,20 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
+        criOAuthSessionItem =
+                CriOAuthSessionItem.builder()
+                        .criOAuthSessionId("testState")
+                        .criId("testCRI")
+                        .accessToken("testAccessToken")
+                        .authorizationCode(TEST_AUTHORIZATION_CODE)
+                        .build();
+
         underTest =
                 new ValidateOAuthCallbackHandler(
-                        mockConfigService, mockIpvSessionService, mockAuditService);
+                        mockConfigService,
+                        mockIpvSessionService,
+                        mockAuditService,
+                        mockCriOAuthSessionService);
     }
 
     @Test
@@ -104,6 +118,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
                 .thenReturn(credentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
+                .thenReturn(criOAuthSessionItem);
 
         Map<String, Object> output = underTest.handleRequest(validCriCallbackRequest(), context);
 
@@ -124,7 +140,18 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                         .getCredentialIssuerSessionDetails()
                         .getAuthorizationCode());
 
+        ArgumentCaptor<CriOAuthSessionItem> criOAuthSessionServiceCaptor =
+                ArgumentCaptor.forClass(CriOAuthSessionItem.class);
+        verify(mockCriOAuthSessionService)
+                .updateCriOAuthSessionItem(criOAuthSessionServiceCaptor.capture());
+
+        assertEquals(
+                TEST_AUTHORIZATION_CODE,
+                criOAuthSessionServiceCaptor.getValue().getAuthorizationCode());
+
         assertEquals("/journey/cri/access-token", output.get("journey"));
+        verify(mockCriOAuthSessionService, times(1)).getCriOauthSessionItem(any());
+        verify(mockCriOAuthSessionService, times(1)).updateCriOAuthSessionItem(any());
     }
 
     @Test
@@ -138,6 +165,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.MISSING_AUTHORIZATION_CODE.getCode(), output.get(CODE));
         assertEquals(ErrorResponse.MISSING_AUTHORIZATION_CODE.getMessage(), output.get(MESSAGE));
+        verify(mockCriOAuthSessionService, times(0)).getCriOauthSessionItem(any());
     }
 
     @Test
@@ -151,6 +179,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID.getCode(), output.get(CODE));
         assertEquals(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID.getMessage(), output.get(MESSAGE));
+        verify(mockCriOAuthSessionService, times(0)).getCriOauthSessionItem(any());
     }
 
     @Test
@@ -166,6 +195,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID.getCode(), output.get(CODE));
         assertEquals(ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID.getMessage(), output.get(MESSAGE));
+        verify(mockCriOAuthSessionService, times(0)).getCriOauthSessionItem(any());
     }
 
     @Test
@@ -179,6 +209,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), output.get(CODE));
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), output.get(MESSAGE));
+        verify(mockCriOAuthSessionService, times(0)).getCriOauthSessionItem(any());
     }
 
     @Test
@@ -192,6 +223,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.MISSING_OAUTH_STATE.getCode(), output.get(CODE));
         assertEquals(ErrorResponse.MISSING_OAUTH_STATE.getMessage(), output.get(MESSAGE));
+        verify(mockCriOAuthSessionService, times(0)).getCriOauthSessionItem(any());
     }
 
     @Test
@@ -207,6 +239,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals("pyi-attempt-recovery", output.get(PAGE));
         assertEquals("error", output.get(TYPE));
+        verify(mockCriOAuthSessionService, times(0)).getCriOauthSessionItem(any());
     }
 
     @Test
@@ -222,6 +255,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals("pyi-attempt-recovery", output.get(PAGE));
         assertEquals("error", output.get(TYPE));
+        verify(mockCriOAuthSessionService, times(0)).getCriOauthSessionItem(any());
     }
 
     @Test
@@ -254,6 +288,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         assertEquals(
                 OAuth2Error.SERVER_ERROR_CODE,
                 updatedIpvSessionItem.getVisitedCredentialIssuerDetails().get(0).getOauthError());
+        verify(mockCriOAuthSessionService, times(0)).getCriOauthSessionItem(any());
     }
 
     @Test
@@ -271,6 +306,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
 
         assertEquals("/journey/access-denied", output.get("journey"));
+        verify(mockCriOAuthSessionService, times(0)).getCriOauthSessionItem(any());
     }
 
     @Test
@@ -291,6 +327,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
 
         assertEquals("/journey/access-denied-multi-doc", output.get("journey"));
+        verify(mockCriOAuthSessionService, times(0)).getCriOauthSessionItem(any());
     }
 
     @Test
@@ -305,6 +342,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
 
         assertEquals("/journey/temporarily-unavailable", output.get("journey"));
+        verify(mockCriOAuthSessionService, times(0)).getCriOauthSessionItem(any());
     }
 
     @Test

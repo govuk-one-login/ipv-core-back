@@ -28,7 +28,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Objects;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.AUDIENCE_FOR_CLIENTS;
+import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 
 public class AuthorizationRequestHelper {
@@ -54,16 +54,16 @@ public class AuthorizationRequestHelper {
         JWTClaimsSet authClaimsSet =
                 new AuthorizationRequest.Builder(
                                 ResponseType.CODE,
-                                new ClientID(credentialIssuerConfig.getIpvClientId()))
-                        .redirectionURI(credentialIssuerConfig.getIpvCoreRedirectUrl())
+                                new ClientID(credentialIssuerConfig.getClientId()))
+                        .redirectionURI(credentialIssuerConfig.getClientCallbackUrl())
                         .state(new State(oauthState))
                         .build()
                         .toJWTClaimsSet();
 
         JWTClaimsSet.Builder claimsSetBuilder =
                 new JWTClaimsSet.Builder(authClaimsSet)
-                        .audience(credentialIssuerConfig.getAudienceForClients())
-                        .issuer(configService.getSsmParameter(AUDIENCE_FOR_CLIENTS))
+                        .audience(credentialIssuerConfig.getComponentId())
+                        .issuer(configService.getSsmParameter(COMPONENT_ID))
                         .issueTime(Date.from(now))
                         .expirationTime(
                                 Date.from(

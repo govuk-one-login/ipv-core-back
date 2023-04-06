@@ -597,6 +597,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub retrieve-cri-oauth-access-token-${Environment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CI_STORAGE_PUT_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
             - contra_indicator_storage_account_id: !FindInMap
@@ -633,8 +634,12 @@ Resources:
             TableName: !Ref UserIssuedCredentialsV2Table
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CriOAuthSessionsTable
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref CriOAuthSessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
@@ -865,6 +870,7 @@ Resources:
           SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -891,8 +897,12 @@ Resources:
             TableName: !Ref UserIssuedCredentialsV2Table
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CriOAuthSessionsTable
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref CriOAuthSessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/*
         - SSMParameterReadPolicy:
@@ -1695,6 +1705,7 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+          CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1719,8 +1730,12 @@ Resources:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBReadPolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref CriOAuthSessionsTable
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref CriOAuthSessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
@@ -2221,6 +2236,26 @@ Resources:
           AttributeType: "S"
       KeySchema:
         - AttributeName: "jwtId"
+          KeyType: "HASH"
+      TimeToLiveSpecification:
+        AttributeName: "ttl"
+        Enabled: true
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !GetAtt DynamoDBKmsKey.Arn
+
+  CriOAuthSessionsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
+      TableName: !Sub "cri-oauth-sessions-${Environment}"
+      BillingMode: "PAY_PER_REQUEST"
+      AttributeDefinitions:
+        - AttributeName: "criOAuthSessionId"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "criOAuthSessionId"
           KeyType: "HASH"
       TimeToLiveSpecification:
         AttributeName: "ttl"

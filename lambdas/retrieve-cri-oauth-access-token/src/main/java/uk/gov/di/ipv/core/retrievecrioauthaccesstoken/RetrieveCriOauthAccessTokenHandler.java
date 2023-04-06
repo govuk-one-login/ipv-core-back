@@ -28,9 +28,11 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
+import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.util.Map;
@@ -42,16 +44,19 @@ public class RetrieveCriOauthAccessTokenHandler
     private final ConfigService configService;
     private final AuditService auditService;
     private final IpvSessionService ipvSessionService;
+    private final CriOAuthSessionService criOAuthSessionService;
 
     public RetrieveCriOauthAccessTokenHandler(
             CredentialIssuerService credentialIssuerService,
             ConfigService configService,
             IpvSessionService ipvSessionService,
-            AuditService auditService) {
+            AuditService auditService,
+            CriOAuthSessionService criOAuthSessionService) {
         this.credentialIssuerService = credentialIssuerService;
         this.configService = configService;
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
+        this.criOAuthSessionService = criOAuthSessionService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -62,6 +67,7 @@ public class RetrieveCriOauthAccessTokenHandler
                         configService, new KmsEs256Signer(configService.getSigningKeyId()));
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.ipvSessionService = new IpvSessionService(configService);
+        this.criOAuthSessionService = new CriOAuthSessionService(configService);
     }
 
     @Override
@@ -104,8 +110,7 @@ public class RetrieveCriOauthAccessTokenHandler
                             ipvSessionId,
                             clientSessionDetailsDto.getGovukSigninJourneyId(),
                             ipAddress);
-            String componentId =
-                    configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+            String componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
 
             auditService.sendAuditEvent(
                     new AuditEvent(
@@ -116,6 +121,8 @@ public class RetrieveCriOauthAccessTokenHandler
             setIpvSessionItemAccessToken(ipvSessionItem, accessToken);
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
+            setCriOAuthSessionAccessToken(
+                    ipvSessionItem.getCredentialIssuerSessionDetails(), accessToken);
             var message =
                     new StringMapMessage()
                             .with("lambdaResult", "Successfully retrieved cri access token.")
@@ -155,6 +162,22 @@ public class RetrieveCriOauthAccessTokenHandler
                 ipvSessionItem.getCredentialIssuerSessionDetails();
         credentialIssuerSessionDetailsDto.setAccessToken(accessToken.toAuthorizationHeader());
         ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
+    }
+
+    @Tracing
+    private void setCriOAuthSessionAccessToken(
+            CredentialIssuerSessionDetailsDto credentialIssuerSessionDetails,
+            BearerAccessToken accessToken) {
+        if (credentialIssuerSessionDetails != null
+                && credentialIssuerSessionDetails.getState() != null) {
+            CriOAuthSessionItem criOAuthSessionItem =
+                    criOAuthSessionService.getCriOauthSessionItem(
+                            credentialIssuerSessionDetails.getState());
+            if (criOAuthSessionItem != null) {
+                criOAuthSessionItem.setAccessToken(accessToken.toAuthorizationHeader());
+                criOAuthSessionService.updateCriOAuthSessionItem(criOAuthSessionItem);
+            }
+        }
     }
 
     @Tracing

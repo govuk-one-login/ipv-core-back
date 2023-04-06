@@ -63,6 +63,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 class InitialiseIpvSessionHandlerTest {
 
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
+    public static final String CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
     @Mock private Context mockContext;
 
     @Mock private IpvSessionService mockIpvSessionService;
@@ -116,10 +117,11 @@ class InitialiseIpvSessionHandlerTest {
 
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setClientOAuthSessionId(CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
 
         clientOAuthSessionItem = new ClientOAuthSessionItem();
-        clientOAuthSessionItem.setClientOAuthSessionId(SecureTokenHelper.generate());
+        clientOAuthSessionItem.setClientOAuthSessionId(CLIENT_OAUTH_SESSION_ID);
         clientOAuthSessionItem.setResponseType("test-type");
         clientOAuthSessionItem.setClientId("test-client");
         clientOAuthSessionItem.setRedirectUri("http://example.com");
@@ -131,8 +133,9 @@ class InitialiseIpvSessionHandlerTest {
     @Test
     void shouldReturnIpvSessionIdWhenProvidedValidRequest()
             throws JsonProcessingException, JarValidationException, ParseException, SqsException {
-        when(mockIpvSessionService.generateIpvSession(any(), any())).thenReturn(ipvSessionItem);
-        when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any()))
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
+                .thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenReturn(signedJWT.getJWTClaimsSet());
@@ -257,9 +260,10 @@ class InitialiseIpvSessionHandlerTest {
     @Test
     void shouldReturnIpvSessionIdWhenRecoverableErrorFound()
             throws JsonProcessingException, JarValidationException, ParseException {
-        when(mockIpvSessionService.generateIpvSession(any(), any())).thenReturn(ipvSessionItem);
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
+                .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateErrorClientSessionDetails(
-                        any(), any(), any(), any()))
+                        any(), any(), any(), any(), any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockJarValidator.validateRequestJwt(any(), any()))
                 .thenThrow(

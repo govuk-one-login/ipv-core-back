@@ -44,7 +44,6 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.VC_VALID_DURATION;
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.*;
 
@@ -76,10 +75,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
-                .thenReturn("testPath");
-        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
-                .thenReturn("test-issuer");
+        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -120,10 +116,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
-                .thenReturn("testPath");
-        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
-                .thenReturn("test-issuer");
+        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -146,10 +139,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
-                .thenReturn("testPath");
-        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
-                .thenReturn("test-issuer");
+        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -199,10 +189,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
-                .thenReturn("testPath");
-        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
-                .thenReturn("test-issuer");
+        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
 
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
@@ -237,10 +224,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
-                .thenReturn("testPath");
-        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
-                .thenReturn("test-issuer");
+        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
 
         HttpResponseExceptionWithErrorBody thrownError =
                 assertThrows(
@@ -273,10 +257,7 @@ class UserIdentityServiceTest {
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
-                .thenReturn("testPath");
-        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
-                .thenReturn("test-issuer");
+        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -325,10 +306,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
-                .thenReturn("testPath");
-        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
-                .thenReturn("test-issuer");
+        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -380,10 +358,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
-                .thenReturn("testPath");
-        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
-                .thenReturn("test-issuer");
+        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
 
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
@@ -422,10 +397,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
-                .thenReturn("testPath");
-        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
-                .thenReturn("test-issuer");
+        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
 
         HttpResponseExceptionWithErrorBody thrownException =
                 assertThrows(
@@ -457,10 +429,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
-                .thenReturn("testPath");
-        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
-                .thenReturn("test-issuer");
+        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
 
         HttpResponseExceptionWithErrorBody thrownException =
                 assertThrows(
@@ -648,10 +617,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
-                .thenReturn("testPath");
-        when(mockConfigService.getSsmParameter("testPath/dcmaw/audienceForClients"))
-                .thenReturn("test-issuer");
+        when(mockConfigService.getComponentId("dcmaw")).thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -703,10 +669,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
-                .thenReturn("testPath");
-        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
-                .thenReturn("test-issuer");
+        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -735,18 +698,11 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
-                .thenReturn("testPath");
-        when(mockConfigService.getSsmParameter("testPath/dcmaw/audienceForClients"))
-                .thenReturn("dcmaw-issuer");
-        when(mockConfigService.getSsmParameter("testPath/ukPassport/audienceForClients"))
-                .thenReturn("test-issuer");
-        when(mockConfigService.getSsmParameter("testPath/fraud/audienceForClients"))
-                .thenReturn("test-issuer");
-        when(mockConfigService.getSsmParameter("testPath/address/audienceForClients"))
-                .thenReturn("test-issuer");
-        when(mockConfigService.getSsmParameter("testPath/kbv/audienceForClients"))
-                .thenReturn("test-issuer");
+        when(mockConfigService.getComponentId("dcmaw")).thenReturn("dcmaw-issuer");
+        when(mockConfigService.getComponentId("ukPassport")).thenReturn("test-issuer");
+        when(mockConfigService.getComponentId("fraud")).thenReturn("test-issuer");
+        when(mockConfigService.getComponentId("address")).thenReturn("test-issuer");
+        when(mockConfigService.getComponentId("kbv")).thenReturn("test-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -772,10 +728,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
-                .thenReturn("testPath");
-        when(mockConfigService.getSsmParameter("testPath/dcmaw/audienceForClients"))
-                .thenReturn("dcmaw-issuer");
+        when(mockConfigService.getComponentId("dcmaw")).thenReturn("dcmaw-issuer");
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
@@ -798,9 +751,7 @@ class UserIdentityServiceTest {
 
         when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
-        when(mockConfigService.getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX))
-                .thenReturn("testPath");
-        when(mockConfigService.getSsmParameter(anyString())).thenReturn("dcmaw-issuer");
+        when(mockConfigService.getComponentId(anyString())).thenReturn("dcmaw-issuer");
 
         HttpResponseExceptionWithErrorBody thrownException =
                 assertThrows(

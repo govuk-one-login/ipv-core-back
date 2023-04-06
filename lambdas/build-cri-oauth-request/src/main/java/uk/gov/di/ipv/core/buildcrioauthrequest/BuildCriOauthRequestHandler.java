@@ -46,6 +46,7 @@ import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
@@ -76,6 +77,7 @@ public class BuildCriOauthRequestHandler
     private final JWSSigner signer;
     private final AuditService auditService;
     private final IpvSessionService ipvSessionService;
+    private final CriOAuthSessionService criOAuthSessionService;
     private final String componentId;
 
     public BuildCriOauthRequestHandler(
@@ -83,16 +85,17 @@ public class BuildCriOauthRequestHandler
             UserIdentityService userIdentityService,
             JWSSigner signer,
             AuditService auditService,
-            IpvSessionService ipvSessionService) {
+            IpvSessionService ipvSessionService,
+            CriOAuthSessionService criOAuthSessionService) {
 
         this.credentialIssuerConfigService = credentialIssuerConfigService;
         this.userIdentityService = userIdentityService;
         this.signer = signer;
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
+        this.criOAuthSessionService = criOAuthSessionService;
         this.componentId =
-                credentialIssuerConfigService.getSsmParameter(
-                        ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -103,9 +106,9 @@ public class BuildCriOauthRequestHandler
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), credentialIssuerConfigService);
         this.ipvSessionService = new IpvSessionService(credentialIssuerConfigService);
+        this.criOAuthSessionService = new CriOAuthSessionService(credentialIssuerConfigService);
         this.componentId =
-                credentialIssuerConfigService.getSsmParameter(
-                        ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+                credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @Override
@@ -157,6 +160,8 @@ public class BuildCriOauthRequestHandler
 
             persistOauthState(ipvSessionItem, credentialIssuerConfig.getId(), oauthState);
 
+            persistCriOauthState(oauthState, credentialIssuerConfig.getId());
+
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
             auditService.sendAuditEvent(
@@ -197,7 +202,7 @@ public class BuildCriOauthRequestHandler
 
         URIBuilder redirectUri =
                 new URIBuilder(credentialIssuerConfig.getAuthorizeUrl())
-                        .addParameter("client_id", credentialIssuerConfig.getIpvClientId())
+                        .addParameter("client_id", credentialIssuerConfig.getClientId())
                         .addParameter("request", jweObject.serialize());
 
         if (credentialIssuerConfig.getId().equals(DCMAW_CRI_ID)
@@ -229,8 +234,7 @@ public class BuildCriOauthRequestHandler
                         userId,
                         govukSigninJourneyId);
 
-        RSAEncrypter rsaEncrypter =
-                new RSAEncrypter(credentialIssuerConfig.getJarEncryptionPublicJwk());
+        RSAEncrypter rsaEncrypter = new RSAEncrypter(credentialIssuerConfig.getEncryptionKey());
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
     }
 
@@ -289,7 +293,7 @@ public class BuildCriOauthRequestHandler
 
                     SharedClaims credentialsSharedClaims =
                             mapper.readValue(credentialSubject.toString(), SharedClaims.class);
-                    if (credentialIss.equals(addressCriConfig.getAudienceForClients())) {
+                    if (credentialIss.equals(addressCriConfig.getComponentId())) {
                         hasAddressVc = true;
                         sharedClaimsSet.forEach(sharedClaims -> sharedClaims.setAddress(null));
                     } else if (hasAddressVc) {
@@ -338,6 +342,12 @@ public class BuildCriOauthRequestHandler
         CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto =
                 new CredentialIssuerSessionDetailsDto(criId, oauthState);
         ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
+        ipvSessionItem.setCriOAuthSessionId(oauthState);
         ipvSessionService.updateIpvSession(ipvSessionItem);
+    }
+
+    @Tracing
+    private void persistCriOauthState(String oauthState, String criId) {
+        criOAuthSessionService.persistCriOAuthSession(oauthState, criId);
     }
 }

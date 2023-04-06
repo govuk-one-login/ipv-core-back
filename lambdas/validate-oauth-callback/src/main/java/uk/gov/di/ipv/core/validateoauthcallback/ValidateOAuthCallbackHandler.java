@@ -26,9 +26,11 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
+import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.validateoauthcallback.dto.CriCallbackRequest;
 
@@ -69,18 +71,20 @@ public class ValidateOAuthCallbackHandler
     private final String componentId;
     private final String passportCriId;
     private final String drivingLicenceCriId;
+    private final CriOAuthSessionService criOAuthSessionService;
 
     public ValidateOAuthCallbackHandler(
             ConfigService configService,
             IpvSessionService ipvSessionService,
-            AuditService auditService) {
+            AuditService auditService,
+            CriOAuthSessionService criOAuthSessionService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.auditService = auditService;
-        this.componentId =
-                this.configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+        this.componentId = this.configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
         this.passportCriId = configService.getSsmParameter(PASSPORT_CRI_ID);
         this.drivingLicenceCriId = configService.getSsmParameter(DRIVING_LICENCE_CRI_ID);
+        this.criOAuthSessionService = criOAuthSessionService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -88,10 +92,10 @@ public class ValidateOAuthCallbackHandler
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
-        this.componentId =
-                this.configService.getSsmParameter(ConfigurationVariable.AUDIENCE_FOR_CLIENTS);
+        this.componentId = this.configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
         this.passportCriId = configService.getSsmParameter(PASSPORT_CRI_ID);
         this.drivingLicenceCriId = configService.getSsmParameter(DRIVING_LICENCE_CRI_ID);
+        this.criOAuthSessionService = new CriOAuthSessionService(configService);
     }
 
     @Override
@@ -119,10 +123,13 @@ public class ValidateOAuthCallbackHandler
 
             sendAuditEvent(ipvSessionItem, null, callbackRequest.getIpAddress());
 
-            setIpvSessionCRIAuthorizationCode(
-                    ipvSessionItem, new AuthorizationCode(callbackRequest.getAuthorizationCode()));
+            final AuthorizationCode authorizationCode =
+                    new AuthorizationCode(callbackRequest.getAuthorizationCode());
+            setIpvSessionCRIAuthorizationCode(ipvSessionItem, authorizationCode);
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
+
+            setCriOAuthSessionAuthorizationCode(callbackRequest.getState(), authorizationCode);
 
             var mapMessage =
                     new StringMapMessage()
@@ -254,6 +261,17 @@ public class ValidateOAuthCallbackHandler
                 ipvSessionItem.getCredentialIssuerSessionDetails();
         credentialIssuerSessionDetailsDto.setAuthorizationCode(authorizationCode.getValue());
         ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
+    }
+
+    @Tracing
+    private void setCriOAuthSessionAuthorizationCode(
+            String state, AuthorizationCode authorizationCode) {
+        CriOAuthSessionItem criOAuthSessionItem =
+                criOAuthSessionService.getCriOauthSessionItem(state);
+        if (criOAuthSessionItem != null) {
+            criOAuthSessionItem.setAuthorizationCode(authorizationCode.getValue());
+            criOAuthSessionService.updateCriOAuthSessionItem(criOAuthSessionItem);
+        }
     }
 
     @Tracing
