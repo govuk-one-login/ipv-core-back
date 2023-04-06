@@ -26,8 +26,7 @@ import uk.gov.di.ipv.core.processjourneystep.utils.ProcessJourneyStepStates;
 import java.time.Instant;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -677,6 +676,7 @@ class ProcessJourneyStepHandlerTest {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setCriOAuthSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(ProcessJourneyStepStates.IPV_IDENTITY_START_PAGE_STATE);
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
@@ -688,13 +688,12 @@ class ProcessJourneyStepHandlerTest {
         when(mockConfigService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
                 .thenReturn(environment);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-
-        Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
+        processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertNull(sessionArgumentCaptor.getValue().getCredentialIssuerSessionDetails());
+        assertNotNull(sessionArgumentCaptor.getValue().getCriOAuthSessionId());
     }
 
     private void mockIpvSessionItemAndTimeout(String validateOauthCallback, String environment) {
