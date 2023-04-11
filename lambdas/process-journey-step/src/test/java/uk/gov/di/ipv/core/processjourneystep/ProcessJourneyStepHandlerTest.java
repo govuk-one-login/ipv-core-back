@@ -14,7 +14,6 @@ import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -682,8 +681,6 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setUserState(ProcessJourneyStepStates.IPV_IDENTITY_START_PAGE_STATE);
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
         ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
-        ipvSessionItem.setCredentialIssuerSessionDetails(
-                new CredentialIssuerSessionDetailsDto("some-cri", "some-state"));
 
         when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockConfigService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
