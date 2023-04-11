@@ -22,7 +22,6 @@ import uk.gov.di.ipv.core.library.credentialissuer.exceptions.CredentialIssuerEx
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -188,9 +187,6 @@ class RetrieveCriCredentialHandlerTest {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId("someIpvSessionId");
         ipvSessionItem.setClientSessionDetails(testClientSessionDetailsDto);
-        ipvSessionItem.setCredentialIssuerSessionDetails(
-                new CredentialIssuerSessionDetailsDto(
-                        CREDENTIAL_ISSUER_ID, TEST_STATE, ACCESS_TOKEN));
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(criOAuthSessionService.getCriOauthSessionItem(any())).thenReturn(criOAuthSessionItem);
 
@@ -351,9 +347,6 @@ class RetrieveCriCredentialHandlerTest {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setClientSessionDetails(testClientSessionDetailsDto);
-        ipvSessionItem.setCredentialIssuerSessionDetails(
-                new CredentialIssuerSessionDetailsDto(
-                        CREDENTIAL_ISSUER_ID, TEST_STATE, ACCESS_TOKEN));
         when(criOAuthSessionService.getCriOauthSessionItem(any())).thenReturn(criOAuthSessionItem);
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 

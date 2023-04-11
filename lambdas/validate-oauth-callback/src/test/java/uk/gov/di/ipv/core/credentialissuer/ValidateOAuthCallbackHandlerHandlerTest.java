@@ -14,7 +14,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
@@ -91,11 +90,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                         TEST_USER_ID,
                         "test-journey-id",
                         false);
-        CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto =
-                new CredentialIssuerSessionDetailsDto(
-                        TEST_CREDENTIAL_ISSUER_ID, TEST_OAUTH_STATE, TEST_AUTHORIZATION_CODE);
         ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
         ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
         ipvSessionItem.setCriOAuthSessionId(TEST_OAUTH_STATE);
 
@@ -383,7 +378,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         criCallbackRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
         criCallbackRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
 
-        ipvSessionItem.setCredentialIssuerSessionDetails(null);
+        ipvSessionItem.setCriOAuthSessionId(null);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         Map<String, Object> output =
@@ -400,10 +395,9 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         criCallbackRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
         criCallbackRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
 
-        CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto =
-                new CredentialIssuerSessionDetailsDto();
-        credentialIssuerSessionDetailsDto.setCriId("test");
-        ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
+        criOAuthSessionItem.setCriId("test");
+        when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
+                .thenReturn(criOAuthSessionItem);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         Map<String, Object> output =
@@ -420,10 +414,9 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         criCallbackRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
         criCallbackRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
 
-        CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto =
-                new CredentialIssuerSessionDetailsDto();
-        credentialIssuerSessionDetailsDto.setCriId("test");
-        ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
+        criOAuthSessionItem.setCriId("test");
+        when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
+                .thenReturn(criOAuthSessionItem);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
