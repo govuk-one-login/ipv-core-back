@@ -153,6 +153,13 @@ SELECT_CRI:
   name: SELECT_CRI
   parent: ATTEMPT_RECOVERY_STATE
   events:
+    ukPassport:
+      type: basic
+      name: ukPassport
+      targetState: PASSPORT_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-passport-doc-check
     stubUkPassport:
       type: basic
       name: stubUkPassport
@@ -160,6 +167,13 @@ SELECT_CRI:
       response:
         type: page
         pageId: page-passport-doc-check
+    drivingLicence:
+      type: basic
+      name: drivingLicence
+      targetState: DRIVING_LICENCE_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-driving-licence-doc-check
     stubDrivingLicence:
       type: basic
       name: stubDrivingLicence
@@ -167,6 +181,13 @@ SELECT_CRI:
       response:
         type: page
         pageId: page-driving-licence-doc-check
+    ukPassportAndDrivingLicence:
+      type: basic
+      name: ukPassportAndDrivingLicence
+      targetState: MULTIPLE_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-multiple-doc-check
     stubUkPassportAndDrivingLicence:
       type: basic
       name: stubUkPassportAndDrivingLicence
@@ -174,6 +195,13 @@ SELECT_CRI:
       response:
         type: page
         pageId: page-multiple-doc-check
+    address:
+      type: basic
+      name: address
+      targetState: CRI_ADDRESS
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/address
     stubAddress:
       type: basic
       name: stubAddress
@@ -181,6 +209,13 @@ SELECT_CRI:
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/stubAddress
+    fraud:
+      type: basic
+      name: fraud
+      targetState: CRI_FRAUD
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/fraud
     stubFraud:
       type: basic
       name: stubFraud
@@ -188,6 +223,13 @@ SELECT_CRI:
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/stubFraud
+    kbv:
+      type: basic
+      name: kbv
+      targetState: PRE_KBV_TRANSITION_PAGE
+      response:
+        type: page
+        pageId: page-pre-kbv-transition
     stubKbv:
       type: basic
       name: stubKbv
@@ -195,6 +237,13 @@ SELECT_CRI:
       response:
         type: page
         pageId: page-pre-kbv-transition
+    dcmaw:
+      type: basic
+      name: dcmaw
+      targetState: CRI_DCMAW
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/dcmaw
     stubDcmaw:
       type: basic
       name: stubDcmaw
@@ -293,7 +342,7 @@ PASSPORT_DOC_CHECK_PAGE:
       targetState: CRI_UK_PASSPORT
       response:
         type: journey
-        journeyStepId: /journey/cri/build-oauth-request/stubUkPassport
+        journeyStepId: /journey/cri/build-oauth-request/ukPassport
     end:
       type: basic
       name: end
@@ -311,7 +360,7 @@ DRIVING_LICENCE_DOC_CHECK_PAGE:
       targetState: CRI_DRIVING_LICENCE
       response:
         type: journey
-        journeyStepId: /journey/cri/build-oauth-request/stubDrivingLicence
+        journeyStepId: /journey/cri/build-oauth-request/drivingLicence
     end:
       type: basic
       name: end
@@ -329,21 +378,21 @@ MULTIPLE_DOC_CHECK_PAGE:
       targetState: CRI_UK_PASSPORT
       response:
         type: journey
-        journeyStepId: /journey/cri/build-oauth-request/stubUkPassport
+        journeyStepId: /journey/cri/build-oauth-request/ukPassport
     ukPassport:
       type: basic
       name: ukPassport
       targetState: CRI_UK_PASSPORT
       response:
         type: journey
-        journeyStepId: /journey/cri/build-oauth-request/stubUkPassport
+        journeyStepId: /journey/cri/build-oauth-request/ukPassport
     drivingLicence:
       type: basic
       name: drivingLicence
       targetState: CRI_DRIVING_LICENCE
       response:
         type: journey
-        journeyStepId: /journey/cri/build-oauth-request/stubDrivingLicence
+        journeyStepId: /journey/cri/build-oauth-request/drivingLicence
     end:
       type: basic
       name: end
@@ -361,7 +410,7 @@ PRE_KBV_TRANSITION_PAGE:
       targetState: CRI_KBV
       response:
         type: journey
-        journeyStepId: /journey/cri/build-oauth-request/stubKbv
+        journeyStepId: /journey/cri/build-oauth-request/kbv
 POST_DCMAW_SUCCESS_PAGE:
   name: POST_DCMAW_SUCCESS_PAGE
   parent: ATTEMPT_RECOVERY_STATE
@@ -372,7 +421,7 @@ POST_DCMAW_SUCCESS_PAGE:
       targetState: CRI_ADDRESS
       response:
         type: journey
-        journeyStepId: /journey/cri/build-oauth-request/stubAddress
+        journeyStepId: /journey/cri/build-oauth-request/address
 CRI_DCMAW:
   name: CRI_DCMAW
   parent: CRI_STATE
