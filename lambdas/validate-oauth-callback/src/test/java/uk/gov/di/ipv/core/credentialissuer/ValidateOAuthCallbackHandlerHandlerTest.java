@@ -12,16 +12,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
-import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.*;
 import uk.gov.di.ipv.core.validateoauthcallback.ValidateOAuthCallbackHandler;
 import uk.gov.di.ipv.core.validateoauthcallback.dto.CriCallbackRequest;
 
@@ -52,6 +49,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     private static final String TEST_OAUTH_SERVER_ERROR = OAuth2Error.SERVER_ERROR_CODE;
     private static final String TEST_ERROR_DESCRIPTION = "test error description";
     private static final String TEST_SESSION_ID = SecureTokenHelper.generate();
+    private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
     private static final String CODE = "code";
@@ -68,8 +66,10 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private AuditService mockAuditService;
     @Mock private CriOAuthSessionService mockCriOAuthSessionService;
+    @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     private ValidateOAuthCallbackHandler underTest;
     private CriOAuthSessionItem criOAuthSessionItem;
+    private ClientOAuthSessionItem clientOAuthSessionItem;
 
     @BeforeEach
     void setUpBeforeEach() throws URISyntaxException {
@@ -80,18 +80,19 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
         credentialIssuerConfig = createCriConfig("criId", "cri.iss.com");
 
-        ClientSessionDetailsDto clientSessionDetailsDto =
-                new ClientSessionDetailsDto(
-                        "code",
-                        "test-client-id",
-                        "https://example.com/redirect",
-                        "test-state",
-                        TEST_USER_ID,
-                        "test-journey-id",
-                        false);
         ipvSessionItem = new IpvSessionItem();
-        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
         ipvSessionItem.setCriOAuthSessionId(TEST_OAUTH_STATE);
+        ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
+
+        clientOAuthSessionItem =
+                ClientOAuthSessionItem.builder()
+                        .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
+                        .state("test-state")
+                        .responseType("code")
+                        .redirectUri("https://example.com/redirect")
+                        .govukSigninJourneyId("test-journey-id")
+                        .userId(TEST_USER_ID)
+                        .build();
 
         criOAuthSessionItem =
                 CriOAuthSessionItem.builder()
@@ -106,7 +107,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                         mockConfigService,
                         mockIpvSessionService,
                         mockAuditService,
-                        mockCriOAuthSessionService);
+                        mockCriOAuthSessionService,
+                        mockClientOAuthSessionDetailsService);
     }
 
     @Test
@@ -116,6 +118,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
                 .thenReturn(criOAuthSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         Map<String, Object> output = underTest.handleRequest(validCriCallbackRequest(), context);
 
@@ -154,6 +158,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
                 .thenReturn(criOAuthSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithoutAuthCode, context);
@@ -171,6 +177,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
                 .thenReturn(criOAuthSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithoutCriId, context);
@@ -189,6 +197,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
                 .thenReturn(criOAuthSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithInvalidCriId, context);
@@ -199,16 +209,17 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     }
 
     @Test
-    void shouldReceive400ResponseCodeIfSessionIdNotPresent() {
+    void shouldReceive400ResponseCodeIfCriOAuthStateAndSessionNotPresent() {
         CriCallbackRequest criCallbackRequestWithoutSessionId = validCriCallbackRequest();
         criCallbackRequestWithoutSessionId.setIpvSessionId(null);
+        criCallbackRequestWithoutSessionId.setState(null);
 
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithoutSessionId, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
-        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), output.get(CODE));
-        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), output.get(MESSAGE));
+        assertEquals(ErrorResponse.MISSING_OAUTH_STATE.getCode(), output.get(CODE));
+        assertEquals(ErrorResponse.MISSING_OAUTH_STATE.getMessage(), output.get(MESSAGE));
         verify(mockCriOAuthSessionService, times(0)).getCriOauthSessionItem(any());
     }
 
@@ -219,6 +230,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
                 .thenReturn(criOAuthSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithoutState, context);
@@ -236,6 +249,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setClientOAuthSessionId(null);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         Map<String, Object> output = underTest.handleRequest(criCallbackRequest, context);
 
@@ -252,6 +267,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
                 .thenReturn(criOAuthSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithInvalidState, context);
@@ -269,6 +286,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
                 .thenReturn(criOAuthSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         doThrow(new SqsException("Test sqs error"))
                 .when(mockAuditService)
@@ -307,6 +326,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
                 .thenReturn(criOAuthSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
         when(mockConfigService.isEnabled(CRI_PASSPORT)).thenReturn(true);
 
         when(mockConfigService.isEnabled(CRI_DRIVING_LICENCE)).thenReturn(false);
@@ -327,6 +348,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
                 .thenReturn(criOAuthSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
         when(mockConfigService.isEnabled(CRI_PASSPORT)).thenReturn(true);
 
         when(mockConfigService.isEnabled(CRI_DRIVING_LICENCE)).thenReturn(true);
@@ -347,6 +370,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
                 .thenReturn(criOAuthSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
@@ -364,6 +389,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
                 .thenReturn(criOAuthSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithOtherError, context);
@@ -379,6 +406,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
         ipvSessionItem.setCriOAuthSessionId(null);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithOtherError, context);
@@ -398,6 +427,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
                 .thenReturn(criOAuthSessionItem);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithOtherError, context);
@@ -417,6 +448,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
                 .thenReturn(criOAuthSessionItem);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
