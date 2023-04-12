@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.credentialissuer.exceptions.CredentialIssuerEx
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.BadRequestError;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -88,9 +87,12 @@ public class RetrieveCriOauthAccessTokenHandler
                     ipvSessionItem.getClientSessionDetails();
             String userId = clientSessionDetailsDto.getUserId();
 
-            credentialIssuerId = ipvSessionItem.getCredentialIssuerSessionDetails().getCriId();
-            String authorizationCode =
-                    ipvSessionItem.getCredentialIssuerSessionDetails().getAuthorizationCode();
+            CriOAuthSessionItem criOAuthSessionItem =
+                    criOAuthSessionService.getCriOauthSessionItem(
+                            ipvSessionItem.getCriOAuthSessionId());
+
+            credentialIssuerId = criOAuthSessionItem.getCriId();
+            String authorizationCode = criOAuthSessionItem.getAuthorizationCode();
 
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     clientSessionDetailsDto.getGovukSigninJourneyId());
@@ -118,11 +120,9 @@ public class RetrieveCriOauthAccessTokenHandler
                             componentId,
                             auditEventUser));
 
-            setIpvSessionItemAccessToken(ipvSessionItem, accessToken);
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            setCriOAuthSessionAccessToken(
-                    ipvSessionItem.getCredentialIssuerSessionDetails(), accessToken);
+            setCriOAuthSessionAccessToken(criOAuthSessionItem, accessToken);
             var message =
                     new StringMapMessage()
                             .with("lambdaResult", "Successfully retrieved cri access token.")
@@ -156,27 +156,12 @@ public class RetrieveCriOauthAccessTokenHandler
         }
     }
 
-    private void setIpvSessionItemAccessToken(
-            IpvSessionItem ipvSessionItem, BearerAccessToken accessToken) {
-        CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto =
-                ipvSessionItem.getCredentialIssuerSessionDetails();
-        credentialIssuerSessionDetailsDto.setAccessToken(accessToken.toAuthorizationHeader());
-        ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
-    }
-
     @Tracing
     private void setCriOAuthSessionAccessToken(
-            CredentialIssuerSessionDetailsDto credentialIssuerSessionDetails,
-            BearerAccessToken accessToken) {
-        if (credentialIssuerSessionDetails != null
-                && credentialIssuerSessionDetails.getState() != null) {
-            CriOAuthSessionItem criOAuthSessionItem =
-                    criOAuthSessionService.getCriOauthSessionItem(
-                            credentialIssuerSessionDetails.getState());
-            if (criOAuthSessionItem != null) {
-                criOAuthSessionItem.setAccessToken(accessToken.toAuthorizationHeader());
-                criOAuthSessionService.updateCriOAuthSessionItem(criOAuthSessionItem);
-            }
+            CriOAuthSessionItem criOAuthSessionItem, BearerAccessToken accessToken) {
+        if (criOAuthSessionItem != null) {
+            criOAuthSessionItem.setAccessToken(accessToken.toAuthorizationHeader());
+            criOAuthSessionService.updateCriOAuthSessionItem(criOAuthSessionItem);
         }
     }
 
