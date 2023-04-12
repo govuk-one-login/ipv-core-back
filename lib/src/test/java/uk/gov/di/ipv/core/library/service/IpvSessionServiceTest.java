@@ -60,6 +60,23 @@ class IpvSessionServiceTest {
     }
 
     @Test
+    void shouldReturnSessionItemByCriOAuthSessionId() {
+        String ipvSessionID = SecureTokenHelper.generate();
+        String criOAuthSessionId = "test-session-id";
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(ipvSessionID);
+
+        when(mockDataStore.getItemByIndex(eq("criOAuthSessionId"), anyString()))
+                .thenReturn(ipvSessionItem);
+
+        IpvSessionItem result =
+                ipvSessionService.getIpvSessionByCriOAuthSessionId(criOAuthSessionId).orElseThrow();
+
+        assertEquals(result, ipvSessionItem);
+    }
+
+    @Test
     void shouldReturnSessionItemByAuthorizationCode() {
         String ipvSessionID = SecureTokenHelper.generate();
         String authorizationCode = "12345";
