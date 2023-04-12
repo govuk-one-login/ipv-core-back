@@ -408,14 +408,36 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     }
 
     @Test
-    void shouldNotUpdateSessionOnAttemptRecoveryError() {
+    void shouldNotUpdateSessionOnAttemptRecoveryError_whenCriIdNotMatchedWithRequest() {
         CriCallbackRequest criCallbackRequestWithOtherError = validCriCallbackRequest();
         criCallbackRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
         criCallbackRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
 
         criOAuthSessionItem.setCriId("test");
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
                 .thenReturn(criOAuthSessionItem);
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockIpvSessionService, times(0))
+                .updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+
+        Map<String, Object> output =
+                underTest.handleRequest(criCallbackRequestWithOtherError, context);
+
+        assertEquals("error", output.get("type"));
+        assertEquals("pyi-attempt-recovery", output.get("page"));
+        assertEquals(400, output.get("statusCode"));
+    }
+
+    @Test
+    void shouldNotUpdateSessionOnAttemptRecoveryError_whenIpvSessionNotHaveCriSessionId() {
+        CriCallbackRequest criCallbackRequestWithOtherError = validCriCallbackRequest();
+        criCallbackRequestWithOtherError.setError(TEST_OAUTH_SERVER_ERROR);
+        criCallbackRequestWithOtherError.setErrorDescription(TEST_ERROR_DESCRIPTION);
+
+        ipvSessionItem.setCriOAuthSessionId(null);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =

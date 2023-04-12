@@ -26,7 +26,7 @@ import java.time.Instant;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -691,7 +691,7 @@ class ProcessJourneyStepHandlerTest {
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(mockIpvSessionService).updateIpvSession(sessionArgumentCaptor.capture());
-        assertNotNull(sessionArgumentCaptor.getValue().getCriOAuthSessionId());
+        assertNull(sessionArgumentCaptor.getValue().getCriOAuthSessionId());
     }
 
     private void mockIpvSessionItemAndTimeout(String validateOauthCallback, String environment) {
