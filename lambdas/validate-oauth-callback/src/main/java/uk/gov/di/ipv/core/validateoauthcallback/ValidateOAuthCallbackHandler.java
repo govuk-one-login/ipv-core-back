@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditExtensions;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -105,6 +104,7 @@ public class ValidateOAuthCallbackHandler
         LogHelper.attachComponentIdToLogs();
 
         IpvSessionItem ipvSessionItem = null;
+        CriOAuthSessionItem criOAuthSessionItem = null;
 
         try {
             String ipvSessionId = callbackRequest.getIpvSessionId();
@@ -115,21 +115,25 @@ public class ValidateOAuthCallbackHandler
             LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
 
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-            if (callbackRequest.getError() != null) {
-                return sendOauthErrorJourneyResponse(ipvSessionItem, callbackRequest);
+            if (ipvSessionItem.getCriOAuthSessionId() != null) {
+                criOAuthSessionItem =
+                        criOAuthSessionService.getCriOauthSessionItem(
+                                ipvSessionItem.getCriOAuthSessionId());
             }
 
-            validate(callbackRequest);
+            if (callbackRequest.getError() != null) {
+                return sendOauthErrorJourneyResponse(
+                        ipvSessionItem, criOAuthSessionItem, callbackRequest);
+            }
+
+            validate(callbackRequest, criOAuthSessionItem);
 
             sendAuditEvent(ipvSessionItem, null, callbackRequest.getIpAddress());
 
             final AuthorizationCode authorizationCode =
                     new AuthorizationCode(callbackRequest.getAuthorizationCode());
-            setIpvSessionCRIAuthorizationCode(ipvSessionItem, authorizationCode);
 
-            ipvSessionService.updateIpvSession(ipvSessionItem);
-
-            setCriOAuthSessionAuthorizationCode(callbackRequest.getState(), authorizationCode);
+            updateCriOAuthSessionAuthorizationCode(criOAuthSessionItem, authorizationCode);
 
             var mapMessage =
                     new StringMapMessage()
@@ -157,7 +161,7 @@ public class ValidateOAuthCallbackHandler
 
             setVisitedCredentials(
                     ipvSessionItem,
-                    ipvSessionItem.getCredentialIssuerSessionDetails().getCriId(),
+                    criOAuthSessionItem.getCriId(),
                     false,
                     OAuth2Error.SERVER_ERROR_CODE);
             ipvSessionService.updateIpvSession(ipvSessionItem);
@@ -168,7 +172,10 @@ public class ValidateOAuthCallbackHandler
 
     @Tracing
     private Map<String, Object> sendOauthErrorJourneyResponse(
-            IpvSessionItem ipvSessionItem, CriCallbackRequest callbackRequest) throws SqsException {
+            IpvSessionItem ipvSessionItem,
+            CriOAuthSessionItem criOAuthSessionItem,
+            CriCallbackRequest callbackRequest)
+            throws SqsException {
         String error = callbackRequest.getError();
         String errorDescription = callbackRequest.getErrorDescription();
 
@@ -183,9 +190,8 @@ public class ValidateOAuthCallbackHandler
             LOGGER.warn("Unknown Oauth error code received");
         }
 
-        if (ipvSessionItem.getCredentialIssuerSessionDetails() == null
-                || !ipvSessionItem
-                        .getCredentialIssuerSessionDetails()
+        if (criOAuthSessionItem == null
+                || !criOAuthSessionItem
                         .getCriId()
                         .equals(callbackRequest.getCredentialIssuerId())) {
             var message =
@@ -218,7 +224,8 @@ public class ValidateOAuthCallbackHandler
     }
 
     @Tracing
-    private void validate(CriCallbackRequest callbackRequest)
+    private void validate(
+            CriCallbackRequest callbackRequest, CriOAuthSessionItem criOAuthSessionItem)
             throws HttpResponseExceptionWithErrorBody {
 
         if (StringUtils.isBlank(callbackRequest.getAuthorizationCode())) {
@@ -242,7 +249,7 @@ public class ValidateOAuthCallbackHandler
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_OAUTH_STATE);
         }
 
-        String persistedOauthState = getPersistedOauthState(callbackRequest);
+        String persistedOauthState = getPersistedOauthState(criOAuthSessionItem);
         if (!callbackRequest.getState().equals(persistedOauthState)) {
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_OAUTH_STATE);
@@ -255,19 +262,8 @@ public class ValidateOAuthCallbackHandler
     }
 
     @Tracing
-    private void setIpvSessionCRIAuthorizationCode(
-            IpvSessionItem ipvSessionItem, AuthorizationCode authorizationCode) {
-        CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto =
-                ipvSessionItem.getCredentialIssuerSessionDetails();
-        credentialIssuerSessionDetailsDto.setAuthorizationCode(authorizationCode.getValue());
-        ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
-    }
-
-    @Tracing
-    private void setCriOAuthSessionAuthorizationCode(
-            String state, AuthorizationCode authorizationCode) {
-        CriOAuthSessionItem criOAuthSessionItem =
-                criOAuthSessionService.getCriOauthSessionItem(state);
+    private void updateCriOAuthSessionAuthorizationCode(
+            CriOAuthSessionItem criOAuthSessionItem, AuthorizationCode authorizationCode) {
         if (criOAuthSessionItem != null) {
             criOAuthSessionItem.setAuthorizationCode(authorizationCode.getValue());
             criOAuthSessionService.updateCriOAuthSessionItem(criOAuthSessionItem);
@@ -275,13 +271,9 @@ public class ValidateOAuthCallbackHandler
     }
 
     @Tracing
-    private String getPersistedOauthState(CriCallbackRequest callbackRequest) {
-        CredentialIssuerSessionDetailsDto credentialIssuerSessionDetails =
-                ipvSessionService
-                        .getIpvSession(callbackRequest.getIpvSessionId())
-                        .getCredentialIssuerSessionDetails();
-        if (credentialIssuerSessionDetails != null) {
-            return credentialIssuerSessionDetails.getState();
+    private String getPersistedOauthState(CriOAuthSessionItem criOAuthSessionItem) {
+        if (criOAuthSessionItem != null) {
+            return criOAuthSessionItem.getCriOAuthSessionId();
         }
         return null;
     }
