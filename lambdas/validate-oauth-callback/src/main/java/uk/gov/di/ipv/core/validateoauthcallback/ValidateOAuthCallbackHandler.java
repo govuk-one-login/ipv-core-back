@@ -115,9 +115,11 @@ public class ValidateOAuthCallbackHandler
             LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
 
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-            criOAuthSessionItem =
-                    criOAuthSessionService.getCriOauthSessionItem(
-                            ipvSessionItem.getCriOAuthSessionId());
+            if (ipvSessionItem.getCriOAuthSessionId() != null) {
+                criOAuthSessionItem =
+                        criOAuthSessionService.getCriOauthSessionItem(
+                                ipvSessionItem.getCriOAuthSessionId());
+            }
 
             if (callbackRequest.getError() != null) {
                 return sendOauthErrorJourneyResponse(
@@ -188,8 +190,7 @@ public class ValidateOAuthCallbackHandler
             LOGGER.warn("Unknown Oauth error code received");
         }
 
-        if (ipvSessionItem.getCriOAuthSessionId() == null
-                || criOAuthSessionItem == null
+        if (criOAuthSessionItem == null
                 || !criOAuthSessionItem
                         .getCriId()
                         .equals(callbackRequest.getCredentialIssuerId())) {
