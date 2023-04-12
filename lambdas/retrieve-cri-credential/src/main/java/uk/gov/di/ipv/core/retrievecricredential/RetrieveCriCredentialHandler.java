@@ -31,12 +31,10 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
-import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 import uk.gov.di.ipv.core.retrievecricredential.validation.VerifiableCredentialJwtValidator;
@@ -62,7 +60,6 @@ public class RetrieveCriCredentialHandler
     private final AuditService auditService;
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     private final CiStorageService ciStorageService;
-    private final CriOAuthSessionService criOAuthSessionService;
 
     private String componentId;
 
@@ -72,15 +69,13 @@ public class RetrieveCriCredentialHandler
             ConfigService configService,
             AuditService auditService,
             VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
-            CiStorageService ciStorageService,
-            CriOAuthSessionService criOAuthSessionService) {
+            CiStorageService ciStorageService) {
         this.credentialIssuerService = credentialIssuerService;
         this.ipvSessionService = ipvSessionService;
         this.configService = configService;
         this.auditService = auditService;
         this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
         this.ciStorageService = ciStorageService;
-        this.criOAuthSessionService = criOAuthSessionService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -93,7 +88,6 @@ public class RetrieveCriCredentialHandler
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator();
         this.ciStorageService = new CiStorageService(configService);
-        this.criOAuthSessionService = new CriOAuthSessionService(configService);
     }
 
     @Override
@@ -117,10 +111,7 @@ public class RetrieveCriCredentialHandler
                     HttpStatus.SC_BAD_REQUEST, errorResponse);
         }
 
-        CriOAuthSessionItem criOAuthSessionItem =
-                criOAuthSessionService.getCriOauthSessionItem(
-                        ipvSessionItem.getCriOAuthSessionId());
-        String credentialIssuerId = criOAuthSessionItem.getCriId();
+        String credentialIssuerId = ipvSessionItem.getCredentialIssuerSessionDetails().getCriId();
         try {
             ClientSessionDetailsDto clientSessionDetailsDto =
                     ipvSessionItem.getClientSessionDetails();
@@ -144,7 +135,10 @@ public class RetrieveCriCredentialHandler
 
             List<SignedJWT> verifiableCredentials =
                     credentialIssuerService.getVerifiableCredential(
-                            BearerAccessToken.parse(criOAuthSessionItem.getAccessToken()),
+                            BearerAccessToken.parse(
+                                    ipvSessionItem
+                                            .getCredentialIssuerSessionDetails()
+                                            .getAccessToken()),
                             credentialIssuerConfig,
                             apiKey);
 
