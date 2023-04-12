@@ -2168,7 +2168,7 @@ Resources:
           KeyType: "RANGE"
       TimeToLiveSpecification:
         AttributeName: "ttl"
-        Enabled: true
+        Enabled: false
       SSESpecification:
         SSEEnabled: true
         SSEType: KMS
