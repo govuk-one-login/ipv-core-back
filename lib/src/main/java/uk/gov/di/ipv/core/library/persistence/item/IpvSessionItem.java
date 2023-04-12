@@ -10,6 +10,7 @@ import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 
@@ -26,6 +27,7 @@ public class IpvSessionItem implements DynamodbItem {
     private String userState;
     private String creationDateTime;
     private ClientSessionDetailsDto clientSessionDetails;
+    private CredentialIssuerSessionDetailsDto credentialIssuerSessionDetails;
     private String authorizationCode;
     private AuthorizationCodeMetadata authorizationCodeMetadata;
     private String accessToken;

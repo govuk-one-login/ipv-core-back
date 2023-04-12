@@ -35,6 +35,7 @@ import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -338,6 +339,9 @@ public class BuildCriOauthRequestHandler
 
     @Tracing
     private void persistOauthState(IpvSessionItem ipvSessionItem, String criId, String oauthState) {
+        CredentialIssuerSessionDetailsDto credentialIssuerSessionDetailsDto =
+                new CredentialIssuerSessionDetailsDto(criId, oauthState);
+        ipvSessionItem.setCredentialIssuerSessionDetails(credentialIssuerSessionDetailsDto);
         ipvSessionItem.setCriOAuthSessionId(oauthState);
         ipvSessionService.updateIpvSession(ipvSessionItem);
     }
