@@ -8,10 +8,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -21,17 +23,22 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.builddebugcredentialdata.TestFixtures.SIGNED_VC_1;
 import static uk.gov.di.ipv.core.builddebugcredentialdata.TestFixtures.SIGNED_VC_2;
 
 @ExtendWith(MockitoExtension.class)
 public class BuildDebugCredentialDataHandlerTest {
+    private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
 
     @Mock private Context mockContext;
     @Mock private UserIdentityService mockUserIdentityService;
     @Mock private ConfigService mockConfigService;
     @Mock private IpvSessionService mockIpvSessionService;
+    @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
 
     private final Gson gson = new Gson();
 
@@ -43,10 +50,20 @@ public class BuildDebugCredentialDataHandlerTest {
         event.setHeaders(Map.of(RequestHelper.IPV_SESSION_ID_HEADER, ipvSessionId));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
-        ClientSessionDetailsDto clientSessionDetailsDto = new ClientSessionDetailsDto();
-        clientSessionDetailsDto.setUserId(userId);
-        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+        ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
+        ClientOAuthSessionItem clientOAuthSessionItem =
+                ClientOAuthSessionItem.builder()
+                        .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
+                        .state("test-state")
+                        .responseType("code")
+                        .redirectUri("https://example.com/redirect")
+                        .govukSigninJourneyId("test-journey-id")
+                        .userId(userId)
+                        .build();
+
         when(mockIpvSessionService.getIpvSession(ipvSessionId)).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         List<VcStoreItem> vcStoreItems =
                 List.of(
@@ -64,7 +81,10 @@ public class BuildDebugCredentialDataHandlerTest {
         when(mockUserIdentityService.getVcStoreItems(userId)).thenReturn(vcStoreItems);
         BuildDebugCredentialDataHandler buildDebugCredentialDataHandler =
                 new BuildDebugCredentialDataHandler(
-                        mockUserIdentityService, mockConfigService, mockIpvSessionService);
+                        mockUserIdentityService,
+                        mockConfigService,
+                        mockIpvSessionService,
+                        mockClientOAuthSessionDetailsService);
 
         APIGatewayProxyResponseEvent response =
                 buildDebugCredentialDataHandler.handleRequest(event, mockContext);
@@ -79,6 +99,7 @@ public class BuildDebugCredentialDataHandlerTest {
         assertEquals(
                 "{\"attributes\":{\"userId\":\"a-user-id\",\"dateCreated\":\"2022-01-25T12:28:56.414849Z\"},\"evidence\":{\"txn\":\"some-uuid\",\"identityFraudScore\":1,\"type\":\"CriStubCheck\"}}",
                 map.get("criTwo"));
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -87,7 +108,10 @@ public class BuildDebugCredentialDataHandlerTest {
         event.setHeaders(Map.of());
         BuildDebugCredentialDataHandler buildDebugCredentialDataHandler =
                 new BuildDebugCredentialDataHandler(
-                        mockUserIdentityService, mockConfigService, mockIpvSessionService);
+                        mockUserIdentityService,
+                        mockConfigService,
+                        mockIpvSessionService,
+                        mockClientOAuthSessionDetailsService);
 
         APIGatewayProxyResponseEvent response =
                 buildDebugCredentialDataHandler.handleRequest(event, mockContext);
@@ -101,7 +125,10 @@ public class BuildDebugCredentialDataHandlerTest {
         event.setHeaders(Map.of(RequestHelper.IPV_SESSION_ID_HEADER, ""));
         BuildDebugCredentialDataHandler buildDebugCredentialDataHandler =
                 new BuildDebugCredentialDataHandler(
-                        mockUserIdentityService, mockConfigService, mockIpvSessionService);
+                        mockUserIdentityService,
+                        mockConfigService,
+                        mockIpvSessionService,
+                        mockClientOAuthSessionDetailsService);
 
         APIGatewayProxyResponseEvent response =
                 buildDebugCredentialDataHandler.handleRequest(event, mockContext);

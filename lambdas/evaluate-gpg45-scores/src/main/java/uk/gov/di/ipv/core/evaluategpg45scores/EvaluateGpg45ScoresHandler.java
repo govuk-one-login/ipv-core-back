@@ -26,7 +26,6 @@ import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
@@ -36,9 +35,11 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -72,6 +73,7 @@ public class EvaluateGpg45ScoresHandler
     private final CiStorageService ciStorageService;
     private final ConfigService configService;
     private final AuditService auditService;
+    private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final String addressCriId;
     private final String componentId;
 
@@ -81,13 +83,15 @@ public class EvaluateGpg45ScoresHandler
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
             CiStorageService ciStorageService,
             ConfigService configService,
-            AuditService auditService) {
+            AuditService auditService,
+            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.ciStorageService = ciStorageService;
         this.configService = configService;
         this.auditService = auditService;
+        this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
 
         addressCriId = configService.getSsmParameter(ADDRESS_CRI_ID);
         componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
@@ -101,6 +105,7 @@ public class EvaluateGpg45ScoresHandler
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService);
         this.ciStorageService = new CiStorageService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
+        this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
 
         addressCriId = configService.getSsmParameter(ADDRESS_CRI_ID);
         componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
@@ -117,11 +122,15 @@ public class EvaluateGpg45ScoresHandler
             String ipvSessionId = RequestHelper.getIpvSessionId(event);
             String ipAddress = RequestHelper.getIpAddress(event);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-            ClientSessionDetailsDto clientSessionDetailsDto =
-                    ipvSessionItem.getClientSessionDetails();
-            String userId = clientSessionDetailsDto.getUserId();
+            ClientOAuthSessionItem clientOAuthSessionItem = null;
+            if (ipvSessionItem.getClientOAuthSessionId() != null) {
+                clientOAuthSessionItem =
+                        clientOAuthSessionDetailsService.getClientOAuthSession(
+                                ipvSessionItem.getClientOAuthSessionId());
+            }
+            String userId = clientOAuthSessionItem.getUserId();
 
-            String govukSigninJourneyId = clientSessionDetailsDto.getGovukSigninJourneyId();
+            String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             List<SignedJWT> credentials =
@@ -131,8 +140,8 @@ public class EvaluateGpg45ScoresHandler
             List<ContraIndicatorItem> ciItems;
             ciItems =
                     ciStorageService.getCIs(
-                            clientSessionDetailsDto.getUserId(),
-                            clientSessionDetailsDto.getGovukSigninJourneyId(),
+                            clientOAuthSessionItem.getUserId(),
+                            clientOAuthSessionItem.getGovukSigninJourneyId(),
                             ipAddress);
 
             JourneyResponse journeyResponse;
@@ -157,7 +166,11 @@ public class EvaluateGpg45ScoresHandler
                 if (contraIndicatorErrorJourneyResponse.isEmpty()) {
                     journeyResponse =
                             checkForMatchingGpg45Profile(
-                                    message, ipvSessionItem, credentials, ipAddress);
+                                    message,
+                                    ipvSessionItem,
+                                    clientOAuthSessionItem,
+                                    credentials,
+                                    ipAddress);
                 } else {
                     message.with("message", "Returning CI error response")
                             .with(
@@ -202,6 +215,7 @@ public class EvaluateGpg45ScoresHandler
     private JourneyResponse checkForMatchingGpg45Profile(
             StringMapMessage message,
             IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
             List<SignedJWT> credentials,
             String ipAddress)
             throws UnknownEvidenceTypeException, ParseException, SqsException {
@@ -213,6 +227,7 @@ public class EvaluateGpg45ScoresHandler
             auditService.sendAuditEvent(
                     buildProfileMatchedAuditEvent(
                             ipvSessionItem,
+                            clientOAuthSessionItem,
                             matchedProfile.get(),
                             gpg45Scores,
                             credentials,
@@ -318,6 +333,7 @@ public class EvaluateGpg45ScoresHandler
     @Tracing
     private AuditEvent buildProfileMatchedAuditEvent(
             IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
             Gpg45Profile gpg45Profile,
             Gpg45Scores gpg45Scores,
             List<SignedJWT> credentials,
@@ -325,9 +341,9 @@ public class EvaluateGpg45ScoresHandler
             throws ParseException {
         AuditEventUser auditEventUser =
                 new AuditEventUser(
-                        ipvSessionItem.getClientSessionDetails().getUserId(),
+                        clientOAuthSessionItem.getUserId(),
                         ipvSessionItem.getIpvSessionId(),
-                        ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId(),
+                        clientOAuthSessionItem.getGovukSigninJourneyId(),
                         ipAddress);
         return new AuditEvent(
                 AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,

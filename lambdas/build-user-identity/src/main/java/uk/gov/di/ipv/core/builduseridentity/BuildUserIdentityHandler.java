@@ -23,14 +23,15 @@ import uk.gov.di.ipv.core.library.auditing.AuditExtensionsUserIdentity;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -47,17 +48,20 @@ public class BuildUserIdentityHandler
     private final IpvSessionService ipvSessionService;
     private final ConfigService configService;
     private final AuditService auditService;
+    private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final String componentId;
 
     public BuildUserIdentityHandler(
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
             ConfigService configService,
-            AuditService auditService) {
+            AuditService auditService,
+            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.configService = configService;
         this.auditService = auditService;
+        this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
@@ -67,6 +71,7 @@ public class BuildUserIdentityHandler
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
+        this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
@@ -105,17 +110,23 @@ public class BuildUserIdentityHandler
             String ipvSessionId = ipvSessionItem.getIpvSessionId();
             LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
 
-            ClientSessionDetailsDto clientSessionDetails = ipvSessionItem.getClientSessionDetails();
-            LogHelper.attachClientIdToLogs(clientSessionDetails.getClientId());
-            LogHelper.attachGovukSigninJourneyIdToLogs(
-                    clientSessionDetails.getGovukSigninJourneyId());
+            ClientOAuthSessionItem clientOAuthSessionItem = null;
+            if (ipvSessionItem.getClientOAuthSessionId() != null) {
+                clientOAuthSessionItem =
+                        clientOAuthSessionDetailsService.getClientOAuthSession(
+                                ipvSessionItem.getClientOAuthSessionId());
+            }
 
-            String userId = clientSessionDetails.getUserId();
+            LogHelper.attachClientIdToLogs(clientOAuthSessionItem.getClientId());
+            LogHelper.attachGovukSigninJourneyIdToLogs(
+                    clientOAuthSessionItem.getGovukSigninJourneyId());
+
+            String userId = clientOAuthSessionItem.getUserId();
             AuditEventUser auditEventUser =
                     new AuditEventUser(
                             userId,
                             ipvSessionId,
-                            clientSessionDetails.getGovukSigninJourneyId(),
+                            clientOAuthSessionItem.getGovukSigninJourneyId(),
                             null);
 
             UserIdentity userIdentity =

@@ -20,14 +20,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.MitigationJourneyDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -63,11 +64,12 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IP_ADDRESS_HEADER
 class EndMitigationJourneyHandlerTest {
     private static final String TEST_IPV_SESSION_ID = SecureTokenHelper.generate();
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
-
+    private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private UserIdentityService mockUserIdentityService;
     @Mock private CiStorageService mockCiStorageService;
     @Mock private ConfigService mockConfigService;
+    @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private Context mockContext;
 
     @InjectMocks
@@ -76,7 +78,8 @@ class EndMitigationJourneyHandlerTest {
                     mockUserIdentityService,
                     mockIpvSessionService,
                     mockCiStorageService,
-                    mockConfigService);
+                    mockConfigService,
+                    mockClientOAuthSessionDetailsService);
 
     private IpvSessionItem ipvSessionItem;
     private List<ContraIndicatorItem> contraIndicatorItems =
@@ -90,21 +93,26 @@ class EndMitigationJourneyHandlerTest {
                             "1234",
                             "1234"));
     private APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+    private ClientOAuthSessionItem clientOAuthSessionItem;
 
     @BeforeEach
     void setUp() {
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(TEST_IPV_SESSION_ID);
         ipvSessionItem.setUserState("test-state");
-        ipvSessionItem.setClientSessionDetails(
-                new ClientSessionDetailsDto(
-                        "code",
-                        "test-client",
-                        "http://example.com",
-                        "test-state",
-                        "test-user-id",
-                        "test-journey-id",
-                        false));
+        ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
+
+        clientOAuthSessionItem =
+                ClientOAuthSessionItem.builder()
+                        .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
+                        .state("test-state")
+                        .responseType("code")
+                        .redirectUri("https://example.com/redirect")
+                        .govukSigninJourneyId("test-journey-id")
+                        .userId("test-user-id")
+                        .clientId("test-client")
+                        .govukSigninJourneyId("test-journey-id")
+                        .build();
 
         List<MitigationJourneyDetailsDto> mitigationJourneyDetails =
                 List.of(new MitigationJourneyDetailsDto("MJ01", false));
@@ -129,6 +137,8 @@ class EndMitigationJourneyHandlerTest {
         when(mockCiStorageService.getCIs(any(), any(), any())).thenReturn(contraIndicatorItems);
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(any()))
                 .thenReturn(getTestFraudCriConfig());
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         List<String> credentials =
                 List.of(
@@ -174,6 +184,7 @@ class EndMitigationJourneyHandlerTest {
                         .get(0);
         assertEquals("MJ01", mitigationJourneyDetails.getMitigationJourneyId());
         assertTrue(mitigationJourneyDetails.isComplete());
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -202,6 +213,8 @@ class EndMitigationJourneyHandlerTest {
                                         List.of("TEST-01"))
                                 .serialize());
         when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(credentials);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         event.setPathParameters(Map.of("mitigationId", "MJ02"));
 
@@ -231,6 +244,7 @@ class EndMitigationJourneyHandlerTest {
                         .get(1);
         assertEquals("MJ02", mitigationJourneyDetails.getMitigationJourneyId());
         assertTrue(mitigationJourneyDetails.isComplete());
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -250,6 +264,8 @@ class EndMitigationJourneyHandlerTest {
                                         List.of("TEST-01"))
                                 .serialize());
         when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(credentials);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         event.setPathParameters(Map.of("mitigationId", "MJ01"));
 
@@ -274,6 +290,7 @@ class EndMitigationJourneyHandlerTest {
                         .get(0);
         assertEquals("MJ01", mitigationJourneyDetails.getMitigationJourneyId());
         assertTrue(mitigationJourneyDetails.isComplete());
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -302,6 +319,8 @@ class EndMitigationJourneyHandlerTest {
                                         List.of("TEST-01"))
                                 .serialize());
         when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(credentials);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         event.setPathParameters(Map.of("mitigationId", "MJ02"));
 
@@ -326,6 +345,7 @@ class EndMitigationJourneyHandlerTest {
                         .get(1);
         assertEquals("MJ02", mitigationJourneyDetails.getMitigationJourneyId());
         assertTrue(mitigationJourneyDetails.isComplete());
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -351,6 +371,8 @@ class EndMitigationJourneyHandlerTest {
                                         List.of("TEST-01"))
                                 .serialize());
         when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(credentials);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         event.setPathParameters(Map.of("mitigationId", "MJ01"));
 
@@ -375,6 +397,7 @@ class EndMitigationJourneyHandlerTest {
                         .get(0);
         assertEquals("MJ01", mitigationJourneyDetails.getMitigationJourneyId());
         assertTrue(mitigationJourneyDetails.isComplete());
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -399,6 +422,8 @@ class EndMitigationJourneyHandlerTest {
                                         List.of())
                                 .serialize());
         when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(credentials);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         event.setPathParameters(Map.of("mitigationId", "MJ01"));
 
@@ -420,6 +445,7 @@ class EndMitigationJourneyHandlerTest {
                         .get(0);
         assertEquals("MJ01", mitigationJourneyDetails.getMitigationJourneyId());
         assertTrue(mitigationJourneyDetails.isComplete());
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -443,6 +469,8 @@ class EndMitigationJourneyHandlerTest {
                                         List.of())
                                 .serialize());
         when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(credentials);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         event.setPathParameters(Map.of("mitigationId", "MJ01"));
 
@@ -464,6 +492,7 @@ class EndMitigationJourneyHandlerTest {
                         .get(0);
         assertEquals("MJ01", mitigationJourneyDetails.getMitigationJourneyId());
         assertTrue(mitigationJourneyDetails.isComplete());
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -491,6 +520,8 @@ class EndMitigationJourneyHandlerTest {
                                         Collections.emptyList())
                                 .serialize());
         when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(credentials);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         event.setPathParameters(Map.of("mitigationId", "MJ01"));
 
@@ -520,6 +551,7 @@ class EndMitigationJourneyHandlerTest {
                         .get(0);
         assertEquals("MJ01", mitigationJourneyDetails.getMitigationJourneyId());
         assertTrue(mitigationJourneyDetails.isComplete());
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -542,6 +574,8 @@ class EndMitigationJourneyHandlerTest {
                                         Collections.emptyList())
                                 .serialize());
         when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(credentials);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         event.setPathParameters(Map.of("mitigationId", "unknown"));
 
@@ -549,6 +583,7 @@ class EndMitigationJourneyHandlerTest {
                 endMitigationJourneyHandler.handleRequest(event, mockContext);
         verify(mockCiStorageService, times(0)).submitMitigatingVcList(any(), any(), any());
         verify(mockIpvSessionService, times(0)).updateIpvSession(any());
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -585,6 +620,8 @@ class EndMitigationJourneyHandlerTest {
                                         Collections.emptyList())
                                 .serialize());
         when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(credentials);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         event.setPathParameters(Map.of("mitigationId", "MJ01"));
 
@@ -614,6 +651,7 @@ class EndMitigationJourneyHandlerTest {
                         .get(0);
         assertEquals("MJ01", mitigationJourneyDetails.getMitigationJourneyId());
         assertTrue(mitigationJourneyDetails.isComplete());
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     private CredentialIssuerConfig getTestFraudCriConfig() {

@@ -878,6 +878,7 @@ Resources:
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -906,6 +907,8 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref CriOAuthSessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
         - DynamoDBWritePolicy:
@@ -986,6 +989,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub build-user-identity-${Environment}
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [1, !Split ['/', !GetAtt UserIssuedCredentialsV2Table.Arn]]
           IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt ClientOAuthSessionsTable.Arn ] ]
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
       VpcConfig:
@@ -1018,6 +1022,8 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/*
         - SSMParameterReadPolicy:
@@ -1165,6 +1171,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub build-debug-credential-data-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsV2Table.Arn ] ]
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt ClientOAuthSessionsTable.Arn ] ]
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1191,6 +1198,8 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsV2Table
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
         - DynamoDBWritePolicy:
             TableName: !Ref UserIssuedCredentialsV2Table
         - SSMParameterReadPolicy:
@@ -1504,6 +1513,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub evaluate-gpg45-scores-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           CI_STORAGE_GET_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
@@ -1544,6 +1554,8 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsV2Table
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
@@ -1814,6 +1826,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub end-mitigation-journey-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           CI_STORAGE_GET_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
@@ -1900,6 +1913,8 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsV2Table
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
@@ -1961,6 +1976,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub build-proven-user-identity-details-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
       VpcConfig:
         SubnetIds:
@@ -1995,6 +2011,8 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref UserIssuedCredentialsV2Table
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
@@ -2054,6 +2072,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub check-existing-identity-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CI_STORAGE_GET_LAMBDA_ARN: !Sub
@@ -2099,6 +2118,8 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBCrudPolicy:
             TableName: !Ref UserIssuedCredentialsV2Table
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:

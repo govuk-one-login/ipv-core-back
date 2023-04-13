@@ -33,7 +33,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -43,8 +42,10 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -77,6 +78,7 @@ public class BuildCriOauthRequestHandler
     private final AuditService auditService;
     private final IpvSessionService ipvSessionService;
     private final CriOAuthSessionService criOAuthSessionService;
+    private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final String componentId;
 
     public BuildCriOauthRequestHandler(
@@ -85,7 +87,8 @@ public class BuildCriOauthRequestHandler
             JWSSigner signer,
             AuditService auditService,
             IpvSessionService ipvSessionService,
-            CriOAuthSessionService criOAuthSessionService) {
+            CriOAuthSessionService criOAuthSessionService,
+            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService) {
 
         this.credentialIssuerConfigService = credentialIssuerConfigService;
         this.userIdentityService = userIdentityService;
@@ -93,6 +96,7 @@ public class BuildCriOauthRequestHandler
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
         this.criOAuthSessionService = criOAuthSessionService;
+        this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.componentId =
                 credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
@@ -106,6 +110,8 @@ public class BuildCriOauthRequestHandler
                 new AuditService(AuditService.getDefaultSqsClient(), credentialIssuerConfigService);
         this.ipvSessionService = new IpvSessionService(credentialIssuerConfigService);
         this.criOAuthSessionService = new CriOAuthSessionService(credentialIssuerConfigService);
+        this.clientOAuthSessionDetailsService =
+                new ClientOAuthSessionDetailsService(credentialIssuerConfigService);
         this.componentId =
                 credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
@@ -135,11 +141,16 @@ public class BuildCriOauthRequestHandler
             }
 
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-            ClientSessionDetailsDto clientSessionDetailsDto =
-                    ipvSessionItem.getClientSessionDetails();
-            String userId = clientSessionDetailsDto.getUserId();
+            ClientOAuthSessionItem clientOAuthSessionItem = null;
+            if (ipvSessionItem.getClientOAuthSessionId() != null) {
+                clientOAuthSessionItem =
+                        clientOAuthSessionDetailsService.getClientOAuthSession(
+                                ipvSessionItem.getClientOAuthSessionId());
+            }
 
-            String govukSigninJourneyId = clientSessionDetailsDto.getGovukSigninJourneyId();
+            String userId = clientOAuthSessionItem.getUserId();
+
+            String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
             List<VcStatusDto> currentVcStatuses = ipvSessionItem.getCurrentVcStatuses();
 
