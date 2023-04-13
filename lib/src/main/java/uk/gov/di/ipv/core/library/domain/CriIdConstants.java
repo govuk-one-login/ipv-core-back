@@ -1,5 +1,8 @@
 package uk.gov.di.ipv.core.library.domain;
 
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+
+@ExcludeFromGeneratedCoverageReport
 public class CriIdConstants {
     public static final String PASSPORT_CRI_ID = "ukPassport";
     public static final String DRIVING_LICENCE_CRI_ID = "drivingLicence";

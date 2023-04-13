@@ -53,6 +53,7 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.*;
 
+import static uk.gov.di.ipv.core.library.domain.CriIdConstants.ADDRESS_CRI_ID;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 
@@ -255,11 +256,9 @@ public class BuildCriOauthRequestHandler
     private SharedClaimsResponse getSharedAttributes(
             String userId, List<VcStatusDto> currentVcStatuses, String criId)
             throws HttpResponseExceptionWithErrorBody {
-        String addressCriId =
-                credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID);
         CredentialIssuerConfig addressCriConfig =
                 credentialIssuerConfigService.getCredentialIssuerActiveConnectionConfig(
-                        addressCriId);
+                        ADDRESS_CRI_ID);
 
         List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
