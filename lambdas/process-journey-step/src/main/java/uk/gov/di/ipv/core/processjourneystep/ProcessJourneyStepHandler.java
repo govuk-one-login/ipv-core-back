@@ -86,11 +86,14 @@ public class ProcessJourneyStepHandler
                                             EnvironmentVariable.ENVIRONMENT),
                                     ipvSessionItem.getJourneyType()));
 
-            ClientOAuthSessionItem clientOAuthSessionItem =
-                    clientOAuthSessionService.getClientOAuthSession(
-                            ipvSessionItem.getClientOAuthSessionId());
-            LogHelper.attachGovukSigninJourneyIdToLogs(
-                    clientOAuthSessionItem.getGovukSigninJourneyId());
+            ClientOAuthSessionItem clientOAuthSessionItem = null;
+            if (ipvSessionItem.getClientOAuthSessionId() != null) {
+                clientOAuthSessionItem =
+                        clientOAuthSessionService.getClientOAuthSession(
+                                ipvSessionItem.getClientOAuthSessionId());
+                LogHelper.attachGovukSigninJourneyIdToLogs(
+                        clientOAuthSessionItem.getGovukSigninJourneyId());
+            }
 
             return executeJourneyEvent(journeyStep, ipvSessionItem);
 

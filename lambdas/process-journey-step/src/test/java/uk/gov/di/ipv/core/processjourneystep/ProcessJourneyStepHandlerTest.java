@@ -13,7 +13,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -34,6 +33,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
+import static uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem.*;
 
 @ExtendWith(MockitoExtension.class)
 class ProcessJourneyStepHandlerTest {
@@ -49,14 +49,12 @@ class ProcessJourneyStepHandlerTest {
     @Mock private ConfigService mockConfigService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
     private ProcessJourneyStepHandler processJourneyStepHandler;
-    private ClientSessionDetailsDto clientSessionDetailsDto;
 
     @BeforeEach
     void setUp() {
         processJourneyStepHandler =
                 new ProcessJourneyStepHandler(
                         mockIpvSessionService, mockConfigService, mockClientOAuthSessionService);
-        clientSessionDetailsDto = new ClientSessionDetailsDto();
     }
 
     @ParameterizedTest
@@ -614,7 +612,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
         ipvSessionItem.setUserState(ProcessJourneyStepStates.CRI_UK_PASSPORT_STATE);
-        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+        ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
@@ -654,7 +652,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().minusSeconds(100).toString());
         ipvSessionItem.setUserState(ProcessJourneyStepStates.CORE_SESSION_TIMEOUT_STATE);
-        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+        ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
@@ -686,7 +684,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setCriOAuthSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(ProcessJourneyStepStates.IPV_IDENTITY_START_PAGE_STATE);
-        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+        ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
 
         when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
@@ -709,7 +707,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(validateOauthCallback);
-        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+        ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
 
         when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
@@ -721,15 +719,13 @@ class ProcessJourneyStepHandlerTest {
     }
 
     private ClientOAuthSessionItem getClientOAuthSessionItem() {
-        ClientOAuthSessionItem clientOAuthSessionItem =
-                ClientOAuthSessionItem.builder()
-                        .clientOAuthSessionId(SecureTokenHelper.generate())
-                        .responseType("code")
-                        .state("test-state")
-                        .redirectUri("https://example.com/redirect")
-                        .govukSigninJourneyId("test-journey-id")
-                        .userId("test-user-id")
-                        .build();
-        return clientOAuthSessionItem;
+        return builder()
+                .clientOAuthSessionId(SecureTokenHelper.generate())
+                .responseType("code")
+                .state("test-state")
+                .redirectUri("https://example.com/redirect")
+                .govukSigninJourneyId("test-journey-id")
+                .userId("test-user-id")
+                .build();
     }
 }
