@@ -129,8 +129,8 @@ public class ValidateOAuthCallbackHandler
                                 .orElseThrow(
                                         () ->
                                                 new HttpResponseExceptionWithErrorBody(
-                                                        HttpStatus.SC_UNAUTHORIZED,
-                                                        ErrorResponse.INVALID_OAUTH_STATE));
+                                                        HttpStatus.SC_BAD_REQUEST,
+                                                        ErrorResponse.MISSING_OAUTH_STATE));
             }
 
             LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
