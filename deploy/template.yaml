@@ -48,6 +48,7 @@ Conditions:
       - !Equals [ !Ref Environment, "integration"]
       - !Equals [ !Ref Environment, "production"]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
+  IsProduction: !Equals [ !Ref Environment, "production"]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -2171,7 +2172,10 @@ Resources:
           KeyType: "RANGE"
       TimeToLiveSpecification:
         AttributeName: "ttl"
-        Enabled: false
+        Enabled: !If
+          - IsProduction
+          - false
+          - true
       SSESpecification:
         SSEEnabled: true
         SSEType: KMS
