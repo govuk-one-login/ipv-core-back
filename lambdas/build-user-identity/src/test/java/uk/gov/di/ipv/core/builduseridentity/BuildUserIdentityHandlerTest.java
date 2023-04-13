@@ -26,12 +26,13 @@ import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -45,6 +46,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
@@ -58,18 +60,21 @@ class BuildUserIdentityHandlerTest {
     private static final String TEST_ACCESS_TOKEN = "test-access-token";
     private static final String VTM = "http://www.example.com/vtm";
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
+    private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
 
     @Mock private Context mockContext;
     @Mock private UserIdentityService mockUserIdentityService;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ConfigService mockConfigService;
     @Mock private AuditService mockAuditService;
+    @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private BuildUserIdentityHandler userInfoHandler;
     private UserIdentity userIdentity;
     private IpvSessionItem ipvSessionItem;
+    private ClientOAuthSessionItem clientOAuthSessionItem;
     private Map<String, String> responseBody;
 
     @BeforeEach
@@ -95,15 +100,7 @@ class BuildUserIdentityHandlerTest {
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(TEST_IPV_SESSION_ID);
         ipvSessionItem.setUserState("test-state");
-        ipvSessionItem.setClientSessionDetails(
-                new ClientSessionDetailsDto(
-                        "code",
-                        "test-client",
-                        "http://example.com",
-                        "test-state",
-                        "test-user-id",
-                        "test-journey-id",
-                        false));
+        ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setAccessToken(TEST_ACCESS_TOKEN);
         ipvSessionItem.setAccessTokenMetadata(new AccessTokenMetadata());
         ipvSessionItem.setVot("P2");
@@ -113,7 +110,20 @@ class BuildUserIdentityHandlerTest {
                         mockUserIdentityService,
                         mockIpvSessionService,
                         mockConfigService,
-                        mockAuditService);
+                        mockAuditService,
+                        mockClientOAuthSessionDetailsService);
+
+        clientOAuthSessionItem =
+                ClientOAuthSessionItem.builder()
+                        .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
+                        .state("test-state")
+                        .responseType("code")
+                        .redirectUri("https://example.com/redirect")
+                        .govukSigninJourneyId("test-journey-id")
+                        .userId("test-user-id")
+                        .clientId("test-client")
+                        .govukSigninJourneyId("test-journey-id")
+                        .build();
     }
 
     @Test
@@ -133,10 +143,13 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
                 .thenReturn(userIdentity);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
 
         assertEquals(200, response.getStatusCode());
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -156,6 +169,8 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
         when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
                 .thenReturn(userIdentity);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
         UserIdentity responseBody =
@@ -174,6 +189,7 @@ class BuildUserIdentityHandlerTest {
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         assertEquals(
                 AuditEventTypes.IPV_IDENTITY_ISSUED, auditEventCaptor.getValue().getEventName());
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -195,6 +211,8 @@ class BuildUserIdentityHandlerTest {
                 .thenThrow(
                         new HttpResponseExceptionWithErrorBody(
                                 500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM));
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
 
@@ -207,6 +225,7 @@ class BuildUserIdentityHandlerTest {
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM.getMessage(),
                 responseBody.get("error_description"));
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -225,6 +244,7 @@ class BuildUserIdentityHandlerTest {
         assertEquals(
                 BearerTokenError.MISSING_TOKEN.getDescription(),
                 responseBody.get("error_description"));
+        verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
     }
 
     @Test
@@ -243,6 +263,7 @@ class BuildUserIdentityHandlerTest {
         assertEquals(
                 BearerTokenError.INVALID_REQUEST.getDescription(),
                 responseBody.get("error_description"));
+        verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
     }
 
     @Test
@@ -259,6 +280,7 @@ class BuildUserIdentityHandlerTest {
         assertEquals(
                 BearerTokenError.MISSING_TOKEN.getDescription(),
                 responseBody.get("error_description"));
+        verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
     }
 
     @Test
@@ -288,6 +310,7 @@ class BuildUserIdentityHandlerTest {
                                 " - The supplied access token was not found in the database")
                         .getDescription(),
                 responseBody.get("error_description"));
+        verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
     }
 
     @Test
@@ -319,6 +342,7 @@ class BuildUserIdentityHandlerTest {
                         .appendDescription(" - The supplied access token has been revoked")
                         .getDescription(),
                 responseBody.get("error_description"));
+        verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
     }
 
     @Test
@@ -350,5 +374,6 @@ class BuildUserIdentityHandlerTest {
                         .appendDescription(" - The supplied access token has expired")
                         .getDescription(),
                 responseBody.get("error_description"));
+        verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
     }
 }
