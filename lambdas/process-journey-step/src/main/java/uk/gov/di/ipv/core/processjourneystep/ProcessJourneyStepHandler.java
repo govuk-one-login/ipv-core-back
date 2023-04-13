@@ -120,6 +120,8 @@ public class ProcessJourneyStepHandler
                     journeyStep,
                     ipvSessionItem);
 
+            clearOauthSessionIfExists(ipvSessionItem);
+
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
             return stateMachineResult.getJourneyStepResponse().value(configService);
@@ -148,6 +150,13 @@ public class ProcessJourneyStepHandler
                         .with("from", oldState)
                         .with("to", updatedStateValue);
         LOGGER.info(message);
+    }
+
+    @Tracing
+    private void clearOauthSessionIfExists(IpvSessionItem ipvSessionItem) {
+        if (ipvSessionItem.getCriOAuthSessionId() != null) {
+            ipvSessionItem.setCriOAuthSessionId(null);
+        }
     }
 
     @Tracing

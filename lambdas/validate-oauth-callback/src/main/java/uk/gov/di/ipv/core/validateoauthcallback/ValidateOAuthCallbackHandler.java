@@ -28,7 +28,10 @@ import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.*;
+import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.validateoauthcallback.dto.CriCallbackRequest;
 
 import java.util.Arrays;
@@ -69,7 +72,7 @@ public class ValidateOAuthCallbackHandler
     private final String passportCriId;
     private final String drivingLicenceCriId;
     private final CriOAuthSessionService criOAuthSessionService;
-    private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
+        private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
 
     public ValidateOAuthCallbackHandler(
             ConfigService configService,
