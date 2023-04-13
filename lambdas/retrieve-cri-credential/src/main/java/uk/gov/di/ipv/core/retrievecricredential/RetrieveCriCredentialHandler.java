@@ -22,7 +22,6 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerService;
 import uk.gov.di.ipv.core.library.credentialissuer.exceptions.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CiPutException;
@@ -31,13 +30,10 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiStorageService;
-import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
-import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.*;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 import uk.gov.di.ipv.core.retrievecricredential.validation.VerifiableCredentialJwtValidator;
 
@@ -63,6 +59,7 @@ public class RetrieveCriCredentialHandler
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     private final CiStorageService ciStorageService;
     private final CriOAuthSessionService criOAuthSessionService;
+    private final ClientOAuthSessionDetailsService clientOAuthSessionService;
 
     private String componentId;
 
@@ -73,7 +70,8 @@ public class RetrieveCriCredentialHandler
             AuditService auditService,
             VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
             CiStorageService ciStorageService,
-            CriOAuthSessionService criOAuthSessionService) {
+            CriOAuthSessionService criOAuthSessionService,
+            ClientOAuthSessionDetailsService clientOAuthSessionService) {
         this.credentialIssuerService = credentialIssuerService;
         this.ipvSessionService = ipvSessionService;
         this.configService = configService;
@@ -81,6 +79,7 @@ public class RetrieveCriCredentialHandler
         this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
         this.ciStorageService = ciStorageService;
         this.criOAuthSessionService = criOAuthSessionService;
+        this.clientOAuthSessionService = clientOAuthSessionService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -94,6 +93,7 @@ public class RetrieveCriCredentialHandler
         this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator();
         this.ciStorageService = new CiStorageService(configService);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
+        this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
     }
 
     @Override
@@ -122,18 +122,19 @@ public class RetrieveCriCredentialHandler
                         ipvSessionItem.getCriOAuthSessionId());
         String credentialIssuerId = criOAuthSessionItem.getCriId();
         try {
-            ClientSessionDetailsDto clientSessionDetailsDto =
-                    ipvSessionItem.getClientSessionDetails();
-            String userId = clientSessionDetailsDto.getUserId();
+            ClientOAuthSessionItem clientOAuthSessionItem =
+                    clientOAuthSessionService.getClientOAuthSession(
+                            ipvSessionItem.getClientOAuthSessionId());
+            String userId = clientOAuthSessionItem.getUserId();
 
             LogHelper.attachGovukSigninJourneyIdToLogs(
-                    clientSessionDetailsDto.getGovukSigninJourneyId());
+                    clientOAuthSessionItem.getGovukSigninJourneyId());
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(
                             userId,
                             ipvSessionItem.getIpvSessionId(),
-                            clientSessionDetailsDto.getGovukSigninJourneyId(),
+                            clientOAuthSessionItem.getGovukSigninJourneyId(),
                             ipAddress);
             this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
 
@@ -159,7 +160,7 @@ public class RetrieveCriCredentialHandler
                 sendIpvVcReceivedAuditEvent(auditEventUser, vc, isSuccessful);
 
                 submitVcToCiStorage(
-                        vc, clientSessionDetailsDto.getGovukSigninJourneyId(), ipAddress);
+                        vc, clientOAuthSessionItem.getGovukSigninJourneyId(), ipAddress);
 
                 credentialIssuerService.persistUserCredentials(vc, credentialIssuerId, userId);
             }

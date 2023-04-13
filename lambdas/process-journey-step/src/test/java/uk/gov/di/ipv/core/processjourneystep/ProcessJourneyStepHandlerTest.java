@@ -15,7 +15,9 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processjourneystep.utils.ProcessJourneyStepEvents;
@@ -27,6 +29,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -44,14 +47,15 @@ class ProcessJourneyStepHandlerTest {
     @Mock private Context mockContext;
     @Mock private IpvSessionService mockIpvSessionService;
     @Mock private ConfigService mockConfigService;
-
+    @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
     private ProcessJourneyStepHandler processJourneyStepHandler;
     private ClientSessionDetailsDto clientSessionDetailsDto;
 
     @BeforeEach
     void setUp() {
         processJourneyStepHandler =
-                new ProcessJourneyStepHandler(mockIpvSessionService, mockConfigService);
+                new ProcessJourneyStepHandler(
+                        mockIpvSessionService, mockConfigService, mockClientOAuthSessionService);
         clientSessionDetailsDto = new ClientSessionDetailsDto();
     }
 
@@ -619,6 +623,8 @@ class ProcessJourneyStepHandlerTest {
         when(mockConfigService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
                 .thenReturn(environment);
         when(mockIpvSessionService.getIpvSession("1234")).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
@@ -652,9 +658,10 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockIpvSessionService.getIpvSession("1234")).thenReturn(ipvSessionItem);
         when(mockConfigService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
                 .thenReturn(environment);
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
 
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
@@ -686,6 +693,9 @@ class ProcessJourneyStepHandlerTest {
         when(mockConfigService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
                 .thenReturn(environment);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
+
         processJourneyStepHandler.handleRequest(input, mockContext);
 
         ArgumentCaptor<IpvSessionItem> sessionArgumentCaptor =
@@ -706,5 +716,20 @@ class ProcessJourneyStepHandlerTest {
         when(mockConfigService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
                 .thenReturn(environment);
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
+    }
+
+    private ClientOAuthSessionItem getClientOAuthSessionItem() {
+        ClientOAuthSessionItem clientOAuthSessionItem =
+                ClientOAuthSessionItem.builder()
+                        .clientOAuthSessionId(SecureTokenHelper.generate())
+                        .responseType("code")
+                        .state("test-state")
+                        .redirectUri("https://example.com/redirect")
+                        .govukSigninJourneyId("test-journey-id")
+                        .userId("test-user-id")
+                        .build();
+        return clientOAuthSessionItem;
     }
 }

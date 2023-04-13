@@ -27,7 +27,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -118,20 +117,16 @@ public class InitialiseIpvSessionHandler
                     jarValidator.validateRequestJwt(
                             signedJWT, sessionParams.get(CLIENT_ID_PARAM_KEY));
 
-            ClientSessionDetailsDto clientSessionDetailsDto =
-                    generateClientSessionDetails(
-                            claimsSet,
-                            sessionParams.get(CLIENT_ID_PARAM_KEY),
-                            Boolean.parseBoolean(sessionParams.get(IS_DEBUG_JOURNEY_PARAM_KEY)));
-
-            LogHelper.attachGovukSigninJourneyIdToLogs(
-                    clientSessionDetailsDto.getGovukSigninJourneyId());
+            String govukSigninJourneyId = claimsSet.getStringClaim("govuk_signin_journey_id");
+            LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             String clientOAuthSessionId = SecureTokenHelper.generate();
 
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
-                            clientSessionDetailsDto, clientOAuthSessionId, null);
+                            clientOAuthSessionId,
+                            null,
+                            Boolean.parseBoolean(sessionParams.get(IS_DEBUG_JOURNEY_PARAM_KEY)));
 
             clientOAuthSessionService.generateClientSessionDetails(
                     clientOAuthSessionId, claimsSet, sessionParams.get(CLIENT_ID_PARAM_KEY));
@@ -140,7 +135,7 @@ public class InitialiseIpvSessionHandler
                     new AuditEventUser(
                             ipvSessionItem.getClientSessionDetails().getUserId(),
                             ipvSessionItem.getIpvSessionId(),
-                            clientSessionDetailsDto.getGovukSigninJourneyId(),
+                            govukSigninJourneyId,
                             ipAddress);
 
             auditService.sendAuditEvent(
@@ -162,16 +157,10 @@ public class InitialiseIpvSessionHandler
                     e.getErrorObject().getDescription());
 
             String clientOAuthSessionId = SecureTokenHelper.generate();
-            ClientSessionDetailsDto clientSessionDetailsDto =
-                    generateErrorClientSessionDetails(
-                            e.getRedirectUri(),
-                            e.getClientId(),
-                            e.getState(),
-                            e.getGovukSigninJourneyId());
 
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
-                            clientSessionDetailsDto, clientOAuthSessionId, e.getErrorObject());
+                            clientOAuthSessionId, e.getErrorObject(), false);
             clientOAuthSessionService.generateErrorClientSessionDetails(
                     clientOAuthSessionId,
                     e.getRedirectUri(),
@@ -225,25 +214,5 @@ public class InitialiseIpvSessionHandler
             return Optional.of(ErrorResponse.INVALID_SESSION_REQUEST);
         }
         return Optional.empty();
-    }
-
-    @Tracing
-    private ClientSessionDetailsDto generateClientSessionDetails(
-            JWTClaimsSet claimsSet, String clientId, boolean isDebugJourney) throws ParseException {
-        return new ClientSessionDetailsDto(
-                claimsSet.getStringClaim("response_type"),
-                clientId,
-                claimsSet.getStringClaim("redirect_uri"),
-                claimsSet.getStringClaim("state"),
-                claimsSet.getSubject(),
-                claimsSet.getStringClaim("govuk_signin_journey_id"),
-                isDebugJourney);
-    }
-
-    @Tracing
-    private ClientSessionDetailsDto generateErrorClientSessionDetails(
-            String redirectUri, String clientId, String state, String govukSigninJourneyId) {
-        return new ClientSessionDetailsDto(
-                null, clientId, redirectUri, state, null, govukSigninJourneyId, false);
     }
 }

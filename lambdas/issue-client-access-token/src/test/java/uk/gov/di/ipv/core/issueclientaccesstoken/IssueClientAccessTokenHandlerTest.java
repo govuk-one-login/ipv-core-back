@@ -23,8 +23,10 @@ import uk.gov.di.ipv.core.issueclientaccesstoken.exception.ClientAuthenticationE
 import uk.gov.di.ipv.core.issueclientaccesstoken.service.AccessTokenService;
 import uk.gov.di.ipv.core.issueclientaccesstoken.validation.TokenRequestValidator;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
@@ -52,6 +54,7 @@ class IssueClientAccessTokenHandlerTest {
     private ConfigService mockConfigService;
     private AccessTokenService mockAccessTokenService;
     private IpvSessionService mockSessionService;
+    private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
     private TokenRequestValidator mockTokenRequestValidator;
 
     private IssueClientAccessTokenHandler handler;
@@ -69,6 +72,7 @@ class IssueClientAccessTokenHandlerTest {
         when(mockConfigService.getSsmParameter(AUTH_CODE_EXPIRY_SECONDS)).thenReturn("3600");
 
         mockSessionService = mock(IpvSessionService.class);
+        mockClientOAuthSessionService = mock(ClientOAuthSessionDetailsService.class);
 
         mockTokenRequestValidator = mock(TokenRequestValidator.class);
 
@@ -79,6 +83,7 @@ class IssueClientAccessTokenHandlerTest {
                         mockAccessTokenService,
                         mockSessionService,
                         mockConfigService,
+                        mockClientOAuthSessionService,
                         mockTokenRequestValidator);
 
         AuthorizationCodeMetadata mockAuthorizationCodeMetadata = new AuthorizationCodeMetadata();
@@ -89,8 +94,6 @@ class IssueClientAccessTokenHandlerTest {
         mockSessionItem.setIpvSessionId(TEST_SESSION_ID);
         mockSessionItem.setAuthorizationCode(TEST_AUTHORIZATION_CODE);
         mockSessionItem.setAuthorizationCodeMetadata(mockAuthorizationCodeMetadata);
-        ClientSessionDetailsDto clientSessionDetailsDto = new ClientSessionDetailsDto();
-        mockSessionItem.setClientSessionDetails(clientSessionDetailsDto);
     }
 
     @Test
@@ -108,6 +111,10 @@ class IssueClientAccessTokenHandlerTest {
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))
                 .thenReturn(Optional.of(mockSessionItem));
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
@@ -214,6 +221,8 @@ class IssueClientAccessTokenHandlerTest {
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))
                 .thenReturn(Optional.of(mockSessionItem));
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
@@ -283,6 +292,8 @@ class IssueClientAccessTokenHandlerTest {
         mockSessionItem.setAccessToken(TEST_ACCESS_TOKEN);
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))
                 .thenReturn(Optional.of(mockSessionItem));
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
@@ -308,6 +319,8 @@ class IssueClientAccessTokenHandlerTest {
         mockSessionItem.setAccessToken(TEST_ACCESS_TOKEN);
         when(mockSessionService.getIpvSessionByAuthorizationCode(TEST_AUTHORIZATION_CODE))
                 .thenReturn(Optional.of(mockSessionItem));
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
 
         String errorMessage = "Failed to revoke access token";
         doThrow(new IllegalArgumentException(errorMessage))
@@ -335,6 +348,8 @@ class IssueClientAccessTokenHandlerTest {
                 .thenReturn(Optional.of(mockSessionItem));
         when(mockAccessTokenService.validateAuthorizationGrant(any()))
                 .thenReturn(ValidationResult.createValidResult());
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
@@ -351,5 +366,18 @@ class IssueClientAccessTokenHandlerTest {
         httpErrorResponse.setContentType(ContentType.APPLICATION_JSON.getType());
         httpErrorResponse.setContent(responseBody);
         return ErrorObject.parse(httpErrorResponse);
+    }
+
+    private ClientOAuthSessionItem getClientOAuthSessionItem() {
+        ClientOAuthSessionItem clientOAuthSessionItem =
+                ClientOAuthSessionItem.builder()
+                        .clientOAuthSessionId(SecureTokenHelper.generate())
+                        .responseType("code")
+                        .state("test-state")
+                        .redirectUri("https://example.com/redirect")
+                        .govukSigninJourneyId("test-journey-id")
+                        .userId("test-user-id")
+                        .build();
+        return clientOAuthSessionItem;
     }
 }

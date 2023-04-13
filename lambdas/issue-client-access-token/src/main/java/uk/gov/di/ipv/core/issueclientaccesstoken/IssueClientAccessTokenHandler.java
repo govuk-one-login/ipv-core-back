@@ -29,7 +29,9 @@ import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
@@ -45,15 +47,18 @@ public class IssueClientAccessTokenHandler
     private final IpvSessionService sessionService;
     private final ConfigService configService;
     private final TokenRequestValidator tokenRequestValidator;
+    private final ClientOAuthSessionDetailsService clientOAuthSessionService;
 
     public IssueClientAccessTokenHandler(
             AccessTokenService accessTokenService,
             IpvSessionService sessionService,
             ConfigService configService,
+            ClientOAuthSessionDetailsService clientOAuthSessionService,
             TokenRequestValidator tokenRequestValidator) {
         this.accessTokenService = accessTokenService;
         this.sessionService = sessionService;
         this.configService = configService;
+        this.clientOAuthSessionService = clientOAuthSessionService;
         this.tokenRequestValidator = tokenRequestValidator;
     }
 
@@ -62,6 +67,7 @@ public class IssueClientAccessTokenHandler
         this.configService = new ConfigService();
         this.accessTokenService = new AccessTokenService(configService);
         this.sessionService = new IpvSessionService(configService);
+        this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.tokenRequestValidator =
                 new TokenRequestValidator(configService, new ClientAuthJwtIdService(configService));
     }
@@ -94,10 +100,12 @@ public class IssueClientAccessTokenHandler
                             .getIpvSessionByAuthorizationCode(
                                     authorizationGrant.getAuthorizationCode().getValue())
                             .orElseThrow();
-
+            ClientOAuthSessionItem clientOAuthSessionItem =
+                    clientOAuthSessionService.getClientOAuthSession(
+                            ipvSessionItem.getClientOAuthSessionId());
             LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
             LogHelper.attachGovukSigninJourneyIdToLogs(
-                    ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId());
+                    clientOAuthSessionItem.getGovukSigninJourneyId());
 
             if (ipvSessionItem.getAccessToken() != null) {
                 ErrorObject error = revokeAccessToken(ipvSessionItem);

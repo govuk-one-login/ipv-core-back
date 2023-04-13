@@ -17,7 +17,6 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerService;
 import uk.gov.di.ipv.core.library.credentialissuer.exceptions.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.BadRequestError;
@@ -27,12 +26,10 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
-import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.*;
 
 import java.util.Map;
 
@@ -44,18 +41,21 @@ public class RetrieveCriOauthAccessTokenHandler
     private final AuditService auditService;
     private final IpvSessionService ipvSessionService;
     private final CriOAuthSessionService criOAuthSessionService;
+    private final ClientOAuthSessionDetailsService clientOAuthSessionService;
 
     public RetrieveCriOauthAccessTokenHandler(
             CredentialIssuerService credentialIssuerService,
             ConfigService configService,
             IpvSessionService ipvSessionService,
             AuditService auditService,
-            CriOAuthSessionService criOAuthSessionService) {
+            CriOAuthSessionService criOAuthSessionService,
+            ClientOAuthSessionDetailsService clientOAuthSessionService) {
         this.credentialIssuerService = credentialIssuerService;
         this.configService = configService;
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
         this.criOAuthSessionService = criOAuthSessionService;
+        this.clientOAuthSessionService = clientOAuthSessionService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -67,6 +67,7 @@ public class RetrieveCriOauthAccessTokenHandler
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
+        this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
     }
 
     @Override
@@ -83,9 +84,6 @@ public class RetrieveCriOauthAccessTokenHandler
         try {
             String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-            ClientSessionDetailsDto clientSessionDetailsDto =
-                    ipvSessionItem.getClientSessionDetails();
-            String userId = clientSessionDetailsDto.getUserId();
 
             CriOAuthSessionItem criOAuthSessionItem =
                     criOAuthSessionService.getCriOauthSessionItem(
@@ -94,8 +92,13 @@ public class RetrieveCriOauthAccessTokenHandler
             credentialIssuerId = criOAuthSessionItem.getCriId();
             String authorizationCode = criOAuthSessionItem.getAuthorizationCode();
 
+            ClientOAuthSessionItem clientOAuthSessionItem =
+                    clientOAuthSessionService.getClientOAuthSession(
+                            ipvSessionItem.getClientOAuthSessionId());
+
+            String userId = clientOAuthSessionItem.getUserId();
             LogHelper.attachGovukSigninJourneyIdToLogs(
-                    clientSessionDetailsDto.getGovukSigninJourneyId());
+                    clientOAuthSessionItem.getGovukSigninJourneyId());
 
             CredentialIssuerConfig credentialIssuerConfig =
                     getCredentialIssuerConfig(credentialIssuerId);
@@ -110,7 +113,7 @@ public class RetrieveCriOauthAccessTokenHandler
                     new AuditEventUser(
                             userId,
                             ipvSessionId,
-                            clientSessionDetailsDto.getGovukSigninJourneyId(),
+                            clientOAuthSessionItem.getGovukSigninJourneyId(),
                             ipAddress);
             String componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
 
