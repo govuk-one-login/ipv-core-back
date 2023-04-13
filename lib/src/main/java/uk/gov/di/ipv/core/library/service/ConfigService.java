@@ -233,6 +233,7 @@ public class ConfigService {
     }
 
     public boolean isEnabled(String credentialIssuerId) {
+        LOGGER.info(credentialIssuerId);
         String enabled =
                 getSsmParameter(
                         String.format(
