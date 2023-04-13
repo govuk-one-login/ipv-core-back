@@ -30,7 +30,6 @@ import uk.gov.di.ipv.core.initialiseipvsession.validation.JarValidator;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -105,21 +104,11 @@ class InitialiseIpvSessionHandlerTest {
                         new RSAEncrypter(RSAKey.parse(TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK)),
                         signedJWT);
 
-        ClientSessionDetailsDto clientSessionDetailsDto =
-                new ClientSessionDetailsDto(
-                        "code",
-                        "test-client",
-                        "http://example.com",
-                        "test-state",
-                        "test-user-id",
-                        "test-journey-id",
-                        false);
-
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setClientOAuthSessionId(CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
-        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+        ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.generate());
 
         clientOAuthSessionItem = new ClientOAuthSessionItem();
         clientOAuthSessionItem.setClientOAuthSessionId(CLIENT_OAUTH_SESSION_ID);
