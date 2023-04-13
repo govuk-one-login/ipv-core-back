@@ -91,12 +91,9 @@ public class EndMitigationJourneyHandler
 
             String mitigationId = input.getPathParameters().get(MITIGATION_ID);
 
-            ClientOAuthSessionItem clientOAuthSessionItem = null;
-            if (ipvSessionItem.getClientOAuthSessionId() != null) {
-                clientOAuthSessionItem =
-                        clientOAuthSessionDetailsService.getClientOAuthSession(
-                                ipvSessionItem.getClientOAuthSessionId());
-            }
+            ClientOAuthSessionItem clientOAuthSessionItem =
+                    clientOAuthSessionDetailsService.getClientOAuthSession(
+                            ipvSessionItem.getClientOAuthSessionId());
 
             final String govUkJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             final String userId = clientOAuthSessionItem.getUserId();

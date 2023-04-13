@@ -110,12 +110,9 @@ public class BuildUserIdentityHandler
             String ipvSessionId = ipvSessionItem.getIpvSessionId();
             LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
 
-            ClientOAuthSessionItem clientOAuthSessionItem = null;
-            if (ipvSessionItem.getClientOAuthSessionId() != null) {
-                clientOAuthSessionItem =
-                        clientOAuthSessionDetailsService.getClientOAuthSession(
-                                ipvSessionItem.getClientOAuthSessionId());
-            }
+            ClientOAuthSessionItem clientOAuthSessionItem =
+                    clientOAuthSessionDetailsService.getClientOAuthSession(
+                            ipvSessionItem.getClientOAuthSessionId());
 
             LogHelper.attachClientIdToLogs(clientOAuthSessionItem.getClientId());
             LogHelper.attachGovukSigninJourneyIdToLogs(

@@ -71,12 +71,9 @@ public class BuildDebugCredentialDataHandler
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 
-            ClientOAuthSessionItem clientOAuthSessionItem = null;
-            if (ipvSessionItem.getClientOAuthSessionId() != null) {
-                clientOAuthSessionItem =
-                        clientOAuthSessionDetailsService.getClientOAuthSession(
-                                ipvSessionItem.getClientOAuthSessionId());
-            }
+            ClientOAuthSessionItem clientOAuthSessionItem =
+                    clientOAuthSessionDetailsService.getClientOAuthSession(
+                            ipvSessionItem.getClientOAuthSessionId());
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     clientOAuthSessionItem.getGovukSigninJourneyId());
             return ApiGatewayResponseGenerator.proxyJsonResponse(

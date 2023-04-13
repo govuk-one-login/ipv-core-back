@@ -94,12 +94,9 @@ public class BuildProvenUserIdentityDetailsHandler
             String ipvSessionId = RequestHelper.getIpvSessionId(input.getHeaders());
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 
-            ClientOAuthSessionItem clientOAuthSessionItem = null;
-            if (ipvSessionItem.getClientOAuthSessionId() != null) {
-                clientOAuthSessionItem =
-                        clientOAuthSessionDetailsService.getClientOAuthSession(
-                                ipvSessionItem.getClientOAuthSessionId());
-            }
+            ClientOAuthSessionItem clientOAuthSessionItem =
+                    clientOAuthSessionDetailsService.getClientOAuthSession(
+                            ipvSessionItem.getClientOAuthSessionId());
 
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
