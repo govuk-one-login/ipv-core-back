@@ -114,12 +114,9 @@ public class CheckExistingIdentityHandler
             String ipvSessionId = RequestHelper.getIpvSessionId(event);
             String ipAddress = RequestHelper.getIpAddress(event);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-            ClientOAuthSessionItem clientOAuthSessionItem = null;
-            if (ipvSessionItem.getClientOAuthSessionId() != null) {
-                clientOAuthSessionItem =
-                        clientOAuthSessionDetailsService.getClientOAuthSession(
-                                ipvSessionItem.getClientOAuthSessionId());
-            }
+            ClientOAuthSessionItem clientOAuthSessionItem =
+                    clientOAuthSessionDetailsService.getClientOAuthSession(
+                            ipvSessionItem.getClientOAuthSessionId());
             String userId = clientOAuthSessionItem.getUserId();
 
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
