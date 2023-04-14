@@ -37,8 +37,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DRIVING_LICENCE_CRI_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriIdConstants.DRIVING_LICENCE_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriIdConstants.PASSPORT_CRI_ID;
 
 public class ValidateOAuthCallbackHandler
         implements RequestHandler<CriCallbackRequest, Map<String, Object>> {
@@ -68,8 +68,6 @@ public class ValidateOAuthCallbackHandler
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
     private final String componentId;
-    private final String passportCriId;
-    private final String drivingLicenceCriId;
     private final CriOAuthSessionService criOAuthSessionService;
 
     public ValidateOAuthCallbackHandler(
@@ -81,8 +79,6 @@ public class ValidateOAuthCallbackHandler
         this.ipvSessionService = ipvSessionService;
         this.auditService = auditService;
         this.componentId = this.configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
-        this.passportCriId = configService.getSsmParameter(PASSPORT_CRI_ID);
-        this.drivingLicenceCriId = configService.getSsmParameter(DRIVING_LICENCE_CRI_ID);
         this.criOAuthSessionService = criOAuthSessionService;
     }
 
@@ -92,8 +88,6 @@ public class ValidateOAuthCallbackHandler
         this.ipvSessionService = new IpvSessionService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.componentId = this.configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
-        this.passportCriId = configService.getSsmParameter(PASSPORT_CRI_ID);
-        this.drivingLicenceCriId = configService.getSsmParameter(DRIVING_LICENCE_CRI_ID);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
     }
 
@@ -211,8 +205,8 @@ public class ValidateOAuthCallbackHandler
         LogHelper.logOauthError("OAuth error received from CRI", error, errorDescription);
 
         if (OAuth2Error.ACCESS_DENIED_CODE.equals(error)) {
-            if (configService.isEnabled(passportCriId)
-                    && configService.isEnabled(drivingLicenceCriId)) {
+            if (configService.isEnabled(PASSPORT_CRI_ID)
+                    && configService.isEnabled(DRIVING_LICENCE_CRI_ID)) {
                 return JOURNEY_ACCESS_DENIED_MULTI;
             }
             return JOURNEY_ACCESS_DENIED;

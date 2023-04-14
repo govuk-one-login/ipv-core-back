@@ -53,8 +53,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
+import static uk.gov.di.ipv.core.library.domain.CriIdConstants.ADDRESS_CRI_ID;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATORS;
@@ -64,7 +64,6 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 class RetrieveCriCredentialHandlerTest {
     private static final String ACCESS_TOKEN = "Bearer dGVzdAo=";
     private static final String CREDENTIAL_ISSUER_ID = "PassportIssuer";
-    private static final String ADDRESS_CRI_JOURNEY_ID = "address";
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_STATE = "test-state";
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
@@ -305,8 +304,7 @@ class RetrieveCriCredentialHandlerTest {
         when(credentialIssuerService.getVerifiableCredential(
                         testBearerAccessToken, testPassportIssuer, testApiKey))
                 .thenReturn(List.of(SignedJWT.parse(SIGNED_ADDRESS_VC)));
-        when(configService.getSsmParameter(ADDRESS_CRI_ID)).thenReturn(ADDRESS_CRI_JOURNEY_ID);
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_JOURNEY_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
                 .thenReturn(addressConfig);
         mockServiceCallsAndSessionItem();
 
@@ -337,10 +335,9 @@ class RetrieveCriCredentialHandlerTest {
         when(credentialIssuerService.getVerifiableCredential(
                         testBearerAccessToken, testPassportIssuer, testApiKey))
                 .thenReturn(List.of(SignedJWT.parse(SIGNED_ADDRESS_VC)));
-        when(configService.getSsmParameter(ADDRESS_CRI_ID)).thenReturn(ADDRESS_CRI_JOURNEY_ID);
         when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
                 .thenReturn(testPassportIssuer);
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_JOURNEY_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
                 .thenReturn(addressConfig);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
         when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
