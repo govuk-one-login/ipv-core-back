@@ -50,8 +50,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_MITIGATION_JOURNEYS_ENABLED;
+import static uk.gov.di.ipv.core.library.domain.CriIdConstants.ADDRESS_CRI_ID;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
@@ -72,7 +72,6 @@ public class EvaluateGpg45ScoresHandler
     private final CiStorageService ciStorageService;
     private final ConfigService configService;
     private final AuditService auditService;
-    private final String addressCriId;
     private final String componentId;
 
     public EvaluateGpg45ScoresHandler(
@@ -89,7 +88,6 @@ public class EvaluateGpg45ScoresHandler
         this.configService = configService;
         this.auditService = auditService;
 
-        addressCriId = configService.getSsmParameter(ADDRESS_CRI_ID);
         componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
@@ -102,7 +100,6 @@ public class EvaluateGpg45ScoresHandler
         this.ciStorageService = new CiStorageService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
 
-        addressCriId = configService.getSsmParameter(ADDRESS_CRI_ID);
         componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
@@ -307,7 +304,7 @@ public class EvaluateGpg45ScoresHandler
         for (SignedJWT signedJWT : credentials) {
 
             CredentialIssuerConfig addressCriConfig =
-                    configService.getCredentialIssuerActiveConnectionConfig(addressCriId);
+                    configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID);
             boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, addressCriConfig);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));

@@ -38,8 +38,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DRIVING_LICENCE_CRI_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriIdConstants.DRIVING_LICENCE_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriIdConstants.PASSPORT_CRI_ID;
 
 @ExtendWith(MockitoExtension.class)
 class ValidateOAuthCallbackHandlerHandlerTest {
@@ -59,8 +59,6 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     private static final String STATUS_CODE = "statusCode";
     private static final String TYPE = "type";
     private static final String PAGE = "page";
-    private static final String CRI_PASSPORT = "ukPassport";
-    private static final String CRI_DRIVING_LICENCE = "drivingLicence";
     private static CredentialIssuerConfig credentialIssuerConfig;
     private static IpvSessionItem ipvSessionItem;
     @Mock private Context context;
@@ -74,9 +72,6 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     @BeforeEach
     void setUpBeforeEach() throws URISyntaxException {
         when(mockConfigService.getSsmParameter(COMPONENT_ID)).thenReturn("audience.for.clients");
-        when(mockConfigService.getSsmParameter(PASSPORT_CRI_ID)).thenReturn(CRI_PASSPORT);
-        when(mockConfigService.getSsmParameter(DRIVING_LICENCE_CRI_ID))
-                .thenReturn(CRI_DRIVING_LICENCE);
 
         credentialIssuerConfig = createCriConfig("criId", "cri.iss.com");
 
@@ -307,9 +302,9 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
                 .thenReturn(criOAuthSessionItem);
-        when(mockConfigService.isEnabled(CRI_PASSPORT)).thenReturn(true);
+        when(mockConfigService.isEnabled(PASSPORT_CRI_ID)).thenReturn(true);
 
-        when(mockConfigService.isEnabled(CRI_DRIVING_LICENCE)).thenReturn(false);
+        when(mockConfigService.isEnabled(DRIVING_LICENCE_CRI_ID)).thenReturn(false);
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
 
@@ -327,9 +322,9 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
                 .thenReturn(criOAuthSessionItem);
-        when(mockConfigService.isEnabled(CRI_PASSPORT)).thenReturn(true);
+        when(mockConfigService.isEnabled(PASSPORT_CRI_ID)).thenReturn(true);
 
-        when(mockConfigService.isEnabled(CRI_DRIVING_LICENCE)).thenReturn(true);
+        when(mockConfigService.isEnabled(DRIVING_LICENCE_CRI_ID)).thenReturn(true);
 
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
