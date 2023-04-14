@@ -46,8 +46,6 @@ import java.util.stream.Collectors;
 import static uk.gov.di.ipv.core.library.domain.CriIdConstants.ADDRESS_CRI_ID;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
-import static uk.gov.di.ipv.core.library.service.UserIdentityService.ADDRESS_CRI_TYPES;
-import static uk.gov.di.ipv.core.library.service.UserIdentityService.ADDRESS_PROPERTY_NAME;
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.BIRTH_DATE_PROPERTY_NAME;
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.NAME_PROPERTY_NAME;
@@ -188,7 +186,7 @@ public class BuildProvenUserIdentityDetailsHandler
             CredentialIssuerConfig credentialIssuerConfig =
                     configService.getCredentialIssuerActiveConnectionConfig(
                             item.getCredentialIssuer());
-            if (ADDRESS_CRI_TYPES.contains(item.getCredentialIssuer())
+            if (item.getCredentialIssuer().equals(ADDRESS_CRI_ID)
                     && userIdentityService.isVcSuccessful(
                             currentVcStatuses, credentialIssuerConfig.getComponentId())) {
                 JsonNode addressNode =
@@ -198,7 +196,7 @@ public class BuildProvenUserIdentityDetailsHandler
                                                 .toString())
                                 .path(VC_CLAIM)
                                 .path(VC_CREDENTIAL_SUBJECT)
-                                .path(ADDRESS_PROPERTY_NAME);
+                                .path(ADDRESS_CRI_ID);
 
                 List<Address> addressList =
                         mapper.convertValue(addressNode, new TypeReference<>() {});
