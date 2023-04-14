@@ -10,7 +10,6 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -99,14 +98,8 @@ public class IpvSessionService {
         return Optional.ofNullable(ipvSessionItem);
     }
 
-    public String getUserId(String ipvSessionId) {
-        return this.getIpvSession(ipvSessionId).getClientSessionDetails().getUserId();
-    }
-
     public IpvSessionItem generateIpvSession(
-            ClientSessionDetailsDto clientSessionDetailsDto,
-            String clientOAuthSessionId,
-            ErrorObject errorObject) {
+            String clientOAuthSessionId, ErrorObject errorObject, Boolean debugJourney) {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
@@ -114,10 +107,8 @@ public class IpvSessionService {
         LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
 
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
-        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
 
-        String userState =
-                generateStartingState(clientSessionDetailsDto.isDebugJourney(), errorObject);
+        String userState = generateStartingState(debugJourney, errorObject);
         ipvSessionItem.setUserState(userState);
 
         ipvSessionItem.setVisitedCredentialIssuerDetails(Collections.emptyList());

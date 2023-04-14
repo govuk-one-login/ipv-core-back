@@ -13,7 +13,6 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
@@ -21,7 +20,9 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
@@ -54,16 +55,22 @@ public class SelectCriHandler
 
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
+    private final ClientOAuthSessionDetailsService clientOAuthSessionService;
 
-    public SelectCriHandler(ConfigService configService, IpvSessionService ipvSessionService) {
+    public SelectCriHandler(
+            ConfigService configService,
+            IpvSessionService ipvSessionService,
+            ClientOAuthSessionDetailsService clientOAuthSessionService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
+        this.clientOAuthSessionService = clientOAuthSessionService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public SelectCriHandler() {
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
+        this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
     }
 
     @Override
@@ -75,15 +82,19 @@ public class SelectCriHandler
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(event);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+            ClientOAuthSessionItem clientOAuthSessionItem =
+                    clientOAuthSessionService.getClientOAuthSession(
+                            ipvSessionItem.getClientOAuthSessionId());
 
-            logGovUkSignInJourneyId(ipvSessionId);
+            LogHelper.attachGovukSigninJourneyIdToLogs(
+                    clientOAuthSessionItem.getGovukSigninJourneyId());
 
             List<VcStatusDto> currentVcStatuses = ipvSessionItem.getCurrentVcStatuses();
 
             List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuers =
                     ipvSessionItem.getVisitedCredentialIssuerDetails();
 
-            String userId = ipvSessionItem.getClientSessionDetails().getUserId();
+            String userId = clientOAuthSessionItem.getUserId();
 
             JourneyResponse response;
             if (shouldSendUserToApp(userId)) {
@@ -215,13 +226,6 @@ public class SelectCriHandler
 
         LOGGER.info("Unable to determine next credential issuer");
         return new JourneyResponse(JOURNEY_FAIL);
-    }
-
-    private void logGovUkSignInJourneyId(String ipvSessionId) {
-        IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-        ClientSessionDetailsDto clientSessionDetailsDto = ipvSessionItem.getClientSessionDetails();
-        LogHelper.attachGovukSigninJourneyIdToLogs(
-                clientSessionDetailsDto.getGovukSigninJourneyId());
     }
 
     private JourneyResponse getJourneyResponse(String criId) {

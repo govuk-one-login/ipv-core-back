@@ -83,6 +83,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     void shouldReceive200ResponseCodeProvenUserIdentityDetails() throws Exception {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
