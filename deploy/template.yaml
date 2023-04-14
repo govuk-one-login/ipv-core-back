@@ -1273,6 +1273,7 @@ Resources:
               Resource: "*"
       Tracing:
         Enabled: true
+      Name: !Sub "${AWS::StackName}-CriReturnStepFunction"
       Type: EXPRESS
       PermissionsBoundary: !If
         - UsePermissionsBoundary
@@ -1325,6 +1326,7 @@ Resources:
       DefinitionUri: journey_engine.asl.json
       DefinitionSubstitutions:
         IPVProcessJourneyStepFunctionArn: !GetAtt IPVProcessJourneyStepFunction.Arn
+        CheckExistingIdentityFunctionArn: !GetAtt CheckExistingIdentityFunction.Arn
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1342,6 +1344,8 @@ Resources:
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref IPVProcessJourneyStepFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref CheckExistingIdentityFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow
@@ -1359,6 +1363,7 @@ Resources:
       Tracing:
         Enabled: true
       Type: EXPRESS
+      Name: !Sub "${AWS::StackName}-JourneyEngineStepFunction"
       PermissionsBoundary: !If
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary

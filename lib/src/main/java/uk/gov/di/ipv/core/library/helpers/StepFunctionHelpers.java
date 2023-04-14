@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.helpers;
 
 import org.apache.http.HttpStatus;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.util.HashMap;
@@ -9,14 +10,14 @@ import java.util.Map;
 import java.util.Optional;
 
 public class StepFunctionHelpers {
-    private static final String CODE = "code";
-    private static final String IPV_SESSION_ID = "ipvSessionId";
-    private static final String JOURNEY = "journey";
-    private static final String MESSAGE = "message";
-    private static final String STATUS_CODE = "statusCode";
-    private static final String IP_ADDRESS = "ipAddress";
-    private static final String TYPE = "type";
-    private static final String PAGE = "page";
+    public static final String CODE = "code";
+    public static final String IPV_SESSION_ID = "ipvSessionId";
+    public static final String JOURNEY = "journey";
+    public static final String MESSAGE = "message";
+    public static final String STATUS_CODE = "statusCode";
+    public static final String IP_ADDRESS = "ipAddress";
+    public static final String TYPE = "type";
+    public static final String PAGE = "page";
 
     private StepFunctionHelpers() {
         throw new IllegalStateException("Utility class");
@@ -51,6 +52,15 @@ public class StepFunctionHelpers {
                                                 ErrorResponse.MISSING_JOURNEY_STEP))
                         .split("/");
         return parts[parts.length - 1];
+    }
+
+    public static Map<String, Object> generateErrorOutputMap(
+            int statusCode, JourneyResponse journeyResponse) {
+        Map<String, Object> output = new HashMap<>();
+        output.put(STATUS_CODE, statusCode);
+        output.put(JOURNEY, journeyResponse.getJourney());
+        output.put(CODE, journeyResponse.getStatusCode());
+        return output;
     }
 
     public static Map<String, Object> generateErrorOutputMap(

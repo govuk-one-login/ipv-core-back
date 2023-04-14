@@ -1,10 +1,6 @@
 package uk.gov.di.ipv.core.checkexistingidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeAll;
@@ -40,11 +36,13 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -58,15 +56,22 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IP_ADDRESS_HEADER;
+import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.IPV_SESSION_ID;
+import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.IP_ADDRESS;
 
 @ExtendWith(MockitoExtension.class)
 class CheckExistingIdentityHandlerTest {
     private static final String TEST_SESSION_ID = "test-session-id";
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_JOURNEY_ID = "test-journey-id";
-    private static final APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+    private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
+    private static final String JOURNEY = "journey";
+    private static final String CODE = "code";
+    private static final String MESSAGE = "message";
+    private static final String STATUS_CODE = "statusCode";
+    private static final Map<String, String> event = Map.of(
+            IPV_SESSION_ID, TEST_SESSION_ID,
+            IP_ADDRESS, TEST_CLIENT_SOURCE_IP);
     private static final List<String> CREDENTIALS =
             List.of(
                     M1A_PASSPORT_VC,
@@ -74,14 +79,13 @@ class CheckExistingIdentityHandlerTest {
                     M1A_FRAUD_VC,
                     M1A_VERIFICATION_VC,
                     M1B_DCMAW_VC);
-    private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     private static CredentialIssuerConfig addressConfig = null;
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
 
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
-    private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
-    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
+    private static final String JOURNEY_REUSE = "/journey/reuse";
+    private static final String JOURNEY_NEXT = "/journey/next";
 
     static {
         try {
@@ -102,8 +106,6 @@ class CheckExistingIdentityHandlerTest {
         }
     }
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
     @Mock private Context context;
     @Mock private UserIdentityService userIdentityService;
     @Mock private IpvSessionService ipvSessionService;
@@ -113,18 +115,10 @@ class CheckExistingIdentityHandlerTest {
     @Mock private AuditService auditService;
     @InjectMocks private CheckExistingIdentityHandler checkExistingIdentityHandler;
 
-    private final Gson gson = new Gson();
-
     private IpvSessionItem ipvSessionItem;
 
     @BeforeAll
     static void setUp() throws Exception {
-        event.setHeaders(
-                Map.of(
-                        IPV_SESSION_ID_HEADER,
-                        TEST_SESSION_ID,
-                        IP_ADDRESS_HEADER,
-                        TEST_CLIENT_SOURCE_IP));
         for (String cred : CREDENTIALS) {
             PARSED_CREDENTIALS.add(SignedJWT.parse(cred));
         }
@@ -156,10 +150,9 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(addressConfig);
 
         var response = checkExistingIdentityHandler.handleRequest(event, context);
-        JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals(JOURNEY_REUSE, journeyResponse);
+        assertNotNull(response);
+        assertEquals(JOURNEY_REUSE, response.get("journey"));
 
         verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
 
@@ -184,10 +177,9 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
 
         var response = checkExistingIdentityHandler.handleRequest(event, context);
-        JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals(JOURNEY_REUSE, journeyResponse);
+        assertNotNull(response);
+        assertEquals(JOURNEY_REUSE, response.get(JOURNEY));
 
         verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
 
@@ -211,10 +203,9 @@ class CheckExistingIdentityHandlerTest {
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
 
         var response = checkExistingIdentityHandler.handleRequest(event, context);
-        JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals(JOURNEY_NEXT, journeyResponse);
+        assertNotNull(response);
+        assertEquals(JOURNEY_NEXT, response.get(JOURNEY));
 
         verify(userIdentityService).deleteVcStoreItems(TEST_USER_ID);
 
@@ -236,10 +227,9 @@ class CheckExistingIdentityHandlerTest {
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
 
         var response = checkExistingIdentityHandler.handleRequest(event, context);
-        JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals("/journey/next", journeyResponse.getJourney());
+        assertNotNull(response);
+        assertEquals(JOURNEY_NEXT, response.get(JOURNEY));
 
         verify(userIdentityService).deleteVcStoreItems(TEST_USER_ID);
 
@@ -261,10 +251,10 @@ class CheckExistingIdentityHandlerTest {
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
 
         var response = checkExistingIdentityHandler.handleRequest(event, context);
-        JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals("/journey/next", journeyResponse.getJourney());
+        assertNotNull(response);
+        assertEquals(JOURNEY_NEXT, response.get(JOURNEY));
+
         verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
 
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
@@ -274,14 +264,13 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturn400IfSessionIdNotInHeader() {
-        APIGatewayProxyRequestEvent eventWithoutHeaders = new APIGatewayProxyRequestEvent();
+        var eventWithoutHeaders = new HashMap<String, String>();
 
         var response = checkExistingIdentityHandler.handleRequest(eventWithoutHeaders, context);
-        var error = gson.fromJson(response.getBody(), Map.class);
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.get(STATUS_CODE));
         assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), error.get("error_description"));
+                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), response.get(MESSAGE));
     }
 
     @Test
@@ -290,16 +279,14 @@ class CheckExistingIdentityHandlerTest {
         when(gpg45ProfileEvaluator.buildScore(any())).thenThrow(new ParseException("Whoops", 0));
 
         var response = checkExistingIdentityHandler.handleRequest(event, context);
-        Map<String, Object> responseMap =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.get(STATUS_CODE));
         assertEquals(
                 ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getCode(),
-                responseMap.get("code"));
+                response.get(CODE));
         assertEquals(
                 ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(),
-                responseMap.get("message"));
+                response.get(MESSAGE));
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
     }
 
@@ -309,16 +296,14 @@ class CheckExistingIdentityHandlerTest {
         when(gpg45ProfileEvaluator.buildScore(any())).thenThrow(new UnknownEvidenceTypeException());
 
         var response = checkExistingIdentityHandler.handleRequest(event, context);
-        Map<String, Object> responseMap =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.get(STATUS_CODE));
         assertEquals(
                 ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE.getCode(),
-                responseMap.get("code"));
+                response.get(CODE));
         assertEquals(
                 ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE.getMessage(),
-                responseMap.get("message"));
+                response.get(MESSAGE));
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
     }
 
@@ -331,14 +316,10 @@ class CheckExistingIdentityHandlerTest {
 
         var response = checkExistingIdentityHandler.handleRequest(event, context);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
-        Map<String, Object> responseMap =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_GET_STORED_CIS.getCode(), responseMap.get("code"));
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.get(STATUS_CODE));
+        assertEquals(ErrorResponse.FAILED_TO_GET_STORED_CIS.getCode(), response.get(CODE));
         assertEquals(
-                ErrorResponse.FAILED_TO_GET_STORED_CIS.getMessage(), responseMap.get("message"));
+                ErrorResponse.FAILED_TO_GET_STORED_CIS.getMessage(), response.get(MESSAGE));
     }
 
     @Test
@@ -355,13 +336,9 @@ class CheckExistingIdentityHandlerTest {
 
         var response = checkExistingIdentityHandler.handleRequest(event, context);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
-        Map<String, Object> responseMap =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getCode(), responseMap.get("code"));
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.get(STATUS_CODE));
+        assertEquals(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getCode(), response.get(CODE));
         assertEquals(
-                ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getMessage(), responseMap.get("message"));
+                ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getMessage(), response.get(MESSAGE));
     }
 }

@@ -21,18 +21,24 @@ class AuditExtensionGpg45ProfileMatchedTest {
 
     private static final ObjectMapper om = new ObjectMapper();
     private static MockedStatic<Clock> clockMock;
+    private static MockedStatic<Instant> instantMock;
 
     @BeforeAll
     public static void setup() {
+        var currentInstant = Instant.ofEpochSecond(1666170506);
+
         clockMock = mockStatic(Clock.class);
         Clock spyClock = spy(Clock.class);
         clockMock.when(Clock::systemUTC).thenReturn(spyClock);
-        when(spyClock.instant()).thenReturn(Instant.ofEpochSecond(1666170506));
+        when(spyClock.instant()).thenReturn(currentInstant);
+        instantMock = mockStatic(Instant.class);
+        instantMock.when(Instant::now).thenReturn(currentInstant);
     }
 
     @AfterAll
     public static void tearDown() {
         clockMock.close();
+        instantMock.close();
     }
 
     @Test

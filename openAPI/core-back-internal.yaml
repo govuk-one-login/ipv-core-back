@@ -256,23 +256,6 @@ paths:
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
 
-  /journey/check-existing-identity:
-    post:
-      description: "Check Existing Identity"
-      responses:
-        200:
-          description: "Check Existing Identity response"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/journeyType"
-      x-amazon-apigateway-integration:
-        httpMethod: "POST"
-        uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${CheckExistingIdentityFunction.Arn}:live/invocations
-        passthroughBehavior: "when_no_match"
-        type: "aws_proxy"
-
 components:
   schemas:
     journeyType:

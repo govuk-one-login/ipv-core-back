@@ -4,7 +4,57 @@
     "ProcessJourneyStep": {
       "Type": "Task",
       "Resource": "${IPVProcessJourneyStepFunctionArn}",
-      "End": true
+      "Next": "IsJourney",
+      "Parameters": {
+        "journey.$": "$.journey",
+        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
+        "ipAddress.$": "$$.Execution.Input.ipAddress"
+      }
+    },
+    "IsJourney": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.journey",
+          "IsPresent": false,
+          "Next": "Success"
+        },
+        {
+          "Variable": "$.journey",
+          "StringEquals": "/journey/check-existing-identity",
+          "Next": "CheckExistingIdentity"
+        }
+      ],
+      "Default": "Success"
+    },
+    "CheckExistingIdentity": {
+      "Type": "Task",
+      "Resource": "${CheckExistingIdentityFunctionArn}",
+      "Parameters": {
+        "journey.$": "$.journey",
+        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
+        "ipAddress.$": "$$.Execution.Input.ipAddress"
+      },
+      "Next": "ShouldRunProcessJourney"
+    },
+    "ShouldRunProcessJourney": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.journey",
+          "IsPresent": false,
+          "Next": "Success"
+        },
+        {
+          "Variable": "$.journey",
+          "StringEquals": "/journey/next",
+          "Next": "ProcessJourneyStep"
+        }
+      ],
+      "Default": "Success"
+    },
+    "Success": {
+      "Type": "Succeed"
     }
   }
 }
