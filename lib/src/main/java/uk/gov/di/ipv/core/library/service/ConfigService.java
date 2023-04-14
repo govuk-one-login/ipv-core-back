@@ -115,6 +115,7 @@ public class ConfigService {
     }
 
     public Map<String, String> getSsmParameters(String path) {
+        LOGGER.info(path);
         return getSsmParameters(path, false);
     }
 
@@ -143,6 +144,9 @@ public class ConfigService {
     public CredentialIssuerConfig getCredentialIssuerActiveConnectionConfig(
             String credentialIssuerId) {
         String activeConnection = getActiveConnection(credentialIssuerId);
+
+        LOGGER.info(credentialIssuerId);
+        LOGGER.info(activeConnection);
 
         Map<String, String> result =
                 getSsmParameters(
