@@ -25,8 +25,10 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -50,16 +52,19 @@ public class EndMitigationJourneyHandler
     private IpvSessionService ipvSessionService;
     private CiStorageService ciStorageService;
     private ConfigService configService;
+    private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
 
     public EndMitigationJourneyHandler(
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
             CiStorageService ciStorageService,
-            ConfigService configService) {
+            ConfigService configService,
+            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.ciStorageService = ciStorageService;
         this.configService = configService;
+        this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -68,6 +73,7 @@ public class EndMitigationJourneyHandler
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.ciStorageService = new CiStorageService(configService);
+        this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
     }
 
     @Override
@@ -85,15 +91,17 @@ public class EndMitigationJourneyHandler
 
             String mitigationId = input.getPathParameters().get(MITIGATION_ID);
 
-            List<String> credentials =
-                    userIdentityService.getUserIssuedCredentials(
-                            ipvSessionItem.getClientSessionDetails().getUserId());
+            ClientOAuthSessionItem clientOAuthSessionItem =
+                    clientOAuthSessionDetailsService.getClientOAuthSession(
+                            ipvSessionItem.getClientOAuthSessionId());
+
+            final String govUkJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
+            final String userId = clientOAuthSessionItem.getUserId();
+
+            List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
             List<ContraIndicatorItem> ciItems =
-                    ciStorageService.getCIs(
-                            ipvSessionItem.getClientSessionDetails().getUserId(),
-                            ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId(),
-                            ipAddress);
+                    ciStorageService.getCIs(userId, govUkJourneyId, ipAddress);
 
             ipvSessionItem
                     .getContraIndicatorMitigationDetails()
@@ -127,6 +135,7 @@ public class EndMitigationJourneyHandler
                                             submitMitigatingVcs(
                                                     mitigatingVcList.get(),
                                                     ipvSessionItem,
+                                                    govUkJourneyId,
                                                     ipAddress);
                                         } else {
                                             StringMapMessage mapMessage =
@@ -205,12 +214,12 @@ public class EndMitigationJourneyHandler
     }
 
     private void submitMitigatingVcs(
-            List<String> mitigatingVcs, IpvSessionItem ipvSessionItem, String ipAddress) {
+            List<String> mitigatingVcs,
+            IpvSessionItem ipvSessionItem,
+            String govUkJourneyId,
+            String ipAddress) {
         try {
-            ciStorageService.submitMitigatingVcList(
-                    mitigatingVcs,
-                    ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId(),
-                    ipAddress);
+            ciStorageService.submitMitigatingVcList(mitigatingVcs, govUkJourneyId, ipAddress);
         } catch (CiPostMitigationsException e) {
             StringMapMessage mapMessage =
                     new StringMapMessage()

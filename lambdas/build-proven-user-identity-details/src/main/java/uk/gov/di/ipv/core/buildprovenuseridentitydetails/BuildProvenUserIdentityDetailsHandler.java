@@ -28,8 +28,10 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -57,16 +59,19 @@ public class BuildProvenUserIdentityDetailsHandler
     private final IpvSessionService ipvSessionService;
     private final UserIdentityService userIdentityService;
     private final ConfigService configService;
+    private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
     public BuildProvenUserIdentityDetailsHandler(
             IpvSessionService ipvSessionService,
             UserIdentityService userIdentityService,
-            ConfigService configService) {
+            ConfigService configService,
+            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService) {
         this.ipvSessionService = ipvSessionService;
         this.userIdentityService = userIdentityService;
         this.configService = configService;
+        this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -74,6 +79,7 @@ public class BuildProvenUserIdentityDetailsHandler
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.userIdentityService = new UserIdentityService(configService);
+        this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
     }
 
     @Override
@@ -88,13 +94,15 @@ public class BuildProvenUserIdentityDetailsHandler
             String ipvSessionId = RequestHelper.getIpvSessionId(input.getHeaders());
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 
-            String govukSigninJourneyId =
-                    ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId();
+            ClientOAuthSessionItem clientOAuthSessionItem =
+                    clientOAuthSessionDetailsService.getClientOAuthSession(
+                            ipvSessionItem.getClientOAuthSessionId());
+
+            String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             List<VcStoreItem> credentials =
-                    userIdentityService.getVcStoreItems(
-                            ipvSessionItem.getClientSessionDetails().getUserId());
+                    userIdentityService.getVcStoreItems(clientOAuthSessionItem.getUserId());
 
             List<VcStatusDto> currentVcStatuses = generateCurrentVcStatuses(credentials);
 
