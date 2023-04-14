@@ -54,7 +54,7 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.*;
 
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 
@@ -264,7 +264,7 @@ public class BuildCriOauthRequestHandler
             throws HttpResponseExceptionWithErrorBody {
         CredentialIssuerConfig addressCriConfig =
                 credentialIssuerConfigService.getCredentialIssuerActiveConnectionConfig(
-                        ADDRESS_CRI_ID);
+                        ADDRESS_CRI);
 
         List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 

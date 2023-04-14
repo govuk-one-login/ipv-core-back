@@ -34,21 +34,21 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SE
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.VC_VALID_DURATION;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.ADDRESS_CRI_ID;
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.DCMAW_CRI_ID;
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.DRIVING_LICENCE_CRI_ID;
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.PASSPORT_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 
 public class UserIdentityService {
     public static final String NAME_PROPERTY_NAME = "name";
     public static final String BIRTH_DATE_PROPERTY_NAME = "birthDate";
-    private static final List<String> PASSPORT_CRI_TYPES = List.of(PASSPORT_CRI_ID, DCMAW_CRI_ID);
+    private static final List<String> PASSPORT_CRI_TYPES = List.of(PASSPORT_CRI, DCMAW_CRI);
     private static final List<String> DRIVING_PERMIT_CRI_TYPES =
-            List.of(DCMAW_CRI_ID, DRIVING_LICENCE_CRI_ID);
+            List.of(DCMAW_CRI, DRIVING_LICENCE_CRI);
     public static final List<String> EVIDENCE_CRI_TYPES =
-            List.of(PASSPORT_CRI_ID, DCMAW_CRI_ID, DRIVING_LICENCE_CRI_ID);
+            List.of(PASSPORT_CRI, DCMAW_CRI, DRIVING_LICENCE_CRI);
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String PASSPORT_PROPERTY_NAME = "passport";
@@ -231,9 +231,7 @@ public class UserIdentityService {
             throws HttpResponseExceptionWithErrorBody {
         Optional<VcStoreItem> addressCredentialItem =
                 vcStoreItems.stream()
-                        .filter(
-                                credential ->
-                                        credential.getCredentialIssuer().equals(ADDRESS_CRI_ID))
+                        .filter(credential -> credential.getCredentialIssuer().equals(ADDRESS_CRI))
                         .findFirst();
 
         if (addressCredentialItem.isPresent()) {
@@ -247,7 +245,7 @@ public class UserIdentityService {
                                                 .toString())
                                 .path(VC_CLAIM)
                                 .path(VC_CREDENTIAL_SUBJECT)
-                                .path(ADDRESS_CRI_ID);
+                                .path(ADDRESS_CRI);
                 if (addressNode.isMissingNode()) {
                     LOGGER.error("Address property is missing from address VC");
                     throw new HttpResponseExceptionWithErrorBody(

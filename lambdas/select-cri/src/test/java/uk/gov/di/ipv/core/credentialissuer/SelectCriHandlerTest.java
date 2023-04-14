@@ -34,12 +34,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ALLOWED_USER_IDS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_SHOULD_SEND_ALL_USERS;
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.ADDRESS_CRI_ID;
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.DCMAW_CRI_ID;
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.DRIVING_LICENCE_CRI_ID;
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.FRAUD_CRI_ID;
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.KBV_CRI_ID;
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.PASSPORT_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 
 @ExtendWith(MockitoExtension.class)
 class SelectCriHandlerTest {
@@ -68,8 +68,8 @@ class SelectCriHandlerTest {
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI_ID))
-                .thenReturn(createCriConfig(PASSPORT_CRI_ID, "test-dcmaw-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI, "test-dcmaw-iss", true));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(Collections.emptyList());
 
@@ -91,8 +91,8 @@ class SelectCriHandlerTest {
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI_ID))
-                .thenReturn(createCriConfig(PASSPORT_CRI_ID, "test-dcmaw-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI, "test-dcmaw-iss", true));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(Collections.emptyList());
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("drivingLicence"))
@@ -113,18 +113,17 @@ class SelectCriHandlerTest {
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI_ID))
-                .thenReturn(createCriConfig(PASSPORT_CRI_ID, "test-passport-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI_ID))
-                .thenReturn(
-                        createCriConfig(DRIVING_LICENCE_CRI_ID, "test-driving-licence-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
-                .thenReturn(createCriConfig(ADDRESS_CRI_ID, "test-address-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI, "test-passport-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
+                .thenReturn(createCriConfig(DRIVING_LICENCE_CRI, "test-driving-licence-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(createCriConfig(ADDRESS_CRI, "test-address-iss", true));
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(List.of(new VcStatusDto("test-passport-iss", true)));
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
-                List.of(new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI_ID, true, null));
+                List.of(new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI, true, null));
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
@@ -144,18 +143,17 @@ class SelectCriHandlerTest {
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI_ID))
-                .thenReturn(createCriConfig(PASSPORT_CRI_ID, "test-passport-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI_ID))
-                .thenReturn(
-                        createCriConfig(DRIVING_LICENCE_CRI_ID, "test-driving-licence-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
-                .thenReturn(createCriConfig(ADDRESS_CRI_ID, "test-address-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI, "test-passport-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
+                .thenReturn(createCriConfig(DRIVING_LICENCE_CRI, "test-driving-licence-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(createCriConfig(ADDRESS_CRI, "test-address-iss", true));
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(List.of(new VcStatusDto("test-passport-iss", true)));
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
-                List.of(new VisitedCredentialIssuerDetailsDto(DRIVING_LICENCE_CRI_ID, true, null));
+                List.of(new VisitedCredentialIssuerDetailsDto(DRIVING_LICENCE_CRI, true, null));
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
@@ -175,17 +173,15 @@ class SelectCriHandlerTest {
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI_ID))
-                .thenReturn(createCriConfig(PASSPORT_CRI_ID, "test-passport-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI_ID))
-                .thenReturn(
-                        createCriConfig(DRIVING_LICENCE_CRI_ID, "test-driving-licence-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI, "test-passport-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
+                .thenReturn(createCriConfig(DRIVING_LICENCE_CRI, "test-driving-licence-iss", true));
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(
-                        new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI_ID, true, null),
-                        new VisitedCredentialIssuerDetailsDto(
-                                ADDRESS_CRI_ID, false, "access_denied"));
+                        new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI, true, null),
+                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, false, "access_denied"));
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
@@ -204,15 +200,14 @@ class SelectCriHandlerTest {
     void shouldReturnFraudCriJourneyResponse() throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI_ID))
-                .thenReturn(createCriConfig(PASSPORT_CRI_ID, "test-passport-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI_ID))
-                .thenReturn(
-                        createCriConfig(DRIVING_LICENCE_CRI_ID, "test-driving-licence-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
-                .thenReturn(createCriConfig(ADDRESS_CRI_ID, "test-address-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI_ID))
-                .thenReturn(createCriConfig(FRAUD_CRI_ID, "test-fraud-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI, "test-passport-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
+                .thenReturn(createCriConfig(DRIVING_LICENCE_CRI, "test-driving-licence-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(createCriConfig(ADDRESS_CRI, "test-address-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI))
+                .thenReturn(createCriConfig(FRAUD_CRI, "test-fraud-iss", true));
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(
                         List.of(
@@ -221,8 +216,8 @@ class SelectCriHandlerTest {
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(
-                        new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI_ID, true, null),
-                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI_ID, true, null));
+                        new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI, true, null),
+                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null));
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
@@ -241,17 +236,16 @@ class SelectCriHandlerTest {
     void shouldReturnKBVCriJourneyResponse() throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI_ID))
-                .thenReturn(createCriConfig(PASSPORT_CRI_ID, "test-passport-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI_ID))
-                .thenReturn(
-                        createCriConfig(DRIVING_LICENCE_CRI_ID, "test-driving-licence-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
-                .thenReturn(createCriConfig(ADDRESS_CRI_ID, "test-address-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI_ID))
-                .thenReturn(createCriConfig(FRAUD_CRI_ID, "test-fraud-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(KBV_CRI_ID))
-                .thenReturn(createCriConfig(KBV_CRI_ID, "test-kbv-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI, "test-passport-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
+                .thenReturn(createCriConfig(DRIVING_LICENCE_CRI, "test-driving-licence-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(createCriConfig(ADDRESS_CRI, "test-address-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI))
+                .thenReturn(createCriConfig(FRAUD_CRI, "test-fraud-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(KBV_CRI))
+                .thenReturn(createCriConfig(KBV_CRI, "test-kbv-iss", true));
 
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(
@@ -262,9 +256,9 @@ class SelectCriHandlerTest {
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(
-                        new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI_ID, true, null),
-                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI_ID, true, null),
-                        new VisitedCredentialIssuerDetailsDto(FRAUD_CRI_ID, true, null));
+                        new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI, true, null),
+                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null),
+                        new VisitedCredentialIssuerDetailsDto(FRAUD_CRI, true, null));
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
@@ -284,17 +278,16 @@ class SelectCriHandlerTest {
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI_ID))
-                .thenReturn(createCriConfig(PASSPORT_CRI_ID, "test-passport-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI_ID))
-                .thenReturn(
-                        createCriConfig(DRIVING_LICENCE_CRI_ID, "test-driving-licence-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
-                .thenReturn(createCriConfig(ADDRESS_CRI_ID, "test-address-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI_ID))
-                .thenReturn(createCriConfig(FRAUD_CRI_ID, "test-fraud-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(KBV_CRI_ID))
-                .thenReturn(createCriConfig(KBV_CRI_ID, "test-kbv-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI, "test-passport-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
+                .thenReturn(createCriConfig(DRIVING_LICENCE_CRI, "test-driving-licence-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(createCriConfig(ADDRESS_CRI, "test-address-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI))
+                .thenReturn(createCriConfig(FRAUD_CRI, "test-fraud-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(KBV_CRI))
+                .thenReturn(createCriConfig(KBV_CRI, "test-kbv-iss", true));
 
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(
@@ -306,10 +299,10 @@ class SelectCriHandlerTest {
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(
-                        new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI_ID, true, null),
-                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI_ID, true, null),
-                        new VisitedCredentialIssuerDetailsDto(FRAUD_CRI_ID, true, null),
-                        new VisitedCredentialIssuerDetailsDto(KBV_CRI_ID, true, null));
+                        new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI, true, null),
+                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null),
+                        new VisitedCredentialIssuerDetailsDto(FRAUD_CRI, true, null),
+                        new VisitedCredentialIssuerDetailsDto(KBV_CRI, true, null));
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
@@ -332,15 +325,14 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(Collections.emptyList());
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI_ID))
-                .thenReturn(createCriConfig(DCMAW_CRI_ID, "test-dcmaw-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI_ID))
-                .thenReturn(createCriConfig(PASSPORT_CRI_ID, "test-passport-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI_ID))
-                .thenReturn(
-                        createCriConfig(DRIVING_LICENCE_CRI_ID, "test-driving-licence-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
+                .thenReturn(createCriConfig(DCMAW_CRI, "test-dcmaw-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI, "test-passport-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
+                .thenReturn(createCriConfig(DRIVING_LICENCE_CRI, "test-driving-licence-iss", true));
 
-        when(mockConfigService.isEnabled(DCMAW_CRI_ID)).thenReturn(true);
+        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
@@ -358,16 +350,16 @@ class SelectCriHandlerTest {
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI_ID))
-                .thenReturn(createCriConfig(DCMAW_CRI_ID, "test-dcmaw-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
-                .thenReturn(createCriConfig(ADDRESS_CRI_ID, "test-address-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
+                .thenReturn(createCriConfig(DCMAW_CRI, "test-dcmaw-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(createCriConfig(ADDRESS_CRI, "test-address-iss", true));
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(List.of(new VcStatusDto("test-dcmaw-iss", true)));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(List.of(new VisitedCredentialIssuerDetailsDto("dcmaw", true, null)));
 
-        when(mockConfigService.isEnabled(DCMAW_CRI_ID)).thenReturn(true);
+        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
@@ -385,12 +377,12 @@ class SelectCriHandlerTest {
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI_ID))
-                .thenReturn(createCriConfig(DCMAW_CRI_ID, "test-dcmaw-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
-                .thenReturn(createCriConfig(ADDRESS_CRI_ID, "test-address-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI_ID))
-                .thenReturn(createCriConfig(FRAUD_CRI_ID, "test-fraud-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
+                .thenReturn(createCriConfig(DCMAW_CRI, "test-dcmaw-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(createCriConfig(ADDRESS_CRI, "test-address-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI))
+                .thenReturn(createCriConfig(FRAUD_CRI, "test-fraud-iss", true));
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(
                         List.of(
@@ -400,9 +392,9 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(
                         List.of(
-                                new VisitedCredentialIssuerDetailsDto(DCMAW_CRI_ID, true, null),
-                                new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI_ID, true, null)));
-        when(mockConfigService.isEnabled(DCMAW_CRI_ID)).thenReturn(true);
+                                new VisitedCredentialIssuerDetailsDto(DCMAW_CRI, true, null),
+                                new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null)));
+        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
@@ -420,21 +412,20 @@ class SelectCriHandlerTest {
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI_ID))
-                .thenReturn(createCriConfig(DCMAW_CRI_ID, "test-dcmaw-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI_ID))
-                .thenReturn(createCriConfig(PASSPORT_CRI_ID, "test-passport-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI_ID))
-                .thenReturn(
-                        createCriConfig(DRIVING_LICENCE_CRI_ID, "test-driving-licence-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
-                .thenReturn(createCriConfig(ADDRESS_CRI_ID, "test-address-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
+                .thenReturn(createCriConfig(DCMAW_CRI, "test-dcmaw-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI, "test-passport-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
+                .thenReturn(createCriConfig(DRIVING_LICENCE_CRI, "test-driving-licence-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(createCriConfig(ADDRESS_CRI, "test-address-iss", true));
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(List.of(new VcStatusDto("test-passport-iss", true)));
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(Collections.emptyList());
-        when(mockConfigService.isEnabled(DCMAW_CRI_ID)).thenReturn(true);
+        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
@@ -452,10 +443,10 @@ class SelectCriHandlerTest {
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI_ID))
-                .thenReturn(createCriConfig(DCMAW_CRI_ID, "test-dcmaw-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI_ID))
-                .thenReturn(createCriConfig(FRAUD_CRI_ID, "test-fraud-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
+                .thenReturn(createCriConfig(DCMAW_CRI, "test-dcmaw-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI))
+                .thenReturn(createCriConfig(FRAUD_CRI, "test-fraud-iss", true));
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(
                         List.of(
@@ -464,9 +455,9 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(
                         List.of(
-                                new VisitedCredentialIssuerDetailsDto(DCMAW_CRI_ID, true, null),
-                                new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI_ID, true, null),
-                                new VisitedCredentialIssuerDetailsDto(FRAUD_CRI_ID, true, null)));
+                                new VisitedCredentialIssuerDetailsDto(DCMAW_CRI, true, null),
+                                new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null),
+                                new VisitedCredentialIssuerDetailsDto(FRAUD_CRI, true, null)));
 
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(
@@ -474,15 +465,15 @@ class SelectCriHandlerTest {
                                 new VcStatusDto("test-dcmaw-iss", true),
                                 new VcStatusDto("test-address-iss", true),
                                 new VcStatusDto("test-fraud-iss", true)));
-        when(mockConfigService.isEnabled(DCMAW_CRI_ID)).thenReturn(true);
+        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI_ID))
-                .thenReturn(createCriConfig(DCMAW_CRI_ID, "test-dcmaw-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
-                .thenReturn(createCriConfig(ADDRESS_CRI_ID, "test-address-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI_ID))
-                .thenReturn(createCriConfig(FRAUD_CRI_ID, "test-fraud-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
+                .thenReturn(createCriConfig(DCMAW_CRI, "test-dcmaw-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(createCriConfig(ADDRESS_CRI, "test-address-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI))
+                .thenReturn(createCriConfig(FRAUD_CRI, "test-fraud-iss", true));
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -499,13 +490,13 @@ class SelectCriHandlerTest {
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI_ID))
-                .thenReturn(createCriConfig(DCMAW_CRI_ID, "test-dcmaw-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI_ID))
-                .thenReturn(createCriConfig(PASSPORT_CRI_ID, "test-passport-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
+                .thenReturn(createCriConfig(DCMAW_CRI, "test-dcmaw-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI, "test-passport-iss", true));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(List.of(new VisitedCredentialIssuerDetailsDto("dcmaw", true, null)));
-        when(mockConfigService.isEnabled(DCMAW_CRI_ID)).thenReturn(true);
+        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("drivingLicence"))
@@ -526,16 +517,16 @@ class SelectCriHandlerTest {
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI_ID))
-                .thenReturn(createCriConfig(DCMAW_CRI_ID, "test-dcmaw-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI_ID))
-                .thenReturn(createCriConfig(PASSPORT_CRI_ID, "test-passport-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
+                .thenReturn(createCriConfig(DCMAW_CRI, "test-dcmaw-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI, "test-passport-iss", true));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(
                         List.of(
                                 new VisitedCredentialIssuerDetailsDto(
                                         "dcmaw", false, "access_denied")));
-        when(mockConfigService.isEnabled(DCMAW_CRI_ID)).thenReturn(true);
+        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("drivingLicence"))
@@ -556,10 +547,10 @@ class SelectCriHandlerTest {
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI_ID))
-                .thenReturn(createCriConfig(DCMAW_CRI_ID, "test-dcmaw-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
-                .thenReturn(createCriConfig(ADDRESS_CRI_ID, "test-address-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
+                .thenReturn(createCriConfig(DCMAW_CRI, "test-dcmaw-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(createCriConfig(ADDRESS_CRI, "test-address-iss", true));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(
                         List.of(
@@ -568,7 +559,7 @@ class SelectCriHandlerTest {
                                         "address", false, "access_denied")));
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(List.of(new VcStatusDto("test-dcmaw-iss", true)));
-        when(mockConfigService.isEnabled(DCMAW_CRI_ID)).thenReturn(true);
+        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
@@ -586,11 +577,10 @@ class SelectCriHandlerTest {
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI_ID))
-                .thenReturn(createCriConfig(PASSPORT_CRI_ID, "test-passport-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI_ID))
-                .thenReturn(
-                        createCriConfig(DRIVING_LICENCE_CRI_ID, "test-driving-licence-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI, "test-passport-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
+                .thenReturn(createCriConfig(DRIVING_LICENCE_CRI, "test-driving-licence-iss", true));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(
                         List.of(
@@ -614,17 +604,16 @@ class SelectCriHandlerTest {
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI_ID))
-                .thenReturn(createCriConfig(PASSPORT_CRI_ID, "test-passport-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI_ID))
-                .thenReturn(
-                        createCriConfig(DRIVING_LICENCE_CRI_ID, "test-driving-licence-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
-                .thenReturn(createCriConfig(ADDRESS_CRI_ID, "test-address-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI_ID))
-                .thenReturn(createCriConfig(FRAUD_CRI_ID, "test-fraud-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(KBV_CRI_ID))
-                .thenReturn(createCriConfig(KBV_CRI_ID, "test-kbv-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI, "test-passport-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
+                .thenReturn(createCriConfig(DRIVING_LICENCE_CRI, "test-driving-licence-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(createCriConfig(ADDRESS_CRI, "test-address-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI))
+                .thenReturn(createCriConfig(FRAUD_CRI, "test-fraud-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(KBV_CRI))
+                .thenReturn(createCriConfig(KBV_CRI, "test-kbv-iss", true));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(
                         List.of(
@@ -640,7 +629,7 @@ class SelectCriHandlerTest {
                                 new VcStatusDto("test-address-iss", true),
                                 new VcStatusDto("test-fraud-iss", true),
                                 new VcStatusDto("test-kbv-iss", false)));
-        when(mockConfigService.isEnabled(DCMAW_CRI_ID)).thenReturn(false);
+        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(false);
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -657,13 +646,13 @@ class SelectCriHandlerTest {
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI_ID))
-                .thenReturn(createCriConfig(PASSPORT_CRI_ID, "test-passport-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI, "test-passport-iss", true));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(Collections.emptyList());
         when(mockIpvSessionItem.getCurrentVcStatuses()).thenReturn(null);
 
-        when(mockConfigService.isEnabled(DCMAW_CRI_ID)).thenReturn(false);
+        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(false);
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("drivingLicence"))
                 .thenReturn(createCriConfig("drivingLicence", "drivingLicence", false));
@@ -683,17 +672,16 @@ class SelectCriHandlerTest {
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI_ID))
-                .thenReturn(createCriConfig(DCMAW_CRI_ID, "test-dcmaw-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI_ID))
-                .thenReturn(createCriConfig(PASSPORT_CRI_ID, "test-passport-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI_ID))
-                .thenReturn(
-                        createCriConfig(DRIVING_LICENCE_CRI_ID, "test-driving-licence-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
+                .thenReturn(createCriConfig(DCMAW_CRI, "test-dcmaw-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI, "test-passport-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
+                .thenReturn(createCriConfig(DRIVING_LICENCE_CRI, "test-driving-licence-iss", true));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(Collections.emptyList());
 
-        when(mockConfigService.isEnabled(DCMAW_CRI_ID)).thenReturn(true);
+        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("false");
         when(mockConfigService.getSsmParameter(DCMAW_ALLOWED_USER_IDS))
                 .thenReturn("test-user-id,test-user-id-2,test-user-id-3");
@@ -713,13 +701,12 @@ class SelectCriHandlerTest {
             throws JsonProcessingException, URISyntaxException {
         mockIpvSessionService();
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI_ID))
-                .thenReturn(createCriConfig(DCMAW_CRI_ID, "test-dcmaw-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI_ID))
-                .thenReturn(createCriConfig(PASSPORT_CRI_ID, "test-passport-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI_ID))
-                .thenReturn(
-                        createCriConfig(DRIVING_LICENCE_CRI_ID, "test-driving-licence-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
+                .thenReturn(createCriConfig(DCMAW_CRI, "test-dcmaw-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI, "test-passport-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
+                .thenReturn(createCriConfig(DRIVING_LICENCE_CRI, "test-driving-licence-iss", true));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(Collections.emptyList());
         ClientOAuthSessionItem clientOAuthSessionItem = getClientOAuthSessionItem();
@@ -727,7 +714,7 @@ class SelectCriHandlerTest {
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        when(mockConfigService.isEnabled(DCMAW_CRI_ID)).thenReturn(true);
+        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("false");
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
@@ -748,10 +735,10 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(Collections.emptyList());
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI_ID))
-                .thenReturn(createCriConfig(PASSPORT_CRI_ID, "test-passport-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI, "test-passport-iss", true));
 
-        when(mockConfigService.isEnabled(DCMAW_CRI_ID)).thenReturn(true);
+        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("false");
         when(mockConfigService.getSsmParameter(DCMAW_ALLOWED_USER_IDS))
                 .thenReturn("test-user-id,test-user-id-2,test-user-id-3");
@@ -781,15 +768,14 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(Collections.emptyList());
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI_ID))
-                .thenReturn(createCriConfig(DCMAW_CRI_ID, "test-dcmaw-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI_ID))
-                .thenReturn(createCriConfig(PASSPORT_CRI_ID, "test-passport-iss", true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI_ID))
-                .thenReturn(
-                        createCriConfig(DRIVING_LICENCE_CRI_ID, "test-driving-licence-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
+                .thenReturn(createCriConfig(DCMAW_CRI, "test-dcmaw-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI, "test-passport-iss", true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
+                .thenReturn(createCriConfig(DRIVING_LICENCE_CRI, "test-driving-licence-iss", true));
 
-        when(mockConfigService.isEnabled(DCMAW_CRI_ID)).thenReturn(true);
+        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS))
                 .thenReturn(String.valueOf(true));
 

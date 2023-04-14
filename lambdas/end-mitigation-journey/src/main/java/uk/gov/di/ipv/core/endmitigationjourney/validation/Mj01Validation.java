@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.FRAUD_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
@@ -34,7 +34,7 @@ public class Mj01Validation {
             ContraIndicatorItem contraIndicatorItem,
             ConfigService configService) {
         CredentialIssuerConfig fraudCriConfig =
-                configService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI_ID);
+                configService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI);
 
         List<String> mitigatingVcList = new ArrayList<>();
 

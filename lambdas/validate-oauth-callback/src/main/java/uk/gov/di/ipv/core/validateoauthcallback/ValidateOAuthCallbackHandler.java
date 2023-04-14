@@ -39,8 +39,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.DRIVING_LICENCE_CRI_ID;
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.PASSPORT_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 
 public class ValidateOAuthCallbackHandler
         implements RequestHandler<CriCallbackRequest, Map<String, Object>> {
@@ -235,8 +235,8 @@ public class ValidateOAuthCallbackHandler
         LogHelper.logOauthError("OAuth error received from CRI", error, errorDescription);
 
         if (OAuth2Error.ACCESS_DENIED_CODE.equals(error)) {
-            if (configService.isEnabled(PASSPORT_CRI_ID)
-                    && configService.isEnabled(DRIVING_LICENCE_CRI_ID)) {
+            if (configService.isEnabled(PASSPORT_CRI)
+                    && configService.isEnabled(DRIVING_LICENCE_CRI)) {
                 return JOURNEY_ACCESS_DENIED_MULTI;
             }
             return JOURNEY_ACCESS_DENIED;
