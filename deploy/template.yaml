@@ -1728,6 +1728,7 @@ Resources:
           CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1754,10 +1755,14 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref CriOAuthSessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
         - DynamoDBWritePolicy:
             TableName: !Ref CriOAuthSessionsTable
+        - DynamoDBWritePolicy:
+            TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
@@ -2215,6 +2220,8 @@ Resources:
           AttributeType: "S"
         - AttributeName: "accessToken"
           AttributeType: "S"
+        - AttributeName: "criOAuthSessionId"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "ipvSessionId"
           KeyType: "HASH"
@@ -2228,6 +2235,12 @@ Resources:
         - IndexName: "accessToken"
           KeySchema:
             - AttributeName: "accessToken"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+        - IndexName: "criOAuthSessionId"
+          KeySchema:
+            - AttributeName: "criOAuthSessionId"
               KeyType: "HASH"
           Projection:
             ProjectionType: "ALL"
