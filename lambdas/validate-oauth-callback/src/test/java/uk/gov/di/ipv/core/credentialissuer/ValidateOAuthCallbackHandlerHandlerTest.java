@@ -18,7 +18,10 @@ import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.*;
+import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.validateoauthcallback.ValidateOAuthCallbackHandler;
 import uk.gov.di.ipv.core.validateoauthcallback.dto.CriCallbackRequest;
 
@@ -36,8 +39,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DRIVING_LICENCE_CRI_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriIdConstants.DRIVING_LICENCE_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriIdConstants.PASSPORT_CRI_ID;
 
 @ExtendWith(MockitoExtension.class)
 class ValidateOAuthCallbackHandlerHandlerTest {
@@ -58,8 +61,6 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     private static final String STATUS_CODE = "statusCode";
     private static final String TYPE = "type";
     private static final String PAGE = "page";
-    private static final String CRI_PASSPORT = "ukPassport";
-    private static final String CRI_DRIVING_LICENCE = "drivingLicence";
     private static CredentialIssuerConfig credentialIssuerConfig;
     private static IpvSessionItem ipvSessionItem;
     @Mock private Context context;
@@ -75,9 +76,6 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     @BeforeEach
     void setUpBeforeEach() throws URISyntaxException {
         when(mockConfigService.getSsmParameter(COMPONENT_ID)).thenReturn("audience.for.clients");
-        when(mockConfigService.getSsmParameter(PASSPORT_CRI_ID)).thenReturn(CRI_PASSPORT);
-        when(mockConfigService.getSsmParameter(DRIVING_LICENCE_CRI_ID))
-                .thenReturn(CRI_DRIVING_LICENCE);
 
         credentialIssuerConfig = createCriConfig("criId", "cri.iss.com");
 
@@ -348,9 +346,9 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 .thenReturn(criOAuthSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockConfigService.isEnabled(CRI_PASSPORT)).thenReturn(true);
+        when(mockConfigService.isEnabled(PASSPORT_CRI_ID)).thenReturn(true);
 
-        when(mockConfigService.isEnabled(CRI_DRIVING_LICENCE)).thenReturn(false);
+        when(mockConfigService.isEnabled(DRIVING_LICENCE_CRI_ID)).thenReturn(false);
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
 
@@ -370,9 +368,9 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 .thenReturn(criOAuthSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockConfigService.isEnabled(CRI_PASSPORT)).thenReturn(true);
+        when(mockConfigService.isEnabled(PASSPORT_CRI_ID)).thenReturn(true);
 
-        when(mockConfigService.isEnabled(CRI_DRIVING_LICENCE)).thenReturn(true);
+        when(mockConfigService.isEnabled(DRIVING_LICENCE_CRI_ID)).thenReturn(true);
 
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithAccessDenied, context);

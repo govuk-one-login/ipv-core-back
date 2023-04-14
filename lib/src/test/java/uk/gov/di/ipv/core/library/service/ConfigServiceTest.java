@@ -41,16 +41,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISSUER;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_FRONT_CALLBACK_URL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CRI_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
@@ -238,38 +234,6 @@ class ConfigServiceTest {
         String coreVtmClaim = "aCoreVtmClaim";
         when(ssmProvider.get("/test/core/self/coreVtmClaim")).thenReturn(coreVtmClaim);
         assertEquals(coreVtmClaim, configService.getSsmParameter(CORE_VTM_CLAIM));
-    }
-
-    @Test
-    void shouldReturnPassportCriId() {
-        environmentVariables.set("ENVIRONMENT", "test");
-        String passportCriId = "ukPassport";
-        when(ssmProvider.get("/test/core/self/journey/passportCriId")).thenReturn(passportCriId);
-        assertEquals(passportCriId, configService.getSsmParameter(PASSPORT_CRI_ID));
-    }
-
-    @Test
-    void shouldReturnAddressCriId() {
-        environmentVariables.set("ENVIRONMENT", "test");
-        String addressCriId = "address";
-        when(ssmProvider.get("/test/core/self/journey/addressCriId")).thenReturn(addressCriId);
-        assertEquals(addressCriId, configService.getSsmParameter(ADDRESS_CRI_ID));
-    }
-
-    @Test
-    void shouldReturnFraudCriId() {
-        environmentVariables.set("ENVIRONMENT", "test");
-        String fraudCriId = "fraud";
-        when(ssmProvider.get("/test/core/self/journey/fraudCriId")).thenReturn(fraudCriId);
-        assertEquals(fraudCriId, configService.getSsmParameter(FRAUD_CRI_ID));
-    }
-
-    @Test
-    void shouldReturnKbvCriId() {
-        environmentVariables.set("ENVIRONMENT", "test");
-        String kbvCriId = "kbv";
-        when(ssmProvider.get("/test/core/self/journey/kbvCriId")).thenReturn(kbvCriId);
-        assertEquals(kbvCriId, configService.getSsmParameter(KBV_CRI_ID));
     }
 
     @Test
