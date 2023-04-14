@@ -39,6 +39,7 @@ public class ProcessJourneyStepHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String PYIC_TECHNICAL_ERROR_PAGE_ID = "pyi-technical";
+    private static final String PYIC_TIMEOUT_UNRECOVERABLE_ID = "pyi-timeout-unrecoverable";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
 
     private final IpvSessionService ipvSessionService;
@@ -117,7 +118,7 @@ public class ProcessJourneyStepHandler
         String currentUserState = ipvSessionItem.getUserState();
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(currentUserState, ipvSessionItem);
-            return new PageResponse(PYIC_TECHNICAL_ERROR_PAGE_ID).value(configService);
+            return new PageResponse(PYIC_TIMEOUT_UNRECOVERABLE_ID).value(configService);
         }
 
         try {

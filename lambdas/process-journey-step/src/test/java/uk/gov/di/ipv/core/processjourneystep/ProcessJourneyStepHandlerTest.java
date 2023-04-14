@@ -639,7 +639,8 @@ class ProcessJourneyStepHandlerTest {
                 OAuth2Error.ACCESS_DENIED.getDescription(),
                 capturedIpvSessionItem.getErrorDescription());
 
-        assertEquals(ProcessJourneyStepPages.PYI_TECHNICAL_ERROR_PAGE, output.get("page"));
+        assertEquals(
+                ProcessJourneyStepPages.PYI_UNRECOVERABLE_TIMEOUT_ERROR_PAGE, output.get("page"));
     }
 
     @ParameterizedTest
