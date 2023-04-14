@@ -2,8 +2,6 @@ package uk.gov.di.ipv.core.selectcri;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,6 +19,7 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -28,6 +27,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
@@ -39,9 +39,10 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DRIVING_LI
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
+import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.JOURNEY;
 
 public class SelectCriHandler
-        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+        implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String CRI_START_JOURNEY = "/journey/%s";
     private static final String JOURNEY_FAIL = "/journey/fail";
@@ -89,11 +90,11 @@ public class SelectCriHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public APIGatewayProxyResponseEvent handleRequest(
-            APIGatewayProxyRequestEvent event, Context context) {
-        LogHelper.attachComponentIdToLogs();
+    public Map<String, Object> handleRequest(
+            Map<String, String> event, Context context) {
+        // LogHelper.attachComponentIdToLogs();
         try {
-            String ipvSessionId = RequestHelper.getIpvSessionId(event);
+            String ipvSessionId = StepFunctionHelpers.getIpvSessionId(event);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 
             logGovUkSignInJourneyId(ipvSessionId);
@@ -120,13 +121,13 @@ public class SelectCriHandler
                             .with("journeyResponse", response.getJourney());
             LOGGER.info(message);
 
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
+            return Map.of(JOURNEY, response.getJourney());
         } catch (HttpResponseExceptionWithErrorBody e) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getResponseCode(), e.getErrorBody());
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    e.getResponseCode(), e.getErrorResponse());
         } catch (ParseException e) {
             LOGGER.error("Unable to parse existing credentials", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
+            return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         }
@@ -268,7 +269,7 @@ public class SelectCriHandler
             if (userHasNotVisited(visitedCredentialIssuers, criId)) {
                 if (criId.equals(dcmawCriId)
                         && (hasPassportVc(currentVcStatuses)
-                                || hasDrivingLicenceVc(currentVcStatuses))) {
+                        || hasDrivingLicenceVc(currentVcStatuses))) {
                     LOGGER.info(
                             "User already has a passport or driving licence VC, continuing a web journey");
                     return Optional.of(
@@ -293,7 +294,7 @@ public class SelectCriHandler
             return Optional.of(
                     criId.equals(dcmawCriId)
                             ? getNextWebJourneyCri(
-                                    visitedCredentialIssuers, currentVcStatuses, userId)
+                            visitedCredentialIssuers, currentVcStatuses, userId)
                             : getJourneyPyiNoMatchResponse());
         }
 

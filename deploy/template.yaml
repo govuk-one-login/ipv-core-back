@@ -1328,6 +1328,7 @@ Resources:
         IPVProcessJourneyStepFunctionArn: !GetAtt IPVProcessJourneyStepFunction.Arn
         CheckExistingIdentityFunctionArn: !GetAtt CheckExistingIdentityFunction.Arn
         EvaluateGpg45ScoresFunctionArn: !GetAtt EvaluateGpg45ScoresFunction.Arn
+        SelectCriFunctionArn: !GetAtt SelectCriFunction.Arn
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1349,6 +1350,8 @@ Resources:
             FunctionName: !Ref CheckExistingIdentityFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref EvaluateGpg45ScoresFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref SelectCriFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow
