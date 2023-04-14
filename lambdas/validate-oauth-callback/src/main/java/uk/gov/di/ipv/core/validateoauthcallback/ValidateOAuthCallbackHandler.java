@@ -129,9 +129,11 @@ public class ValidateOAuthCallbackHandler
 
             LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
 
-            criOAuthSessionItem =
-                    criOAuthSessionService.getCriOauthSessionItem(
-                            ipvSessionItem.getCriOAuthSessionId());
+            if (ipvSessionItem.getCriOAuthSessionId() != null) {
+                criOAuthSessionItem =
+                        criOAuthSessionService.getCriOauthSessionItem(
+                                ipvSessionItem.getCriOAuthSessionId());
+            }
             clientOAuthSessionItem =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
                             ipvSessionItem.getClientOAuthSessionId());
