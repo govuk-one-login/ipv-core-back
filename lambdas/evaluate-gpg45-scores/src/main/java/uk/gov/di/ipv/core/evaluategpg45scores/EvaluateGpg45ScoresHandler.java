@@ -2,8 +2,6 @@ package uk.gov.di.ipv.core.evaluategpg45scores;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
@@ -33,9 +31,8 @@ import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
-import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
@@ -47,6 +44,7 @@ import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -55,9 +53,10 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_MITIGAT
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
+import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.JOURNEY;
 
 public class EvaluateGpg45ScoresHandler
-        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+        implements RequestHandler<Map<String, String>, Map<String, Object>> {
 
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
@@ -109,13 +108,12 @@ public class EvaluateGpg45ScoresHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public APIGatewayProxyResponseEvent handleRequest(
-            APIGatewayProxyRequestEvent event, Context context) {
+    public Map<String, Object> handleRequest(Map<String, String> event, Context context) {
         LogHelper.attachComponentIdToLogs();
 
         try {
-            String ipvSessionId = RequestHelper.getIpvSessionId(event);
-            String ipAddress = RequestHelper.getIpAddress(event);
+            String ipvSessionId = StepFunctionHelpers.getIpvSessionId(event);
+            String ipAddress = StepFunctionHelpers.getIpAddress(event);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             ClientSessionDetailsDto clientSessionDetailsDto =
                     ipvSessionItem.getClientSessionDetails();
@@ -164,8 +162,7 @@ public class EvaluateGpg45ScoresHandler
                                     "errorJourneyResponse",
                                     contraIndicatorErrorJourneyResponse.get().toString());
                     LOGGER.info(message);
-                    return ApiGatewayResponseGenerator.proxyJsonResponse(
-                            HttpStatus.SC_OK, contraIndicatorErrorJourneyResponse.get());
+                    return Map.of(JOURNEY, contraIndicatorErrorJourneyResponse.get().getJourney());
                 }
             }
 
@@ -173,27 +170,27 @@ public class EvaluateGpg45ScoresHandler
 
             LOGGER.info(message);
 
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, journeyResponse);
+            return Map.of(JOURNEY, journeyResponse.getJourney());
         } catch (HttpResponseExceptionWithErrorBody e) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getResponseCode(), e.getErrorBody());
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    e.getResponseCode(), e.getErrorResponse());
         } catch (ParseException e) {
             LOGGER.error("Unable to parse GPG45 scores from existing credentials", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
+            return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (UnknownEvidenceTypeException e) {
             LOGGER.error("Unable to determine type of credential", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
+            return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
         } catch (CiRetrievalException e) {
             LOGGER.error("Error when fetching CIs from storage system", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
+            return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_GET_STORED_CIS);
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue: {}", e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
+            return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
         }
     }

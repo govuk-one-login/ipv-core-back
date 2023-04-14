@@ -172,23 +172,6 @@ paths:
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
 
-  /journey/evaluate-gpg45-scores:
-    post:
-      description: "Evaludate the gathered credentials against a desired GPG45 profile. Returns journey response or session end"
-      responses:
-        200:
-          description: "Returns a journeyResponse or session end"
-          content:
-            application/json:
-              schema:
-                type: "object"
-      x-amazon-apigateway-integration:
-        httpMethod: "POST"
-        uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${EvaluateGpg45ScoresFunction.Arn}:live/invocations
-        passthroughBehavior: "when_no_match"
-        type: "aws_proxy"
-
   /journey/select-cri:
     post:
       description: "Selects a CRI based on which CRIs the user has not visited. Returns journey response or journey fail"

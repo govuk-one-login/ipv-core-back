@@ -23,6 +23,11 @@
           "Variable": "$.journey",
           "StringEquals": "/journey/check-existing-identity",
           "Next": "CheckExistingIdentity"
+        },
+        {
+          "Variable": "$.journey",
+          "StringEquals": "/journey/evaluate-gpg45-scores",
+          "Next": "EvaluateGpg45Scores"
         }
       ],
       "Default": "Success"
@@ -30,6 +35,16 @@
     "CheckExistingIdentity": {
       "Type": "Task",
       "Resource": "${CheckExistingIdentityFunctionArn}",
+      "Parameters": {
+        "journey.$": "$.journey",
+        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
+        "ipAddress.$": "$$.Execution.Input.ipAddress"
+      },
+      "Next": "ShouldRunProcessJourney"
+    },
+    "EvaluateGpg45Scores": {
+      "Type": "Task",
+      "Resource": "${EvaluateGpg45ScoresFunctionArn}",
       "Parameters": {
         "journey.$": "$.journey",
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
