@@ -19,7 +19,7 @@ These values are automatically assigned by terraform within the `aws_lambda_func
 
 ### Request Evidence
 <hr/>
-Request evidence from a credential issuer
+Requests evidence from a credential issuer
 
 * **URL**
 
@@ -143,4 +143,3 @@ sam deploy --debug --config-file ./samconfig.toml --config-env dev-{{environment
 ```
 sam sync --watch --config-file samconfig.toml --config-env {{environment}} --stack-name core-back-dev-{{environment}} --region eu-west-2
 ```
-
