@@ -24,7 +24,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerConfigService;
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -64,6 +63,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
+import static uk.gov.di.ipv.core.library.domain.CriIdConstants.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriIdConstants.DCMAW_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriIdConstants.KBV_CRI_ID;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_3;
@@ -79,9 +81,6 @@ import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.v
 class BuildCriOauthRequestHandlerTest {
 
     private static final String CRI_ID = "PassportIssuer";
-    private static final String DCMAW_CRI_ID = "dcmaw";
-    private static final String ADDRESS_CRI_ID = "address";
-    private static final String KBV_CRI_ID = "kbv";
     private static final String CRI_NAME = "any";
     private static final String CRI_TOKEN_URL = "http://www.example.com";
     private static final String CRI_CREDENTIAL_URL = "http://www.example.com/credential";
@@ -232,8 +231,6 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn(ADDRESS_CRI_ID);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
@@ -309,8 +306,6 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(dcmawCredentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn(ADDRESS_CRI_ID);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
@@ -440,8 +435,6 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn(ADDRESS_CRI_ID);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
@@ -499,8 +492,6 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn(ADDRESS_CRI_ID);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
@@ -556,8 +547,6 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn(ADDRESS_CRI_ID);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
@@ -632,8 +621,6 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn(ADDRESS_CRI_ID);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
@@ -693,8 +680,6 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn(ADDRESS_CRI_ID);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
@@ -752,8 +737,6 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(kbvCredentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn(ADDRESS_CRI_ID);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);

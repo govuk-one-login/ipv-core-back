@@ -11,7 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.ProvenUserIdentityDetails;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -84,9 +83,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     void shouldReceive200ResponseCodeProvenUserIdentityDetails() throws Exception {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn("address");
-
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
@@ -152,8 +148,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
             throws Exception {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn("address");
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
@@ -227,8 +221,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                     throws Exception {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn("address");
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
@@ -294,8 +286,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     @Test
     void shouldReceive400ResponseCodeWhenEvidenceVcIsMissing() throws Exception {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn("address");
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
@@ -345,8 +335,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     void shouldReceive400ResponseCodeWhenAddressVcIsMissing() throws Exception {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn("address");
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
@@ -439,8 +427,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     void shouldReceive400ResponseCodeWhenEvidenceVcIsNotSuccessful() throws Exception {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn("address");
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(

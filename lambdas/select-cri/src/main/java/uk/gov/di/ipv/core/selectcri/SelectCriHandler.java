@@ -31,15 +31,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ALLOWED_USER_IDS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ENABLED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_SHOULD_SEND_ALL_USERS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DRIVING_LICENCE_CRI_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CRI_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriIdConstants.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriIdConstants.DCMAW_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriIdConstants.DRIVING_LICENCE_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriIdConstants.FRAUD_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriIdConstants.KBV_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriIdConstants.PASSPORT_CRI_ID;
 
 public class SelectCriHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -56,12 +56,6 @@ public class SelectCriHandler
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
-    private final String passportCriId;
-    private final String fraudCriId;
-    private final String kbvCriId;
-    private final String addressCriId;
-    private final String dcmawCriId;
-    private final String drivingLicenceCriId;
 
     public SelectCriHandler(
             ConfigService configService,
@@ -70,13 +64,6 @@ public class SelectCriHandler
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.clientOAuthSessionService = clientOAuthSessionService;
-
-        passportCriId = configService.getSsmParameter(PASSPORT_CRI_ID);
-        fraudCriId = configService.getSsmParameter(FRAUD_CRI_ID);
-        kbvCriId = configService.getSsmParameter(KBV_CRI_ID);
-        addressCriId = configService.getSsmParameter(ADDRESS_CRI_ID);
-        dcmawCriId = configService.getSsmParameter(DCMAW_CRI_ID);
-        drivingLicenceCriId = configService.getSsmParameter(DRIVING_LICENCE_CRI_ID);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -84,13 +71,6 @@ public class SelectCriHandler
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
-
-        passportCriId = configService.getSsmParameter(PASSPORT_CRI_ID);
-        fraudCriId = configService.getSsmParameter(FRAUD_CRI_ID);
-        kbvCriId = configService.getSsmParameter(KBV_CRI_ID);
-        addressCriId = configService.getSsmParameter(ADDRESS_CRI_ID);
-        dcmawCriId = configService.getSsmParameter(DCMAW_CRI_ID);
-        drivingLicenceCriId = configService.getSsmParameter(DRIVING_LICENCE_CRI_ID);
     }
 
     @Override
@@ -152,18 +132,18 @@ public class SelectCriHandler
                 getCriResponse(
                         visitedCredentialIssuers,
                         currentVcStatuses,
-                        passportCriId,
-                        passportCriId,
+                        PASSPORT_CRI_ID,
+                        PASSPORT_CRI_ID,
                         userId);
         Optional<JourneyResponse> drivingLicenceResponse =
                 getCriResponse(
                         visitedCredentialIssuers,
                         currentVcStatuses,
-                        drivingLicenceCriId,
-                        drivingLicenceCriId,
+                        DRIVING_LICENCE_CRI_ID,
+                        DRIVING_LICENCE_CRI_ID,
                         userId);
         if (passportResponse.isPresent() && drivingLicenceResponse.isPresent()) {
-            if (userHasVisited(visitedCredentialIssuers, drivingLicenceCriId)) {
+            if (userHasVisited(visitedCredentialIssuers, DRIVING_LICENCE_CRI_ID)) {
                 return drivingLicenceResponse.get();
             }
             return passportResponse.get();
@@ -173,8 +153,8 @@ public class SelectCriHandler
                 getCriResponse(
                         visitedCredentialIssuers,
                         currentVcStatuses,
-                        addressCriId,
-                        addressCriId,
+                        ADDRESS_CRI_ID,
+                        ADDRESS_CRI_ID,
                         userId);
         if (addressResponse.isPresent()) {
             return addressResponse.get();
@@ -184,8 +164,8 @@ public class SelectCriHandler
                 getCriResponse(
                         visitedCredentialIssuers,
                         currentVcStatuses,
-                        fraudCriId,
-                        fraudCriId,
+                        FRAUD_CRI_ID,
+                        FRAUD_CRI_ID,
                         userId);
         if (fraudResponse.isPresent()) {
             return fraudResponse.get();
@@ -193,7 +173,11 @@ public class SelectCriHandler
 
         Optional<JourneyResponse> kbvResponse =
                 getCriResponse(
-                        visitedCredentialIssuers, currentVcStatuses, kbvCriId, kbvCriId, userId);
+                        visitedCredentialIssuers,
+                        currentVcStatuses,
+                        KBV_CRI_ID,
+                        KBV_CRI_ID,
+                        userId);
         if (kbvResponse.isPresent()) {
             return kbvResponse.get();
         }
@@ -211,8 +195,8 @@ public class SelectCriHandler
                 getCriResponse(
                         visitedCredentialIssuers,
                         currentVcStatuses,
-                        dcmawCriId,
-                        dcmawCriId,
+                        DCMAW_CRI_ID,
+                        DCMAW_CRI_ID,
                         userId);
         if (dcmawResponse.isPresent()) {
             return dcmawResponse.get();
@@ -222,7 +206,7 @@ public class SelectCriHandler
                 getCriResponse(
                         visitedCredentialIssuers,
                         currentVcStatuses,
-                        addressCriId,
+                        ADDRESS_CRI_ID,
                         DCMAW_SUCCESS_PAGE,
                         userId);
         if (addressResponse.isPresent()) {
@@ -233,8 +217,8 @@ public class SelectCriHandler
                 getCriResponse(
                         visitedCredentialIssuers,
                         currentVcStatuses,
-                        fraudCriId,
-                        fraudCriId,
+                        FRAUD_CRI_ID,
+                        FRAUD_CRI_ID,
                         userId);
         if (fraudResponse.isPresent()) {
             return fraudResponse.get();
@@ -270,7 +254,7 @@ public class SelectCriHandler
 
         if (vc.isEmpty()) {
             if (userHasNotVisited(visitedCredentialIssuers, criId)) {
-                if (criId.equals(dcmawCriId)
+                if (criId.equals(DCMAW_CRI_ID)
                         && (hasPassportVc(currentVcStatuses)
                                 || hasDrivingLicenceVc(currentVcStatuses))) {
                     LOGGER.info(
@@ -280,7 +264,8 @@ public class SelectCriHandler
                                     visitedCredentialIssuers, currentVcStatuses, userId));
                 }
 
-                if (criId.equals(passportCriId) && configService.isEnabled(drivingLicenceCriId)) {
+                if (criId.equals(PASSPORT_CRI_ID)
+                        && configService.isEnabled(DRIVING_LICENCE_CRI_ID)) {
                     return getMultipleDocCheckPage();
                 }
 
@@ -295,7 +280,7 @@ public class SelectCriHandler
             LOGGER.info(message);
 
             return Optional.of(
-                    criId.equals(dcmawCriId)
+                    criId.equals(DCMAW_CRI_ID)
                             ? getNextWebJourneyCri(
                                     visitedCredentialIssuers, currentVcStatuses, userId)
                             : getJourneyPyiNoMatchResponse());
@@ -310,11 +295,11 @@ public class SelectCriHandler
                             .with("criId", criId);
             LOGGER.info(message);
 
-            if (criId.equals(dcmawCriId)) {
+            if (criId.equals(DCMAW_CRI_ID)) {
                 LOGGER.info("Reverting app user to the web journey");
                 return Optional.of(
                         getNextWebJourneyCri(visitedCredentialIssuers, currentVcStatuses, userId));
-            } else if (criId.equals(kbvCriId)) {
+            } else if (criId.equals(KBV_CRI_ID)) {
                 return Optional.of(getJourneyKbvFailResponse());
             }
             return Optional.of(getJourneyPyiNoMatchResponse());
@@ -323,7 +308,7 @@ public class SelectCriHandler
     }
 
     private Optional<JourneyResponse> getMultipleDocCheckPage() {
-        if (configService.getActiveConnection(drivingLicenceCriId).equals("stub")) {
+        if (configService.getActiveConnection(DRIVING_LICENCE_CRI_ID).equals("stub")) {
             return Optional.of(getJourneyResponse(STUB_UK_PASSPORT_AND_DRIVING_LICENCE_PAGE));
         }
         return Optional.of(getJourneyResponse(UK_PASSPORT_AND_DRIVING_LICENCE_PAGE));
@@ -331,7 +316,7 @@ public class SelectCriHandler
 
     private boolean hasPassportVc(List<VcStatusDto> currentVcStatuses) {
         CredentialIssuerConfig passportConfig =
-                configService.getCredentialIssuerActiveConnectionConfig(passportCriId);
+                configService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI_ID);
         Optional<VcStatusDto> passportVc =
                 getVc(currentVcStatuses, passportConfig.getComponentId());
         return passportVc.isPresent();
@@ -339,7 +324,7 @@ public class SelectCriHandler
 
     private boolean hasDrivingLicenceVc(List<VcStatusDto> currentVcStatuses) {
         CredentialIssuerConfig drivingLicenceConfig =
-                configService.getCredentialIssuerActiveConnectionConfig(drivingLicenceCriId);
+                configService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI_ID);
         Optional<VcStatusDto> drivingLicenceVc =
                 getVc(currentVcStatuses, drivingLicenceConfig.getComponentId());
         return drivingLicenceVc.isPresent();

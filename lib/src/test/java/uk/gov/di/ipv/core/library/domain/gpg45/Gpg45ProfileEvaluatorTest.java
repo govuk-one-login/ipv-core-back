@@ -11,9 +11,6 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.Collections;
@@ -25,10 +22,8 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
 
 @ExtendWith(MockitoExtension.class)
 class Gpg45ProfileEvaluatorTest {
@@ -40,10 +35,7 @@ class Gpg45ProfileEvaluatorTest {
     private static final String JOURNEY_PYI_KBV_FAIL = "/journey/pyi-kbv-fail";
     private static final JourneyResponse JOURNEY_RESPONSE_PYI_KBV_FAIL =
             new JourneyResponse(JOURNEY_PYI_KBV_FAIL);
-
-    @Mock CiStorageService mockCiStorageService;
     @Mock ConfigService mockConfigService;
-    @Mock ClientSessionDetailsDto mockClientSessionDetails;
     @InjectMocks Gpg45ProfileEvaluator evaluator;
 
     private final String M1A_PASSPORT_VC =
@@ -135,7 +127,6 @@ class Gpg45ProfileEvaluatorTest {
                 "X99", new ContraIndicatorScore("X99", 3, -2, null, Collections.emptyList()));
         when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
-        when(mockConfigService.getSsmParameter(KBV_CRI_ID)).thenReturn("kbv");
         when(mockConfigService.getComponentId("kbv")).thenReturn("kbvIssuer");
 
         assertEquals(
@@ -173,9 +164,6 @@ class Gpg45ProfileEvaluatorTest {
                 "X99", new ContraIndicatorScore("X99", 3, -2, null, Collections.emptyList()));
         when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
-
-        CredentialIssuerConfig kbvConfig = mock(CredentialIssuerConfig.class);
-        when(mockConfigService.getSsmParameter(KBV_CRI_ID)).thenReturn("kbv");
 
         assertEquals(
                 Optional.of(JOURNEY_RESPONSE_PYI_NO_MATCH),

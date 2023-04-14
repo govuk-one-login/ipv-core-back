@@ -18,7 +18,6 @@ import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.NameAndDateOfBir
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.ProvenUserIdentityDetails;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.exceptions.ProvenUserIdentityDetailsException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -44,6 +43,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static uk.gov.di.ipv.core.library.domain.CriIdConstants.ADDRESS_CRI_ID;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.ADDRESS_CRI_TYPES;
@@ -223,10 +223,8 @@ public class BuildProvenUserIdentityDetailsHandler
 
         for (VcStoreItem item : credentials) {
             SignedJWT signedJWT = SignedJWT.parse(item.getCredential());
-            String addressCriId =
-                    configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID);
             CredentialIssuerConfig addressCriConfig =
-                    configService.getCredentialIssuerActiveConnectionConfig(addressCriId);
+                    configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID);
             boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, addressCriConfig);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
