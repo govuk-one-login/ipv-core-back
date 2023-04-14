@@ -32,7 +32,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ALLOWED_USER_IDS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ENABLED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_SHOULD_SEND_ALL_USERS;
 import static uk.gov.di.ipv.core.library.domain.CriIdConstants.ADDRESS_CRI_ID;
 import static uk.gov.di.ipv.core.library.domain.CriIdConstants.DCMAW_CRI_ID;
@@ -350,7 +349,7 @@ public class SelectCriHandler
     }
 
     private boolean shouldSendUserToApp(String userId) {
-        boolean dcmawEnabled = Boolean.parseBoolean(configService.getSsmParameter(DCMAW_ENABLED));
+        boolean dcmawEnabled = configService.isEnabled(DCMAW_CRI_ID);
         if (dcmawEnabled) {
             boolean shouldSendAllUsers =
                     Boolean.parseBoolean(
