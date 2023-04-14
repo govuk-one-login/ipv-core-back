@@ -98,10 +98,6 @@ public class IpvSessionService {
         return Optional.ofNullable(ipvSessionItem);
     }
 
-    public String getUserId(String ipvSessionId) {
-        return this.getIpvSession(ipvSessionId).getClientSessionDetails().getUserId();
-    }
-
     public IpvSessionItem generateIpvSession(
             String clientOAuthSessionId, ErrorObject errorObject, Boolean debugJourney) {
 

@@ -137,7 +137,6 @@ public class DataStoreIpvSessionIT {
         updatedIpvSessionItem.setIpvSessionId(ipvSessionItem.getIpvSessionId());
         updatedIpvSessionItem.setCreationDateTime(ipvSessionItem.getCreationDateTime());
         updatedIpvSessionItem.setUserState(DEBUG_PAGE_STATE);
-        updatedIpvSessionItem.setClientSessionDetails(ipvSessionItem.getClientSessionDetails());
         updatedIpvSessionItem.setCriOAuthSessionId(CRI_OAUTH_SESSION_ID);
         updatedIpvSessionItem.setClientOAuthSessionId(CLIENT_OAUTH_SESSION_ID);
 
