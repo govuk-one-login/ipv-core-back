@@ -238,8 +238,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 underTest.handleRequest(criCallbackRequestWithoutSessionId, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
-        assertEquals(ErrorResponse.MISSING_OAUTH_STATE.getCode(), output.get(CODE));
-        assertEquals(ErrorResponse.MISSING_OAUTH_STATE.getMessage(), output.get(MESSAGE));
+        assertEquals(ErrorResponse.UNRECOVERABLE_OAUTH_STATE.getCode(), output.get(CODE));
+        assertEquals(ErrorResponse.UNRECOVERABLE_OAUTH_STATE.getMessage(), output.get(MESSAGE));
         verify(mockCriOAuthSessionService, times(0)).getCriOauthSessionItem(any());
     }
 

@@ -130,7 +130,7 @@ public class ValidateOAuthCallbackHandler
                                         () ->
                                                 new HttpResponseExceptionWithErrorBody(
                                                         HttpStatus.SC_BAD_REQUEST,
-                                                        ErrorResponse.MISSING_OAUTH_STATE));
+                                                        ErrorResponse.UNRECOVERABLE_OAUTH_STATE));
             }
 
             LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
