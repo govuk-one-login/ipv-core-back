@@ -184,7 +184,7 @@ public class BuildCriOauthRequestHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(OK, criResponse);
 
         } catch (HttpResponseExceptionWithErrorBody e) {
-            if (ErrorResponse.MISSING_IPV_SESSION_ID.equals(e.getErrorResponse())) {
+            if (ErrorResponse.MISSING_SESSION_ID.equals(e.getErrorResponse())) {
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         e.getResponseCode(), e.getErrorBody());
             }

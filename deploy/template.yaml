@@ -2237,6 +2237,8 @@ Resources:
           AttributeType: "S"
         - AttributeName: "criOAuthSessionId"
           AttributeType: "S"
+        - AttributeName: "clientOAuthSessionId"
+          AttributeType: "S"
       KeySchema:
         - AttributeName: "ipvSessionId"
           KeyType: "HASH"
@@ -2256,6 +2258,12 @@ Resources:
         - IndexName: "criOAuthSessionId"
           KeySchema:
             - AttributeName: "criOAuthSessionId"
+              KeyType: "HASH"
+          Projection:
+            ProjectionType: "ALL"
+        - IndexName: "clientOAuthSessionId"
+          KeySchema:
+            - AttributeName: "clientOAuthSessionId"
               KeyType: "HASH"
           Projection:
             ProjectionType: "ALL"

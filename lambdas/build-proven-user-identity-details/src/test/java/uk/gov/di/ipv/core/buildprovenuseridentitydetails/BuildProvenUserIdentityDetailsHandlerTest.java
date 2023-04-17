@@ -533,10 +533,10 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
         assertEquals(400, response.getStatusCode());
         assertEquals(
-                String.valueOf(ErrorResponse.MISSING_IPV_SESSION_ID.getCode()),
+                String.valueOf(ErrorResponse.MISSING_SESSION_ID.getCode()),
                 errorResponse.get("error"));
         assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
+                ErrorResponse.MISSING_SESSION_ID.getMessage(),
                 errorResponse.get("error_description"));
     }
 

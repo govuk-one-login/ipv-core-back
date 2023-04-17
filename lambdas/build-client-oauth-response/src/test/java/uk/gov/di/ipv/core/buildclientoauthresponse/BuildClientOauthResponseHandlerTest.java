@@ -40,6 +40,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -54,7 +55,17 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class BuildClientOauthResponseHandlerTest {
     private static final Map<String, String> TEST_EVENT_HEADERS =
-            Map.of("ipv-session-id", "12345", "ip-address", "192.168.1.100");
+            Map.of(
+                    "ipv-session-id",
+                    "12345",
+                    "ip-address",
+                    "192.168.1.100",
+                    "client-session-id",
+                    "12345");
+    private static final Map<String, String> TEST_CLIENT_SESSION_HEADERS =
+            Map.of("ip-address", "192.168.1.100", "client-session-id", "12345");
+    private static final Map<String, String> TEST_MISSING_HEADERS =
+            Map.of("ip-address", "192.168.1.100");
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Map<String, String> VALID_QUERY_PARAMS =
             Map.of(
@@ -86,7 +97,7 @@ class BuildClientOauthResponseHandlerTest {
     }
 
     @Test
-    void shouldReturn200OnSuccessfulOauthRequest()
+    void shouldReturn200OnSuccessfulOauthRequestWithIpvSession()
             throws JsonProcessingException, SqsException, URISyntaxException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
@@ -98,6 +109,49 @@ class BuildClientOauthResponseHandlerTest {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setQueryStringParameters(VALID_QUERY_PARAMS);
         event.setHeaders(TEST_EVENT_HEADERS);
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+
+        ClientResponse responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        verify(mockSessionService)
+                .setAuthorizationCode(eq(ipvSessionItem), anyString(), eq("https://example.com"));
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        assertEquals(AuditEventTypes.IPV_JOURNEY_END, auditEventCaptor.getValue().getEventName());
+
+        URI expectedRedirectUrl =
+                new URIBuilder("https://example.com")
+                        .addParameter("code", authorizationCode)
+                        .addParameter("state", "test-state")
+                        .build();
+
+        URI actualRedirectUrl = new URI(responseBody.getClient().getRedirectUrl());
+        List<NameValuePair> params =
+                URLEncodedUtils.parse(actualRedirectUrl, StandardCharsets.UTF_8);
+        assertEquals(expectedRedirectUrl.getHost(), actualRedirectUrl.getHost());
+        assertNotNull(params.get(0).getValue());
+        assertEquals("test-state", params.get(1).getValue());
+    }
+
+    @Test
+    void shouldReturn200OnSuccessfulOauthRequestWithoutIpvSession()
+            throws JsonProcessingException, SqsException, URISyntaxException {
+        when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
+                .thenReturn(ValidationResult.createValidResult());
+        IpvSessionItem ipvSessionItem = generateIpvSessionItem();
+        when(mockSessionService.getIpvSessionByClientOAuthSessionId(anyString()))
+                .thenReturn(Optional.of(ipvSessionItem));
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
+
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        event.setQueryStringParameters(VALID_QUERY_PARAMS);
+        event.setHeaders(TEST_CLIENT_SESSION_HEADERS);
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
@@ -273,9 +327,46 @@ class BuildClientOauthResponseHandlerTest {
         assertEquals(2, uriBuilder.getQueryParams().size());
     }
 
+    @Test
+    void shouldReturn400IfSessionIdHeadersMissing() throws JsonProcessingException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        ObjectMapper mapper = new ObjectMapper();
+        event.setQueryStringParameters(VALID_QUERY_PARAMS);
+        event.setHeaders(TEST_MISSING_HEADERS);
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+
+        Map<String, Object> responseBody = mapper.readValue(response.getBody(), Map.class);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(ErrorResponse.MISSING_SESSION_ID.getCode(), responseBody.get("error"));
+        assertEquals(
+                ErrorResponse.MISSING_SESSION_ID.getMessage(),
+                responseBody.get("error_description"));
+    }
+
+    @Test
+    void shouldReturn400IfNoClientSessionIdMatch() throws JsonProcessingException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        ObjectMapper mapper = new ObjectMapper();
+        event.setQueryStringParameters(VALID_QUERY_PARAMS);
+        event.setHeaders(TEST_CLIENT_SESSION_HEADERS);
+        when(mockSessionService.getIpvSessionByClientOAuthSessionId(anyString()))
+                .thenReturn(Optional.empty());
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+
+        Map<String, Object> responseBody = mapper.readValue(response.getBody(), Map.class);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(ErrorResponse.INVALID_SESSION_ID.getCode(), responseBody.get("error"));
+        assertEquals(
+                ErrorResponse.INVALID_SESSION_ID.getMessage(),
+                responseBody.get("error_description"));
+    }
+
     private IpvSessionItem generateIpvSessionItem() {
         IpvSessionItem item = new IpvSessionItem();
         item.setIpvSessionId(SecureTokenHelper.generate());
+        item.setClientOAuthSessionId(SecureTokenHelper.generate());
         item.setUserState("test-state");
         item.setCreationDateTime(new Date().toString());
         return item;

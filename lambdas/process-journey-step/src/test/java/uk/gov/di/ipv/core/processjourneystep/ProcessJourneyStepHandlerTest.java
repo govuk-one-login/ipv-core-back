@@ -77,8 +77,8 @@ class ProcessJourneyStepHandlerTest {
         Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
-        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), output.get(CODE));
-        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), output.get(MESSAGE));
+        assertEquals(ErrorResponse.MISSING_SESSION_ID.getCode(), output.get(CODE));
+        assertEquals(ErrorResponse.MISSING_SESSION_ID.getMessage(), output.get(MESSAGE));
     }
 
     @ParameterizedTest

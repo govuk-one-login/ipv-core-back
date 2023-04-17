@@ -14,7 +14,7 @@ public enum ErrorResponse {
     MISSING_CREDENTIAL_ISSUER_ID(1007, "Missing credential issuer id"),
     INVALID_CREDENTIAL_ISSUER_ID(1008, "Invalid credential issuer id"),
     INVALID_TOKEN_REQUEST(1009, "Invalid token request"),
-    MISSING_IPV_SESSION_ID(1010, "Missing ipv session id header"),
+    MISSING_SESSION_ID(1010, "Missing ipv session id or client session id header"),
     MISSING_IP_ADDRESS(1010, "Missing ip address header"),
     FAILED_TO_GET_CREDENTIAL_FROM_ISSUER(1011, "Failed to get credential from issuer"),
     FAILED_TO_SAVE_CREDENTIAL(1012, "Failed to save credential"),
@@ -30,7 +30,7 @@ public enum ErrorResponse {
     FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL(1020, "Failed to validate verifiable credential"),
     INVALID_SESSION_ID(
             1021,
-            "Invalid ipv-session-id has been provided, could not record of that requested session"),
+            "Invalid ipv-session-id or client-session-id has been provided, could not find the requested session"),
     FAILED_JOURNEY_ENGINE_STEP(1022, "Failed to execute journey engine step"),
     MISSING_JOURNEY_STEP(1023, "Missing journey step in input"),
     FAILED_TO_PARSE_ISSUED_CREDENTIALS(1024, "Failed to parse issued credentials"),

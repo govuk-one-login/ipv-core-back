@@ -200,10 +200,10 @@ class RetrieveCriCredentialHandlerTest {
 
         assertEquals(HTTPResponse.SC_BAD_REQUEST, output.get(STATUS_CODE));
         assertEquals(
-                String.valueOf(ErrorResponse.MISSING_IPV_SESSION_ID.getCode()),
+                String.valueOf(ErrorResponse.MISSING_SESSION_ID.getCode()),
                 String.valueOf(output.get(CODE)));
         assertEquals(
-                String.valueOf(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage()),
+                String.valueOf(ErrorResponse.MISSING_SESSION_ID.getMessage()),
                 String.valueOf(output.get(MESSAGE)));
     }
 

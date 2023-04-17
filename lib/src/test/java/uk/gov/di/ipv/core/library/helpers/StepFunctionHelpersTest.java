@@ -33,7 +33,7 @@ class StepFunctionHelpersTest {
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
                         () -> StepFunctionHelpers.getIpvSessionId(input));
-        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID, exception.getErrorResponse());
+        assertEquals(ErrorResponse.MISSING_SESSION_ID, exception.getErrorResponse());
         assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
     }
 

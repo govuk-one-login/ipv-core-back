@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 public class RequestHelper {
 
     public static final String IPV_SESSION_ID_HEADER = "ipv-session-id";
+    public static final String CLIENT_OAUTH_SESSION_ID_HEADER = "client-session-id";
     public static final String IP_ADDRESS_HEADER = "ip-address";
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
@@ -78,21 +79,32 @@ public class RequestHelper {
         return getIpvSessionId(event.getHeaders());
     }
 
+    public static String getClientOAuthSessionId(APIGatewayProxyRequestEvent event) {
+        return getClientOAuthSessionId(event.getHeaders());
+    }
+
     public static String getIpAddress(APIGatewayProxyRequestEvent event)
             throws HttpResponseExceptionWithErrorBody {
         return getIpAddress(event.getHeaders());
     }
 
-    public static String getIpvSessionId(Map<String, String> headers)
-            throws HttpResponseExceptionWithErrorBody {
+    public static String getIpvSessionId(Map<String, String> headers) {
         String ipvSessionId = RequestHelper.getHeaderByKey(headers, IPV_SESSION_ID_HEADER);
         if (ipvSessionId == null) {
-            LOGGER.error("{} not present in header", IPV_SESSION_ID_HEADER);
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
+            LOGGER.warn("{} not present in header", IPV_SESSION_ID_HEADER);
         }
         LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
         return ipvSessionId;
+    }
+
+    public static String getClientOAuthSessionId(Map<String, String> headers) {
+        String clientSessionId =
+                RequestHelper.getHeaderByKey(headers, CLIENT_OAUTH_SESSION_ID_HEADER);
+        if (clientSessionId == null) {
+            LOGGER.warn("{} not present in header", CLIENT_OAUTH_SESSION_ID_HEADER);
+        }
+        LogHelper.attachClientSessionIdToLogs(clientSessionId);
+        return clientSessionId;
     }
 
     public static String getIpAddress(Map<String, String> headers)

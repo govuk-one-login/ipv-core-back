@@ -90,10 +90,9 @@ class AuthRequestValidatorTest {
 
         assertFalse(validationResult.isValid());
         assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getCode(),
-                validationResult.getError().getCode());
+                ErrorResponse.MISSING_SESSION_ID.getCode(), validationResult.getError().getCode());
         assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
+                ErrorResponse.MISSING_SESSION_ID.getMessage(),
                 validationResult.getError().getMessage());
     }
 
@@ -105,10 +104,9 @@ class AuthRequestValidatorTest {
 
         assertFalse(validationResult.isValid());
         assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getCode(),
-                validationResult.getError().getCode());
+                ErrorResponse.MISSING_SESSION_ID.getCode(), validationResult.getError().getCode());
         assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
+                ErrorResponse.MISSING_SESSION_ID.getMessage(),
                 validationResult.getError().getMessage());
     }
 

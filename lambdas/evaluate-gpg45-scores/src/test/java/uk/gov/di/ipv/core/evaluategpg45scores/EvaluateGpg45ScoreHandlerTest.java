@@ -260,8 +260,7 @@ class EvaluateGpg45ScoreHandlerTest {
         var error = gson.fromJson(response.getBody(), Map.class);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), error.get("error_description"));
+        assertEquals(ErrorResponse.MISSING_SESSION_ID.getMessage(), error.get("error_description"));
         verify(clientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
     }
 

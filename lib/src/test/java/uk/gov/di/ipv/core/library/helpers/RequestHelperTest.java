@@ -85,7 +85,7 @@ class RequestHelperTest {
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
         assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
+                ErrorResponse.MISSING_SESSION_ID.getMessage(),
                 exception.getErrorResponse().getMessage());
     }
 
@@ -102,7 +102,7 @@ class RequestHelperTest {
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
         assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
+                ErrorResponse.MISSING_SESSION_ID.getMessage(),
                 exception.getErrorResponse().getMessage());
     }
 

@@ -28,7 +28,7 @@ public class StepFunctionHelpers {
 
         if (ipvSessionId == null) {
             throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_SESSION_ID);
         }
 
         LogHelper.attachIpvSessionIdToLogs(ipvSessionId);

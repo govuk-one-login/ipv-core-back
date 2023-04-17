@@ -85,9 +85,29 @@ public class BuildClientOauthResponseHandler
         LogHelper.attachComponentIdToLogs();
 
         try {
+            LOGGER.info("Proxy event: {}", input);
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
+            String clientSessionId = RequestHelper.getClientOAuthSessionId(input);
             String ipAddress = RequestHelper.getIpAddress(input);
-            IpvSessionItem ipvSessionItem = sessionService.getIpvSession(ipvSessionId);
+
+            if (ipvSessionId == null && clientSessionId == null) {
+                throw new HttpResponseExceptionWithErrorBody(
+                        HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_SESSION_ID);
+            }
+
+            IpvSessionItem ipvSessionItem;
+            if (ipvSessionId != null) {
+                ipvSessionItem = sessionService.getIpvSession(ipvSessionId);
+            } else {
+                ipvSessionItem =
+                        sessionService
+                                .getIpvSessionByClientOAuthSessionId(clientSessionId)
+                                .orElseThrow(
+                                        () ->
+                                                new HttpResponseExceptionWithErrorBody(
+                                                        HttpStatus.SC_BAD_REQUEST,
+                                                        ErrorResponse.INVALID_SESSION_ID));
+            }
 
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.getClientOAuthSession(

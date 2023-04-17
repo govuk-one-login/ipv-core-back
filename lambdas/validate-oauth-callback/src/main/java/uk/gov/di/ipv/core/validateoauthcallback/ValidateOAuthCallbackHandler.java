@@ -263,11 +263,6 @@ public class ValidateOAuthCallbackHandler
         }
         LogHelper.attachCriIdToLogs(callbackRequest.getCredentialIssuerId());
 
-        if (StringUtils.isBlank(callbackRequest.getIpvSessionId())) {
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
-        }
-
         if (StringUtils.isBlank(callbackRequest.getState())) {
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_OAUTH_STATE);

@@ -61,6 +61,13 @@ public class IpvSessionService {
         return Optional.ofNullable(ipvSessionItem);
     }
 
+    public Optional<IpvSessionItem> getIpvSessionByClientOAuthSessionId(
+            String clientOAuthSessionId) {
+        IpvSessionItem ipvSessionItem =
+                dataStore.getItemByIndex("clientOAuthSessionId", clientOAuthSessionId);
+        return Optional.ofNullable(ipvSessionItem);
+    }
+
     public Optional<IpvSessionItem> getIpvSessionByAuthorizationCode(String authorizationCode) {
         IpvSessionItem ipvSessionItem =
                 dataStore.getItemByIndex(
