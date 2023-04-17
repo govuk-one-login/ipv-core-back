@@ -46,7 +46,11 @@
           "journey.$": "$.lambdaResult.journey"
         }
       },
+      "ResultSelector": {
+        "lambdaResult.$": "States.StringToJson($.Output)"
+      },
       "ResultPath": "$.lambdaResult",
+      "OutputPath": "$.lambdaResult",
       "Next": "RouteJourneyResponse"
     },
     "ProcessJourneyStep-JourneyError": {
@@ -60,7 +64,11 @@
           "journey": "journey/error"
         }
       },
+      "ResultSelector": {
+        "lambdaResult.$": "States.StringToJson($.Output)"
+      },
       "ResultPath": "$.lambdaResult",
+      "OutputPath": "$.lambdaResult",
       "Next": "ReturnToFrontend"
     },
     "ReturnToFrontend": {
