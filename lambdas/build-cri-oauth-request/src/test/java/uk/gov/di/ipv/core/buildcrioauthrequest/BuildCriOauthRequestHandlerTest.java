@@ -63,9 +63,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.ADDRESS_CRI_ID;
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.DCMAW_CRI_ID;
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.KBV_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_3;
@@ -148,7 +148,7 @@ class BuildCriOauthRequestHandlerTest {
 
         addressCredentialIssuerConfig =
                 new CredentialIssuerConfig(
-                        ADDRESS_CRI_ID,
+                        ADDRESS_CRI,
                         CRI_NAME,
                         new URI(CRI_TOKEN_URL),
                         new URI(CRI_CREDENTIAL_URL),
@@ -161,7 +161,7 @@ class BuildCriOauthRequestHandlerTest {
 
         dcmawCredentialIssuerConfig =
                 new CredentialIssuerConfig(
-                        DCMAW_CRI_ID,
+                        DCMAW_CRI,
                         CRI_NAME,
                         new URI(CRI_TOKEN_URL),
                         new URI(CRI_CREDENTIAL_URL),
@@ -174,7 +174,7 @@ class BuildCriOauthRequestHandlerTest {
 
         kbvCredentialIssuerConfig =
                 new CredentialIssuerConfig(
-                        KBV_CRI_ID,
+                        KBV_CRI,
                         CRI_NAME,
                         new URI(CRI_TOKEN_URL),
                         new URI(CRI_CREDENTIAL_URL),
@@ -231,7 +231,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getCurrentVcStatuses())
@@ -302,11 +302,11 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithResponseTypeParam()
             throws Exception {
-        when(configService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
                 .thenReturn(dcmawCredentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getCurrentVcStatuses())
@@ -329,7 +329,7 @@ class BuildCriOauthRequestHandlerTest {
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
-        input.setPathParameters(Map.of("criId", DCMAW_CRI_ID));
+        input.setPathParameters(Map.of("criId", DCMAW_CRI));
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", TEST_IP_ADDRESS));
 
         APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
@@ -339,7 +339,7 @@ class BuildCriOauthRequestHandlerTest {
         URIBuilder redirectUri = new URIBuilder(responseBody.get("redirectUrl"));
         List<NameValuePair> queryParams = redirectUri.getQueryParams();
 
-        assertEquals(DCMAW_CRI_ID, responseBody.get("id"));
+        assertEquals(DCMAW_CRI, responseBody.get("id"));
 
         Optional<NameValuePair> client_id =
                 queryParams.stream()
@@ -435,7 +435,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getCurrentVcStatuses())
@@ -492,7 +492,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getCurrentVcStatuses())
@@ -547,7 +547,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getCurrentVcStatuses())
@@ -621,7 +621,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getCurrentVcStatuses())
@@ -680,7 +680,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getCurrentVcStatuses())
@@ -737,7 +737,7 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(kbvCredentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID))
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getCurrentVcStatuses())

@@ -10,7 +10,6 @@ public enum ConfigurationVariable {
     JAR_KMS_ENCRYPTION_KEY_ID("/%s/core/self/jarKmsEncryptionKeyId"),
     JWT_TTL_SECONDS("/%s/core/self/jwtTtlSeconds"),
     MAX_ALLOWED_AUTH_CLIENT_TTL("/%s/core/self/maxAllowedAuthClientTtl"),
-    DCMAW_ENABLED("/%s/core/credentialIssuers/dcmaw/enabled"),
     DCMAW_SHOULD_SEND_ALL_USERS("/%s/core/self/journey/dcmawShouldSendAllUsers"),
     DCMAW_ALLOWED_USER_IDS("/%s/core/self/journey/dcmawAllowedUserIds"),
     AUTH_CODE_EXPIRY_SECONDS("/%s/core/self/authCodeExpirySeconds"),

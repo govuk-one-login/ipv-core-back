@@ -40,8 +40,8 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.DRIVING_LICENCE_CRI_ID;
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.PASSPORT_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 
 @ExtendWith(MockitoExtension.class)
 class ValidateOAuthCallbackHandlerHandlerTest {
@@ -347,9 +347,9 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 .thenReturn(criOAuthSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockConfigService.isEnabled(PASSPORT_CRI_ID)).thenReturn(true);
+        when(mockConfigService.isEnabled(PASSPORT_CRI)).thenReturn(true);
 
-        when(mockConfigService.isEnabled(DRIVING_LICENCE_CRI_ID)).thenReturn(false);
+        when(mockConfigService.isEnabled(DRIVING_LICENCE_CRI)).thenReturn(false);
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
 
@@ -369,9 +369,9 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 .thenReturn(criOAuthSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockConfigService.isEnabled(PASSPORT_CRI_ID)).thenReturn(true);
+        when(mockConfigService.isEnabled(PASSPORT_CRI)).thenReturn(true);
 
-        when(mockConfigService.isEnabled(DRIVING_LICENCE_CRI_ID)).thenReturn(true);
+        when(mockConfigService.isEnabled(DRIVING_LICENCE_CRI)).thenReturn(true);
 
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithAccessDenied, context);

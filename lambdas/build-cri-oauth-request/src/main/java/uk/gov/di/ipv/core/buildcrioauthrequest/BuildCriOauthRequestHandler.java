@@ -54,7 +54,7 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.*;
 
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 
@@ -64,7 +64,6 @@ public class BuildCriOauthRequestHandler
     private static final String CRI_ID = "criId";
     private static final int OK = 200;
     private static final String DCMAW_CRI_ID = "dcmaw";
-    private static final String STUB_DCMAW_CRI_ID = "stubDcmaw";
     private static final JourneyResponse ERROR_JOURNEY = new JourneyResponse("/journey/error");
     public static final String SHARED_CLAIM_ATTR_NAME = "name";
     public static final String SHARED_CLAIM_ATTR_BIRTH_DATE = "birthDate";
@@ -213,8 +212,7 @@ public class BuildCriOauthRequestHandler
                         .addParameter("client_id", credentialIssuerConfig.getClientId())
                         .addParameter("request", jweObject.serialize());
 
-        if (credentialIssuerConfig.getId().equals(DCMAW_CRI_ID)
-                || credentialIssuerConfig.getId().equals(STUB_DCMAW_CRI_ID)) {
+        if (credentialIssuerConfig.getId().equals(DCMAW_CRI_ID)) {
             redirectUri.addParameter("response_type", "code");
         }
 
@@ -266,7 +264,7 @@ public class BuildCriOauthRequestHandler
             throws HttpResponseExceptionWithErrorBody {
         CredentialIssuerConfig addressCriConfig =
                 credentialIssuerConfigService.getCredentialIssuerActiveConnectionConfig(
-                        ADDRESS_CRI_ID);
+                        ADDRESS_CRI);
 
         List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 

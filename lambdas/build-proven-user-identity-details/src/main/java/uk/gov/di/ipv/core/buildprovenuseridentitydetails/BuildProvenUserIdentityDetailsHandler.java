@@ -43,11 +43,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
-import static uk.gov.di.ipv.core.library.service.UserIdentityService.ADDRESS_CRI_TYPES;
-import static uk.gov.di.ipv.core.library.service.UserIdentityService.ADDRESS_PROPERTY_NAME;
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.BIRTH_DATE_PROPERTY_NAME;
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.NAME_PROPERTY_NAME;
@@ -188,7 +186,7 @@ public class BuildProvenUserIdentityDetailsHandler
             CredentialIssuerConfig credentialIssuerConfig =
                     configService.getCredentialIssuerActiveConnectionConfig(
                             item.getCredentialIssuer());
-            if (ADDRESS_CRI_TYPES.contains(item.getCredentialIssuer())
+            if (item.getCredentialIssuer().equals(ADDRESS_CRI)
                     && userIdentityService.isVcSuccessful(
                             currentVcStatuses, credentialIssuerConfig.getComponentId())) {
                 JsonNode addressNode =
@@ -198,7 +196,7 @@ public class BuildProvenUserIdentityDetailsHandler
                                                 .toString())
                                 .path(VC_CLAIM)
                                 .path(VC_CREDENTIAL_SUBJECT)
-                                .path(ADDRESS_PROPERTY_NAME);
+                                .path(ADDRESS_CRI);
 
                 List<Address> addressList =
                         mapper.convertValue(addressNode, new TypeReference<>() {});
@@ -224,7 +222,7 @@ public class BuildProvenUserIdentityDetailsHandler
         for (VcStoreItem item : credentials) {
             SignedJWT signedJWT = SignedJWT.parse(item.getCredential());
             CredentialIssuerConfig addressCriConfig =
-                    configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID);
+                    configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI);
             boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, addressCriConfig);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));

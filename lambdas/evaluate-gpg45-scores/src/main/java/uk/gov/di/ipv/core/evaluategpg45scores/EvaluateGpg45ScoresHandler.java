@@ -52,7 +52,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_MITIGATION_JOURNEYS_ENABLED;
-import static uk.gov.di.ipv.core.library.domain.CriIdConstants.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
@@ -316,7 +316,7 @@ public class EvaluateGpg45ScoresHandler
         for (SignedJWT signedJWT : credentials) {
 
             CredentialIssuerConfig addressCriConfig =
-                    configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI_ID);
+                    configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI);
             boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, addressCriConfig);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
