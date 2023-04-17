@@ -1230,7 +1230,7 @@ Resources:
     Properties:
       DefinitionUri: criReturnStepFunction.asl.json
       DefinitionSubstitutions:
-        IPVProcessJourneyStepFunctionArn: !GetAtt IPVProcessJourneyStepFunction.Arn
+        JourneyEngineStepFunctionArn: !GetAtt JourneyEngineStepFunction.Arn
         RetrieveCriCredentialFunctionArn: !GetAtt RetrieveCriCredentialFunction.Arn
         RetrieveCriOauthAccessTokenFunctionArn: !GetAtt RetrieveCriOauthAccessTokenFunction.Arn
         ValidateOAuthCallbackFunctionArn: !GetAtt ValidateOAuthCallbackFunction.Arn
@@ -1250,13 +1250,17 @@ Resources:
         Level: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, criReturnStepFunctionLogLevel ]
       Policies:
         - LambdaInvokePolicy:
-            FunctionName: !Ref IPVProcessJourneyStepFunction
-        - LambdaInvokePolicy:
             FunctionName: !Ref RetrieveCriCredentialFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref RetrieveCriOauthAccessTokenFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref ValidateOAuthCallbackFunction
+        - Statement:
+            - Sid: JourneyEngineStepFunction
+              Effect: Allow
+              Action:
+                - "states:StartSyncExecution"
+              Resource: !Ref JourneyEngineStepFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow

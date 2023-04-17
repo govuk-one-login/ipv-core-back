@@ -37,22 +37,28 @@
     },
     "ProcessJourneyStep": {
       "Type": "Task",
-      "Resource": "${IPVProcessJourneyStepFunctionArn}",
+      "Resource": "arn:aws:states:::aws-sdk:sfn:startSyncExecution",
       "Parameters": {
-        "ipvSessionId.$": "$.ipvSessionId",
-        "ipAddress.$": "$.ipAddress",
-        "journey.$": "$.lambdaResult.journey"
+        "StateMachineArn": "${JourneyEngineStepFunctionArn}",
+        "Input": {
+          "ipvSessionId.$": "$.ipvSessionId",
+          "ipAddress.$": "$.ipAddress",
+          "journey.$": "$.lambdaResult.journey"
+        }
       },
       "ResultPath": "$.lambdaResult",
       "Next": "RouteJourneyResponse"
     },
     "ProcessJourneyStep-JourneyError": {
       "Type": "Task",
-      "Resource": "${IPVProcessJourneyStepFunctionArn}",
+      "Resource": "arn:aws:states:::aws-sdk:sfn:startSyncExecution",
       "Parameters": {
-        "ipvSessionId.$": "$.ipvSessionId",
-        "ipAddress.$": "$.ipAddress",
-        "journey": "journey/error"
+        "StateMachineArn": "${JourneyEngineStepFunctionArn}",
+        "Input": {
+          "ipvSessionId.$": "$.ipvSessionId",
+          "ipAddress.$": "$.ipAddress",
+          "journey": "journey/error"
+        }
       },
       "ResultPath": "$.lambdaResult",
       "Next": "ReturnToFrontend"
