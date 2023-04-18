@@ -114,7 +114,8 @@ public class ValidateOAuthCallbackHandler
             if (ipvSessionId != null && !ipvSessionId.isEmpty()) {
                 ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             } else if (criOAuthSessionId != null && !criOAuthSessionId.isEmpty()) {
-                criOAuthSessionItem = criOAuthSessionService.getCriOauthSessionItem(criOAuthSessionId);
+                criOAuthSessionItem =
+                        criOAuthSessionService.getCriOauthSessionItem(criOAuthSessionId);
                 var mapMessage =
                         new StringMapMessage()
                                 .with("message", "No ipvSession for existing CriOAuthSession")
