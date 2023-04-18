@@ -8,14 +8,10 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 
 import java.net.URI;
 import java.text.ParseException;
-import java.util.Objects;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ExcludeFromGeneratedCoverageReport
 public class CredentialIssuerConfig {
-
-    private String id;
-    private String name;
     private URI tokenUrl;
     private URI credentialUrl;
     private URI authorizeUrl;
@@ -29,8 +25,6 @@ public class CredentialIssuerConfig {
 
     @SuppressWarnings("java:S107") // Methods should not have too many parameters
     public CredentialIssuerConfig(
-            String id,
-            String name,
             URI tokenUrl,
             URI credentialUrl,
             URI authorizeUrl,
@@ -39,8 +33,6 @@ public class CredentialIssuerConfig {
             String encryptionKey,
             String componentId,
             URI clientCallbackUrl) {
-        this.id = id;
-        this.name = name;
         this.tokenUrl = tokenUrl;
         this.credentialUrl = credentialUrl;
         this.authorizeUrl = authorizeUrl;
@@ -51,20 +43,12 @@ public class CredentialIssuerConfig {
         this.clientCallbackUrl = clientCallbackUrl;
     }
 
-    public String getId() {
-        return id;
-    }
-
     public URI getTokenUrl() {
         return tokenUrl;
     }
 
     public URI getCredentialUrl() {
         return credentialUrl;
-    }
-
-    public String getName() {
-        return name;
     }
 
     public URI getAuthorizeUrl() {
@@ -102,11 +86,6 @@ public class CredentialIssuerConfig {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -115,12 +94,6 @@ public class CredentialIssuerConfig {
             return false;
         }
         CredentialIssuerConfig that = (CredentialIssuerConfig) o;
-        return id.equals(that.id)
-                && tokenUrl.equals(that.tokenUrl)
-                && credentialUrl.equals(that.credentialUrl);
-    }
-
-    public void setId(String credentialIssuerId) {
-        this.id = credentialIssuerId;
+        return tokenUrl.equals(that.tokenUrl) && credentialUrl.equals(that.credentialUrl);
     }
 }

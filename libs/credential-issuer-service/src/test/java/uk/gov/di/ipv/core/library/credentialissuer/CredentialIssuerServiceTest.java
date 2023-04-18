@@ -72,6 +72,7 @@ class CredentialIssuerServiceTest {
 
     private CredentialIssuerService credentialIssuerService;
     private final String testApiKey = "test-api-key";
+    private final String cri = "ukPassport";
 
     @BeforeEach
     void setUp() throws Exception {
@@ -98,7 +99,7 @@ class CredentialIssuerServiceTest {
 
         AccessToken accessToken =
                 credentialIssuerService.exchangeCodeForToken(
-                        TEST_AUTH_CODE, credentialIssuerConfig, testApiKey);
+                        TEST_AUTH_CODE, credentialIssuerConfig, testApiKey, cri);
         AccessTokenType type = accessToken.getType();
         assertEquals("Bearer", type.toString());
         assertEquals(3600, accessToken.getLifetime());
@@ -122,7 +123,7 @@ class CredentialIssuerServiceTest {
 
         AccessToken accessToken =
                 credentialIssuerService.exchangeCodeForToken(
-                        TEST_AUTH_CODE, credentialIssuerConfig, testApiKey);
+                        TEST_AUTH_CODE, credentialIssuerConfig, testApiKey, cri);
         AccessTokenType type = accessToken.getType();
         assertEquals("Bearer", type.toString());
         assertEquals(3600, accessToken.getLifetime());
@@ -146,7 +147,7 @@ class CredentialIssuerServiceTest {
 
         AccessToken accessToken =
                 credentialIssuerService.exchangeCodeForToken(
-                        TEST_AUTH_CODE, credentialIssuerConfig, null);
+                        TEST_AUTH_CODE, credentialIssuerConfig, null, cri);
         AccessTokenType type = accessToken.getType();
         assertEquals("Bearer", type.toString());
         assertEquals(3600, accessToken.getLifetime());
@@ -175,7 +176,7 @@ class CredentialIssuerServiceTest {
                         CredentialIssuerException.class,
                         () ->
                                 credentialIssuerService.exchangeCodeForToken(
-                                        TEST_AUTH_CODE, credentialIssuerConfig, testApiKey));
+                                        TEST_AUTH_CODE, credentialIssuerConfig, testApiKey, cri));
 
         assertEquals(HTTPResponse.SC_BAD_REQUEST, exception.getHttpStatusCode());
         assertEquals(ErrorResponse.INVALID_TOKEN_REQUEST, exception.getErrorResponse());
@@ -199,7 +200,7 @@ class CredentialIssuerServiceTest {
                         CredentialIssuerException.class,
                         () ->
                                 credentialIssuerService.exchangeCodeForToken(
-                                        TEST_AUTH_CODE, credentialIssuerConfig, testApiKey));
+                                        TEST_AUTH_CODE, credentialIssuerConfig, testApiKey, cri));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
         assertEquals(
@@ -335,7 +336,7 @@ class CredentialIssuerServiceTest {
 
         List<SignedJWT> credentials =
                 credentialIssuerService.getVerifiableCredential(
-                        accessToken, credentialIssuerConfig, testApiKey);
+                        accessToken, credentialIssuerConfig, testApiKey, cri);
 
         assertEquals(SIGNED_VC_1, credentials.get(0).serialize());
 
@@ -361,7 +362,7 @@ class CredentialIssuerServiceTest {
 
         List<SignedJWT> credentials =
                 credentialIssuerService.getVerifiableCredential(
-                        accessToken, credentialIssuerConfig, null);
+                        accessToken, credentialIssuerConfig, null, cri);
 
         assertEquals(SIGNED_VC_1, credentials.get(0).serialize());
 
@@ -391,7 +392,7 @@ class CredentialIssuerServiceTest {
 
         List<SignedJWT> credentials =
                 credentialIssuerService.getVerifiableCredential(
-                        accessToken, credentialIssuerConfig, null);
+                        accessToken, credentialIssuerConfig, null, cri);
 
         assertEquals(SIGNED_VC_1, credentials.get(0).serialize());
 
@@ -421,7 +422,7 @@ class CredentialIssuerServiceTest {
                         CredentialIssuerException.class,
                         () ->
                                 credentialIssuerService.getVerifiableCredential(
-                                        accessToken, credentialIssuerConfig, testApiKey));
+                                        accessToken, credentialIssuerConfig, testApiKey, cri));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
@@ -445,7 +446,7 @@ class CredentialIssuerServiceTest {
                         CredentialIssuerException.class,
                         () ->
                                 credentialIssuerService.getVerifiableCredential(
-                                        accessToken, credentialIssuerConfig, testApiKey));
+                                        accessToken, credentialIssuerConfig, testApiKey, cri));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
@@ -454,8 +455,6 @@ class CredentialIssuerServiceTest {
     private CredentialIssuerConfig getStubCredentialIssuerConfig(
             WireMockRuntimeInfo wmRuntimeInfo) {
         return new CredentialIssuerConfig(
-                "StubPassport",
-                "any",
                 URI.create("http://localhost:" + wmRuntimeInfo.getHttpPort() + "/token"),
                 URI.create(
                         "http://localhost:" + wmRuntimeInfo.getHttpPort() + "/credentials/issue"),

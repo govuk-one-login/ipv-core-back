@@ -65,7 +65,6 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_3;
@@ -135,8 +134,6 @@ class BuildCriOauthRequestHandlerTest {
                         mockClientOAuthSessionDetailsService);
         credentialIssuerConfig =
                 new CredentialIssuerConfig(
-                        CRI_ID,
-                        CRI_NAME,
                         new URI(CRI_TOKEN_URL),
                         new URI(CRI_CREDENTIAL_URL),
                         new URI(CRI_AUTHORIZE_URL),
@@ -148,8 +145,6 @@ class BuildCriOauthRequestHandlerTest {
 
         addressCredentialIssuerConfig =
                 new CredentialIssuerConfig(
-                        ADDRESS_CRI,
-                        CRI_NAME,
                         new URI(CRI_TOKEN_URL),
                         new URI(CRI_CREDENTIAL_URL),
                         new URI(CRI_AUTHORIZE_URL),
@@ -161,8 +156,6 @@ class BuildCriOauthRequestHandlerTest {
 
         dcmawCredentialIssuerConfig =
                 new CredentialIssuerConfig(
-                        DCMAW_CRI,
-                        CRI_NAME,
                         new URI(CRI_TOKEN_URL),
                         new URI(CRI_CREDENTIAL_URL),
                         new URI(CRI_AUTHORIZE_URL),
@@ -174,8 +167,6 @@ class BuildCriOauthRequestHandlerTest {
 
         kbvCredentialIssuerConfig =
                 new CredentialIssuerConfig(
-                        KBV_CRI,
-                        CRI_NAME,
                         new URI(CRI_TOKEN_URL),
                         new URI(CRI_CREDENTIAL_URL),
                         new URI(CRI_AUTHORIZE_URL),

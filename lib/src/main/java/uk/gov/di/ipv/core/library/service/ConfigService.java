@@ -152,11 +152,7 @@ public class ConfigService {
                                 credentialIssuerId,
                                 activeConnection));
 
-        CredentialIssuerConfig credentialIssuerConfig =
-                new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
-        credentialIssuerConfig.setId(credentialIssuerId);
-
-        return credentialIssuerConfig;
+        return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
     }
 
     public List<String> getClientRedirectUrls(String clientId) {
