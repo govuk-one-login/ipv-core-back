@@ -38,10 +38,15 @@ public class CriOAuthSessionService {
         return dataStore.getItem(criOAuthSessionId);
     }
 
-    public CriOAuthSessionItem persistCriOAuthSession(String state, String criId, String clientOAuthSessionId) {
+    public CriOAuthSessionItem persistCriOAuthSession(
+            String state, String criId, String clientOAuthSessionId) {
 
         CriOAuthSessionItem criOAuthSessionItem =
-                CriOAuthSessionItem.builder().criOAuthSessionId(state).criId(criId).clientOAuthSessionId(clientOAuthSessionId).build();
+                CriOAuthSessionItem.builder()
+                        .criOAuthSessionId(state)
+                        .criId(criId)
+                        .clientOAuthSessionId(clientOAuthSessionId)
+                        .build();
 
         dataStore.create(criOAuthSessionItem, BACKEND_SESSION_TTL);
         LOGGER.info(

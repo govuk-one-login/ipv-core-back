@@ -347,7 +347,8 @@ public class BuildCriOauthRequestHandler
     }
 
     @Tracing
-    private void persistCriOauthState(String oauthState, String criId, String clientOAuthSessionId) {
+    private void persistCriOauthState(
+            String oauthState, String criId, String clientOAuthSessionId) {
         criOAuthSessionService.persistCriOAuthSession(oauthState, criId, clientOAuthSessionId);
     }
 }
