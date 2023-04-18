@@ -656,8 +656,6 @@ class EndMitigationJourneyHandlerTest {
 
     private CredentialIssuerConfig getTestFraudCriConfig() {
         return new CredentialIssuerConfig(
-                "fraud",
-                "fraud",
                 URI.create("http://example.com/token"),
                 URI.create("http://example.com/credential"),
                 URI.create("http://example.com/authorize"),

@@ -163,11 +163,11 @@ public class BuildCriOauthRequestHandler
                             currentVcStatuses,
                             criId);
 
-            CriResponse criResponse = getCriResponse(credentialIssuerConfig, jweObject);
+            CriResponse criResponse = getCriResponse(credentialIssuerConfig, jweObject, criId);
 
-            persistOauthState(ipvSessionItem, credentialIssuerConfig.getId(), oauthState);
+            persistOauthState(ipvSessionItem, criId, oauthState);
 
-            persistCriOauthState(oauthState, credentialIssuerConfig.getId());
+            persistCriOauthState(oauthState, criId);
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
@@ -204,7 +204,7 @@ public class BuildCriOauthRequestHandler
     }
 
     private CriResponse getCriResponse(
-            CredentialIssuerConfig credentialIssuerConfig, JWEObject jweObject)
+            CredentialIssuerConfig credentialIssuerConfig, JWEObject jweObject, String criId)
             throws URISyntaxException {
 
         URIBuilder redirectUri =
@@ -212,12 +212,11 @@ public class BuildCriOauthRequestHandler
                         .addParameter("client_id", credentialIssuerConfig.getClientId())
                         .addParameter("request", jweObject.serialize());
 
-        if (credentialIssuerConfig.getId().equals(DCMAW_CRI_ID)) {
+        if (criId.equals(DCMAW_CRI_ID)) {
             redirectUri.addParameter("response_type", "code");
         }
 
-        return new CriResponse(
-                new CriDetails(credentialIssuerConfig.getId(), redirectUri.build().toString()));
+        return new CriResponse(new CriDetails(criId, redirectUri.build().toString()));
     }
 
     private JWEObject signEncryptJar(

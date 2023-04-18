@@ -99,8 +99,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -113,8 +111,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -167,8 +163,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -181,8 +175,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -240,8 +232,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -254,8 +244,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -289,8 +277,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -349,8 +335,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -363,8 +347,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -377,8 +359,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("fraud"))
                 .thenReturn(
                         new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -391,8 +371,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("kbv"))
                 .thenReturn(
                         new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -446,8 +424,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -460,8 +436,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -474,8 +448,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("fraud"))
                 .thenReturn(
                         new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),
@@ -488,8 +460,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("kbv"))
                 .thenReturn(
                         new CredentialIssuerConfig(
-                                "test-cri",
-                                "test cri",
                                 URI.create("https://example.com/token"),
                                 URI.create("https://example.com/credential"),
                                 URI.create("https://example.com/authorize"),

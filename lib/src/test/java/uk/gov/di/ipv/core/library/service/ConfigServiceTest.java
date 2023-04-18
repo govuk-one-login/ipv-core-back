@@ -67,8 +67,6 @@ class ConfigServiceTest {
 
     @Mock SSMProvider ssmProvider;
 
-    @Mock SSMProvider ssmProvider2;
-
     @Mock SecretsProvider secretsProvider;
 
     private ConfigService configService;
@@ -131,8 +129,6 @@ class ConfigServiceTest {
 
         CredentialIssuerConfig expected =
                 new CredentialIssuerConfig(
-                        "passportCri",
-                        "",
                         URI.create(TEST_TOKEN_URL),
                         URI.create(TEST_CREDENTIAL_URL),
                         URI.create(TEST_CREDENTIAL_URL),

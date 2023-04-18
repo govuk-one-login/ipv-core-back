@@ -32,8 +32,6 @@ class GetCredentialIssuerConfigHandlerTest {
     private final List<CredentialIssuerConfig> credentialIssuerConfigList =
             List.of(
                     new CredentialIssuerConfig(
-                            "test1",
-                            "Any",
                             URI.create("test1TokenUrl"),
                             URI.create("test1credentialUrl"),
                             URI.create("test1AuthorizeUrl"),
@@ -43,8 +41,6 @@ class GetCredentialIssuerConfigHandlerTest {
                             "test-audience",
                             URI.create("testRedirectUrl")),
                     new CredentialIssuerConfig(
-                            "test2",
-                            "Any",
                             URI.create("test2TokenUrl"),
                             URI.create("test2credentialUrl"),
                             URI.create("test2AuthorizeUrl"),
