@@ -51,6 +51,7 @@ public class InitialiseIpvSessionHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final String IPV_SESSION_ID_KEY = "ipvSessionId";
+    private static final String CLIENT_SESSION_ID_KEY = "clientSessionId";
     private static final String CLIENT_ID_PARAM_KEY = "clientId";
     private static final String REQUEST_PARAM_KEY = "request";
     private static final String IS_DEBUG_JOURNEY_PARAM_KEY = "isDebugJourney";
@@ -146,7 +147,11 @@ public class InitialiseIpvSessionHandler
                     new AuditEvent(AuditEventTypes.IPV_JOURNEY_START, componentId, auditEventUser));
 
             Map<String, String> response =
-                    Map.of(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());
+                    Map.of(
+                            IPV_SESSION_ID_KEY,
+                            ipvSessionItem.getIpvSessionId(),
+                            CLIENT_SESSION_ID_KEY,
+                            clientOAuthSessionItem.getClientOAuthSessionId());
 
             var message =
                     new StringMapMessage()

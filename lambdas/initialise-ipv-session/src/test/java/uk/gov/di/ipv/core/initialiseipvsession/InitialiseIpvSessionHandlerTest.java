@@ -144,6 +144,9 @@ class InitialiseIpvSessionHandlerTest {
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
         assertEquals(ipvSessionItem.getIpvSessionId(), responseBody.get("ipvSessionId"));
+        assertEquals(
+                clientOAuthSessionItem.getClientOAuthSessionId(),
+                responseBody.get("clientSessionId"));
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
