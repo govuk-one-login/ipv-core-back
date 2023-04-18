@@ -53,6 +53,16 @@ public class IpvSessionItem implements DynamodbItem {
         return accessToken;
     }
 
+    @DynamoDbSecondaryPartitionKey(indexNames = "clientOAuthSessionId")
+    public String getClientOAuthSessionId() {
+        return clientOAuthSessionId;
+    }
+
+    @DynamoDbSecondaryPartitionKey(indexNames = "criOAuthSessionId")
+    public String getCriOAuthSessionId() {
+        return criOAuthSessionId;
+    }
+
     public void addVisitedCredentialIssuerDetails(
             VisitedCredentialIssuerDetailsDto visitedCredentialIssuerDetails) {
         this.visitedCredentialIssuerDetails.add(visitedCredentialIssuerDetails);

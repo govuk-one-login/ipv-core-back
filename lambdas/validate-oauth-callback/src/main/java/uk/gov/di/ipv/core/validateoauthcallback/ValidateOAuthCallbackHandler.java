@@ -111,9 +111,9 @@ public class ValidateOAuthCallbackHandler
             String ipvSessionId = callbackRequest.getIpvSessionId();
             String criOAuthSessionId = callbackRequest.getState();
 
-            if (ipvSessionId != null) {
+            if (ipvSessionId != null && !ipvSessionId.isEmpty()) {
                 ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-            } else if (criOAuthSessionId == null) {
+            } else if (criOAuthSessionId == null || criOAuthSessionId.isEmpty()) {
                 throw new HttpResponseExceptionWithErrorBody(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_OAUTH_STATE);
             } else {
