@@ -141,9 +141,9 @@ public class BuildCriOauthRequestHandler
             }
 
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+            String clientOAuthSessionId = ipvSessionItem.getClientOAuthSessionId();
             ClientOAuthSessionItem clientOAuthSessionItem =
-                    clientOAuthSessionDetailsService.getClientOAuthSession(
-                            ipvSessionItem.getClientOAuthSessionId());
+                    clientOAuthSessionDetailsService.getClientOAuthSession(clientOAuthSessionId);
 
             String userId = clientOAuthSessionItem.getUserId();
 
@@ -167,7 +167,7 @@ public class BuildCriOauthRequestHandler
 
             persistOauthState(ipvSessionItem, criId, oauthState);
 
-            persistCriOauthState(oauthState, criId);
+            persistCriOauthState(oauthState, criId, clientOAuthSessionId);
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
@@ -347,7 +347,7 @@ public class BuildCriOauthRequestHandler
     }
 
     @Tracing
-    private void persistCriOauthState(String oauthState, String criId) {
-        criOAuthSessionService.persistCriOAuthSession(oauthState, criId);
+    private void persistCriOauthState(String oauthState, String criId, String clientOAuthSessionId) {
+        criOAuthSessionService.persistCriOAuthSession(oauthState, criId, clientOAuthSessionId);
     }
 }
