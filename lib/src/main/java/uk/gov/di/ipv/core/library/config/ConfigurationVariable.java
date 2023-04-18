@@ -1,22 +1,15 @@
 package uk.gov.di.ipv.core.library.config;
 
 public enum ConfigurationVariable {
-    ADDRESS_CRI_ID("/%s/core/self/journey/addressCriId"),
     BACKEND_SESSION_TIMEOUT("/%s/core/self/backendSessionTimeout"),
     BACKEND_SESSION_TTL("/%s/core/self/backendSessionTtl"),
     CLIENT_ISSUER("/%s/core/clients/%s/issuer"),
     COMPONENT_ID("/%s/core/self/componentId"),
     CORE_FRONT_CALLBACK_URL("/%s/core/self/coreFrontCallbackUrl"),
     CORE_VTM_CLAIM("/%s/core/self/coreVtmClaim"),
-    DRIVING_LICENCE_CRI_ID("/%s/core/self/journey/drivingLicenceId"),
-    FRAUD_CRI_ID("/%s/core/self/journey/fraudCriId"),
-    KBV_CRI_ID("/%s/core/self/journey/kbvCriId"),
-    DCMAW_CRI_ID("/%s/core/self/journey/dcmawCriId"),
     JAR_KMS_ENCRYPTION_KEY_ID("/%s/core/self/jarKmsEncryptionKeyId"),
     JWT_TTL_SECONDS("/%s/core/self/jwtTtlSeconds"),
     MAX_ALLOWED_AUTH_CLIENT_TTL("/%s/core/self/maxAllowedAuthClientTtl"),
-    PASSPORT_CRI_ID("/%s/core/self/journey/passportCriId"),
-    DCMAW_ENABLED("/%s/core/credentialIssuers/dcmaw/enabled"),
     DCMAW_SHOULD_SEND_ALL_USERS("/%s/core/self/journey/dcmawShouldSendAllUsers"),
     DCMAW_ALLOWED_USER_IDS("/%s/core/self/journey/dcmawAllowedUserIds"),
     AUTH_CODE_EXPIRY_SECONDS("/%s/core/self/authCodeExpirySeconds"),

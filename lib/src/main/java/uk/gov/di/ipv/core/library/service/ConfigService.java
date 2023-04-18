@@ -142,11 +142,7 @@ public class ConfigService {
 
     public CredentialIssuerConfig getCredentialIssuerActiveConnectionConfig(
             String credentialIssuerId) {
-
-        LOGGER.info(credentialIssuerId);
-        LOGGER.info(getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX));
         String activeConnection = getActiveConnection(credentialIssuerId);
-        LOGGER.info(activeConnection);
 
         Map<String, String> result =
                 getSsmParameters(

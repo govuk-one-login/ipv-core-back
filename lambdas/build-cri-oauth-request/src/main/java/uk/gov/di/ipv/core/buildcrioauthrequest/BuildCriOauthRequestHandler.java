@@ -33,7 +33,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -43,8 +42,10 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -53,6 +54,7 @@ import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.*;
 
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 
@@ -62,7 +64,6 @@ public class BuildCriOauthRequestHandler
     private static final String CRI_ID = "criId";
     private static final int OK = 200;
     private static final String DCMAW_CRI_ID = "dcmaw";
-    private static final String STUB_DCMAW_CRI_ID = "stubDcmaw";
     private static final JourneyResponse ERROR_JOURNEY = new JourneyResponse("/journey/error");
     public static final String SHARED_CLAIM_ATTR_NAME = "name";
     public static final String SHARED_CLAIM_ATTR_BIRTH_DATE = "birthDate";
@@ -77,6 +78,7 @@ public class BuildCriOauthRequestHandler
     private final AuditService auditService;
     private final IpvSessionService ipvSessionService;
     private final CriOAuthSessionService criOAuthSessionService;
+    private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final String componentId;
 
     public BuildCriOauthRequestHandler(
@@ -85,7 +87,8 @@ public class BuildCriOauthRequestHandler
             JWSSigner signer,
             AuditService auditService,
             IpvSessionService ipvSessionService,
-            CriOAuthSessionService criOAuthSessionService) {
+            CriOAuthSessionService criOAuthSessionService,
+            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService) {
 
         this.credentialIssuerConfigService = credentialIssuerConfigService;
         this.userIdentityService = userIdentityService;
@@ -93,6 +96,7 @@ public class BuildCriOauthRequestHandler
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
         this.criOAuthSessionService = criOAuthSessionService;
+        this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.componentId =
                 credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
@@ -106,6 +110,8 @@ public class BuildCriOauthRequestHandler
                 new AuditService(AuditService.getDefaultSqsClient(), credentialIssuerConfigService);
         this.ipvSessionService = new IpvSessionService(credentialIssuerConfigService);
         this.criOAuthSessionService = new CriOAuthSessionService(credentialIssuerConfigService);
+        this.clientOAuthSessionDetailsService =
+                new ClientOAuthSessionDetailsService(credentialIssuerConfigService);
         this.componentId =
                 credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
@@ -135,11 +141,13 @@ public class BuildCriOauthRequestHandler
             }
 
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-            ClientSessionDetailsDto clientSessionDetailsDto =
-                    ipvSessionItem.getClientSessionDetails();
-            String userId = clientSessionDetailsDto.getUserId();
+            ClientOAuthSessionItem clientOAuthSessionItem =
+                    clientOAuthSessionDetailsService.getClientOAuthSession(
+                            ipvSessionItem.getClientOAuthSessionId());
 
-            String govukSigninJourneyId = clientSessionDetailsDto.getGovukSigninJourneyId();
+            String userId = clientOAuthSessionItem.getUserId();
+
+            String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
             List<VcStatusDto> currentVcStatuses = ipvSessionItem.getCurrentVcStatuses();
 
@@ -204,8 +212,7 @@ public class BuildCriOauthRequestHandler
                         .addParameter("client_id", credentialIssuerConfig.getClientId())
                         .addParameter("request", jweObject.serialize());
 
-        if (credentialIssuerConfig.getId().equals(DCMAW_CRI_ID)
-                || credentialIssuerConfig.getId().equals(STUB_DCMAW_CRI_ID)) {
+        if (credentialIssuerConfig.getId().equals(DCMAW_CRI_ID)) {
             redirectUri.addParameter("response_type", "code");
         }
 
@@ -255,11 +262,9 @@ public class BuildCriOauthRequestHandler
     private SharedClaimsResponse getSharedAttributes(
             String userId, List<VcStatusDto> currentVcStatuses, String criId)
             throws HttpResponseExceptionWithErrorBody {
-        String addressCriId =
-                credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID);
         CredentialIssuerConfig addressCriConfig =
                 credentialIssuerConfigService.getCredentialIssuerActiveConnectionConfig(
-                        addressCriId);
+                        ADDRESS_CRI);
 
         List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 

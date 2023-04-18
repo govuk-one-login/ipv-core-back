@@ -15,12 +15,13 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -38,15 +39,18 @@ public class BuildDebugCredentialDataHandler
     private final UserIdentityService userIdentityService;
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
+    private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private static final Logger LOGGER = LogManager.getLogger();
 
     public BuildDebugCredentialDataHandler(
             UserIdentityService userIdentityService,
             ConfigService configService,
-            IpvSessionService ipvSessionService) {
+            IpvSessionService ipvSessionService,
+            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService) {
         this.userIdentityService = userIdentityService;
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
+        this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -54,6 +58,7 @@ public class BuildDebugCredentialDataHandler
         this.configService = new ConfigService();
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
+        this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
     }
 
     @Override
@@ -65,13 +70,15 @@ public class BuildDebugCredentialDataHandler
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-            ClientSessionDetailsDto clientSessionDetailsDto =
-                    ipvSessionItem.getClientSessionDetails();
+
+            ClientOAuthSessionItem clientOAuthSessionItem =
+                    clientOAuthSessionDetailsService.getClientOAuthSession(
+                            ipvSessionItem.getClientOAuthSessionId());
             LogHelper.attachGovukSigninJourneyIdToLogs(
-                    clientSessionDetailsDto.getGovukSigninJourneyId());
+                    clientOAuthSessionItem.getGovukSigninJourneyId());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK,
-                    getUserIssuedDebugCredentials(clientSessionDetailsDto.getUserId()));
+                    getUserIssuedDebugCredentials(clientOAuthSessionItem.getUserId()));
         } catch (HttpResponseExceptionWithErrorBody e) {
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getResponseCode(), e.getErrorBody());

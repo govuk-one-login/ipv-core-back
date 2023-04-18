@@ -11,13 +11,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.ProvenUserIdentityDetails;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -29,6 +30,8 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FAILED_PASSPORT_VC;
@@ -43,35 +46,44 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
     private static final String SESSION_ID = "the-session-id";
     private static final String TEST_USER_ID = "test-user-id";
+    private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
 
     @Mock private Context context;
     @Mock private ConfigService mockConfigService;
     @Mock private UserIdentityService mockUserIdentityService;
     @Mock private IpvSessionService mockIpvSessionService;
+    @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private IpvSessionItem mockIpvSessionItem;
 
     private BuildProvenUserIdentityDetailsHandler underTest;
-    private ClientSessionDetailsDto clientSessionDetailsDto;
+    private ClientOAuthSessionItem clientOAuthSessionItem;
     private ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
         underTest =
                 new BuildProvenUserIdentityDetailsHandler(
-                        mockIpvSessionService, mockUserIdentityService, mockConfigService);
+                        mockIpvSessionService,
+                        mockUserIdentityService,
+                        mockConfigService,
+                        mockClientOAuthSessionDetailsService);
 
-        clientSessionDetailsDto = new ClientSessionDetailsDto();
-        clientSessionDetailsDto.setUserId(TEST_USER_ID);
-        clientSessionDetailsDto.setGovukSigninJourneyId("test-journey-id");
+        clientOAuthSessionItem =
+                ClientOAuthSessionItem.builder()
+                        .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
+                        .state("test-state")
+                        .responseType("code")
+                        .redirectUri("https://example.com/redirect")
+                        .govukSigninJourneyId("test-journey-id")
+                        .userId(TEST_USER_ID)
+                        .build();
     }
 
     @Test
     void shouldReceive200ResponseCodeProvenUserIdentityDetails() throws Exception {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn("address");
-        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
@@ -112,6 +124,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "https://review-a.integration.account.gov.uk",
                                 URI.create("https://example.com/callback")));
 
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", "12345"));
@@ -125,6 +140,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
         assertEquals("1959-08-23", provenUserIdentityDetails.getDateOfBirth());
         assertEquals("BA2 5AA", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -132,9 +148,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
             throws Exception {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn("address");
-        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
@@ -178,6 +192,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "https://review-a.integration.account.gov.uk",
                                 URI.create("https://example.com/callback")));
 
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", "12345"));
@@ -195,6 +212,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         assertEquals("CA14 5PH", addresses.get(0).getPostalCode());
         assertEquals("TE5 7ER", addresses.get(1).getPostalCode());
         assertEquals("BA2 5AA", addresses.get(2).getPostalCode());
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -203,9 +221,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                     throws Exception {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn("address");
-        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
@@ -248,6 +264,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "https://review-a.integration.account.gov.uk",
                                 URI.create("https://example.com/callback")));
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
@@ -262,13 +280,12 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
         assertEquals("1959-08-23", provenUserIdentityDetails.getDateOfBirth());
         assertEquals("BA2 5AA", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
     void shouldReceive400ResponseCodeWhenEvidenceVcIsMissing() throws Exception {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn("address");
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
@@ -282,7 +299,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "https://review-a.integration.account.gov.uk",
                                 URI.create("https://example.com/callback")));
-        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
@@ -292,7 +309,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                         "user-id-1", "fraud", M1A_FRAUD_VC, Instant.now()),
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
-
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", "12345"));
@@ -310,15 +328,14 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getMessage(),
                 errorResponse.get("message"));
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
     void shouldReceive400ResponseCodeWhenAddressVcIsMissing() throws Exception {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn("address");
-        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
@@ -384,7 +401,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "https://review-k.integration.account.gov.uk",
                                 URI.create("https://example.com/callback")));
-
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", "12345"));
@@ -402,15 +420,14 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getMessage(),
                 errorResponse.get("message"));
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
     void shouldReceive400ResponseCodeWhenEvidenceVcIsNotSuccessful() throws Exception {
         when(mockUserIdentityService.isVcSuccessful(any(), any())).thenCallRealMethod();
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn("address");
-        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
@@ -481,7 +498,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "https://review-k.integration.account.gov.uk",
                                 URI.create("https://example.com/callback")));
-
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
         APIGatewayProxyRequestEvent input = createRequestEvent();
 
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", "12345"));
@@ -499,6 +517,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getMessage(),
                 errorResponse.get("message"));
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -524,7 +543,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     @Test
     void shouldReceive500ResponseCodeWhenFailedToParseVc() throws Exception {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionItem.getClientSessionDetails()).thenReturn(clientSessionDetailsDto);
+        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(

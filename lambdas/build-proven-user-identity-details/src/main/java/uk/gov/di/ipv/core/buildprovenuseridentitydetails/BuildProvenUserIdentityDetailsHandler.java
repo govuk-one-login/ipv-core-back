@@ -18,7 +18,6 @@ import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.NameAndDateOfBir
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.ProvenUserIdentityDetails;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.exceptions.ProvenUserIdentityDetailsException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
@@ -29,8 +28,10 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -42,10 +43,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
-import static uk.gov.di.ipv.core.library.service.UserIdentityService.ADDRESS_CRI_TYPES;
-import static uk.gov.di.ipv.core.library.service.UserIdentityService.ADDRESS_PROPERTY_NAME;
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.BIRTH_DATE_PROPERTY_NAME;
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.NAME_PROPERTY_NAME;
@@ -57,16 +57,19 @@ public class BuildProvenUserIdentityDetailsHandler
     private final IpvSessionService ipvSessionService;
     private final UserIdentityService userIdentityService;
     private final ConfigService configService;
+    private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
     public BuildProvenUserIdentityDetailsHandler(
             IpvSessionService ipvSessionService,
             UserIdentityService userIdentityService,
-            ConfigService configService) {
+            ConfigService configService,
+            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService) {
         this.ipvSessionService = ipvSessionService;
         this.userIdentityService = userIdentityService;
         this.configService = configService;
+        this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -74,6 +77,7 @@ public class BuildProvenUserIdentityDetailsHandler
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.userIdentityService = new UserIdentityService(configService);
+        this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
     }
 
     @Override
@@ -88,13 +92,15 @@ public class BuildProvenUserIdentityDetailsHandler
             String ipvSessionId = RequestHelper.getIpvSessionId(input.getHeaders());
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 
-            String govukSigninJourneyId =
-                    ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId();
+            ClientOAuthSessionItem clientOAuthSessionItem =
+                    clientOAuthSessionDetailsService.getClientOAuthSession(
+                            ipvSessionItem.getClientOAuthSessionId());
+
+            String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             List<VcStoreItem> credentials =
-                    userIdentityService.getVcStoreItems(
-                            ipvSessionItem.getClientSessionDetails().getUserId());
+                    userIdentityService.getVcStoreItems(clientOAuthSessionItem.getUserId());
 
             List<VcStatusDto> currentVcStatuses = generateCurrentVcStatuses(credentials);
 
@@ -180,7 +186,7 @@ public class BuildProvenUserIdentityDetailsHandler
             CredentialIssuerConfig credentialIssuerConfig =
                     configService.getCredentialIssuerActiveConnectionConfig(
                             item.getCredentialIssuer());
-            if (ADDRESS_CRI_TYPES.contains(item.getCredentialIssuer())
+            if (item.getCredentialIssuer().equals(ADDRESS_CRI)
                     && userIdentityService.isVcSuccessful(
                             currentVcStatuses, credentialIssuerConfig.getComponentId())) {
                 JsonNode addressNode =
@@ -190,7 +196,7 @@ public class BuildProvenUserIdentityDetailsHandler
                                                 .toString())
                                 .path(VC_CLAIM)
                                 .path(VC_CREDENTIAL_SUBJECT)
-                                .path(ADDRESS_PROPERTY_NAME);
+                                .path(ADDRESS_CRI);
 
                 List<Address> addressList =
                         mapper.convertValue(addressNode, new TypeReference<>() {});
@@ -215,10 +221,8 @@ public class BuildProvenUserIdentityDetailsHandler
 
         for (VcStoreItem item : credentials) {
             SignedJWT signedJWT = SignedJWT.parse(item.getCredential());
-            String addressCriId =
-                    configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID);
             CredentialIssuerConfig addressCriConfig =
-                    configService.getCredentialIssuerActiveConnectionConfig(addressCriId);
+                    configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI);
             boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, addressCriConfig);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));

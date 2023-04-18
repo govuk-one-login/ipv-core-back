@@ -10,7 +10,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -57,6 +56,23 @@ class IpvSessionServiceTest {
         assertEquals(ipvSessionItem.getIpvSessionId(), result.getIpvSessionId());
         assertEquals(ipvSessionItem.getUserState(), result.getUserState());
         assertEquals(ipvSessionItem.getCreationDateTime(), result.getCreationDateTime());
+    }
+
+    @Test
+    void shouldReturnSessionItemByCriOAuthSessionId() {
+        String ipvSessionID = SecureTokenHelper.generate();
+        String criOAuthSessionId = "test-session-id";
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setIpvSessionId(ipvSessionID);
+
+        when(mockDataStore.getItemByIndex(eq("criOAuthSessionId"), anyString()))
+                .thenReturn(ipvSessionItem);
+
+        IpvSessionItem result =
+                ipvSessionService.getIpvSessionByCriOAuthSessionId(criOAuthSessionId).orElseThrow();
+
+        assertEquals(result, ipvSessionItem);
     }
 
     @Test
@@ -113,17 +129,7 @@ class IpvSessionServiceTest {
     @Test
     void shouldCreateSessionItem() {
         IpvSessionItem ipvSessionItem =
-                ipvSessionService.generateIpvSession(
-                        new ClientSessionDetailsDto(
-                                "jwt",
-                                "test-client",
-                                "http://example.come",
-                                "test-state",
-                                "test-user-id",
-                                "test-journey-id",
-                                false),
-                        null,
-                        null);
+                ipvSessionService.generateIpvSession(SecureTokenHelper.generate(), null, false);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -142,17 +148,7 @@ class IpvSessionServiceTest {
     @Test
     void shouldCreateSessionItemForDebugJourney() {
         IpvSessionItem ipvSessionItem =
-                ipvSessionService.generateIpvSession(
-                        new ClientSessionDetailsDto(
-                                "jwt",
-                                "test-client",
-                                "http://example.come",
-                                "test-state",
-                                "test-user-id",
-                                "test-journey-id",
-                                true),
-                        null,
-                        null);
+                ipvSessionService.generateIpvSession(SecureTokenHelper.generate(), null, true);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -174,16 +170,7 @@ class IpvSessionServiceTest {
         ErrorObject testErrorObject = new ErrorObject("server_error", "Test error");
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
-                        new ClientSessionDetailsDto(
-                                "jwt",
-                                "test-client",
-                                "http://example.come",
-                                "test-state",
-                                "test-user-id",
-                                "test-journey-id",
-                                false),
-                        null,
-                        testErrorObject);
+                        SecureTokenHelper.generate(), testErrorObject, false);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);

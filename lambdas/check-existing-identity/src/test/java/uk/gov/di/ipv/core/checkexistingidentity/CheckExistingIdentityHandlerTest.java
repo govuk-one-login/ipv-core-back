@@ -13,20 +13,21 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -84,8 +85,10 @@ class CheckExistingIdentityHandlerTest {
 
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
+
     private static final String JOURNEY_REUSE = "/journey/reuse";
     private static final String JOURNEY_NEXT = "/journey/next";
+    private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
 
     static {
         try {
@@ -113,9 +116,11 @@ class CheckExistingIdentityHandlerTest {
     @Mock private CiStorageService ciStorageService;
     @Mock private ConfigService configService;
     @Mock private AuditService auditService;
+    @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     @InjectMocks private CheckExistingIdentityHandler checkExistingIdentityHandler;
 
     private IpvSessionItem ipvSessionItem;
+    private ClientOAuthSessionItem clientOAuthSessionItem;
 
     @BeforeAll
     static void setUp() throws Exception {
@@ -127,13 +132,22 @@ class CheckExistingIdentityHandlerTest {
     @BeforeEach
     void setUpEach() {
         ipvSessionItem = new IpvSessionItem();
-        ClientSessionDetailsDto clientSessionDetailsDto = new ClientSessionDetailsDto();
-        clientSessionDetailsDto.setUserId(TEST_USER_ID);
-        clientSessionDetailsDto.setGovukSigninJourneyId(TEST_JOURNEY_ID);
-        ipvSessionItem.setClientSessionDetails(clientSessionDetailsDto);
+        ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setIpvSessionId(TEST_SESSION_ID);
         ipvSessionItem.setContraIndicatorMitigationDetails(
                 List.of(new ContraIndicatorMitigationDetailsDto("A01")));
+
+        clientOAuthSessionItem =
+                ClientOAuthSessionItem.builder()
+                        .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
+                        .state("test-state")
+                        .responseType("code")
+                        .redirectUri("https://example.com/redirect")
+                        .govukSigninJourneyId("test-journey-id")
+                        .userId(TEST_USER_ID)
+                        .clientId("test-client")
+                        .govukSigninJourneyId(TEST_JOURNEY_ID)
+                        .build();
     }
 
     @Test
@@ -144,10 +158,10 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
-        when(configService.getSsmParameter(ConfigurationVariable.ADDRESS_CRI_ID))
-                .thenReturn("address");
         when(configService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(addressConfig);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         var response = checkExistingIdentityHandler.handleRequest(event, context);
 
@@ -165,6 +179,7 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(
                 AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
                 auditEventArgumentCaptor.getAllValues().get(1).getEventName());
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -175,6 +190,8 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         var response = checkExistingIdentityHandler.handleRequest(event, context);
 
@@ -189,6 +206,7 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(
                 AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
                 auditEventArgumentCaptor.getValue().getEventName());
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -201,6 +219,8 @@ class CheckExistingIdentityHandlerTest {
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         var response = checkExistingIdentityHandler.handleRequest(event, context);
 
@@ -215,6 +235,7 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(
                 AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
                 auditEventArgumentCaptor.getValue().getEventName());
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -225,6 +246,8 @@ class CheckExistingIdentityHandlerTest {
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
                 .thenReturn(Optional.of(new JourneyResponse("/journey/pyi-no-match")));
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         var response = checkExistingIdentityHandler.handleRequest(event, context);
 
@@ -239,6 +262,7 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(
                 AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
                 auditEventArgumentCaptor.getValue().getEventName());
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -249,6 +273,8 @@ class CheckExistingIdentityHandlerTest {
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         var response = checkExistingIdentityHandler.handleRequest(event, context);
 
@@ -260,6 +286,7 @@ class CheckExistingIdentityHandlerTest {
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
                 ArgumentCaptor.forClass(AuditEvent.class);
         verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -271,12 +298,15 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.get(STATUS_CODE));
         assertEquals(
                 ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), response.get(MESSAGE));
+        verify(clientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
     }
 
     @Test
     void shouldReturn500IfFailedToParseCredentials() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.buildScore(any())).thenThrow(new ParseException("Whoops", 0));
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         var response = checkExistingIdentityHandler.handleRequest(event, context);
 
@@ -288,12 +318,15 @@ class CheckExistingIdentityHandlerTest {
                 ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(),
                 response.get(MESSAGE));
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
     void shouldReturn500IfCredentialOfUnknownType() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.buildScore(any())).thenThrow(new UnknownEvidenceTypeException());
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         var response = checkExistingIdentityHandler.handleRequest(event, context);
 
@@ -305,6 +338,7 @@ class CheckExistingIdentityHandlerTest {
                 ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE.getMessage(),
                 response.get(MESSAGE));
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -313,6 +347,8 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(ciStorageService.getCIs(anyString(), anyString(), anyString()))
                 .thenThrow(CiRetrievalException.class);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         var response = checkExistingIdentityHandler.handleRequest(event, context);
 
@@ -320,6 +356,7 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(ErrorResponse.FAILED_TO_GET_STORED_CIS.getCode(), response.get(CODE));
         assertEquals(
                 ErrorResponse.FAILED_TO_GET_STORED_CIS.getMessage(), response.get(MESSAGE));
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -330,6 +367,10 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
+
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
         doThrow(new SqsException("test error"))
                 .when(auditService)
                 .sendAuditEvent((AuditEvent) any());
@@ -340,5 +381,6 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getCode(), response.get(CODE));
         assertEquals(
                 ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getMessage(), response.get(MESSAGE));
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 }

@@ -15,7 +15,9 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processjourneystep.exceptions.JourneyEngineException;
@@ -37,22 +39,28 @@ public class ProcessJourneyStepHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String PYIC_TECHNICAL_ERROR_PAGE_ID = "pyi-technical";
+    private static final String PYIC_TIMEOUT_UNRECOVERABLE_ID = "pyi-timeout-unrecoverable";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
 
     private final IpvSessionService ipvSessionService;
     private final ConfigService configService;
+    private final ClientOAuthSessionDetailsService clientOAuthSessionService;
     private StateMachine stateMachine;
 
     public ProcessJourneyStepHandler(
-            IpvSessionService ipvSessionService, ConfigService configService) {
+            IpvSessionService ipvSessionService,
+            ConfigService configService,
+            ClientOAuthSessionDetailsService clientOAuthSessionService) {
         this.ipvSessionService = ipvSessionService;
         this.configService = configService;
+        this.clientOAuthSessionService = clientOAuthSessionService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public ProcessJourneyStepHandler() {
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
+        this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
     }
 
     @Override
@@ -79,8 +87,14 @@ public class ProcessJourneyStepHandler
                                             EnvironmentVariable.ENVIRONMENT),
                                     ipvSessionItem.getJourneyType()));
 
-            LogHelper.attachGovukSigninJourneyIdToLogs(
-                    ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId());
+            ClientOAuthSessionItem clientOAuthSessionItem = null;
+            if (ipvSessionItem.getClientOAuthSessionId() != null) {
+                clientOAuthSessionItem =
+                        clientOAuthSessionService.getClientOAuthSession(
+                                ipvSessionItem.getClientOAuthSessionId());
+                LogHelper.attachGovukSigninJourneyIdToLogs(
+                        clientOAuthSessionItem.getGovukSigninJourneyId());
+            }
 
             return executeJourneyEvent(journeyStep, ipvSessionItem);
 
@@ -104,7 +118,7 @@ public class ProcessJourneyStepHandler
         String currentUserState = ipvSessionItem.getUserState();
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(currentUserState, ipvSessionItem);
-            return new PageResponse(PYIC_TECHNICAL_ERROR_PAGE_ID).value(configService);
+            return new PageResponse(PYIC_TIMEOUT_UNRECOVERABLE_ID).value(configService);
         }
 
         try {

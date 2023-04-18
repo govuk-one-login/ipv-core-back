@@ -34,33 +34,21 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SE
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.VC_VALID_DURATION;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 
 public class UserIdentityService {
     public static final String NAME_PROPERTY_NAME = "name";
     public static final String BIRTH_DATE_PROPERTY_NAME = "birthDate";
-    public static final String ADDRESS_PROPERTY_NAME = "address";
-    public static final List<String> ADDRESS_CRI_TYPES =
-            List.of(ADDRESS_PROPERTY_NAME, "stubAddress");
-    public static final String UK_PASSPORT = "ukPassport";
-    public static final String STUB_UK_PASSPORT = "stubUkPassport";
-    public static final String DCMAW = "dcmaw";
-    public static final String STUB_DCMAW = "stubDcmaw";
-    public static final String DRIVING_LICENCE = "drivingLicence";
-    public static final String STUB_DRIVING_LICENCE = "stubDrivingLicence";
-    private static final List<String> PASSPORT_CRI_TYPES =
-            List.of(UK_PASSPORT, STUB_UK_PASSPORT, DCMAW, STUB_DCMAW);
+    private static final List<String> PASSPORT_CRI_TYPES = List.of(PASSPORT_CRI, DCMAW_CRI);
     private static final List<String> DRIVING_PERMIT_CRI_TYPES =
-            List.of(DCMAW, STUB_DCMAW, DRIVING_LICENCE, STUB_DRIVING_LICENCE);
+            List.of(DCMAW_CRI, DRIVING_LICENCE_CRI);
     public static final List<String> EVIDENCE_CRI_TYPES =
-            List.of(
-                    UK_PASSPORT,
-                    STUB_UK_PASSPORT,
-                    DCMAW,
-                    STUB_DCMAW,
-                    DRIVING_LICENCE,
-                    STUB_DRIVING_LICENCE);
+            List.of(PASSPORT_CRI, DCMAW_CRI, DRIVING_LICENCE_CRI);
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String PASSPORT_PROPERTY_NAME = "passport";
@@ -243,10 +231,7 @@ public class UserIdentityService {
             throws HttpResponseExceptionWithErrorBody {
         Optional<VcStoreItem> addressCredentialItem =
                 vcStoreItems.stream()
-                        .filter(
-                                credential ->
-                                        ADDRESS_CRI_TYPES.contains(
-                                                credential.getCredentialIssuer()))
+                        .filter(credential -> credential.getCredentialIssuer().equals(ADDRESS_CRI))
                         .findFirst();
 
         if (addressCredentialItem.isPresent()) {
@@ -260,7 +245,7 @@ public class UserIdentityService {
                                                 .toString())
                                 .path(VC_CLAIM)
                                 .path(VC_CREDENTIAL_SUBJECT)
-                                .path(ADDRESS_PROPERTY_NAME);
+                                .path(ADDRESS_CRI);
                 if (addressNode.isMissingNode()) {
                     LOGGER.error("Address property is missing from address VC");
                     throw new HttpResponseExceptionWithErrorBody(

@@ -24,7 +24,6 @@ import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
@@ -32,9 +31,11 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -46,7 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
@@ -68,6 +69,7 @@ public class CheckExistingIdentityHandler
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final CiStorageService ciStorageService;
     private final AuditService auditService;
+    private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final String componentId;
 
     public CheckExistingIdentityHandler(
@@ -76,13 +78,15 @@ public class CheckExistingIdentityHandler
             IpvSessionService ipvSessionService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
             CiStorageService ciStorageService,
-            AuditService auditService) {
+            AuditService auditService,
+            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService) {
         this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.ciStorageService = ciStorageService;
         this.auditService = auditService;
+        this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
@@ -94,6 +98,7 @@ public class CheckExistingIdentityHandler
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService);
         this.ciStorageService = new CiStorageService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
+        this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
@@ -108,11 +113,12 @@ public class CheckExistingIdentityHandler
             String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
             String ipAddress = StepFunctionHelpers.getIpAddress(input);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-            ClientSessionDetailsDto clientSessionDetailsDto =
-                    ipvSessionItem.getClientSessionDetails();
-            String userId = clientSessionDetailsDto.getUserId();
+            ClientOAuthSessionItem clientOAuthSessionItem =
+                    clientOAuthSessionDetailsService.getClientOAuthSession(
+                            ipvSessionItem.getClientOAuthSessionId());
+            String userId = clientOAuthSessionItem.getUserId();
 
-            String govukSigninJourneyId = clientSessionDetailsDto.getGovukSigninJourneyId();
+            String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             AuditEventUser auditEventUser =
@@ -128,8 +134,8 @@ public class CheckExistingIdentityHandler
             List<ContraIndicatorItem> ciItems;
             ciItems =
                     ciStorageService.getCIs(
-                            clientSessionDetailsDto.getUserId(),
-                            clientSessionDetailsDto.getGovukSigninJourneyId(),
+                            clientOAuthSessionItem.getUserId(),
+                            clientOAuthSessionItem.getGovukSigninJourneyId(),
                             ipAddress);
 
             Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
@@ -143,6 +149,7 @@ public class CheckExistingIdentityHandler
                     auditService.sendAuditEvent(
                             buildProfileMatchedAuditEvent(
                                     ipvSessionItem,
+                                    clientOAuthSessionItem,
                                     matchedProfile.get(),
                                     gpg45Scores,
                                     credentials,
@@ -239,12 +246,10 @@ public class CheckExistingIdentityHandler
     private List<VcStatusDto> generateVcSuccessStatuses(List<SignedJWT> credentials)
             throws ParseException {
         List<VcStatusDto> vcStatuses = new ArrayList<>();
-        String addressCriId = configService.getSsmParameter(ADDRESS_CRI_ID);
-
         for (SignedJWT signedJWT : credentials) {
 
             CredentialIssuerConfig addressCriConfig =
-                    configService.getCredentialIssuerActiveConnectionConfig(addressCriId);
+                    configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI);
             boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, addressCriConfig);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
@@ -254,6 +259,7 @@ public class CheckExistingIdentityHandler
 
     private AuditEvent buildProfileMatchedAuditEvent(
             IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
             Gpg45Profile gpg45Profile,
             Gpg45Scores gpg45Scores,
             List<SignedJWT> credentials,
@@ -261,9 +267,9 @@ public class CheckExistingIdentityHandler
             throws ParseException {
         AuditEventUser auditEventUser =
                 new AuditEventUser(
-                        ipvSessionItem.getClientSessionDetails().getUserId(),
+                        clientOAuthSessionItem.getUserId(),
                         ipvSessionItem.getIpvSessionId(),
-                        ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId(),
+                        clientOAuthSessionItem.getGovukSigninJourneyId(),
                         ipAddress);
         return new AuditEvent(
                 AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,

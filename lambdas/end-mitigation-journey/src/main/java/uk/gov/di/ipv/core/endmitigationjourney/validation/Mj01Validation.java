@@ -7,7 +7,6 @@ import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -19,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
@@ -33,9 +33,8 @@ public class Mj01Validation {
             List<String> credentials,
             ContraIndicatorItem contraIndicatorItem,
             ConfigService configService) {
-        String fraudCriId = configService.getSsmParameter(ConfigurationVariable.FRAUD_CRI_ID);
         CredentialIssuerConfig fraudCriConfig =
-                configService.getCredentialIssuerActiveConnectionConfig(fraudCriId);
+                configService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI);
 
         List<String> mitigatingVcList = new ArrayList<>();
 

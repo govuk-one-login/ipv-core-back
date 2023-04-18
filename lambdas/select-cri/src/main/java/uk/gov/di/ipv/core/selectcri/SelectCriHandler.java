@@ -11,16 +11,15 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
@@ -30,16 +29,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.ADDRESS_CRI_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ALLOWED_USER_IDS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_CRI_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ENABLED;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_SHOULD_SEND_ALL_USERS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DRIVING_LICENCE_CRI_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.FRAUD_CRI_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.KBV_CRI_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.JOURNEY;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 
 public class SelectCriHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
@@ -55,36 +53,22 @@ public class SelectCriHandler
 
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
-    private final String passportCriId;
-    private final String fraudCriId;
-    private final String kbvCriId;
-    private final String addressCriId;
-    private final String dcmawCriId;
-    private final String drivingLicenceCriId;
+    private final ClientOAuthSessionDetailsService clientOAuthSessionService;
 
-    public SelectCriHandler(ConfigService configService, IpvSessionService ipvSessionService) {
+    public SelectCriHandler(
+            ConfigService configService,
+            IpvSessionService ipvSessionService,
+            ClientOAuthSessionDetailsService clientOAuthSessionService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
-
-        passportCriId = configService.getSsmParameter(PASSPORT_CRI_ID);
-        fraudCriId = configService.getSsmParameter(FRAUD_CRI_ID);
-        kbvCriId = configService.getSsmParameter(KBV_CRI_ID);
-        addressCriId = configService.getSsmParameter(ADDRESS_CRI_ID);
-        dcmawCriId = configService.getSsmParameter(DCMAW_CRI_ID);
-        drivingLicenceCriId = configService.getSsmParameter(DRIVING_LICENCE_CRI_ID);
+        this.clientOAuthSessionService = clientOAuthSessionService;
     }
 
     @ExcludeFromGeneratedCoverageReport
     public SelectCriHandler() {
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
-
-        passportCriId = configService.getSsmParameter(PASSPORT_CRI_ID);
-        fraudCriId = configService.getSsmParameter(FRAUD_CRI_ID);
-        kbvCriId = configService.getSsmParameter(KBV_CRI_ID);
-        addressCriId = configService.getSsmParameter(ADDRESS_CRI_ID);
-        dcmawCriId = configService.getSsmParameter(DCMAW_CRI_ID);
-        drivingLicenceCriId = configService.getSsmParameter(DRIVING_LICENCE_CRI_ID);
+        this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
     }
 
     @Override
@@ -96,15 +80,19 @@ public class SelectCriHandler
         try {
             String ipvSessionId = StepFunctionHelpers.getIpvSessionId(event);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+            ClientOAuthSessionItem clientOAuthSessionItem =
+                    clientOAuthSessionService.getClientOAuthSession(
+                            ipvSessionItem.getClientOAuthSessionId());
 
-            logGovUkSignInJourneyId(ipvSessionId);
+            LogHelper.attachGovukSigninJourneyIdToLogs(
+                    clientOAuthSessionItem.getGovukSigninJourneyId());
 
             List<VcStatusDto> currentVcStatuses = ipvSessionItem.getCurrentVcStatuses();
 
             List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuers =
                     ipvSessionItem.getVisitedCredentialIssuerDetails();
 
-            String userId = ipvSessionItem.getClientSessionDetails().getUserId();
+            String userId = clientOAuthSessionItem.getUserId();
 
             JourneyResponse response;
             if (shouldSendUserToApp(userId)) {
@@ -142,18 +130,18 @@ public class SelectCriHandler
                 getCriResponse(
                         visitedCredentialIssuers,
                         currentVcStatuses,
-                        passportCriId,
-                        passportCriId,
+                        PASSPORT_CRI,
+                        PASSPORT_CRI,
                         userId);
         Optional<JourneyResponse> drivingLicenceResponse =
                 getCriResponse(
                         visitedCredentialIssuers,
                         currentVcStatuses,
-                        drivingLicenceCriId,
-                        drivingLicenceCriId,
+                        DRIVING_LICENCE_CRI,
+                        DRIVING_LICENCE_CRI,
                         userId);
         if (passportResponse.isPresent() && drivingLicenceResponse.isPresent()) {
-            if (userHasVisited(visitedCredentialIssuers, drivingLicenceCriId)) {
+            if (userHasVisited(visitedCredentialIssuers, DRIVING_LICENCE_CRI)) {
                 return drivingLicenceResponse.get();
             }
             return passportResponse.get();
@@ -163,8 +151,8 @@ public class SelectCriHandler
                 getCriResponse(
                         visitedCredentialIssuers,
                         currentVcStatuses,
-                        addressCriId,
-                        addressCriId,
+                        ADDRESS_CRI,
+                        ADDRESS_CRI,
                         userId);
         if (addressResponse.isPresent()) {
             return addressResponse.get();
@@ -172,18 +160,14 @@ public class SelectCriHandler
 
         Optional<JourneyResponse> fraudResponse =
                 getCriResponse(
-                        visitedCredentialIssuers,
-                        currentVcStatuses,
-                        fraudCriId,
-                        fraudCriId,
-                        userId);
+                        visitedCredentialIssuers, currentVcStatuses, FRAUD_CRI, FRAUD_CRI, userId);
         if (fraudResponse.isPresent()) {
             return fraudResponse.get();
         }
 
         Optional<JourneyResponse> kbvResponse =
                 getCriResponse(
-                        visitedCredentialIssuers, currentVcStatuses, kbvCriId, kbvCriId, userId);
+                        visitedCredentialIssuers, currentVcStatuses, KBV_CRI, KBV_CRI, userId);
         if (kbvResponse.isPresent()) {
             return kbvResponse.get();
         }
@@ -199,11 +183,7 @@ public class SelectCriHandler
             throws ParseException {
         Optional<JourneyResponse> dcmawResponse =
                 getCriResponse(
-                        visitedCredentialIssuers,
-                        currentVcStatuses,
-                        dcmawCriId,
-                        dcmawCriId,
-                        userId);
+                        visitedCredentialIssuers, currentVcStatuses, DCMAW_CRI, DCMAW_CRI, userId);
         if (dcmawResponse.isPresent()) {
             return dcmawResponse.get();
         }
@@ -212,7 +192,7 @@ public class SelectCriHandler
                 getCriResponse(
                         visitedCredentialIssuers,
                         currentVcStatuses,
-                        addressCriId,
+                        ADDRESS_CRI,
                         DCMAW_SUCCESS_PAGE,
                         userId);
         if (addressResponse.isPresent()) {
@@ -221,24 +201,13 @@ public class SelectCriHandler
 
         Optional<JourneyResponse> fraudResponse =
                 getCriResponse(
-                        visitedCredentialIssuers,
-                        currentVcStatuses,
-                        fraudCriId,
-                        fraudCriId,
-                        userId);
+                        visitedCredentialIssuers, currentVcStatuses, FRAUD_CRI, FRAUD_CRI, userId);
         if (fraudResponse.isPresent()) {
             return fraudResponse.get();
         }
 
         LOGGER.info("Unable to determine next credential issuer");
         return new JourneyResponse(JOURNEY_FAIL);
-    }
-
-    private void logGovUkSignInJourneyId(String ipvSessionId) {
-        IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-        ClientSessionDetailsDto clientSessionDetailsDto = ipvSessionItem.getClientSessionDetails();
-        LogHelper.attachGovukSigninJourneyIdToLogs(
-                clientSessionDetailsDto.getGovukSigninJourneyId());
     }
 
     private JourneyResponse getJourneyResponse(String criId) {
@@ -267,7 +236,7 @@ public class SelectCriHandler
 
         if (vc.isEmpty()) {
             if (userHasNotVisited(visitedCredentialIssuers, criId)) {
-                if (criId.equals(dcmawCriId)
+                if (criId.equals(DCMAW_CRI)
                         && (hasPassportVc(currentVcStatuses)
                         || hasDrivingLicenceVc(currentVcStatuses))) {
                     LOGGER.info(
@@ -277,7 +246,7 @@ public class SelectCriHandler
                                     visitedCredentialIssuers, currentVcStatuses, userId));
                 }
 
-                if (criId.equals(passportCriId) && configService.isEnabled(drivingLicenceCriId)) {
+                if (criId.equals(PASSPORT_CRI) && configService.isEnabled(DRIVING_LICENCE_CRI)) {
                     return getMultipleDocCheckPage();
                 }
 
@@ -292,7 +261,7 @@ public class SelectCriHandler
             LOGGER.info(message);
 
             return Optional.of(
-                    criId.equals(dcmawCriId)
+                    criId.equals(DCMAW_CRI)
                             ? getNextWebJourneyCri(
                             visitedCredentialIssuers, currentVcStatuses, userId)
                             : getJourneyPyiNoMatchResponse());
@@ -307,11 +276,11 @@ public class SelectCriHandler
                             .with("criId", criId);
             LOGGER.info(message);
 
-            if (criId.equals(dcmawCriId)) {
+            if (criId.equals(DCMAW_CRI)) {
                 LOGGER.info("Reverting app user to the web journey");
                 return Optional.of(
                         getNextWebJourneyCri(visitedCredentialIssuers, currentVcStatuses, userId));
-            } else if (criId.equals(kbvCriId)) {
+            } else if (criId.equals(KBV_CRI)) {
                 return Optional.of(getJourneyKbvFailResponse());
             }
             return Optional.of(getJourneyPyiNoMatchResponse());
@@ -320,7 +289,7 @@ public class SelectCriHandler
     }
 
     private Optional<JourneyResponse> getMultipleDocCheckPage() {
-        if (configService.getActiveConnection(drivingLicenceCriId).equals("stub")) {
+        if (configService.getActiveConnection(DRIVING_LICENCE_CRI).equals("stub")) {
             return Optional.of(getJourneyResponse(STUB_UK_PASSPORT_AND_DRIVING_LICENCE_PAGE));
         }
         return Optional.of(getJourneyResponse(UK_PASSPORT_AND_DRIVING_LICENCE_PAGE));
@@ -328,7 +297,7 @@ public class SelectCriHandler
 
     private boolean hasPassportVc(List<VcStatusDto> currentVcStatuses) {
         CredentialIssuerConfig passportConfig =
-                configService.getCredentialIssuerActiveConnectionConfig(passportCriId);
+                configService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI);
         Optional<VcStatusDto> passportVc =
                 getVc(currentVcStatuses, passportConfig.getComponentId());
         return passportVc.isPresent();
@@ -336,7 +305,7 @@ public class SelectCriHandler
 
     private boolean hasDrivingLicenceVc(List<VcStatusDto> currentVcStatuses) {
         CredentialIssuerConfig drivingLicenceConfig =
-                configService.getCredentialIssuerActiveConnectionConfig(drivingLicenceCriId);
+                configService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI);
         Optional<VcStatusDto> drivingLicenceVc =
                 getVc(currentVcStatuses, drivingLicenceConfig.getComponentId());
         return drivingLicenceVc.isPresent();
@@ -362,7 +331,7 @@ public class SelectCriHandler
     }
 
     private boolean shouldSendUserToApp(String userId) {
-        boolean dcmawEnabled = Boolean.parseBoolean(configService.getSsmParameter(DCMAW_ENABLED));
+        boolean dcmawEnabled = configService.isEnabled(DCMAW_CRI);
         if (dcmawEnabled) {
             boolean shouldSendAllUsers =
                     Boolean.parseBoolean(

@@ -25,9 +25,11 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
+import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -37,8 +39,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DRIVING_LICENCE_CRI_ID;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PASSPORT_CRI_ID;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 
 public class ValidateOAuthCallbackHandler
         implements RequestHandler<CriCallbackRequest, Map<String, Object>> {
@@ -68,22 +70,21 @@ public class ValidateOAuthCallbackHandler
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
     private final String componentId;
-    private final String passportCriId;
-    private final String drivingLicenceCriId;
     private final CriOAuthSessionService criOAuthSessionService;
+    private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
 
     public ValidateOAuthCallbackHandler(
             ConfigService configService,
             IpvSessionService ipvSessionService,
             AuditService auditService,
-            CriOAuthSessionService criOAuthSessionService) {
+            CriOAuthSessionService criOAuthSessionService,
+            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService) {
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.auditService = auditService;
         this.componentId = this.configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
-        this.passportCriId = configService.getSsmParameter(PASSPORT_CRI_ID);
-        this.drivingLicenceCriId = configService.getSsmParameter(DRIVING_LICENCE_CRI_ID);
         this.criOAuthSessionService = criOAuthSessionService;
+        this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -92,9 +93,8 @@ public class ValidateOAuthCallbackHandler
         this.ipvSessionService = new IpvSessionService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.componentId = this.configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
-        this.passportCriId = configService.getSsmParameter(PASSPORT_CRI_ID);
-        this.drivingLicenceCriId = configService.getSsmParameter(DRIVING_LICENCE_CRI_ID);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
+        this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
     }
 
     @Override
@@ -105,30 +105,51 @@ public class ValidateOAuthCallbackHandler
 
         IpvSessionItem ipvSessionItem = null;
         CriOAuthSessionItem criOAuthSessionItem = null;
+        ClientOAuthSessionItem clientOAuthSessionItem;
 
         try {
             String ipvSessionId = callbackRequest.getIpvSessionId();
-            if (ipvSessionId == null) {
-                throw new HttpResponseExceptionWithErrorBody(
-                        HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
-            }
-            LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
+            String criOAuthSessionId = callbackRequest.getState();
 
-            ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+            if (ipvSessionId != null) {
+                ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+            } else if (criOAuthSessionId == null) {
+                throw new HttpResponseExceptionWithErrorBody(
+                        HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_OAUTH_STATE);
+            } else {
+                ipvSessionItem =
+                        ipvSessionService
+                                .getIpvSessionByCriOAuthSessionId(criOAuthSessionId)
+                                .orElseThrow(
+                                        () ->
+                                                new HttpResponseExceptionWithErrorBody(
+                                                        HttpStatus.SC_BAD_REQUEST,
+                                                        ErrorResponse.UNRECOVERABLE_OAUTH_STATE));
+            }
+
+            LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
+
             if (ipvSessionItem.getCriOAuthSessionId() != null) {
                 criOAuthSessionItem =
                         criOAuthSessionService.getCriOauthSessionItem(
                                 ipvSessionItem.getCriOAuthSessionId());
             }
+            clientOAuthSessionItem =
+                    clientOAuthSessionDetailsService.getClientOAuthSession(
+                            ipvSessionItem.getClientOAuthSessionId());
 
             if (callbackRequest.getError() != null) {
                 return sendOauthErrorJourneyResponse(
-                        ipvSessionItem, criOAuthSessionItem, callbackRequest);
+                        ipvSessionItem,
+                        criOAuthSessionItem,
+                        clientOAuthSessionItem,
+                        callbackRequest);
             }
 
             validate(callbackRequest, criOAuthSessionItem);
 
-            sendAuditEvent(ipvSessionItem, null, callbackRequest.getIpAddress());
+            sendAuditEvent(
+                    ipvSessionItem, clientOAuthSessionItem, null, callbackRequest.getIpAddress());
 
             final AuthorizationCode authorizationCode =
                     new AuthorizationCode(callbackRequest.getAuthorizationCode());
@@ -174,6 +195,7 @@ public class ValidateOAuthCallbackHandler
     private Map<String, Object> sendOauthErrorJourneyResponse(
             IpvSessionItem ipvSessionItem,
             CriOAuthSessionItem criOAuthSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
             CriCallbackRequest callbackRequest)
             throws SqsException {
         String error = callbackRequest.getError();
@@ -184,13 +206,15 @@ public class ValidateOAuthCallbackHandler
                         .setErrorCode(error)
                         .setErrorDescription(errorDescription)
                         .build();
-        sendAuditEvent(ipvSessionItem, extensions, callbackRequest.getIpAddress());
+        sendAuditEvent(
+                ipvSessionItem, clientOAuthSessionItem, extensions, callbackRequest.getIpAddress());
 
         if (!ALLOWED_OAUTH_ERROR_CODES.contains(error)) {
             LOGGER.warn("Unknown Oauth error code received");
         }
 
-        if (criOAuthSessionItem == null
+        if (ipvSessionItem.getCriOAuthSessionId() == null
+                || criOAuthSessionItem == null
                 || !criOAuthSessionItem
                         .getCriId()
                         .equals(callbackRequest.getCredentialIssuerId())) {
@@ -211,8 +235,8 @@ public class ValidateOAuthCallbackHandler
         LogHelper.logOauthError("OAuth error received from CRI", error, errorDescription);
 
         if (OAuth2Error.ACCESS_DENIED_CODE.equals(error)) {
-            if (configService.isEnabled(passportCriId)
-                    && configService.isEnabled(drivingLicenceCriId)) {
+            if (configService.isEnabled(PASSPORT_CRI)
+                    && configService.isEnabled(DRIVING_LICENCE_CRI)) {
                 return JOURNEY_ACCESS_DENIED_MULTI;
             }
             return JOURNEY_ACCESS_DENIED;
@@ -296,16 +320,19 @@ public class ValidateOAuthCallbackHandler
 
     @Tracing
     private void sendAuditEvent(
-            IpvSessionItem ipvSessionItem, AuditExtensions extensions, String ipAddress)
+            IpvSessionItem ipvSessionItem,
+            ClientOAuthSessionItem clientOAuthSessionItem,
+            AuditExtensions extensions,
+            String ipAddress)
             throws SqsException {
         auditService.sendAuditEvent(
                 new AuditEvent(
                         AuditEventTypes.IPV_CRI_AUTH_RESPONSE_RECEIVED,
                         componentId,
                         new AuditEventUser(
-                                ipvSessionItem.getClientSessionDetails().getUserId(),
+                                clientOAuthSessionItem.getUserId(),
                                 ipvSessionItem.getIpvSessionId(),
-                                ipvSessionItem.getClientSessionDetails().getGovukSigninJourneyId(),
+                                clientOAuthSessionItem.getGovukSigninJourneyId(),
                                 ipAddress),
                         extensions));
     }

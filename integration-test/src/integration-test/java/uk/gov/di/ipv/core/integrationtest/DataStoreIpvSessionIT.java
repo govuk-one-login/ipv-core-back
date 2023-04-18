@@ -14,7 +14,6 @@ import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import uk.gov.di.ipv.core.library.dto.ClientSessionDetailsDto;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -35,21 +34,15 @@ public class DataStoreIpvSessionIT {
     private static final String IPV_SESSION_ID = "ipvSessionId";
     private static final String USER_STATE = "userState";
     private static final String CREATION_DATE_TIME = "creationDateTime";
-    private static final String CLIENT_SESSION_DETAILS = "clientSessionDetails";
-    private static final String CREDENTIAL_ISSUER_SESSION_DETAILS =
-            "credentialIssuerSessionDetails";
     private static final String CRI_OAUTH_SESSION_ID = SecureTokenHelper.generate();
+    private static final String CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
 
-    private static final List<String> createdItemIds = new ArrayList<>();
-    private static final String CRI_ID = "criId";
-    private static final String OAUTH_STATE = SecureTokenHelper.generate();
+    private static List<String> createdItemIds = new ArrayList<>();
     private static final String INITIAL_IPV_JOURNEY_STATE = "INITIAL_IPV_JOURNEY";
     private static final String DEBUG_PAGE_STATE = "DEBUG_PAGE";
 
     private static DataStore<IpvSessionItem> ipvSessionItemDataStore;
     private static Table tableTestHarness;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeAll
     public static void setUp() {
@@ -101,24 +94,8 @@ public class DataStoreIpvSessionIT {
         assertEquals(ipvSessionItem.getUserState(), savedIpvSession.get(USER_STATE));
         assertEquals(ipvSessionItem.getCreationDateTime(), savedIpvSession.get(CREATION_DATE_TIME));
 
-        ClientSessionDetailsDto clientSessionDetailsDto =
-                objectMapper.convertValue(
-                        savedIpvSession.getMap(CLIENT_SESSION_DETAILS),
-                        ClientSessionDetailsDto.class);
-
-        assertEquals(
-                ipvSessionItem.getClientSessionDetails().getResponseType(),
-                clientSessionDetailsDto.getResponseType());
-        assertEquals(
-                ipvSessionItem.getClientSessionDetails().getClientId(),
-                clientSessionDetailsDto.getClientId());
-        assertEquals(
-                ipvSessionItem.getClientSessionDetails().getRedirectUri(),
-                clientSessionDetailsDto.getRedirectUri());
-        assertEquals(
-                ipvSessionItem.getClientSessionDetails().getState(),
-                clientSessionDetailsDto.getState());
         assertEquals(ipvSessionItem.getCriOAuthSessionId(), CRI_OAUTH_SESSION_ID);
+        assertEquals(ipvSessionItem.getClientOAuthSessionId(), CLIENT_OAUTH_SESSION_ID);
     }
 
     private IpvSessionItem setUpIpvSessionItem() {
@@ -126,8 +103,8 @@ public class DataStoreIpvSessionIT {
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setUserState(INITIAL_IPV_JOURNEY_STATE);
         ipvSessionItem.setCreationDateTime(new Date().toString());
-        ipvSessionItem.setClientSessionDetails(generateClientSessionDetails());
         ipvSessionItem.setCriOAuthSessionId(CRI_OAUTH_SESSION_ID);
+        ipvSessionItem.setClientOAuthSessionId(CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setAuthorizationCode("12345");
         ipvSessionItem.setAccessToken("12345");
         return ipvSessionItem;
@@ -145,19 +122,8 @@ public class DataStoreIpvSessionIT {
         assertEquals(ipvSessionItem.getIpvSessionId(), result.getIpvSessionId());
         assertEquals(ipvSessionItem.getUserState(), result.getUserState());
         assertEquals(ipvSessionItem.getCreationDateTime(), result.getCreationDateTime());
-        assertEquals(
-                ipvSessionItem.getClientSessionDetails().getResponseType(),
-                result.getClientSessionDetails().getResponseType());
-        assertEquals(
-                ipvSessionItem.getClientSessionDetails().getClientId(),
-                result.getClientSessionDetails().getClientId());
-        assertEquals(
-                ipvSessionItem.getClientSessionDetails().getRedirectUri(),
-                result.getClientSessionDetails().getRedirectUri());
-        assertEquals(
-                ipvSessionItem.getClientSessionDetails().getState(),
-                result.getClientSessionDetails().getState());
         assertEquals(ipvSessionItem.getCriOAuthSessionId(), CRI_OAUTH_SESSION_ID);
+        assertEquals(ipvSessionItem.getClientOAuthSessionId(), CLIENT_OAUTH_SESSION_ID);
     }
 
     @Test
@@ -171,37 +137,15 @@ public class DataStoreIpvSessionIT {
         updatedIpvSessionItem.setIpvSessionId(ipvSessionItem.getIpvSessionId());
         updatedIpvSessionItem.setCreationDateTime(ipvSessionItem.getCreationDateTime());
         updatedIpvSessionItem.setUserState(DEBUG_PAGE_STATE);
-        updatedIpvSessionItem.setClientSessionDetails(ipvSessionItem.getClientSessionDetails());
         updatedIpvSessionItem.setCriOAuthSessionId(CRI_OAUTH_SESSION_ID);
+        updatedIpvSessionItem.setClientOAuthSessionId(CLIENT_OAUTH_SESSION_ID);
 
         IpvSessionItem result = ipvSessionItemDataStore.update(updatedIpvSessionItem);
 
         assertEquals(updatedIpvSessionItem.getIpvSessionId(), result.getIpvSessionId());
         assertEquals(updatedIpvSessionItem.getUserState(), result.getUserState());
         assertEquals(updatedIpvSessionItem.getCreationDateTime(), result.getCreationDateTime());
-        assertEquals(
-                ipvSessionItem.getClientSessionDetails().getResponseType(),
-                result.getClientSessionDetails().getResponseType());
-        assertEquals(
-                ipvSessionItem.getClientSessionDetails().getClientId(),
-                result.getClientSessionDetails().getClientId());
-        assertEquals(
-                ipvSessionItem.getClientSessionDetails().getRedirectUri(),
-                result.getClientSessionDetails().getRedirectUri());
-        assertEquals(
-                ipvSessionItem.getClientSessionDetails().getState(),
-                result.getClientSessionDetails().getState());
         assertEquals(ipvSessionItem.getCriOAuthSessionId(), CRI_OAUTH_SESSION_ID);
-    }
-
-    private ClientSessionDetailsDto generateClientSessionDetails() {
-        return new ClientSessionDetailsDto(
-                "test-response-type",
-                "test-client-id",
-                "https//example.com",
-                "test-state",
-                "test-user-id",
-                "test-journey-id",
-                false);
+        assertEquals(ipvSessionItem.getClientOAuthSessionId(), CLIENT_OAUTH_SESSION_ID);
     }
 }
