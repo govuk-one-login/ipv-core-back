@@ -119,7 +119,10 @@ public class ValidateOAuthCallbackHandler
                 var mapMessage =
                         new StringMapMessage()
                                 .with("message", "No ipvSession for existing CriOAuthSession")
-                                .with("criId", callbackRequest.getCredentialIssuerId());
+                                .with("criId", criOAuthSessionItem.getCriId())
+                                .with(
+                                        "criOAuthSessionId",
+                                        criOAuthSessionItem.getCriOAuthSessionId());
                 LOGGER.info(mapMessage);
                 return JOURNEY_ACCESS_DENIED;
             } else {
