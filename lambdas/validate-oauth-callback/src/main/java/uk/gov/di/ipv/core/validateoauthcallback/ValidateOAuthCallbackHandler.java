@@ -111,20 +111,19 @@ public class ValidateOAuthCallbackHandler
             String ipvSessionId = callbackRequest.getIpvSessionId();
             String criOAuthSessionId = callbackRequest.getState();
 
-            if (ipvSessionId != null) {
+            if (ipvSessionId != null && !ipvSessionId.isEmpty()) {
                 ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-            } else if (criOAuthSessionId == null) {
+            } else if (criOAuthSessionId != null && !criOAuthSessionId.isEmpty()) {
+                criOAuthSessionItem = criOAuthSessionService.getCriOauthSessionItem(criOAuthSessionId);
+                var mapMessage =
+                        new StringMapMessage()
+                                .with("message", "No ipvSession for existing CriOAuthSession")
+                                .with("criId", callbackRequest.getCredentialIssuerId());
+                LOGGER.info(mapMessage);
+                return JOURNEY_ACCESS_DENIED;
+            } else {
                 throw new HttpResponseExceptionWithErrorBody(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_OAUTH_STATE);
-            } else {
-                ipvSessionItem =
-                        ipvSessionService
-                                .getIpvSessionByCriOAuthSessionId(criOAuthSessionId)
-                                .orElseThrow(
-                                        () ->
-                                                new HttpResponseExceptionWithErrorBody(
-                                                        HttpStatus.SC_BAD_REQUEST,
-                                                        ErrorResponse.UNRECOVERABLE_OAUTH_STATE));
             }
 
             LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());
