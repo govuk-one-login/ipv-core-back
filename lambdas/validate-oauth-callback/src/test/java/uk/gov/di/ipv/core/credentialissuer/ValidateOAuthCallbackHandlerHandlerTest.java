@@ -77,7 +77,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     void setUpBeforeEach() throws URISyntaxException {
         when(mockConfigService.getSsmParameter(COMPONENT_ID)).thenReturn("audience.for.clients");
 
-        credentialIssuerConfig = createCriConfig("criId", "cri.iss.com");
+        credentialIssuerConfig = createCriConfig("cri.iss.com");
 
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setCriOAuthSessionId(TEST_OAUTH_STATE);
@@ -514,11 +514,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 TEST_IP_ADDRESS);
     }
 
-    private CredentialIssuerConfig createCriConfig(String criId, String criIss)
-            throws URISyntaxException {
+    private CredentialIssuerConfig createCriConfig(String criIss) throws URISyntaxException {
         return new CredentialIssuerConfig(
-                criId,
-                criId,
                 new URI("http://example.com/token"),
                 new URI("http://example.com/credential"),
                 new URI("http://example.com/authorize"),

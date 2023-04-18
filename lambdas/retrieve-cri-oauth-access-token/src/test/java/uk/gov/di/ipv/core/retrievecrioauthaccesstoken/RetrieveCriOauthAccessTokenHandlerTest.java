@@ -80,8 +80,6 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
         passportIssuer =
                 new CredentialIssuerConfig(
-                        CREDENTIAL_ISSUER_ID,
-                        "any",
                         new URI("http://www.example.com"),
                         new URI("http://www.example.com/credential"),
                         new URI("http://www.example.com/authorize"),
@@ -108,7 +106,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         testCredential.appendField("foo", "bar");
 
         when(credentialIssuerService.exchangeCodeForToken(
-                        TEST_AUTH_CODE, passportIssuer, testApiKey))
+                        TEST_AUTH_CODE, passportIssuer, testApiKey, CREDENTIAL_ISSUER_ID))
                 .thenReturn(new BearerAccessToken());
 
         mockServiceCallsAndSessionItem();
@@ -139,7 +137,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         Map<String, String> input = Map.of(IPV_SESSION_ID, sessionId);
 
         when(credentialIssuerService.exchangeCodeForToken(
-                        TEST_AUTH_CODE, passportIssuer, testApiKey))
+                        TEST_AUTH_CODE, passportIssuer, testApiKey, CREDENTIAL_ISSUER_ID))
                 .thenThrow(
                         new CredentialIssuerException(
                                 HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST));
@@ -161,7 +159,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         BearerAccessToken accessToken = mock(BearerAccessToken.class);
 
         when(credentialIssuerService.exchangeCodeForToken(
-                        TEST_AUTH_CODE, passportIssuer, testApiKey))
+                        TEST_AUTH_CODE, passportIssuer, testApiKey, CREDENTIAL_ISSUER_ID))
                 .thenReturn(accessToken);
 
         mockServiceCallsAndSessionItem();
@@ -235,7 +233,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
         when(credentialIssuerService.exchangeCodeForToken(
-                        TEST_AUTH_CODE, passportIssuer, testApiKey))
+                        TEST_AUTH_CODE, passportIssuer, testApiKey, CREDENTIAL_ISSUER_ID))
                 .thenThrow(
                         new CredentialIssuerException(
                                 HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST));

@@ -141,13 +141,14 @@ public class RetrieveCriCredentialHandler
             CredentialIssuerConfig credentialIssuerConfig =
                     configService.getCredentialIssuerActiveConnectionConfig(credentialIssuerId);
 
-            String apiKey = configService.getCriPrivateApiKey(credentialIssuerConfig.getId());
+            String apiKey = configService.getCriPrivateApiKey(credentialIssuerId);
 
             List<SignedJWT> verifiableCredentials =
                     credentialIssuerService.getVerifiableCredential(
                             BearerAccessToken.parse(criOAuthSessionItem.getAccessToken()),
                             credentialIssuerConfig,
-                            apiKey);
+                            apiKey,
+                            credentialIssuerId);
 
             for (SignedJWT vc : verifiableCredentials) {
                 verifiableCredentialJwtValidator.validate(vc, credentialIssuerConfig, userId);

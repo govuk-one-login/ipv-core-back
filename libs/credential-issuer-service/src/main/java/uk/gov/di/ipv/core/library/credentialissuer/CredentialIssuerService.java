@@ -77,7 +77,10 @@ public class CredentialIssuerService {
     }
 
     public BearerAccessToken exchangeCodeForToken(
-            String authCode, CredentialIssuerConfig config, String apiKey) {
+            String authCode,
+            CredentialIssuerConfig config,
+            String apiKey,
+            String credentialIssuerId) {
 
         AuthorizationCode authorizationCode = new AuthorizationCode(authCode);
         try {
@@ -110,7 +113,7 @@ public class CredentialIssuerService {
             if (apiKey != null) {
                 LOGGER.info(
                         "Private api key found for cri {}, sending key in header for token request",
-                        config.getId());
+                        credentialIssuerId);
                 httpRequest.setHeader(API_KEY_HEADER, apiKey);
             }
 
@@ -125,7 +128,7 @@ public class CredentialIssuerService {
                                 new ErrorObject("unknown", "unknown"));
                 LOGGER.error(
                         "Failed to exchange token with credential issuer with ID '{}' at '{}'. Code: '{}', Description: {}, HttpStatus code: {}",
-                        config.getId(),
+                        credentialIssuerId,
                         config.getTokenUrl(),
                         errorObject.getCode(),
                         errorObject.getDescription(),
@@ -148,14 +151,17 @@ public class CredentialIssuerService {
     }
 
     public List<SignedJWT> getVerifiableCredential(
-            BearerAccessToken accessToken, CredentialIssuerConfig config, String apiKey) {
+            BearerAccessToken accessToken,
+            CredentialIssuerConfig config,
+            String apiKey,
+            String credentialIssuerId) {
         HTTPRequest credentialRequest =
                 new HTTPRequest(HTTPRequest.Method.POST, config.getCredentialUrl());
 
         if (apiKey != null) {
             LOGGER.info(
                     "Private api key found for cri {}, sending key in header for credential request",
-                    config.getId());
+                    credentialIssuerId);
             credentialRequest.setHeader(API_KEY_HEADER, apiKey);
         }
 

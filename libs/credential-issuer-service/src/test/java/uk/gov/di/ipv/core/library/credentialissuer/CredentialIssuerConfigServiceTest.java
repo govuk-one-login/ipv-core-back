@@ -48,11 +48,11 @@ class CredentialIssuerConfigServiceTest {
         HashMap<String, String> response = new HashMap<>();
         response.put("passportCri/tokenUrl", "passportTokenUrl");
         response.put("passportCri/authorizeUrl", "passportAuthUrl");
-        response.put("passportCri/id", "passportCri");
+        response.put("passportCri/clientId", "passportCri");
         response.put("passportCri/name", "passportIssuer");
         response.put("stubCri/tokenUrl", "stubTokenUrl");
         response.put("stubCri/authorizeUrl", "stubAuthUrl");
-        response.put("stubCri/id", "stubCri");
+        response.put("stubCri/clientId", "stubCri");
         response.put("stubCri/name", "stubIssuer");
         response.put("stubCri/allowedSharedAttributes", "name, birthDate, address");
 
@@ -64,21 +64,21 @@ class CredentialIssuerConfigServiceTest {
 
         Optional<CredentialIssuerConfig> passportIssuerConfig =
                 result.stream()
-                        .filter(config -> Objects.equals(config.getId(), "passportCri"))
+                        .filter(config -> Objects.equals(config.getClientId(), "passportCri"))
                         .findFirst();
         assertTrue(passportIssuerConfig.isPresent());
         assertEquals("passportTokenUrl", passportIssuerConfig.get().getTokenUrl().toString());
         assertEquals("passportAuthUrl", passportIssuerConfig.get().getAuthorizeUrl().toString());
-        assertEquals("passportCri", passportIssuerConfig.get().getId());
+        assertEquals("passportCri", passportIssuerConfig.get().getClientId());
 
         Optional<CredentialIssuerConfig> stubIssuerConfig =
                 result.stream()
-                        .filter(config -> Objects.equals(config.getId(), "stubCri"))
+                        .filter(config -> Objects.equals(config.getClientId(), "stubCri"))
                         .findFirst();
         assertTrue(stubIssuerConfig.isPresent());
         assertEquals("stubTokenUrl", stubIssuerConfig.get().getTokenUrl().toString());
         assertEquals("stubAuthUrl", stubIssuerConfig.get().getAuthorizeUrl().toString());
-        assertEquals("stubCri", stubIssuerConfig.get().getId());
+        assertEquals("stubCri", stubIssuerConfig.get().getClientId());
     }
 
     @Test
@@ -109,9 +109,9 @@ class CredentialIssuerConfigServiceTest {
         environmentVariables.set(
                 "CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "/dev/core/credentialIssuers/");
         HashMap<String, String> response = new HashMap<>();
-        response.put("passportCri/id", "passportCri");
+        response.put("passportCri/clientId", "passportCri");
         response.put("passportCri/tokenUrl", "passportTokenUrl");
-        response.put("stubCri/id", "stubCri");
+        response.put("stubCri/clientId", "stubCri");
         response.put("stubCri/tokenUrl", "stubTokenUrl");
         // This will be ignored - not in pojo
         response.put("stubCri/ipclientid", "stubIpClient");
@@ -122,14 +122,14 @@ class CredentialIssuerConfigServiceTest {
 
         Optional<CredentialIssuerConfig> passportIssuerConfig =
                 result.stream()
-                        .filter(config -> Objects.equals(config.getId(), "passportCri"))
+                        .filter(config -> Objects.equals(config.getClientId(), "passportCri"))
                         .findFirst();
         assertTrue(passportIssuerConfig.isPresent());
         assertEquals("passportTokenUrl", passportIssuerConfig.get().getTokenUrl().toString());
 
         Optional<CredentialIssuerConfig> stubIssuerConfig =
                 result.stream()
-                        .filter(config -> Objects.equals(config.getId(), "stubCri"))
+                        .filter(config -> Objects.equals(config.getClientId(), "stubCri"))
                         .findFirst();
         assertTrue(stubIssuerConfig.isPresent());
         assertEquals("stubTokenUrl", stubIssuerConfig.get().getTokenUrl().toString());
