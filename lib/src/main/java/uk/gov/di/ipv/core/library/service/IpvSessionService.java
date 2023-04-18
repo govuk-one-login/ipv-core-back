@@ -55,12 +55,6 @@ public class IpvSessionService {
         return dataStore.getItem(ipvSessionId);
     }
 
-    public Optional<IpvSessionItem> getIpvSessionByCriOAuthSessionId(String criOAuthSessionId) {
-        IpvSessionItem ipvSessionItem =
-                dataStore.getItemByIndex("criOAuthSessionId", criOAuthSessionId);
-        return Optional.ofNullable(ipvSessionItem);
-    }
-
     public Optional<IpvSessionItem> getIpvSessionByAuthorizationCode(String authorizationCode) {
         IpvSessionItem ipvSessionItem =
                 dataStore.getItemByIndex(
