@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 public class RequestHelper {
 
     public static final String IPV_SESSION_ID_HEADER = "ipv-session-id";
+    public static final String CLIENT_SESSION_ID_HEADER = "client-session-id";
     public static final String IP_ADDRESS_HEADER = "ip-address";
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
@@ -75,7 +76,12 @@ public class RequestHelper {
 
     public static String getIpvSessionId(APIGatewayProxyRequestEvent event)
             throws HttpResponseExceptionWithErrorBody {
-        return getIpvSessionId(event.getHeaders());
+        return getIpvSessionId(event.getHeaders(), false);
+    }
+
+    public static String getIpvSessionIdAllowNull(APIGatewayProxyRequestEvent event)
+            throws HttpResponseExceptionWithErrorBody {
+        return getIpvSessionId(event.getHeaders(), true);
     }
 
     public static String getIpAddress(APIGatewayProxyRequestEvent event)
@@ -83,13 +89,21 @@ public class RequestHelper {
         return getIpAddress(event.getHeaders());
     }
 
-    public static String getIpvSessionId(Map<String, String> headers)
+    public static String getClientOAuthSessionId(APIGatewayProxyRequestEvent event) {
+        return getClientOAuthSessionId(event.getHeaders());
+    }
+
+    private static String getIpvSessionId(Map<String, String> headers, boolean allowNull)
             throws HttpResponseExceptionWithErrorBody {
         String ipvSessionId = RequestHelper.getHeaderByKey(headers, IPV_SESSION_ID_HEADER);
         if (ipvSessionId == null) {
-            LOGGER.error("{} not present in header", IPV_SESSION_ID_HEADER);
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
+            if (allowNull) {
+                LOGGER.warn("{} not present in header", IPV_SESSION_ID_HEADER);
+            } else {
+                LOGGER.error("{} not present in header", IPV_SESSION_ID_HEADER);
+                throw new HttpResponseExceptionWithErrorBody(
+                        HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
+            }
         }
         LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
         return ipvSessionId;
@@ -104,5 +118,14 @@ public class RequestHelper {
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IP_ADDRESS);
         }
         return ipAddress;
+    }
+
+    public static String getClientOAuthSessionId(Map<String, String> headers) {
+        String clientSessionId = RequestHelper.getHeaderByKey(headers, CLIENT_SESSION_ID_HEADER);
+        if (clientSessionId == null) {
+            LOGGER.warn("{} not present in header", CLIENT_SESSION_ID_HEADER);
+        }
+        LogHelper.attachClientSessionIdToLogs(clientSessionId);
+        return clientSessionId;
     }
 }

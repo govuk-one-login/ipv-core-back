@@ -17,8 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IP_ADDRESS_HEADER;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.*;
 
 class RequestHelperTest {
 
@@ -107,6 +106,30 @@ class RequestHelperTest {
     }
 
     @Test
+    void getIpvSessionIdShouldReturnNullIfSessionIdIsNull()
+            throws HttpResponseExceptionWithErrorBody {
+        var event = new APIGatewayProxyRequestEvent();
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put(IPV_SESSION_ID_HEADER, null);
+
+        event.setHeaders(headers);
+
+        assertNull(RequestHelper.getIpvSessionIdAllowNull(event));
+    }
+
+    @Test
+    void getIpvSessionIdShouldReturnNullIfSessionIdIsEmpty()
+            throws HttpResponseExceptionWithErrorBody {
+        var event = new APIGatewayProxyRequestEvent();
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put(IPV_SESSION_ID_HEADER, "");
+
+        event.setHeaders(headers);
+
+        assertNull(RequestHelper.getIpvSessionIdAllowNull(event));
+    }
+
+    @Test
     void getIpAddressShouldReturnIpAddress() throws HttpResponseExceptionWithErrorBody {
         var event = new APIGatewayProxyRequestEvent();
         event.setHeaders(Map.of(IP_ADDRESS_HEADER, "a-client-source-ip"));
@@ -148,5 +171,24 @@ class RequestHelperTest {
         assertEquals(
                 ErrorResponse.MISSING_IP_ADDRESS.getMessage(),
                 exception.getErrorResponse().getMessage());
+    }
+
+    @Test
+    void getClientOAuthSessionIdShouldReturnClientSessionId() {
+        var event = new APIGatewayProxyRequestEvent();
+        String clientSessionIdInHeader = "client-session-id";
+        event.setHeaders(Map.of(CLIENT_SESSION_ID_HEADER, clientSessionIdInHeader));
+
+        assertEquals(clientSessionIdInHeader, RequestHelper.getClientOAuthSessionId(event));
+    }
+
+    @Test
+    void getClientOAuthSessionIdShouldReturnNullIfClientSessionIdIsNull() {
+        var event = new APIGatewayProxyRequestEvent();
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put(CLIENT_SESSION_ID_HEADER, null);
+        event.setHeaders(headers);
+
+        assertNull(RequestHelper.getClientOAuthSessionId(event));
     }
 }
