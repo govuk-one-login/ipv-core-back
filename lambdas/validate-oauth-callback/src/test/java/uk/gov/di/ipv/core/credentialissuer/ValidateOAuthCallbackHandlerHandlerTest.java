@@ -234,7 +234,10 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithoutSessionId, context);
 
-        assertEquals("/journey/access-denied", output.get("journey"));
+        assertEquals(HttpStatus.SC_UNAUTHORIZED, output.get(STATUS_CODE));
+        assertEquals("pyi-timeout-recoverable", output.get(PAGE));
+        assertEquals("error", output.get(TYPE));
+        assertEquals(TEST_OAUTH_STATE, output.get("criOAuthSessionId"));
     }
 
     @Test

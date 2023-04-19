@@ -66,6 +66,7 @@ public class ValidateOAuthCallbackHandler
                     OAuth2Error.SERVER_ERROR_CODE,
                     OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE);
     private static final String PYI_ATTEMPT_RECOVERY_PAGE_ID = "pyi-attempt-recovery";
+    private static final String PYI_TIMEOUT_RECOVERABLE_PAGE_ID = "pyi-timeout-recoverable";
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
@@ -120,11 +121,15 @@ public class ValidateOAuthCallbackHandler
                         new StringMapMessage()
                                 .with("message", "No ipvSession for existing CriOAuthSession")
                                 .with("criId", criOAuthSessionItem.getCriId())
-                                .with(
-                                        "criOAuthSessionId",
-                                        criOAuthSessionItem.getCriOAuthSessionId());
+                                .with("criOAuthSessionId", criOAuthSessionId);
                 LOGGER.info(mapMessage);
-                return JOURNEY_ACCESS_DENIED;
+                Map<String, Object> pageOutput =
+                        StepFunctionHelpers.generatePageOutputMap(
+                                "error",
+                                HttpStatus.SC_UNAUTHORIZED,
+                                PYI_TIMEOUT_RECOVERABLE_PAGE_ID);
+                pageOutput.put("criOAuthSessionId", criOAuthSessionId);
+                return pageOutput;
             } else {
                 throw new HttpResponseExceptionWithErrorBody(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_OAUTH_STATE);
