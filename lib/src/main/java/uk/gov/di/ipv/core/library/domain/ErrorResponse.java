@@ -49,7 +49,8 @@ public enum ErrorResponse {
     FAILED_TO_SEND_AUDIT_EVENT(1040, "Failed to send audit event"),
     FAILED_TO_INITIALISE_STATE_MACHINE(1041, "Failed to initialise state machine"),
     FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS(
-            1042, "Failed to generate the proven user identity details");
+            1042, "Failed to generate the proven user identity details"),
+    FAILED_TO_BIRTHDATE_CORRELATION(1043, "Birthdate correlation problem in user credentials");
 
     @JsonProperty("code")
     private final int code;

@@ -178,6 +178,8 @@ public class EvaluateGpg45ScoresHandler
 
             updateSuccessfulVcStatuses(ipvSessionItem, credentials);
 
+            checkCorrelation(userId, ipvSessionItem.getCurrentVcStatuses());
+
             LOGGER.info(message);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, journeyResponse);
@@ -202,6 +204,16 @@ public class EvaluateGpg45ScoresHandler
             LOGGER.error("Failed to send audit event to SQS queue: {}", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
+        }
+    }
+
+    private void checkCorrelation(String userId, List<VcStatusDto> currentVcStatuses)
+            throws HttpResponseExceptionWithErrorBody {
+        if (!userIdentityService.checkBirthDateCorrelationInCredentials(
+                userId, currentVcStatuses)) {
+            LOGGER.error("Birthdate correlation problem in user credentials for userId:{}", userId);
+            throw new HttpResponseExceptionWithErrorBody(
+                    500, ErrorResponse.FAILED_TO_BIRTHDATE_CORRELATION);
         }
     }
 

@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -386,5 +387,87 @@ public class UserIdentityService {
                 .findFirst()
                 .orElseThrow()
                 .getIsSuccessfulVc();
+    }
+
+    private List<IdentityClaim> getIdentityClaims(
+            List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
+            throws HttpResponseExceptionWithErrorBody {
+        List<IdentityClaim> identityClaims = new ArrayList<>();
+        for (VcStoreItem item : vcStoreItems) {
+            String componentId = configService.getComponentId(item.getCredentialIssuer());
+
+            if (isVcSuccessful(currentVcStatuses, componentId)) {
+                try {
+                    JsonNode nameNode =
+                            objectMapper
+                                    .readTree(
+                                            SignedJWT.parse(item.getCredential())
+                                                    .getPayload()
+                                                    .toString())
+                                    .path(VC_CLAIM)
+                                    .path(VC_CREDENTIAL_SUBJECT)
+                                    .path(NAME_PROPERTY_NAME);
+
+                    if (nameNode.isMissingNode()) {
+                        LOGGER.error("Name property is missing from passport VC");
+                        throw new HttpResponseExceptionWithErrorBody(
+                                500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+                    }
+
+                    JsonNode birthDateNode =
+                            objectMapper
+                                    .readTree(
+                                            SignedJWT.parse(item.getCredential())
+                                                    .getPayload()
+                                                    .toString())
+                                    .path(VC_CLAIM)
+                                    .path(VC_CREDENTIAL_SUBJECT)
+                                    .path(BIRTH_DATE_PROPERTY_NAME);
+
+                    if (birthDateNode.isMissingNode()) {
+                        LOGGER.error("BirthDate property is missing from passport VC");
+                        throw new HttpResponseExceptionWithErrorBody(
+                                500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+                    }
+
+                    List<Name> names =
+                            objectMapper.treeToValue(
+                                    nameNode,
+                                    objectMapper
+                                            .getTypeFactory()
+                                            .constructCollectionType(List.class, Name.class));
+                    List<BirthDate> birthDates =
+                            objectMapper.treeToValue(
+                                    birthDateNode,
+                                    objectMapper
+                                            .getTypeFactory()
+                                            .constructCollectionType(List.class, BirthDate.class));
+
+                    identityClaims.add(new IdentityClaim(names, birthDates));
+                } catch (ParseException | JsonProcessingException e) {
+                    LOGGER.error("Failed to parse VC JWT because: {}", e.getMessage());
+                    throw new HttpResponseExceptionWithErrorBody(
+                            500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+                }
+            }
+        }
+        return identityClaims;
+    }
+
+    public boolean checkBirthDateCorrelationInCredentials(
+            String userId, List<VcStatusDto> currentVcStatuses)
+            throws HttpResponseExceptionWithErrorBody {
+        if (currentVcStatuses != null) {
+            List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
+            List<IdentityClaim> identityClaims = getIdentityClaims(vcStoreItems, currentVcStatuses);
+            return identityClaims.stream()
+                            .map(IdentityClaim::getBirthDate)
+                            .flatMap(List::stream)
+                            .map(BirthDate::getValue)
+                            .distinct()
+                            .count()
+                    == 1;
+        }
+        return true;
     }
 }

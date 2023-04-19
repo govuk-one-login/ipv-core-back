@@ -33,9 +33,11 @@ import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
@@ -49,7 +51,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserIdentityServiceTest {
-
+    private static final String USER_ID_1 = "user-id-1";
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock private ConfigService mockConfigService;
@@ -67,8 +69,8 @@ class UserIdentityServiceTest {
     void shouldReturnCredentialsFromDataStore() throws HttpResponseExceptionWithErrorBody {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem("user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
-                        createVcStoreItem("user-id-1", "fraud", SIGNED_VC_2, Instant.now()));
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -79,7 +81,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        "user-id-1", "test-sub", "P2", currentVcStatuses);
+                        USER_ID_1, "test-sub", "P2", currentVcStatuses);
 
         assertEquals(SIGNED_VC_1, credentials.getVcs().get(0));
         assertEquals(SIGNED_VC_2, credentials.getVcs().get(1));
@@ -91,7 +93,7 @@ class UserIdentityServiceTest {
         String ipvSessionId = "ipvSessionId";
         String criId = "criId";
         VcStoreItem credentialItem =
-                createVcStoreItem("user-id-1", "ukPassport", SIGNED_VC_1, Instant.now());
+                createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now());
 
         when(mockDataStore.getItem(ipvSessionId, criId)).thenReturn(credentialItem);
 
@@ -106,10 +108,10 @@ class UserIdentityServiceTest {
             throws HttpResponseExceptionWithErrorBody {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem("user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
-                        createVcStoreItem("user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
-                        createVcStoreItem("user-id-1", "kbv", SIGNED_VC_3, Instant.now()),
-                        createVcStoreItem("user-id-1", "address", SIGNED_VC_4, Instant.now()));
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "kbv", SIGNED_VC_3, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "address", SIGNED_VC_4, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -120,19 +122,57 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        "user-id-1", "test-sub", "P2", currentVcStatuses);
+                        USER_ID_1, "test-sub", "P2", currentVcStatuses);
 
         assertEquals(VectorOfTrust.P2.toString(), credentials.getVot());
+    }
+
+    @Test
+    void checkValidateBirthDatesInCredentialsSuccess() throws HttpResponseExceptionWithErrorBody {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_3, Instant.now()));
+
+        List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("test-issuer", true));
+
+        when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
+        when(mockConfigService.getComponentId(any())).thenReturn("test-issuer");
+
+        boolean isValid =
+                userIdentityService.checkBirthDateCorrelationInCredentials(
+                        USER_ID_1, currentVcStatuses);
+
+        assertTrue(isValid);
+    }
+
+    @Test
+    void checkValidateBirthDatesInCredentialsFalse() throws HttpResponseExceptionWithErrorBody {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_3, Instant.now()));
+
+        List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("test-issuer", true));
+
+        when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
+        when(mockConfigService.getComponentId(any())).thenReturn("test-issuer");
+
+        boolean isValid =
+                userIdentityService.checkBirthDateCorrelationInCredentials(
+                        USER_ID_1, currentVcStatuses);
+
+        assertFalse(isValid);
     }
 
     @Test
     void shouldSetIdentityClaimWhenVotIsP2() throws HttpResponseExceptionWithErrorBody, Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem("user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
-                        createVcStoreItem("user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
-                        createVcStoreItem("user-id-1", "kbv", SIGNED_VC_3, Instant.now()),
-                        createVcStoreItem("user-id-1", "address", SIGNED_VC_4, Instant.now()));
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "kbv", SIGNED_VC_3, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "address", SIGNED_VC_4, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -143,7 +183,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        "user-id-1", "test-sub", "P2", currentVcStatuses);
+                        USER_ID_1, "test-sub", "P2", currentVcStatuses);
 
         IdentityClaim identityClaim = credentials.getIdentityClaim();
 
@@ -157,8 +197,8 @@ class UserIdentityServiceTest {
     void shouldNotSetIdentityClaimWhenVotIsP0() throws HttpResponseExceptionWithErrorBody {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem("user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
-                        createVcStoreItem("user-id-1", "fraud", SIGNED_VC_2, Instant.now()));
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -167,7 +207,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        "user-id-1", "test-sub", "P0", currentVcStatuses);
+                        USER_ID_1, "test-sub", "P0", currentVcStatuses);
 
         assertNull(credentials.getIdentityClaim());
     }
@@ -177,12 +217,12 @@ class UserIdentityServiceTest {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
-                                "user-id-1",
+                                USER_ID_1,
                                 "ukPassport",
                                 SIGNED_PASSPORT_VC_MISSING_NAME,
                                 Instant.now()),
-                        createVcStoreItem("user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
-                        createVcStoreItem("user-id-1", "kbv", SIGNED_VC_3, Instant.now()));
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "kbv", SIGNED_VC_3, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -196,7 +236,7 @@ class UserIdentityServiceTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        "user-id-1", "test-sub", "P2", currentVcStatuses));
+                                        USER_ID_1, "test-sub", "P2", currentVcStatuses));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -212,12 +252,12 @@ class UserIdentityServiceTest {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
-                                "user-id-1",
+                                USER_ID_1,
                                 "ukPassport",
                                 SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE,
                                 Instant.now()),
-                        createVcStoreItem("user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
-                        createVcStoreItem("user-id-1", "kbv", SIGNED_VC_3, Instant.now()));
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "kbv", SIGNED_VC_3, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -231,7 +271,7 @@ class UserIdentityServiceTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        "user-id-1", "test-sub", "P2", currentVcStatuses));
+                                        USER_ID_1, "test-sub", "P2", currentVcStatuses));
 
         assertEquals(500, thrownError.getResponseCode());
         assertEquals(
@@ -248,10 +288,10 @@ class UserIdentityServiceTest {
 
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem("user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
-                        createVcStoreItem("user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
-                        createVcStoreItem("user-id-1", "kbv", SIGNED_VC_3, Instant.now()),
-                        createVcStoreItem("user-id-1", "address", SIGNED_VC_4, Instant.now()));
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "kbv", SIGNED_VC_3, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "address", SIGNED_VC_4, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -261,7 +301,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        "user-id-1", "test-sub", "P2", currentVcStatuses);
+                        USER_ID_1, "test-sub", "P2", currentVcStatuses);
 
         JsonNode passportClaim = credentials.getPassportClaim();
 
@@ -273,8 +313,8 @@ class UserIdentityServiceTest {
     void shouldNotSetPassportClaimWhenVotIsP0() throws HttpResponseExceptionWithErrorBody {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem("user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
-                        createVcStoreItem("user-id-1", "fraud", SIGNED_VC_2, Instant.now()));
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -283,7 +323,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        "user-id-1", "test-sub", "P0", currentVcStatuses);
+                        USER_ID_1, "test-sub", "P0", currentVcStatuses);
 
         assertNull(credentials.getPassportClaim());
     }
@@ -293,13 +333,13 @@ class UserIdentityServiceTest {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
-                                "user-id-1",
+                                USER_ID_1,
                                 "ukPassport",
                                 SIGNED_PASSPORT_VC_MISSING_PASSPORT,
                                 Instant.now()),
-                        createVcStoreItem("user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
-                        createVcStoreItem("user-id-1", "kbv", SIGNED_VC_3, Instant.now()),
-                        createVcStoreItem("user-id-1", "address", SIGNED_VC_4, Instant.now()));
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "kbv", SIGNED_VC_3, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "address", SIGNED_VC_4, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -310,7 +350,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        "user-id-1", "test-sub", "P2", currentVcStatuses);
+                        USER_ID_1, "test-sub", "P2", currentVcStatuses);
 
         assertNull(credentials.getPassportClaim());
     }
@@ -324,7 +364,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        "user-id-1", "test-sub", "P2", currentVcStatuses);
+                        USER_ID_1, "test-sub", "P2", currentVcStatuses);
 
         assertEquals("test-sub", credentials.getSub());
     }
@@ -338,7 +378,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        "user-id-1", "test-sub", "P2", currentVcStatuses);
+                        USER_ID_1, "test-sub", "P2", currentVcStatuses);
 
         assertEquals("mock-vtm-claim", credentials.getVtm());
     }
@@ -347,11 +387,10 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldSetAddressClaimOnUserIdentity() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem("user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
-                        createVcStoreItem("user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
-                        createVcStoreItem("user-id-1", "kbv", SIGNED_VC_3, Instant.now()),
-                        createVcStoreItem(
-                                "user-id-1", "address", SIGNED_ADDRESS_VC, Instant.now()));
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "kbv", SIGNED_VC_3, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "address", SIGNED_ADDRESS_VC, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -362,7 +401,7 @@ class UserIdentityServiceTest {
 
         UserIdentity userIdentity =
                 userIdentityService.generateUserIdentity(
-                        "user-id-1", "test-sub", "P2", currentVcStatuses);
+                        USER_ID_1, "test-sub", "P2", currentVcStatuses);
 
         JsonNode userIdentityJsonNode =
                 objectMapper.readTree(objectMapper.writeValueAsString(userIdentity));
@@ -383,11 +422,11 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldThrowIfAddressVCIsMissingAddressProperty() {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem("user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
-                        createVcStoreItem("user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
-                        createVcStoreItem("user-id-1", "kbv", SIGNED_VC_3, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "kbv", SIGNED_VC_3, Instant.now()),
                         createVcStoreItem(
-                                "user-id-1",
+                                USER_ID_1,
                                 "address",
                                 SIGNED_ADDRESS_VC_MISSING_ADDRESS_PROPERTY,
                                 Instant.now()));
@@ -404,7 +443,7 @@ class UserIdentityServiceTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        "user-id-1", "test-sub", "P2", currentVcStatuses));
+                                        USER_ID_1, "test-sub", "P2", currentVcStatuses));
 
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
@@ -419,10 +458,10 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldThrowIfAddressVCCanNotBeParsed() {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem("user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
-                        createVcStoreItem("user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
-                        createVcStoreItem("user-id-1", "kbv", SIGNED_VC_3, Instant.now()),
-                        createVcStoreItem("user-id-1", "address", "GARBAGE", Instant.now()));
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "kbv", SIGNED_VC_3, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "address", "GARBAGE", Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -436,7 +475,7 @@ class UserIdentityServiceTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        "user-id-1", "test-sub", "P2", currentVcStatuses));
+                                        USER_ID_1, "test-sub", "P2", currentVcStatuses));
 
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
@@ -451,10 +490,9 @@ class UserIdentityServiceTest {
     void shouldNotSetAddressClaimWhenVotIsP0() throws HttpResponseExceptionWithErrorBody {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem("user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
-                        createVcStoreItem("user-id-1", "kbv", SIGNED_VC_3, Instant.now()),
-                        createVcStoreItem(
-                                "user-id-1", "address", SIGNED_ADDRESS_VC, Instant.now()));
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "kbv", SIGNED_VC_3, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "address", SIGNED_ADDRESS_VC, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -463,7 +501,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        "user-id-1", "test-sub", "P0", currentVcStatuses);
+                        USER_ID_1, "test-sub", "P0", currentVcStatuses);
 
         assertNull(credentials.getAddressClaim());
     }
@@ -472,12 +510,12 @@ class UserIdentityServiceTest {
     void shouldReturnListOfVcsForSharedAttributes() {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem("user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
-                        createVcStoreItem("user-id-1", "fraud", SIGNED_VC_2, Instant.now()));
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()));
 
         when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
 
-        List<String> vcList = userIdentityService.getUserIssuedCredentials("user-id-1");
+        List<String> vcList = userIdentityService.getUserIssuedCredentials(USER_ID_1);
 
         assertEquals(SIGNED_VC_1, vcList.get(0));
         assertEquals(SIGNED_VC_2, vcList.get(1));
@@ -590,7 +628,7 @@ class UserIdentityServiceTest {
         List<VcStoreItem> credentialItem =
                 List.of(
                         createVcStoreItem(
-                                "user-id-1", testCredentialIssuer, SIGNED_VC_1, Instant.now()));
+                                USER_ID_1, testCredentialIssuer, SIGNED_VC_1, Instant.now()));
 
         when(mockDataStore.getItems(userId)).thenReturn(credentialItem);
 
@@ -606,9 +644,9 @@ class UserIdentityServiceTest {
     void shouldSetDrivingPermitClaimWhenVotIsP2() throws HttpResponseExceptionWithErrorBody {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem("user-id-1", "dcmaw", SIGNED_DCMAW_VC, Instant.now()),
-                        createVcStoreItem("user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
-                        createVcStoreItem("user-id-1", "address", SIGNED_VC_4, Instant.now()));
+                        createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_DCMAW_VC, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "address", SIGNED_VC_4, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(
@@ -621,7 +659,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        "user-id-1", "test-sub", "P2", currentVcStatuses);
+                        USER_ID_1, "test-sub", "P2", currentVcStatuses);
 
         JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
 
@@ -634,9 +672,9 @@ class UserIdentityServiceTest {
     void shouldNotSetDrivingPermitClaimWhenVotIsP0() throws HttpResponseExceptionWithErrorBody {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem("user-id-1", "dcmaw", SIGNED_DCMAW_VC, Instant.now()),
-                        createVcStoreItem("user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
-                        createVcStoreItem("user-id-1", "address", SIGNED_VC_4, Instant.now()));
+                        createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_DCMAW_VC, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "address", SIGNED_VC_4, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(
@@ -647,7 +685,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        "user-id-1", "test-sub", "P0", currentVcStatuses);
+                        USER_ID_1, "test-sub", "P0", currentVcStatuses);
 
         JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
 
@@ -659,10 +697,10 @@ class UserIdentityServiceTest {
             throws HttpResponseExceptionWithErrorBody {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem("user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
-                        createVcStoreItem("user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
-                        createVcStoreItem("user-id-1", "kbv", SIGNED_VC_3, Instant.now()),
-                        createVcStoreItem("user-id-1", "address", SIGNED_VC_4, Instant.now()));
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "kbv", SIGNED_VC_3, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "address", SIGNED_VC_4, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
@@ -673,7 +711,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        "user-id-1", "test-sub", "P2", currentVcStatuses);
+                        USER_ID_1, "test-sub", "P2", currentVcStatuses);
 
         JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
 
@@ -685,11 +723,11 @@ class UserIdentityServiceTest {
             throws HttpResponseExceptionWithErrorBody {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem("user-id-1", "dcmaw", SIGNED_DCMAW_VC, Instant.now()),
-                        createVcStoreItem("user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
-                        createVcStoreItem("user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
-                        createVcStoreItem("user-id-1", "address", SIGNED_VC_4, Instant.now()),
-                        createVcStoreItem("user-id-1", "kbv", SIGNED_VC_3, Instant.now()));
+                        createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_DCMAW_VC, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "address", SIGNED_VC_4, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "kbv", SIGNED_VC_3, Instant.now()));
 
         List<VcStatusDto> currentVcStatuses =
                 List.of(
@@ -706,7 +744,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        "user-id-1", "test-sub", "P2", currentVcStatuses);
+                        USER_ID_1, "test-sub", "P2", currentVcStatuses);
 
         JsonNode drivingPermitClaim = credentials.getDrivingPermitClaim();
 
@@ -719,7 +757,7 @@ class UserIdentityServiceTest {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
-                                "user-id-1",
+                                USER_ID_1,
                                 "dcmaw",
                                 SIGNED_DCMAW_VC_MISSING_DRIVING_PERMIT_PROPERTY,
                                 Instant.now()));
@@ -732,7 +770,7 @@ class UserIdentityServiceTest {
 
         UserIdentity credentials =
                 userIdentityService.generateUserIdentity(
-                        "user-id-1", "test-sub", "P2", currentVcStatuses);
+                        USER_ID_1, "test-sub", "P2", currentVcStatuses);
 
         assertNull(credentials.getDrivingPermitClaim());
     }
@@ -741,11 +779,11 @@ class UserIdentityServiceTest {
     void generateUserIdentityShouldThrowIfDcmawVCCanNotBeParsed() {
         List<VcStoreItem> vcStoreItems =
                 List.of(
-                        createVcStoreItem("user-id-1", "ukPassport", SIGNED_VC_1, Instant.now()),
-                        createVcStoreItem("user-id-1", "fraud", SIGNED_VC_2, Instant.now()),
-                        createVcStoreItem("user-id-1", "kbv", SIGNED_VC_3, Instant.now()),
-                        createVcStoreItem("user-id-1", "address", SIGNED_ADDRESS_VC, Instant.now()),
-                        createVcStoreItem("user-id-1", "dcmaw", "GARBAGE", Instant.now()));
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "kbv", SIGNED_VC_3, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "address", SIGNED_ADDRESS_VC, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "dcmaw", "GARBAGE", Instant.now()));
 
         List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("dcmaw-issuer", true));
 
@@ -758,7 +796,7 @@ class UserIdentityServiceTest {
                         HttpResponseExceptionWithErrorBody.class,
                         () ->
                                 userIdentityService.generateUserIdentity(
-                                        "user-id-1", "test-sub", "P2", currentVcStatuses));
+                                        USER_ID_1, "test-sub", "P2", currentVcStatuses));
 
         assertEquals(500, thrownException.getResponseCode());
         assertEquals(
