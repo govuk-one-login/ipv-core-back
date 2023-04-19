@@ -52,6 +52,9 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
 
+/**
+ * Check Existing Identity
+ */
 public class CheckExistingIdentityHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
@@ -72,6 +75,7 @@ public class CheckExistingIdentityHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final String componentId;
 
+    @SuppressWarnings("unused") // Used by AWS
     public CheckExistingIdentityHandler(
             ConfigService configService,
             UserIdentityService userIdentityService,
@@ -90,6 +94,7 @@ public class CheckExistingIdentityHandler
         this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
+    @SuppressWarnings("unused") // Used by tests
     @ExcludeFromGeneratedCoverageReport
     public CheckExistingIdentityHandler() {
         this.configService = new ConfigService();

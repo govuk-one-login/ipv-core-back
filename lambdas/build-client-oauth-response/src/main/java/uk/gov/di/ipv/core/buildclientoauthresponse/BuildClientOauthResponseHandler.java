@@ -42,6 +42,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Lambda called when the user has completed their user journey in IPV Core
+ */
 public class BuildClientOauthResponseHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -52,6 +55,7 @@ public class BuildClientOauthResponseHandler
     private final AuditService auditService;
     private final String componentId;
 
+    @SuppressWarnings("unused") // Used by AWS
     @ExcludeFromGeneratedCoverageReport
     public BuildClientOauthResponseHandler() {
         this.configService = new ConfigService();

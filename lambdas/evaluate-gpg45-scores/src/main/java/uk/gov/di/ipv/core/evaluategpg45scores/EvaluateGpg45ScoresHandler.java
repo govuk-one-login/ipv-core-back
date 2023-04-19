@@ -56,6 +56,9 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
 import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.JOURNEY;
 
+/**
+ * Lambda evaluate the gathered credentials against a desired GPG45 profile. Returns journey response or session end.
+ */
 public class EvaluateGpg45ScoresHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
 
@@ -75,6 +78,7 @@ public class EvaluateGpg45ScoresHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final String componentId;
 
+    @SuppressWarnings("unused") // Used by tests
     public EvaluateGpg45ScoresHandler(
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
@@ -94,6 +98,7 @@ public class EvaluateGpg45ScoresHandler
         componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
+    @SuppressWarnings("unused") // Used by AWS
     @ExcludeFromGeneratedCoverageReport
     public EvaluateGpg45ScoresHandler() {
         this.configService = new ConfigService();

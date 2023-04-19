@@ -11,7 +11,7 @@ allprojects {
 
 	tasks.withType(Test) {
 		onlyIf {
-			/* System.getProperty("software.amazon.aws.lambdabuilders.scratch-dir") == null || */ System.getenv("GRADLE_SAM_EXECUTE_TEST") != null
+			System.getProperty("software.amazon.aws.lambdabuilders.scratch-dir") == null || System.getenv("GRADLE_SAM_EXECUTE_TEST") != null
 		}
 	}
 }

@@ -155,23 +155,6 @@ paths:
                   $bodyObj
                 #end
 
-  /journey/cri/build-oauth-request/{criId}:
-    post:
-      description: Called when the frontend begins the CRI journey.
-      responses:
-        200:
-          description: "Returns the id, clientId and authorizationUrl for a CRI."
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/journeyType"
-      x-amazon-apigateway-integration:
-        httpMethod: "POST"
-        uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildCriOauthRequestFunction.Arn}:live/invocations
-        passthroughBehavior: "when_no_match"
-        type: "aws_proxy"
-
   /journey/build-client-oauth-response:
     post:
       description: "Called when the user has completed their user journey in IPV Core"

@@ -1,8 +1,6 @@
 package uk.gov.di.ipv.core.buildcrioauthrequest;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,6 +12,7 @@ import com.nimbusds.jose.crypto.RSADecrypter;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.buildcrioauthrequest.domain.CriDetails;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerConfigService;
@@ -54,9 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -74,12 +72,13 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
+import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.*;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.generateVerifiableCredential;
 import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.vcClaim;
 
 @ExtendWith(MockitoExtension.class)
 class BuildCriOauthRequestHandlerTest {
-
+    private static final String JOURNEY_REQUEST_FORMAT = "/journey/cri/build-oauth-request/%s";
     private static final String CRI_ID = "PassportIssuer";
     private static final String CRI_NAME = "any";
     private static final String CRI_TOKEN_URL = "http://www.example.com";
@@ -206,21 +205,25 @@ class BuildCriOauthRequestHandlerTest {
     }
 
     @Test
-    void shouldReceive400ResponseCodeIfCredentialIssuerNotPresent() throws JsonProcessingException {
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+    void shouldReceive400ResponseCodeIfCredentialIssuerNotPresent() {
+        Map<String, String> input = Map.of(
+                IPV_SESSION_ID, SESSION_ID,
+                IP_ADDRESS, TEST_IP_ADDRESS
+        );
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
         assert400Response(response, ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
     }
 
     @Test
-    void shouldReceive400ResponseCodeIfCredentialIssuerNotInPermittedSet()
-            throws JsonProcessingException {
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+    void shouldReceive400ResponseCodeIfCredentialIssuerNotInPermittedSet() {
+        Map<String, String> input = Map.of(
+                JOURNEY, String.format(JOURNEY_REQUEST_FORMAT, "Missing CriId"),
+                IPV_SESSION_ID, SESSION_ID,
+                IP_ADDRESS, TEST_IP_ADDRESS
+        );
 
-        input.setPathParameters(Map.of("criId", "Missing CriId"));
-
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
         assert400Response(response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
     }
 
@@ -252,19 +255,21 @@ class BuildCriOauthRequestHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, String> input = Map.of(
+                JOURNEY, String.format(JOURNEY_REQUEST_FORMAT, CRI_ID),
+                IPV_SESSION_ID, SESSION_ID,
+                IP_ADDRESS, TEST_IP_ADDRESS
+        );
 
-        input.setPathParameters(Map.of("criId", CRI_ID));
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", TEST_IP_ADDRESS));
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        CriDetails responseBody = objectMapper.convertValue(response.get("cri"), CriDetails.class);
+        assertNotNull(responseBody);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
-
-        URIBuilder redirectUri = new URIBuilder(responseBody.get("redirectUrl"));
+        URIBuilder redirectUri = new URIBuilder(responseBody.getRedirectUrl());
         List<NameValuePair> queryParams = redirectUri.getQueryParams();
 
-        assertEquals(CRI_ID, responseBody.get("id"));
+        assertEquals(CRI_ID, responseBody.getId());
 
         Optional<NameValuePair> client_id =
                 queryParams.stream()
@@ -287,8 +292,6 @@ class BuildCriOauthRequestHandlerTest {
         assertSharedClaimsJWTIsValid(jweObject.getPayload().toString());
 
         assertEquals(CRI_AUTHORIZE_URL, redirectUri.removeQuery().build().toString());
-
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
@@ -327,19 +330,21 @@ class BuildCriOauthRequestHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, String> input = Map.of(
+                JOURNEY, String.format(JOURNEY_REQUEST_FORMAT, DCMAW_CRI),
+                IPV_SESSION_ID, SESSION_ID,
+                IP_ADDRESS, TEST_IP_ADDRESS
+        );
 
-        input.setPathParameters(Map.of("criId", DCMAW_CRI));
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", TEST_IP_ADDRESS));
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        CriDetails responseBody = objectMapper.convertValue(response.get("cri"), CriDetails.class);
+        assertNotNull(responseBody);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
-
-        URIBuilder redirectUri = new URIBuilder(responseBody.get("redirectUrl"));
+        URIBuilder redirectUri = new URIBuilder(responseBody.getRedirectUrl());
         List<NameValuePair> queryParams = redirectUri.getQueryParams();
 
-        assertEquals(DCMAW_CRI, responseBody.get("id"));
+        assertEquals(DCMAW_CRI, responseBody.getId());
 
         Optional<NameValuePair> client_id =
                 queryParams.stream()
@@ -364,8 +369,6 @@ class BuildCriOauthRequestHandlerTest {
 
         assertEquals(CRI_AUTHORIZE_URL, redirectUri.removeQuery().build().toString());
 
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
-
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
         assertEquals(
@@ -376,15 +379,15 @@ class BuildCriOauthRequestHandlerTest {
     }
 
     @Test
-    void shouldReturn400IfSessionIdIsNotInTheHeader() throws JsonProcessingException {
-        APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
-        input.setPathParameters(Map.of("criId", CRI_ID));
-        input.setHeaders(Map.of("not-ipv-session-header", "dummy-value"));
+    void shouldReturn400IfSessionIdIsNotInTheHeader() {
+        Map<String, String> input = Map.of(
+                JOURNEY, String.format(JOURNEY_REQUEST_FORMAT, CRI_ID),
+                "not-ipv-session-header", "dummy-value"
+        );
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
-        assertEquals(400, response.getStatusCode());
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
-        assertEquals("Missing ipv session id header", responseBody.get("error_description"));
+        Map<String, Object> response = underTest.handleRequest(input, context);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.get(STATUS_CODE));
+        assertEquals("/journey/error", response.get(JOURNEY));
     }
 
     private void assertSharedClaimsJWTIsValid(String request)
@@ -417,6 +420,9 @@ class BuildCriOauthRequestHandlerTest {
                         .filter(x -> "SW1A2AA".equals(x.getPostalCode()))
                         .findAny()
                         .orElse(null);
+
+        assertNotNull(streetAddress);
+        assertNotNull(postCode);
 
         assertFalse(streetAddress.getStreetName().isEmpty());
         assertFalse(postCode.getPostalCode().isEmpty());
@@ -456,15 +462,18 @@ class BuildCriOauthRequestHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, String> input = Map.of(
+                JOURNEY, String.format(JOURNEY_REQUEST_FORMAT, CRI_ID),
+                IPV_SESSION_ID, SESSION_ID,
+                IP_ADDRESS, TEST_IP_ADDRESS
+        );
 
-        input.setPathParameters(Map.of("criId", CRI_ID));
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", TEST_IP_ADDRESS));
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
-        Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
+        CriDetails responseBody = objectMapper.convertValue(response.get("cri"), CriDetails.class);
+        assertNotNull(responseBody);
 
-        URIBuilder redirectUri = new URIBuilder(responseBody.get("redirectUrl"));
+        URIBuilder redirectUri = new URIBuilder(responseBody.getRedirectUrl());
         List<NameValuePair> queryParams = redirectUri.getQueryParams();
 
         Optional<NameValuePair> request =
@@ -513,15 +522,18 @@ class BuildCriOauthRequestHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, String> input = Map.of(
+                JOURNEY, String.format(JOURNEY_REQUEST_FORMAT, CRI_ID),
+                IPV_SESSION_ID, SESSION_ID,
+                IP_ADDRESS, TEST_IP_ADDRESS
+        );
 
-        input.setPathParameters(Map.of("criId", CRI_ID));
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", TEST_IP_ADDRESS));
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
-        Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
+        CriDetails responseBody = objectMapper.convertValue(response.get("cri"), CriDetails.class);
+        assertNotNull(responseBody);
 
-        URIBuilder redirectUri = new URIBuilder(responseBody.get("redirectUrl"));
+        URIBuilder redirectUri = new URIBuilder(responseBody.getRedirectUrl());
         List<NameValuePair> queryParams = redirectUri.getQueryParams();
 
         Optional<NameValuePair> request =
@@ -568,15 +580,18 @@ class BuildCriOauthRequestHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, String> input = Map.of(
+                JOURNEY, String.format(JOURNEY_REQUEST_FORMAT, CRI_ID),
+                IPV_SESSION_ID, SESSION_ID,
+                IP_ADDRESS, TEST_IP_ADDRESS
+        );
 
-        input.setPathParameters(Map.of("criId", CRI_ID));
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", TEST_IP_ADDRESS));
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
-        Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
+        CriDetails responseBody = objectMapper.convertValue(response.get("cri"), CriDetails.class);
+        assertNotNull(responseBody);
 
-        URIBuilder redirectUri = new URIBuilder(responseBody.get("redirectUrl"));
+        URIBuilder redirectUri = new URIBuilder(responseBody.getRedirectUrl());
         List<NameValuePair> queryParams = redirectUri.getQueryParams();
 
         Optional<NameValuePair> request =
@@ -644,15 +659,18 @@ class BuildCriOauthRequestHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, String> input = Map.of(
+                JOURNEY, String.format(JOURNEY_REQUEST_FORMAT, CRI_ID),
+                IPV_SESSION_ID, SESSION_ID,
+                IP_ADDRESS, TEST_IP_ADDRESS
+        );
 
-        input.setPathParameters(Map.of("criId", CRI_ID));
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", TEST_IP_ADDRESS));
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
-        Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
+        CriDetails responseBody = objectMapper.convertValue(response.get("cri"), CriDetails.class);
+        assertNotNull(responseBody);
 
-        URIBuilder redirectUri = new URIBuilder(responseBody.get("redirectUrl"));
+        URIBuilder redirectUri = new URIBuilder(responseBody.getRedirectUrl());
         List<NameValuePair> queryParams = redirectUri.getQueryParams();
 
         Optional<NameValuePair> request =
@@ -701,15 +719,18 @@ class BuildCriOauthRequestHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, String> input = Map.of(
+                JOURNEY, String.format(JOURNEY_REQUEST_FORMAT, CRI_ID),
+                IPV_SESSION_ID, SESSION_ID,
+                IP_ADDRESS, TEST_IP_ADDRESS
+        );
 
-        input.setPathParameters(Map.of("criId", CRI_ID));
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", TEST_IP_ADDRESS));
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
-        Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
+        CriDetails responseBody = objectMapper.convertValue(response.get("cri"), CriDetails.class);
+        assertNotNull(responseBody);
 
-        URIBuilder redirectUri = new URIBuilder(responseBody.get("redirectUrl"));
+        URIBuilder redirectUri = new URIBuilder(responseBody.getRedirectUrl());
         List<NameValuePair> queryParams = redirectUri.getQueryParams();
 
         Optional<NameValuePair> request =
@@ -760,15 +781,18 @@ class BuildCriOauthRequestHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, String> input = Map.of(
+                JOURNEY, String.format(JOURNEY_REQUEST_FORMAT, CRI_ID),
+                IPV_SESSION_ID, SESSION_ID,
+                IP_ADDRESS, TEST_IP_ADDRESS
+        );
 
-        input.setPathParameters(Map.of("criId", CRI_ID));
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", TEST_IP_ADDRESS));
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
-        Map<String, String> responseBody = getResponseBodyAsMap(response).get("cri");
+        CriDetails responseBody = objectMapper.convertValue(response.get("cri"), CriDetails.class);
+        assertNotNull(responseBody);
 
-        URIBuilder redirectUri = new URIBuilder(responseBody.get("redirectUrl"));
+        URIBuilder redirectUri = new URIBuilder(responseBody.getRedirectUrl());
         List<NameValuePair> queryParams = redirectUri.getQueryParams();
 
         Optional<NameValuePair> request =
@@ -788,25 +812,10 @@ class BuildCriOauthRequestHandlerTest {
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
     }
 
-    private Map<String, Map<String, String>> getResponseBodyAsMap(
-            APIGatewayProxyResponseEvent response) throws JsonProcessingException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        return objectMapper.readValue(response.getBody(), Map.class);
-    }
-
-    private APIGatewayProxyRequestEvent createRequestEvent() {
-        APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
-        input.setHeaders(Map.of("ipv-session-id", "aSessionId", "ip-address", TEST_IP_ADDRESS));
-        return input;
-    }
-
     private void assert400Response(
-            APIGatewayProxyResponseEvent response, ErrorResponse errorResponse)
-            throws JsonProcessingException {
-        Integer statusCode = response.getStatusCode();
-        Map responseBody = getResponseBodyAsMap(response);
-        assertEquals(HTTPResponse.SC_BAD_REQUEST, statusCode);
-        assertEquals(errorResponse.getCode(), responseBody.get("code"));
+            Map<String, Object> response, ErrorResponse errorResponse) {
+        assertEquals(HTTPResponse.SC_BAD_REQUEST, response.get(STATUS_CODE));
+        assertEquals(errorResponse.getCode(), response.get(CODE));
     }
 
     private ECPrivateKey getSigningPrivateKey()

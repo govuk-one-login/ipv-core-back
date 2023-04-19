@@ -39,6 +39,9 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 
+/**
+ * Lambda selects a CRI based on which CRIs the user has not visited. Returns journey response or journey fail
+ */
 public class SelectCriHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -64,6 +67,7 @@ public class SelectCriHandler
         this.clientOAuthSessionService = clientOAuthSessionService;
     }
 
+    @SuppressWarnings("unused") // Used by AWS
     @ExcludeFromGeneratedCoverageReport
     public SelectCriHandler() {
         this.configService = new ConfigService();
@@ -76,7 +80,7 @@ public class SelectCriHandler
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(
             Map<String, String> event, Context context) {
-        // LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs();
         try {
             String ipvSessionId = StepFunctionHelpers.getIpvSessionId(event);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);

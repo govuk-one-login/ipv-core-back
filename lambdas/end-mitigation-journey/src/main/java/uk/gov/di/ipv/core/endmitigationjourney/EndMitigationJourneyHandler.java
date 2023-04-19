@@ -37,6 +37,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Lambda called when the user has completed the last step of a mitigation journey
+ */
 public class EndMitigationJourneyHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
@@ -48,11 +51,11 @@ public class EndMitigationJourneyHandler
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private UserIdentityService userIdentityService;
-    private IpvSessionService ipvSessionService;
-    private CiStorageService ciStorageService;
-    private ConfigService configService;
-    private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
+    private final UserIdentityService userIdentityService;
+    private final IpvSessionService ipvSessionService;
+    private final CiStorageService ciStorageService;
+    private final ConfigService configService;
+    private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
 
     public EndMitigationJourneyHandler(
             UserIdentityService userIdentityService,
@@ -67,6 +70,7 @@ public class EndMitigationJourneyHandler
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
     }
 
+    @SuppressWarnings("unused") // Used by AWS
     @ExcludeFromGeneratedCoverageReport
     public EndMitigationJourneyHandler() {
         this.configService = new ConfigService();

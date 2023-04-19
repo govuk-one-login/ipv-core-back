@@ -50,6 +50,9 @@ import static uk.gov.di.ipv.core.library.service.UserIdentityService.BIRTH_DATE_
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.NAME_PROPERTY_NAME;
 
+/**
+ * Lambda called when core front needs to display information about a users proven identity
+ */
 public class BuildProvenUserIdentityDetailsHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -72,6 +75,7 @@ public class BuildProvenUserIdentityDetailsHandler
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
     }
 
+    @SuppressWarnings("unused") // Used by AWS
     @ExcludeFromGeneratedCoverageReport
     public BuildProvenUserIdentityDetailsHandler() {
         this.configService = new ConfigService();
