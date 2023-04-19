@@ -147,6 +147,26 @@ class UserIdentityServiceTest {
     }
 
     @Test
+    void checkNameAndFamilyNameCorrelationInCredentialsTrue()
+            throws HttpResponseExceptionWithErrorBody {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_5, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_5, Instant.now()));
+
+        List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("test-issuer", true));
+
+        when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
+        when(mockConfigService.getComponentId(any())).thenReturn("test-issuer");
+
+        boolean isValid =
+                userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(
+                        USER_ID_1, currentVcStatuses);
+
+        assertTrue(isValid);
+    }
+
+    @Test
     void checkValidateBirthDatesInCredentialsFalse() throws HttpResponseExceptionWithErrorBody {
         List<VcStoreItem> vcStoreItems =
                 List.of(
@@ -160,6 +180,26 @@ class UserIdentityServiceTest {
 
         boolean isValid =
                 userIdentityService.checkBirthDateCorrelationInCredentials(
+                        USER_ID_1, currentVcStatuses);
+
+        assertFalse(isValid);
+    }
+
+    @Test
+    void checkNameAndFamilyNameCorrelationInCredentialsFalse()
+            throws HttpResponseExceptionWithErrorBody {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_5, Instant.now()));
+
+        List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("test-issuer", true));
+
+        when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
+        when(mockConfigService.getComponentId(any())).thenReturn("test-issuer");
+
+        boolean isValid =
+                userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(
                         USER_ID_1, currentVcStatuses);
 
         assertFalse(isValid);
@@ -805,6 +845,30 @@ class UserIdentityServiceTest {
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_DRIVING_PERMIT_CLAIM.getMessage(),
                 thrownException.getErrorBody().get("error_description"));
+    }
+
+    @Test
+    void getFullNamesFromCredentialsValidateSpecialCharactersSuccessScenarios() {
+        List<String> fullNames = List.of("Alice JANE DOE", "AlIce Ja-ne Do-e", "ALiCE JA'-ne Do'e");
+        assertTrue(userIdentityService.checkNamesForCorrelation(fullNames));
+
+        fullNames = List.of("SÖŞMİĞë", "sosmige", "SÖŞ-Mİ'Ğe");
+        assertTrue(userIdentityService.checkNamesForCorrelation(fullNames));
+    }
+
+    @Test
+    void getFullNamesFromCredentialsValidateSpecialCharactersFailScenarios() {
+        List<String> fullNames = List.of("Alice JANE DOE", "Alce JANE DOE", "Alëce JANE DOE");
+        assertFalse(userIdentityService.checkNamesForCorrelation(fullNames));
+
+        fullNames = List.of("Alice JANE DOE", "Alce JANE DOE");
+        assertFalse(userIdentityService.checkNamesForCorrelation(fullNames));
+
+        fullNames = List.of("Alice JANE DOE", "JANE AlIce DOE");
+        assertFalse(userIdentityService.checkNamesForCorrelation(fullNames));
+
+        fullNames = List.of("Alice JANE DOE", "Alice JANE Onel");
+        assertFalse(userIdentityService.checkNamesForCorrelation(fullNames));
     }
 
     private VcStoreItem createVcStoreItem(

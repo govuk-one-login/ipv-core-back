@@ -173,6 +173,8 @@ class EvaluateGpg45ScoreHandlerTest {
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+                .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
@@ -222,6 +224,8 @@ class EvaluateGpg45ScoreHandlerTest {
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+                .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
@@ -244,6 +248,8 @@ class EvaluateGpg45ScoreHandlerTest {
                 .thenReturn(Optional.empty());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+                .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
@@ -371,6 +377,8 @@ class EvaluateGpg45ScoreHandlerTest {
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+                .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
@@ -412,6 +420,8 @@ class EvaluateGpg45ScoreHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+                .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
@@ -468,6 +478,8 @@ class EvaluateGpg45ScoreHandlerTest {
                                         "1234")));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+                .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
@@ -520,6 +532,8 @@ class EvaluateGpg45ScoreHandlerTest {
                                         "1234")));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+                .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
@@ -568,6 +582,8 @@ class EvaluateGpg45ScoreHandlerTest {
                                         "1234")));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+                .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
@@ -611,6 +627,8 @@ class EvaluateGpg45ScoreHandlerTest {
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+                .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
@@ -665,6 +683,8 @@ class EvaluateGpg45ScoreHandlerTest {
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+                .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
@@ -705,11 +725,37 @@ class EvaluateGpg45ScoreHandlerTest {
     }
 
     @Test
+    void shouldReturn500IfFailedToNameCorrelationIssues() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+                .thenReturn(false);
+
+        var response = evaluateGpg45ScoresHandler.handleRequest(event, context);
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        Map<String, Object> responseMap =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_NAME_CORRELATION.getCode(), responseMap.get("error"));
+        assertEquals(
+                ErrorResponse.FAILED_TO_NAME_CORRELATION.getMessage(),
+                responseMap.get("error_description"));
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+        verify(userIdentityService, times(1))
+                .checkNameAndFamilyNameCorrelationInCredentials(any(), any());
+        verify(userIdentityService, times(0)).checkBirthDateCorrelationInCredentials(any(), any());
+    }
+
+    @Test
     void shouldReturn500IfFailedToBirthdateCorrelationIssues() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+                .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(false);
 

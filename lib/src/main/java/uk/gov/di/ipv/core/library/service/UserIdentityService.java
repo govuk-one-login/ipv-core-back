@@ -15,6 +15,7 @@ import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
+import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
@@ -23,12 +24,14 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
+import java.text.Normalizer;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
@@ -55,6 +58,11 @@ public class UserIdentityService {
     private static final String PASSPORT_PROPERTY_NAME = "passport";
     private static final String DRIVING_PERMIT_PROPERTY_NAME = "drivingPermit";
     private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final Pattern DIACRITIC_CHECK_PATTERN = Pattern.compile("\\p{M}");
+    private static final Pattern IGNORE_SOME_CHARACTERS_PATTERN = Pattern.compile("[\\s'-]+");
+
+    public static final String GIVEN_NAME_PROPERTY_NAME = "GivenName";
+    public static final String FAMILY_NAME_PROPERTY_NAME = "FamilyName";
 
     private final ConfigService configService;
     private final DataStore<VcStoreItem> dataStore;
@@ -469,5 +477,71 @@ public class UserIdentityService {
                     == 1;
         }
         return true;
+    }
+
+    public boolean checkNameAndFamilyNameCorrelationInCredentials(
+            String userId, List<VcStatusDto> currentVcStatuses)
+            throws HttpResponseExceptionWithErrorBody {
+        if (currentVcStatuses != null) {
+            List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
+
+            List<IdentityClaim> identityClaims = getIdentityClaims(vcStoreItems, currentVcStatuses);
+
+            return checkNamesForCorrelation(getFullNamesFromCredentials(identityClaims));
+        }
+        return true;
+    }
+
+    public boolean checkNamesForCorrelation(List<String> userFullNames) {
+        return userFullNames.stream()
+                        .map(n -> Normalizer.normalize(n, Normalizer.Form.NFD))
+                        .map(n -> DIACRITIC_CHECK_PATTERN.matcher(n).replaceAll(""))
+                        .map(n -> IGNORE_SOME_CHARACTERS_PATTERN.matcher(n).replaceAll(""))
+                        .map(n -> n.toLowerCase())
+                        .distinct()
+                        .count()
+                == 1;
+    }
+
+    private List<String> getFullNamesFromCredentials(List<IdentityClaim> identityClaims) {
+        List<String> userFullNames =
+                identityClaims.stream()
+                        .flatMap(id -> id.getName().stream())
+                        .map(Name::getNameParts)
+                        .map(
+                                nameParts -> {
+                                    String givenNames =
+                                            nameParts.stream()
+                                                    .filter(
+                                                            nameParts1 ->
+                                                                    GIVEN_NAME_PROPERTY_NAME.equals(
+                                                                                    nameParts1
+                                                                                            .getType())
+                                                                            && !nameParts1
+                                                                                    .getValue()
+                                                                                    .equals(""))
+                                                    .map(NameParts::getValue)
+                                                    .collect(Collectors.joining(" "));
+
+                                    String familyNames =
+                                            nameParts.stream()
+                                                    .filter(
+                                                            nameParts1 ->
+                                                                    FAMILY_NAME_PROPERTY_NAME
+                                                                                    .equals(
+                                                                                            nameParts1
+                                                                                                    .getType())
+                                                                            && !nameParts1
+                                                                                    .getValue()
+                                                                                    .equals(""))
+                                                    .map(NameParts::getValue)
+                                                    .collect(Collectors.joining(" "));
+
+                                    return givenNames + " " + familyNames;
+                                })
+                        .map(String::trim)
+                        .collect(Collectors.toList());
+        LOGGER.info("Customer name list {}", userFullNames);
+        return userFullNames;
     }
 }

@@ -209,6 +209,13 @@ public class EvaluateGpg45ScoresHandler
 
     private void checkCorrelation(String userId, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
+        if (!userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(
+                userId, currentVcStatuses)) {
+            LOGGER.error("Name correlation problem in user credentials for userId:{}", userId);
+            throw new HttpResponseExceptionWithErrorBody(
+                    500, ErrorResponse.FAILED_TO_NAME_CORRELATION);
+        }
+
         if (!userIdentityService.checkBirthDateCorrelationInCredentials(
                 userId, currentVcStatuses)) {
             LOGGER.error("Birthdate correlation problem in user credentials for userId:{}", userId);
