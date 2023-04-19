@@ -36,8 +36,23 @@
         },
         {
           "Variable": "$.journey",
+          "StringEquals": "/journey/build-client-oauth-response",
+          "Next": "Success"
+        },
+        {
+          "Variable": "$.journey",
           "StringMatches": "/journey/cri/build-oauth-request/*",
           "Next": "BuildCriOauthRequestFunction"
+        },
+        {
+          "Variable": "$.journey",
+          "StringMatches": "/journey/end-mitigation-journey/*",
+          "Next": "Success"
+        },
+        {
+          "Variable": "$.journey",
+          "StringMatches": "/journey/*",
+          "Next": "ShouldRunProcessJourney"
         }
       ],
       "Default": "Success"
@@ -92,7 +107,7 @@
         },
         {
           "Variable": "$.journey",
-          "StringEquals": "/journey/next",
+          "StringMatches": "/journey/*",
           "Next": "ProcessJourneyStep"
         }
       ],
