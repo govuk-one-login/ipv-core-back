@@ -17,7 +17,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.*;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.CLIENT_SESSION_ID_HEADER;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IP_ADDRESS_HEADER;
 
 class RequestHelperTest {
 

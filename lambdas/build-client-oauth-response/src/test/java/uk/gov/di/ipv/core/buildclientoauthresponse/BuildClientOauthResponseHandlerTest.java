@@ -47,7 +47,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BuildClientOauthResponseHandlerTest {
@@ -55,6 +58,8 @@ class BuildClientOauthResponseHandlerTest {
             Map.of("ipv-session-id", "12345", "ip-address", "192.168.1.100");
     private static final Map<String, String> TEST_EVENT_HEADERS_NO_IPV_SESSION =
             Map.of("client-session-id", "54321", "ip-address", "192.168.1.100");
+    private static final Map<String, String> TEST_EVENT_HEADERS_NO_IPV_AND_CLIENT_SESSION =
+            Map.of("ip-address", "192.168.1.100");
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Map<String, String> VALID_QUERY_PARAMS =
             Map.of(
@@ -166,6 +171,24 @@ class BuildClientOauthResponseHandlerTest {
         assertEquals(expectedRedirectUrl.getHost(), actualRedirectUrl.getHost());
         assertNotNull(params.get(0).getValue());
         assertEquals("test-state", params.get(1).getValue());
+    }
+
+    @Test
+    void shouldReturn400_withBothIpvSessionAndClientSessionIdNullInHeader()
+            throws JsonProcessingException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        event.setQueryStringParameters(VALID_QUERY_PARAMS);
+        event.setHeaders(TEST_EVENT_HEADERS_NO_IPV_AND_CLIENT_SESSION);
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(ErrorResponse.MISSING_SESSION_ID.getCode(), responseBody.get("error"));
+        assertEquals(
+                ErrorResponse.MISSING_SESSION_ID.getMessage(),
+                responseBody.get("error_description"));
     }
 
     @Test

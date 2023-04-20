@@ -31,7 +31,10 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.*;
+import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.net.URISyntaxException;
 import java.util.Collections;
@@ -103,8 +106,6 @@ public class BuildClientOauthResponseHandler
                                 .with("message", "No ipvSession for existing ClientOAuthSession")
                                 .with("clientOAuthSessionId", clientSessionId);
                 LOGGER.info(mapMessage);
-                // We don't have ipvSession here.....should we generate a IPVSession here with this
-                // clientSessionId and then update its auth code below
             } else {
                 throw new HttpResponseExceptionWithErrorBody(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_SESSION_ID);
