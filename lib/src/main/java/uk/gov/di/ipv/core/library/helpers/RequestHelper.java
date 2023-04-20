@@ -97,10 +97,11 @@ public class RequestHelper {
             throws HttpResponseExceptionWithErrorBody {
         String ipvSessionId = RequestHelper.getHeaderByKey(headers, IPV_SESSION_ID_HEADER);
         if (ipvSessionId == null) {
+            String message = String.format("%s not present in header", IPV_SESSION_ID_HEADER);
             if (allowNull) {
-                LOGGER.warn("{} not present in header", IPV_SESSION_ID_HEADER);
+                LOGGER.warn(message);
             } else {
-                LOGGER.error("{} not present in header", IPV_SESSION_ID_HEADER);
+                LOGGER.error(message);
                 throw new HttpResponseExceptionWithErrorBody(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
             }
