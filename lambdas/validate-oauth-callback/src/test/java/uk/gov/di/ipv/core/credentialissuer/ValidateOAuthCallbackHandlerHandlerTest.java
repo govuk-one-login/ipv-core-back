@@ -238,7 +238,9 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         assertEquals(HttpStatus.SC_UNAUTHORIZED, output.get(STATUS_CODE));
         assertEquals("pyi-timeout-recoverable", output.get(PAGE));
         assertEquals("error", output.get(TYPE));
-        assertEquals(clientOAuthSessionItem.getClientOAuthSessionId(), output.get("clientOAuthSessionId"));
+        assertEquals(
+                clientOAuthSessionItem.getClientOAuthSessionId(),
+                output.get("clientOAuthSessionId"));
     }
 
     @Test
