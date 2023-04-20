@@ -747,8 +747,6 @@ class SelectCriHandlerTest {
     private CredentialIssuerConfig createCriConfig(String criId, String criIss, boolean enabled)
             throws URISyntaxException {
         return new CredentialIssuerConfig(
-                criId,
-                criId,
                 new URI("http://example.com/token"),
                 new URI("http://example.com/credential"),
                 new URI("http://example.com/authorize"),
@@ -760,15 +758,13 @@ class SelectCriHandlerTest {
     }
 
     private ClientOAuthSessionItem getClientOAuthSessionItem() {
-        ClientOAuthSessionItem clientOAuthSessionItem =
-                ClientOAuthSessionItem.builder()
-                        .clientOAuthSessionId(SecureTokenHelper.generate())
-                        .responseType("code")
-                        .state("test-state")
-                        .redirectUri("https://example.com/redirect")
-                        .govukSigninJourneyId("test-journey-id")
-                        .userId("test-user-id")
-                        .build();
-        return clientOAuthSessionItem;
+        return ClientOAuthSessionItem.builder()
+                .clientOAuthSessionId(SecureTokenHelper.generate())
+                .responseType("code")
+                .state("test-state")
+                .redirectUri("https://example.com/redirect")
+                .govukSigninJourneyId("test-journey-id")
+                .userId("test-user-id")
+                .build();
     }
 }

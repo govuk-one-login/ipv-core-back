@@ -27,8 +27,6 @@ class VcHelperTest {
         try {
             addressConfig =
                     new CredentialIssuerConfig(
-                            "address",
-                            "address",
                             new URI("https://example.com/token"),
                             new URI("https://example.com/credential"),
                             new URI("https://example.com/authorize"),

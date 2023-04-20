@@ -66,6 +66,7 @@ public class ValidateOAuthCallbackHandler
                     OAuth2Error.SERVER_ERROR_CODE,
                     OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE);
     private static final String PYI_ATTEMPT_RECOVERY_PAGE_ID = "pyi-attempt-recovery";
+    private static final String PYI_TIMEOUT_RECOVERABLE_PAGE_ID = "pyi-timeout-recoverable";
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
     private final AuditService auditService;
@@ -111,20 +112,28 @@ public class ValidateOAuthCallbackHandler
             String ipvSessionId = callbackRequest.getIpvSessionId();
             String criOAuthSessionId = callbackRequest.getState();
 
-            if (ipvSessionId != null) {
+            if (!StringUtils.isBlank(ipvSessionId)) {
                 ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-            } else if (criOAuthSessionId == null) {
+            } else if (!StringUtils.isBlank(criOAuthSessionId)) {
+                criOAuthSessionItem =
+                        criOAuthSessionService.getCriOauthSessionItem(criOAuthSessionId);
+                String clientOAuthSessionId = criOAuthSessionItem.getClientOAuthSessionId();
+                var mapMessage =
+                        new StringMapMessage()
+                                .with("message", "No ipvSession for existing CriOAuthSession")
+                                .with("criId", criOAuthSessionItem.getCriId())
+                                .with("clientOAuthSessionId", clientOAuthSessionId);
+                LOGGER.info(mapMessage);
+                Map<String, Object> pageOutput =
+                        StepFunctionHelpers.generatePageOutputMap(
+                                "error",
+                                HttpStatus.SC_UNAUTHORIZED,
+                                PYI_TIMEOUT_RECOVERABLE_PAGE_ID);
+                pageOutput.put("clientOAuthSessionId", clientOAuthSessionId);
+                return pageOutput;
+            } else {
                 throw new HttpResponseExceptionWithErrorBody(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_OAUTH_STATE);
-            } else {
-                ipvSessionItem =
-                        ipvSessionService
-                                .getIpvSessionByCriOAuthSessionId(criOAuthSessionId)
-                                .orElseThrow(
-                                        () ->
-                                                new HttpResponseExceptionWithErrorBody(
-                                                        HttpStatus.SC_BAD_REQUEST,
-                                                        ErrorResponse.UNRECOVERABLE_OAUTH_STATE));
             }
 
             LogHelper.attachIpvSessionIdToLogs(ipvSessionItem.getIpvSessionId());

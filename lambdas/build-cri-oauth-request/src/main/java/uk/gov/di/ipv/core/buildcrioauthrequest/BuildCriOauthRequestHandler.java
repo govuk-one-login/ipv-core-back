@@ -142,9 +142,9 @@ public class BuildCriOauthRequestHandler
             }
 
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+            String clientOAuthSessionId = ipvSessionItem.getClientOAuthSessionId();
             ClientOAuthSessionItem clientOAuthSessionItem =
-                    clientOAuthSessionDetailsService.getClientOAuthSession(
-                            ipvSessionItem.getClientOAuthSessionId());
+                    clientOAuthSessionDetailsService.getClientOAuthSession(clientOAuthSessionId);
 
             String userId = clientOAuthSessionItem.getUserId();
 
@@ -164,11 +164,11 @@ public class BuildCriOauthRequestHandler
                             currentVcStatuses,
                             criId);
 
-            CriResponse criResponse = getCriResponse(credentialIssuerConfig, jweObject);
+            CriResponse criResponse = getCriResponse(credentialIssuerConfig, jweObject, criId);
 
             persistOauthState(ipvSessionItem, oauthState);
 
-            persistCriOauthState(oauthState, credentialIssuerConfig.getId());
+            persistCriOauthState(oauthState, criId, clientOAuthSessionId);
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
@@ -208,7 +208,7 @@ public class BuildCriOauthRequestHandler
     }
 
     private CriResponse getCriResponse(
-            CredentialIssuerConfig credentialIssuerConfig, JWEObject jweObject)
+            CredentialIssuerConfig credentialIssuerConfig, JWEObject jweObject, String criId)
             throws URISyntaxException {
 
         URIBuilder redirectUri =
@@ -216,12 +216,11 @@ public class BuildCriOauthRequestHandler
                         .addParameter("client_id", credentialIssuerConfig.getClientId())
                         .addParameter("request", jweObject.serialize());
 
-        if (credentialIssuerConfig.getId().equals(DCMAW_CRI_ID)) {
+        if (criId.equals(DCMAW_CRI_ID)) {
             redirectUri.addParameter("response_type", "code");
         }
 
-        return new CriResponse(
-                new CriDetails(credentialIssuerConfig.getId(), redirectUri.build().toString()));
+        return new CriResponse(new CriDetails(criId, redirectUri.build().toString()));
     }
 
     private JWEObject signEncryptJar(
@@ -343,7 +342,8 @@ public class BuildCriOauthRequestHandler
     }
 
     @Tracing
-    private void persistCriOauthState(String oauthState, String criId) {
-        criOAuthSessionService.persistCriOAuthSession(oauthState, criId);
+    private void persistCriOauthState(
+            String oauthState, String criId, String clientOAuthSessionId) {
+        criOAuthSessionService.persistCriOAuthSession(oauthState, criId, clientOAuthSessionId);
     }
 }
