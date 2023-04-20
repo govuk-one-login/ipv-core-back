@@ -10,6 +10,13 @@ ATTEMPT_RECOVERY_STATE:
       response:
         type: journey
         journeyStepId: /journey/evaluate-gpg45-scores
+    timeout-recoverable:
+      type: basic
+      name: timeout-recoverable
+      targetState: END
+      response:
+        type: journey
+        journeyStepId: /journey/build-client-oauth-response
 CRI_STATE:
   name: CRI_STATE
   parent: ATTEMPT_RECOVERY_STATE
