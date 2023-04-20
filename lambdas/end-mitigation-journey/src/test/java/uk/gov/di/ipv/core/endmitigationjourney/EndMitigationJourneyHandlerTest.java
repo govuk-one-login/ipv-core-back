@@ -1,8 +1,6 @@
 package uk.gov.di.ipv.core.endmitigationjourney;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JOSEObjectType;
 import com.nimbusds.jose.JWSAlgorithm;
@@ -25,6 +23,7 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.MitigationJourneyDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
@@ -57,8 +56,6 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IP_ADDRESS_HEADER;
 
 @ExtendWith(MockitoExtension.class)
 class EndMitigationJourneyHandlerTest {
@@ -73,16 +70,10 @@ class EndMitigationJourneyHandlerTest {
     @Mock private Context mockContext;
 
     @InjectMocks
-    private EndMitigationJourneyHandler endMitigationJourneyHandler =
-            new EndMitigationJourneyHandler(
-                    mockUserIdentityService,
-                    mockIpvSessionService,
-                    mockCiStorageService,
-                    mockConfigService,
-                    mockClientOAuthSessionDetailsService);
+    private EndMitigationJourneyHandler endMitigationJourneyHandler;
 
     private IpvSessionItem ipvSessionItem;
-    private List<ContraIndicatorItem> contraIndicatorItems =
+    private final List<ContraIndicatorItem> contraIndicatorItems =
             List.of(
                     new ContraIndicatorItem(
                             "test-user-id",
@@ -92,7 +83,6 @@ class EndMitigationJourneyHandlerTest {
                             "TEST-01",
                             "1234",
                             "1234"));
-    private APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
     private ClientOAuthSessionItem clientOAuthSessionItem;
 
     @BeforeEach
@@ -122,13 +112,15 @@ class EndMitigationJourneyHandlerTest {
                         new ContraIndicatorMitigationDetailsDto(
                                 "TEST-01", mitigationJourneyDetails, true));
         ipvSessionItem.setContraIndicatorMitigationDetails(contraIndicatorMitigationDetails);
+    }
 
-        event.setHeaders(
-                Map.of(
-                        IPV_SESSION_ID_HEADER,
-                        TEST_IPV_SESSION_ID,
-                        IP_ADDRESS_HEADER,
-                        TEST_CLIENT_SOURCE_IP));
+    private static Map<String, String> createRequest(String mitigationId) {
+        return Map.of(
+                StepFunctionHelpers.IPV_SESSION_ID,
+                TEST_IPV_SESSION_ID,
+                StepFunctionHelpers.IP_ADDRESS,
+                TEST_CLIENT_SOURCE_IP,
+                StepFunctionHelpers.JOURNEY, String.format("/journey/end-mitigation-journey/%s", mitigationId));
     }
 
     @Test
@@ -156,9 +148,9 @@ class EndMitigationJourneyHandlerTest {
                                 .serialize());
         when(mockUserIdentityService.getUserIssuedCredentials(any())).thenReturn(credentials);
 
-        event.setPathParameters(Map.of("mitigationId", "MJ01"));
+        Map<String, String> event = createRequest("MJ01");
 
-        APIGatewayProxyResponseEvent response =
+        Map<String, Object> response =
                 endMitigationJourneyHandler.handleRequest(event, mockContext);
 
         ArgumentCaptor<List<String>> mitigatingVcsArguementCaptor =
@@ -216,9 +208,9 @@ class EndMitigationJourneyHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        event.setPathParameters(Map.of("mitigationId", "MJ02"));
+        Map<String, String> event = createRequest("MJ02");
 
-        APIGatewayProxyResponseEvent response =
+        Map<String, Object> response =
                 endMitigationJourneyHandler.handleRequest(event, mockContext);
 
         ArgumentCaptor<List<String>> mitigatingVcsArguementCaptor =
@@ -267,9 +259,9 @@ class EndMitigationJourneyHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        event.setPathParameters(Map.of("mitigationId", "MJ01"));
+        Map<String, String> event = createRequest("MJ01");
 
-        APIGatewayProxyResponseEvent response =
+        Map<String, Object> response =
                 endMitigationJourneyHandler.handleRequest(event, mockContext);
 
         ArgumentCaptor<List<String>> mitigatingVcsArguementCaptor =
@@ -322,9 +314,9 @@ class EndMitigationJourneyHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        event.setPathParameters(Map.of("mitigationId", "MJ02"));
+        Map<String, String> event = createRequest("MJ02");
 
-        APIGatewayProxyResponseEvent response =
+        Map<String, Object> response =
                 endMitigationJourneyHandler.handleRequest(event, mockContext);
 
         ArgumentCaptor<List<String>> mitigatingVcsArguementCaptor =
@@ -374,9 +366,9 @@ class EndMitigationJourneyHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        event.setPathParameters(Map.of("mitigationId", "MJ01"));
+        Map<String, String> event = createRequest("MJ01");
 
-        APIGatewayProxyResponseEvent response =
+        Map<String, Object> response =
                 endMitigationJourneyHandler.handleRequest(event, mockContext);
 
         ArgumentCaptor<List<String>> mitigatingVcsArguementCaptor =
@@ -425,9 +417,9 @@ class EndMitigationJourneyHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        event.setPathParameters(Map.of("mitigationId", "MJ01"));
+        Map<String, String> event = createRequest("MJ01");
 
-        APIGatewayProxyResponseEvent response =
+        Map<String, Object> response =
                 endMitigationJourneyHandler.handleRequest(event, mockContext);
 
         verify(mockCiStorageService, times(0)).submitMitigatingVcList(any(), any(), any());
@@ -472,9 +464,9 @@ class EndMitigationJourneyHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        event.setPathParameters(Map.of("mitigationId", "MJ01"));
+        Map<String, String> event = createRequest("MJ01");
 
-        APIGatewayProxyResponseEvent response =
+        Map<String, Object> response =
                 endMitigationJourneyHandler.handleRequest(event, mockContext);
 
         verify(mockCiStorageService, times(0)).submitMitigatingVcList(any(), any(), any());
@@ -523,9 +515,9 @@ class EndMitigationJourneyHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        event.setPathParameters(Map.of("mitigationId", "MJ01"));
+        Map<String, String> event = createRequest("MJ01");
 
-        APIGatewayProxyResponseEvent response =
+        Map<String, Object> response =
                 endMitigationJourneyHandler.handleRequest(event, mockContext);
 
         ArgumentCaptor<List<String>> mitigatingVcsArguementCaptor =
@@ -577,9 +569,9 @@ class EndMitigationJourneyHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        event.setPathParameters(Map.of("mitigationId", "unknown"));
+        Map<String, String> event = createRequest("unknown");
 
-        APIGatewayProxyResponseEvent response =
+        Map<String, Object> response =
                 endMitigationJourneyHandler.handleRequest(event, mockContext);
         verify(mockCiStorageService, times(0)).submitMitigatingVcList(any(), any(), any());
         verify(mockIpvSessionService, times(0)).updateIpvSession(any());
@@ -623,9 +615,9 @@ class EndMitigationJourneyHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        event.setPathParameters(Map.of("mitigationId", "MJ01"));
+        Map<String, String> event = createRequest("MJ01");
 
-        APIGatewayProxyResponseEvent response =
+        Map<String, Object> response =
                 endMitigationJourneyHandler.handleRequest(event, mockContext);
 
         ArgumentCaptor<List<String>> mitigatingVcsArguementCaptor =

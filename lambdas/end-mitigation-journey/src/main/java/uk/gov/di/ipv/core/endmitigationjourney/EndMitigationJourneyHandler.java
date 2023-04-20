@@ -2,8 +2,6 @@ package uk.gov.di.ipv.core.endmitigationjourney;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,15 +14,13 @@ import uk.gov.di.ipv.core.endmitigationjourney.validation.Mj02Validation;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
@@ -35,19 +31,19 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
  * Lambda called when the user has completed the last step of a mitigation journey
  */
 public class EndMitigationJourneyHandler
-        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+        implements RequestHandler<Map<String, String>, Map<String, Object>> {
 
-    private static final String MITIGATION_ID = "mitigationId";
     private static final String MJ01 = "MJ01";
     private static final String MJ02 = "MJ02";
     private static final String MITIGATION_JOURNEY_ID = "mitigationJourneyId";
-    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
+    private static final String JOURNEY_NEXT = "/journey/next";
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -57,6 +53,7 @@ public class EndMitigationJourneyHandler
     private final ConfigService configService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
 
+    @SuppressWarnings("unused") // Used by tests
     public EndMitigationJourneyHandler(
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
@@ -83,17 +80,17 @@ public class EndMitigationJourneyHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public APIGatewayProxyResponseEvent handleRequest(
-            APIGatewayProxyRequestEvent input, Context context) {
+    public Map<String, Object> handleRequest(
+            Map<String, String> input, Context context) {
         LogHelper.attachComponentIdToLogs();
 
         try {
-            String ipvSessionId = RequestHelper.getIpvSessionId(input);
+            String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 
-            String ipAddress = RequestHelper.getIpAddress(input);
+            String ipAddress = StepFunctionHelpers.getIpAddress(input);
 
-            String mitigationId = input.getPathParameters().get(MITIGATION_ID);
+            String mitigationId = StepFunctionHelpers.getJourneyStep(input);
 
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
@@ -138,7 +135,6 @@ public class EndMitigationJourneyHandler
                                             LOGGER.info(mapMessage);
                                             submitMitigatingVcs(
                                                     mitigatingVcList.get(),
-                                                    ipvSessionItem,
                                                     govUkJourneyId,
                                                     ipAddress);
                                         } else {
@@ -166,15 +162,14 @@ public class EndMitigationJourneyHandler
                                 }
                             });
         } catch (HttpResponseExceptionWithErrorBody e) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getResponseCode(), e.getErrorBody());
+            return StepFunctionHelpers.generateErrorOutputMap(e.getResponseCode(), e.getErrorResponse());
         } catch (CiRetrievalException e) {
             LOGGER.error("Error when fetching CIs from storage system", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
+            return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_GET_STORED_CIS);
         }
 
-        return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, JOURNEY_NEXT);
+        return Map.of(StepFunctionHelpers.JOURNEY, JOURNEY_NEXT);
     }
 
     private Optional<List<String>> validateMitigationJourney(
@@ -219,7 +214,6 @@ public class EndMitigationJourneyHandler
 
     private void submitMitigatingVcs(
             List<String> mitigatingVcs,
-            IpvSessionItem ipvSessionItem,
             String govUkJourneyId,
             String ipAddress) {
         try {
