@@ -117,18 +117,19 @@ public class ValidateOAuthCallbackHandler
             } else if (criOAuthSessionId != null && !criOAuthSessionId.isEmpty()) {
                 criOAuthSessionItem =
                         criOAuthSessionService.getCriOauthSessionItem(criOAuthSessionId);
+                String clientOAuthSessionId = criOAuthSessionItem.getClientOAuthSessionId();
                 var mapMessage =
                         new StringMapMessage()
                                 .with("message", "No ipvSession for existing CriOAuthSession")
                                 .with("criId", criOAuthSessionItem.getCriId())
-                                .with("criOAuthSessionId", criOAuthSessionId);
+                                .with("clientOAuthSessionId", clientOAuthSessionId);
                 LOGGER.info(mapMessage);
                 Map<String, Object> pageOutput =
                         StepFunctionHelpers.generatePageOutputMap(
                                 "error",
                                 HttpStatus.SC_UNAUTHORIZED,
                                 PYI_TIMEOUT_RECOVERABLE_PAGE_ID);
-                pageOutput.put("criOAuthSessionId", criOAuthSessionId);
+                pageOutput.put("clientOAuthSessionId", clientOAuthSessionId);
                 return pageOutput;
             } else {
                 throw new HttpResponseExceptionWithErrorBody(

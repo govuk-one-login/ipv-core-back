@@ -96,6 +96,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         criOAuthSessionItem =
                 CriOAuthSessionItem.builder()
                         .criOAuthSessionId(TEST_OAUTH_STATE)
+                        .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
                         .criId(TEST_CREDENTIAL_ISSUER_ID)
                         .accessToken("testAccessToken")
                         .authorizationCode(TEST_AUTHORIZATION_CODE)
@@ -228,7 +229,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         criCallbackRequestWithoutSessionId.setIpvSessionId(null);
         criCallbackRequestWithoutSessionId.setState(TEST_OAUTH_STATE);
 
-        when(mockCriOAuthSessionService.getCriOauthSessionItem(anyString()))
+        when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
                 .thenReturn(criOAuthSessionItem);
 
         Map<String, Object> output =
@@ -237,7 +238,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         assertEquals(HttpStatus.SC_UNAUTHORIZED, output.get(STATUS_CODE));
         assertEquals("pyi-timeout-recoverable", output.get(PAGE));
         assertEquals("error", output.get(TYPE));
-        assertEquals(TEST_OAUTH_STATE, output.get("criOAuthSessionId"));
+        assertEquals(clientOAuthSessionItem.getClientOAuthSessionId(), output.get("clientOAuthSessionId"));
     }
 
     @Test
