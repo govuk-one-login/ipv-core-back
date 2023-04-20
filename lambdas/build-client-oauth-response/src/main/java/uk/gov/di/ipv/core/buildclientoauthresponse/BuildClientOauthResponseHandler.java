@@ -85,14 +85,34 @@ public class BuildClientOauthResponseHandler
         LogHelper.attachComponentIdToLogs();
 
         try {
-            String ipvSessionId = RequestHelper.getIpvSessionId(input);
+            String ipvSessionId = RequestHelper.getIpvSessionIdAllowNull(input);
+            String clientSessionId = RequestHelper.getClientOAuthSessionId(input);
             String ipAddress = RequestHelper.getIpAddress(input);
-            IpvSessionItem ipvSessionItem = sessionService.getIpvSession(ipvSessionId);
 
-            ClientOAuthSessionItem clientOAuthSessionItem =
-                    clientOAuthSessionService.getClientOAuthSession(
-                            ipvSessionItem.getClientOAuthSessionId());
+            LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
 
+            IpvSessionItem ipvSessionItem = null;
+            ClientOAuthSessionItem clientOAuthSessionItem;
+            if (!StringUtils.isBlank(ipvSessionId)) {
+                ipvSessionItem = sessionService.getIpvSession(ipvSessionId);
+                clientOAuthSessionItem =
+                        clientOAuthSessionService.getClientOAuthSession(
+                                ipvSessionItem.getClientOAuthSessionId());
+            } else if (!StringUtils.isBlank(clientSessionId)) {
+                clientOAuthSessionItem =
+                        clientOAuthSessionService.getClientOAuthSession(clientSessionId);
+                var mapMessage =
+                        new StringMapMessage()
+                                .with("message", "No ipvSession for existing ClientOAuthSession")
+                                .with("clientOAuthSessionId", clientSessionId);
+                LOGGER.info(mapMessage);
+            } else {
+                throw new HttpResponseExceptionWithErrorBody(
+                        HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_SESSION_ID);
+            }
+
+            LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
+            LogHelper.attachClientSessionIdToLogs(clientOAuthSessionItem.getClientOAuthSessionId());
             LogHelper.attachClientIdToLogs(clientOAuthSessionItem.getClientId());
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     clientOAuthSessionItem.getGovukSigninJourneyId());
@@ -106,7 +126,7 @@ public class BuildClientOauthResponseHandler
 
             ClientResponse clientResponse;
 
-            if (ipvSessionItem.getErrorCode() != null) {
+            if (ipvSessionItem != null && ipvSessionItem.getErrorCode() != null) {
                 clientResponse =
                         generateClientErrorResponse(ipvSessionItem, clientOAuthSessionItem);
             } else {
@@ -120,14 +140,15 @@ public class BuildClientOauthResponseHandler
                             HttpStatus.SC_BAD_REQUEST, validationResult.getError());
                 }
 
-                AuthorizationRequest authorizationRequest =
-                        AuthorizationRequest.parse(authParameters);
                 AuthorizationCode authorizationCode = new AuthorizationCode();
-
-                sessionService.setAuthorizationCode(
-                        ipvSessionItem,
-                        authorizationCode.getValue(),
-                        authorizationRequest.getRedirectionURI().toString());
+                if (ipvSessionItem != null) {
+                    AuthorizationRequest authorizationRequest =
+                            AuthorizationRequest.parse(authParameters);
+                    sessionService.setAuthorizationCode(
+                            ipvSessionItem,
+                            authorizationCode.getValue(),
+                            authorizationRequest.getRedirectionURI().toString());
+                }
 
                 clientResponse =
                         generateClientSuccessResponse(
