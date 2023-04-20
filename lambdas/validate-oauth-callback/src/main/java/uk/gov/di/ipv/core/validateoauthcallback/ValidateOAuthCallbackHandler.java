@@ -112,9 +112,9 @@ public class ValidateOAuthCallbackHandler
             String ipvSessionId = callbackRequest.getIpvSessionId();
             String criOAuthSessionId = callbackRequest.getState();
 
-            if (ipvSessionId != null && !ipvSessionId.isEmpty()) {
+            if (!StringUtils.isBlank(ipvSessionId)) {
                 ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
-            } else if (criOAuthSessionId != null && !criOAuthSessionId.isEmpty()) {
+            } else if (!StringUtils.isBlank(criOAuthSessionId)) {
                 criOAuthSessionItem =
                         criOAuthSessionService.getCriOauthSessionItem(criOAuthSessionId);
                 String clientOAuthSessionId = criOAuthSessionItem.getClientOAuthSessionId();
