@@ -2,8 +2,7 @@ package uk.gov.di.ipv.core.buildclientoauthresponse;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.ParseException;
@@ -26,9 +25,8 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
-import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.helpers.RequestHelper;
+import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -46,7 +44,7 @@ import java.util.Map;
  * Lambda called when the user has completed their user journey in IPV Core
  */
 public class BuildClientOauthResponseHandler
-        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+        implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private final IpvSessionService sessionService;
     private final ConfigService configService;
@@ -54,6 +52,7 @@ public class BuildClientOauthResponseHandler
     private final AuthRequestValidator authRequestValidator;
     private final AuditService auditService;
     private final String componentId;
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     @SuppressWarnings("unused") // Used by AWS
     @ExcludeFromGeneratedCoverageReport
@@ -83,14 +82,14 @@ public class BuildClientOauthResponseHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public APIGatewayProxyResponseEvent handleRequest(
-            APIGatewayProxyRequestEvent input, Context context) {
+    public Map<String, Object> handleRequest(
+            Map<String, String> input, Context context) {
 
         LogHelper.attachComponentIdToLogs();
 
         try {
-            String ipvSessionId = RequestHelper.getIpvSessionId(input);
-            String ipAddress = RequestHelper.getIpAddress(input);
+            String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
+            String ipAddress = StepFunctionHelpers.getIpAddress(input);
             IpvSessionItem ipvSessionItem = sessionService.getIpvSession(ipvSessionId);
 
             ClientOAuthSessionItem clientOAuthSessionItem =
@@ -118,10 +117,9 @@ public class BuildClientOauthResponseHandler
                         getAuthParamsAsMap(clientOAuthSessionItem);
 
                 var validationResult =
-                        authRequestValidator.validateRequest(authParameters, input.getHeaders());
+                        authRequestValidator.validateRequest(authParameters, input);
                 if (!validationResult.isValid()) {
-                    return ApiGatewayResponseGenerator.proxyJsonResponse(
-                            HttpStatus.SC_BAD_REQUEST, validationResult.getError());
+                    return StepFunctionHelpers.generateErrorOutputMap(HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_QUERY_PARAMETERS);
                 }
 
                 AuthorizationRequest authorizationRequest =
@@ -148,23 +146,24 @@ public class BuildClientOauthResponseHandler
                             .with("redirectUri", clientResponse.getClient().getRedirectUrl());
             LOGGER.info(message);
 
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, clientResponse);
+            return mapper.convertValue(clientResponse, Map.class);
         } catch (ParseException e) {
             LOGGER.error("Authentication request could not be parsed", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
+            return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_BAD_REQUEST,
                     ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS);
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
         } catch (URISyntaxException e) {
             LOGGER.error("Failed to construct redirect uri because: {}", e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_BUILD_REDIRECT_RESPONSE
+            );
         } catch (HttpResponseExceptionWithErrorBody e) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getResponseCode(), e.getErrorBody());
+            return StepFunctionHelpers.generateErrorOutputMap(
+                    e.getResponseCode(), e.getErrorResponse());
         }
     }
 

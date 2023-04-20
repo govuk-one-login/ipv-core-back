@@ -37,7 +37,7 @@
         {
           "Variable": "$.journey",
           "StringEquals": "/journey/build-client-oauth-response",
-          "Next": "Success"
+          "Next": "BuildClientOauthResponseFunction"
         },
         {
           "Variable": "$.journey",
@@ -100,6 +100,16 @@
     "BuildProvenUserIdentityDetails":{
       "Type": "Task",
       "Resource": "${BuildProvenUserIdentityDetailsFunctionArn}",
+      "Parameters": {
+        "journey.$": "$.journey",
+        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
+        "ipAddress.$": "$$.Execution.Input.ipAddress"
+      },
+      "Next": "ShouldRunProcessJourney"
+    },
+    "BuildClientOauthResponseFunction":{
+      "Type": "Task",
+      "Resource": "${BuildClientOauthResponseFunctionArn}",
       "Parameters": {
         "journey.$": "$.journey",
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",

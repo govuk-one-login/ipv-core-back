@@ -155,23 +155,6 @@ paths:
                   $bodyObj
                 #end
 
-  /journey/build-client-oauth-response:
-    post:
-      description: "Called when the user has completed their user journey in IPV Core"
-      responses:
-        200:
-          description: "Authorization Code and details"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/journeyType"
-      x-amazon-apigateway-integration:
-        httpMethod: "POST"
-        uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildClientOauthResponseFunction.Arn}:live/invocations
-        passthroughBehavior: "when_no_match"
-        type: "aws_proxy"
-
   /journey/build-proven-user-identity-details:
     get:
       description: "Called when core front needs to display information about a users proven identity"

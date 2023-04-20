@@ -1353,6 +1353,7 @@ Resources:
         SelectCriFunctionArn: !GetAtt SelectCriFunction.Arn
         BuildCriOauthRequestFunctionArn: !GetAtt BuildCriOauthRequestFunction.Arn
         BuildProvenUserIdentityDetailsFunctionArn: !GetAtt BuildProvenUserIdentityDetailsFunction.Arn
+        BuildClientOauthResponseFunctionArn: !GetAtt BuildClientOauthResponseFunction.Arn
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1380,6 +1381,8 @@ Resources:
             FunctionName: !Ref BuildCriOauthRequestFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref BuildProvenUserIdentityDetailsFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref BuildClientOauthResponseFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow

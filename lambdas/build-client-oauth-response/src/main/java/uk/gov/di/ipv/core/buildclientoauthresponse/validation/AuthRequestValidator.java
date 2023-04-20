@@ -13,13 +13,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers.IPV_SESSION_ID;
+
 public class AuthRequestValidator {
 
     public static final String RESPONSE_TYPE_PARAM = "response_type";
     public static final String CLIENT_ID_PARAM = "client_id";
     public static final String REDIRECT_URI_PARAM = "redirect_uri";
     public static final String STATE_PARAM = "state";
-    private static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final ConfigService configService;
@@ -52,7 +53,7 @@ public class AuthRequestValidator {
 
     private boolean sessionIdMissing(Map<String, String> requestHeaders) {
         return StringUtils.isBlank(
-                RequestHelper.getHeaderByKey(requestHeaders, IPV_SESSION_ID_HEADER_KEY));
+                RequestHelper.getHeaderByKey(requestHeaders, IPV_SESSION_ID));
     }
 
     private Optional<ErrorResponse> validateRedirectUrl(

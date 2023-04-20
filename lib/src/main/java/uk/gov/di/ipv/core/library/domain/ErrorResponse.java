@@ -50,7 +50,9 @@ public enum ErrorResponse {
     FAILED_TO_INITIALISE_STATE_MACHINE(1041, "Failed to initialise state machine"),
     FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS(
             1042, "Failed to generate the proven user identity details"),
-    FAILED_TO_CONSTRUCT_REDIRECT_URL(1043, "Failed to generate CRI URL");
+    FAILED_TO_CONSTRUCT_REDIRECT_URL(1043, "Failed to generate CRI URL"),
+    FAILED_TO_VALIDATE_BUILD_OAUTH_RESPONSE(1044, "Failed to validate Build Client Oauth response"),
+    FAILED_TO_BUILD_REDIRECT_RESPONSE(1045, "Failed to create redirect response");
 
     @JsonProperty("code")
     private final int code;
