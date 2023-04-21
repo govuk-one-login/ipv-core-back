@@ -48,7 +48,6 @@ import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -134,16 +133,13 @@ class BuildClientOauthResponseHandlerTest {
 
     @Test
     void shouldReturn200OnSuccessfulOauthRequest_withNullIpvSessionAndClientSessionIdInHeader()
-            throws JsonProcessingException, SqsException, URISyntaxException {
-        when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
-                .thenReturn(ValidationResult.createValidResult());
-        IpvSessionItem ipvSessionItem = generateIpvSessionItem();
-        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
-                .thenReturn(getClientOAuthSessionItem());
-
+            throws JsonProcessingException, URISyntaxException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         event.setQueryStringParameters(VALID_QUERY_PARAMS);
         event.setHeaders(TEST_EVENT_HEADERS_NO_IPV_SESSION);
+
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
 
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
@@ -151,26 +147,13 @@ class BuildClientOauthResponseHandlerTest {
 
         ClientResponse responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-
-        verify(mockSessionService, times(0))
-                .setAuthorizationCode(eq(ipvSessionItem), anyString(), eq("https://example.com"));
-
-        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
-        assertEquals(AuditEventTypes.IPV_JOURNEY_END, auditEventCaptor.getValue().getEventName());
-
-        URI expectedRedirectUrl =
-                new URIBuilder("https://example.com")
-                        .addParameter("code", authorizationCode)
-                        .addParameter("state", "test-state")
-                        .build();
-
         URI actualRedirectUrl = new URI(responseBody.getClient().getRedirectUrl());
         List<NameValuePair> params =
                 URLEncodedUtils.parse(actualRedirectUrl, StandardCharsets.UTF_8);
-        assertEquals(expectedRedirectUrl.getHost(), actualRedirectUrl.getHost());
-        assertNotNull(params.get(0).getValue());
-        assertEquals("test-state", params.get(1).getValue());
+        assertEquals("example.com", actualRedirectUrl.getHost());
+        assertEquals("access_denied", params.get(0).getValue());
+        assertEquals("Missing Context", params.get(1).getValue());
+        assertEquals("test-state", params.get(2).getValue());
     }
 
     @Test
@@ -192,7 +175,7 @@ class BuildClientOauthResponseHandlerTest {
     }
 
     @Test
-    void shouldReturn200WhenStateNotInSession() throws Exception {
+    void shouldReturn200WhenStateNotInSession() {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSession(anyString())).thenReturn(generateIpvSessionItem());
@@ -208,9 +191,6 @@ class BuildClientOauthResponseHandlerTest {
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-
-        ClientResponse responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
     }
 
     @Test
