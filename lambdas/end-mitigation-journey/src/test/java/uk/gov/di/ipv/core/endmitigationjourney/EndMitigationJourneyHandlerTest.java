@@ -663,7 +663,8 @@ class EndMitigationJourneyHandlerTest {
                 "test-jwk",
                 "test-jwk",
                 "test-fraud-iss",
-                URI.create("http://example.com/callback"));
+                URI.create("http://example.com/callback"),
+                true);
     }
 
     private SignedJWT generateTestVc(String iss, long nbf, List<String> cis)

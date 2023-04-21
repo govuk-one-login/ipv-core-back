@@ -103,7 +103,10 @@ public class RetrieveCriOauthAccessTokenHandler
             CredentialIssuerConfig credentialIssuerConfig =
                     getCredentialIssuerConfig(credentialIssuerId);
 
-            String apiKey = configService.getCriPrivateApiKey(credentialIssuerId);
+            String apiKey =
+                    credentialIssuerConfig.requiresApiKey()
+                            ? configService.getCriPrivateApiKey(credentialIssuerId)
+                            : null;
 
             BearerAccessToken accessToken =
                     credentialIssuerService.exchangeCodeForToken(

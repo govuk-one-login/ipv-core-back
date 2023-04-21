@@ -106,7 +106,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-p.integration.account.gov.uk",
-                                URI.create("https://example.com/callback")));
+                                URI.create("https://example.com/callback"),
+                                true));
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
@@ -118,7 +119,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-a.integration.account.gov.uk",
-                                URI.create("https://example.com/callback")));
+                                URI.create("https://example.com/callback"),
+                                true));
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -170,7 +172,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-p.integration.account.gov.uk",
-                                URI.create("https://example.com/callback")));
+                                URI.create("https://example.com/callback"),
+                                true));
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
@@ -182,7 +185,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-a.integration.account.gov.uk",
-                                URI.create("https://example.com/callback")));
+                                URI.create("https://example.com/callback"),
+                                true));
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -239,7 +243,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-p.integration.account.gov.uk",
-                                URI.create("https://example.com/callback")));
+                                URI.create("https://example.com/callback"),
+                                true));
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
@@ -251,7 +256,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-a.integration.account.gov.uk",
-                                URI.create("https://example.com/callback")));
+                                URI.create("https://example.com/callback"),
+                                true));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -284,7 +290,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-a.integration.account.gov.uk",
-                                URI.create("https://example.com/callback")));
+                                URI.create("https://example.com/callback"),
+                                true));
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
@@ -342,7 +349,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-p.integration.account.gov.uk",
-                                URI.create("https://example.com/callback")));
+                                URI.create("https://example.com/callback"),
+                                true));
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
@@ -354,7 +362,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-a.integration.account.gov.uk",
-                                URI.create("https://example.com/callback")));
+                                URI.create("https://example.com/callback"),
+                                true));
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("fraud"))
                 .thenReturn(
@@ -366,7 +375,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-f.integration.account.gov.uk",
-                                URI.create("https://example.com/callback")));
+                                URI.create("https://example.com/callback"),
+                                true));
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("kbv"))
                 .thenReturn(
@@ -378,7 +388,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-k.integration.account.gov.uk",
-                                URI.create("https://example.com/callback")));
+                                URI.create("https://example.com/callback"),
+                                true));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         APIGatewayProxyRequestEvent input = createRequestEvent();
@@ -431,7 +442,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-p.integration.account.gov.uk",
-                                URI.create("https://example.com/callback")));
+                                URI.create("https://example.com/callback"),
+                                true));
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
@@ -443,7 +455,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-a.integration.account.gov.uk",
-                                URI.create("https://example.com/callback")));
+                                URI.create("https://example.com/callback"),
+                                true));
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("fraud"))
                 .thenReturn(
@@ -455,7 +468,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-f.integration.account.gov.uk",
-                                URI.create("https://example.com/callback")));
+                                URI.create("https://example.com/callback"),
+                                true));
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("kbv"))
                 .thenReturn(
@@ -467,7 +481,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "test-jwk",
                                 "test-jwk",
                                 "https://review-k.integration.account.gov.uk",
-                                URI.create("https://example.com/callback")));
+                                URI.create("https://example.com/callback"),
+                                true));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         APIGatewayProxyRequestEvent input = createRequestEvent();

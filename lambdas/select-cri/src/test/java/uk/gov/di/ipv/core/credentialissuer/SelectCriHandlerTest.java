@@ -816,7 +816,8 @@ class SelectCriHandlerTest {
                 "test-jwk",
                 "test-jwk",
                 criIss,
-                new URI("http://example.com/redirect"));
+                new URI("http://example.com/redirect"),
+                true);
     }
 
     private ClientOAuthSessionItem getClientOAuthSessionItem() {
