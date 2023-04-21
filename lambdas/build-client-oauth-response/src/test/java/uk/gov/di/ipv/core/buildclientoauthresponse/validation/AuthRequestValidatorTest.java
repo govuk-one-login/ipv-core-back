@@ -114,6 +114,8 @@ class AuthRequestValidatorTest {
 
     @Test
     void validateRequestReturnValidResultForBlankIpvSessionId() {
+        when(mockConfigService.getClientRedirectUrls("12345"))
+                .thenReturn(List.of("http://example.com"));
         var validationResult =
                 validator.validateRequest(
                         VALID_QUERY_STRING_PARAMS,
