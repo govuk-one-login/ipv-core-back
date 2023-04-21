@@ -20,6 +20,7 @@ public class AuthRequestValidator {
     public static final String REDIRECT_URI_PARAM = "redirect_uri";
     public static final String STATE_PARAM = "state";
     private static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
+    private static final String CLIENT_SESSION_ID_HEADER_KEY = "client-session-id";
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final ConfigService configService;
@@ -35,9 +36,9 @@ public class AuthRequestValidator {
             return new ValidationResult<>(false, ErrorResponse.MISSING_QUERY_PARAMETERS);
         }
 
-        if (sessionIdMissing(requestHeaders)) {
-            LOGGER.error("Missing IPV session ID from headers");
-            return new ValidationResult<>(false, ErrorResponse.MISSING_IPV_SESSION_ID);
+        if (sessionIdMissing(requestHeaders) && clientSessionIdMissing(requestHeaders)) {
+            LOGGER.error("Missing IPV session and client session ID from headers");
+            return new ValidationResult<>(false, ErrorResponse.MISSING_SESSION_ID);
         }
 
         var errorResult = validateRedirectUrl(queryStringParameters);
@@ -53,6 +54,11 @@ public class AuthRequestValidator {
     private boolean sessionIdMissing(Map<String, String> requestHeaders) {
         return StringUtils.isBlank(
                 RequestHelper.getHeaderByKey(requestHeaders, IPV_SESSION_ID_HEADER_KEY));
+    }
+
+    private boolean clientSessionIdMissing(Map<String, String> requestHeaders) {
+        return StringUtils.isBlank(
+                RequestHelper.getHeaderByKey(requestHeaders, CLIENT_SESSION_ID_HEADER_KEY));
     }
 
     private Optional<ErrorResponse> validateRedirectUrl(
