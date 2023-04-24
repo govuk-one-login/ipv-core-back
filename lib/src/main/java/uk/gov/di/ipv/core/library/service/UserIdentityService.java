@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.type.CollectionType;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
@@ -15,6 +16,7 @@ import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.Name;
+import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
@@ -23,11 +25,14 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
+import java.text.Normalizer;
 import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
@@ -54,6 +59,12 @@ public class UserIdentityService {
     private static final String PASSPORT_PROPERTY_NAME = "passport";
     private static final String DRIVING_PERMIT_PROPERTY_NAME = "drivingPermit";
     private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final Pattern DIACRITIC_CHECK_PATTERN = Pattern.compile("\\p{M}");
+    private static final Pattern IGNORE_SOME_CHARACTERS_PATTERN = Pattern.compile("[\\s'-]+");
+
+    public static final String GIVEN_NAME_PROPERTY_NAME = "GivenName";
+    public static final String FAMILY_NAME_PROPERTY_NAME = "FamilyName";
+    private static final String PASSPORT_CRI_NAME = "passport";
 
     private final ConfigService configService;
     private final DataStore<VcStoreItem> dataStore;
@@ -161,6 +172,60 @@ public class UserIdentityService {
         return userIdentityBuilder.build();
     }
 
+    private JsonNode getVCClaimNode(String credential) throws HttpResponseExceptionWithErrorBody {
+        try {
+            return objectMapper
+                    .readTree(SignedJWT.parse(credential).getPayload().toString())
+                    .path(VC_CLAIM)
+                    .path(VC_CREDENTIAL_SUBJECT);
+        } catch (ParseException | JsonProcessingException e) {
+            LOGGER.error("Failed to parse VC JWT because: {}", e.getMessage());
+            throw new HttpResponseExceptionWithErrorBody(
+                    500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+        }
+    }
+
+    private <T> T getJsonProperty(
+            JsonNode jsonNode, String propertyName, String criName, CollectionType valueType)
+            throws HttpResponseExceptionWithErrorBody {
+        JsonNode propertyNode = jsonNode.path(propertyName);
+        if (propertyNode.isMissingNode()) {
+            LOGGER.error("{} property is missing from {} VC", propertyName, criName);
+            throw new HttpResponseExceptionWithErrorBody(
+                    500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+        }
+        try {
+            return objectMapper.treeToValue(propertyNode, valueType);
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Failed to parse VC JWT because: {}", e.getMessage());
+            throw new HttpResponseExceptionWithErrorBody(
+                    500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+        }
+    }
+
+    private IdentityClaim getIdentityClaim(String credential)
+            throws HttpResponseExceptionWithErrorBody {
+        JsonNode vcClaimNode = getVCClaimNode(credential);
+        List<Name> names =
+                getJsonProperty(
+                        vcClaimNode,
+                        NAME_PROPERTY_NAME,
+                        PASSPORT_CRI_NAME,
+                        objectMapper
+                                .getTypeFactory()
+                                .constructCollectionType(List.class, Name.class));
+        List<BirthDate> birthDates =
+                getJsonProperty(
+                        vcClaimNode,
+                        BIRTH_DATE_PROPERTY_NAME,
+                        PASSPORT_CRI_NAME,
+                        objectMapper
+                                .getTypeFactory()
+                                .constructCollectionType(List.class, BirthDate.class));
+
+        return new IdentityClaim(names, birthDates);
+    }
+
     private Optional<IdentityClaim> generateIdentityClaim(
             List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
@@ -169,58 +234,7 @@ public class UserIdentityService {
 
             if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())
                     && isVcSuccessful(currentVcStatuses, componentId)) {
-                try {
-                    JsonNode nameNode =
-                            objectMapper
-                                    .readTree(
-                                            SignedJWT.parse(item.getCredential())
-                                                    .getPayload()
-                                                    .toString())
-                                    .path(VC_CLAIM)
-                                    .path(VC_CREDENTIAL_SUBJECT)
-                                    .path(NAME_PROPERTY_NAME);
-
-                    if (nameNode.isMissingNode()) {
-                        LOGGER.error("Name property is missing from passport VC");
-                        throw new HttpResponseExceptionWithErrorBody(
-                                500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
-                    }
-
-                    JsonNode birthDateNode =
-                            objectMapper
-                                    .readTree(
-                                            SignedJWT.parse(item.getCredential())
-                                                    .getPayload()
-                                                    .toString())
-                                    .path(VC_CLAIM)
-                                    .path(VC_CREDENTIAL_SUBJECT)
-                                    .path(BIRTH_DATE_PROPERTY_NAME);
-
-                    if (birthDateNode.isMissingNode()) {
-                        LOGGER.error("BirthDate property is missing from passport VC");
-                        throw new HttpResponseExceptionWithErrorBody(
-                                500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
-                    }
-
-                    List<Name> names =
-                            objectMapper.treeToValue(
-                                    nameNode,
-                                    objectMapper
-                                            .getTypeFactory()
-                                            .constructCollectionType(List.class, Name.class));
-                    List<BirthDate> birthDates =
-                            objectMapper.treeToValue(
-                                    birthDateNode,
-                                    objectMapper
-                                            .getTypeFactory()
-                                            .constructCollectionType(List.class, BirthDate.class));
-
-                    return Optional.of(new IdentityClaim(names, birthDates));
-                } catch (ParseException | JsonProcessingException e) {
-                    LOGGER.error("Failed to parse VC JWT because: {}", e.getMessage());
-                    throw new HttpResponseExceptionWithErrorBody(
-                            500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
-                }
+                return Optional.of(getIdentityClaim(item.getCredential()));
             }
         }
         LOGGER.warn("Failed to generate identity claim");
@@ -386,5 +400,102 @@ public class UserIdentityService {
                 .findFirst()
                 .orElseThrow()
                 .getIsSuccessfulVc();
+    }
+
+    private List<IdentityClaim> getIdentityClaims(
+            List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
+            throws HttpResponseExceptionWithErrorBody {
+        List<IdentityClaim> identityClaims = new ArrayList<>();
+        for (VcStoreItem item : vcStoreItems) {
+            String componentId = configService.getComponentId(item.getCredentialIssuer());
+
+            if (isVcSuccessful(currentVcStatuses, componentId)) {
+                identityClaims.add(getIdentityClaim(item.getCredential()));
+            }
+        }
+        return identityClaims;
+    }
+
+    public boolean checkBirthDateCorrelationInCredentials(
+            String userId, List<VcStatusDto> currentVcStatuses)
+            throws HttpResponseExceptionWithErrorBody {
+        if (currentVcStatuses != null) {
+            List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
+            List<IdentityClaim> identityClaims = getIdentityClaims(vcStoreItems, currentVcStatuses);
+            return identityClaims.stream()
+                            .map(IdentityClaim::getBirthDate)
+                            .flatMap(List::stream)
+                            .map(BirthDate::getValue)
+                            .distinct()
+                            .count()
+                    == 1;
+        }
+        return true;
+    }
+
+    public boolean checkNameAndFamilyNameCorrelationInCredentials(
+            String userId, List<VcStatusDto> currentVcStatuses)
+            throws HttpResponseExceptionWithErrorBody {
+        if (currentVcStatuses != null) {
+            List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
+
+            List<IdentityClaim> identityClaims = getIdentityClaims(vcStoreItems, currentVcStatuses);
+
+            return checkNamesForCorrelation(getFullNamesFromCredentials(identityClaims));
+        }
+        return true;
+    }
+
+    public boolean checkNamesForCorrelation(List<String> userFullNames) {
+        return userFullNames.stream()
+                        .map(n -> Normalizer.normalize(n, Normalizer.Form.NFD))
+                        .map(n -> DIACRITIC_CHECK_PATTERN.matcher(n).replaceAll(""))
+                        .map(n -> IGNORE_SOME_CHARACTERS_PATTERN.matcher(n).replaceAll(""))
+                        .map(n -> n.toLowerCase())
+                        .distinct()
+                        .count()
+                == 1;
+    }
+
+    private List<String> getFullNamesFromCredentials(List<IdentityClaim> identityClaims) {
+        List<String> userFullNames =
+                identityClaims.stream()
+                        .flatMap(id -> id.getName().stream())
+                        .map(Name::getNameParts)
+                        .map(
+                                nameParts -> {
+                                    String givenNames =
+                                            nameParts.stream()
+                                                    .filter(
+                                                            nameParts1 ->
+                                                                    GIVEN_NAME_PROPERTY_NAME.equals(
+                                                                                    nameParts1
+                                                                                            .getType())
+                                                                            && !nameParts1
+                                                                                    .getValue()
+                                                                                    .equals(""))
+                                                    .map(NameParts::getValue)
+                                                    .collect(Collectors.joining(" "));
+
+                                    String familyNames =
+                                            nameParts.stream()
+                                                    .filter(
+                                                            nameParts1 ->
+                                                                    FAMILY_NAME_PROPERTY_NAME
+                                                                                    .equals(
+                                                                                            nameParts1
+                                                                                                    .getType())
+                                                                            && !nameParts1
+                                                                                    .getValue()
+                                                                                    .equals(""))
+                                                    .map(NameParts::getValue)
+                                                    .collect(Collectors.joining(" "));
+
+                                    return givenNames + " " + familyNames;
+                                })
+                        .map(String::trim)
+                        .collect(Collectors.toList());
+        LOGGER.info("Customer name list {}", userFullNames);
+        return userFullNames;
     }
 }
