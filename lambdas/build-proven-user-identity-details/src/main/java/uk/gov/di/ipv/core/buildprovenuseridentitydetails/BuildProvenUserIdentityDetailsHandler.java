@@ -89,7 +89,7 @@ public class BuildProvenUserIdentityDetailsHandler
         ProvenUserIdentityDetails.ProvenUserIdentityDetailsBuilder
                 provenUserIdentityDetailsBuilder = ProvenUserIdentityDetails.builder();
         try {
-            String ipvSessionId = RequestHelper.getIpvSessionId(input.getHeaders());
+            String ipvSessionId = RequestHelper.getIpvSessionId(input);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 
             ClientOAuthSessionItem clientOAuthSessionItem =
