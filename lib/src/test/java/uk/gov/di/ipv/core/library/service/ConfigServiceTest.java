@@ -117,7 +117,9 @@ class ConfigServiceTest {
                         "credentialUrl",
                         TEST_CREDENTIAL_URL,
                         "encryptionKey",
-                        RSA_ENCRYPTION_PUBLIC_JWK);
+                        RSA_ENCRYPTION_PUBLIC_JWK,
+                        "requiresApiKey",
+                        "true");
         when(ssmProvider.get("/dev/core/credentialIssuers/passportCri/activeConnection"))
                 .thenReturn("stub");
 
@@ -142,6 +144,7 @@ class ConfigServiceTest {
         assertEquals(expected.getTokenUrl(), result.getTokenUrl());
         assertEquals(expected.getCredentialUrl(), result.getCredentialUrl());
         assertEquals("RSA", result.getEncryptionKey().getKeyType().toString());
+        assertTrue(result.getRequiresApiKey());
     }
 
     @Test

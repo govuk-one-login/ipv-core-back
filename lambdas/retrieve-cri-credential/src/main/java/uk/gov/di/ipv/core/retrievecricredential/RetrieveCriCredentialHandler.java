@@ -142,7 +142,7 @@ public class RetrieveCriCredentialHandler
                     configService.getCredentialIssuerActiveConnectionConfig(credentialIssuerId);
 
             String apiKey =
-                    credentialIssuerConfig.requiresApiKey()
+                    credentialIssuerConfig.getRequiresApiKey()
                             ? configService.getCriPrivateApiKey(credentialIssuerId)
                             : null;
 

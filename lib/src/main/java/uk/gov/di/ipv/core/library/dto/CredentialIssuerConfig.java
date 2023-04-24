@@ -35,7 +35,7 @@ public class CredentialIssuerConfig {
             String encryptionKey,
             String componentId,
             URI clientCallbackUrl,
-            Boolean requiresApiKey) {
+            boolean requiresApiKey) {
         this.tokenUrl = tokenUrl;
         this.credentialUrl = credentialUrl;
         this.authorizeUrl = authorizeUrl;
@@ -89,7 +89,7 @@ public class CredentialIssuerConfig {
         return clientCallbackUrl;
     }
 
-    public boolean requiresApiKey() {
+    public boolean getRequiresApiKey() {
         return requiresApiKey;
     }
 
