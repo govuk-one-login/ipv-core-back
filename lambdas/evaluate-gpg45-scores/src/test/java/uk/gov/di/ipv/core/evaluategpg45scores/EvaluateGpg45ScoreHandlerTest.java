@@ -725,7 +725,7 @@ class EvaluateGpg45ScoreHandlerTest {
     }
 
     @Test
-    void shouldReturn500IfFailedToNameCorrelationIssues() throws Exception {
+    void shouldReturn500IfFailedDueToNameCorrelationIssues() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -739,9 +739,9 @@ class EvaluateGpg45ScoreHandlerTest {
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_NAME_CORRELATION.getCode(), responseMap.get("error"));
+        assertEquals(ErrorResponse.FAILED_NAME_CORRELATION.getCode(), responseMap.get("error"));
         assertEquals(
-                ErrorResponse.FAILED_TO_NAME_CORRELATION.getMessage(),
+                ErrorResponse.FAILED_NAME_CORRELATION.getMessage(),
                 responseMap.get("error_description"));
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(userIdentityService, times(1))
@@ -750,7 +750,7 @@ class EvaluateGpg45ScoreHandlerTest {
     }
 
     @Test
-    void shouldReturn500IfFailedToBirthdateCorrelationIssues() throws Exception {
+    void shouldReturn500IfFailedDueToBirthdateCorrelationIssues() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -767,9 +767,9 @@ class EvaluateGpg45ScoreHandlerTest {
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_BIRTHDATE_CORRELATION.getCode(), responseMap.get("error"));
+                ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getCode(), responseMap.get("error"));
         assertEquals(
-                ErrorResponse.FAILED_TO_BIRTHDATE_CORRELATION.getMessage(),
+                ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getMessage(),
                 responseMap.get("error_description"));
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(userIdentityService, times(1)).checkBirthDateCorrelationInCredentials(any(), any());

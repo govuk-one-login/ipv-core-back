@@ -51,8 +51,8 @@ public enum ErrorResponse {
             1042, "Failed to generate the proven user identity details"),
     MISSING_SESSION_ID(1043, "Missing ipv session id and client session id in header"),
     MISSING_IP_ADDRESS(1044, "Missing ip address header"),
-    FAILED_TO_BIRTHDATE_CORRELATION(1045, "Birthdate correlation problem in user credentials"),
-    FAILED_TO_NAME_CORRELATION(1046, "Name correlation problem in user credentials");
+    FAILED_BIRTHDATE_CORRELATION(1045, "Failed to correlate gathered birth dates"),
+    FAILED_NAME_CORRELATION(1046, "Failed to correlate gathered names");
 
     @JsonProperty("code")
     private final int code;

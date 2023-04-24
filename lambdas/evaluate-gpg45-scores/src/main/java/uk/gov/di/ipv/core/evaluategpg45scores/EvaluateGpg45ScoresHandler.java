@@ -211,16 +211,16 @@ public class EvaluateGpg45ScoresHandler
             throws HttpResponseExceptionWithErrorBody {
         if (!userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(
                 userId, currentVcStatuses)) {
-            LOGGER.error("Name correlation problem in user credentials for userId:{}", userId);
+            LOGGER.error("Failed to correlate gathered names for userId:{}", userId);
             throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.FAILED_TO_NAME_CORRELATION);
+                    500, ErrorResponse.FAILED_NAME_CORRELATION);
         }
 
         if (!userIdentityService.checkBirthDateCorrelationInCredentials(
                 userId, currentVcStatuses)) {
-            LOGGER.error("Birthdate correlation problem in user credentials for userId:{}", userId);
+            LOGGER.error("Failed to correlate gathered birth dates for userId:{}", userId);
             throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.FAILED_TO_BIRTHDATE_CORRELATION);
+                    500, ErrorResponse.FAILED_BIRTHDATE_CORRELATION);
         }
     }
 
