@@ -29,9 +29,10 @@ class AuthRequestValidatorTest {
     private static final String RESPONSE_TYPE_PARAM = "response_type";
     private static final String SCOPE_PARAM = "scope";
     private static final String IPV_SESSION_ID_HEADER = "ipv-session-id";
+    private static final String CLIENT_SESSION_ID_HEADER = "client-session-id";
 
     private static final Map<String, String> REQUEST_HEADERS =
-            Map.of(IPV_SESSION_ID_HEADER, "12345");
+            Map.of(IPV_SESSION_ID_HEADER, "12345", CLIENT_SESSION_ID_HEADER, "12345");
     private static final Map<String, List<String>> VALID_QUERY_STRING_PARAMS =
             Map.of(
                     REDIRECT_URI_PARAM, List.of("http://example.com"),
@@ -84,32 +85,43 @@ class AuthRequestValidatorTest {
     }
 
     @Test
-    void validateRequestReturnsErrorResponseForMissingSessionId() {
+    void validateRequestReturnsErrorResponseForMissingSessionIds() {
         var validationResult =
                 validator.validateRequest(VALID_QUERY_STRING_PARAMS, Collections.emptyMap());
 
         assertFalse(validationResult.isValid());
         assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getCode(),
-                validationResult.getError().getCode());
+                ErrorResponse.MISSING_SESSION_ID.getCode(), validationResult.getError().getCode());
         assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
+                ErrorResponse.MISSING_SESSION_ID.getMessage(),
                 validationResult.getError().getMessage());
     }
 
     @Test
-    void validateRequestReturnsErrorResponseForBlankSessionId() {
+    void validateRequestReturnsErrorResponseForBlankSessionIds() {
         var validationResult =
                 validator.validateRequest(
-                        VALID_QUERY_STRING_PARAMS, Map.of(IPV_SESSION_ID_HEADER, ""));
+                        VALID_QUERY_STRING_PARAMS,
+                        Map.of(IPV_SESSION_ID_HEADER, "", CLIENT_SESSION_ID_HEADER, ""));
 
         assertFalse(validationResult.isValid());
         assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getCode(),
-                validationResult.getError().getCode());
+                ErrorResponse.MISSING_SESSION_ID.getCode(), validationResult.getError().getCode());
         assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
+                ErrorResponse.MISSING_SESSION_ID.getMessage(),
                 validationResult.getError().getMessage());
+    }
+
+    @Test
+    void validateRequestReturnValidResultForBlankIpvSessionId() {
+        when(mockConfigService.getClientRedirectUrls("12345"))
+                .thenReturn(List.of("http://example.com"));
+        var validationResult =
+                validator.validateRequest(
+                        VALID_QUERY_STRING_PARAMS,
+                        Map.of(IPV_SESSION_ID_HEADER, "", CLIENT_SESSION_ID_HEADER, "12345"));
+
+        assertTrue(validationResult.isValid());
     }
 
     @Test

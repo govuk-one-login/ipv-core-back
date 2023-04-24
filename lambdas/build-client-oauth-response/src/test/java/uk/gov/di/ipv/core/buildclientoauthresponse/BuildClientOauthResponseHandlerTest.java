@@ -55,6 +55,10 @@ import static org.mockito.Mockito.when;
 class BuildClientOauthResponseHandlerTest {
     private static final Map<String, String> TEST_EVENT_HEADERS =
             Map.of("ipv-session-id", "12345", "ip-address", "192.168.1.100");
+    private static final Map<String, String> TEST_EVENT_HEADERS_NO_IPV_SESSION =
+            Map.of("client-session-id", "54321", "ip-address", "192.168.1.100");
+    private static final Map<String, String> TEST_EVENT_HEADERS_NO_IPV_AND_CLIENT_SESSION =
+            Map.of("ip-address", "192.168.1.100");
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Map<String, String> VALID_QUERY_PARAMS =
             Map.of(
@@ -128,7 +132,50 @@ class BuildClientOauthResponseHandlerTest {
     }
 
     @Test
-    void shouldReturn200WhenStateNotInSession() throws Exception {
+    void shouldReturn200OnSuccessfulOauthRequest_withNullIpvSessionAndClientSessionIdInHeader()
+            throws JsonProcessingException, URISyntaxException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        event.setQueryStringParameters(VALID_QUERY_PARAMS);
+        event.setHeaders(TEST_EVENT_HEADERS_NO_IPV_SESSION);
+
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+
+        ClientResponse responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        URI actualRedirectUrl = new URI(responseBody.getClient().getRedirectUrl());
+        List<NameValuePair> params =
+                URLEncodedUtils.parse(actualRedirectUrl, StandardCharsets.UTF_8);
+        assertEquals("example.com", actualRedirectUrl.getHost());
+        assertEquals("access_denied", params.get(0).getValue());
+        assertEquals("Missing Context", params.get(1).getValue());
+        assertEquals("test-state", params.get(2).getValue());
+    }
+
+    @Test
+    void shouldReturn400_withBothIpvSessionAndClientSessionIdNullInHeader()
+            throws JsonProcessingException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        event.setQueryStringParameters(VALID_QUERY_PARAMS);
+        event.setHeaders(TEST_EVENT_HEADERS_NO_IPV_AND_CLIENT_SESSION);
+
+        APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
+
+        Map<String, Object> responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(ErrorResponse.MISSING_SESSION_ID.getCode(), responseBody.get("error"));
+        assertEquals(
+                ErrorResponse.MISSING_SESSION_ID.getMessage(),
+                responseBody.get("error_description"));
+    }
+
+    @Test
+    void shouldReturn200WhenStateNotInSession() {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSession(anyString())).thenReturn(generateIpvSessionItem());
@@ -144,9 +191,6 @@ class BuildClientOauthResponseHandlerTest {
         APIGatewayProxyResponseEvent response = handler.handleRequest(event, context);
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-
-        ClientResponse responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
     }
 
     @Test

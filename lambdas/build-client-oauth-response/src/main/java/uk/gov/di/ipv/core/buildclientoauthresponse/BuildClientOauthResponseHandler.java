@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
+import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
@@ -85,14 +86,39 @@ public class BuildClientOauthResponseHandler
         LogHelper.attachComponentIdToLogs();
 
         try {
-            String ipvSessionId = RequestHelper.getIpvSessionId(input);
+            String ipvSessionId = RequestHelper.getIpvSessionIdAllowNull(input);
+            String clientSessionId = RequestHelper.getClientOAuthSessionId(input);
             String ipAddress = RequestHelper.getIpAddress(input);
-            IpvSessionItem ipvSessionItem = sessionService.getIpvSession(ipvSessionId);
 
-            ClientOAuthSessionItem clientOAuthSessionItem =
-                    clientOAuthSessionService.getClientOAuthSession(
-                            ipvSessionItem.getClientOAuthSessionId());
+            LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
 
+            IpvSessionItem ipvSessionItem;
+            ClientOAuthSessionItem clientOAuthSessionItem;
+            if (!StringUtils.isBlank(ipvSessionId)) {
+                ipvSessionItem = sessionService.getIpvSession(ipvSessionId);
+                clientOAuthSessionItem =
+                        clientOAuthSessionService.getClientOAuthSession(
+                                ipvSessionItem.getClientOAuthSessionId());
+            } else if (!StringUtils.isBlank(clientSessionId)) {
+                clientOAuthSessionItem =
+                        clientOAuthSessionService.getClientOAuthSession(clientSessionId);
+                var mapMessage =
+                        new StringMapMessage()
+                                .with(
+                                        "description",
+                                        "No ipvSession for existing ClientOAuthSession")
+                                .with("clientOAuthSessionId", clientSessionId);
+                LOGGER.info(mapMessage);
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        HttpStatus.SC_OK,
+                        generateClientOAuthSessionErrorResponse(clientOAuthSessionItem));
+            } else {
+                throw new HttpResponseExceptionWithErrorBody(
+                        HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_SESSION_ID);
+            }
+
+            LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
+            LogHelper.attachClientSessionIdToLogs(clientOAuthSessionItem.getClientOAuthSessionId());
             LogHelper.attachClientIdToLogs(clientOAuthSessionItem.getClientId());
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     clientOAuthSessionItem.getGovukSigninJourneyId());
@@ -120,10 +146,9 @@ public class BuildClientOauthResponseHandler
                             HttpStatus.SC_BAD_REQUEST, validationResult.getError());
                 }
 
+                AuthorizationCode authorizationCode = new AuthorizationCode();
                 AuthorizationRequest authorizationRequest =
                         AuthorizationRequest.parse(authParameters);
-                AuthorizationCode authorizationCode = new AuthorizationCode();
-
                 sessionService.setAuthorizationCode(
                         ipvSessionItem,
                         authorizationCode.getValue(),
@@ -184,6 +209,19 @@ public class BuildClientOauthResponseHandler
         URIBuilder uriBuilder = new URIBuilder(clientOAuthSessionItem.getRedirectUri());
         uriBuilder.addParameter("error", ipvSessionItem.getErrorCode());
         uriBuilder.addParameter("error_description", ipvSessionItem.getErrorDescription());
+
+        if (StringUtils.isNotBlank(clientOAuthSessionItem.getState())) {
+            uriBuilder.addParameter("state", clientOAuthSessionItem.getState());
+        }
+
+        return new ClientResponse(new ClientDetails(uriBuilder.build().toString()));
+    }
+
+    private ClientResponse generateClientOAuthSessionErrorResponse(
+            ClientOAuthSessionItem clientOAuthSessionItem) throws URISyntaxException {
+        URIBuilder uriBuilder = new URIBuilder(clientOAuthSessionItem.getRedirectUri());
+        uriBuilder.addParameter("error", OAuth2Error.ACCESS_DENIED.getCode());
+        uriBuilder.addParameter("error_description", "Missing Context");
 
         if (StringUtils.isNotBlank(clientOAuthSessionItem.getState())) {
             uriBuilder.addParameter("state", clientOAuthSessionItem.getState());

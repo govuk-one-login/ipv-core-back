@@ -15,7 +15,6 @@ public enum ErrorResponse {
     INVALID_CREDENTIAL_ISSUER_ID(1008, "Invalid credential issuer id"),
     INVALID_TOKEN_REQUEST(1009, "Invalid token request"),
     MISSING_IPV_SESSION_ID(1010, "Missing ipv session id header"),
-    MISSING_IP_ADDRESS(1010, "Missing ip address header"),
     FAILED_TO_GET_CREDENTIAL_FROM_ISSUER(1011, "Failed to get credential from issuer"),
     FAILED_TO_SAVE_CREDENTIAL(1012, "Failed to save credential"),
     FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS(
@@ -50,8 +49,10 @@ public enum ErrorResponse {
     FAILED_TO_INITIALISE_STATE_MACHINE(1041, "Failed to initialise state machine"),
     FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS(
             1042, "Failed to generate the proven user identity details"),
-    FAILED_TO_BIRTHDATE_CORRELATION(1043, "Birthdate correlation problem in user credentials"),
-    FAILED_TO_NAME_CORRELATION(1044, "Name correlation problem in user credentials");
+    MISSING_SESSION_ID(1043, "Missing ipv session id and client session id in header"),
+    MISSING_IP_ADDRESS(1044, "Missing ip address header"),
+    FAILED_TO_BIRTHDATE_CORRELATION(1045, "Birthdate correlation problem in user credentials"),
+    FAILED_TO_NAME_CORRELATION(1046, "Name correlation problem in user credentials");
 
     @JsonProperty("code")
     private final int code;

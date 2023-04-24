@@ -162,3 +162,12 @@ region = "eu-west-2"
 capabilities = "CAPABILITY_IAM"
 parameter_overrides = "Environment=\"dev-shivp\" VpcStackName=\"network-shared-development\""
 parallel = "true"
+
+[dev-martins.deploy.parameters]
+stack_name = "core-back-dev-martins"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-ec647gpjuo2w"
+s3_prefix = "martins-core-back-stack"
+region = "eu-west-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=\"dev-martins\" VpcStackName=\"network-shared-development\""
+parallel = "true"

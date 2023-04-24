@@ -29,7 +29,6 @@ import uk.gov.di.ipv.core.validateoauthcallback.dto.CriCallbackRequest;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -97,6 +96,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         criOAuthSessionItem =
                 CriOAuthSessionItem.builder()
                         .criOAuthSessionId(TEST_OAUTH_STATE)
+                        .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
                         .criId(TEST_CREDENTIAL_ISSUER_ID)
                         .accessToken("testAccessToken")
                         .authorizationCode(TEST_AUTHORIZATION_CODE)
@@ -224,22 +224,23 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     }
 
     @Test
-    void shouldReceive400ResponseCodeIfSessionNotPresentForCriOAuthSession() {
+    void shouldReceiveAccessDeniedJourneyIfSessionNotPresentForCriOAuthSession() {
         CriCallbackRequest criCallbackRequestWithoutSessionId = validCriCallbackRequest();
         criCallbackRequestWithoutSessionId.setIpvSessionId(null);
-        criCallbackRequestWithoutSessionId.setState(null);
         criCallbackRequestWithoutSessionId.setState(TEST_OAUTH_STATE);
 
-        when(mockIpvSessionService.getIpvSessionByCriOAuthSessionId(anyString()))
-                .thenReturn(Optional.empty());
+        when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
+                .thenReturn(criOAuthSessionItem);
 
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithoutSessionId, context);
 
-        assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
-        assertEquals(ErrorResponse.UNRECOVERABLE_OAUTH_STATE.getCode(), output.get(CODE));
-        assertEquals(ErrorResponse.UNRECOVERABLE_OAUTH_STATE.getMessage(), output.get(MESSAGE));
-        verify(mockCriOAuthSessionService, times(0)).getCriOauthSessionItem(any());
+        assertEquals(HttpStatus.SC_UNAUTHORIZED, output.get(STATUS_CODE));
+        assertEquals("pyi-timeout-recoverable", output.get(PAGE));
+        assertEquals("error", output.get(TYPE));
+        assertEquals(
+                clientOAuthSessionItem.getClientOAuthSessionId(),
+                output.get("clientOAuthSessionId"));
     }
 
     @Test

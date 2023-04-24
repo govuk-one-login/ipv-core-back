@@ -64,7 +64,9 @@ class CriOAuthSessionServiceTest {
 
         CriOAuthSessionItem result =
                 criOauthSessionService.persistCriOAuthSession(
-                        criOAuthSessionItem.getCriOAuthSessionId(), criOAuthSessionItem.getCriId());
+                        criOAuthSessionItem.getCriOAuthSessionId(),
+                        criOAuthSessionItem.getCriId(),
+                        criOAuthSessionItem.getClientOAuthSessionId());
 
         ArgumentCaptor<CriOAuthSessionItem> criOAuthSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(CriOAuthSessionItem.class);

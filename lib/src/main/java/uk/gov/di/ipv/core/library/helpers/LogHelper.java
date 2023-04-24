@@ -24,6 +24,7 @@ public class LogHelper {
         ERROR_DESCRIPTION_LOG_FIELD("errorDescription"),
         GOVUK_SIGNIN_JOURNEY_ID_FIELD("govuk_signin_journey_id"),
         IPV_SESSION_ID_LOG_FIELD("ipvSessionId"),
+        CLIENT_SESSION_ID_LOG_FIELD("clientSessionId"),
         JTI_LOG_FIELD("jti"),
         JTI_USED_AT_LOG_FIELD("jtiUsedAt"),
         NUMBER_OF_VCS("numberOfVCs"),
@@ -59,6 +60,10 @@ public class LogHelper {
 
     public static void attachIpvSessionIdToLogs(String sessionId) {
         attachFieldToLogs(LogField.IPV_SESSION_ID_LOG_FIELD, sessionId);
+    }
+
+    public static void attachClientSessionIdToLogs(String sessionId) {
+        attachFieldToLogs(LogField.CLIENT_SESSION_ID_LOG_FIELD, sessionId);
     }
 
     public static void attachGovukSigninJourneyIdToLogs(String govukSigninJourneyId) {
