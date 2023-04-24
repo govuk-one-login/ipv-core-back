@@ -128,7 +128,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void checkValidateBirthDatesInCredentialsSuccess() throws HttpResponseExceptionWithErrorBody {
+    void checkBirthDateCorrelationInCredentialsReturnsTrueWhenBirthDatesSame() throws HttpResponseExceptionWithErrorBody {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_2, Instant.now()),
@@ -147,7 +147,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void checkValidateBirthDatesInCredentialsFalse() throws HttpResponseExceptionWithErrorBody {
+    void checkBirthDateCorrelationInCredentialsReturnsFalseWhenBirthDatesDiffer() throws HttpResponseExceptionWithErrorBody {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
