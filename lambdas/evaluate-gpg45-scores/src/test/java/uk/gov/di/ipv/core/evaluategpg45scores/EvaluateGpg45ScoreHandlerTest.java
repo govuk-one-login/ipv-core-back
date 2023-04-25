@@ -91,6 +91,7 @@ class EvaluateGpg45ScoreHandlerTest {
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
     private static final JourneyResponse JOURNEY_END = new JourneyResponse("/journey/end");
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
+    private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
 
     static {
@@ -324,7 +325,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
-                .thenReturn(Optional.of(new JourneyResponse("/journey/pyi-no-match")));
+                .thenReturn(Optional.of(new JourneyResponse(JOURNEY_PYI_NO_MATCH)));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -332,7 +333,7 @@ class EvaluateGpg45ScoreHandlerTest {
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals("/journey/pyi-no-match", journeyResponse.getJourney());
+        assertEquals(JOURNEY_PYI_NO_MATCH, journeyResponse.getJourney());
     }
 
     @Test
@@ -725,7 +726,7 @@ class EvaluateGpg45ScoreHandlerTest {
     }
 
     @Test
-    void shouldReturn500IfFailedDueToNameCorrelationIssues() throws Exception {
+    void shouldReturnPyiNoMatchIfFailedDueToNameCorrelationIssues() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -734,15 +735,11 @@ class EvaluateGpg45ScoreHandlerTest {
 
         var response = evaluateGpg45ScoresHandler.handleRequest(event, context);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
-        Map<String, Object> responseMap =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_NAME_CORRELATION.getCode(), responseMap.get("error"));
-        assertEquals(
-                ErrorResponse.FAILED_NAME_CORRELATION.getMessage(),
-                responseMap.get("error_description"));
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(JOURNEY_PYI_NO_MATCH, journeyResponse.getJourney());
+
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(userIdentityService, times(1))
                 .checkNameAndFamilyNameCorrelationInCredentials(any(), any());
@@ -750,7 +747,7 @@ class EvaluateGpg45ScoreHandlerTest {
     }
 
     @Test
-    void shouldReturn500IfFailedDueToBirthdateCorrelationIssues() throws Exception {
+    void shouldReturnPyiNoMatchIfFailedDueToBirthdateCorrelationIssues() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -761,16 +758,11 @@ class EvaluateGpg45ScoreHandlerTest {
 
         var response = evaluateGpg45ScoresHandler.handleRequest(event, context);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
-        Map<String, Object> responseMap =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getCode(), responseMap.get("error"));
-        assertEquals(
-                ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getMessage(),
-                responseMap.get("error_description"));
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        assertEquals(JOURNEY_PYI_NO_MATCH, journeyResponse.getJourney());
+
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(userIdentityService, times(1)).checkBirthDateCorrelationInCredentials(any(), any());
     }
