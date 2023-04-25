@@ -64,6 +64,7 @@ public class EvaluateGpg45ScoresHandler
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
     private static final JourneyResponse JOURNEY_END = new JourneyResponse("/journey/end");
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
+    private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
     private static final String VOT_P2 = "P2";
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int ONLY = 0;
@@ -178,7 +179,10 @@ public class EvaluateGpg45ScoresHandler
 
             updateSuccessfulVcStatuses(ipvSessionItem, credentials);
 
-            checkCorrelation(userId, ipvSessionItem.getCurrentVcStatuses());
+            if (!checkCorrelation(userId, ipvSessionItem.getCurrentVcStatuses())) {
+                return ApiGatewayResponseGenerator.proxyJsonResponse(
+                        HttpStatus.SC_OK, new JourneyResponse(JOURNEY_PYI_NO_MATCH));
+            }
 
             LOGGER.info(message);
 
@@ -207,21 +211,32 @@ public class EvaluateGpg45ScoresHandler
         }
     }
 
-    private void checkCorrelation(String userId, List<VcStatusDto> currentVcStatuses)
+    private boolean checkCorrelation(String userId, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
         if (!userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(
                 userId, currentVcStatuses)) {
-            LOGGER.error("Failed to correlate gathered names for userId:{}", userId);
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.FAILED_NAME_CORRELATION);
+            var message = new StringMapMessage();
+            message.with("errorCode", ErrorResponse.FAILED_NAME_CORRELATION.getCode())
+                    .with("errorDescription", ErrorResponse.FAILED_NAME_CORRELATION.getMessage())
+                    .with("userId", userId)
+                    .with("journeyResponse", JOURNEY_PYI_NO_MATCH);
+            LOGGER.error(message);
+            return false;
         }
 
         if (!userIdentityService.checkBirthDateCorrelationInCredentials(
                 userId, currentVcStatuses)) {
-            LOGGER.error("Failed to correlate gathered birth dates for userId:{}", userId);
-            throw new HttpResponseExceptionWithErrorBody(
-                    500, ErrorResponse.FAILED_BIRTHDATE_CORRELATION);
+            var message = new StringMapMessage();
+            message.with("errorCode", ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getCode())
+                    .with(
+                            "errorDescription",
+                            ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getMessage())
+                    .with("userId", userId)
+                    .with("journeyResponse", JOURNEY_PYI_NO_MATCH);
+            LOGGER.error(message);
+            return false;
         }
+        return true;
     }
 
     @Tracing
