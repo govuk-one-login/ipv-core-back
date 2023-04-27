@@ -30,6 +30,7 @@ import java.text.ParseException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -188,13 +189,16 @@ public class UserIdentityService {
             JsonNode jsonNode,
             String propertyName,
             String credentialIssuer,
-            CollectionType valueType)
+            CollectionType valueType,
+            boolean validateCorrelation)
             throws HttpResponseExceptionWithErrorBody {
         JsonNode propertyNode = jsonNode.path(propertyName);
-        if (propertyNode.isMissingNode()) {
+        if (!validateCorrelation && propertyNode.isMissingNode()) {
             LOGGER.error("Property [{}] is missing from [{}] VC.", propertyName, credentialIssuer);
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+        } else if (propertyNode.isMissingNode()) {
+            return (T) Collections.emptyList();
         }
         try {
             return objectMapper.treeToValue(propertyNode, valueType);
@@ -205,7 +209,8 @@ public class UserIdentityService {
         }
     }
 
-    private IdentityClaim getIdentityClaim(String credential, String credentialIssuer)
+    private IdentityClaim getIdentityClaim(
+            String credential, String credentialIssuer, boolean validateCorrelation)
             throws HttpResponseExceptionWithErrorBody {
         JsonNode vcClaimNode = getVCClaimNode(credential);
         List<Name> names =
@@ -215,7 +220,8 @@ public class UserIdentityService {
                         credentialIssuer,
                         objectMapper
                                 .getTypeFactory()
-                                .constructCollectionType(List.class, Name.class));
+                                .constructCollectionType(List.class, Name.class),
+                        validateCorrelation);
         List<BirthDate> birthDates =
                 getJsonProperty(
                         vcClaimNode,
@@ -223,7 +229,8 @@ public class UserIdentityService {
                         credentialIssuer,
                         objectMapper
                                 .getTypeFactory()
-                                .constructCollectionType(List.class, BirthDate.class));
+                                .constructCollectionType(List.class, BirthDate.class),
+                        validateCorrelation);
 
         return new IdentityClaim(names, birthDates);
     }
@@ -237,7 +244,7 @@ public class UserIdentityService {
             if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())
                     && isVcSuccessful(currentVcStatuses, componentId)) {
                 return Optional.of(
-                        getIdentityClaim(item.getCredential(), item.getCredentialIssuer()));
+                        getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), false));
             }
         }
         LOGGER.warn("Failed to generate identity claim");
@@ -414,7 +421,7 @@ public class UserIdentityService {
 
             if (isVcSuccessful(currentVcStatuses, componentId)) {
                 identityClaims.add(
-                        getIdentityClaim(item.getCredential(), item.getCredentialIssuer()));
+                        getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), true));
             }
         }
         return identityClaims;
@@ -432,7 +439,7 @@ public class UserIdentityService {
                             .map(BirthDate::getValue)
                             .distinct()
                             .count()
-                    == 1;
+                    <= 1;
         }
         return true;
     }
@@ -458,7 +465,7 @@ public class UserIdentityService {
                         .map(n -> n.toLowerCase())
                         .distinct()
                         .count()
-                == 1;
+                <= 1;
     }
 
     private List<String> getFullNamesFromCredentials(List<IdentityClaim> identityClaims) {

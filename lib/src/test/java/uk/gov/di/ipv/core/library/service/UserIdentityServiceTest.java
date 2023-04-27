@@ -188,7 +188,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void checkNameCorrelationInCredentialsReturnTrueWhenNameDiffer()
+    void checkNameCorrelationInCredentialsReturnFalseWhenNameDiffer()
             throws HttpResponseExceptionWithErrorBody {
         List<VcStoreItem> vcStoreItems =
                 List.of(
@@ -205,6 +205,122 @@ class UserIdentityServiceTest {
                         USER_ID_1, currentVcStatuses);
 
         assertFalse(isValid);
+    }
+
+    @Test
+    void checkNameCorrelationWithSameNamesAndMissingNameCredentialsForReturnTrue()
+            throws HttpResponseExceptionWithErrorBody {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(
+                                USER_ID_1,
+                                "ukPassport",
+                                SIGNED_PASSPORT_VC_MISSING_NAME,
+                                Instant.now()),
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem(
+                                USER_ID_1,
+                                "ukPassport",
+                                SIGNED_PASSPORT_VC_MISSING_NAME,
+                                Instant.now()),
+                        createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_1, Instant.now()));
+
+        List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("test-issuer", true));
+
+        when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
+        when(mockConfigService.getComponentId(any())).thenReturn("test-issuer");
+
+        boolean isValid =
+                userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(
+                        USER_ID_1, currentVcStatuses);
+
+        assertTrue(isValid);
+    }
+
+    @Test
+    void checkNameCorrelationWithMissingNameCredentialsForReturnTrue()
+            throws HttpResponseExceptionWithErrorBody {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(
+                                USER_ID_1,
+                                "ukPassport",
+                                SIGNED_PASSPORT_VC_MISSING_NAME,
+                                Instant.now()),
+                        createVcStoreItem(
+                                USER_ID_1,
+                                "ukPassport",
+                                SIGNED_PASSPORT_VC_MISSING_NAME,
+                                Instant.now()));
+
+        List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("test-issuer", true));
+
+        when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
+        when(mockConfigService.getComponentId(any())).thenReturn("test-issuer");
+
+        boolean isValid =
+                userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(
+                        USER_ID_1, currentVcStatuses);
+
+        assertTrue(isValid);
+    }
+
+    @Test
+    void checkNameCorrelationWithSameBirthDatesAndMissingBirthDateCredentialsForReturnTrue()
+            throws HttpResponseExceptionWithErrorBody {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(
+                                USER_ID_1,
+                                "ukPassport",
+                                SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE,
+                                Instant.now()),
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(
+                                USER_ID_1,
+                                "ukPassport",
+                                SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE,
+                                Instant.now()),
+                        createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_3, Instant.now()));
+
+        List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("test-issuer", true));
+
+        when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
+        when(mockConfigService.getComponentId(any())).thenReturn("test-issuer");
+
+        boolean isValid =
+                userIdentityService.checkBirthDateCorrelationInCredentials(
+                        USER_ID_1, currentVcStatuses);
+
+        assertTrue(isValid);
+    }
+
+    @Test
+    void checkNameCorrelationWithMissingBirthDateCredentialsForReturnTrue()
+            throws HttpResponseExceptionWithErrorBody {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(
+                                USER_ID_1,
+                                "ukPassport",
+                                SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE,
+                                Instant.now()),
+                        createVcStoreItem(
+                                USER_ID_1,
+                                "ukPassport",
+                                SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE,
+                                Instant.now()));
+
+        List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("test-issuer", true));
+
+        when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
+        when(mockConfigService.getComponentId(any())).thenReturn("test-issuer");
+
+        boolean isValid =
+                userIdentityService.checkBirthDateCorrelationInCredentials(
+                        USER_ID_1, currentVcStatuses);
+
+        assertTrue(isValid);
     }
 
     @Test
