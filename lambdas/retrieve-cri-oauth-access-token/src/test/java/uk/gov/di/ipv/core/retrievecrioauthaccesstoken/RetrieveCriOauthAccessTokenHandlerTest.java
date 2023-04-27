@@ -15,8 +15,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerService;
-import uk.gov.di.ipv.core.library.credentialissuer.exceptions.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.JourneyError;
@@ -30,6 +28,8 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.retrievecrioauthaccesstoken.exception.AuthCodeToAccessTokenException;
+import uk.gov.di.ipv.core.retrievecrioauthaccesstoken.service.AuthCodeToAccessTokenService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -58,7 +58,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     private static final String TEST_AUTH_CODE = "test-auth-code";
 
     @Mock private Context context;
-    @Mock private CredentialIssuerService credentialIssuerService;
+    @Mock private AuthCodeToAccessTokenService authCodeToAccessTokenService;
     @Mock private AuditService auditService;
     @Mock private static ConfigService configService;
     @Mock private IpvSessionService ipvSessionService;
@@ -105,7 +105,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         JSONObject testCredential = new JSONObject();
         testCredential.appendField("foo", "bar");
 
-        when(credentialIssuerService.exchangeCodeForToken(
+        when(authCodeToAccessTokenService.exchangeCodeForToken(
                         TEST_AUTH_CODE, passportIssuer, testApiKey, CREDENTIAL_ISSUER_ID))
                 .thenReturn(new BearerAccessToken());
 
@@ -136,10 +136,10 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     void shouldThrowJourneyErrorIfCredentialIssuerServiceThrowsException() {
         Map<String, String> input = Map.of(IPV_SESSION_ID, sessionId);
 
-        when(credentialIssuerService.exchangeCodeForToken(
+        when(authCodeToAccessTokenService.exchangeCodeForToken(
                         TEST_AUTH_CODE, passportIssuer, testApiKey, CREDENTIAL_ISSUER_ID))
                 .thenThrow(
-                        new CredentialIssuerException(
+                        new AuthCodeToAccessTokenException(
                                 HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST));
 
         when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
@@ -158,7 +158,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     void shouldSendIpvVcReceivedAuditEvent() throws Exception {
         BearerAccessToken accessToken = mock(BearerAccessToken.class);
 
-        when(credentialIssuerService.exchangeCodeForToken(
+        when(authCodeToAccessTokenService.exchangeCodeForToken(
                         TEST_AUTH_CODE, passportIssuer, testApiKey, CREDENTIAL_ISSUER_ID))
                 .thenReturn(accessToken);
 
@@ -232,10 +232,10 @@ class RetrieveCriOauthAccessTokenHandlerTest {
 
         when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
 
-        when(credentialIssuerService.exchangeCodeForToken(
+        when(authCodeToAccessTokenService.exchangeCodeForToken(
                         TEST_AUTH_CODE, passportIssuer, testApiKey, CREDENTIAL_ISSUER_ID))
                 .thenThrow(
-                        new CredentialIssuerException(
+                        new AuthCodeToAccessTokenException(
                                 HTTPResponse.SC_BAD_REQUEST, ErrorResponse.INVALID_TOKEN_REQUEST));
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
@@ -311,15 +311,13 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     }
 
     private ClientOAuthSessionItem getClientOAuthSessionItem() {
-        ClientOAuthSessionItem clientOAuthSessionItem =
-                ClientOAuthSessionItem.builder()
-                        .clientOAuthSessionId(SecureTokenHelper.generate())
-                        .responseType("code")
-                        .state("test-state")
-                        .redirectUri("https://example.com/redirect")
-                        .govukSigninJourneyId("test-journey-id")
-                        .userId("test-user-id")
-                        .build();
-        return clientOAuthSessionItem;
+        return ClientOAuthSessionItem.builder()
+                .clientOAuthSessionId(SecureTokenHelper.generate())
+                .responseType("code")
+                .state("test-state")
+                .redirectUri("https://example.com/redirect")
+                .govukSigninJourneyId("test-journey-id")
+                .userId("test-user-id")
+                .build();
     }
 }

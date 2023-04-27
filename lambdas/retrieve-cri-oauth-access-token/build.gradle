@@ -15,13 +15,13 @@ dependencies {
 			"com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			project(":lib"),
-			project(":libs:credential-issuer-service"),
 			project(":libs:kms-es256-signer")
 
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
 
-	testImplementation "org.junit.jupiter:junit-jupiter:5.8.2",
+	testImplementation "com.github.tomakehurst:wiremock-jre8:2.35.0",
+			"org.junit.jupiter:junit-jupiter:5.8.2",
 			"org.mockito:mockito-junit-jupiter:4.1.0",
 			project(":lib").sourceSets.test.output
 }

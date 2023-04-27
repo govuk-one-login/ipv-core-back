@@ -19,8 +19,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerService;
-import uk.gov.di.ipv.core.library.credentialissuer.exceptions.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
@@ -29,12 +27,18 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
-import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.*;
+import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.CiStorageService;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
+import uk.gov.di.ipv.core.retrievecricredential.exception.VerifiableCredentialException;
+import uk.gov.di.ipv.core.retrievecricredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.retrievecricredential.validation.VerifiableCredentialJwtValidator;
 
 import java.text.ParseException;
@@ -52,7 +56,7 @@ public class RetrieveCriCredentialHandler
     private static final Map<String, Object> JOURNEY_NEXT = Map.of(JOURNEY, "/journey/next");
     private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, "/journey/error");
 
-    private final CredentialIssuerService credentialIssuerService;
+    private final VerifiableCredentialService verifiableCredentialService;
     private final IpvSessionService ipvSessionService;
     private final ConfigService configService;
     private final AuditService auditService;
@@ -64,7 +68,7 @@ public class RetrieveCriCredentialHandler
     private String componentId;
 
     public RetrieveCriCredentialHandler(
-            CredentialIssuerService credentialIssuerService,
+            VerifiableCredentialService verifiableCredentialService,
             IpvSessionService ipvSessionService,
             ConfigService configService,
             AuditService auditService,
@@ -72,7 +76,7 @@ public class RetrieveCriCredentialHandler
             CiStorageService ciStorageService,
             CriOAuthSessionService criOAuthSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionService) {
-        this.credentialIssuerService = credentialIssuerService;
+        this.verifiableCredentialService = verifiableCredentialService;
         this.ipvSessionService = ipvSessionService;
         this.configService = configService;
         this.auditService = auditService;
@@ -85,9 +89,7 @@ public class RetrieveCriCredentialHandler
     @ExcludeFromGeneratedCoverageReport
     public RetrieveCriCredentialHandler() {
         this.configService = new ConfigService();
-        this.credentialIssuerService =
-                new CredentialIssuerService(
-                        configService, new KmsEs256Signer(configService.getSigningKeyId()));
+        this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator();
@@ -144,7 +146,7 @@ public class RetrieveCriCredentialHandler
             String apiKey = configService.getCriPrivateApiKey(credentialIssuerId);
 
             List<SignedJWT> verifiableCredentials =
-                    credentialIssuerService.getVerifiableCredential(
+                    verifiableCredentialService.getVerifiableCredential(
                             BearerAccessToken.parse(criOAuthSessionItem.getAccessToken()),
                             credentialIssuerConfig,
                             apiKey,
@@ -162,7 +164,7 @@ public class RetrieveCriCredentialHandler
                 submitVcToCiStorage(
                         vc, clientOAuthSessionItem.getGovukSigninJourneyId(), ipAddress);
 
-                credentialIssuerService.persistUserCredentials(vc, credentialIssuerId, userId);
+                verifiableCredentialService.persistUserCredentials(vc, credentialIssuerId, userId);
             }
 
             updateVisitedCredentials(ipvSessionItem, credentialIssuerId, true, null);
@@ -174,7 +176,7 @@ public class RetrieveCriCredentialHandler
             LOGGER.info(message);
 
             return JOURNEY_NEXT;
-        } catch (CredentialIssuerException | CiPutException e) {
+        } catch (VerifiableCredentialException | CiPutException e) {
             updateVisitedCredentials(
                     ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
 

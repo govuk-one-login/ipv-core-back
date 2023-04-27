@@ -17,8 +17,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionsVcEvidence;
-import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerService;
-import uk.gov.di.ipv.core.library.credentialissuer.exceptions.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.CiPutException;
@@ -33,6 +31,8 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.retrievecricredential.exception.VerifiableCredentialException;
+import uk.gov.di.ipv.core.retrievecricredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.retrievecricredential.validation.VerifiableCredentialJwtValidator;
 
 import java.net.URI;
@@ -74,7 +74,7 @@ class RetrieveCriCredentialHandlerTest {
     private static final String passportIssuerId = CREDENTIAL_ISSUER_ID;
 
     @Mock private Context context;
-    @Mock private CredentialIssuerService credentialIssuerService;
+    @Mock private VerifiableCredentialService verifiableCredentialService;
     @Mock private AuditService auditService;
     @Mock private static ConfigService configService;
     @Mock private VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
@@ -139,7 +139,7 @@ class RetrieveCriCredentialHandlerTest {
     @Test
     void shouldReturnJourneyResponseOnSuccessfulRequest() throws Exception {
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(credentialIssuerService.getVerifiableCredential(
+        when(verifiableCredentialService.getVerifiableCredential(
                         testBearerAccessToken,
                         testPassportIssuer,
                         testApiKey,
@@ -168,7 +168,7 @@ class RetrieveCriCredentialHandlerTest {
                 .thenReturn(testPassportIssuer);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
         when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
-        when(credentialIssuerService.getVerifiableCredential(
+        when(verifiableCredentialService.getVerifiableCredential(
                         testBearerAccessToken,
                         testPassportIssuer,
                         testApiKey,
@@ -213,10 +213,10 @@ class RetrieveCriCredentialHandlerTest {
     void shouldReturnErrorJourneyResponseIfCredentialIssuerServiceGetCredentialThrows() {
         mockServiceCallsAndSessionItem();
 
-        when(credentialIssuerService.getVerifiableCredential(
+        when(verifiableCredentialService.getVerifiableCredential(
                         any(), any(), anyString(), anyString()))
                 .thenThrow(
-                        new CredentialIssuerException(
+                        new VerifiableCredentialException(
                                 HTTPResponse.SC_SERVER_ERROR,
                                 ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER));
 
@@ -228,7 +228,7 @@ class RetrieveCriCredentialHandlerTest {
     @Test
     void shouldReturnErrorJourneyResponseIfSqsExceptionIsThrown() throws Exception {
         mockServiceCallsAndSessionItem();
-        when(credentialIssuerService.getVerifiableCredential(
+        when(verifiableCredentialService.getVerifiableCredential(
                         testBearerAccessToken,
                         testPassportIssuer,
                         testApiKey,
@@ -246,7 +246,7 @@ class RetrieveCriCredentialHandlerTest {
 
     @Test
     void shouldReturnErrorJourneyIfVCFailsValidation() throws Exception {
-        when(credentialIssuerService.getVerifiableCredential(
+        when(verifiableCredentialService.getVerifiableCredential(
                         testBearerAccessToken,
                         testPassportIssuer,
                         testApiKey,
@@ -256,7 +256,7 @@ class RetrieveCriCredentialHandlerTest {
         mockServiceCallsAndSessionItem();
 
         doThrow(
-                        new CredentialIssuerException(
+                        new VerifiableCredentialException(
                                 HTTPResponse.SC_SERVER_ERROR,
                                 ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL))
                 .when(verifiableCredentialJwtValidator)
@@ -270,7 +270,7 @@ class RetrieveCriCredentialHandlerTest {
     @Test
     void shouldSendIpvVcReceivedAuditEvent() throws Exception {
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(credentialIssuerService.getVerifiableCredential(
+        when(verifiableCredentialService.getVerifiableCredential(
                         testBearerAccessToken,
                         testPassportIssuer,
                         testApiKey,
@@ -303,7 +303,7 @@ class RetrieveCriCredentialHandlerTest {
 
     @Test
     void shouldSendIpvVcReceivedAuditEventWhenVcEvidenceIsMissing() throws Exception {
-        when(credentialIssuerService.getVerifiableCredential(
+        when(verifiableCredentialService.getVerifiableCredential(
                         testBearerAccessToken,
                         testPassportIssuer,
                         testApiKey,
@@ -337,7 +337,7 @@ class RetrieveCriCredentialHandlerTest {
 
     @Test
     void shouldNotStoreVcIfFailedToSubmitItToTheCiStorageSystem() throws Exception {
-        when(credentialIssuerService.getVerifiableCredential(
+        when(verifiableCredentialService.getVerifiableCredential(
                         testBearerAccessToken,
                         testPassportIssuer,
                         testApiKey,
@@ -362,7 +362,7 @@ class RetrieveCriCredentialHandlerTest {
 
         handler.handleRequest(testInput, context);
 
-        verify(credentialIssuerService, never()).persistUserCredentials(any(), any(), any());
+        verify(verifiableCredentialService, never()).persistUserCredentials(any(), any(), any());
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -396,15 +396,13 @@ class RetrieveCriCredentialHandlerTest {
     }
 
     private ClientOAuthSessionItem getClientOAuthSessionItem() {
-        ClientOAuthSessionItem clientOAuthSessionItem =
-                ClientOAuthSessionItem.builder()
-                        .clientOAuthSessionId(SecureTokenHelper.generate())
-                        .responseType("code")
-                        .state("test-state")
-                        .redirectUri("https://example.com/redirect")
-                        .govukSigninJourneyId("test-journey-id")
-                        .userId("test-user-id")
-                        .build();
-        return clientOAuthSessionItem;
+        return ClientOAuthSessionItem.builder()
+                .clientOAuthSessionId(SecureTokenHelper.generate())
+                .responseType("code")
+                .state("test-state")
+                .redirectUri("https://example.com/redirect")
+                .govukSigninJourneyId("test-journey-id")
+                .userId("test-user-id")
+                .build();
     }
 }
