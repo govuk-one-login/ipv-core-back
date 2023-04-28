@@ -37,6 +37,9 @@ import uk.gov.di.ipv.core.retrievecrioauthaccesstoken.service.AuthCodeToAccessTo
 
 import java.util.Map;
 
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
+
 public class RetrieveCriOauthAccessTokenHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -132,8 +135,10 @@ public class RetrieveCriOauthAccessTokenHandler
             setCriOAuthSessionAccessToken(criOAuthSessionItem, accessToken);
             var message =
                     new StringMapMessage()
-                            .with("lambdaResult", "Successfully retrieved cri access token.")
-                            .with("criId", credentialIssuerId);
+                            .with(
+                                    LOG_LAMBDA_RESULT.getFieldName(),
+                                    "Successfully retrieved cri access token.")
+                            .with(LOG_CRI_ID.getFieldName(), credentialIssuerId);
             LOGGER.info(message);
 
             return Map.of("result", "success");
@@ -156,7 +161,7 @@ public class RetrieveCriOauthAccessTokenHandler
         } catch (HttpResponseExceptionWithErrorBody e) {
             ErrorResponse errorResponse = e.getErrorResponse();
             LogHelper.logErrorMessage(
-                    "Error in credential issuer return lambda",
+                    "Error in credential issuer return lambda.",
                     errorResponse.getCode(),
                     errorResponse.getMessage());
             throw new BadRequestError();

@@ -33,8 +33,8 @@ import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.CRI_ID_LOG_FIELD;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class AuthCodeToAccessTokenService {
 
@@ -88,9 +88,9 @@ public class AuthCodeToAccessTokenService {
                 var message =
                         new StringMapMessage()
                                 .with(
-                                        MESSAGE_DESCRIPTION.getFieldName(),
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                         "Private api key found for cri, sending key in header for token request.")
-                                .with(CRI_ID_LOG_FIELD.getFieldName(), credentialIssuerId);
+                                .with(LOG_CRI_ID.getFieldName(), credentialIssuerId);
                 LOGGER.info(message);
                 httpRequest.setHeader(API_KEY_HEADER, apiKey);
             }
@@ -117,7 +117,7 @@ public class AuthCodeToAccessTokenService {
 
             BearerAccessToken token =
                     tokenResponse.toSuccessResponse().getTokens().getBearerAccessToken();
-            LOGGER.info("Auth Code exchanged for Access Token");
+            LOGGER.info("Auth Code exchanged for Access Token.");
             return token;
         } catch (IOException | ParseException | JOSEException e) {
             LOGGER.error("Error exchanging token: {}", e.getMessage(), e);

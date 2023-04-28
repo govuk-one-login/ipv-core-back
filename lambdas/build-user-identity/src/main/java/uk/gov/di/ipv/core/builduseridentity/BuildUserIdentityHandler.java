@@ -39,6 +39,9 @@ import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import java.time.Instant;
 import java.util.Objects;
 
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_VOT;
+
 public class BuildUserIdentityHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -147,8 +150,10 @@ public class BuildUserIdentityHandler
 
             var message =
                     new StringMapMessage()
-                            .with("lambdaResult", "Successfully generated user identity response.")
-                            .with("vot", ipvSessionItem.getVot());
+                            .with(
+                                    LOG_LAMBDA_RESULT.getFieldName(),
+                                    "Successfully generated user identity response.")
+                            .with(LOG_VOT.getFieldName(), ipvSessionItem.getVot());
             LOGGER.info(message);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HTTPResponse.SC_OK, userIdentity);
@@ -157,13 +162,13 @@ public class BuildUserIdentityHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getErrorObject().getHTTPStatusCode(), e.getErrorObject().toJSONObject());
         } catch (SqsException e) {
-            LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
+            LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),
                     OAuth2Error.SERVER_ERROR.toJSONObject());
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LOGGER.error(
-                    "Failed to generate the user identity output because: {}", e.getErrorReason());
+            LogHelper.logErrorMessage(
+                    "Failed to generate the user identity output.", e.getErrorReason());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getResponseCode(), e.getErrorBody());
         }

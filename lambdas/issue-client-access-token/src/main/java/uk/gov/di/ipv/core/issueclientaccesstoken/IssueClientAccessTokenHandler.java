@@ -39,6 +39,10 @@ import uk.gov.di.ipv.core.library.validation.ValidationResult;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ACCESS_TOKEN;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_SHA256_ACCESS_TOKEN;
+
 public class IssueClientAccessTokenHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
@@ -89,7 +93,7 @@ public class IssueClientAccessTokenHandler
             if (!validationResult.isValid()) {
                 ErrorObject error = validationResult.getError();
                 LogHelper.logOauthError(
-                        "Invalid auth grant received", error.getCode(), error.getDescription());
+                        "Invalid auth grant received.", error.getCode(), error.getDescription());
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         getHttpStatusCodeForErrorResponse(validationResult.getError()),
                         validationResult.getError().toJSONObject());
@@ -165,9 +169,9 @@ public class IssueClientAccessTokenHandler
                         accessTokenResponse.getTokens().getBearerAccessToken();
                 var message =
                         new StringMapMessage()
-                                .with("accessToken", bearerAccessToken.getValue())
+                                .with(LOG_ACCESS_TOKEN.getFieldName(), bearerAccessToken.getValue())
                                 .with(
-                                        "sha256AccessToken",
+                                        LOG_SHA256_ACCESS_TOKEN.getFieldName(),
                                         DigestUtils.sha256Hex(bearerAccessToken.getValue()));
                 LOGGER.info(message);
             }
@@ -178,7 +182,7 @@ public class IssueClientAccessTokenHandler
             var message =
                     new StringMapMessage()
                             .with(
-                                    "lambdaResult",
+                                    LOG_LAMBDA_RESULT.getFieldName(),
                                     "Successfully generated IPV client access token.");
             LOGGER.info(message);
 
@@ -247,7 +251,7 @@ public class IssueClientAccessTokenHandler
             return OAuth2Error.INVALID_GRANT.setDescription(
                     "Authorization code used too many times");
         } catch (IllegalArgumentException e) {
-            LOGGER.error("Failed to revoke access token because: {}", e.getMessage());
+            LogHelper.logErrorMessage("Failed to revoke access token.", e.getMessage());
             return OAuth2Error.INVALID_GRANT.setDescription("Failed to revoke access token");
         }
     }

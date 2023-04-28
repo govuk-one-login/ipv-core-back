@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
@@ -36,6 +37,9 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CREDENTIAL_I
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IS_LOCAL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.SIGNING_KEY_ID_PARAM;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_SECRET_ID;
 
 public class ConfigService {
 
@@ -276,9 +280,12 @@ public class ConfigService {
                     e.getMessage());
         } catch (ResourceNotFoundException e) {
             LOGGER.warn(
-                    "Failed to find the resource within Secrets manager: {}, details: {}",
-                    secretId,
-                    e.getMessage());
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Failed to find the resource within Secrets manager.")
+                            .with(LOG_SECRET_ID.getFieldName(), secretId)
+                            .with(LOG_ERROR_DESCRIPTION.getFieldName(), e.getMessage()));
         }
         return null;
     }

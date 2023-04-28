@@ -45,6 +45,9 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LIST_OF_CUSTOMER_NAMES;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class UserIdentityService {
     public static final String NAME_PROPERTY_NAME = "name";
@@ -98,7 +101,7 @@ public class UserIdentityService {
                 this.dataStore.getItemsWithAttributeLessThanOrEqualValue(
                         userId, "expirationTime", nowPlusSessionTimeout().toString());
         if (!expiredVcStoreItems.isEmpty()) {
-            LOGGER.info("Found VCs due to expire within session timeout");
+            LOGGER.info("Found VCs due to expire within session timeout.");
             deleteVcStoreItems(userId);
         }
     }
@@ -109,7 +112,7 @@ public class UserIdentityService {
         credentials.removeIf(
                 credential -> isVcValid(credential, vcValidDuration, nowPlusSessionTimeout()));
         if (!credentials.isEmpty()) {
-            LOGGER.info("Found invalid VCs within session timeout");
+            LOGGER.info("Found invalid VCs within session timeout.");
             deleteVcStoreItems(userId);
         }
     }
@@ -119,9 +122,11 @@ public class UserIdentityService {
         if (!vcStoreItems.isEmpty()) {
             var message =
                     new StringMapMessage()
-                            .with("description", "Deleting existing issued VCs")
                             .with(
-                                    LogHelper.LogField.NUMBER_OF_VCS.getFieldName(),
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Deleting existing issued VCs.")
+                            .with(
+                                    LogHelper.LogField.LOG_NUMBER_OF_VCS.getFieldName(),
                                     String.valueOf(vcStoreItems.size()));
             LOGGER.info(message);
         }
@@ -301,8 +306,12 @@ public class UserIdentityService {
                     if (passportNode.isMissingNode()) {
                         StringMapMessage mapMessage =
                                 new StringMapMessage()
-                                        .with("message", "Passport property is missing from VC")
-                                        .with("criIss", item.getCredentialIssuer());
+                                        .with(
+                                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                                "Passport property is missing from VC")
+                                        .with(
+                                                LOG_CRI_ISSUER.getFieldName(),
+                                                item.getCredentialIssuer());
                         LOGGER.warn(mapMessage);
 
                         return Optional.empty();
@@ -350,9 +359,11 @@ public class UserIdentityService {
                         StringMapMessage mapMessage =
                                 new StringMapMessage()
                                         .with(
-                                                "message",
+                                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                                 "Driving Permit property is missing from VC")
-                                        .with("criIss", item.getCredentialIssuer());
+                                        .with(
+                                                LOG_CRI_ISSUER.getFieldName(),
+                                                item.getCredentialIssuer());
                         LOGGER.warn(mapMessage);
 
                         return Optional.empty();
@@ -499,7 +510,10 @@ public class UserIdentityService {
                                 })
                         .map(String::trim)
                         .collect(Collectors.toList());
-        LOGGER.info("Customer name list {}", userFullNames);
+        var mapMessage =
+                new StringMapMessage()
+                        .with(LOG_LIST_OF_CUSTOMER_NAMES.getFieldName(), userFullNames);
+        LOGGER.info(mapMessage);
         return userFullNames;
     }
 }

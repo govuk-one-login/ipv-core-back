@@ -28,6 +28,10 @@ import java.util.List;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_GET_LAMBDA_ARN;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_PUT_LAMBDA_ARN;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PAYLOAD;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_CODE;
 
 public class CiStorageService {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -60,7 +64,7 @@ public class CiStorageService {
                                                 ipAddress,
                                                 verifiableCredential.serialize())));
 
-        LOGGER.info("Sending VC to CI storage system");
+        LOGGER.info("Sending VC to CI storage system.");
         InvokeResult result = lambdaClient.invoke(request);
 
         if (lambdaExecutionFailed(result)) {
@@ -84,7 +88,7 @@ public class CiStorageService {
                                                 ipAddress,
                                                 verifiableCredentialList)));
 
-        LOGGER.info("Sending mitigating VC's to CI storage system");
+        LOGGER.info("Sending mitigating VC's to CI storage system.");
         InvokeResult result = lambdaClient.invoke(request);
 
         if (lambdaExecutionFailed(result)) {
@@ -104,7 +108,7 @@ public class CiStorageService {
                                 gson.toJson(
                                         new GetCiRequest(govukSigninJourneyId, ipAddress, userId)));
 
-        LOGGER.info("Retrieving CIs from CI storage system");
+        LOGGER.info("Retrieving CIs from CI storage system.");
         InvokeResult result = lambdaClient.invoke(request);
 
         if (lambdaExecutionFailed(result)) {
@@ -128,10 +132,10 @@ public class CiStorageService {
 
     private void logLambdaExecutionError(InvokeResult result) {
         HashMap<String, String> message = new HashMap<>();
-        message.put("message", "CI storage lambda execution failed");
-        message.put("error", result.getFunctionError());
-        message.put("statusCode", String.valueOf(result.getStatusCode()));
-        message.put("payload", getPayloadOrNull(result));
+        message.put(LOG_MESSAGE_DESCRIPTION.getFieldName(), "CI storage lambda execution failed.");
+        message.put(LOG_ERROR.getFieldName(), result.getFunctionError());
+        message.put(LOG_STATUS_CODE.getFieldName(), String.valueOf(result.getStatusCode()));
+        message.put(LOG_PAYLOAD.getFieldName(), getPayloadOrNull(result));
         message.values().removeAll(Collections.singleton(null));
         LOGGER.error(new StringMapMessage(message));
     }

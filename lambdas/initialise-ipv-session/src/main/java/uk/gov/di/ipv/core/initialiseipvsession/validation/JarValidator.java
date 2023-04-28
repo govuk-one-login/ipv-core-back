@@ -13,6 +13,7 @@ import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.JarValidationException;
 import uk.gov.di.ipv.core.initialiseipvsession.exception.RecoverableJarValidationException;
@@ -32,6 +33,10 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CLIENT_ISS
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.MAX_ALLOWED_AUTH_CLIENT_TTL;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CLIENT_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JWT_ALGORITHM;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
 
 public class JarValidator {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -84,7 +89,12 @@ public class JarValidator {
             configService.getSsmParameter(CLIENT_ISSUER, clientId);
             LogHelper.attachClientIdToLogs(clientId);
         } catch (ParameterNotFoundException e) {
-            LOGGER.error("Unknown client id provided {}", clientId);
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Unknown client id provided.")
+                            .with(LOG_CLIENT_ID.getFieldName(), clientId));
             throw new JarValidationException(
                     OAuth2Error.INVALID_CLIENT.setDescription("Unknown client id was provided"));
         }
@@ -94,8 +104,11 @@ public class JarValidator {
         JWSAlgorithm jwtAlgorithm = signedJWT.getHeader().getAlgorithm();
         if (jwtAlgorithm != JWSAlgorithm.ES256) {
             LOGGER.error(
-                    "jwt signing algorithm {} does not match expected signing algorithm ES256",
-                    jwtAlgorithm);
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "jwt signing algorithm does not match expected signing algorithm ES256.")
+                            .with(LOG_JWT_ALGORITHM.getFieldName(), jwtAlgorithm));
             throw new JarValidationException(
                     OAuth2Error.INVALID_REQUEST_OBJECT.setDescription(
                             "Signing algorithm used does not match required algorithm"));
@@ -190,9 +203,12 @@ public class JarValidator {
 
             if (redirectUri == null || !allowedRedirectUris.contains(redirectUri.toString())) {
                 LOGGER.error(
-                        "Invalid redirect_uri claim ({}) provided for client: {}",
-                        redirectUri,
-                        clientId);
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "Invalid redirect_uri claim provided for client.")
+                                .with(LOG_CLIENT_ID.getFieldName(), clientId)
+                                .with(LOG_REDIRECT_URI.getFieldName(), redirectUri));
                 throw new JarValidationException(
                         OAuth2Error.INVALID_GRANT.setDescription(
                                 "Invalid redirct_uri claim provided for configured client"));

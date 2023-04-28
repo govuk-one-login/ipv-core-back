@@ -15,6 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.retrievecricredential.exception.VerifiableCredentialException;
 
 import java.text.ParseException;
@@ -34,7 +35,7 @@ public class VerifiableCredentialJwtValidator {
             throws VerifiableCredentialException {
         validateSignature(verifiableCredential, credentialIssuerConfig);
         validateClaimsSet(verifiableCredential, credentialIssuerConfig, userId);
-        LOGGER.info("Verifiable Credential validated");
+        LOGGER.info("Verifiable Credential validated.");
     }
 
     private void validateSignature(
@@ -47,7 +48,7 @@ public class VerifiableCredentialJwtValidator {
                             ? transcodeSignature(verifiableCredential)
                             : verifiableCredential;
         } catch (JOSEException | ParseException e) {
-            LOGGER.error("Error transcoding signature: '{}'", e.getMessage());
+            LogHelper.logErrorMessage("Error transcoding signature.", e.getMessage());
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
@@ -62,7 +63,7 @@ public class VerifiableCredentialJwtValidator {
                         ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
             }
         } catch (JOSEException e) {
-            LOGGER.error("JOSE exception when verifying signature: '{}'", e.getMessage());
+            LogHelper.logErrorMessage("JOSE exception when verifying signature.", e.getMessage());
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
@@ -74,7 +75,7 @@ public class VerifiableCredentialJwtValidator {
     }
 
     private SignedJWT transcodeSignature(SignedJWT vc) throws JOSEException, ParseException {
-        LOGGER.info("Transcoding signature");
+        LOGGER.info("Transcoding signature.");
         Base64URL transcodedSignatureBase64 =
                 Base64URL.encode(
                         ECDSA.transcodeSignatureToConcat(

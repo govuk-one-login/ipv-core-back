@@ -2,12 +2,15 @@ package uk.gov.di.ipv.core.library.service;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CRI_OAUTH_SESSIONS_TABLE_NAME;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_OAUTH_SESSION_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class CriOAuthSessionService {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -50,15 +53,25 @@ public class CriOAuthSessionService {
 
         dataStore.create(criOAuthSessionItem, BACKEND_SESSION_TTL);
         LOGGER.info(
-                "Cri OAuth Session Item {} created. ", criOAuthSessionItem.getCriOAuthSessionId());
-
+                new StringMapMessage()
+                        .with(
+                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                "Cri OAuth Session item created.")
+                        .with(
+                                LOG_CRI_OAUTH_SESSION_ID.getFieldName(),
+                                criOAuthSessionItem.getCriOAuthSessionId()));
         return criOAuthSessionItem;
     }
 
     public void updateCriOAuthSessionItem(CriOAuthSessionItem updatedCriOAuthSessionItem) {
         dataStore.update(updatedCriOAuthSessionItem);
         LOGGER.info(
-                "Cri OAuth Session Item {} updated. ",
-                updatedCriOAuthSessionItem.getCriOAuthSessionId());
+                new StringMapMessage()
+                        .with(
+                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                "Cri OAuth Session item updated.")
+                        .with(
+                                LOG_CRI_OAUTH_SESSION_ID.getFieldName(),
+                                updatedCriOAuthSessionItem.getCriOAuthSessionId()));
     }
 }
