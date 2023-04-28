@@ -174,7 +174,7 @@ public class ValidateOAuthCallbackHandler
             return JOURNEY_ACCESS_TOKEN;
         } catch (HttpResponseExceptionWithErrorBody e) {
             ErrorResponse errorResponse = e.getErrorResponse();
-            LogHelper.logOauthError(
+            LogHelper.logErrorMessage(
                     "Error in validate oauth callback lambda",
                     errorResponse.getCode(),
                     errorResponse.getMessage());

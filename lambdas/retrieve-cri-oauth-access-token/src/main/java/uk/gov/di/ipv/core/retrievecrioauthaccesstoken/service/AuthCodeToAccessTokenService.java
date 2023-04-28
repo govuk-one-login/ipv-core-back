@@ -17,6 +17,7 @@ import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ClientAuthClaims;
@@ -31,6 +32,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.Objects;
+
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.CRI_ID_LOG_FIELD;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.MESSAGE_DESCRIPTION;
 
 public class AuthCodeToAccessTokenService {
 
@@ -81,9 +85,13 @@ public class AuthCodeToAccessTokenService {
 
             HTTPRequest httpRequest = tokenRequest.toHTTPRequest();
             if (apiKey != null) {
-                LOGGER.info(
-                        "Private api key found for cri {}, sending key in header for token request",
-                        credentialIssuerId);
+                var message =
+                        new StringMapMessage()
+                                .with(
+                                        MESSAGE_DESCRIPTION.getFieldName(),
+                                        "Private api key found for cri, sending key in header for token request.")
+                                .with(CRI_ID_LOG_FIELD.getFieldName(), credentialIssuerId);
+                LOGGER.info(message);
                 httpRequest.setHeader(API_KEY_HEADER, apiKey);
             }
 

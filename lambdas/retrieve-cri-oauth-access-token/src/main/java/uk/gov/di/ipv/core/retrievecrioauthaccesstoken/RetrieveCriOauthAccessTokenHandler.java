@@ -155,7 +155,7 @@ public class RetrieveCriOauthAccessTokenHandler
             throw new JourneyError();
         } catch (HttpResponseExceptionWithErrorBody e) {
             ErrorResponse errorResponse = e.getErrorResponse();
-            LogHelper.logOauthError(
+            LogHelper.logErrorMessage(
                     "Error in credential issuer return lambda",
                     errorResponse.getCode(),
                     errorResponse.getMessage());

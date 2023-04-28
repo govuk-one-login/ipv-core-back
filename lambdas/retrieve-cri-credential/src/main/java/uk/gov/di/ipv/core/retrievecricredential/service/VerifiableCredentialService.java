@@ -11,12 +11,14 @@ import net.minidev.json.JSONObject;
 import org.apache.http.HttpHeaders;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -28,6 +30,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.CRI_ID_LOG_FIELD;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.RESPONSE_CONTENT_TYPE;
 
 public class VerifiableCredentialService {
 
@@ -66,9 +72,13 @@ public class VerifiableCredentialService {
                 new HTTPRequest(HTTPRequest.Method.POST, config.getCredentialUrl());
 
         if (apiKey != null) {
-            LOGGER.info(
-                    "Private api key found for cri {}, sending key in header for credential request",
-                    credentialIssuerId);
+            var message =
+                    new StringMapMessage()
+                            .with(
+                                    MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Private api key found for cri, sending key in header for credential request.")
+                            .with(CRI_ID_LOG_FIELD.getFieldName(), credentialIssuerId);
+            LOGGER.info(message);
             credentialRequest.setHeader(API_KEY_HEADER, apiKey);
         }
 
@@ -77,8 +87,8 @@ public class VerifiableCredentialService {
         try {
             HTTPResponse response = credentialRequest.send();
             if (!response.indicatesSuccess()) {
-                LOGGER.error(
-                        "Error retrieving credential: {} - {}",
+                LogHelper.logErrorMessage(
+                        "Error retrieving credential",
                         response.getStatusCode(),
                         response.getStatusMessage());
                 throw new VerifiableCredentialException(
@@ -104,15 +114,19 @@ public class VerifiableCredentialService {
                 LOGGER.info("Verifiable Credential retrieved");
                 return vcJwts;
             } else {
-                LOGGER.error(
-                        "Error retrieving credential: Unknown response type received from CRI - {}",
-                        responseContentType);
+                var message =
+                        new StringMapMessage()
+                                .with(
+                                        MESSAGE_DESCRIPTION.getFieldName(),
+                                        "Error retrieving credential::Unknown response type received from CRI.")
+                                .with(RESPONSE_CONTENT_TYPE.getFieldName(), responseContentType);
+                LOGGER.error(message);
                 throw new VerifiableCredentialException(
                         HTTPResponse.SC_SERVER_ERROR,
                         ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
             }
         } catch (IOException | ParseException | java.text.ParseException e) {
-            LOGGER.error("Error retrieving credential: {}", e.getMessage());
+            LogHelper.logErrorMessage("Error retrieving credential.", null, e.getMessage());
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
