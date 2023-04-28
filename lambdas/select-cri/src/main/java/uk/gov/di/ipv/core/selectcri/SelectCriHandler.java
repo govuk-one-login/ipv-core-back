@@ -39,6 +39,9 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI
 import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class SelectCriHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -106,7 +109,9 @@ public class SelectCriHandler
 
             var message =
                     new StringMapMessage()
-                            .with("lambdaResult", "Successfully found next step for user")
+                            .with(
+                                    LOG_LAMBDA_RESULT.getFieldName(),
+                                    "Successfully found next step for user.")
                             .with("journeyResponse", response.getJourney());
             LOGGER.info(message);
 
@@ -173,7 +178,7 @@ public class SelectCriHandler
             return kbvResponse.get();
         }
 
-        LOGGER.info("Unable to determine next credential issuer");
+        LOGGER.info("Unable to determine next credential issuer.");
         return new JourneyResponse(JOURNEY_FAIL);
     }
 
@@ -207,7 +212,7 @@ public class SelectCriHandler
             return fraudResponse.get();
         }
 
-        LOGGER.info("Unable to determine next credential issuer");
+        LOGGER.info("Unable to determine next credential issuer.");
         return new JourneyResponse(JOURNEY_FAIL);
     }
 
@@ -241,7 +246,7 @@ public class SelectCriHandler
                         && (hasPassportVc(currentVcStatuses)
                                 || hasDrivingLicenceVc(currentVcStatuses))) {
                     LOGGER.info(
-                            "User already has a passport or driving licence VC, continuing a web journey");
+                            "User already has a passport or driving licence VC, continuing a web journey.");
                     return Optional.of(
                             getNextWebJourneyCri(
                                     visitedCredentialIssuers, currentVcStatuses, userId));
@@ -256,9 +261,9 @@ public class SelectCriHandler
             var message =
                     new StringMapMessage()
                             .with(
-                                    "description",
-                                    "User has a previous failed visit to a cri due to an oauth error")
-                            .with("criId", criId);
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "User has a previous failed visit to a cri due to an oauth error.")
+                            .with(LOG_CRI_ID.getFieldName(), criId);
             LOGGER.info(message);
 
             return Optional.of(
@@ -272,13 +277,13 @@ public class SelectCriHandler
             var message =
                     new StringMapMessage()
                             .with(
-                                    "description",
-                                    "User has a previous failed visit to a cri due to a failed identity check")
-                            .with("criId", criId);
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "User has a previous failed visit to a cri due to a failed identity check.")
+                            .with(LOG_CRI_ID.getFieldName(), criId);
             LOGGER.info(message);
 
             if (criId.equals(DCMAW_CRI)) {
-                LOGGER.info("Reverting app user to the web journey");
+                LOGGER.info("Reverting app user to the web journey.");
                 return Optional.of(
                         getNextWebJourneyCri(visitedCredentialIssuers, currentVcStatuses, userId));
             } else if (criId.equals(KBV_CRI)) {

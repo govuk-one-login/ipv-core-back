@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.buildclientoauthresponse.validation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.awssdk.utils.StringUtils;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -12,6 +13,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CLIENT_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
 
 public class AuthRequestValidator {
 
@@ -73,7 +78,13 @@ public class AuthRequestValidator {
             List<String> clientRedirectUrls = configService.getClientRedirectUrls(clientId);
 
             if (!clientRedirectUrls.contains(redirectUrl)) {
-                LOGGER.error("Invalid redirect URL for client_id {}: '{}'", clientId, redirectUrl);
+                LOGGER.error(
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "Invalid redirect URL for client id.")
+                                .with(LOG_CLIENT_ID.getFieldName(), clientId)
+                                .with(LOG_REDIRECT_URI.getFieldName(), redirectUrl));
                 return Optional.of(ErrorResponse.INVALID_REDIRECT_URL);
             }
             return Optional.empty();

@@ -43,9 +43,7 @@ public class GetCredentialIssuerConfigHandler
                     credentialIssuerConfigService.getCredentialIssuers();
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, config);
         } catch (ParseCredentialIssuerConfigException e) {
-            String errorMessage =
-                    String.format("Failed to load credential issuer config: %s", e.getMessage());
-            LOGGER.error(errorMessage);
+            LogHelper.logErrorMessage("Failed to load credential issuer config.", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     500, ErrorResponse.FAILED_TO_PARSE_CREDENTIAL_ISSUER_CONFIG);
         }

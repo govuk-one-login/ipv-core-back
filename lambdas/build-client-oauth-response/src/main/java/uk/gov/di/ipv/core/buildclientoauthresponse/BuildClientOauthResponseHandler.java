@@ -43,6 +43,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CLIENT_OAUTH_SESSION_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
+
 public class BuildClientOauthResponseHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -105,9 +110,9 @@ public class BuildClientOauthResponseHandler
                 var mapMessage =
                         new StringMapMessage()
                                 .with(
-                                        "description",
-                                        "No ipvSession for existing ClientOAuthSession")
-                                .with("clientOAuthSessionId", clientSessionId);
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "No ipvSession for existing ClientOAuthSession.")
+                                .with(LOG_CLIENT_OAUTH_SESSION_ID.getFieldName(), clientSessionId);
                 LOGGER.info(mapMessage);
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatus.SC_OK,
@@ -164,9 +169,11 @@ public class BuildClientOauthResponseHandler
             var message =
                     new StringMapMessage()
                             .with(
-                                    "lambdaResult",
+                                    LOG_LAMBDA_RESULT.getFieldName(),
                                     "Successfully generated ipv client oauth response.")
-                            .with("redirectUri", clientResponse.getClient().getRedirectUrl());
+                            .with(
+                                    LOG_REDIRECT_URI.getFieldName(),
+                                    clientResponse.getClient().getRedirectUrl());
             LOGGER.info(message);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, clientResponse);
@@ -176,11 +183,11 @@ public class BuildClientOauthResponseHandler
                     HttpStatus.SC_BAD_REQUEST,
                     ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS);
         } catch (SqsException e) {
-            LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
+            LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } catch (URISyntaxException e) {
-            LOGGER.error("Failed to construct redirect uri because: {}", e.getMessage());
+            LogHelper.logErrorMessage("Failed to construct redirect uri.", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } catch (HttpResponseExceptionWithErrorBody e) {

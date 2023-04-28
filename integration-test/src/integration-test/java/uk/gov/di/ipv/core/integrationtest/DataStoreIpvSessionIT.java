@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.StringMapMessage;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -25,6 +26,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TTL;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_IPV_SESSION_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class DataStoreIpvSessionIT {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -75,8 +78,11 @@ public class DataStoreIpvSessionIT {
                 tableTestHarness.deleteItem(new KeyAttribute(IPV_SESSION_ID, id));
             } catch (Exception e) {
                 LOGGER.warn(
-                        String.format(
-                                "Failed to delete test data with %s of %s", IPV_SESSION_ID, id));
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "Failed to delete test data.")
+                                .with(LOG_IPV_SESSION_ID.getFieldName(), id));
             }
         }
     }

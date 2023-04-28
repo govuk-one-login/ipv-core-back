@@ -29,6 +29,9 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING
 import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CI_SCORE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_NO_OF_CI_ITEMS;
 
 public class Gpg45ProfileEvaluator {
     private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
@@ -40,7 +43,6 @@ public class Gpg45ProfileEvaluator {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson gson = new Gson();
     private static final int NO_SCORE = 0;
-    private static final String LOG_DESCRIPTION_FIELD = "description";
     private final ConfigService configService;
 
     public Gpg45ProfileEvaluator(ConfigService configService) {
@@ -52,8 +54,8 @@ public class Gpg45ProfileEvaluator {
         List<ContraIndicatorItem> contraIndicatorItems = new ArrayList<>(ciItems);
         LOGGER.info(
                 new StringMapMessage()
-                        .with(LOG_DESCRIPTION_FIELD, "Retrieved user's CI items")
-                        .with("numberOfItems", ciItems.size()));
+                        .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Retrieved user's CI items.")
+                        .with(LOG_NO_OF_CI_ITEMS.getFieldName(), ciItems.size()));
 
         Set<String> ciSet =
                 contraIndicatorItems.stream()
@@ -70,8 +72,8 @@ public class Gpg45ProfileEvaluator {
         }
         LOGGER.info(
                 new StringMapMessage()
-                        .with(LOG_DESCRIPTION_FIELD, "Calculated user's CI score")
-                        .with("score", ciScore));
+                        .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Calculated user's CI score.")
+                        .with(LOG_CI_SCORE.getFieldName(), ciScore));
 
         int ciScoreThreshold =
                 Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
@@ -100,8 +102,8 @@ public class Gpg45ProfileEvaluator {
                                 var message =
                                         new StringMapMessage()
                                                 .with(
-                                                        LOG_DESCRIPTION_FIELD,
-                                                        "GPG45 profile has been met")
+                                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                                        "GPG45 profile has been met.")
                                                 .with("gpg45Profile", profile.getLabel());
                                 LOGGER.info(message);
                             }

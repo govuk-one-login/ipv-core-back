@@ -41,6 +41,9 @@ import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CLIENT_OAUTH_SESSION_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class ValidateOAuthCallbackHandler
         implements RequestHandler<CriCallbackRequest, Map<String, Object>> {
@@ -120,9 +123,13 @@ public class ValidateOAuthCallbackHandler
                 String clientOAuthSessionId = criOAuthSessionItem.getClientOAuthSessionId();
                 var mapMessage =
                         new StringMapMessage()
-                                .with("message", "No ipvSession for existing CriOAuthSession")
-                                .with("criId", criOAuthSessionItem.getCriId())
-                                .with("clientOAuthSessionId", clientOAuthSessionId);
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "No ipvSession for existing CriOAuthSession.")
+                                .with(LOG_CRI_ID.getFieldName(), criOAuthSessionItem.getCriId())
+                                .with(
+                                        LOG_CLIENT_OAUTH_SESSION_ID.getFieldName(),
+                                        clientOAuthSessionId);
                 LOGGER.info(mapMessage);
                 Map<String, Object> pageOutput =
                         StepFunctionHelpers.generatePageOutputMap(
@@ -167,8 +174,12 @@ public class ValidateOAuthCallbackHandler
 
             var mapMessage =
                     new StringMapMessage()
-                            .with("message", "Successfully validated oauth callback")
-                            .with("criId", callbackRequest.getCredentialIssuerId());
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Successfully validated oauth callback.")
+                            .with(
+                                    LOG_CRI_ID.getFieldName(),
+                                    callbackRequest.getCredentialIssuerId());
             LOGGER.info(mapMessage);
 
             return JOURNEY_ACCESS_TOKEN;
@@ -229,8 +240,12 @@ public class ValidateOAuthCallbackHandler
                         .equals(callbackRequest.getCredentialIssuerId())) {
             var message =
                     new StringMapMessage()
-                            .with("criId", callbackRequest.getCredentialIssuerId())
-                            .with("message", "Oauth error from unexpected CRI");
+                            .with(
+                                    LOG_CRI_ID.getFieldName(),
+                                    callbackRequest.getCredentialIssuerId())
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Oauth error from unexpected CRI.");
             LOGGER.warn(message);
             return StepFunctionHelpers.generatePageOutputMap(
                     "error", HttpStatus.SC_BAD_REQUEST, PYI_ATTEMPT_RECOVERY_PAGE_ID);

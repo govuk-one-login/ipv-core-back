@@ -47,6 +47,8 @@ import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 
 public class RetrieveCriCredentialHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
@@ -112,9 +114,8 @@ public class RetrieveCriCredentialHandler
             ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
         } catch (HttpResponseExceptionWithErrorBody e) {
             ErrorResponse errorResponse = e.getErrorResponse();
-            LOGGER.error(
-                    "Error in credential issuer return lambda because: {}",
-                    errorResponse.getMessage());
+            LogHelper.logErrorMessage(
+                    "Error in credential issuer return lambda.", errorResponse.getMessage());
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_BAD_REQUEST, errorResponse);
         }
@@ -174,8 +175,10 @@ public class RetrieveCriCredentialHandler
 
             var message =
                     new StringMapMessage()
-                            .with("lambdaResult", "Successfully retrieved CRI credential.")
-                            .with("criId", credentialIssuerId);
+                            .with(
+                                    LOG_LAMBDA_RESULT.getFieldName(),
+                                    "Successfully retrieved CRI credential.")
+                            .with(LOG_CRI_ID.getFieldName(), credentialIssuerId);
             LOGGER.info(message);
 
             return JOURNEY_NEXT;
@@ -185,13 +188,12 @@ public class RetrieveCriCredentialHandler
 
             return JOURNEY_ERROR;
         } catch (ParseException | JsonProcessingException | SqsException e) {
-            LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
-
+            LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
             updateVisitedCredentials(
                     ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
             return JOURNEY_ERROR;
         } catch (com.nimbusds.oauth2.sdk.ParseException e) {
-            LOGGER.error("Failed to parse access token: {}", e.getMessage());
+            LogHelper.logErrorMessage("Failed to parse access token.", e.getMessage());
 
             updateVisitedCredentials(
                     ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);

@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JAR_KMS_ENCRYPTION_KEY_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 
 public class InitialiseIpvSessionHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -105,8 +106,8 @@ public class InitialiseIpvSessionHandler
                     objectMapper.readValue(input.getBody(), new TypeReference<>() {});
             Optional<ErrorResponse> error = validateSessionParams(sessionParams);
             if (error.isPresent()) {
-                LOGGER.error(
-                        "Validation of the client session params failed because: {}",
+                LogHelper.logErrorMessage(
+                        "Validation of the client session params failed.",
                         error.get().getMessage());
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         HttpStatus.SC_BAD_REQUEST, error.get());
@@ -150,15 +151,16 @@ public class InitialiseIpvSessionHandler
 
             var message =
                     new StringMapMessage()
-                            .with("lambdaResult", "Successfully generated a new IPV Core session")
+                            .with(
+                                    LOG_LAMBDA_RESULT.getFieldName(),
+                                    "Successfully generated a new IPV Core session")
                             .with(IPV_SESSION_ID_KEY, ipvSessionItem.getIpvSessionId());
             LOGGER.info(message);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
         } catch (RecoverableJarValidationException e) {
-            LOGGER.error(
-                    "Recoverable Jar validation failed because: {}",
-                    e.getErrorObject().getDescription());
+            LogHelper.logErrorMessage(
+                    "Recoverable Jar validation failed.", e.getErrorObject().getDescription());
 
             String clientOAuthSessionId = SecureTokenHelper.generate();
 
@@ -177,7 +179,7 @@ public class InitialiseIpvSessionHandler
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, response);
         } catch (ParseException e) {
-            LOGGER.error("Failed to parse the decrypted JWE because: {}", e.getMessage());
+            LogHelper.logErrorMessage("Failed to parse the decrypted JWE.", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
         } catch (JarValidationException e) {
@@ -185,15 +187,15 @@ public class InitialiseIpvSessionHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
         } catch (SqsException e) {
-            LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
+            LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } catch (JsonProcessingException | IllegalArgumentException e) {
-            LOGGER.error("Failed to parse request body into map because: {}", e.getMessage());
+            LogHelper.logErrorMessage("Failed to parse request body into map.", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
         } catch (HttpResponseExceptionWithErrorBody e) {
-            LOGGER.error("Failed to parse request body into map because: {}", e.getMessage());
+            LogHelper.logErrorMessage("Failed to parse request body into map.", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IP_ADDRESS);
         }

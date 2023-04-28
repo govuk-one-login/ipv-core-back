@@ -56,6 +56,11 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_JOURNEY_RESPONSE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MITIGATION_JOURNEY_RESPONSE;
 
 public class EvaluateGpg45ScoresHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -153,8 +158,12 @@ public class EvaluateGpg45ScoresHandler
 
             if (mitigationJourneyResponse.isPresent()) {
                 journeyResponse = mitigationJourneyResponse.get();
-                message.with("message", "Returning mitigation journey response")
-                        .with("mitigationJourneyResponse", journeyResponse.toString());
+                message.with(
+                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                "Returning mitigation journey response.")
+                        .with(
+                                LOG_MITIGATION_JOURNEY_RESPONSE.getFieldName(),
+                                journeyResponse.toString());
             } else {
                 Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
                         gpg45ProfileEvaluator.getJourneyResponseForStoredCis(ciItems);
@@ -167,9 +176,11 @@ public class EvaluateGpg45ScoresHandler
                                     credentials,
                                     ipAddress);
                 } else {
-                    message.with("message", "Returning CI error response")
+                    message.with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Returning CI error response.")
                             .with(
-                                    "errorJourneyResponse",
+                                    LOG_ERROR_JOURNEY_RESPONSE.getFieldName(),
                                     contraIndicatorErrorJourneyResponse.get().toString());
                     LOGGER.info(message);
                     return ApiGatewayResponseGenerator.proxyJsonResponse(
@@ -205,7 +216,7 @@ public class EvaluateGpg45ScoresHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_GET_STORED_CIS);
         } catch (SqsException e) {
-            LOGGER.error("Failed to send audit event to SQS queue: {}", e.getMessage());
+            LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
         }
@@ -216,10 +227,14 @@ public class EvaluateGpg45ScoresHandler
         if (!userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(
                 userId, currentVcStatuses)) {
             var message = new StringMapMessage();
-            message.with("errorCode", ErrorResponse.FAILED_NAME_CORRELATION.getCode())
-                    .with("errorDescription", ErrorResponse.FAILED_NAME_CORRELATION.getMessage())
+            message.with(
+                            LOG_ERROR_CODE.getFieldName(),
+                            ErrorResponse.FAILED_NAME_CORRELATION.getCode())
+                    .with(
+                            LOG_ERROR_DESCRIPTION.getFieldName(),
+                            ErrorResponse.FAILED_NAME_CORRELATION.getMessage())
                     .with("userId", userId)
-                    .with("journeyResponse", JOURNEY_PYI_NO_MATCH);
+                    .with(LOG_ERROR_JOURNEY_RESPONSE.getFieldName(), JOURNEY_PYI_NO_MATCH);
             LOGGER.error(message);
             return false;
         }
@@ -227,12 +242,14 @@ public class EvaluateGpg45ScoresHandler
         if (!userIdentityService.checkBirthDateCorrelationInCredentials(
                 userId, currentVcStatuses)) {
             var message = new StringMapMessage();
-            message.with("errorCode", ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getCode())
+            message.with(
+                            LOG_ERROR_CODE.getFieldName(),
+                            ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getCode())
                     .with(
-                            "errorDescription",
+                            LOG_ERROR_DESCRIPTION.getFieldName(),
                             ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getMessage())
                     .with("userId", userId)
-                    .with("journeyResponse", JOURNEY_PYI_NO_MATCH);
+                    .with(LOG_ERROR_JOURNEY_RESPONSE.getFieldName(), JOURNEY_PYI_NO_MATCH);
             LOGGER.error(message);
             return false;
         }
