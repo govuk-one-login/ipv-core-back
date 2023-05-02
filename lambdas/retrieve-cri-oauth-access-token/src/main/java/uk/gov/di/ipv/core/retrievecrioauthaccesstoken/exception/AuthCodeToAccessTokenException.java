@@ -1,14 +1,14 @@
-package uk.gov.di.ipv.core.library.credentialissuer.exceptions;
+package uk.gov.di.ipv.core.retrievecrioauthaccesstoken.exception;
 
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 
-public class CredentialIssuerException extends RuntimeException {
+public class AuthCodeToAccessTokenException extends RuntimeException {
 
     private final ErrorResponse errorResponse;
 
     private final int httpStatusCode;
 
-    public CredentialIssuerException(int httpStatusCode, ErrorResponse errorResponse) {
+    public AuthCodeToAccessTokenException(int httpStatusCode, ErrorResponse errorResponse) {
         this.errorResponse = errorResponse;
         this.httpStatusCode = httpStatusCode;
     }

@@ -13,9 +13,8 @@ dependencies {
 	implementation "com.amazonaws:aws-java-sdk-sqs:$rootProject.ext.dependencyVersions.awsJavaSdkSqs",
 			"com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
+			"software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
 			project(":lib"),
-			project(":libs:credential-issuer-service"),
-			project(":libs:kms-es256-signer"),
 			project(":libs:vc-helper")
 
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
@@ -24,7 +23,8 @@ dependencies {
 	compileOnly "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
 	annotationProcessor "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
 
-	testImplementation "org.junit.jupiter:junit-jupiter:5.8.2",
+	testImplementation "com.github.tomakehurst:wiremock-jre8:2.35.0",
+			"org.junit.jupiter:junit-jupiter:5.8.2",
 			"org.mockito:mockito-junit-jupiter:4.1.0",
 			project(":lib").sourceSets.test.output
 }

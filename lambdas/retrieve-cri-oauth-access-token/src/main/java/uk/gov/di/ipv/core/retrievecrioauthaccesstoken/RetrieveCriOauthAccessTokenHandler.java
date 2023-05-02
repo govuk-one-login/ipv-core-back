@@ -14,8 +14,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerService;
-import uk.gov.di.ipv.core.library.credentialissuer.exceptions.CredentialIssuerException;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
@@ -29,14 +27,20 @@ import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.*;
+import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.retrievecrioauthaccesstoken.exception.AuthCodeToAccessTokenException;
+import uk.gov.di.ipv.core.retrievecrioauthaccesstoken.service.AuthCodeToAccessTokenService;
 
 import java.util.Map;
 
 public class RetrieveCriOauthAccessTokenHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private final CredentialIssuerService credentialIssuerService;
+    private final AuthCodeToAccessTokenService authCodeToAccessTokenService;
     private final ConfigService configService;
     private final AuditService auditService;
     private final IpvSessionService ipvSessionService;
@@ -44,13 +48,13 @@ public class RetrieveCriOauthAccessTokenHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
 
     public RetrieveCriOauthAccessTokenHandler(
-            CredentialIssuerService credentialIssuerService,
+            AuthCodeToAccessTokenService authCodeToAccessTokenService,
             ConfigService configService,
             IpvSessionService ipvSessionService,
             AuditService auditService,
             CriOAuthSessionService criOAuthSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionService) {
-        this.credentialIssuerService = credentialIssuerService;
+        this.authCodeToAccessTokenService = authCodeToAccessTokenService;
         this.configService = configService;
         this.auditService = auditService;
         this.ipvSessionService = ipvSessionService;
@@ -61,8 +65,8 @@ public class RetrieveCriOauthAccessTokenHandler
     @ExcludeFromGeneratedCoverageReport
     public RetrieveCriOauthAccessTokenHandler() {
         this.configService = new ConfigService();
-        this.credentialIssuerService =
-                new CredentialIssuerService(
+        this.authCodeToAccessTokenService =
+                new AuthCodeToAccessTokenService(
                         configService, new KmsEs256Signer(configService.getSigningKeyId()));
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.ipvSessionService = new IpvSessionService(configService);
@@ -109,7 +113,7 @@ public class RetrieveCriOauthAccessTokenHandler
                             : null;
 
             BearerAccessToken accessToken =
-                    credentialIssuerService.exchangeCodeForToken(
+                    authCodeToAccessTokenService.exchangeCodeForToken(
                             authorizationCode, credentialIssuerConfig, apiKey, credentialIssuerId);
 
             AuditEventUser auditEventUser =
@@ -136,7 +140,7 @@ public class RetrieveCriOauthAccessTokenHandler
             LOGGER.info(message);
 
             return Map.of("result", "success");
-        } catch (CredentialIssuerException e) {
+        } catch (AuthCodeToAccessTokenException e) {
             if (ipvSessionItem != null) {
                 setVisitedCredentials(
                         ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
@@ -154,7 +158,7 @@ public class RetrieveCriOauthAccessTokenHandler
             throw new JourneyError();
         } catch (HttpResponseExceptionWithErrorBody e) {
             ErrorResponse errorResponse = e.getErrorResponse();
-            LogHelper.logOauthError(
+            LogHelper.logErrorMessage(
                     "Error in credential issuer return lambda",
                     errorResponse.getCode(),
                     errorResponse.getMessage());

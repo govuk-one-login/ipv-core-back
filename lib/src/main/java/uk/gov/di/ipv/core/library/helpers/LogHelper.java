@@ -28,6 +28,8 @@ public class LogHelper {
         JTI_LOG_FIELD("jti"),
         JTI_USED_AT_LOG_FIELD("jtiUsedAt"),
         NUMBER_OF_VCS("numberOfVCs"),
+        MESSAGE_DESCRIPTION("description"),
+        RESPONSE_CONTENT_TYPE("responseContentType"),
         ERROR("error"),
         PAYLOAD("payload"),
         STATUS_CODE("statusCode");
@@ -75,16 +77,26 @@ public class LogHelper {
         }
     }
 
-    public static void logOauthError(String message, int errorCode, String errorDescription) {
-        logOauthError(message, Integer.toString(errorCode), errorDescription);
+    public static void logErrorMessage(String message, Integer errorCode, String errorDescription) {
+        logErrorMessage(
+                message,
+                (errorCode != null) ? Integer.toString(errorCode) : null,
+                errorDescription);
     }
 
     public static void logOauthError(String message, String errorCode, String errorDescription) {
+        logErrorMessage(message, errorCode, errorDescription);
+    }
+
+    private static void logErrorMessage(String message, String errorCode, String errorDescription) {
         var mapMessage =
                 new StringMapMessage()
-                        .with(LogField.ERROR_CODE_LOG_FIELD.getFieldName(), errorCode)
-                        .with(LogField.ERROR_DESCRIPTION_LOG_FIELD.getFieldName(), errorDescription)
-                        .with("description", message);
+                        .with(LogField.MESSAGE_DESCRIPTION.getFieldName(), message)
+                        .with(
+                                LogField.ERROR_DESCRIPTION_LOG_FIELD.getFieldName(),
+                                errorDescription);
+        if (errorCode != null)
+            mapMessage.with(LogField.ERROR_CODE_LOG_FIELD.getFieldName(), errorCode);
         LOGGER.error(mapMessage);
     }
 
