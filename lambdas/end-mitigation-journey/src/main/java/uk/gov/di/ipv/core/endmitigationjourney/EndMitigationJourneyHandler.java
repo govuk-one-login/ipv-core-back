@@ -37,13 +37,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MITIGATION_JOURNEY_ID;
+
 public class EndMitigationJourneyHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private static final String MITIGATION_ID = "mitigationId";
     private static final String MJ01 = "MJ01";
     private static final String MJ02 = "MJ02";
-    private static final String MITIGATION_JOURNEY_ID = "mitigationJourneyId";
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -126,10 +130,12 @@ public class EndMitigationJourneyHandler
                                             StringMapMessage mapMessage =
                                                     new StringMapMessage()
                                                             .with(
-                                                                    "lambdaResult",
-                                                                    "Mitigating VCs found")
+                                                                    LOG_LAMBDA_RESULT
+                                                                            .getFieldName(),
+                                                                    "Mitigating VCs found.")
                                                             .with(
-                                                                    MITIGATION_JOURNEY_ID,
+                                                                    LOG_MITIGATION_JOURNEY_ID
+                                                                            .getFieldName(),
                                                                     mitigationId);
                                             LOGGER.info(mapMessage);
                                             submitMitigatingVcs(
@@ -141,10 +147,12 @@ public class EndMitigationJourneyHandler
                                             StringMapMessage mapMessage =
                                                     new StringMapMessage()
                                                             .with(
-                                                                    "lambdaResult",
-                                                                    "No mitigating VCs were found")
+                                                                    LOG_LAMBDA_RESULT
+                                                                            .getFieldName(),
+                                                                    "No mitigating VCs were found.")
                                                             .with(
-                                                                    MITIGATION_JOURNEY_ID,
+                                                                    LOG_MITIGATION_JOURNEY_ID
+                                                                            .getFieldName(),
                                                                     mitigationId);
                                             LOGGER.info(mapMessage);
                                         }
@@ -155,9 +163,12 @@ public class EndMitigationJourneyHandler
                                     var message =
                                             new StringMapMessage()
                                                     .with(
-                                                            "message",
-                                                            "Unknown mitigation journey ID")
-                                                    .with(MITIGATION_JOURNEY_ID, mitigationId);
+                                                            LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                                            "Unknown mitigation journey ID.")
+                                                    .with(
+                                                            LOG_MITIGATION_JOURNEY_ID
+                                                                    .getFieldName(),
+                                                            mitigationId);
                                     LOGGER.warn(message);
                                 }
                             });
@@ -224,9 +235,9 @@ public class EndMitigationJourneyHandler
             StringMapMessage mapMessage =
                     new StringMapMessage()
                             .with(
-                                    "message",
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                     "Failed to send mitigation request to the CI storage system")
-                            .with("reason", e.getMessage());
+                            .with(LOG_ERROR_DESCRIPTION.getFieldName(), e.getMessage());
             LOGGER.error(mapMessage);
         }
     }

@@ -34,11 +34,13 @@ import java.time.Instant;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_STEP;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_USER_STATE;
 
 public class ProcessJourneyStepHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String PYIC_TECHNICAL_ERROR_PAGE_ID = "pyi-technical";
     private static final String PYIC_TIMEOUT_UNRECOVERABLE_ID = "pyi-timeout-unrecoverable";
     private static final String CORE_SESSION_TIMEOUT_STATE = "CORE_SESSION_TIMEOUT";
 
@@ -87,7 +89,7 @@ public class ProcessJourneyStepHandler
                                             EnvironmentVariable.ENVIRONMENT),
                                     ipvSessionItem.getJourneyType()));
 
-            ClientOAuthSessionItem clientOAuthSessionItem = null;
+            ClientOAuthSessionItem clientOAuthSessionItem;
             if (ipvSessionItem.getClientOAuthSessionId() != null) {
                 clientOAuthSessionItem =
                         clientOAuthSessionService.getClientOAuthSession(
@@ -140,11 +142,17 @@ public class ProcessJourneyStepHandler
 
             return stateMachineResult.getJourneyStepResponse().value(configService);
         } catch (UnknownStateException e) {
-            LOGGER.error("Unknown journey state: {}", ipvSessionItem.getUserState());
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Unknown journey state.")
+                            .with(LOG_USER_STATE.getFieldName(), ipvSessionItem.getUserState()));
             throw new JourneyEngineException(
                     "Invalid journey state encountered, failed to execute journey engine step.");
         } catch (UnknownEventException e) {
-            LOGGER.error("Unknown journey event: {}", journeyStep);
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Unknown journey event.")
+                            .with(LOG_JOURNEY_STEP.getFieldName(), journeyStep));
             throw new JourneyEngineException(
                     "Invalid journey event provided, failed to execute journey engine step.");
         }

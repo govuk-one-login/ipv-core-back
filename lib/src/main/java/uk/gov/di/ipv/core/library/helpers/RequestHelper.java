@@ -8,6 +8,7 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
@@ -17,6 +18,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MISSING_HEADER_FIELD;
 
 public class RequestHelper {
 
@@ -124,7 +128,14 @@ public class RequestHelper {
     public static String getClientOAuthSessionId(Map<String, String> headers) {
         String clientSessionId = RequestHelper.getHeaderByKey(headers, CLIENT_SESSION_ID_HEADER);
         if (clientSessionId == null) {
-            LOGGER.warn("{} not present in header", CLIENT_SESSION_ID_HEADER);
+            LOGGER.warn(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Client session id missing in header.")
+                            .with(
+                                    LOG_MISSING_HEADER_FIELD.getFieldName(),
+                                    CLIENT_SESSION_ID_HEADER));
         }
         LogHelper.attachClientSessionIdToLogs(clientSessionId);
         return clientSessionId;

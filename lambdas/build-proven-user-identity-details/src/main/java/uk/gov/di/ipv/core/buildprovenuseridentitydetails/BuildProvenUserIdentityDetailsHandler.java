@@ -112,7 +112,7 @@ public class BuildProvenUserIdentityDetailsHandler
             List<Address> addresses = getProvenIdentityAddresses(credentials, currentVcStatuses);
             provenUserIdentityDetailsBuilder.addresses(addresses);
 
-            LOGGER.info("Successfully retrieved proven identity response");
+            LOGGER.info("Successfully retrieved proven identity response.");
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_OK, provenUserIdentityDetailsBuilder.build());

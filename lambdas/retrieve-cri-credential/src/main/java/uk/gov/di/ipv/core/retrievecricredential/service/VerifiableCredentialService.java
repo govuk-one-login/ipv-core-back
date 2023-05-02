@@ -31,9 +31,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.CRI_ID_LOG_FIELD;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.MESSAGE_DESCRIPTION;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.RESPONSE_CONTENT_TYPE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESPONSE_CONTENT_TYPE;
 
 public class VerifiableCredentialService {
 
@@ -75,9 +75,9 @@ public class VerifiableCredentialService {
             var message =
                     new StringMapMessage()
                             .with(
-                                    MESSAGE_DESCRIPTION.getFieldName(),
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                     "CRI has API key, sending key in header for credential request.")
-                            .with(CRI_ID_LOG_FIELD.getFieldName(), credentialIssuerId);
+                            .with(LOG_CRI_ID.getFieldName(), credentialIssuerId);
             LOGGER.info(message);
             credentialRequest.setHeader(API_KEY_HEADER, apiKey);
         }
@@ -99,7 +99,7 @@ public class VerifiableCredentialService {
             String responseContentType = response.getHeaderValue(HttpHeaders.CONTENT_TYPE);
             if (ContentType.APPLICATION_JWT.matches(ContentType.parse(responseContentType))) {
                 SignedJWT vcJwt = (SignedJWT) response.getContentAsJWT();
-                LOGGER.info("Verifiable Credential retrieved");
+                LOGGER.info("Verifiable Credential retrieved.");
                 return Collections.singletonList(vcJwt);
             } else if (ContentType.APPLICATION_JSON.matches(
                     ContentType.parse(responseContentType))) {
@@ -111,22 +111,24 @@ public class VerifiableCredentialService {
                     vcJwts.add(SignedJWT.parse(vc.toString()));
                 }
 
-                LOGGER.info("Verifiable Credential retrieved");
+                LOGGER.info("Verifiable Credential retrieved.");
                 return vcJwts;
             } else {
                 var message =
                         new StringMapMessage()
                                 .with(
-                                        MESSAGE_DESCRIPTION.getFieldName(),
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                         "Error retrieving credential::Unknown response type received from CRI.")
-                                .with(RESPONSE_CONTENT_TYPE.getFieldName(), responseContentType);
+                                .with(
+                                        LOG_RESPONSE_CONTENT_TYPE.getFieldName(),
+                                        responseContentType);
                 LOGGER.error(message);
                 throw new VerifiableCredentialException(
                         HTTPResponse.SC_SERVER_ERROR,
                         ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
             }
         } catch (IOException | ParseException | java.text.ParseException e) {
-            LogHelper.logErrorMessage("Error retrieving credential.", null, e.getMessage());
+            LogHelper.logErrorMessage("Error retrieving credential.", e.getMessage());
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);

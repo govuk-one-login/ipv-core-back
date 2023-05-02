@@ -53,6 +53,8 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PROFILE;
 
 public class CheckExistingIdentityHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -63,7 +65,7 @@ public class CheckExistingIdentityHandler
     private static final String VOT_P2 = "P2";
     private static final int ONLY = 0;
     private static final Logger LOGGER = LogManager.getLogger();
-    public static final String CANDIDATE_KEY = "message";
+
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
     private final IpvSessionService ipvSessionService;
@@ -159,9 +161,11 @@ public class CheckExistingIdentityHandler
                     var message =
                             new StringMapMessage()
                                     .with(
-                                            CANDIDATE_KEY,
-                                            "Matched profile and within CI threshold so returning reuse journey")
-                                    .with("profile", matchedProfile.get().getLabel());
+                                            LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                            "Matched profile and within CI threshold so returning reuse journey.")
+                                    .with(
+                                            LOG_PROFILE.getFieldName(),
+                                            matchedProfile.get().getLabel());
                     LOGGER.info(message);
 
                     auditService.sendAuditEvent(
@@ -183,8 +187,8 @@ public class CheckExistingIdentityHandler
                 var message =
                         new StringMapMessage()
                                 .with(
-                                        CANDIDATE_KEY,
-                                        "Failed to match profile so clearing VCs and returning next");
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "Failed to match profile so clearing VCs and returning next.");
                 LOGGER.info(message);
 
                 auditService.sendAuditEvent(
@@ -196,7 +200,10 @@ public class CheckExistingIdentityHandler
                 userIdentityService.deleteVcStoreItems(userId);
             } else {
                 var message =
-                        new StringMapMessage().with(CANDIDATE_KEY, "New user so returning next");
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "New user so returning next.");
                 LOGGER.info(message);
             }
 

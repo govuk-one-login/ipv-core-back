@@ -57,6 +57,8 @@ import java.util.*;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
 
 public class BuildCriOauthRequestHandler
         implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
@@ -177,8 +179,12 @@ public class BuildCriOauthRequestHandler
 
             var message =
                     new StringMapMessage()
-                            .with("lambdaResult", "Successfully generated ipv cri oauth request.")
-                            .with("redirectUri", criResponse.getCri().getRedirectUrl());
+                            .with(
+                                    LOG_LAMBDA_RESULT.getFieldName(),
+                                    "Successfully generated ipv cri oauth request.")
+                            .with(
+                                    LOG_REDIRECT_URI.getFieldName(),
+                                    criResponse.getCri().getRedirectUrl());
             LOGGER.info(message);
 
             return ApiGatewayResponseGenerator.proxyJsonResponse(OK, criResponse);
@@ -188,16 +194,16 @@ public class BuildCriOauthRequestHandler
                 return ApiGatewayResponseGenerator.proxyJsonResponse(
                         e.getResponseCode(), e.getErrorBody());
             }
-            LOGGER.error("Failed to create cri JAR because: {}", e.getMessage());
+            LogHelper.logErrorMessage("Failed to create cri JAR", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, ERROR_JOURNEY);
         } catch (SqsException e) {
-            LOGGER.error("Failed to send audit event to SQS queue because: {}", e.getMessage());
+            LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, ERROR_JOURNEY);
         } catch (ParseException | JOSEException e) {
-            LOGGER.error("Failed to parse encryption public JWK: {}", e.getMessage());
+            LogHelper.logErrorMessage("Failed to parse encryption public JWK.", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, ERROR_JOURNEY);
         } catch (URISyntaxException e) {
-            LOGGER.error("Failed to construct redirect uri because: {}", e.getMessage());
+            LogHelper.logErrorMessage("Failed to construct redirect uri.", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
@@ -307,11 +313,11 @@ public class BuildCriOauthRequestHandler
                     sharedClaimsSet.add(credentialsSharedClaims);
                 }
             } catch (JsonProcessingException e) {
-                LOGGER.error("Failed to get Shared Attributes: {}", e.getMessage());
+                LogHelper.logErrorMessage("Failed to get Shared Attributes.", e.getMessage());
                 throw new HttpResponseExceptionWithErrorBody(
                         500, ErrorResponse.FAILED_TO_GET_SHARED_ATTRIBUTES);
             } catch (ParseException e) {
-                LOGGER.error("Failed to parse issued credentials: {}", e.getMessage());
+                LogHelper.logErrorMessage("Failed to parse issued credentials.", e.getMessage());
                 throw new HttpResponseExceptionWithErrorBody(
                         500, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
             }
