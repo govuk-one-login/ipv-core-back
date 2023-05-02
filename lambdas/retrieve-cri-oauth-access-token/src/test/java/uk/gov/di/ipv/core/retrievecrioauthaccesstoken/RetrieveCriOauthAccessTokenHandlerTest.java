@@ -333,12 +333,12 @@ class RetrieveCriOauthAccessTokenHandlerTest {
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
 
-        when(credentialIssuerService.exchangeCodeForToken(any(), any(), any(), any()))
+        when(authCodeToAccessTokenService.exchangeCodeForToken(any(), any(), any(), any()))
                 .thenReturn(new BearerAccessToken());
 
         Map<String, Object> output = handler.handleRequest(input, context);
 
-        verify(credentialIssuerService)
+        verify(authCodeToAccessTokenService)
                 .exchangeCodeForToken(TEST_AUTH_CODE, passportIssuer, null, CREDENTIAL_ISSUER_ID);
         assertEquals("success", output.get("result"));
     }

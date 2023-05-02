@@ -407,12 +407,12 @@ class RetrieveCriCredentialHandlerTest {
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(credentialIssuerService.getVerifiableCredential(any(), any(), any(), any()))
+        when(verifiableCredentialService.getVerifiableCredential(any(), any(), any(), any()))
                 .thenReturn(List.of(SignedJWT.parse(SIGNED_VC_1)));
 
         Map<String, Object> output = handler.handleRequest(testInput, context);
 
-        verify(credentialIssuerService)
+        verify(verifiableCredentialService)
                 .getVerifiableCredential(
                         testBearerAccessToken,
                         testCriNotRequiringApiKey,
