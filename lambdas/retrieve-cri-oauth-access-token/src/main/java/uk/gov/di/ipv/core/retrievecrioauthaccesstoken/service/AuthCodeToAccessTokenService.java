@@ -82,7 +82,7 @@ public class AuthCodeToAccessTokenService {
             HTTPRequest httpRequest = tokenRequest.toHTTPRequest();
             if (apiKey != null) {
                 LOGGER.info(
-                        "Private api key found for cri {}, sending key in header for token request",
+                        "CRI {} has API key, sending key in header for token request",
                         credentialIssuerId);
                 httpRequest.setHeader(API_KEY_HEADER, apiKey);
             }

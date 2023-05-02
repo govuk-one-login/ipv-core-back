@@ -67,7 +67,7 @@ public class VerifiableCredentialService {
 
         if (apiKey != null) {
             LOGGER.info(
-                    "Private api key found for cri {}, sending key in header for credential request",
+                    "CRI {} has API key, sending key in header for credential request",
                     credentialIssuerId);
             credentialRequest.setHeader(API_KEY_HEADER, apiKey);
         }
