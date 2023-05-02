@@ -183,7 +183,8 @@ public class InitialiseIpvSessionHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
         } catch (JarValidationException e) {
-            LOGGER.error("Jar validation failed because: {}", e.getErrorObject().getDescription());
+            LogHelper.logErrorMessage(
+                    "Jar validation failed.", e.getErrorObject().getDescription());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_REQUEST);
         } catch (SqsException e) {
