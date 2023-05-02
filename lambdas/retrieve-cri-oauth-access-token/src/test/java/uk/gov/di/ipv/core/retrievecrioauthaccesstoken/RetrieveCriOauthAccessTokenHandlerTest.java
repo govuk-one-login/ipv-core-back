@@ -87,7 +87,8 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "test-audience",
-                        new URI("http://www.example.com/credential-issuers/callback/criId"));
+                        new URI("http://www.example.com/credential-issuers/callback/criId"),
+                        true);
 
         criOAuthSessionItem =
                 CriOAuthSessionItem.builder()
@@ -308,6 +309,38 @@ class RetrieveCriOauthAccessTokenHandlerTest {
                 OAuth2Error.SERVER_ERROR_CODE,
                 updatedIpvSessionItem.getVisitedCredentialIssuerDetails().get(0).getOauthError());
         verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
+    }
+
+    @Test
+    void shouldPassNullApiKeyWhenCriDoesNotRequireApiKey() throws URISyntaxException {
+        Map<String, String> input = Map.of(IPV_SESSION_ID, sessionId);
+        CredentialIssuerConfig testCriNotRequiringApiKey =
+                new CredentialIssuerConfig(
+                        new URI("http://www.example.com"),
+                        new URI("http://www.example.com/credential"),
+                        new URI("http://www.example.com/authorize"),
+                        "ipv-core",
+                        "{}",
+                        RSA_ENCRYPTION_PUBLIC_JWK,
+                        "test-audience",
+                        new URI("http://www.example.com/credential-issuers/callback/criId"),
+                        false);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
+                .thenReturn(testCriNotRequiringApiKey);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(criOAuthSessionService.getCriOauthSessionItem(any())).thenReturn(criOAuthSessionItem);
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
+
+        when(credentialIssuerService.exchangeCodeForToken(any(), any(), any(), any()))
+                .thenReturn(new BearerAccessToken());
+
+        Map<String, Object> output = handler.handleRequest(input, context);
+
+        verify(credentialIssuerService)
+                .exchangeCodeForToken(TEST_AUTH_CODE, passportIssuer, null, CREDENTIAL_ISSUER_ID);
+        assertEquals("success", output.get("result"));
     }
 
     private ClientOAuthSessionItem getClientOAuthSessionItem() {

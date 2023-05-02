@@ -105,7 +105,8 @@ class RetrieveCriCredentialHandlerTest {
                             "test-jwk",
                             "test-encryption-jwk",
                             "test-audience",
-                            new URI("http://example.com/redirect"));
+                            new URI("http://example.com/redirect"),
+                            true);
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -122,7 +123,8 @@ class RetrieveCriCredentialHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "test-audience",
-                        new URI("https://www.example.com/credential-issuers/callback/criId"));
+                        new URI("https://www.example.com/credential-issuers/callback/criId"),
+                        true);
 
         testBearerAccessToken = BearerAccessToken.parse(ACCESS_TOKEN);
 
@@ -381,6 +383,42 @@ class RetrieveCriCredentialHandlerTest {
                 OAuth2Error.SERVER_ERROR_CODE,
                 updatedIpvSessionItem.getVisitedCredentialIssuerDetails().get(0).getOauthError());
         verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
+    }
+
+    @Test
+    void shouldPassNullApiKeyWhenCriDoesNotRequireApiKey() throws Exception {
+        CredentialIssuerConfig testCriNotRequiringApiKey =
+                new CredentialIssuerConfig(
+                        new URI("https://www.example.com"),
+                        new URI("https://www.example.com/credential"),
+                        new URI("https://www.example.com/authorize"),
+                        "ipv-core",
+                        "{}",
+                        RSA_ENCRYPTION_PUBLIC_JWK,
+                        "test-audience",
+                        new URI("https://www.example.com/credential-issuers/callback/criId"),
+                        false);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
+                .thenReturn(testCriNotRequiringApiKey);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(criOAuthSessionService.getCriOauthSessionItem(any())).thenReturn(criOAuthSessionItem);
+        when(ipvSessionItem.getIpvSessionId()).thenReturn(testSessionId);
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(credentialIssuerService.getVerifiableCredential(any(), any(), any(), any()))
+                .thenReturn(List.of(SignedJWT.parse(SIGNED_VC_1)));
+
+        Map<String, Object> output = handler.handleRequest(testInput, context);
+
+        verify(credentialIssuerService)
+                .getVerifiableCredential(
+                        testBearerAccessToken,
+                        testCriNotRequiringApiKey,
+                        null,
+                        CREDENTIAL_ISSUER_ID);
+        assertEquals("/journey/next", output.get("journey"));
     }
 
     private void mockServiceCallsAndSessionItem() {

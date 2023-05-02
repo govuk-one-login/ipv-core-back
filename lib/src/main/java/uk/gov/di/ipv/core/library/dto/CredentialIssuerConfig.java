@@ -21,6 +21,7 @@ public class CredentialIssuerConfig {
     private String encryptionKey;
     private String componentId;
     private URI clientCallbackUrl;
+    private boolean requiresApiKey;
 
     public CredentialIssuerConfig() {}
 
@@ -33,7 +34,8 @@ public class CredentialIssuerConfig {
             String signingKey,
             String encryptionKey,
             String componentId,
-            URI clientCallbackUrl) {
+            URI clientCallbackUrl,
+            boolean requiresApiKey) {
         this.tokenUrl = tokenUrl;
         this.credentialUrl = credentialUrl;
         this.authorizeUrl = authorizeUrl;
@@ -42,6 +44,7 @@ public class CredentialIssuerConfig {
         this.encryptionKey = encryptionKey;
         this.componentId = componentId;
         this.clientCallbackUrl = clientCallbackUrl;
+        this.requiresApiKey = requiresApiKey;
     }
 
     public URI getTokenUrl() {
@@ -84,6 +87,10 @@ public class CredentialIssuerConfig {
 
     public URI getClientCallbackUrl() {
         return clientCallbackUrl;
+    }
+
+    public boolean getRequiresApiKey() {
+        return requiresApiKey;
     }
 
     @Override

@@ -96,7 +96,8 @@ class CheckExistingIdentityHandlerTest {
                             "test-jwk",
                             "test-encryption-jwk",
                             "test-audience",
-                            new URI("http://example.com/redirect"));
+                            new URI("http://example.com/redirect"),
+                            true);
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }

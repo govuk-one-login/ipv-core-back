@@ -275,7 +275,7 @@ public class ConfigService {
                     "Parameter value is not valid for the current state of the resource, details: {}",
                     e.getMessage());
         } catch (ResourceNotFoundException e) {
-            LOGGER.warn(
+            LOGGER.error(
                     "Failed to find the resource within Secrets manager: {}, details: {}",
                     secretId,
                     e.getMessage());

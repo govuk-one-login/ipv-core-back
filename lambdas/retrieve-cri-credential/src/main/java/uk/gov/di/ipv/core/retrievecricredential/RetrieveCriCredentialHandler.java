@@ -141,7 +141,10 @@ public class RetrieveCriCredentialHandler
             CredentialIssuerConfig credentialIssuerConfig =
                     configService.getCredentialIssuerActiveConnectionConfig(credentialIssuerId);
 
-            String apiKey = configService.getCriPrivateApiKey(credentialIssuerId);
+            String apiKey =
+                    credentialIssuerConfig.getRequiresApiKey()
+                            ? configService.getCriPrivateApiKey(credentialIssuerId)
+                            : null;
 
             List<SignedJWT> verifiableCredentials =
                     credentialIssuerService.getVerifiableCredential(

@@ -141,7 +141,8 @@ class BuildCriOauthRequestHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "http://www.example.com/audience",
-                        URI.create("http://www.example.com/callback/criId"));
+                        URI.create("http://www.example.com/callback/criId"),
+                        true);
 
         addressCredentialIssuerConfig =
                 new CredentialIssuerConfig(
@@ -152,7 +153,8 @@ class BuildCriOauthRequestHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         ADDRESS_ISSUER,
-                        URI.create("http://www.example.com/callback/criId"));
+                        URI.create("http://www.example.com/callback/criId"),
+                        true);
 
         dcmawCredentialIssuerConfig =
                 new CredentialIssuerConfig(
@@ -163,7 +165,8 @@ class BuildCriOauthRequestHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "http://www.example.com/audience",
-                        URI.create("http://www.example.com/callback/criId"));
+                        URI.create("http://www.example.com/callback/criId"),
+                        true);
 
         kbvCredentialIssuerConfig =
                 new CredentialIssuerConfig(
@@ -174,7 +177,8 @@ class BuildCriOauthRequestHandlerTest {
                         "{}",
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "http://www.example.com/audience",
-                        URI.create("http://www.example.com/callback/criId"));
+                        URI.create("http://www.example.com/callback/criId"),
+                        true);
 
         criOAuthSessionItem =
                 CriOAuthSessionItem.builder()
