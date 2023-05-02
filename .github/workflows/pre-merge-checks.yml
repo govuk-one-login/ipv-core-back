@@ -69,18 +69,6 @@ jobs:
       - name: Build and unit tests
         run: ./gradlew clean build
 
-      - name: Set up AWS creds for integration tests
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ secrets.ACTIONS_ROLE_ARN }}
-          aws-region: eu-west-2
-#
-#      - name: Integration tests
-#        env:
-#          IPV_SESSIONS_TABLE_NAME: sessions-build
-#          ENVIRONMENT: build
-#        run: ./gradlew intTest
-
       - name: Perform Static Analysis
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
