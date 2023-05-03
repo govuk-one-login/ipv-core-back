@@ -19,6 +19,11 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CREDENTIAL_I
 
 public class CredentialIssuerConfigService extends ConfigService {
 
+    public CredentialIssuerConfigService(
+            SSMProvider ssmProvider, SecretsProvider secretsProvider, String featureSet) {
+        super(ssmProvider, secretsProvider, featureSet);
+    }
+
     public CredentialIssuerConfigService(SSMProvider ssmProvider, SecretsProvider secretsProvider) {
         super(ssmProvider, secretsProvider);
     }

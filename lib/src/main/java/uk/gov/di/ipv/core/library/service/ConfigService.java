@@ -53,12 +53,20 @@ public class ConfigService {
     private final SecretsProvider secretsProvider;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public ConfigService(SSMProvider ssmProvider, SecretsProvider secretsProvider) {
+    private final String featureSet;
+
+    public ConfigService(
+            SSMProvider ssmProvider, SecretsProvider secretsProvider, String featureSet) {
         this.ssmProvider = ssmProvider;
         this.secretsProvider = secretsProvider;
+        this.featureSet = featureSet;
     }
 
-    public ConfigService() {
+    public ConfigService(SSMProvider ssmProvider, SecretsProvider secretsProvider) {
+        this(ssmProvider, secretsProvider, null);
+    }
+
+    public ConfigService(String featureSet) {
         if (isRunningLocally()) {
             this.ssmProvider =
                     ParamManager.getSsmProvider(
@@ -90,6 +98,11 @@ public class ConfigService {
                                             .build())
                             .defaultMaxAge(3, MINUTES);
         }
+        this.featureSet = featureSet;
+    }
+
+    public ConfigService() {
+        this(null);
     }
 
     public SSMProvider getSsmProvider() {
