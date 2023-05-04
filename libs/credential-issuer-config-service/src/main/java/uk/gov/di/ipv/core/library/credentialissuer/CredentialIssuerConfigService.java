@@ -36,16 +36,6 @@ public class CredentialIssuerConfigService extends ConfigService {
     private static final Logger LOGGER = LogManager.getLogger();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public CredentialIssuerConfig getCredentialIssuer(String credentialIssuerId) {
-        Map<String, String> result =
-                getSsmParameters(
-                        String.format(
-                                "%s/%s",
-                                getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
-                                credentialIssuerId));
-        return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
-    }
-
     public List<CredentialIssuerConfig> getCredentialIssuers()
             throws ParseCredentialIssuerConfigException {
         Map<String, String> params =
