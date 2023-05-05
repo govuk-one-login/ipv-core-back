@@ -34,8 +34,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.getAllServeEvents;
+import static com.github.tomakehurst.wiremock.client.WireMock.ok;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
@@ -96,9 +103,7 @@ class ConfigServiceTest {
 
     @Test
     void shouldGetCredentialIssuerFromParameterStore() throws Exception {
-        environmentVariables.set(
-                "CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "/dev/core/credentialIssuers");
-
+        environmentVariables.set("ENVIRONMENT", "test");
         Map<String, String> credentialIssuerParameters =
                 Map.of(
                         "activeConnection",
@@ -111,10 +116,10 @@ class ConfigServiceTest {
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "requiresApiKey",
                         "true");
-        when(ssmProvider.get("/dev/core/credentialIssuers/passportCri/activeConnection"))
+        when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
                 .thenReturn("stub");
 
-        when(ssmProvider.getMultiple("/dev/core/credentialIssuers/passportCri/connections/stub"))
+        when(ssmProvider.getMultiple("/test/core/credentialIssuers/passportCri/connections/stub"))
                 .thenReturn(credentialIssuerParameters);
 
         CredentialIssuerConfig result =
@@ -140,29 +145,31 @@ class ConfigServiceTest {
 
     @Test
     void shouldReturnIsEnabled() {
-        environmentVariables.set("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "passportCri");
-        when(ssmProvider.get("passportCri/aClientId/enabled")).thenReturn("true");
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/credentialIssuers/passportCri/enabled"))
+                .thenReturn("true");
 
-        boolean isEnabled = configService.isEnabled("aClientId");
+        boolean isEnabled = configService.isEnabled("passportCri");
         assertTrue(isEnabled);
     }
 
     @Test
     void shouldReturnIsAvailableOrNot() {
-        environmentVariables.set("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "passportCri");
-        when(ssmProvider.get("passportCri/aClientId/unavailable")).thenReturn("false");
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/credentialIssuers/passportCri/unavailable"))
+                .thenReturn("false");
 
-        boolean isUnavailable = configService.isUnavailable("aClientId");
+        boolean isUnavailable = configService.isUnavailable("passportCri");
         assertFalse(isUnavailable);
     }
 
     @Test
     void shouldReturnAllowedSharedAttributes() {
-        environmentVariables.set("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "passportCri");
-        when(ssmProvider.get("passportCri/aClientId/allowedSharedAttributes"))
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/credentialIssuers/passportCri/allowedSharedAttributes"))
                 .thenReturn("address,name");
 
-        String sharedAttributes = configService.getAllowedSharedAttributes("aClientId");
+        String sharedAttributes = configService.getAllowedSharedAttributes("passportCri");
         assertEquals("address,name", sharedAttributes);
     }
 
