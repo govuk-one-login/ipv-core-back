@@ -15,6 +15,7 @@ import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterExce
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
@@ -38,7 +39,9 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IS_LOCAL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.SIGNING_KEY_ID_PARAM;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_FEATURE_SET;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PARAMETER_PATH;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_SECRET_ID;
 
 public class ConfigService {
@@ -126,12 +129,26 @@ public class ConfigService {
         return ssmProvider.get(path);
     }
 
-    public String getSsmParameter(ConfigurationVariable configurationVariable) {
-        return ssmProvider.get(resolvePath(configurationVariable.getPath()));
-    }
-
-    public String getSsmParameter(ConfigurationVariable configurationVariable, String clientId) {
-        return ssmProvider.get(resolvePath(configurationVariable.getPath(), clientId));
+    public String getSsmParameter(
+            ConfigurationVariable configurationVariable, String... pathProperties) {
+        if (getFeatureSet() != null) {
+            var featureSetPath =
+                    resolveFeatureSetPath(configurationVariable.getPath(), pathProperties);
+            try {
+                return ssmProvider.get(featureSetPath);
+            } catch (ParameterNotFoundException ignored) {
+                LOGGER.debug(
+                        (new StringMapMessage())
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "Parameter not present for featureSet")
+                                .with(
+                                        LOG_PARAMETER_PATH.getFieldName(),
+                                        configurationVariable.getPath())
+                                .with(LOG_FEATURE_SET.getFieldName(), getFeatureSet()));
+            }
+        }
+        return ssmProvider.get(resolvePath(configurationVariable.getPath(), pathProperties));
     }
 
     private String resolveBasePath() {
@@ -140,6 +157,12 @@ public class ConfigService {
 
     private String resolvePath(String path, String... pathProperties) {
         return resolveBasePath() + String.format(path, (Object[]) pathProperties);
+    }
+
+    private String resolveFeatureSetPath(String path, String... pathProperties) {
+        return resolveBasePath()
+                + String.format("featureSet/%s/", getFeatureSet())
+                + String.format(path, (Object[]) pathProperties);
     }
 
     public Map<String, String> getSsmParameters(String path) {
