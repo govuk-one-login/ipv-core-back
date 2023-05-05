@@ -25,7 +25,7 @@ dependencies {
 
 	testImplementation "com.github.tomakehurst:wiremock-jre8:2.35.0",
 			"org.junit.jupiter:junit-jupiter:5.8.2",
-			"org.mockito:mockito-junit-jupiter:4.1.0",
+			"org.mockito:mockito-junit-jupiter:5.3.1",
 			project(":lib").sourceSets.test.output
 }
 
