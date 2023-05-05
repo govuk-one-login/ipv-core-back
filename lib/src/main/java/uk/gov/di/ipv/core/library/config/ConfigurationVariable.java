@@ -18,7 +18,8 @@ public enum ConfigurationVariable {
     CI_SCORING_THRESHOLD("self/ciScoringThreshold"),
     CI_MITIGATION_JOURNEYS_ENABLED("self/journey/ciMitigationsEnabled"),
     VC_TTL("self/vcTtl"),
-    VC_VALID_DURATION("self/vcValidDuration");
+    VC_VALID_DURATION("self/vcValidDuration"),
+    CREDENTIAL_ISSUERS("credentialIssuers");
 
     private final String path;
 
