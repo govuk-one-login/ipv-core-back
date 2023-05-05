@@ -21,7 +21,7 @@ dependencies {
 			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
 
 	testImplementation "com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson",
-			"org.junit.jupiter:junit-jupiter:5.8.2",
+			"org.junit.jupiter:junit-jupiter:5.9.3",
 			"org.mockito:mockito-junit-jupiter:5.3.1",
 			project(":lib").sourceSets.test.output
 }
