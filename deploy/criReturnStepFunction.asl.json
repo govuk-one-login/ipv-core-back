@@ -19,7 +19,7 @@
         {
           "ErrorEquals": ["uk.gov.di.ipv.core.library.exceptions.JourneyError"],
           "ResultPath": "$.error",
-          "Next": "ProcessJourneyStep-JourneyError"
+          "Next": "ReturnFrontend"
         }
       ],
       "ResultPath": "$.lambdaResult",
@@ -35,28 +35,6 @@
       "ResultPath": "$.lambdaResult",
       "Next": "RouteJourneyResponse"
     },
-    "ProcessJourneyStep": {
-      "Type": "Task",
-      "Resource": "${IPVProcessJourneyStepFunctionArn}",
-      "Parameters": {
-        "ipvSessionId.$": "$.ipvSessionId",
-        "ipAddress.$": "$.ipAddress",
-        "journey.$": "$.lambdaResult.journey"
-      },
-      "ResultPath": "$.lambdaResult",
-      "Next": "RouteJourneyResponse"
-    },
-    "ProcessJourneyStep-JourneyError": {
-      "Type": "Task",
-      "Resource": "${IPVProcessJourneyStepFunctionArn}",
-      "Parameters": {
-        "ipvSessionId.$": "$.ipvSessionId",
-        "ipAddress.$": "$.ipAddress",
-        "journey": "journey/error"
-      },
-      "ResultPath": "$.lambdaResult",
-      "Next": "ReturnToFrontend"
-    },
     "ReturnToFrontend": {
       "Type": "Succeed",
       "OutputPath": "$.lambdaResult"
@@ -70,26 +48,6 @@
             "IsPresent": true
           },
           "Next": "ReturnToFrontend"
-        },
-        {
-          "Variable": "$.lambdaResult.journey",
-          "StringEquals": "/journey/next",
-          "Next": "ProcessJourneyStep"
-        },
-        {
-          "Variable": "$.lambdaResult.journey",
-          "StringEquals": "/journey/access-denied",
-          "Next": "ProcessJourneyStep"
-        },
-        {
-          "Variable": "$.lambdaResult.journey",
-          "StringEquals": "/journey/temporarily-unavailable",
-          "Next": "ProcessJourneyStep"
-        },
-        {
-          "Variable": "$.lambdaResult.journey",
-          "StringEquals": "/journey/error",
-          "Next": "ProcessJourneyStep"
         },
         {
           "Variable": "$.lambdaResult.journey",
