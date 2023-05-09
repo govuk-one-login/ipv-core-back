@@ -19,7 +19,7 @@
         {
           "ErrorEquals": ["uk.gov.di.ipv.core.library.exceptions.JourneyError"],
           "ResultPath": "$.error",
-          "Next": "ReturnFrontend"
+          "Next": "RetrieveCriOAuthAccessTokenError"
         }
       ],
       "ResultPath": "$.lambdaResult",
@@ -34,6 +34,10 @@
       },
       "ResultPath": "$.lambdaResult",
       "Next": "RouteJourneyResponse"
+    },
+    "RetrieveCriOAuthAccessTokenError": {
+      "Type": "Pass",
+      "Next": "ReturnToFrontend"
     },
     "ReturnToFrontend": {
       "Type": "Succeed",
