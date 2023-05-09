@@ -377,7 +377,8 @@ class CheckExistingIdentityHandlerTest {
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
-    private APIGatewayProxyResponseEvent makeRequest(APIGatewayProxyRequestEvent event, Context context) {
+    private APIGatewayProxyResponseEvent makeRequest(
+            APIGatewayProxyRequestEvent event, Context context) {
         final var requestType = new TypeReference<Map<String, Object>>() {};
         final var request = objectMapper.convertValue(event, requestType);
         final var response = checkExistingIdentityHandler.handleRequest(request, context);

@@ -16,15 +16,16 @@ import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import java.util.Map;
 
 public abstract class BaseJourneyLambda
-    implements RequestHandler<Map<String, Object>, Map<String, Object>> {
+        implements RequestHandler<Map<String, Object>, Map<String, Object>> {
 
     public static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
     public static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
     public static final JourneyResponse JOURNEY_ERROR = new JourneyResponse("/journey/error");
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false)
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    private static final ObjectMapper OBJECT_MAPPER =
+            new ObjectMapper()
+                    .configure(DeserializationFeature.FAIL_ON_IGNORED_PROPERTIES, false)
+                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private static final TypeReference<Map<String, Object>> RETURN_TYPE_REFERENCE =
             new TypeReference<>() {};
@@ -40,16 +41,21 @@ public abstract class BaseJourneyLambda
 
         APIGatewayProxyResponseEvent apiGatewayResponse;
         try {
-            APIGatewayProxyRequestEvent request = OBJECT_MAPPER.convertValue(event, APIGatewayProxyRequestEvent.class);
+            APIGatewayProxyRequestEvent request =
+                    OBJECT_MAPPER.convertValue(event, APIGatewayProxyRequestEvent.class);
 
             final var ipvSessionId = RequestHelper.getIpvSessionId(request);
             final var ipAddress = RequestHelper.getIpAddress(request);
             final var journeyRequest = new JourneyRequest(ipvSessionId, ipAddress);
 
             final var journeyResponse = handleRequest(journeyRequest, context);
-            apiGatewayResponse = ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, journeyResponse);
+            apiGatewayResponse =
+                    ApiGatewayResponseGenerator.proxyJsonResponse(
+                            HttpStatus.SC_OK, journeyResponse);
         } catch (HttpResponseExceptionWithErrorBody e) {
-            apiGatewayResponse = ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_BAD_REQUEST, JOURNEY_ERROR);
+            apiGatewayResponse =
+                    ApiGatewayResponseGenerator.proxyJsonResponse(
+                            HttpStatus.SC_BAD_REQUEST, JOURNEY_ERROR);
         }
 
         return OBJECT_MAPPER.convertValue(apiGatewayResponse, RETURN_TYPE_REFERENCE);

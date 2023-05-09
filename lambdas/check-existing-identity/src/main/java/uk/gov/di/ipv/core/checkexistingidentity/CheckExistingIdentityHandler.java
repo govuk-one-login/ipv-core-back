@@ -50,9 +50,7 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PROFILE;
 
-/**
- * Check Existing Identity response Lambda
- */
+/** Check Existing Identity response Lambda */
 public class CheckExistingIdentityHandler extends BaseJourneyLambda {
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
