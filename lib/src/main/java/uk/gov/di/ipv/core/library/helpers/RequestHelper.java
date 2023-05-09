@@ -27,6 +27,7 @@ public class RequestHelper {
     public static final String IPV_SESSION_ID_HEADER = "ipv-session-id";
     public static final String CLIENT_SESSION_ID_HEADER = "client-session-id";
     public static final String IP_ADDRESS_HEADER = "ip-address";
+    public static final String FEATURE_SET_HEADER = "feature-set";
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -139,5 +140,18 @@ public class RequestHelper {
         }
         LogHelper.attachClientSessionIdToLogs(clientSessionId);
         return clientSessionId;
+    }
+
+    public static String getFeatureSet(Map<String, String> headers) {
+        String featureSet = RequestHelper.getHeaderByKey(headers, FEATURE_SET_HEADER);
+        if (featureSet == null) {
+            LOGGER.warn("{} not present in header", FEATURE_SET_HEADER);
+            return "default";
+        }
+        return featureSet;
+    }
+
+    public static String getFeatureSet(APIGatewayProxyRequestEvent event) {
+        return getFeatureSet(event.getHeaders());
     }
 }
