@@ -127,6 +127,7 @@ public class BuildCriOauthRequestHandler
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
             String ipAddress = RequestHelper.getIpAddress(input);
+            String featureSet = RequestHelper.getFeatureSet(input);
             Map<String, String> pathParameters = input.getPathParameters();
 
             var errorResponse = validate(pathParameters);

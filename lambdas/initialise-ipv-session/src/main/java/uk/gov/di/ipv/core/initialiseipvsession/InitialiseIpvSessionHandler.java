@@ -102,6 +102,7 @@ public class InitialiseIpvSessionHandler
 
         try {
             String ipAddress = RequestHelper.getIpAddress(input);
+            String featureSet = RequestHelper.getFeatureSet(input);
             Map<String, String> sessionParams =
                     objectMapper.readValue(input.getBody(), new TypeReference<>() {});
             Optional<ErrorResponse> error = validateSessionParams(sessionParams);

@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -74,6 +75,7 @@ public class ProcessJourneyStepHandler
         try {
             String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
             String journeyStep = StepFunctionHelpers.getJourneyStep(input);
+            String featureSet = RequestHelper.getFeatureSet(input);
 
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             if (ipvSessionItem == null) {
