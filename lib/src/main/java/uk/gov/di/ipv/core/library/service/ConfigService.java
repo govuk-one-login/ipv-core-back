@@ -164,16 +164,15 @@ public class ConfigService {
                 + String.format(path, (Object[]) pathProperties);
     }
 
-    public Map<String, String> getSsmParameters(String path) {
-        return getSsmParameters(path, false);
-    }
-
-    public Map<String, String> getSsmParameters(String path, boolean recursive) {
-        if (recursive) {
-            return ssmProvider.recursive().getMultiple(path);
-        } else {
-            return ssmProvider.getMultiple(path);
+    public Map<String, String> getSsmParameters(
+            String path, boolean recursive, String... pathProperties) {
+        var provider = recursive ? ssmProvider.recursive() : ssmProvider;
+        Map<String, String> parameters =
+                new HashMap<>(provider.getMultiple(resolvePath(path, pathProperties)));
+        if (getFeatureSet() != null) {
+            parameters.putAll(provider.getMultiple(resolveFeatureSetPath(path, pathProperties)));
         }
+        return parameters;
     }
 
     public boolean isRunningLocally() {
@@ -225,7 +224,7 @@ public class ConfigService {
         final String pathTemplate =
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/connections/%s";
         Map<String, String> result =
-                getSsmParameters(resolvePath(pathTemplate, credentialIssuerId, activeConnection));
+                getSsmParameters(pathTemplate, false, credentialIssuerId, activeConnection);
 
         return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
     }

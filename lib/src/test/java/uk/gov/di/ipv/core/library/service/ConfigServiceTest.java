@@ -454,4 +454,76 @@ class ConfigServiceTest {
             }
         }
     }
+
+    @ParameterizedTest
+    @CsvSource({
+        "CREDENTIAL_ISSUERS,",
+        "CREDENTIAL_ISSUERS,FS01",
+    })
+    void shouldAccountForFeatureSetWhenRetrievingParameters(String testSet, String featureSet) {
+        configService = new ConfigService(ssmProvider, secretsProvider, featureSet);
+        environmentVariables.set("ENVIRONMENT", "test");
+        TestMultipleConfiguration testMultipleConfiguration =
+                TestMultipleConfiguration.valueOf(testSet);
+        testMultipleConfiguration.setupMockConfig(ssmProvider);
+        assertEquals(
+                testMultipleConfiguration.getExpectedValue(featureSet),
+                configService.getSsmParameters(testMultipleConfiguration.path, false));
+    }
+
+    private enum TestMultipleConfiguration {
+        CREDENTIAL_ISSUERS(
+                "credentialIssuers",
+                Map.of(
+                        "cri1/activeConnection",
+                        "stub",
+                        "cri1/connections/stub/clientId",
+                        "ipv-core",
+                        "cri2/activeConnection",
+                        "main",
+                        "cri2/connections/main/clientId",
+                        "a client id"),
+                Map.of(
+                        "FS01",
+                        Map.of("cri2/activeConnection", "stub", "cri3/activeConnection", "main")));
+
+        private final String path;
+        private final Map<String, String> baseValues;
+        private final Map<String, Map<String, String>> featureSetValues;
+
+        TestMultipleConfiguration(
+                String path,
+                Map<String, String> baseValues,
+                Map<String, Map<String, String>> featureSetValues) {
+            this.path = path;
+            this.baseValues = baseValues;
+            this.featureSetValues = featureSetValues;
+        }
+
+        public void setupMockConfig(SSMProvider ssmProvider) {
+            Mockito.lenient()
+                    .when(ssmProvider.getMultiple("/test/core/" + path))
+                    .thenReturn(baseValues);
+            featureSetValues.forEach(
+                    (featureSet, valueOverride) ->
+                            Mockito.lenient()
+                                    .when(
+                                            ssmProvider.getMultiple(
+                                                    "/test/core/features/"
+                                                            + featureSet
+                                                            + "/"
+                                                            + path))
+                                    .thenReturn(valueOverride));
+        }
+
+        public Map<String, String> getExpectedValue(String featureSet) {
+            if (featureSet == null) {
+                return baseValues;
+            } else {
+                var expected = new HashMap<>(baseValues);
+                expected.putAll(featureSetValues.get(featureSet));
+                return expected;
+            }
+        }
+    }
 }

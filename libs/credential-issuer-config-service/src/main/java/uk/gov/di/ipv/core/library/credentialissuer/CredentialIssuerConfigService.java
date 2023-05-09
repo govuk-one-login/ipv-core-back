@@ -38,8 +38,7 @@ public class CredentialIssuerConfigService extends ConfigService {
     public List<CredentialIssuerConfig> getCredentialIssuers()
             throws ParseCredentialIssuerConfigException {
         Map<String, String> params =
-                getSsmParameters(
-                        resolvePath(ConfigurationVariable.CREDENTIAL_ISSUERS.getPath()), true);
+                getSsmParameters(ConfigurationVariable.CREDENTIAL_ISSUERS.getPath(), true);
 
         Map<String, Map<String, Object>> map = new HashMap<>();
         for (Map.Entry<String, String> entry : params.entrySet()) {
