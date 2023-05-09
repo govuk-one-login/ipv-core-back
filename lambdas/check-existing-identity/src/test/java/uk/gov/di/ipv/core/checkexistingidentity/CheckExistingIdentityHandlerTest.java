@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.checkexistingidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
@@ -17,7 +18,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
@@ -83,6 +83,7 @@ class CheckExistingIdentityHandlerTest {
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
+    private static final JourneyResponse JOURNEY_ERROR = new JourneyResponse("/journey/error");
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
 
     static {
@@ -103,7 +104,7 @@ class CheckExistingIdentityHandlerTest {
         }
     }
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock private Context context;
     @Mock private UserIdentityService userIdentityService;
@@ -167,7 +168,7 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var response = checkExistingIdentityHandler.handleRequest(event, context);
+        var response = makeRequest(event, context);
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
@@ -198,7 +199,7 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var response = checkExistingIdentityHandler.handleRequest(event, context);
+        var response = makeRequest(event, context);
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
@@ -228,7 +229,7 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var response = checkExistingIdentityHandler.handleRequest(event, context);
+        var response = makeRequest(event, context);
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
@@ -256,11 +257,11 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var response = checkExistingIdentityHandler.handleRequest(event, context);
+        var response = makeRequest(event, context);
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals("/journey/next", journeyResponse.getJourney());
+        assertEquals(JOURNEY_NEXT, journeyResponse);
 
         verify(userIdentityService).deleteVcStoreItems(TEST_USER_ID);
 
@@ -284,11 +285,11 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var response = checkExistingIdentityHandler.handleRequest(event, context);
+        var response = makeRequest(event, context);
         JourneyResponse journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
         assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-        assertEquals("/journey/next", journeyResponse.getJourney());
+        assertEquals(JOURNEY_NEXT, journeyResponse);
         verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
 
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
@@ -301,12 +302,9 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturn400IfSessionIdNotInHeader() {
         APIGatewayProxyRequestEvent eventWithoutHeaders = new APIGatewayProxyRequestEvent();
 
-        var response = checkExistingIdentityHandler.handleRequest(eventWithoutHeaders, context);
-        var error = gson.fromJson(response.getBody(), Map.class);
+        var response = makeRequest(eventWithoutHeaders, context);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), error.get("error_description"));
         verify(clientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
     }
 
@@ -317,18 +315,10 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var response = checkExistingIdentityHandler.handleRequest(event, context);
-        Map<String, Object> responseMap =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        var response = makeRequest(event, context);
+        var journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getCode(),
-                responseMap.get("code"));
-        assertEquals(
-                ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(),
-                responseMap.get("message"));
-        verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
+        assertEquals(JOURNEY_ERROR, journeyResponse);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
@@ -339,17 +329,10 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var response = checkExistingIdentityHandler.handleRequest(event, context);
-        Map<String, Object> responseMap =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        var response = makeRequest(event, context);
+        var journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals(
-                ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE.getCode(),
-                responseMap.get("code"));
-        assertEquals(
-                ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE.getMessage(),
-                responseMap.get("message"));
+        assertEquals(JOURNEY_ERROR, journeyResponse);
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
@@ -363,16 +346,10 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var response = checkExistingIdentityHandler.handleRequest(event, context);
+        var response = makeRequest(event, context);
+        var journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
-        Map<String, Object> responseMap =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_GET_STORED_CIS.getCode(), responseMap.get("code"));
-        assertEquals(
-                ErrorResponse.FAILED_TO_GET_STORED_CIS.getMessage(), responseMap.get("message"));
+        assertEquals(JOURNEY_ERROR, journeyResponse);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
@@ -392,16 +369,19 @@ class CheckExistingIdentityHandlerTest {
                 .when(auditService)
                 .sendAuditEvent((AuditEvent) any());
 
-        var response = checkExistingIdentityHandler.handleRequest(event, context);
+        var response = makeRequest(event, context);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
-        Map<String, Object> responseMap =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        var journeyResponse = gson.fromJson(response.getBody(), JourneyResponse.class);
 
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getCode(), responseMap.get("code"));
-        assertEquals(
-                ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getMessage(), responseMap.get("message"));
+        assertEquals(JOURNEY_ERROR, journeyResponse);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+    }
+
+    private APIGatewayProxyResponseEvent makeRequest(APIGatewayProxyRequestEvent event, Context context) {
+        final var requestType = new TypeReference<Map<String, Object>>() {};
+        final var request = objectMapper.convertValue(event, requestType);
+        final var response = checkExistingIdentityHandler.handleRequest(request, context);
+
+        return objectMapper.convertValue(response, APIGatewayProxyResponseEvent.class);
     }
 }
