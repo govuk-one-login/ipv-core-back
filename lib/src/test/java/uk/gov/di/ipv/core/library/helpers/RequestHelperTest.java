@@ -17,9 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.CLIENT_SESSION_ID_HEADER;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IPV_SESSION_ID_HEADER;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.IP_ADDRESS_HEADER;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.*;
 
 class RequestHelperTest {
 
@@ -192,5 +190,24 @@ class RequestHelperTest {
         event.setHeaders(headers);
 
         assertNull(RequestHelper.getClientOAuthSessionId(event));
+    }
+
+    @Test
+    void getFeatureSetShouldReturnFeatureSetId() throws HttpResponseExceptionWithErrorBody {
+        var event = new APIGatewayProxyRequestEvent();
+        event.setHeaders(Map.of(FEATURE_SET_HEADER, "test-feature-set"));
+
+        assertEquals("test-feature-set", RequestHelper.getFeatureSet(event));
+    }
+
+    @Test
+    void getFeatureSetShouldReturnDefault() {
+        var event = new APIGatewayProxyRequestEvent();
+        HashMap<String, String> headers = new HashMap<>();
+        headers.put(FEATURE_SET_HEADER, null);
+
+        event.setHeaders(headers);
+
+        assertEquals("default", RequestHelper.getFeatureSet(event));
     }
 }

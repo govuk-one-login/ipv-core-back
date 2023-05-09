@@ -150,4 +150,8 @@ public class RequestHelper {
         }
         return featureSet;
     }
+
+    public static String getFeatureSet(APIGatewayProxyRequestEvent event) {
+        return getFeatureSet(event.getHeaders());
+    }
 }
