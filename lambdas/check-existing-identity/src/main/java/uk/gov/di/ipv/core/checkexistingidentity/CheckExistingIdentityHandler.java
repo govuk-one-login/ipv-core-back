@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeExce
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -35,7 +36,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda;
-import uk.gov.di.ipv.core.library.statemachine.JourneyRequest;
+import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 
 import java.text.ParseException;
@@ -49,6 +50,8 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PROFILE;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 
 /** Check Existing Identity response Lambda */
 public class CheckExistingIdentityHandler extends BaseJourneyLambda {
@@ -106,8 +109,8 @@ public class CheckExistingIdentityHandler extends BaseJourneyLambda {
         LogHelper.attachComponentIdToLogs();
 
         try {
-            String ipvSessionId = event.getIpvSessionId();
-            String ipAddress = event.getIpAddress();
+            String ipvSessionId = getIpvSessionId(event);
+            String ipAddress = getIpAddress(event);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
@@ -200,6 +203,9 @@ public class CheckExistingIdentityHandler extends BaseJourneyLambda {
             }
 
             return JOURNEY_NEXT;
+        } catch (HttpResponseExceptionWithErrorBody e ) {
+            LOGGER.error("Unable to parse existing credentials", e);
+            return JOURNEY_ERROR;
         } catch (ParseException e) {
             LOGGER.error("Unable to parse existing credentials", e);
             return JOURNEY_ERROR;

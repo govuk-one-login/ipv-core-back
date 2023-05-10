@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.statemachine;
+package uk.gov.di.ipv.core.library.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

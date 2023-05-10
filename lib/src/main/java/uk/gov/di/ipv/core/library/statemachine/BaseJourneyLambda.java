@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
+import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -33,8 +34,8 @@ public abstract class BaseJourneyLambda
     @Override
     public Map<String, Object> handleRequest(Map<String, Object> event, Context context) {
         if (event.containsKey("ipvSessionId")) {
-            final var journeyRequest = OBJECT_MAPPER.convertValue(event, JourneyRequest.class);
-            final var journeyResponse = handleRequest(journeyRequest, context);
+            var journeyRequest = OBJECT_MAPPER.convertValue(event, JourneyRequest.class);
+            var journeyResponse = handleRequest(journeyRequest, context);
 
             return OBJECT_MAPPER.convertValue(journeyResponse, RETURN_TYPE_REFERENCE);
         }
@@ -44,11 +45,11 @@ public abstract class BaseJourneyLambda
             APIGatewayProxyRequestEvent request =
                     OBJECT_MAPPER.convertValue(event, APIGatewayProxyRequestEvent.class);
 
-            final var ipvSessionId = RequestHelper.getIpvSessionId(request);
-            final var ipAddress = RequestHelper.getIpAddress(request);
-            final var journeyRequest = new JourneyRequest(ipvSessionId, ipAddress);
+            var ipvSessionId = RequestHelper.getIpvSessionId(request);
+            var ipAddress = RequestHelper.getIpAddress(request);
+            var journeyRequest = new JourneyRequest(ipvSessionId, ipAddress);
 
-            final var journeyResponse = handleRequest(journeyRequest, context);
+            var journeyResponse = handleRequest(journeyRequest, context);
             apiGatewayResponse =
                     ApiGatewayResponseGenerator.proxyJsonResponse(
                             HttpStatus.SC_OK, journeyResponse);
