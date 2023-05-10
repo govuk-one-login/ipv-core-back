@@ -142,23 +142,24 @@ public class RequestHelper {
     public static String getIpAddress(JourneyRequest request)
             throws HttpResponseExceptionWithErrorBody {
         String ipAddress = request.getIpAddress();
-        if (ipAddress == null) {
-            LOGGER.error("ipAddress not present in request");
-            throw new HttpResponseExceptionWithErrorBody(
-                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IP_ADDRESS);
-        }
+        validateIpAddress(ipAddress, "ipAddress not present in request");
         return ipAddress;
     }
 
     public static String getIpAddress(Map<String, String> headers)
             throws HttpResponseExceptionWithErrorBody {
         String ipAddress = RequestHelper.getHeaderByKey(headers, IP_ADDRESS_HEADER);
+        validateIpAddress(ipAddress, String.format("%s not present in header", IP_ADDRESS_HEADER));
+        return ipAddress;
+    }
+
+    private static void validateIpAddress(String ipAddress, String errorMessage)
+            throws HttpResponseExceptionWithErrorBody {
         if (ipAddress == null) {
-            LOGGER.error("{} not present in header", IP_ADDRESS_HEADER);
+            LOGGER.error(errorMessage, IP_ADDRESS_HEADER);
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IP_ADDRESS);
         }
-        return ipAddress;
     }
 
     public static String getClientOAuthSessionId(Map<String, String> headers) {
