@@ -326,7 +326,9 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals("/journey/error", responseValue.getJourney());
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, responseValue.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getCode(), responseValue.getCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getCode(),
+                responseValue.getCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(),
                 responseValue.getMessage());
@@ -348,7 +350,9 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals("/journey/error", responseValue.getJourney());
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, responseValue.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE.getCode(), responseValue.getCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE.getCode(),
+                responseValue.getCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE.getMessage(),
                 responseValue.getMessage());
