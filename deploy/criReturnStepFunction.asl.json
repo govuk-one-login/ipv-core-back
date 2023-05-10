@@ -17,7 +17,7 @@
       },
       "Catch": [
         {
-          "ErrorEquals": ["uk.gov.di.ipv.core.library.exceptions.JourneyError"],
+          "ErrorEquals": ["uk.gov.di.ipv.core.library.exceptions.JourneyError", "java.lang.IllegalArgumentException"],
           "ResultPath": "$.error",
           "Next": "RetrieveCriOAuthAccessTokenError"
         }
