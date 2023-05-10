@@ -10,8 +10,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
+import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.nio.charset.Charset;
 import java.util.HashMap;
@@ -126,9 +126,8 @@ public class RequestHelper {
     }
 
     private static void validateIpvSessionId(
-            String ipvSessionId,
-            String errorMessage,
-            boolean allowNull) throws HttpResponseExceptionWithErrorBody {
+            String ipvSessionId, String errorMessage, boolean allowNull)
+            throws HttpResponseExceptionWithErrorBody {
         if (ipvSessionId == null) {
             if (allowNull) {
                 LOGGER.warn(errorMessage);

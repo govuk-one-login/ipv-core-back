@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
+import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -18,10 +19,10 @@ import java.util.Map;
 
 public abstract class BaseJourneyLambda
         implements RequestHandler<Map<String, Object>, Map<String, Object>> {
-
+    public static final String JOURNEY_ERROR_PATH = "/journey/error";
     public static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
     public static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
-    public static final JourneyResponse JOURNEY_ERROR = new JourneyResponse("/journey/error");
+    public static final JourneyResponse JOURNEY_ERROR = new JourneyResponse(JOURNEY_ERROR_PATH);
 
     private static final ObjectMapper OBJECT_MAPPER =
             new ObjectMapper()
@@ -54,9 +55,13 @@ public abstract class BaseJourneyLambda
                     ApiGatewayResponseGenerator.proxyJsonResponse(
                             HttpStatus.SC_OK, journeyResponse);
         } catch (HttpResponseExceptionWithErrorBody e) {
+            var journeyResponse =
+                    new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse());
+
             apiGatewayResponse =
                     ApiGatewayResponseGenerator.proxyJsonResponse(
-                            HttpStatus.SC_BAD_REQUEST, JOURNEY_ERROR);
+                            HttpStatus.SC_BAD_REQUEST, journeyResponse);
         }
 
         return OBJECT_MAPPER.convertValue(apiGatewayResponse, RETURN_TYPE_REFERENCE);

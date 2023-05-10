@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
+import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -16,6 +17,9 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
@@ -36,7 +40,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda;
-import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 
 import java.text.ParseException;
@@ -203,21 +206,34 @@ public class CheckExistingIdentityHandler extends BaseJourneyLambda {
             }
 
             return JOURNEY_NEXT;
-        } catch (HttpResponseExceptionWithErrorBody e ) {
+        } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("Unable to parse existing credentials", e);
-            return JOURNEY_ERROR;
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse());
         } catch (ParseException e) {
             LOGGER.error("Unable to parse existing credentials", e);
-            return JOURNEY_ERROR;
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (CiRetrievalException e) {
             LOGGER.error("Error when fetching CIs from storage system", e);
-            return JOURNEY_ERROR;
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_GET_STORED_CIS);
         } catch (UnknownEvidenceTypeException e) {
             LOGGER.error("Unable to determine type of credential", e);
-            return JOURNEY_ERROR;
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue", e);
-            return JOURNEY_ERROR;
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
         }
     }
 
