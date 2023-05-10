@@ -81,11 +81,6 @@ public enum ErrorResponse {
         return message;
     }
 
-    @JsonValue()
-    public int toValue() {
-        return this.getCode();
-    }
-
     @JsonCreator
     public static ErrorResponse forCode(int code) {
         for (ErrorResponse element : values()) {

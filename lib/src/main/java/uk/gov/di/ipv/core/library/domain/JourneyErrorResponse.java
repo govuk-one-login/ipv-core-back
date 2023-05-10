@@ -49,7 +49,7 @@ public class JourneyErrorResponse extends JourneyResponse {
         return this.statusCode;
     }
 
-    public ErrorResponse getCode() {
-        return code;
+    public int getCode() {
+        return this.code != null ? this.code.getCode() : 0;
     }
 }

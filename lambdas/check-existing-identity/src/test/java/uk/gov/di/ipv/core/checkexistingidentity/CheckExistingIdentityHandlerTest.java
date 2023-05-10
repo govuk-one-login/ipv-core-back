@@ -308,7 +308,7 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals("/journey/error", responseValue.getJourney());
         assertEquals(HttpStatus.SC_BAD_REQUEST, responseValue.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID, responseValue.getCode());
+        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), responseValue.getCode());
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), responseValue.getMessage());
         verify(clientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
     }
@@ -326,7 +326,7 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals("/journey/error", responseValue.getJourney());
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, responseValue.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS, responseValue.getCode());
+        assertEquals(ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getCode(), responseValue.getCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(),
                 responseValue.getMessage());
@@ -348,7 +348,7 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals("/journey/error", responseValue.getJourney());
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, responseValue.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE, responseValue.getCode());
+        assertEquals(ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE.getCode(), responseValue.getCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE.getMessage(),
                 responseValue.getMessage());
@@ -372,7 +372,7 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals("/journey/error", responseValue.getJourney());
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, responseValue.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_GET_STORED_CIS, responseValue.getCode());
+        assertEquals(ErrorResponse.FAILED_TO_GET_STORED_CIS.getCode(), responseValue.getCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_GET_STORED_CIS.getMessage(), responseValue.getMessage());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
@@ -400,7 +400,7 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals("/journey/error", responseValue.getJourney());
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, responseValue.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT, responseValue.getCode());
+        assertEquals(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getCode(), responseValue.getCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getMessage(), responseValue.getMessage());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
