@@ -37,6 +37,9 @@
     },
     "RetrieveCriOAuthAccessTokenError": {
       "Type": "Pass",
+      "Result": {
+        "journey": "/journey/error"
+      },
       "Next": "ReturnToFrontend"
     },
     "ReturnToFrontend": {
