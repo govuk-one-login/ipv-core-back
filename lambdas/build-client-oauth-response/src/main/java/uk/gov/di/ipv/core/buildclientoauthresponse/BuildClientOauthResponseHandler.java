@@ -96,6 +96,8 @@ public class BuildClientOauthResponseHandler extends BaseJourneyLambda {
             String ipvSessionId = getIpvSessionIdAllowNull(input);
             String ipAddress = getIpAddress(input);
             String clientSessionId = getClientOAuthSessionId(input);
+            String featureSet = RequestHelper.getFeatureSet(input);
+            configService.setFeatureSet(featureSet);
 
             LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
 

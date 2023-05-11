@@ -81,6 +81,7 @@ public class SelectCriHandler extends BaseJourneyLambda {
         try {
             String ipvSessionId = getIpvSessionId(event);
             String featureSet = RequestHelper.getFeatureSet(event);
+            configService.setFeatureSet(featureSet);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.getClientOAuthSession(

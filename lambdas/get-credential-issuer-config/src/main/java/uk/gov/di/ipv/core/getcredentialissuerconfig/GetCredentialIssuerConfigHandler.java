@@ -41,6 +41,7 @@ public class GetCredentialIssuerConfigHandler
         LogHelper.attachComponentIdToLogs();
         try {
             String featureSet = RequestHelper.getFeatureSet(input);
+            credentialIssuerConfigService.setFeatureSet(featureSet);
             List<CredentialIssuerConfig> config =
                     credentialIssuerConfigService.getCredentialIssuers();
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, config);

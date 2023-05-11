@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.JourneyError;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -87,6 +88,8 @@ public class RetrieveCriOauthAccessTokenHandler
         String credentialIssuerId = null;
 
         String ipAddress = StepFunctionHelpers.getIpAddress(input);
+        String featureSet = RequestHelper.getFeatureSet(input);
+        configService.setFeatureSet(featureSet);
 
         try {
             String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);

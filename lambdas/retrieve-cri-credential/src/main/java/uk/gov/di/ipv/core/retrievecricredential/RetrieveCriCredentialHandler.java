@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
@@ -107,6 +108,8 @@ public class RetrieveCriCredentialHandler
         LogHelper.attachComponentIdToLogs();
 
         String ipAddress = StepFunctionHelpers.getIpAddress(input);
+        String featureSet = RequestHelper.getFeatureSet(input);
+        configService.setFeatureSet(featureSet);
 
         IpvSessionItem ipvSessionItem;
         try {

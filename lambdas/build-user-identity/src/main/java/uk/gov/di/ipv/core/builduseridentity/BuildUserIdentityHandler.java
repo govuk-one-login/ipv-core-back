@@ -85,6 +85,8 @@ public class BuildUserIdentityHandler
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
         try {
+            String featureSet = RequestHelper.getFeatureSet(input);
+            configService.setFeatureSet(featureSet);
             AccessToken accessToken =
                     AccessToken.parse(
                             RequestHelper.getHeaderByKey(

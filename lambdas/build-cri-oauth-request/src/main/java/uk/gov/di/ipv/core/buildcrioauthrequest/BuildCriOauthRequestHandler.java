@@ -128,6 +128,7 @@ public class BuildCriOauthRequestHandler
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
             String ipAddress = RequestHelper.getIpAddress(input);
             String featureSet = RequestHelper.getFeatureSet(input);
+            credentialIssuerConfigService.setFeatureSet(featureSet);
             Map<String, String> pathParameters = input.getPathParameters();
 
             var errorResponse = validate(pathParameters);
