@@ -1,9 +1,6 @@
 package uk.gov.di.ipv.core.checkexistingidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
@@ -21,6 +18,8 @@ import uk.gov.di.ipv.core.library.auditing.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
@@ -31,9 +30,7 @@ import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
-import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -42,6 +39,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 
 import java.text.ParseException;
@@ -55,13 +53,13 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PROFILE;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 
-public class CheckExistingIdentityHandler
-        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+/** Check Existing Identity response Lambda */
+public class CheckExistingIdentityHandler extends BaseJourneyLambda {
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
-    private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
-    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
     private static final String VOT_P2 = "P2";
     private static final int ONLY = 0;
     private static final Logger LOGGER = LogManager.getLogger();
@@ -75,6 +73,7 @@ public class CheckExistingIdentityHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final String componentId;
 
+    @SuppressWarnings("unused") // Used by AWS
     public CheckExistingIdentityHandler(
             ConfigService configService,
             UserIdentityService userIdentityService,
@@ -93,6 +92,7 @@ public class CheckExistingIdentityHandler
         this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
+    @SuppressWarnings("unused") // Used through dependency injection
     @ExcludeFromGeneratedCoverageReport
     public CheckExistingIdentityHandler() {
         this.configService = new ConfigService();
@@ -108,13 +108,12 @@ public class CheckExistingIdentityHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public APIGatewayProxyResponseEvent handleRequest(
-            APIGatewayProxyRequestEvent event, Context context) {
+    protected JourneyResponse handleRequest(JourneyRequest event, Context context) {
         LogHelper.attachComponentIdToLogs();
 
         try {
-            String ipvSessionId = RequestHelper.getIpvSessionId(event);
-            String ipAddress = RequestHelper.getIpAddress(event);
+            String ipvSessionId = getIpvSessionId(event);
+            String ipAddress = getIpAddress(event);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionDetailsService.getClientOAuthSession(
@@ -178,8 +177,7 @@ public class CheckExistingIdentityHandler
 
                     updateSuccessfulVcStatuses(ipvSessionItem, credentials);
 
-                    return ApiGatewayResponseGenerator.proxyJsonResponse(
-                            HttpStatus.SC_OK, JOURNEY_REUSE);
+                    return JOURNEY_REUSE;
                 }
             }
 
@@ -207,28 +205,35 @@ public class CheckExistingIdentityHandler
                 LOGGER.info(message);
             }
 
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, JOURNEY_NEXT);
+            return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody e) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getResponseCode(), e.getErrorBody());
+            LOGGER.error("Unable to parse existing credentials", e);
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse());
         } catch (ParseException e) {
             LOGGER.error("Unable to parse existing credentials", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (CiRetrievalException e) {
             LOGGER.error("Error when fetching CIs from storage system", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_GET_STORED_CIS);
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_GET_STORED_CIS);
         } catch (UnknownEvidenceTypeException e) {
             LOGGER.error("Unable to determine type of credential", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
         }
     }
 

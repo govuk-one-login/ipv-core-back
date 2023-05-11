@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.nio.charset.Charset;
@@ -84,6 +85,11 @@ public class RequestHelper {
         return getIpvSessionId(event.getHeaders(), false);
     }
 
+    public static String getIpvSessionId(JourneyRequest event)
+            throws HttpResponseExceptionWithErrorBody {
+        return getIpvSessionId(event, false);
+    }
+
     public static String getIpvSessionIdAllowNull(APIGatewayProxyRequestEvent event)
             throws HttpResponseExceptionWithErrorBody {
         return getIpvSessionId(event.getHeaders(), true);
@@ -98,32 +104,62 @@ public class RequestHelper {
         return getClientOAuthSessionId(event.getHeaders());
     }
 
-    private static String getIpvSessionId(Map<String, String> headers, boolean allowNull)
+    public static String getIpvSessionId(JourneyRequest request, boolean allowNull)
+            throws HttpResponseExceptionWithErrorBody {
+        String ipvSessionId = request.getIpvSessionId();
+
+        validateIpvSessionId(ipvSessionId, "ipvSessionId not present in request", allowNull);
+
+        LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
+        return ipvSessionId;
+    }
+
+    public static String getIpvSessionId(Map<String, String> headers, boolean allowNull)
             throws HttpResponseExceptionWithErrorBody {
         String ipvSessionId = RequestHelper.getHeaderByKey(headers, IPV_SESSION_ID_HEADER);
+        String message = String.format("%s not present in header", IPV_SESSION_ID_HEADER);
+
+        validateIpvSessionId(ipvSessionId, message, allowNull);
+
+        LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
+        return ipvSessionId;
+    }
+
+    private static void validateIpvSessionId(
+            String ipvSessionId, String errorMessage, boolean allowNull)
+            throws HttpResponseExceptionWithErrorBody {
         if (ipvSessionId == null) {
-            String message = String.format("%s not present in header", IPV_SESSION_ID_HEADER);
             if (allowNull) {
-                LOGGER.warn(message);
+                LOGGER.warn(errorMessage);
             } else {
-                LOGGER.error(message);
+                LOGGER.error(errorMessage);
                 throw new HttpResponseExceptionWithErrorBody(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IPV_SESSION_ID);
             }
         }
-        LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
-        return ipvSessionId;
+    }
+
+    public static String getIpAddress(JourneyRequest request)
+            throws HttpResponseExceptionWithErrorBody {
+        String ipAddress = request.getIpAddress();
+        validateIpAddress(ipAddress, "ipAddress not present in request");
+        return ipAddress;
     }
 
     public static String getIpAddress(Map<String, String> headers)
             throws HttpResponseExceptionWithErrorBody {
         String ipAddress = RequestHelper.getHeaderByKey(headers, IP_ADDRESS_HEADER);
+        validateIpAddress(ipAddress, String.format("%s not present in header", IP_ADDRESS_HEADER));
+        return ipAddress;
+    }
+
+    private static void validateIpAddress(String ipAddress, String errorMessage)
+            throws HttpResponseExceptionWithErrorBody {
         if (ipAddress == null) {
-            LOGGER.error("{} not present in header", IP_ADDRESS_HEADER);
+            LOGGER.error(errorMessage, IP_ADDRESS_HEADER);
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IP_ADDRESS);
         }
-        return ipAddress;
     }
 
     public static String getClientOAuthSessionId(Map<String, String> headers) {

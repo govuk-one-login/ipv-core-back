@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.domain;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
@@ -77,5 +78,15 @@ public enum ErrorResponse {
 
     public String getMessage() {
         return message;
+    }
+
+    @JsonCreator
+    public static ErrorResponse forCode(int code) {
+        for (ErrorResponse element : values()) {
+            if (element.getCode() == code) {
+                return element;
+            }
+        }
+        return null;
     }
 }
