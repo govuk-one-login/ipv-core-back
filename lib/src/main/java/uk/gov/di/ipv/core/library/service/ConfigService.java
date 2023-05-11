@@ -48,6 +48,7 @@ public class ConfigService {
     private static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
     private static final String CLIENT_REDIRECT_URL_SEPARATOR = ",";
     private static final String API_KEY = "apiKey";
+    private static final String CORE_BASE_PATH = "/%s/core/";
     private static final Logger LOGGER = LogManager.getLogger();
     private final SSMProvider ssmProvider;
     private final SecretsProvider secretsProvider;
@@ -126,17 +127,19 @@ public class ConfigService {
     }
 
     public String getSsmParameter(ConfigurationVariable configurationVariable) {
-        return ssmProvider.get(
-                String.format(
-                        configurationVariable.getValue(), getEnvironmentVariable(ENVIRONMENT)));
+        return ssmProvider.get(resolvePath(configurationVariable.getPath()));
     }
 
     public String getSsmParameter(ConfigurationVariable configurationVariable, String clientId) {
-        return ssmProvider.get(
-                String.format(
-                        configurationVariable.getValue(),
-                        getEnvironmentVariable(ENVIRONMENT),
-                        clientId));
+        return ssmProvider.get(resolvePath(configurationVariable.getPath(), clientId));
+    }
+
+    private String resolveBasePath() {
+        return String.format(CORE_BASE_PATH, getEnvironmentVariable(ENVIRONMENT));
+    }
+
+    private String resolvePath(String path, String... pathProperties) {
+        return resolveBasePath() + String.format(path, (Object[]) pathProperties);
     }
 
     public Map<String, String> getSsmParameters(String path) {
@@ -182,10 +185,7 @@ public class ConfigService {
 
     public List<String> getClientRedirectUrls(String clientId) {
         String redirectUrlStrings =
-                ssmProvider.get(
-                        String.format(
-                                "/%s/core/clients/%s/validRedirectUrls",
-                                getEnvironmentVariable(ENVIRONMENT), clientId));
+                ssmProvider.get(resolvePath("clients/%s/validRedirectUrls", clientId));
 
         return Arrays.asList(redirectUrlStrings.split(CLIENT_REDIRECT_URL_SEPARATOR));
     }
@@ -261,10 +261,7 @@ public class ConfigService {
     }
 
     public Map<String, ContraIndicatorScore> getContraIndicatorScoresMap() {
-        String secretId =
-                String.format(
-                        ConfigurationVariable.CI_SCORING_CONFIG.getValue(),
-                        getEnvironmentVariable(ENVIRONMENT));
+        String secretId = resolveBasePath() + ConfigurationVariable.CI_SCORING_CONFIG.getPath();
         try {
             String secretValue = getSecretValue(secretId);
             List<ContraIndicatorScore> scoresList =

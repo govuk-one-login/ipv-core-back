@@ -1,33 +1,33 @@
 package uk.gov.di.ipv.core.library.config;
 
 public enum ConfigurationVariable {
-    BACKEND_SESSION_TIMEOUT("/%s/core/self/backendSessionTimeout"),
-    BACKEND_SESSION_TTL("/%s/core/self/backendSessionTtl"),
-    CLIENT_ISSUER("/%s/core/clients/%s/issuer"),
-    COMPONENT_ID("/%s/core/self/componentId"),
-    CORE_FRONT_CALLBACK_URL("/%s/core/self/coreFrontCallbackUrl"),
-    CORE_VTM_CLAIM("/%s/core/self/coreVtmClaim"),
-    JAR_KMS_ENCRYPTION_KEY_ID("/%s/core/self/jarKmsEncryptionKeyId"),
-    JWT_TTL_SECONDS("/%s/core/self/jwtTtlSeconds"),
-    MAX_ALLOWED_AUTH_CLIENT_TTL("/%s/core/self/maxAllowedAuthClientTtl"),
-    DCMAW_SHOULD_SEND_ALL_USERS("/%s/core/self/journey/dcmawShouldSendAllUsers"),
-    DCMAW_ALLOWED_USER_IDS("/%s/core/self/journey/dcmawAllowedUserIds"),
-    AUTH_CODE_EXPIRY_SECONDS("/%s/core/self/authCodeExpirySeconds"),
-    PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY("/%s/core/clients/%s/publicKeyMaterialForCoreToVerify"),
-    CI_SCORING_CONFIG("/%s/core/self/ci-scoring-config"),
-    CI_SCORING_THRESHOLD("/%s/core/self/ciScoringThreshold"),
-    CI_MITIGATION_JOURNEYS_ENABLED("/%s/core/self/journey/ciMitigationsEnabled"),
-    VC_TTL("/%s/core/self/vcTtl"),
-    VC_VALID_DURATION("/%s/core/self/vcValidDuration");
+    BACKEND_SESSION_TIMEOUT("self/backendSessionTimeout"),
+    BACKEND_SESSION_TTL("self/backendSessionTtl"),
+    CLIENT_ISSUER("clients/%s/issuer"),
+    COMPONENT_ID("self/componentId"),
+    CORE_FRONT_CALLBACK_URL("self/coreFrontCallbackUrl"),
+    CORE_VTM_CLAIM("self/coreVtmClaim"),
+    JAR_KMS_ENCRYPTION_KEY_ID("self/jarKmsEncryptionKeyId"),
+    JWT_TTL_SECONDS("self/jwtTtlSeconds"),
+    MAX_ALLOWED_AUTH_CLIENT_TTL("self/maxAllowedAuthClientTtl"),
+    DCMAW_SHOULD_SEND_ALL_USERS("self/journey/dcmawShouldSendAllUsers"),
+    DCMAW_ALLOWED_USER_IDS("self/journey/dcmawAllowedUserIds"),
+    AUTH_CODE_EXPIRY_SECONDS("self/authCodeExpirySeconds"),
+    PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY("clients/%s/publicKeyMaterialForCoreToVerify"),
+    CI_SCORING_CONFIG("self/ci-scoring-config"),
+    CI_SCORING_THRESHOLD("self/ciScoringThreshold"),
+    CI_MITIGATION_JOURNEYS_ENABLED("self/journey/ciMitigationsEnabled"),
+    VC_TTL("self/vcTtl"),
+    VC_VALID_DURATION("self/vcValidDuration");
 
-    private final String value;
+    private final String path;
 
-    ConfigurationVariable(String value) {
+    ConfigurationVariable(String path) {
 
-        this.value = value;
+        this.path = path;
     }
 
-    public String getValue() {
-        return value;
+    public String getPath() {
+        return path;
     }
 }
