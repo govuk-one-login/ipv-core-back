@@ -45,7 +45,6 @@ public class LogHelper {
         LOG_ERROR_JOURNEY_RESPONSE("errorJourneyResponse"),
         LOG_MITIGATION_JOURNEY_ID("mitigationJourneyId"),
         LOG_MITIGATION_JOURNEY_RESPONSE("mitigationJourneyResponse"),
-        LOG_LIST_OF_CUSTOMER_NAMES("listOfCustomerNames"),
         LOG_MISSING_HEADER_FIELD("missingHeaderField"),
         LOG_USER_STATE("userState"),
         LOG_JOURNEY_STEP("journeyStep"),
