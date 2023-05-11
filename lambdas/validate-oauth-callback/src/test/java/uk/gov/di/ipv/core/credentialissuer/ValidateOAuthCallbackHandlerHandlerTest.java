@@ -56,6 +56,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
+    private static final String TEST_FEATURE_SET = "fs001";
     private static final String CODE = "code";
     private static final String MESSAGE = "message";
     private static final String STATUS_CODE = "statusCode";
@@ -517,7 +518,8 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 TEST_OAUTH_STATE,
                 null,
                 null,
-                TEST_IP_ADDRESS);
+                TEST_IP_ADDRESS,
+                TEST_FEATURE_SET);
     }
 
     private CredentialIssuerConfig createCriConfig(String criIss) throws URISyntaxException {

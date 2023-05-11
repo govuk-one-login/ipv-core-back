@@ -48,9 +48,11 @@ public abstract class BaseJourneyLambda
                     OBJECT_MAPPER.convertValue(event, APIGatewayProxyRequestEvent.class);
 
             var clientOAuthSessionId = RequestHelper.getClientOAuthSessionId(request);
-            var journeyRequest =
-                    new JourneyRequest(
-                            getIpvSessionId(request), getIpAddress(request), clientOAuthSessionId);
+            var ipvSessionId = RequestHelper.getIpvSessionId(request);
+            var ipAddress = RequestHelper.getIpAddress(request);
+            var featureSet = RequestHelper.getFeatureSet(request);
+            var journeyRequest = new JourneyRequest(ipvSessionId, ipAddress, clientOAuthSessionId, featureSet);
+
             var journeyResponse = handleRequest(journeyRequest, context);
 
             apiGatewayResponse =
