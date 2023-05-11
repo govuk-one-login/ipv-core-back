@@ -47,7 +47,6 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LIST_OF_CUSTOMER_NAMES;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
 public class UserIdentityService {
@@ -517,10 +516,6 @@ public class UserIdentityService {
                                 })
                         .map(String::trim)
                         .collect(Collectors.toList());
-        var mapMessage =
-                new StringMapMessage()
-                        .with(LOG_LIST_OF_CUSTOMER_NAMES.getFieldName(), userFullNames);
-        LOGGER.info(mapMessage);
         return userFullNames;
     }
 }
