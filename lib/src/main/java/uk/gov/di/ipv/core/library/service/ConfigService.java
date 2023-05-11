@@ -53,13 +53,13 @@ public class ConfigService {
     private final SecretsProvider secretsProvider;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final String featureSet;
+    private String featureSet;
 
     public ConfigService(
             SSMProvider ssmProvider, SecretsProvider secretsProvider, String featureSet) {
         this.ssmProvider = ssmProvider;
         this.secretsProvider = secretsProvider;
-        this.featureSet = featureSet;
+        setFeatureSet(featureSet);
     }
 
     public ConfigService(SSMProvider ssmProvider, SecretsProvider secretsProvider) {
@@ -98,7 +98,7 @@ public class ConfigService {
                                             .build())
                             .defaultMaxAge(3, MINUTES);
         }
-        this.featureSet = featureSet;
+        setFeatureSet(featureSet);
     }
 
     public ConfigService() {
@@ -107,6 +107,14 @@ public class ConfigService {
 
     public SSMProvider getSsmProvider() {
         return ssmProvider;
+    }
+
+    public String getFeatureSet() {
+        return featureSet;
+    }
+
+    public void setFeatureSet(String featureSet) {
+        this.featureSet = featureSet;
     }
 
     public String getEnvironmentVariable(EnvironmentVariable environmentVariable) {
