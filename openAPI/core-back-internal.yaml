@@ -277,8 +277,7 @@ paths:
             Fn::Sub: |
               {
                 "ipvSessionId": "$input.params('ipv-session-id')", 
-                "ipAddress": "$input.params('ip-address')",
-                "body-json": "$input.json('$')"
+                "ipAddress": "$input.params('ip-address')"
               }
         responses:
           default:
