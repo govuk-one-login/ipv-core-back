@@ -28,6 +28,10 @@ class RequestHelperTest {
                     "Foo", "bar",
                     "baz", "bar");
 
+    private final String TEST_IPV_SESSION_ID = "a-session-id";
+    private final String TEST_IP_ADDRESS = "127.0.0.1";
+    private final String TEST_FEATURE_SET = "test-feature-set";
+
     @ParameterizedTest(name = "with matching header: {0}")
     @ValueSource(strings = {"Baz", "baz"})
     void matchHeaderByDownCasing(String headerName) {
@@ -66,6 +70,14 @@ class RequestHelperTest {
     void getIpvSessionIdShouldReturnSessionId() throws HttpResponseExceptionWithErrorBody {
         var event = new APIGatewayProxyRequestEvent();
         event.setHeaders(Map.of(IPV_SESSION_ID_HEADER, "a-session-id"));
+
+        assertEquals("a-session-id", RequestHelper.getIpvSessionId(event));
+    }
+
+    @Test
+    void getIpvSessionIdShouldReturnSessionIdFromJourney()
+            throws HttpResponseExceptionWithErrorBody {
+        var event = new JourneyRequest(TEST_IPV_SESSION_ID, TEST_IP_ADDRESS, TEST_FEATURE_SET);
 
         assertEquals("a-session-id", RequestHelper.getIpvSessionId(event));
     }
@@ -231,6 +243,18 @@ class RequestHelperTest {
 
         event.setHeaders(headers);
 
+        assertEquals("default", RequestHelper.getFeatureSet(event));
+    }
+
+    @Test
+    void getFeatureSetShouldReturnFeatureSetIdFromJourney() {
+        var event = new JourneyRequest(TEST_IPV_SESSION_ID, TEST_IP_ADDRESS, TEST_FEATURE_SET);
+        assertEquals("test-feature-set", RequestHelper.getFeatureSet(event));
+    }
+
+    @Test
+    void getFeatureSetShouldReturnDefaultFeatureSetIdFromJourneyWhenNotPresent() {
+        var event = new JourneyRequest(TEST_IPV_SESSION_ID, TEST_IP_ADDRESS, null);
         assertEquals("default", RequestHelper.getFeatureSet(event));
     }
 }
