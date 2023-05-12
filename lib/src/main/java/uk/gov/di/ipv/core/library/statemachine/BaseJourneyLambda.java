@@ -23,7 +23,6 @@ public abstract class BaseJourneyLambda
     public static final String JOURNEY_NEXT_PATH = "/journey/next";
     public static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
     public static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
-    public static final JourneyResponse JOURNEY_ERROR = new JourneyResponse(JOURNEY_ERROR_PATH);
 
     private static final ObjectMapper OBJECT_MAPPER =
             new ObjectMapper()
@@ -46,22 +45,13 @@ public abstract class BaseJourneyLambda
         try {
             APIGatewayProxyRequestEvent request =
                     OBJECT_MAPPER.convertValue(event, APIGatewayProxyRequestEvent.class);
-            String ipvSessionId;
-            try {
-                ipvSessionId = RequestHelper.getIpvSessionId(request);
-            } catch (HttpResponseExceptionWithErrorBody e) {
-                ipvSessionId = null;
-            }
-            String ipAddress;
-            try {
-                ipAddress = RequestHelper.getIpAddress(request);
-            } catch (HttpResponseExceptionWithErrorBody e) {
-                ipAddress = null;
-            }
-            var clientOAuthSessionId = RequestHelper.getClientOAuthSessionId(request);
-            var journeyRequest = new JourneyRequest(ipvSessionId, ipAddress, clientOAuthSessionId);
 
+            var clientOAuthSessionId = RequestHelper.getClientOAuthSessionId(request);
+            var journeyRequest =
+                    new JourneyRequest(
+                            getIpvSessionId(request), getIpAddress(request), clientOAuthSessionId);
             var journeyResponse = handleRequest(journeyRequest, context);
+
             apiGatewayResponse =
                     ApiGatewayResponseGenerator.proxyJsonResponse(
                             HttpStatus.SC_OK, journeyResponse);
@@ -76,6 +66,26 @@ public abstract class BaseJourneyLambda
         }
 
         return OBJECT_MAPPER.convertValue(apiGatewayResponse, RETURN_TYPE_REFERENCE);
+    }
+
+    private static String getIpvSessionId(APIGatewayProxyRequestEvent request) {
+        String ipvSessionId;
+        try {
+            ipvSessionId = RequestHelper.getIpvSessionId(request);
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            ipvSessionId = null;
+        }
+        return ipvSessionId;
+    }
+
+    private static String getIpAddress(APIGatewayProxyRequestEvent request) {
+        String ipAddress;
+        try {
+            ipAddress = RequestHelper.getIpAddress(request);
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            ipAddress = null;
+        }
+        return ipAddress;
     }
 
     protected abstract JourneyResponse handleRequest(JourneyRequest request, Context context);

@@ -313,6 +313,45 @@ class BuildClientOauthResponseHandlerTest {
         assertEquals(2, uriBuilder.getQueryParams().size());
     }
 
+    @Test
+    void shouldReturn200OnSuccessfulOauthRequestForJsonRequest()
+            throws JsonProcessingException, SqsException, URISyntaxException {
+        when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
+                .thenReturn(ValidationResult.createValidResult());
+        IpvSessionItem ipvSessionItem = generateIpvSessionItem();
+        when(mockSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
+
+        Map<String, Object> event = new HashMap<>();
+        event.put("ipvSessionId", "12345");
+        event.put("ipAddress", "192.168.1.100");
+
+        var response = handler.handleRequest(event, context);
+
+        ClientResponse responseBody = objectMapper.convertValue(response, ClientResponse.class);
+
+        verify(mockSessionService)
+                .setAuthorizationCode(eq(ipvSessionItem), anyString(), eq("https://example.com"));
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        assertEquals(AuditEventTypes.IPV_JOURNEY_END, auditEventCaptor.getValue().getEventName());
+
+        URI expectedRedirectUrl =
+                new URIBuilder("https://example.com")
+                        .addParameter("code", authorizationCode)
+                        .addParameter("state", "test-state")
+                        .build();
+
+        URI actualRedirectUrl = new URI(responseBody.getClient().getRedirectUrl());
+        List<NameValuePair> params =
+                URLEncodedUtils.parse(actualRedirectUrl, StandardCharsets.UTF_8);
+        assertEquals(expectedRedirectUrl.getHost(), actualRedirectUrl.getHost());
+        assertNotNull(params.get(0).getValue());
+        assertEquals("test-state", params.get(1).getValue());
+    }
+
     private IpvSessionItem generateIpvSessionItem() {
         IpvSessionItem item = new IpvSessionItem();
         item.setIpvSessionId(SecureTokenHelper.generate());

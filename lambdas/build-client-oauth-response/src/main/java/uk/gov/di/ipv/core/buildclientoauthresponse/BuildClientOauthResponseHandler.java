@@ -143,13 +143,9 @@ public class BuildClientOauthResponseHandler extends BaseJourneyLambda {
             } else {
                 Map<String, List<String>> authParameters =
                         getAuthParamsAsMap(clientOAuthSessionItem);
-                Map<String, String> params =
-                        new HashMap<>() {
-                            {
-                                put(IPV_SESSION_ID_HEADER_KEY, ipvSessionId);
-                                put(CLIENT_SESSION_ID_HEADER_KEY, clientSessionId);
-                            }
-                        };
+                Map<String, String> params = new HashMap<>();
+                params.put(IPV_SESSION_ID_HEADER_KEY, ipvSessionId);
+                params.put(CLIENT_SESSION_ID_HEADER_KEY, clientSessionId);
                 var validationResult = authRequestValidator.validateRequest(authParameters, params);
                 if (!validationResult.isValid()) {
                     return new JourneyErrorResponse(
