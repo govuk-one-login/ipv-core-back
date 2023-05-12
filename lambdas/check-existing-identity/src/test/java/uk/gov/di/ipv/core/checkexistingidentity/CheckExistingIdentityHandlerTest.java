@@ -63,7 +63,8 @@ class CheckExistingIdentityHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_JOURNEY_ID = "test-journey-id";
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
-    private static final JourneyRequest event = new JourneyRequest(TEST_SESSION_ID, TEST_CLIENT_SOURCE_IP);
+    private static final JourneyRequest event =
+            new JourneyRequest(TEST_SESSION_ID, TEST_CLIENT_SOURCE_IP);
     private static final List<String> CREDENTIALS =
             List.of(
                     M1A_PASSPORT_VC,
@@ -152,7 +153,8 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyResponse journeyResponse = checkExistingIdentityHandler.handleRequest(event, context);
+        JourneyResponse journeyResponse =
+                checkExistingIdentityHandler.handleRequest(event, context);
 
         assertEquals(JOURNEY_REUSE, journeyResponse);
 
@@ -181,7 +183,8 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyResponse journeyResponse = checkExistingIdentityHandler.handleRequest(event, context);
+        JourneyResponse journeyResponse =
+                checkExistingIdentityHandler.handleRequest(event, context);
         assertEquals(JOURNEY_REUSE, journeyResponse);
 
         verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
@@ -208,7 +211,8 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyResponse journeyResponse = checkExistingIdentityHandler.handleRequest(event, context);
+        JourneyResponse journeyResponse =
+                checkExistingIdentityHandler.handleRequest(event, context);
         assertEquals(JOURNEY_NEXT, journeyResponse);
 
         verify(userIdentityService).deleteVcStoreItems(TEST_USER_ID);
@@ -233,7 +237,8 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyResponse journeyResponse = checkExistingIdentityHandler.handleRequest(event, context);
+        JourneyResponse journeyResponse =
+                checkExistingIdentityHandler.handleRequest(event, context);
         assertEquals("/journey/next", journeyResponse.getJourney());
 
         verify(userIdentityService).deleteVcStoreItems(TEST_USER_ID);
@@ -258,7 +263,8 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyResponse journeyResponse = checkExistingIdentityHandler.handleRequest(event, context);
+        JourneyResponse journeyResponse =
+                checkExistingIdentityHandler.handleRequest(event, context);
         assertEquals("/journey/next", journeyResponse.getJourney());
         verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
 
@@ -272,10 +278,11 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturn400IfSessionIdNotInHeader() {
         JourneyRequest eventWithoutHeaders = new JourneyRequest(null, null);
 
-        JourneyResponse journeyResponse = checkExistingIdentityHandler.handleRequest(eventWithoutHeaders, context);
+        JourneyResponse journeyResponse =
+                checkExistingIdentityHandler.handleRequest(eventWithoutHeaders, context);
         assertEquals("/journey/error", journeyResponse.getJourney());
 
-        JourneyErrorResponse errorResponse = (JourneyErrorResponse)journeyResponse;
+        JourneyErrorResponse errorResponse = (JourneyErrorResponse) journeyResponse;
         assertEquals(HttpStatus.SC_BAD_REQUEST, errorResponse.getStatusCode());
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), errorResponse.getCode());
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), errorResponse.getMessage());
@@ -289,10 +296,11 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyResponse journeyResponse = checkExistingIdentityHandler.handleRequest(event, context);
+        JourneyResponse journeyResponse =
+                checkExistingIdentityHandler.handleRequest(event, context);
         assertEquals("/journey/error", journeyResponse.getJourney());
 
-        JourneyErrorResponse errorResponse = (JourneyErrorResponse)journeyResponse;
+        JourneyErrorResponse errorResponse = (JourneyErrorResponse) journeyResponse;
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse.getStatusCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getCode(),
@@ -312,10 +320,11 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyResponse journeyResponse = checkExistingIdentityHandler.handleRequest(event, context);
+        JourneyResponse journeyResponse =
+                checkExistingIdentityHandler.handleRequest(event, context);
         assertEquals("/journey/error", journeyResponse.getJourney());
 
-        JourneyErrorResponse errorResponse = (JourneyErrorResponse)journeyResponse;
+        JourneyErrorResponse errorResponse = (JourneyErrorResponse) journeyResponse;
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse.getStatusCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE.getCode(),
@@ -337,10 +346,11 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyResponse journeyResponse = checkExistingIdentityHandler.handleRequest(event, context);
+        JourneyResponse journeyResponse =
+                checkExistingIdentityHandler.handleRequest(event, context);
         assertEquals("/journey/error", journeyResponse.getJourney());
 
-        JourneyErrorResponse errorResponse = (JourneyErrorResponse)journeyResponse;
+        JourneyErrorResponse errorResponse = (JourneyErrorResponse) journeyResponse;
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse.getStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_STORED_CIS.getCode(), errorResponse.getCode());
         assertEquals(
@@ -364,10 +374,11 @@ class CheckExistingIdentityHandlerTest {
                 .when(auditService)
                 .sendAuditEvent((AuditEvent) any());
 
-        JourneyResponse journeyResponse = checkExistingIdentityHandler.handleRequest(event, context);
+        JourneyResponse journeyResponse =
+                checkExistingIdentityHandler.handleRequest(event, context);
         assertEquals("/journey/error", journeyResponse.getJourney());
 
-        JourneyErrorResponse errorResponse = (JourneyErrorResponse)journeyResponse;
+        JourneyErrorResponse errorResponse = (JourneyErrorResponse) journeyResponse;
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse.getStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getCode(), errorResponse.getCode());
         assertEquals(

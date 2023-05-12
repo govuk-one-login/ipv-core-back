@@ -57,7 +57,8 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 
 /** Check Existing Identity response Lambda */
-public class CheckExistingIdentityHandler implements RequestHandler<JourneyRequest, JourneyResponse>  {
+public class CheckExistingIdentityHandler
+        implements RequestHandler<JourneyRequest, JourneyResponse> {
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
     private static final String VOT_P2 = "P2";
