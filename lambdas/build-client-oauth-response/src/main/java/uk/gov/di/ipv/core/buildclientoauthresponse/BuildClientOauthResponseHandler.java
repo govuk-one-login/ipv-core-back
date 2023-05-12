@@ -153,9 +153,7 @@ public class BuildClientOauthResponseHandler extends BaseJourneyLambda {
                 var validationResult = authRequestValidator.validateRequest(authParameters, params);
                 if (!validationResult.isValid()) {
                     return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_BAD_REQUEST,
-                            validationResult.getError());
+                            null, HttpStatus.SC_BAD_REQUEST, validationResult.getError());
                 }
 
                 AuthorizationCode authorizationCode = new AuthorizationCode();
@@ -187,26 +185,25 @@ public class BuildClientOauthResponseHandler extends BaseJourneyLambda {
         } catch (ParseException e) {
             LOGGER.error("Authentication request could not be parsed", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
+                    null,
                     HttpStatus.SC_BAD_REQUEST,
                     ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS);
         } catch (SqsException e) {
             LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
+                    null,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT,
                     e.getMessage());
         } catch (URISyntaxException e) {
             LogHelper.logErrorMessage("Failed to construct redirect uri.", e.getMessage());
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
+                    null,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI,
                     e.getMessage());
         } catch (HttpResponseExceptionWithErrorBody e) {
-            return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse());
+            return new JourneyErrorResponse(null, e.getResponseCode(), e.getErrorResponse());
         }
     }
 
@@ -221,8 +218,7 @@ public class BuildClientOauthResponseHandler extends BaseJourneyLambda {
             redirectUri.addParameter("state", clientOAuthSessionItem.getState());
         }
 
-        return new ClientResponse(
-                JOURNEY_NEXT_PATH, new ClientDetails(redirectUri.build().toString()));
+        return new ClientResponse(null, new ClientDetails(redirectUri.build().toString()));
     }
 
     private ClientResponse generateClientErrorResponse(
@@ -236,8 +232,7 @@ public class BuildClientOauthResponseHandler extends BaseJourneyLambda {
             uriBuilder.addParameter("state", clientOAuthSessionItem.getState());
         }
 
-        return new ClientResponse(
-                JOURNEY_ERROR_PATH, new ClientDetails(uriBuilder.build().toString()));
+        return new ClientResponse(null, new ClientDetails(uriBuilder.build().toString()));
     }
 
     private ClientResponse generateClientOAuthSessionErrorResponse(
@@ -250,8 +245,7 @@ public class BuildClientOauthResponseHandler extends BaseJourneyLambda {
             uriBuilder.addParameter("state", clientOAuthSessionItem.getState());
         }
 
-        return new ClientResponse(
-                JOURNEY_ERROR_PATH, new ClientDetails(uriBuilder.build().toString()));
+        return new ClientResponse(null, new ClientDetails(uriBuilder.build().toString()));
     }
 
     @Tracing
