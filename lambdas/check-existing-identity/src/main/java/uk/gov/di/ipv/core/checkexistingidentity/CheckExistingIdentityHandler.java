@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.checkexistingidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
@@ -39,7 +40,6 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 
 import java.text.ParseException;
@@ -57,12 +57,16 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 
 /** Check Existing Identity response Lambda */
-public class CheckExistingIdentityHandler extends BaseJourneyLambda {
+public class CheckExistingIdentityHandler implements RequestHandler<JourneyRequest, JourneyResponse>  {
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
     private static final String VOT_P2 = "P2";
     private static final int ONLY = 0;
     private static final Logger LOGGER = LogManager.getLogger();
+
+    private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
+    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
+    public static final String JOURNEY_ERROR_PATH = "/journey/error";
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -108,7 +112,7 @@ public class CheckExistingIdentityHandler extends BaseJourneyLambda {
     @Override
     @Tracing
     @Logging(clearState = true)
-    protected JourneyResponse handleRequest(JourneyRequest event, Context context) {
+    public JourneyResponse handleRequest(JourneyRequest event, Context context) {
         LogHelper.attachComponentIdToLogs();
 
         try {
