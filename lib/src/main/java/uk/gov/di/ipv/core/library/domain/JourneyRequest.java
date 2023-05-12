@@ -2,10 +2,12 @@ package uk.gov.di.ipv.core.library.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Getter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
-@Getter
+@NoArgsConstructor
+@Data
 @ExcludeFromGeneratedCoverageReport
 public class JourneyRequest {
     @JsonProperty private String ipvSessionId;
