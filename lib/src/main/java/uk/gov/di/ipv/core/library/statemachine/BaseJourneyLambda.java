@@ -46,15 +46,17 @@ public abstract class BaseJourneyLambda
         try {
             APIGatewayProxyRequestEvent request =
                     OBJECT_MAPPER.convertValue(event, APIGatewayProxyRequestEvent.class);
-            String ipvSessionId = null;
+            String ipvSessionId;
             try {
                 ipvSessionId = RequestHelper.getIpvSessionId(request);
             } catch (HttpResponseExceptionWithErrorBody e) {
+                ipvSessionId = null;
             }
-            String ipAddress = null;
+            String ipAddress;
             try {
                 ipAddress = RequestHelper.getIpAddress(request);
             } catch (HttpResponseExceptionWithErrorBody e) {
+                ipAddress = null;
             }
             var clientOAuthSessionId = RequestHelper.getClientOAuthSessionId(request);
             var journeyRequest = new JourneyRequest(ipvSessionId, ipAddress, clientOAuthSessionId);
