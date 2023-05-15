@@ -14,9 +14,11 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.*;
 
 class RequestHelperTest {
@@ -209,5 +211,25 @@ class RequestHelperTest {
         event.setHeaders(headers);
 
         assertEquals("default", RequestHelper.getFeatureSet(event));
+    }
+
+    @Test
+    void getPathParametersShouldReturnPathParameters() {
+        var event = new APIGatewayProxyRequestEvent();
+        event.setPathParameters(Map.of("criId", DCMAW_CRI));
+
+        Map<String, String> pathParameters = RequestHelper.getPathParameters(event);
+
+        assertFalse(pathParameters.isEmpty());
+        assertEquals(DCMAW_CRI, pathParameters.get("criId"));
+    }
+
+    @Test
+    void getPathParametersShouldReturnNullWithoutPathParameters() {
+        var event = new APIGatewayProxyRequestEvent();
+
+        Map<String, String> pathParameters = RequestHelper.getPathParameters(event);
+
+        assertNull(pathParameters);
     }
 }
