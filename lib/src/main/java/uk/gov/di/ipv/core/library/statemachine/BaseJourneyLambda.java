@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 
 import java.util.Map;
@@ -56,6 +57,7 @@ public abstract class BaseJourneyLambda
                     ApiGatewayResponseGenerator.proxyJsonResponse(
                             HttpStatus.SC_OK, journeyResponse);
         } catch (Exception ex) {
+            LogHelper.logErrorMessage("Error during lambda processing.", ex.getMessage());
             var journeyResponse =
                     new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, null);
