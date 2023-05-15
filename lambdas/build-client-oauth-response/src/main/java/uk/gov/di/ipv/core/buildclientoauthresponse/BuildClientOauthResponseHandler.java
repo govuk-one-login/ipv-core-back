@@ -181,25 +181,26 @@ public class BuildClientOauthResponseHandler extends BaseJourneyLambda {
         } catch (ParseException e) {
             LOGGER.error("Authentication request could not be parsed", e);
             return new JourneyErrorResponse(
-                    null,
+                    JOURNEY_ERROR_PATH,
                     HttpStatus.SC_BAD_REQUEST,
                     ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS);
         } catch (SqsException e) {
             LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
             return new JourneyErrorResponse(
-                    null,
+                    JOURNEY_ERROR_PATH,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT,
                     e.getMessage());
         } catch (URISyntaxException e) {
             LogHelper.logErrorMessage("Failed to construct redirect uri.", e.getMessage());
             return new JourneyErrorResponse(
-                    null,
+                    JOURNEY_ERROR_PATH,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI,
                     e.getMessage());
         } catch (HttpResponseExceptionWithErrorBody e) {
-            return new JourneyErrorResponse(null, e.getResponseCode(), e.getErrorResponse());
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse());
         }
     }
 
