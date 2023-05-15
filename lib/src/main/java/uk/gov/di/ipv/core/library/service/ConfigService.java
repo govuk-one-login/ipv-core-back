@@ -34,7 +34,6 @@ import java.util.Optional;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.BEARER_TOKEN_TTL;
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IS_LOCAL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.SIGNING_KEY_ID_PARAM;
@@ -155,7 +154,7 @@ public class ConfigService {
         return String.format(CORE_BASE_PATH, getEnvironmentVariable(ENVIRONMENT));
     }
 
-    private String resolvePath(String path, String... pathProperties) {
+    protected String resolvePath(String path, String... pathProperties) {
         return resolveBasePath() + String.format(path, (Object[]) pathProperties);
     }
 
@@ -191,21 +190,6 @@ public class ConfigService {
         return ssmProvider.get(getEnvironmentVariable(SIGNING_KEY_ID_PARAM));
     }
 
-    public CredentialIssuerConfig getCredentialIssuerActiveConnectionConfig(
-            String credentialIssuerId) {
-        String activeConnection = getActiveConnection(credentialIssuerId);
-
-        Map<String, String> result =
-                getSsmParameters(
-                        String.format(
-                                "%s/%s/connections/%s",
-                                getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
-                                credentialIssuerId,
-                                activeConnection));
-
-        return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
-    }
-
     public List<String> getClientRedirectUrls(String clientId) {
         String redirectUrlStrings =
                 ssmProvider.get(resolvePath("clients/%s/validRedirectUrls", clientId));
@@ -235,52 +219,47 @@ public class ConfigService {
         }
     }
 
+    public CredentialIssuerConfig getCredentialIssuerActiveConnectionConfig(
+            String credentialIssuerId) {
+        String activeConnection = getActiveConnection(credentialIssuerId);
+        final String pathTemplate =
+                ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/connections/%s";
+        Map<String, String> result =
+                getSsmParameters(resolvePath(pathTemplate, credentialIssuerId, activeConnection));
+
+        return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
+    }
+
     public String getActiveConnection(String credentialIssuerId) {
-        return getSsmParameter(
-                String.format(
-                        "%s/%s/activeConnection",
-                        getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
-                        credentialIssuerId));
+        final String pathTemplate =
+                ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/activeConnection";
+        return getSsmParameter(resolvePath(pathTemplate, credentialIssuerId));
     }
 
     public String getComponentId(String credentialIssuerId) {
         String activeConnection = getActiveConnection(credentialIssuerId);
-        return getSsmParameter(
-                String.format(
-                        "%s/%s/connections/%s/componentId",
-                        getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
-                        credentialIssuerId,
-                        activeConnection));
+        final String pathTemplate =
+                ConfigurationVariable.CREDENTIAL_ISSUERS.getPath()
+                        + "/%s/connections/%s/componentId";
+        return getSsmParameter(resolvePath(pathTemplate, credentialIssuerId, activeConnection));
     }
 
     public boolean isUnavailable(String credentialIssuerId) {
-        String unavailable =
-                getSsmParameter(
-                        String.format(
-                                "%s/%s/unavailable",
-                                getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
-                                credentialIssuerId));
-
-        return Boolean.parseBoolean(unavailable);
+        final String pathTemplate =
+                ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/unavailable";
+        return Boolean.parseBoolean(getSsmParameter(resolvePath(pathTemplate, credentialIssuerId)));
     }
 
     public String getAllowedSharedAttributes(String credentialIssuerId) {
-        return getSsmParameter(
-                String.format(
-                        "%s/%s/allowedSharedAttributes",
-                        getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
-                        credentialIssuerId));
+        final String pathTemplate =
+                ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/allowedSharedAttributes";
+        return getSsmParameter(resolvePath(pathTemplate, credentialIssuerId));
     }
 
     public boolean isEnabled(String credentialIssuerId) {
-        String enabled =
-                getSsmParameter(
-                        String.format(
-                                "%s/%s/enabled",
-                                getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
-                                credentialIssuerId));
-
-        return Boolean.parseBoolean(enabled);
+        final String pathTemplate =
+                ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/enabled";
+        return Boolean.parseBoolean(getSsmParameter(resolvePath(pathTemplate, credentialIssuerId)));
     }
 
     public Map<String, ContraIndicatorScore> getContraIndicatorScoresMap() {

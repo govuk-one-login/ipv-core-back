@@ -103,9 +103,7 @@ class ConfigServiceTest {
 
     @Test
     void shouldGetCredentialIssuerFromParameterStore() throws Exception {
-        environmentVariables.set(
-                "CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "/dev/core/credentialIssuers");
-
+        environmentVariables.set("ENVIRONMENT", "test");
         Map<String, String> credentialIssuerParameters =
                 Map.of(
                         "activeConnection",
@@ -118,10 +116,10 @@ class ConfigServiceTest {
                         RSA_ENCRYPTION_PUBLIC_JWK,
                         "requiresApiKey",
                         "true");
-        when(ssmProvider.get("/dev/core/credentialIssuers/passportCri/activeConnection"))
+        when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
                 .thenReturn("stub");
 
-        when(ssmProvider.getMultiple("/dev/core/credentialIssuers/passportCri/connections/stub"))
+        when(ssmProvider.getMultiple("/test/core/credentialIssuers/passportCri/connections/stub"))
                 .thenReturn(credentialIssuerParameters);
 
         CredentialIssuerConfig result =
@@ -147,29 +145,31 @@ class ConfigServiceTest {
 
     @Test
     void shouldReturnIsEnabled() {
-        environmentVariables.set("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "passportCri");
-        when(ssmProvider.get("passportCri/aClientId/enabled")).thenReturn("true");
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/credentialIssuers/passportCri/enabled"))
+                .thenReturn("true");
 
-        boolean isEnabled = configService.isEnabled("aClientId");
+        boolean isEnabled = configService.isEnabled("passportCri");
         assertTrue(isEnabled);
     }
 
     @Test
     void shouldReturnIsAvailableOrNot() {
-        environmentVariables.set("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "passportCri");
-        when(ssmProvider.get("passportCri/aClientId/unavailable")).thenReturn("false");
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/credentialIssuers/passportCri/unavailable"))
+                .thenReturn("false");
 
-        boolean isUnavailable = configService.isUnavailable("aClientId");
+        boolean isUnavailable = configService.isUnavailable("passportCri");
         assertFalse(isUnavailable);
     }
 
     @Test
     void shouldReturnAllowedSharedAttributes() {
-        environmentVariables.set("CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX", "passportCri");
-        when(ssmProvider.get("passportCri/aClientId/allowedSharedAttributes"))
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/credentialIssuers/passportCri/allowedSharedAttributes"))
                 .thenReturn("address,name");
 
-        String sharedAttributes = configService.getAllowedSharedAttributes("aClientId");
+        String sharedAttributes = configService.getAllowedSharedAttributes("passportCri");
         assertEquals("address,name", sharedAttributes);
     }
 
@@ -260,6 +260,13 @@ class ConfigServiceTest {
     }
 
     @Test
+    void shouldReturnNullOnInvalidApiKeyJsonFromSecretsManager() {
+        when(secretsProvider.get(any())).thenReturn("{\"apiKey\":\"invalidJson}");
+        String apiKey = configService.getCriPrivateApiKey("ukPassport");
+        assertNull(apiKey);
+    }
+
+    @Test
     void shouldGetContraIndicatorScoresMap() {
         String scoresJsonString =
                 "[{ \"ci\": \"X01\", \"detectedScore\": 3, \"checkedScore\": -3, \"fidCode\": \"YZ01\" }, { \"ci\": \"Z03\", \"detectedScore\": 5, \"checkedScore\": -3 }]";
@@ -270,6 +277,48 @@ class ConfigServiceTest {
         assertEquals(2, scoresMap.size());
         assertTrue(scoresMap.containsKey("X01"));
         assertTrue(scoresMap.containsKey("Z03"));
+    }
+
+    @Test
+    void shouldReturnEmptyCollectionOnInvalidContraIndicatorScoresMap() {
+        final String invalidCIScoresJsonString =
+                "[\"ci\":\"X01\",\"detectedScore\":3,\"checkedScore\":-3,\"fidCode\":\"YZ01\"}]";
+        when(secretsProvider.get(any())).thenReturn(invalidCIScoresJsonString);
+        Map<String, ContraIndicatorScore> scoresMap = configService.getContraIndicatorScoresMap();
+        assertTrue(scoresMap.isEmpty());
+    }
+
+    @Test
+    void shouldGetBearerAccessTokenTtlFromEnvironmentVariableIfSet() {
+        environmentVariables.set("BEARER_TOKEN_TTL", "1800");
+        assertEquals(1800L, configService.getBearerAccessTokenTtl());
+    }
+
+    @Test
+    void shouldDefaultBearerAccessTokenTtlIfEnvironmentVariableNotSet() {
+        assertEquals(3600L, configService.getBearerAccessTokenTtl());
+    }
+
+    @Test
+    void shouldGetSigningKeyIdParamNamedByEnvironmentVariable() {
+        final String signingKeyIdPath = "/test/core/self/signingKeyId";
+        final String testSigningKeyId = "6CA2A18E-AFAD-41B4-95EC-53F967A290BE";
+        environmentVariables.set("SIGNING_KEY_ID_PARAM", signingKeyIdPath);
+        when(ssmProvider.get(signingKeyIdPath)).thenReturn(testSigningKeyId);
+        assertEquals(testSigningKeyId, configService.getSigningKeyId());
+    }
+
+    @Test
+    void shouldGetComponentIdForActiveConnection() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        final String testCredentialIssuerId = "address";
+        final String testComponentId =
+                "https://development-di-ipv-cri-address-stub.london.cloudapps.digital";
+        when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
+                .thenReturn("stub");
+        when(ssmProvider.get("/test/core/credentialIssuers/address/connections/stub/componentId"))
+                .thenReturn(testComponentId);
+        assertEquals(testComponentId, configService.getComponentId(testCredentialIssuerId));
     }
 
     @ParameterizedTest

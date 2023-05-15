@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.library.config;
 public enum EnvironmentVariable {
     BEARER_TOKEN_TTL,
     CLIENT_AUTH_JWT_IDS_TABLE_NAME,
-    CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX,
     ENVIRONMENT,
     IPV_SESSIONS_TABLE_NAME,
     CLIENT_OAUTH_SESSIONS_TABLE_NAME,
