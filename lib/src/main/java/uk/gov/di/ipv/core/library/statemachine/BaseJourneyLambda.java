@@ -20,8 +20,9 @@ import java.util.Map;
 public abstract class BaseJourneyLambda
         implements RequestHandler<Map<String, Object>, Map<String, Object>> {
     public static final String JOURNEY_ERROR_PATH = "/journey/error";
+    public static final String JOURNEY_NEXT_PATH = "/journey/next";
     public static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
-    public static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
+    public static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
     public static final JourneyResponse JOURNEY_ERROR = new JourneyResponse(JOURNEY_ERROR_PATH);
 
     private static final ObjectMapper OBJECT_MAPPER =
@@ -48,7 +49,13 @@ public abstract class BaseJourneyLambda
 
             var ipvSessionId = RequestHelper.getIpvSessionId(request);
             var ipAddress = RequestHelper.getIpAddress(request);
-            var journeyRequest = new JourneyRequest(ipvSessionId, ipAddress);
+            var pathParameters = RequestHelper.getPathParameters(request);
+            var journeyRequest =
+                    JourneyRequest.builder()
+                            .ipvSessionId(ipvSessionId)
+                            .ipAddress(ipAddress)
+                            .pathParameters(pathParameters)
+                            .build();
 
             var journeyResponse = handleRequest(journeyRequest, context);
             apiGatewayResponse =

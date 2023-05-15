@@ -100,6 +100,10 @@ public class RequestHelper {
         return getIpAddress(event.getHeaders());
     }
 
+    public static Map<String, String> getPathParameters(APIGatewayProxyRequestEvent request) {
+        return request.getPathParameters();
+    }
+
     public static String getClientOAuthSessionId(APIGatewayProxyRequestEvent event) {
         return getClientOAuthSessionId(event.getHeaders());
     }
