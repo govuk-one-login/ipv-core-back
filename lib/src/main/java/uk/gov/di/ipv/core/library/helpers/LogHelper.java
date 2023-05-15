@@ -50,7 +50,9 @@ public class LogHelper {
         LOG_JOURNEY_STEP("journeyStep"),
         LOG_ERROR("error"),
         LOG_PAYLOAD("payload"),
-        LOG_STATUS_CODE("statusCode");
+        LOG_STATUS_CODE("statusCode"),
+        LOG_PARAMETER_PATH("parameterPath"),
+        LOG_FEATURE_SET("featureSet");
         private final String fieldName;
 
         LogField(String fieldName) {
