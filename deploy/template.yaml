@@ -41,12 +41,10 @@ Conditions:
     - !Equals
       - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
       -  0
-  IsDevelopment: !Not
-    - !Or
-      - !Equals [ !Ref Environment, "build"]
-      - !Equals [ !Ref Environment, "staging"]
-      - !Equals [ !Ref Environment, "integration"]
-      - !Equals [ !Ref Environment, "production"]
+  IsDevelopment: !Or
+    - !Equals [ !Ref AWS::AccountId, "130355686670"]
+    - !Equals [ !Ref AWS::AccountId, "175872367215"]
+  IsOldDevelopment: !Equals [ !Ref AWS::AccountId, "130355686670"]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
   IsProduction: !Equals [ !Ref Environment, "production"]
   UseCodeSigning:
@@ -65,7 +63,14 @@ Conditions:
 # mapping up to date with each developer environment.
 Mappings:
   EnvironmentConfiguration:
-    "130355686670": # Development
+    "130355686670": # Old Development Account
+      provisionedConcurrency: 0
+      ciStorageAccountId: 322814139578 # di-ipv-cri-dev
+      environment: dev
+      criReturnStepFunctionLogLevel: ALL
+      pgw500ErrorLimit: 2
+      egw500ErrorLimit: 2
+    "175872367215": # New Development Account
       provisionedConcurrency: 0
       ciStorageAccountId: 322814139578 # di-ipv-cri-dev
       environment: dev
@@ -148,7 +153,7 @@ Resources:
           FromPort: 443
           ToPort: 443
         - DestinationSecurityGroupId: !If
-            - IsDevelopment
+            - IsOldDevelopment
             - !ImportValue InterfaceVpcEndpointSecurityGroupId
             - Fn::ImportValue:  !Sub ${VpcStackName}-AWSServicesEndpointSecurityGroupId
           Description: Allow outbound HTTPS traffic to AWS Services vpc endpoint security group
@@ -178,7 +183,7 @@ Resources:
       EndpointConfiguration:
         Type: PRIVATE
         VPCEndpointIds: !If
-          - IsDevelopment
+          - IsOldDevelopment
           - - !ImportValue "network-shared-development-ApiGatewayVpcEndpointId"
           - - Fn::ImportValue: !Sub "${VpcStackName}-ExecuteApiGatewayEndpointId"
       DefinitionBody:
@@ -206,7 +211,7 @@ Resources:
               Condition:
                 StringNotEquals:
                   'aws:SourceVpce': !If
-                    - IsDevelopment
+                    - IsOldDevelopment
                     - !ImportValue "network-shared-development-ApiGatewayVpcEndpointId"
                     - Fn::ImportValue:
                         !Sub "${VpcStackName}-ExecuteApiGatewayEndpointId"
