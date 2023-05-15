@@ -31,4 +31,9 @@ public class ClientResponse extends JourneyResponse {
         ClientResponse that = (ClientResponse) o;
         return Objects.equals(client, that.client);
     }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), client);
+    }
 }
