@@ -260,6 +260,13 @@ class ConfigServiceTest {
     }
 
     @Test
+    void shouldReturnNullOnInvalidApiKeyJsonFromSecretsManager() {
+        when(secretsProvider.get(any())).thenReturn("{\"apiKey\":\"invalidJson}");
+        String apiKey = configService.getCriPrivateApiKey("ukPassport");
+        assertNull(apiKey);
+    }
+
+    @Test
     void shouldGetContraIndicatorScoresMap() {
         String scoresJsonString =
                 "[{ \"ci\": \"X01\", \"detectedScore\": 3, \"checkedScore\": -3, \"fidCode\": \"YZ01\" }, { \"ci\": \"Z03\", \"detectedScore\": 5, \"checkedScore\": -3 }]";
@@ -270,6 +277,48 @@ class ConfigServiceTest {
         assertEquals(2, scoresMap.size());
         assertTrue(scoresMap.containsKey("X01"));
         assertTrue(scoresMap.containsKey("Z03"));
+    }
+
+    @Test
+    void shouldReturnEmptyCollectionOnInvalidContraIndicatorScoresMap() {
+        final String invalidCIScoresJsonString =
+                "[\"ci\":\"X01\",\"detectedScore\":3,\"checkedScore\":-3,\"fidCode\":\"YZ01\"}]";
+        when(secretsProvider.get(any())).thenReturn(invalidCIScoresJsonString);
+        Map<String, ContraIndicatorScore> scoresMap = configService.getContraIndicatorScoresMap();
+        assertTrue(scoresMap.isEmpty());
+    }
+
+    @Test
+    void shouldGetBearerAccessTokenTtlFromEnvironmentVariableIfSet() {
+        environmentVariables.set("BEARER_TOKEN_TTL", "1800");
+        assertEquals(1800L, configService.getBearerAccessTokenTtl());
+    }
+
+    @Test
+    void shouldDefaultBearerAccessTokenTtlIfEnvironmentVariableNotSet() {
+        assertEquals(3600L, configService.getBearerAccessTokenTtl());
+    }
+
+    @Test
+    void shouldGetSigningKeyIdParamNamedByEnvironmentVariable() {
+        final String signingKeyIdPath = "/test/core/self/signingKeyId";
+        final String testSigningKeyId = "6CA2A18E-AFAD-41B4-95EC-53F967A290BE";
+        environmentVariables.set("SIGNING_KEY_ID_PARAM", signingKeyIdPath);
+        when(ssmProvider.get(signingKeyIdPath)).thenReturn(testSigningKeyId);
+        assertEquals(testSigningKeyId, configService.getSigningKeyId());
+    }
+
+    @Test
+    void shouldGetComponentIdForActiveConnection() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        final String testCredentialIssuerId = "address";
+        final String testComponentId =
+                "https://development-di-ipv-cri-address-stub.london.cloudapps.digital";
+        when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
+                .thenReturn("stub");
+        when(ssmProvider.get("/test/core/credentialIssuers/address/connections/stub/componentId"))
+                .thenReturn(testComponentId);
+        assertEquals(testComponentId, configService.getComponentId(testCredentialIssuerId));
     }
 
     @ParameterizedTest
