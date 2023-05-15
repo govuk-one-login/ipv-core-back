@@ -233,7 +233,6 @@ public class EvaluateGpg45ScoresHandler
                     .with(
                             LOG_ERROR_DESCRIPTION.getFieldName(),
                             ErrorResponse.FAILED_NAME_CORRELATION.getMessage())
-                    .with("userId", userId)
                     .with(LOG_ERROR_JOURNEY_RESPONSE.getFieldName(), JOURNEY_PYI_NO_MATCH);
             LOGGER.error(message);
             return false;
@@ -248,7 +247,6 @@ public class EvaluateGpg45ScoresHandler
                     .with(
                             LOG_ERROR_DESCRIPTION.getFieldName(),
                             ErrorResponse.FAILED_BIRTHDATE_CORRELATION.getMessage())
-                    .with("userId", userId)
                     .with(LOG_ERROR_JOURNEY_RESPONSE.getFieldName(), JOURNEY_PYI_NO_MATCH);
             LOGGER.error(message);
             return false;

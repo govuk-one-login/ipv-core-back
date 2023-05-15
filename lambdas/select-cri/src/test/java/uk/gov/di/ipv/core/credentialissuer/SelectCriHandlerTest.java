@@ -1,11 +1,7 @@
 package uk.gov.di.ipv.core.credentialissuer;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,7 +42,7 @@ class SelectCriHandlerTest {
 
     private static final String TEST_SESSION_ID = "the-session-id";
     private static final String APP_JOURNEY_USER_ID_PREFIX = "urn:uuid:app-journey-user-";
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock private Context context;
     @Mock private ConfigService mockConfigService;
@@ -64,8 +60,7 @@ class SelectCriHandlerTest {
     }
 
     @Test
-    void shouldReturnPassportCriJourneyResponse()
-            throws JsonProcessingException, URISyntaxException {
+    void shouldReturnPassportCriJourneyResponse() throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -76,19 +71,16 @@ class SelectCriHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("drivingLicence"))
                 .thenReturn(createCriConfig("drivingLicence", "drivingLicence", false));
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/ukPassport", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/ukPassport", response.get("journey"));
     }
 
     @Test
     void shouldReturnPassportAndDrivingLicenceCriJourneyResponseWhenDrivingLicenceCriEnabled()
-            throws JsonProcessingException, URISyntaxException {
+            throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -97,20 +89,19 @@ class SelectCriHandlerTest {
                 .thenReturn(Collections.emptyList());
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("drivingLicence"))
                 .thenReturn(createCriConfig("drivingLicence", "drivingLicence", true));
+        when(mockConfigService.getActiveConnection("drivingLicence")).thenReturn("main");
+        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(false);
+        when(mockConfigService.isEnabled("drivingLicence")).thenReturn(true);
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        //        assertEquals("/journey/ukPassportAndDrivingLicence", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/ukPassportAndDrivingLicence", response.get("journey"));
     }
 
     @Test
-    void shouldReturnAddressCriJourneyResponseWhenVisitedPassport()
-            throws JsonProcessingException, URISyntaxException {
+    void shouldReturnAddressCriJourneyResponseWhenVisitedPassport() throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -128,19 +119,16 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/address", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/address", response.get("journey"));
     }
 
     @Test
     void shouldReturnAddressCriJourneyResponseWhenVisitedDrivingLicence()
-            throws JsonProcessingException, URISyntaxException {
+            throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -158,19 +146,16 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/address", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/address", response.get("journey"));
     }
 
     @Test
     void shouldReturnPyiNoMatchErrorResponseIfAddressCriHasPreviouslyFailed()
-            throws JsonProcessingException, URISyntaxException {
+            throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -186,18 +171,15 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/pyi-no-match", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/pyi-no-match", response.get("journey"));
     }
 
     @Test
-    void shouldReturnFraudCriJourneyResponse() throws JsonProcessingException, URISyntaxException {
+    void shouldReturnFraudCriJourneyResponse() throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -222,18 +204,15 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/fraud", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/fraud", response.get("journey"));
     }
 
     @Test
-    void shouldReturnKBVCriJourneyResponse() throws JsonProcessingException, URISyntaxException {
+    void shouldReturnKBVCriJourneyResponse() throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -263,19 +242,15 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/kbv", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/kbv", response.get("journey"));
     }
 
     @Test
-    void shouldReturnJourneyFailedIfAllCriVisited()
-            throws JsonProcessingException, URISyntaxException {
+    void shouldReturnJourneyFailedIfAllCriVisited() throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -307,19 +282,15 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/fail", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/fail", response.get("journey"));
     }
 
     @Test
-    void shouldReturnDcmawCriJourneyResponseIfUserHasNotVisited()
-            throws JsonProcessingException, URISyntaxException {
+    void shouldReturnDcmawCriJourneyResponseIfUserHasNotVisited() throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
@@ -335,19 +306,16 @@ class SelectCriHandlerTest {
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/dcmaw", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/dcmaw", response.get("journey"));
     }
 
     @Test
     void shouldReturnDcmawSuccessJourneyResponseIfUserHasVisitedDcmawSuccessfully()
-            throws JsonProcessingException, URISyntaxException {
+            throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
@@ -362,19 +330,16 @@ class SelectCriHandlerTest {
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/dcmaw-success", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/dcmaw-success", response.get("journey"));
     }
 
     @Test
     void shouldReturnFraudCriJourneyResponseIfUserHasVisitedDcmawAndAddressSuccessfully()
-            throws JsonProcessingException, URISyntaxException {
+            throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
@@ -397,19 +362,16 @@ class SelectCriHandlerTest {
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/fraud", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/fraud", response.get("journey"));
     }
 
     @Test
     void shouldReturnAddressdCriJourneyResponseIfUserHasNotVistedAppButAlreadyHasPassportVC()
-            throws JsonProcessingException, URISyntaxException {
+            throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
@@ -428,19 +390,16 @@ class SelectCriHandlerTest {
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/address", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/address", response.get("journey"));
     }
 
     @Test
     void shouldReturnPyiNoMatchJourneyResponseIfUserHasVisitedDcmawAndAddressAndFraudSuccessfully()
-            throws JsonProcessingException, URISyntaxException {
+            throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
@@ -475,19 +434,16 @@ class SelectCriHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI))
                 .thenReturn(createCriConfig(FRAUD_CRI, "test-fraud-iss", true));
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/fail", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/fail", response.get("journey"));
     }
 
     @Test
     void shouldReturnPassportCriJourneyResponseIfUserHasVisitedDcmawButItFailedWithAVc()
-            throws JsonProcessingException, URISyntaxException {
+            throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
@@ -502,19 +458,16 @@ class SelectCriHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("drivingLicence"))
                 .thenReturn(createCriConfig("drivingLicence", "drivingLicence", false));
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/ukPassport", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/ukPassport", response.get("journey"));
     }
 
     @Test
     void shouldReturnPassportCriJourneyResponseIfUserHasVisitedDcmawButItFailedWithoutAVc()
-            throws JsonProcessingException, URISyntaxException {
+            throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
@@ -532,19 +485,16 @@ class SelectCriHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("drivingLicence"))
                 .thenReturn(createCriConfig("drivingLicence", "drivingLicence", false));
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/ukPassport", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/ukPassport", response.get("journey"));
     }
 
     @Test
     void shouldReturnPyiNoMatchErrorJourneyResponseIfUserHasAPreviouslyFailedVisitToAddress()
-            throws JsonProcessingException, URISyntaxException {
+            throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
@@ -562,19 +512,16 @@ class SelectCriHandlerTest {
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/pyi-no-match", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/pyi-no-match", response.get("journey"));
     }
 
     @Test
     void shouldReturnPyiNoMatchErrorJourneyResponseIfUserHasAPreviouslyFailedVisitToDrivingLicence()
-            throws JsonProcessingException, URISyntaxException {
+            throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -589,19 +536,16 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(List.of(new VcStatusDto("test-driving-licence-iss", false)));
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/pyi-no-match", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/pyi-no-match", response.get("journey"));
     }
 
     @Test
     void shouldReturnKbvThinFileErrorJourneyResponseIfUserHasAPreviouslyFailedVisitKbvWithoutCis()
-            throws JsonProcessingException, URISyntaxException {
+            throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -631,19 +575,15 @@ class SelectCriHandlerTest {
                                 new VcStatusDto("test-kbv-iss", false)));
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(false);
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/pyi-kbv-thin-file", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/pyi-kbv-thin-file", response.get("journey"));
     }
 
     @Test
-    void shouldReturnCorrectJourneyResponseWhenVcStatusesAreNull()
-            throws JsonProcessingException, URISyntaxException {
+    void shouldReturnCorrectJourneyResponseWhenVcStatusesAreNull() throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -657,19 +597,16 @@ class SelectCriHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("drivingLicence"))
                 .thenReturn(createCriConfig("drivingLicence", "drivingLicence", false));
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/ukPassport", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/ukPassport", response.get("journey"));
     }
 
     @Test
     void shouldReturnDcmawCriJourneyResponseIfUserIsIncludedInAllowedList()
-            throws JsonProcessingException, URISyntaxException {
+            throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
@@ -686,19 +623,16 @@ class SelectCriHandlerTest {
         when(mockConfigService.getSsmParameter(DCMAW_ALLOWED_USER_IDS))
                 .thenReturn("test-user-id,test-user-id-2,test-user-id-3");
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/dcmaw", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/dcmaw", response.get("journey"));
     }
 
     @Test
     void shouldReturnDcmawCriJourneyResponseIfUserIdHasAppJourneyPrefix()
-            throws JsonProcessingException, URISyntaxException {
+            throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
@@ -717,19 +651,16 @@ class SelectCriHandlerTest {
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("false");
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/dcmaw", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/dcmaw", response.get("journey"));
     }
 
     @Test
     void shouldReturnPassportCriJourneyResponseIfUserIsNotIncludedInAllowedList()
-            throws JsonProcessingException, URISyntaxException {
+            throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
@@ -750,19 +681,16 @@ class SelectCriHandlerTest {
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/ukPassport", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/ukPassport", response.get("journey"));
     }
 
     @Test
     void shouldReturnDcmawCriJourneyResponseIfShouldSendAllUsersToAppVarIsTrue()
-            throws JsonProcessingException, URISyntaxException {
+            throws URISyntaxException {
         mockIpvSessionService();
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
@@ -779,14 +707,11 @@ class SelectCriHandlerTest {
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS))
                 .thenReturn(String.valueOf(true));
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        Map<String, Object> input = createRequestEvent();
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        Map<String, Object> response = underTest.handleRequest(input, context);
 
-        Map<String, String> responseBody = getResponseBodyAsMap(response);
-
-        assertEquals("/journey/dcmaw", responseBody.get("journey"));
-        assertEquals(HTTPResponse.SC_OK, response.getStatusCode());
+        assertEquals("/journey/dcmaw", response.get("journey"));
     }
 
     private void mockIpvSessionService() {
@@ -795,15 +720,8 @@ class SelectCriHandlerTest {
                 .thenReturn(getClientOAuthSessionItem());
     }
 
-    private APIGatewayProxyRequestEvent createRequestEvent() {
-        APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
-        input.setHeaders(Map.of("ipv-session-id", TEST_SESSION_ID));
-        return input;
-    }
-
-    private Map<String, String> getResponseBodyAsMap(APIGatewayProxyResponseEvent response)
-            throws JsonProcessingException {
-        return objectMapper.readValue(response.getBody(), Map.class);
+    private Map<String, Object> createRequestEvent() {
+        return Map.of("ipvSessionId", TEST_SESSION_ID);
     }
 
     private CredentialIssuerConfig createCriConfig(String criId, String criIss, boolean enabled)

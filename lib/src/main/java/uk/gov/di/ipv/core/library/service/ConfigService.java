@@ -15,6 +15,7 @@ import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterExce
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.ssm.SsmClient;
+import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
@@ -33,12 +34,13 @@ import java.util.Optional;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.BEARER_TOKEN_TTL;
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IS_LOCAL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.SIGNING_KEY_ID_PARAM;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_FEATURE_SET;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PARAMETER_PATH;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_SECRET_ID;
 
 public class ConfigService {
@@ -48,18 +50,19 @@ public class ConfigService {
     private static final long DEFAULT_BEARER_TOKEN_TTL_IN_SECS = 3600L;
     private static final String CLIENT_REDIRECT_URL_SEPARATOR = ",";
     private static final String API_KEY = "apiKey";
+    private static final String CORE_BASE_PATH = "/%s/core/";
     private static final Logger LOGGER = LogManager.getLogger();
     private final SSMProvider ssmProvider;
     private final SecretsProvider secretsProvider;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final String featureSet;
+    private String featureSet;
 
     public ConfigService(
             SSMProvider ssmProvider, SecretsProvider secretsProvider, String featureSet) {
         this.ssmProvider = ssmProvider;
         this.secretsProvider = secretsProvider;
-        this.featureSet = featureSet;
+        setFeatureSet(featureSet);
     }
 
     public ConfigService(SSMProvider ssmProvider, SecretsProvider secretsProvider) {
@@ -98,7 +101,7 @@ public class ConfigService {
                                             .build())
                             .defaultMaxAge(3, MINUTES);
         }
-        this.featureSet = featureSet;
+        setFeatureSet(featureSet);
     }
 
     public ConfigService() {
@@ -109,6 +112,14 @@ public class ConfigService {
         return ssmProvider;
     }
 
+    public String getFeatureSet() {
+        return featureSet;
+    }
+
+    public void setFeatureSet(String featureSet) {
+        this.featureSet = featureSet;
+    }
+
     public String getEnvironmentVariable(EnvironmentVariable environmentVariable) {
         return System.getenv(environmentVariable.name());
     }
@@ -117,18 +128,40 @@ public class ConfigService {
         return ssmProvider.get(path);
     }
 
-    public String getSsmParameter(ConfigurationVariable configurationVariable) {
-        return ssmProvider.get(
-                String.format(
-                        configurationVariable.getValue(), getEnvironmentVariable(ENVIRONMENT)));
+    public String getSsmParameter(
+            ConfigurationVariable configurationVariable, String... pathProperties) {
+        if (getFeatureSet() != null) {
+            var featureSetPath =
+                    resolveFeatureSetPath(configurationVariable.getPath(), pathProperties);
+            try {
+                return ssmProvider.get(featureSetPath);
+            } catch (ParameterNotFoundException ignored) {
+                LOGGER.debug(
+                        (new StringMapMessage())
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "Parameter not present for featureSet")
+                                .with(
+                                        LOG_PARAMETER_PATH.getFieldName(),
+                                        configurationVariable.getPath())
+                                .with(LOG_FEATURE_SET.getFieldName(), getFeatureSet()));
+            }
+        }
+        return ssmProvider.get(resolvePath(configurationVariable.getPath(), pathProperties));
     }
 
-    public String getSsmParameter(ConfigurationVariable configurationVariable, String clientId) {
-        return ssmProvider.get(
-                String.format(
-                        configurationVariable.getValue(),
-                        getEnvironmentVariable(ENVIRONMENT),
-                        clientId));
+    private String resolveBasePath() {
+        return String.format(CORE_BASE_PATH, getEnvironmentVariable(ENVIRONMENT));
+    }
+
+    protected String resolvePath(String path, String... pathProperties) {
+        return resolveBasePath() + String.format(path, (Object[]) pathProperties);
+    }
+
+    private String resolveFeatureSetPath(String path, String... pathProperties) {
+        return resolveBasePath()
+                + String.format("featureSet/%s/", getFeatureSet())
+                + String.format(path, (Object[]) pathProperties);
     }
 
     public Map<String, String> getSsmParameters(String path) {
@@ -157,27 +190,9 @@ public class ConfigService {
         return ssmProvider.get(getEnvironmentVariable(SIGNING_KEY_ID_PARAM));
     }
 
-    public CredentialIssuerConfig getCredentialIssuerActiveConnectionConfig(
-            String credentialIssuerId) {
-        String activeConnection = getActiveConnection(credentialIssuerId);
-
-        Map<String, String> result =
-                getSsmParameters(
-                        String.format(
-                                "%s/%s/connections/%s",
-                                getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
-                                credentialIssuerId,
-                                activeConnection));
-
-        return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
-    }
-
     public List<String> getClientRedirectUrls(String clientId) {
         String redirectUrlStrings =
-                ssmProvider.get(
-                        String.format(
-                                "/%s/core/clients/%s/validRedirectUrls",
-                                getEnvironmentVariable(ENVIRONMENT), clientId));
+                ssmProvider.get(resolvePath("clients/%s/validRedirectUrls", clientId));
 
         return Arrays.asList(redirectUrlStrings.split(CLIENT_REDIRECT_URL_SEPARATOR));
     }
@@ -204,59 +219,51 @@ public class ConfigService {
         }
     }
 
+    public CredentialIssuerConfig getCredentialIssuerActiveConnectionConfig(
+            String credentialIssuerId) {
+        String activeConnection = getActiveConnection(credentialIssuerId);
+        final String pathTemplate =
+                ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/connections/%s";
+        Map<String, String> result =
+                getSsmParameters(resolvePath(pathTemplate, credentialIssuerId, activeConnection));
+
+        return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
+    }
+
     public String getActiveConnection(String credentialIssuerId) {
-        return getSsmParameter(
-                String.format(
-                        "%s/%s/activeConnection",
-                        getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
-                        credentialIssuerId));
+        final String pathTemplate =
+                ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/activeConnection";
+        return getSsmParameter(resolvePath(pathTemplate, credentialIssuerId));
     }
 
     public String getComponentId(String credentialIssuerId) {
         String activeConnection = getActiveConnection(credentialIssuerId);
-        return getSsmParameter(
-                String.format(
-                        "%s/%s/connections/%s/componentId",
-                        getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
-                        credentialIssuerId,
-                        activeConnection));
+        final String pathTemplate =
+                ConfigurationVariable.CREDENTIAL_ISSUERS.getPath()
+                        + "/%s/connections/%s/componentId";
+        return getSsmParameter(resolvePath(pathTemplate, credentialIssuerId, activeConnection));
     }
 
     public boolean isUnavailable(String credentialIssuerId) {
-        String unavailable =
-                getSsmParameter(
-                        String.format(
-                                "%s/%s/unavailable",
-                                getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
-                                credentialIssuerId));
-
-        return Boolean.parseBoolean(unavailable);
+        final String pathTemplate =
+                ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/unavailable";
+        return Boolean.parseBoolean(getSsmParameter(resolvePath(pathTemplate, credentialIssuerId)));
     }
 
     public String getAllowedSharedAttributes(String credentialIssuerId) {
-        return getSsmParameter(
-                String.format(
-                        "%s/%s/allowedSharedAttributes",
-                        getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
-                        credentialIssuerId));
+        final String pathTemplate =
+                ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/allowedSharedAttributes";
+        return getSsmParameter(resolvePath(pathTemplate, credentialIssuerId));
     }
 
     public boolean isEnabled(String credentialIssuerId) {
-        String enabled =
-                getSsmParameter(
-                        String.format(
-                                "%s/%s/enabled",
-                                getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX),
-                                credentialIssuerId));
-
-        return Boolean.parseBoolean(enabled);
+        final String pathTemplate =
+                ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/enabled";
+        return Boolean.parseBoolean(getSsmParameter(resolvePath(pathTemplate, credentialIssuerId)));
     }
 
     public Map<String, ContraIndicatorScore> getContraIndicatorScoresMap() {
-        String secretId =
-                String.format(
-                        ConfigurationVariable.CI_SCORING_CONFIG.getValue(),
-                        getEnvironmentVariable(ENVIRONMENT));
+        String secretId = resolveBasePath() + ConfigurationVariable.CI_SCORING_CONFIG.getPath();
         try {
             String secretValue = getSecretValue(secretId);
             List<ContraIndicatorScore> scoresList =

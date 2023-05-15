@@ -41,12 +41,10 @@ Conditions:
     - !Equals
       - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
       -  0
-  IsDevelopment: !Not
-    - !Or
-      - !Equals [ !Ref Environment, "build"]
-      - !Equals [ !Ref Environment, "staging"]
-      - !Equals [ !Ref Environment, "integration"]
-      - !Equals [ !Ref Environment, "production"]
+  IsDevelopment: !Or
+    - !Equals [ !Ref AWS::AccountId, "130355686670"]
+    - !Equals [ !Ref AWS::AccountId, "175872367215"]
+  IsOldDevelopment: !Equals [ !Ref AWS::AccountId, "130355686670"]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
   IsProduction: !Equals [ !Ref Environment, "production"]
   UseCodeSigning:
@@ -65,7 +63,14 @@ Conditions:
 # mapping up to date with each developer environment.
 Mappings:
   EnvironmentConfiguration:
-    "130355686670": # Development
+    "130355686670": # Old Development Account
+      provisionedConcurrency: 0
+      ciStorageAccountId: 322814139578 # di-ipv-cri-dev
+      environment: dev
+      criReturnStepFunctionLogLevel: ALL
+      pgw500ErrorLimit: 2
+      egw500ErrorLimit: 2
+    "175872367215": # New Development Account
       provisionedConcurrency: 0
       ciStorageAccountId: 322814139578 # di-ipv-cri-dev
       environment: dev
@@ -148,7 +153,7 @@ Resources:
           FromPort: 443
           ToPort: 443
         - DestinationSecurityGroupId: !If
-            - IsDevelopment
+            - IsOldDevelopment
             - !ImportValue InterfaceVpcEndpointSecurityGroupId
             - Fn::ImportValue:  !Sub ${VpcStackName}-AWSServicesEndpointSecurityGroupId
           Description: Allow outbound HTTPS traffic to AWS Services vpc endpoint security group
@@ -178,7 +183,7 @@ Resources:
       EndpointConfiguration:
         Type: PRIVATE
         VPCEndpointIds: !If
-          - IsDevelopment
+          - IsOldDevelopment
           - - !ImportValue "network-shared-development-ApiGatewayVpcEndpointId"
           - - Fn::ImportValue: !Sub "${VpcStackName}-ExecuteApiGatewayEndpointId"
       DefinitionBody:
@@ -206,7 +211,7 @@ Resources:
               Condition:
                 StringNotEquals:
                   'aws:SourceVpce': !If
-                    - IsDevelopment
+                    - IsOldDevelopment
                     - !ImportValue "network-shared-development-ApiGatewayVpcEndpointId"
                     - Fn::ImportValue:
                         !Sub "${VpcStackName}-ExecuteApiGatewayEndpointId"
@@ -597,7 +602,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsV2Table.Arn ] ]
           SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
           ENVIRONMENT: !Sub "${Environment}"
@@ -739,7 +743,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsV2Table.Arn ] ]
           SIGNING_KEY_ID_PARAM: !Sub "/${Environment}/core/self/signingKeyId"
           ENVIRONMENT: !Sub "${Environment}"
@@ -879,7 +882,6 @@ Resources:
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
-          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub build-cri-oauth-request-${Environment}
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt UserIssuedCredentialsV2Table.Arn ] ]
@@ -1000,7 +1002,6 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt SessionsTable.Arn ] ]
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt ClientOAuthSessionsTable.Arn ] ]
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
-          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1099,7 +1100,6 @@ Resources:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub get-credential-issuer-config-${Environment}
-          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1526,7 +1526,6 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           CI_STORAGE_GET_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
             - contra_indicator_storage_account_id: !FindInMap
@@ -1652,7 +1651,6 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub select-cri-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
-          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
       VpcConfig:
@@ -1740,7 +1738,6 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub validate-oauth-callback-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
-          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
@@ -1847,7 +1844,6 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           CI_STORAGE_GET_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
             - contra_indicator_storage_account_id: !FindInMap
@@ -1997,7 +1993,6 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2093,7 +2088,6 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX: !Sub "/${Environment}/core/credentialIssuers"
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CI_STORAGE_GET_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
