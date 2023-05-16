@@ -137,6 +137,16 @@ public class RequestHelper {
         return ipvSessionId;
     }
 
+    public static String getFeatureSet(JourneyRequest request) {
+        String featureSet = request.getFeatureSet();
+
+        if (featureSet == null || featureSet.isEmpty()) {
+            featureSet = "default";
+        }
+        LogHelper.attachFeatureSetToLogs(featureSet);
+        return featureSet;
+    }
+
     public static String getFeatureSet(Map<String, String> headers) {
         String featureSet = RequestHelper.getHeaderByKey(headers, FEATURE_SET_HEADER);
         if (featureSet == null) {

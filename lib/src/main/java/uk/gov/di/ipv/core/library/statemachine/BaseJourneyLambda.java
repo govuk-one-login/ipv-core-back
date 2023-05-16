@@ -51,7 +51,8 @@ public abstract class BaseJourneyLambda
             var ipvSessionId = RequestHelper.getIpvSessionId(request);
             var ipAddress = RequestHelper.getIpAddress(request);
             var featureSet = RequestHelper.getFeatureSet(request);
-            var journeyRequest = new JourneyRequest(ipvSessionId, ipAddress, clientOAuthSessionId, featureSet);
+            var journeyRequest =
+                    new JourneyRequest(ipvSessionId, ipAddress, clientOAuthSessionId, featureSet);
 
             var journeyResponse = handleRequest(journeyRequest, context);
 

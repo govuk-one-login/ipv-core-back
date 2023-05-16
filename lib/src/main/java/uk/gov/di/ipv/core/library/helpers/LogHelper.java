@@ -84,6 +84,10 @@ public class LogHelper {
         attachFieldToLogs(LogField.LOG_IPV_SESSION_ID, sessionId);
     }
 
+    public static void attachFeatureSetToLogs(String sessionId) {
+        attachFieldToLogs(LogField.LOG_FEATURE_SET, sessionId);
+    }
+
     public static void attachClientSessionIdToLogs(String sessionId) {
         attachFieldToLogs(LogField.LOG_CLIENT_OAUTH_SESSION_ID, sessionId);
     }
