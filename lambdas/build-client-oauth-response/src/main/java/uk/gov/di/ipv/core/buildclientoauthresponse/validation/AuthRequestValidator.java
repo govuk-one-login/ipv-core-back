@@ -24,8 +24,8 @@ public class AuthRequestValidator {
     public static final String CLIENT_ID_PARAM = "client_id";
     public static final String REDIRECT_URI_PARAM = "redirect_uri";
     public static final String STATE_PARAM = "state";
-    private static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
-    private static final String CLIENT_SESSION_ID_HEADER_KEY = "client-session-id";
+    public static final String IPV_SESSION_ID_HEADER_KEY = "ipv-session-id";
+    public static final String CLIENT_SESSION_ID_HEADER_KEY = "client-session-id";
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final ConfigService configService;

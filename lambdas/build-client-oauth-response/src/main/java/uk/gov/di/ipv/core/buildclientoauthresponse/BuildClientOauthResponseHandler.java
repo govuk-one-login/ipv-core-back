@@ -1,9 +1,6 @@
 package uk.gov.di.ipv.core.buildclientoauthresponse;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
@@ -25,17 +22,19 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyRequest;
+import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
-import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda;
 
 import java.net.URISyntaxException;
 import java.util.Collections;
@@ -43,13 +42,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static uk.gov.di.ipv.core.buildclientoauthresponse.validation.AuthRequestValidator.CLIENT_SESSION_ID_HEADER_KEY;
+import static uk.gov.di.ipv.core.buildclientoauthresponse.validation.AuthRequestValidator.IPV_SESSION_ID_HEADER_KEY;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CLIENT_OAUTH_SESSION_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getClientOAuthSessionId;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionIdAllowNull;
 
-public class BuildClientOauthResponseHandler
-        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+public class BuildClientOauthResponseHandler extends BaseJourneyLambda {
     private static final Logger LOGGER = LogManager.getLogger();
     private final IpvSessionService sessionService;
     private final ConfigService configService;
@@ -85,15 +88,14 @@ public class BuildClientOauthResponseHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public APIGatewayProxyResponseEvent handleRequest(
-            APIGatewayProxyRequestEvent input, Context context) {
+    protected JourneyResponse handleRequest(JourneyRequest input, Context context) {
 
         LogHelper.attachComponentIdToLogs();
 
         try {
-            String ipvSessionId = RequestHelper.getIpvSessionIdAllowNull(input);
-            String clientSessionId = RequestHelper.getClientOAuthSessionId(input);
-            String ipAddress = RequestHelper.getIpAddress(input);
+            String ipvSessionId = getIpvSessionIdAllowNull(input);
+            String ipAddress = getIpAddress(input);
+            String clientSessionId = getClientOAuthSessionId(input);
 
             LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
 
@@ -114,9 +116,7 @@ public class BuildClientOauthResponseHandler
                                         "No ipvSession for existing ClientOAuthSession.")
                                 .with(LOG_CLIENT_OAUTH_SESSION_ID.getFieldName(), clientSessionId);
                 LOGGER.info(mapMessage);
-                return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        HttpStatus.SC_OK,
-                        generateClientOAuthSessionErrorResponse(clientOAuthSessionItem));
+                return generateClientOAuthSessionErrorResponse(clientOAuthSessionItem);
             } else {
                 throw new HttpResponseExceptionWithErrorBody(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_SESSION_ID);
@@ -143,12 +143,13 @@ public class BuildClientOauthResponseHandler
             } else {
                 Map<String, List<String>> authParameters =
                         getAuthParamsAsMap(clientOAuthSessionItem);
-
-                var validationResult =
-                        authRequestValidator.validateRequest(authParameters, input.getHeaders());
+                Map<String, String> params = new HashMap<>();
+                params.put(IPV_SESSION_ID_HEADER_KEY, ipvSessionId);
+                params.put(CLIENT_SESSION_ID_HEADER_KEY, clientSessionId);
+                var validationResult = authRequestValidator.validateRequest(authParameters, params);
                 if (!validationResult.isValid()) {
-                    return ApiGatewayResponseGenerator.proxyJsonResponse(
-                            HttpStatus.SC_BAD_REQUEST, validationResult.getError());
+                    return new JourneyErrorResponse(
+                            null, HttpStatus.SC_BAD_REQUEST, validationResult.getError());
                 }
 
                 AuthorizationCode authorizationCode = new AuthorizationCode();
@@ -176,23 +177,30 @@ public class BuildClientOauthResponseHandler
                                     clientResponse.getClient().getRedirectUrl());
             LOGGER.info(message);
 
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, clientResponse);
+            return clientResponse;
         } catch (ParseException e) {
             LOGGER.error("Authentication request could not be parsed", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
                     HttpStatus.SC_BAD_REQUEST,
                     ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS);
         } catch (SqsException e) {
             LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT,
+                    e.getMessage());
         } catch (URISyntaxException e) {
             LogHelper.logErrorMessage("Failed to construct redirect uri.", e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI,
+                    e.getMessage());
         } catch (HttpResponseExceptionWithErrorBody e) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getResponseCode(), e.getErrorBody());
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse());
         }
     }
 
@@ -207,7 +215,7 @@ public class BuildClientOauthResponseHandler
             redirectUri.addParameter("state", clientOAuthSessionItem.getState());
         }
 
-        return new ClientResponse(new ClientDetails(redirectUri.build().toString()));
+        return new ClientResponse(null, new ClientDetails(redirectUri.build().toString()));
     }
 
     private ClientResponse generateClientErrorResponse(
@@ -221,7 +229,7 @@ public class BuildClientOauthResponseHandler
             uriBuilder.addParameter("state", clientOAuthSessionItem.getState());
         }
 
-        return new ClientResponse(new ClientDetails(uriBuilder.build().toString()));
+        return new ClientResponse(null, new ClientDetails(uriBuilder.build().toString()));
     }
 
     private ClientResponse generateClientOAuthSessionErrorResponse(
@@ -234,7 +242,7 @@ public class BuildClientOauthResponseHandler
             uriBuilder.addParameter("state", clientOAuthSessionItem.getState());
         }
 
-        return new ClientResponse(new ClientDetails(uriBuilder.build().toString()));
+        return new ClientResponse(null, new ClientDetails(uriBuilder.build().toString()));
     }
 
     @Tracing

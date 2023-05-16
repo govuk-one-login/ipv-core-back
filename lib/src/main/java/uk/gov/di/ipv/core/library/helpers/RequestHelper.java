@@ -95,13 +95,36 @@ public class RequestHelper {
         return getIpvSessionId(event.getHeaders(), true);
     }
 
+    public static String getIpvSessionIdAllowNull(JourneyRequest event)
+            throws HttpResponseExceptionWithErrorBody {
+        return getIpvSessionId(event, true);
+    }
+
     public static String getIpAddress(APIGatewayProxyRequestEvent event)
             throws HttpResponseExceptionWithErrorBody {
         return getIpAddress(event.getHeaders());
     }
 
+    public static String getIpAddress(JourneyRequest request)
+            throws HttpResponseExceptionWithErrorBody {
+        String ipAddress = request.getIpAddress();
+        validateIpAddress(ipAddress, "ipAddress not present in request.");
+        return ipAddress;
+    }
+
     public static String getClientOAuthSessionId(APIGatewayProxyRequestEvent event) {
         return getClientOAuthSessionId(event.getHeaders());
+    }
+
+    public static String getClientOAuthSessionId(JourneyRequest event) {
+        String clientSessionId = event.getClientOAuthSessionId();
+        StringMapMessage message =
+                new StringMapMessage()
+                        .with(
+                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                "Client session id missing in header.");
+        validateClientOAuthSessionId(clientSessionId, message);
+        return clientSessionId;
     }
 
     public static String getIpvSessionId(JourneyRequest request, boolean allowNull)
@@ -114,7 +137,20 @@ public class RequestHelper {
         return ipvSessionId;
     }
 
-    public static String getIpvSessionId(Map<String, String> headers, boolean allowNull)
+    public static String getFeatureSet(Map<String, String> headers) {
+        String featureSet = RequestHelper.getHeaderByKey(headers, FEATURE_SET_HEADER);
+        if (featureSet == null) {
+            LOGGER.warn("{} not present in header", FEATURE_SET_HEADER);
+            return "default";
+        }
+        return featureSet;
+    }
+
+    public static String getFeatureSet(APIGatewayProxyRequestEvent event) {
+        return getFeatureSet(event.getHeaders());
+    }
+
+    private static String getIpvSessionId(Map<String, String> headers, boolean allowNull)
             throws HttpResponseExceptionWithErrorBody {
         String ipvSessionId = RequestHelper.getHeaderByKey(headers, IPV_SESSION_ID_HEADER);
         String message = String.format("%s not present in header", IPV_SESSION_ID_HEADER);
@@ -139,14 +175,7 @@ public class RequestHelper {
         }
     }
 
-    public static String getIpAddress(JourneyRequest request)
-            throws HttpResponseExceptionWithErrorBody {
-        String ipAddress = request.getIpAddress();
-        validateIpAddress(ipAddress, "ipAddress not present in request");
-        return ipAddress;
-    }
-
-    public static String getIpAddress(Map<String, String> headers)
+    private static String getIpAddress(Map<String, String> headers)
             throws HttpResponseExceptionWithErrorBody {
         String ipAddress = RequestHelper.getHeaderByKey(headers, IP_ADDRESS_HEADER);
         validateIpAddress(ipAddress, String.format("%s not present in header", IP_ADDRESS_HEADER));
@@ -162,32 +191,26 @@ public class RequestHelper {
         }
     }
 
-    public static String getClientOAuthSessionId(Map<String, String> headers) {
+    private static String getClientOAuthSessionId(Map<String, String> headers) {
         String clientSessionId = RequestHelper.getHeaderByKey(headers, CLIENT_SESSION_ID_HEADER);
-        if (clientSessionId == null) {
-            LOGGER.warn(
-                    new StringMapMessage()
-                            .with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "Client session id missing in header.")
-                            .with(
-                                    LOG_MISSING_HEADER_FIELD.getFieldName(),
-                                    CLIENT_SESSION_ID_HEADER));
-        }
+
+        StringMapMessage message =
+                new StringMapMessage()
+                        .with(
+                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                "Client session id missing in header.")
+                        .with(LOG_MISSING_HEADER_FIELD.getFieldName(), CLIENT_SESSION_ID_HEADER);
+        validateClientOAuthSessionId(clientSessionId, message);
+
         LogHelper.attachClientSessionIdToLogs(clientSessionId);
         return clientSessionId;
     }
 
-    public static String getFeatureSet(Map<String, String> headers) {
-        String featureSet = RequestHelper.getHeaderByKey(headers, FEATURE_SET_HEADER);
-        if (featureSet == null) {
-            LOGGER.warn("{} not present in header", FEATURE_SET_HEADER);
-            return "default";
+    private static void validateClientOAuthSessionId(
+            String clientSessionId, StringMapMessage message) {
+        if (clientSessionId == null) {
+            LOGGER.warn(message);
         }
-        return featureSet;
-    }
-
-    public static String getFeatureSet(APIGatewayProxyRequestEvent event) {
-        return getFeatureSet(event.getHeaders());
+        LogHelper.attachClientSessionIdToLogs(clientSessionId);
     }
 }

@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 
 import java.util.Map;
@@ -20,9 +21,9 @@ import java.util.Map;
 public abstract class BaseJourneyLambda
         implements RequestHandler<Map<String, Object>, Map<String, Object>> {
     public static final String JOURNEY_ERROR_PATH = "/journey/error";
+    public static final String JOURNEY_NEXT_PATH = "/journey/next";
     public static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
-    public static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
-    public static final JourneyResponse JOURNEY_ERROR = new JourneyResponse(JOURNEY_ERROR_PATH);
+    public static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
 
     private static final ObjectMapper OBJECT_MAPPER =
             new ObjectMapper()
@@ -46,18 +47,20 @@ public abstract class BaseJourneyLambda
             APIGatewayProxyRequestEvent request =
                     OBJECT_MAPPER.convertValue(event, APIGatewayProxyRequestEvent.class);
 
-            var ipvSessionId = RequestHelper.getIpvSessionId(request);
-            var ipAddress = RequestHelper.getIpAddress(request);
-            var journeyRequest = new JourneyRequest(ipvSessionId, ipAddress);
-
+            var clientOAuthSessionId = RequestHelper.getClientOAuthSessionId(request);
+            var journeyRequest =
+                    new JourneyRequest(
+                            getIpvSessionId(request), getIpAddress(request), clientOAuthSessionId);
             var journeyResponse = handleRequest(journeyRequest, context);
+
             apiGatewayResponse =
                     ApiGatewayResponseGenerator.proxyJsonResponse(
                             HttpStatus.SC_OK, journeyResponse);
-        } catch (HttpResponseExceptionWithErrorBody e) {
+        } catch (Exception ex) {
+            LogHelper.logErrorMessage("Error during lambda processing.", ex.getMessage());
             var journeyResponse =
                     new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse());
+                            JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, null);
 
             apiGatewayResponse =
                     ApiGatewayResponseGenerator.proxyJsonResponse(
@@ -65,6 +68,26 @@ public abstract class BaseJourneyLambda
         }
 
         return OBJECT_MAPPER.convertValue(apiGatewayResponse, RETURN_TYPE_REFERENCE);
+    }
+
+    private static String getIpvSessionId(APIGatewayProxyRequestEvent request) {
+        String ipvSessionId;
+        try {
+            ipvSessionId = RequestHelper.getIpvSessionId(request);
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            ipvSessionId = null;
+        }
+        return ipvSessionId;
+    }
+
+    private static String getIpAddress(APIGatewayProxyRequestEvent request) {
+        String ipAddress;
+        try {
+            ipAddress = RequestHelper.getIpAddress(request);
+        } catch (HttpResponseExceptionWithErrorBody e) {
+            ipAddress = null;
+        }
+        return ipAddress;
     }
 
     protected abstract JourneyResponse handleRequest(JourneyRequest request, Context context);
