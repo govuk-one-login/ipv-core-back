@@ -1,9 +1,6 @@
 package uk.gov.di.ipv.core.buildprovenuseridentitydetails;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -21,11 +18,13 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyRequest;
+import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -35,6 +34,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 
 import java.text.ParseException;
@@ -50,8 +50,7 @@ import static uk.gov.di.ipv.core.library.service.UserIdentityService.BIRTH_DATE_
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.NAME_PROPERTY_NAME;
 
-public class BuildProvenUserIdentityDetailsHandler
-        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+public class BuildProvenUserIdentityDetailsHandler extends BaseJourneyLambda {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final IpvSessionService ipvSessionService;
@@ -83,8 +82,7 @@ public class BuildProvenUserIdentityDetailsHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public APIGatewayProxyResponseEvent handleRequest(
-            APIGatewayProxyRequestEvent input, Context context) {
+    protected JourneyResponse handleRequest(JourneyRequest input, Context context) {
         LogHelper.attachComponentIdToLogs();
         ProvenUserIdentityDetails.ProvenUserIdentityDetailsBuilder
                 provenUserIdentityDetailsBuilder = ProvenUserIdentityDetails.builder();
@@ -114,19 +112,20 @@ public class BuildProvenUserIdentityDetailsHandler
 
             LOGGER.info("Successfully retrieved proven identity response.");
 
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_OK, provenUserIdentityDetailsBuilder.build());
+            return provenUserIdentityDetailsBuilder.build();
         } catch (HttpResponseExceptionWithErrorBody e) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getResponseCode(), e.getErrorBody());
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse());
         } catch (ParseException | JsonProcessingException e) {
             LOGGER.error("Failed to parse credentials");
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (ProvenUserIdentityDetailsException e) {
             LOGGER.error("Failed generate the proven user identity details");
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS);
         }

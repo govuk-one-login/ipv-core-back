@@ -1,21 +1,42 @@
 package uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain;
 
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.Address;
+import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 
 import java.util.List;
 
 @ExcludeFromGeneratedCoverageReport
-@NoArgsConstructor
-@AllArgsConstructor
 @Data
 @Builder
-public class ProvenUserIdentityDetails {
-    private String name;
-    private String dateOfBirth;
-    private List<Address> addresses;
+public class ProvenUserIdentityDetails extends JourneyResponse {
+    @JsonProperty private final String name;
+    @JsonProperty private final String dateOfBirth;
+    @JsonProperty private final List<Address> addresses;
+
+    @JsonCreator
+    public ProvenUserIdentityDetails(
+            @JsonProperty(value = "journey", required = true) String journey,
+            @JsonProperty(value = "name") String name,
+            @JsonProperty(value = "dateOfBirth") String dateOfBirth,
+            @JsonProperty(value = "addresses") List<Address> addresses) {
+        super(journey);
+        this.name = name;
+        this.dateOfBirth = dateOfBirth;
+        this.addresses = addresses;
+    }
+
+    public ProvenUserIdentityDetails(
+            @JsonProperty(value = "name") String name,
+            @JsonProperty(value = "dateOfBirth") String dateOfBirth,
+            @JsonProperty(value = "addresses") List<Address> addresses) {
+        super(null);
+        this.name = name;
+        this.dateOfBirth = dateOfBirth;
+        this.addresses = addresses;
+    }
 }
