@@ -274,4 +274,12 @@ class RequestHelperTest {
                         TEST_IPV_SESSION_ID, TEST_IP_ADDRESS, TEST_CLIENT_SESSION_ID, null);
         assertEquals("default", RequestHelper.getFeatureSet(event));
     }
+
+    @Test
+    void getFeatureSetShouldReturnDefaultFeatureSetIdFromJourneyWhenEmpty() {
+        var event =
+                new JourneyRequest(
+                        TEST_IPV_SESSION_ID, TEST_IP_ADDRESS, TEST_CLIENT_SESSION_ID, "");
+        assertEquals("default", RequestHelper.getFeatureSet(event));
+    }
 }

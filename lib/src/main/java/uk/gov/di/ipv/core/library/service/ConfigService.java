@@ -130,7 +130,7 @@ public class ConfigService {
 
     public String getSsmParameter(
             ConfigurationVariable configurationVariable, String... pathProperties) {
-        if (getFeatureSet() != null) {
+        if (getFeatureSet() != null && !getFeatureSet().equals("default")) {
             var featureSetPath =
                     resolveFeatureSetPath(configurationVariable.getPath(), pathProperties);
             try {
