@@ -277,7 +277,12 @@ paths:
             Fn::Sub: |
               {
                 "ipvSessionId": "$input.params('ipv-session-id')", 
+<<<<<<< HEAD
                 "ipAddress": "$input.params('ip-address')"
+=======
+                "ipAddress": "$input.params('ip-address')",
+                "body-json": "$input.json('$')"
+>>>>>>> 0df0f14f (PYIC-2739: Updated merge conflict of JourneyRequest.java)
               }
         responses:
           default:
