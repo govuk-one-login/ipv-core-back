@@ -63,8 +63,9 @@ class CheckExistingIdentityHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_JOURNEY_ID = "test-journey-id";
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
+    private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
     private static final JourneyRequest event =
-            new JourneyRequest(TEST_SESSION_ID, TEST_CLIENT_SOURCE_IP);
+            new JourneyRequest(TEST_SESSION_ID, TEST_CLIENT_SOURCE_IP, TEST_CLIENT_OAUTH_SESSION_ID);
     private static final List<String> CREDENTIALS =
             List.of(
                     M1A_PASSPORT_VC,
@@ -79,7 +80,6 @@ class CheckExistingIdentityHandlerTest {
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
-    private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
 
     static {
         try {
@@ -276,7 +276,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturn400IfSessionIdNotInHeader() {
-        JourneyRequest eventWithoutHeaders = new JourneyRequest(null, null);
+        JourneyRequest eventWithoutHeaders = new JourneyRequest(null, null, null);
 
         JourneyResponse journeyResponse =
                 checkExistingIdentityHandler.handleRequest(eventWithoutHeaders, context);

@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -14,8 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX;
 
 public class CredentialIssuerConfigService extends ConfigService {
 
@@ -40,7 +39,7 @@ public class CredentialIssuerConfigService extends ConfigService {
             throws ParseCredentialIssuerConfigException {
         Map<String, String> params =
                 getSsmParameters(
-                        getEnvironmentVariable(CREDENTIAL_ISSUERS_CONFIG_PARAM_PREFIX), true);
+                        resolvePath(ConfigurationVariable.CREDENTIAL_ISSUERS.getPath()), true);
 
         Map<String, Map<String, Object>> map = new HashMap<>();
         for (Map.Entry<String, String> entry : params.entrySet()) {
