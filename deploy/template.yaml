@@ -352,6 +352,10 @@ Resources:
             ParameterName: !Sub ${Environment}/core/clients/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/clients/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/self/*
       Events:
         IPVCoreExternalAPI:
           Type: Api
@@ -535,6 +539,10 @@ Resources:
             ParameterName: !Sub ${Environment}/core/clients/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/clients/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/self/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -660,6 +668,12 @@ Resources:
             ParameterName: !Sub ${Environment}/core/credentialIssuers
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/self/*
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:${Environment}/credential-issuers/*/api-key-*
         - SQSSendMessagePolicy:
@@ -799,6 +813,12 @@ Resources:
             ParameterName: !Sub ${Environment}/core/credentialIssuers
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/self/*
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:${Environment}/credential-issuers/*/api-key-*
         - SQSSendMessagePolicy:
@@ -930,6 +950,12 @@ Resources:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/self/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -1038,6 +1064,10 @@ Resources:
             ParameterName: !Sub ${Environment}/core/self/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/self/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -1126,6 +1156,10 @@ Resources:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1213,6 +1247,8 @@ Resources:
             TableName: !Ref UserIssuedCredentialsV2Table
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/self/*
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1479,6 +1515,8 @@ Resources:
             TableName: !Ref CriOAuthSessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/self/*
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
@@ -1571,6 +1609,10 @@ Resources:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/self/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - AWSSecretsManagerGetSecretValuePolicy:
@@ -1685,6 +1727,10 @@ Resources:
             ParameterName: !Sub ${Environment}/core/self/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/self/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1779,6 +1825,10 @@ Resources:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/self/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -1935,6 +1985,10 @@ Resources:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/self/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
       Events:
@@ -2032,6 +2086,10 @@ Resources:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/self/*
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -2138,6 +2196,10 @@ Resources:
             ParameterName: !Sub ${Environment}/core/credentialIssuers/*
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/self/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/features/*/self/*
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-scoring-config-*
         - SQSSendMessagePolicy:
