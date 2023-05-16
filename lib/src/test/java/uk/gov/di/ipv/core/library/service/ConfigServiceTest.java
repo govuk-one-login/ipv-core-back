@@ -429,7 +429,7 @@ class ConfigServiceTest {
                             Mockito.lenient()
                                     .when(
                                             ssmProvider.get(
-                                                    "/test/core/featureSet/"
+                                                    "/test/core/features/"
                                                             + featureSet
                                                             + "/"
                                                             + path))
@@ -439,7 +439,7 @@ class ConfigServiceTest {
                             Mockito.lenient()
                                     .when(
                                             ssmProvider.get(
-                                                    "/test/core/featureSet/"
+                                                    "/test/core/features/"
                                                             + featureSet
                                                             + "/"
                                                             + path))
