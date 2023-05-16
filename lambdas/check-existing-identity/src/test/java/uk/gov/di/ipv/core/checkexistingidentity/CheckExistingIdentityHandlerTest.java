@@ -65,7 +65,8 @@ class CheckExistingIdentityHandlerTest {
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
     private static final JourneyRequest event =
-            new JourneyRequest(TEST_SESSION_ID, TEST_CLIENT_SOURCE_IP, TEST_CLIENT_OAUTH_SESSION_ID);
+            new JourneyRequest(
+                    TEST_SESSION_ID, TEST_CLIENT_SOURCE_IP, TEST_CLIENT_OAUTH_SESSION_ID);
     private static final List<String> CREDENTIALS =
             List.of(
                     M1A_PASSPORT_VC,
