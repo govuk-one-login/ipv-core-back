@@ -2195,6 +2195,15 @@ Resources:
       # checkov:skip=CKV_AWS_28: Point in time recovery is not necessary for this table.
       TableName: !Sub "user-issued-credentials-v2-${Environment}"
       BillingMode: "PAY_PER_REQUEST"
+      DeletionProtectionEnabled: !If
+        - IsProduction
+        - true
+        - false
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: !If
+          - IsProduction
+          - true
+          - false
       AttributeDefinitions:
         - AttributeName: "userId"
           AttributeType: "S"
