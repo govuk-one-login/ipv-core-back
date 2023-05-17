@@ -8,6 +8,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.JourneyRequest;
+import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
@@ -23,7 +25,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -71,11 +72,11 @@ class SelectCriHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("drivingLicence"))
                 .thenReturn(createCriConfig("drivingLicence", "drivingLicence", false));
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/ukPassport", response.get("journey"));
+        assertEquals("/journey/ukPassport", response.getJourney());
     }
 
     @Test
@@ -93,11 +94,11 @@ class SelectCriHandlerTest {
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(false);
         when(mockConfigService.isEnabled("drivingLicence")).thenReturn(true);
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/ukPassportAndDrivingLicence", response.get("journey"));
+        assertEquals("/journey/ukPassportAndDrivingLicence", response.getJourney());
     }
 
     @Test
@@ -119,11 +120,11 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/address", response.get("journey"));
+        assertEquals("/journey/address", response.getJourney());
     }
 
     @Test
@@ -146,11 +147,11 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/address", response.get("journey"));
+        assertEquals("/journey/address", response.getJourney());
     }
 
     @Test
@@ -171,11 +172,11 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/pyi-no-match", response.get("journey"));
+        assertEquals("/journey/pyi-no-match", response.getJourney());
     }
 
     @Test
@@ -204,11 +205,11 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/fraud", response.get("journey"));
+        assertEquals("/journey/fraud", response.getJourney());
     }
 
     @Test
@@ -242,11 +243,11 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/kbv", response.get("journey"));
+        assertEquals("/journey/kbv", response.getJourney());
     }
 
     @Test
@@ -282,11 +283,11 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/fail", response.get("journey"));
+        assertEquals("/journey/fail", response.getJourney());
     }
 
     @Test
@@ -306,11 +307,11 @@ class SelectCriHandlerTest {
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/dcmaw", response.get("journey"));
+        assertEquals("/journey/dcmaw", response.getJourney());
     }
 
     @Test
@@ -330,11 +331,11 @@ class SelectCriHandlerTest {
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/dcmaw-success", response.get("journey"));
+        assertEquals("/journey/dcmaw-success", response.getJourney());
     }
 
     @Test
@@ -362,11 +363,11 @@ class SelectCriHandlerTest {
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/fraud", response.get("journey"));
+        assertEquals("/journey/fraud", response.getJourney());
     }
 
     @Test
@@ -390,11 +391,11 @@ class SelectCriHandlerTest {
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/address", response.get("journey"));
+        assertEquals("/journey/address", response.getJourney());
     }
 
     @Test
@@ -434,11 +435,11 @@ class SelectCriHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI))
                 .thenReturn(createCriConfig(FRAUD_CRI, "test-fraud-iss", true));
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/fail", response.get("journey"));
+        assertEquals("/journey/fail", response.getJourney());
     }
 
     @Test
@@ -458,11 +459,11 @@ class SelectCriHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("drivingLicence"))
                 .thenReturn(createCriConfig("drivingLicence", "drivingLicence", false));
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/ukPassport", response.get("journey"));
+        assertEquals("/journey/ukPassport", response.getJourney());
     }
 
     @Test
@@ -485,11 +486,11 @@ class SelectCriHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("drivingLicence"))
                 .thenReturn(createCriConfig("drivingLicence", "drivingLicence", false));
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/ukPassport", response.get("journey"));
+        assertEquals("/journey/ukPassport", response.getJourney());
     }
 
     @Test
@@ -512,11 +513,11 @@ class SelectCriHandlerTest {
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/pyi-no-match", response.get("journey"));
+        assertEquals("/journey/pyi-no-match", response.getJourney());
     }
 
     @Test
@@ -536,11 +537,11 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(List.of(new VcStatusDto("test-driving-licence-iss", false)));
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/pyi-no-match", response.get("journey"));
+        assertEquals("/journey/pyi-no-match", response.getJourney());
     }
 
     @Test
@@ -575,11 +576,11 @@ class SelectCriHandlerTest {
                                 new VcStatusDto("test-kbv-iss", false)));
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(false);
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/pyi-kbv-thin-file", response.get("journey"));
+        assertEquals("/journey/pyi-kbv-thin-file", response.getJourney());
     }
 
     @Test
@@ -597,11 +598,11 @@ class SelectCriHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("drivingLicence"))
                 .thenReturn(createCriConfig("drivingLicence", "drivingLicence", false));
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/ukPassport", response.get("journey"));
+        assertEquals("/journey/ukPassport", response.getJourney());
     }
 
     @Test
@@ -623,11 +624,11 @@ class SelectCriHandlerTest {
         when(mockConfigService.getSsmParameter(DCMAW_ALLOWED_USER_IDS))
                 .thenReturn("test-user-id,test-user-id-2,test-user-id-3");
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/dcmaw", response.get("journey"));
+        assertEquals("/journey/dcmaw", response.getJourney());
     }
 
     @Test
@@ -651,11 +652,11 @@ class SelectCriHandlerTest {
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("false");
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/dcmaw", response.get("journey"));
+        assertEquals("/journey/dcmaw", response.getJourney());
     }
 
     @Test
@@ -681,11 +682,11 @@ class SelectCriHandlerTest {
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/ukPassport", response.get("journey"));
+        assertEquals("/journey/ukPassport", response.getJourney());
     }
 
     @Test
@@ -707,11 +708,11 @@ class SelectCriHandlerTest {
         when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS))
                 .thenReturn(String.valueOf(true));
 
-        Map<String, Object> input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
 
-        Map<String, Object> response = underTest.handleRequest(input, context);
+        JourneyResponse response = underTest.handleRequest(input, context);
 
-        assertEquals("/journey/dcmaw", response.get("journey"));
+        assertEquals("/journey/dcmaw", response.getJourney());
     }
 
     private void mockIpvSessionService() {
@@ -720,8 +721,8 @@ class SelectCriHandlerTest {
                 .thenReturn(getClientOAuthSessionItem());
     }
 
-    private Map<String, Object> createRequestEvent() {
-        return Map.of("ipvSessionId", TEST_SESSION_ID);
+    private JourneyRequest createRequestEvent() {
+        return new JourneyRequest(TEST_SESSION_ID, null, null, null);
     }
 
     private CredentialIssuerConfig createCriConfig(String criId, String criIss, boolean enabled)
