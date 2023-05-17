@@ -200,7 +200,8 @@ class RequestHelperTest {
         String clientSessionId = "client-session-id";
         String ipvSessionId = "a-session-id";
         String ipAddress = "a-ipaddress";
-        var event = new JourneyRequest(ipvSessionId, ipAddress, clientSessionId);
+        Map<String, String> pathParameters = Map.of("criId", DCMAW_CRI);
+        var event = new JourneyRequest(ipvSessionId, ipAddress, clientSessionId, pathParameters);
 
         assertEquals(clientSessionId, RequestHelper.getClientOAuthSessionId(event));
         assertEquals(ipvSessionId, RequestHelper.getIpvSessionId(event));
@@ -212,7 +213,8 @@ class RequestHelperTest {
             throws HttpResponseExceptionWithErrorBody {
         String clientSessionId = "client-session-id";
         String ipAddress = "a-ipaddress";
-        var event = new JourneyRequest(null, ipAddress, clientSessionId);
+        Map<String, String> pathParameters = Map.of("criId", DCMAW_CRI);
+        var event = new JourneyRequest(null, ipAddress, clientSessionId, pathParameters);
 
         assertNull(RequestHelper.getIpvSessionIdAllowNull(event));
     }

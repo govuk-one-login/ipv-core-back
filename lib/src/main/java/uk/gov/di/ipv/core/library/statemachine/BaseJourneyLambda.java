@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 
 import java.util.Map;
@@ -51,12 +52,11 @@ public abstract class BaseJourneyLambda
             var pathParameters = RequestHelper.getPathParameters(request);
             var journeyRequest =
                     JourneyRequest.builder()
-                            .getIpvSessionId(request)
-                            .getIpAddress(request)
+                            .ipvSessionId(getIpvSessionId(request))
+                            .ipAddress(getIpAddress(request))
                             .pathParameters(pathParameters)
                             .clientOAuthSessionId(clientOAuthSessionId)
                             .build();
-
             var journeyResponse = handleRequest(journeyRequest, context);
 
             apiGatewayResponse =

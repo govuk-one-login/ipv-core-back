@@ -379,9 +379,10 @@ class BuildCriOauthRequestHandlerTest {
         input.setHeaders(Map.of("not-ipv-session-header", "dummy-value"));
 
         APIGatewayProxyResponseEvent response = handleRequest(input, context);
-        assertEquals(400, response.getStatusCode());
-        Map<String, Object> responseBody = objectMapper.readValue(response.getBody(), Map.class);
-        assertEquals("Missing ipv session id header", responseBody.get("message"));
+
+        Map<String, Object> responseDetails = objectMapper.readValue(response.getBody(), Map.class);
+        assertEquals(HTTPResponse.SC_BAD_REQUEST, responseDetails.get("statusCode"));
+        assertEquals("Missing ipv session id header", responseDetails.get("message"));
     }
 
     private void assertSharedClaimsJWTIsValid(String request)

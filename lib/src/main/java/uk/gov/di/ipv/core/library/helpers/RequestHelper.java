@@ -150,6 +150,10 @@ public class RequestHelper {
         return getFeatureSet(event.getHeaders());
     }
 
+    public static Map<String, String> getPathParameters(APIGatewayProxyRequestEvent request) {
+        return request.getPathParameters();
+    }
+
     private static String getIpvSessionId(Map<String, String> headers, boolean allowNull)
             throws HttpResponseExceptionWithErrorBody {
         String ipvSessionId = RequestHelper.getHeaderByKey(headers, IPV_SESSION_ID_HEADER);

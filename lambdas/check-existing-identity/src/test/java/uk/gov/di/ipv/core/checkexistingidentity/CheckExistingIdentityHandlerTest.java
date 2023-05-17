@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -51,6 +52,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
@@ -64,9 +66,15 @@ class CheckExistingIdentityHandlerTest {
     private static final String TEST_JOURNEY_ID = "test-journey-id";
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
+
+    private static final Map<String, String> TEST_PATH_PARAMETERS = Map.of("criId", DCMAW_CRI);
+
     private static final JourneyRequest event =
             new JourneyRequest(
-                    TEST_SESSION_ID, TEST_CLIENT_SOURCE_IP, TEST_CLIENT_OAUTH_SESSION_ID);
+                    TEST_SESSION_ID,
+                    TEST_CLIENT_SOURCE_IP,
+                    TEST_CLIENT_OAUTH_SESSION_ID,
+                    TEST_PATH_PARAMETERS);
     private static final List<String> CREDENTIALS =
             List.of(
                     M1A_PASSPORT_VC,
@@ -277,7 +285,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturn400IfSessionIdNotInHeader() {
-        JourneyRequest eventWithoutHeaders = new JourneyRequest(null, null, null);
+        JourneyRequest eventWithoutHeaders = new JourneyRequest(null, null, null, null);
 
         JourneyResponse journeyResponse =
                 checkExistingIdentityHandler.handleRequest(eventWithoutHeaders, context);
