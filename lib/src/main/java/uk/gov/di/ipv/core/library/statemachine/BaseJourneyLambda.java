@@ -18,6 +18,9 @@ import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 
 import java.util.Map;
 
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getClientOAuthSessionId;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
+
 public abstract class BaseJourneyLambda
         implements RequestHandler<Map<String, Object>, Map<String, Object>> {
     public static final String JOURNEY_ERROR_PATH = "/journey/error";
@@ -47,10 +50,10 @@ public abstract class BaseJourneyLambda
             APIGatewayProxyRequestEvent request =
                     OBJECT_MAPPER.convertValue(event, APIGatewayProxyRequestEvent.class);
 
-            var clientOAuthSessionId = RequestHelper.getClientOAuthSessionId(request);
+            var clientOAuthSessionId = getClientOAuthSessionId(request);
             var ipvSessionId = getIpvSessionId(request);
             var ipAddress = getIpAddress(request);
-            var featureSet = RequestHelper.getFeatureSet(request);
+            var featureSet = getFeatureSet(request);
             var journeyRequest =
                     new JourneyRequest(ipvSessionId, ipAddress, clientOAuthSessionId, featureSet);
 

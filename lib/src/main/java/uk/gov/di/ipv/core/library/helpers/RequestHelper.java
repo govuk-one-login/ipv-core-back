@@ -143,7 +143,7 @@ public class RequestHelper {
         return featureSet;
     }
 
-    public static String getFeatureSet(Map<String, String> headers) {
+    private static String getFeatureSet(Map<String, String> headers) {
         return RequestHelper.getHeaderByKey(headers, FEATURE_SET_HEADER);
     }
 
