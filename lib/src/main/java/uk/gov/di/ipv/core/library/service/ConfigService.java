@@ -160,7 +160,7 @@ public class ConfigService {
 
     private String resolveFeatureSetPath(String path, String... pathProperties) {
         return resolveBasePath()
-                + String.format("featureSet/%s/", getFeatureSet())
+                + String.format("features/%s/", getFeatureSet())
                 + String.format(path, (Object[]) pathProperties);
     }
 
