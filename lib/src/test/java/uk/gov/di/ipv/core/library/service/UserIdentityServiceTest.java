@@ -2,11 +2,6 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.crypto.ECDSASigner;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,8 +23,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.*;
 import java.util.Base64;
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,13 +32,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.VC_VALID_DURATION;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.*;
 
@@ -677,89 +666,6 @@ class UserIdentityServiceTest {
 
         assertEquals(SIGNED_VC_1, vcList.get(0));
         assertEquals(SIGNED_VC_2, vcList.get(1));
-    }
-
-    @Test
-    void shouldDeleteExistingVCsIfAnyDueToExpireWithinSessionTimeout() {
-        when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
-
-        List<VcStoreItem> vcStoreItems =
-                List.of(
-                        createVcStoreItem("a-users-id", "ukPassport", SIGNED_VC_1, Instant.now()),
-                        createVcStoreItem("a-users-id", "fraud", SIGNED_VC_2, Instant.now()),
-                        createVcStoreItem("a-users-id", "sausages", SIGNED_VC_3, Instant.now()));
-        when(mockDataStore.getItems("a-users-id")).thenReturn(vcStoreItems);
-
-        List<VcStoreItem> expiredVcStoreItems =
-                List.of(createVcStoreItem("a-users-id", "fraud", SIGNED_VC_2, Instant.now()));
-        when(mockDataStore.getItemsWithAttributeLessThanOrEqualValue(
-                        eq("a-users-id"), eq("expirationTime"), anyString()))
-                .thenReturn(expiredVcStoreItems);
-
-        userIdentityService.deleteVcStoreItemsIfAnyExpired("a-users-id");
-
-        verify(mockDataStore).delete("a-users-id", "ukPassport");
-        verify(mockDataStore).delete("a-users-id", "fraud");
-        verify(mockDataStore).delete("a-users-id", "sausages");
-    }
-
-    @Test
-    void shouldNotDeleteExistingVCsIfNoneAreDueToExpireWithinSessionTimeout() {
-        when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
-
-        List<VcStoreItem> expiredVcStoreItems = Collections.emptyList();
-        when(mockDataStore.getItemsWithAttributeLessThanOrEqualValue(
-                        eq("a-users-id"), eq("expirationTime"), anyString()))
-                .thenReturn(expiredVcStoreItems);
-
-        userIdentityService.deleteVcStoreItemsIfAnyExpired("a-users-id");
-
-        verify(mockDataStore, times(0)).delete(anyString(), anyString());
-    }
-
-    @Test
-    void shouldDeleteExistingVCsIfAnyInvalidWithinSessionTimeout() {
-        when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
-        when(mockConfigService.getSsmParameter(VC_VALID_DURATION)).thenReturn("P182DT12H");
-
-        List<VcStoreItem> vcStoreItems =
-                List.of(
-                        createVcStoreItem("a-users-id", "ukPassport", SIGNED_VC_1, Instant.now()),
-                        createVcStoreItem("a-users-id", "fraud", SIGNED_VC_2, Instant.now()),
-                        createVcStoreItem("a-users-id", "sausages", SIGNED_VC_3, Instant.now()));
-        when(mockDataStore.getItems("a-users-id")).thenReturn(vcStoreItems);
-
-        userIdentityService.deleteVcStoreItemsIfAnyInvalid("a-users-id");
-
-        verify(mockDataStore).delete("a-users-id", "ukPassport");
-        verify(mockDataStore).delete("a-users-id", "fraud");
-        verify(mockDataStore).delete("a-users-id", "sausages");
-    }
-
-    @Test
-    void shouldNotDeleteExistingVCsIfAllValidWithinSessionTimeout() throws Exception {
-        when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
-        when(mockConfigService.getSsmParameter(VC_VALID_DURATION)).thenReturn("P182DT12H");
-        Date nbf = Date.from(ZonedDateTime.now().plusYears(1).toInstant());
-
-        SignedJWT signedJwt =
-                new SignedJWT(
-                        new JWSHeader.Builder(JWSAlgorithm.ES256).build(),
-                        new JWTClaimsSet.Builder()
-                                .subject("testSubject")
-                                .issuer("ukPassport")
-                                .notBeforeTime(nbf)
-                                .build());
-        signedJwt.sign(new ECDSASigner(getPrivateKey()));
-        String signedVc = signedJwt.serialize();
-
-        List<VcStoreItem> vcStoreItems =
-                List.of(createVcStoreItem("a-users-id", "ukPassport", signedVc, Instant.now()));
-        when(mockDataStore.getItems("a-users-id")).thenReturn(vcStoreItems);
-
-        userIdentityService.deleteVcStoreItemsIfAnyInvalid("a-users-id");
-
-        verify(mockDataStore, times(0)).delete(anyString(), anyString());
     }
 
     @Test
