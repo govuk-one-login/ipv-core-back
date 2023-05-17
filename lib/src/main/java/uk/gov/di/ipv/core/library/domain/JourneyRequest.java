@@ -14,5 +14,6 @@ import java.util.Map;
 public class JourneyRequest {
     private String ipvSessionId;
     private String ipAddress;
+    private String clientOAuthSessionId;
     private Map<String, String> pathParameters;
 }

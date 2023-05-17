@@ -1,9 +1,6 @@
 package uk.gov.di.ipv.core.evaluategpg45scores;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
@@ -21,6 +18,8 @@ import uk.gov.di.ipv.core.library.auditing.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
@@ -32,7 +31,6 @@ import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
-import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -43,6 +41,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 
 import java.text.ParseException;
@@ -62,8 +61,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_JO
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MITIGATION_JOURNEY_RESPONSE;
 
-public class EvaluateGpg45ScoresHandler
-        implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+public class EvaluateGpg45ScoresHandler extends BaseJourneyLambda {
 
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
@@ -117,8 +115,7 @@ public class EvaluateGpg45ScoresHandler
     @Override
     @Tracing
     @Logging(clearState = true)
-    public APIGatewayProxyResponseEvent handleRequest(
-            APIGatewayProxyRequestEvent event, Context context) {
+    protected JourneyResponse handleRequest(JourneyRequest event, Context context) {
         LogHelper.attachComponentIdToLogs();
 
         try {
@@ -183,42 +180,47 @@ public class EvaluateGpg45ScoresHandler
                                     LOG_ERROR_JOURNEY_RESPONSE.getFieldName(),
                                     contraIndicatorErrorJourneyResponse.get().toString());
                     LOGGER.info(message);
-                    return ApiGatewayResponseGenerator.proxyJsonResponse(
-                            HttpStatus.SC_OK, contraIndicatorErrorJourneyResponse.get());
+                    return contraIndicatorErrorJourneyResponse.get();
                 }
             }
 
             updateSuccessfulVcStatuses(ipvSessionItem, credentials);
 
             if (!checkCorrelation(userId, ipvSessionItem.getCurrentVcStatuses())) {
-                return ApiGatewayResponseGenerator.proxyJsonResponse(
-                        HttpStatus.SC_OK, new JourneyResponse(JOURNEY_PYI_NO_MATCH));
+                return new JourneyResponse(JOURNEY_PYI_NO_MATCH);
             }
 
             LOGGER.info(message);
 
-            return ApiGatewayResponseGenerator.proxyJsonResponse(HttpStatus.SC_OK, journeyResponse);
+            return journeyResponse;
         } catch (HttpResponseExceptionWithErrorBody e) {
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    e.getResponseCode(), e.getErrorBody());
+            LOGGER.error("Received HTTP response exception", e);
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse());
         } catch (ParseException e) {
             LOGGER.error("Unable to parse GPG45 scores from existing credentials", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
         } catch (UnknownEvidenceTypeException e) {
             LOGGER.error("Unable to determine type of credential", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
         } catch (CiRetrievalException e) {
             LOGGER.error("Error when fetching CIs from storage system", e);
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_GET_STORED_CIS);
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_GET_STORED_CIS);
         } catch (SqsException e) {
             LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
-            return ApiGatewayResponseGenerator.proxyJsonResponse(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
         }
     }
 

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.util.HashMap;
@@ -192,6 +193,28 @@ class RequestHelperTest {
         event.setHeaders(headers);
 
         assertNull(RequestHelper.getClientOAuthSessionId(event));
+    }
+
+    @Test
+    void forJourneyRequestShouldReturnClientSessionId() throws HttpResponseExceptionWithErrorBody {
+        String clientSessionId = "client-session-id";
+        String ipvSessionId = "a-session-id";
+        String ipAddress = "a-ipaddress";
+        var event = new JourneyRequest(ipvSessionId, ipAddress, clientSessionId);
+
+        assertEquals(clientSessionId, RequestHelper.getClientOAuthSessionId(event));
+        assertEquals(ipvSessionId, RequestHelper.getIpvSessionId(event));
+        assertEquals(ipAddress, RequestHelper.getIpAddress(event));
+    }
+
+    @Test
+    void forJourneyRequestShouldReturnNullIfSessionIdIsNull()
+            throws HttpResponseExceptionWithErrorBody {
+        String clientSessionId = "client-session-id";
+        String ipAddress = "a-ipaddress";
+        var event = new JourneyRequest(null, ipAddress, clientSessionId);
+
+        assertNull(RequestHelper.getIpvSessionIdAllowNull(event));
     }
 
     @Test
