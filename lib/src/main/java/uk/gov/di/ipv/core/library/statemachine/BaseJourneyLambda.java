@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
+import uk.gov.di.ipv.core.library.domain.BaseResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -90,5 +91,5 @@ public abstract class BaseJourneyLambda
         return ipAddress;
     }
 
-    protected abstract JourneyResponse handleRequest(JourneyRequest request, Context context);
+    protected abstract BaseResponse handleRequest(JourneyRequest request, Context context);
 }
