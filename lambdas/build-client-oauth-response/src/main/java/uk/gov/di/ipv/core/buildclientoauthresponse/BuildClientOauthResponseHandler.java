@@ -49,6 +49,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_R
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getClientOAuthSessionId;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionIdAllowNull;
 
@@ -96,6 +97,8 @@ public class BuildClientOauthResponseHandler extends BaseJourneyLambda {
             String ipvSessionId = getIpvSessionIdAllowNull(input);
             String ipAddress = getIpAddress(input);
             String clientSessionId = getClientOAuthSessionId(input);
+            String featureSet = getFeatureSet(input);
+            configService.setFeatureSet(featureSet);
 
             LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
 

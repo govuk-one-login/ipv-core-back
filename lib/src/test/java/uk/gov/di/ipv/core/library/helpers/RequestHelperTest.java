@@ -28,6 +28,12 @@ class RequestHelperTest {
                     "Foo", "bar",
                     "baz", "bar");
 
+    private final String TEST_IPV_SESSION_ID = "a-session-id";
+    private final String TEST_IP_ADDRESS = "127.0.0.1";
+    private final String TEST_FEATURE_SET = "test-feature-set";
+
+    private final String TEST_CLIENT_SESSION_ID = "client-session-id";
+
     @ParameterizedTest(name = "with matching header: {0}")
     @ValueSource(strings = {"Baz", "baz"})
     void matchHeaderByDownCasing(String headerName) {
@@ -66,6 +72,19 @@ class RequestHelperTest {
     void getIpvSessionIdShouldReturnSessionId() throws HttpResponseExceptionWithErrorBody {
         var event = new APIGatewayProxyRequestEvent();
         event.setHeaders(Map.of(IPV_SESSION_ID_HEADER, "a-session-id"));
+
+        assertEquals("a-session-id", RequestHelper.getIpvSessionId(event));
+    }
+
+    @Test
+    void getIpvSessionIdShouldReturnSessionIdFromJourney()
+            throws HttpResponseExceptionWithErrorBody {
+        var event =
+                new JourneyRequest(
+                        TEST_IPV_SESSION_ID,
+                        TEST_IP_ADDRESS,
+                        TEST_CLIENT_SESSION_ID,
+                        TEST_FEATURE_SET);
 
         assertEquals("a-session-id", RequestHelper.getIpvSessionId(event));
     }
@@ -198,11 +217,13 @@ class RequestHelperTest {
         String clientSessionId = "client-session-id";
         String ipvSessionId = "a-session-id";
         String ipAddress = "a-ipaddress";
-        var event = new JourneyRequest(ipvSessionId, ipAddress, clientSessionId);
+        String featureSet = "a-feature-set";
+        var event = new JourneyRequest(ipvSessionId, ipAddress, clientSessionId, featureSet);
 
         assertEquals(clientSessionId, RequestHelper.getClientOAuthSessionId(event));
         assertEquals(ipvSessionId, RequestHelper.getIpvSessionId(event));
         assertEquals(ipAddress, RequestHelper.getIpAddress(event));
+        assertEquals(featureSet, RequestHelper.getFeatureSet(event));
     }
 
     @Test
@@ -210,7 +231,8 @@ class RequestHelperTest {
             throws HttpResponseExceptionWithErrorBody {
         String clientSessionId = "client-session-id";
         String ipAddress = "a-ipaddress";
-        var event = new JourneyRequest(null, ipAddress, clientSessionId);
+        String featureSet = "a-feature-set";
+        var event = new JourneyRequest(null, ipAddress, clientSessionId, featureSet);
 
         assertNull(RequestHelper.getIpvSessionIdAllowNull(event));
     }
@@ -224,13 +246,13 @@ class RequestHelperTest {
     }
 
     @Test
-    void getFeatureSetShouldReturnDefault() {
-        var event = new APIGatewayProxyRequestEvent();
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put(FEATURE_SET_HEADER, null);
-
-        event.setHeaders(headers);
-
-        assertEquals("default", RequestHelper.getFeatureSet(event));
+    void getFeatureSetShouldReturnFeatureSetIdFromJourney() {
+        var event =
+                new JourneyRequest(
+                        TEST_IPV_SESSION_ID,
+                        TEST_IP_ADDRESS,
+                        TEST_CLIENT_SESSION_ID,
+                        TEST_FEATURE_SET);
+        assertEquals("test-feature-set", RequestHelper.getFeatureSet(event));
     }
 }

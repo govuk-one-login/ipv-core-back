@@ -89,6 +89,8 @@ public class EndMitigationJourneyHandler
 
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
+            String featureSet = RequestHelper.getFeatureSet(input);
+            configService.setFeatureSet(featureSet);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 
             String ipAddress = RequestHelper.getIpAddress(input);

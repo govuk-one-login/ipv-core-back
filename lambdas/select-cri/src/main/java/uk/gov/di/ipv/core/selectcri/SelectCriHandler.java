@@ -17,6 +17,7 @@ import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
@@ -40,7 +41,6 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 
 public class SelectCriHandler extends BaseJourneyLambda {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -79,7 +79,9 @@ public class SelectCriHandler extends BaseJourneyLambda {
     protected JourneyResponse handleRequest(JourneyRequest event, Context context) {
         LogHelper.attachComponentIdToLogs();
         try {
-            String ipvSessionId = getIpvSessionId(event);
+            String ipvSessionId = RequestHelper.getIpvSessionId(event);
+            String featureSet = RequestHelper.getFeatureSet(event);
+            configService.setFeatureSet(featureSet);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.getClientOAuthSession(

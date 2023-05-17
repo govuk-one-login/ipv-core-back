@@ -88,4 +88,11 @@ class StepFunctionHelpersTest {
         assertEquals(
                 expected, StepFunctionHelpers.generatePageOutputMap("error", 400, "some-page"));
     }
+
+    @Test
+    void getFeatureSetShouldReturnFeatureSet() throws Exception {
+        Map<String, String> input = Map.of("featureSet", "test-feature-set");
+
+        assertEquals("test-feature-set", StepFunctionHelpers.getFeatureSet(input));
+    }
 }

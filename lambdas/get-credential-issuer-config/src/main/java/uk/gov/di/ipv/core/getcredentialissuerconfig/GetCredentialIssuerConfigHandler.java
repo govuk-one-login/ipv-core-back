@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ParseCredentialIssuerConfigException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 
 import java.util.List;
 
@@ -39,6 +40,8 @@ public class GetCredentialIssuerConfigHandler
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
         try {
+            String featureSet = RequestHelper.getFeatureSet(input);
+            credentialIssuerConfigService.setFeatureSet(featureSet);
             List<CredentialIssuerConfig> config =
                     credentialIssuerConfigService.getCredentialIssuers();
             return ApiGatewayResponseGenerator.proxyJsonResponse(200, config);

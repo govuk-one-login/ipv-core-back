@@ -137,13 +137,14 @@ public class RequestHelper {
         return ipvSessionId;
     }
 
-    public static String getFeatureSet(Map<String, String> headers) {
-        String featureSet = RequestHelper.getHeaderByKey(headers, FEATURE_SET_HEADER);
-        if (featureSet == null) {
-            LOGGER.warn("{} not present in header", FEATURE_SET_HEADER);
-            return "default";
-        }
+    public static String getFeatureSet(JourneyRequest request) {
+        String featureSet = request.getFeatureSet();
+        LogHelper.attachFeatureSetToLogs(featureSet);
         return featureSet;
+    }
+
+    private static String getFeatureSet(Map<String, String> headers) {
+        return RequestHelper.getHeaderByKey(headers, FEATURE_SET_HEADER);
     }
 
     public static String getFeatureSet(APIGatewayProxyRequestEvent event) {

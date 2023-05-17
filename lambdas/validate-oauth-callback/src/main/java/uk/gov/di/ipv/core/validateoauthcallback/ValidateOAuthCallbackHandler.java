@@ -114,6 +114,8 @@ public class ValidateOAuthCallbackHandler
         try {
             String ipvSessionId = callbackRequest.getIpvSessionId();
             String criOAuthSessionId = callbackRequest.getState();
+            String featureSet = callbackRequest.getFeatureSet();
+            configService.setFeatureSet(featureSet);
 
             if (!StringUtils.isBlank(ipvSessionId)) {
                 ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
