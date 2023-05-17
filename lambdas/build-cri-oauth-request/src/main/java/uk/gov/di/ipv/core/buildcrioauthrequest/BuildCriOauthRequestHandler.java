@@ -26,10 +26,10 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerConfigService;
+import uk.gov.di.ipv.core.library.domain.BaseResponse;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
-import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -57,8 +57,10 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getJourney;
 
 public class BuildCriOauthRequestHandler extends BaseJourneyLambda {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -118,20 +120,21 @@ public class BuildCriOauthRequestHandler extends BaseJourneyLambda {
     @Override
     @Tracing
     @Logging(clearState = true)
-    protected JourneyResponse handleRequest(JourneyRequest input, Context context) {
+    protected BaseResponse handleRequest(JourneyRequest input, Context context) {
         LogHelper.attachComponentIdToLogs();
         try {
             String ipvSessionId = getIpvSessionId(input);
             String ipAddress = getIpAddress(input);
-            Map<String, String> pathParameters = input.getPathParameters();
+            String featureSet = getFeatureSet(input);
+            credentialIssuerConfigService.setFeatureSet(featureSet);
+            String criId = getJourney(input);
 
-            var errorResponse = validate(pathParameters);
+            var errorResponse = validate(criId);
             if (errorResponse.isPresent()) {
                 return new JourneyErrorResponse(
                         JOURNEY_ERROR_PATH, HttpStatus.SC_BAD_REQUEST, errorResponse.get());
             }
 
-            String criId = pathParameters.get(CRI_ID);
             CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(criId);
 
             if (credentialIssuerConfig == null) {
@@ -232,7 +235,7 @@ public class BuildCriOauthRequestHandler extends BaseJourneyLambda {
             redirectUri.addParameter("response_type", "code");
         }
 
-        return new CriResponse(null, new CriDetails(criId, redirectUri.build().toString()));
+        return new CriResponse(new CriDetails(criId, redirectUri.build().toString()));
     }
 
     private JWEObject signEncryptJar(
@@ -260,11 +263,11 @@ public class BuildCriOauthRequestHandler extends BaseJourneyLambda {
     }
 
     @Tracing
-    private Optional<ErrorResponse> validate(Map<String, String> pathParameters) {
-        if (pathParameters == null || StringUtils.isBlank(pathParameters.get(CRI_ID))) {
+    private Optional<ErrorResponse> validate(String criId) {
+        if (criId == null || StringUtils.isBlank(criId)) {
             return Optional.of(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
         }
-        LogHelper.attachCriIdToLogs(pathParameters.get(CRI_ID));
+        LogHelper.attachCriIdToLogs(criId);
         return Optional.empty();
     }
 

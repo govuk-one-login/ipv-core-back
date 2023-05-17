@@ -29,6 +29,8 @@ public class RequestHelper {
     public static final String CLIENT_SESSION_ID_HEADER = "client-session-id";
     public static final String IP_ADDRESS_HEADER = "ip-address";
     public static final String FEATURE_SET_HEADER = "feature-set";
+    public static final String JOURNEY_HEADER = "journey";
+
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -137,21 +139,30 @@ public class RequestHelper {
         return ipvSessionId;
     }
 
-    public static String getFeatureSet(Map<String, String> headers) {
-        String featureSet = RequestHelper.getHeaderByKey(headers, FEATURE_SET_HEADER);
-        if (featureSet == null) {
-            LOGGER.warn("{} not present in header", FEATURE_SET_HEADER);
-            return "default";
-        }
+    public static String getFeatureSet(JourneyRequest request) {
+        String featureSet = request.getFeatureSet();
+        LogHelper.attachFeatureSetToLogs(featureSet);
         return featureSet;
+    }
+
+    private static String getFeatureSet(Map<String, String> headers) {
+        return RequestHelper.getHeaderByKey(headers, FEATURE_SET_HEADER);
     }
 
     public static String getFeatureSet(APIGatewayProxyRequestEvent event) {
         return getFeatureSet(event.getHeaders());
     }
 
-    public static Map<String, String> getPathParameters(APIGatewayProxyRequestEvent request) {
-        return request.getPathParameters();
+    public static String getJourney(JourneyRequest request) {
+        return request.getJourney();
+    }
+
+    public static String getJourney(APIGatewayProxyRequestEvent event) {
+        return getJourney(event.getHeaders());
+    }
+
+    private static String getJourney(Map<String, String> headers) {
+        return RequestHelper.getHeaderByKey(headers, JOURNEY_HEADER);
     }
 
     private static String getIpvSessionId(Map<String, String> headers, boolean allowNull)

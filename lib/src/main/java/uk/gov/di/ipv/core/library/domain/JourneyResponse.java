@@ -7,7 +7,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 
 @ExcludeFromGeneratedCoverageReport
 @EqualsAndHashCode
-public class JourneyResponse {
+public class JourneyResponse implements BaseResponse {
     @JsonProperty private final String journey;
 
     @JsonCreator

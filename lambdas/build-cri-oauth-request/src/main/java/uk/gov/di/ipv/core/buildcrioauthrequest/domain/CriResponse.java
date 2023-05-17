@@ -2,20 +2,15 @@ package uk.gov.di.ipv.core.buildcrioauthrequest.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.BaseResponse;
 
 @Getter
-@EqualsAndHashCode(callSuper = true)
-public class CriResponse extends JourneyResponse {
+public class CriResponse implements BaseResponse {
     @JsonProperty private final CriDetails cri;
 
     @JsonCreator
-    public CriResponse(
-            @JsonProperty(value = "journey", required = true) String journey,
-            @JsonProperty(value = "cri", required = true) CriDetails cri) {
-        super(journey);
+    public CriResponse(@JsonProperty(value = "cri", required = true) CriDetails cri) {
         this.cri = cri;
     }
 }

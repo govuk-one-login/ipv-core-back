@@ -40,7 +40,6 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -65,16 +64,19 @@ class CheckExistingIdentityHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_JOURNEY_ID = "test-journey-id";
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
+
+    private static final String TEST_FEATURE_SET = "test-feature-set";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
 
-    private static final Map<String, String> TEST_PATH_PARAMETERS = Map.of("criId", DCMAW_CRI);
+    private static final String TEST_JOURNEY = DCMAW_CRI;
 
     private static final JourneyRequest event =
             new JourneyRequest(
                     TEST_SESSION_ID,
                     TEST_CLIENT_SOURCE_IP,
                     TEST_CLIENT_OAUTH_SESSION_ID,
-                    TEST_PATH_PARAMETERS);
+                    TEST_JOURNEY,
+                    TEST_FEATURE_SET);
     private static final List<String> CREDENTIALS =
             List.of(
                     M1A_PASSPORT_VC,
@@ -285,7 +287,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturn400IfSessionIdNotInHeader() {
-        JourneyRequest eventWithoutHeaders = new JourneyRequest(null, null, null, null);
+        JourneyRequest eventWithoutHeaders = new JourneyRequest(null, null, null, null, null);
 
         JourneyResponse journeyResponse =
                 checkExistingIdentityHandler.handleRequest(eventWithoutHeaders, context);

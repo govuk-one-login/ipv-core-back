@@ -21,10 +21,10 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.BaseResponse;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
-import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -49,6 +49,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_R
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_REDIRECT_URI;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getClientOAuthSessionId;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionIdAllowNull;
 
@@ -88,7 +89,7 @@ public class BuildClientOauthResponseHandler extends BaseJourneyLambda {
     @Override
     @Tracing
     @Logging(clearState = true)
-    protected JourneyResponse handleRequest(JourneyRequest input, Context context) {
+    protected BaseResponse handleRequest(JourneyRequest input, Context context) {
 
         LogHelper.attachComponentIdToLogs();
 
@@ -96,6 +97,8 @@ public class BuildClientOauthResponseHandler extends BaseJourneyLambda {
             String ipvSessionId = getIpvSessionIdAllowNull(input);
             String ipAddress = getIpAddress(input);
             String clientSessionId = getClientOAuthSessionId(input);
+            String featureSet = getFeatureSet(input);
+            configService.setFeatureSet(featureSet);
 
             LogHelper.attachIpvSessionIdToLogs(ipvSessionId);
 
@@ -215,7 +218,7 @@ public class BuildClientOauthResponseHandler extends BaseJourneyLambda {
             redirectUri.addParameter("state", clientOAuthSessionItem.getState());
         }
 
-        return new ClientResponse(null, new ClientDetails(redirectUri.build().toString()));
+        return new ClientResponse(new ClientDetails(redirectUri.build().toString()));
     }
 
     private ClientResponse generateClientErrorResponse(
@@ -229,7 +232,7 @@ public class BuildClientOauthResponseHandler extends BaseJourneyLambda {
             uriBuilder.addParameter("state", clientOAuthSessionItem.getState());
         }
 
-        return new ClientResponse(null, new ClientDetails(uriBuilder.build().toString()));
+        return new ClientResponse(new ClientDetails(uriBuilder.build().toString()));
     }
 
     private ClientResponse generateClientOAuthSessionErrorResponse(
@@ -242,7 +245,7 @@ public class BuildClientOauthResponseHandler extends BaseJourneyLambda {
             uriBuilder.addParameter("state", clientOAuthSessionItem.getState());
         }
 
-        return new ClientResponse(null, new ClientDetails(uriBuilder.build().toString()));
+        return new ClientResponse(new ClientDetails(uriBuilder.build().toString()));
     }
 
     @Tracing

@@ -69,6 +69,8 @@ public class BuildDebugCredentialDataHandler
         LogHelper.attachComponentIdToLogs();
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(input);
+            String featureSet = RequestHelper.getFeatureSet(input);
+            configService.setFeatureSet(featureSet);
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
 
             ClientOAuthSessionItem clientOAuthSessionItem =

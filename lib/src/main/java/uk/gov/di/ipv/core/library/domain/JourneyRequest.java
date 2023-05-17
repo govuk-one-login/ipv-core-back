@@ -5,8 +5,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Map;
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -15,5 +13,6 @@ public class JourneyRequest {
     private String ipvSessionId;
     private String ipAddress;
     private String clientOAuthSessionId;
-    private Map<String, String> pathParameters;
+    private String journey;
+    private String featureSet;
 }

@@ -56,7 +56,13 @@ class BuildClientOauthResponseHandlerTest {
     private static final Map<String, String> TEST_EVENT_HEADERS =
             Map.of("ipv-session-id", "12345", "ip-address", "192.168.1.100");
     private static final Map<String, String> TEST_EVENT_HEADERS_NO_IPV_SESSION =
-            Map.of("client-session-id", "54321", "ip-address", "192.168.1.100");
+            Map.of(
+                    "client-session-id",
+                    "54321",
+                    "ip-address",
+                    "192.168.1.100",
+                    "feature-set",
+                    "fs-001");
     private static final Map<String, String> TEST_EVENT_HEADERS_NO_IPV_AND_CLIENT_SESSION =
             Map.of("ip-address", "192.168.1.100");
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -154,6 +160,7 @@ class BuildClientOauthResponseHandlerTest {
         assertEquals("access_denied", params.get(0).getValue());
         assertEquals("Missing Context", params.get(1).getValue());
         assertEquals("test-state", params.get(2).getValue());
+        verify(mockConfigService).setFeatureSet("fs-001");
     }
 
     @Test

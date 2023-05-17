@@ -74,6 +74,8 @@ public class ProcessJourneyStepHandler
         try {
             String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
             String journeyStep = StepFunctionHelpers.getJourneyStep(input);
+            String featureSet = StepFunctionHelpers.getFeatureSet(input);
+            configService.setFeatureSet(featureSet);
 
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
             if (ipvSessionItem == null) {

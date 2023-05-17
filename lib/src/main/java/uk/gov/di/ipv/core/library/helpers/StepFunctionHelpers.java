@@ -17,6 +17,7 @@ public class StepFunctionHelpers {
     private static final String IP_ADDRESS = "ipAddress";
     private static final String TYPE = "type";
     private static final String PAGE = "page";
+    private static final String FEATURE_SET = "featureSet";
 
     private StepFunctionHelpers() {
         throw new IllegalStateException("Utility class");
@@ -38,6 +39,10 @@ public class StepFunctionHelpers {
 
     public static String getIpAddress(Map<String, String> input) {
         return input.get(IP_ADDRESS);
+    }
+
+    public static String getFeatureSet(Map<String, String> input) {
+        return input.get(FEATURE_SET);
     }
 
     public static String getJourneyStep(Map<String, String> input)

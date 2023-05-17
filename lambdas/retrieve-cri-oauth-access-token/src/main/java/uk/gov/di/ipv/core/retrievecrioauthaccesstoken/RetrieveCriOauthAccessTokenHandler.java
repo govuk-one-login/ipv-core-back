@@ -87,6 +87,8 @@ public class RetrieveCriOauthAccessTokenHandler
         String credentialIssuerId = null;
 
         String ipAddress = StepFunctionHelpers.getIpAddress(input);
+        String featureSet = StepFunctionHelpers.getFeatureSet(input);
+        configService.setFeatureSet(featureSet);
 
         try {
             String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);

@@ -18,4 +18,5 @@ public class CriCallbackRequest {
     private String error;
     private String errorDescription;
     private String ipAddress;
+    private String featureSet;
 }

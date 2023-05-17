@@ -107,6 +107,8 @@ public class RetrieveCriCredentialHandler
         LogHelper.attachComponentIdToLogs();
 
         String ipAddress = StepFunctionHelpers.getIpAddress(input);
+        String featureSet = StepFunctionHelpers.getFeatureSet(input);
+        configService.setFeatureSet(featureSet);
 
         IpvSessionItem ipvSessionItem;
         try {

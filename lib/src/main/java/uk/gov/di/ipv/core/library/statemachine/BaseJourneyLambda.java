@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
+import uk.gov.di.ipv.core.library.domain.BaseResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -17,6 +18,10 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 
 import java.util.Map;
+
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getClientOAuthSessionId;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
+import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getJourney;
 
 public abstract class BaseJourneyLambda
         implements RequestHandler<Map<String, Object>, Map<String, Object>> {
@@ -48,14 +53,16 @@ public abstract class BaseJourneyLambda
             APIGatewayProxyRequestEvent request =
                     OBJECT_MAPPER.convertValue(event, APIGatewayProxyRequestEvent.class);
 
-            var clientOAuthSessionId = RequestHelper.getClientOAuthSessionId(request);
-            var pathParameters = RequestHelper.getPathParameters(request);
+            var clientOAuthSessionId = getClientOAuthSessionId(request);
+            var journey = getJourney(request);
+            var featureSet = getFeatureSet(request);
             var journeyRequest =
                     JourneyRequest.builder()
                             .ipvSessionId(getIpvSessionId(request))
                             .ipAddress(getIpAddress(request))
-                            .pathParameters(pathParameters)
+                            .journey(journey)
                             .clientOAuthSessionId(clientOAuthSessionId)
+                            .featureSet(featureSet)
                             .build();
             var journeyResponse = handleRequest(journeyRequest, context);
 
@@ -96,5 +103,5 @@ public abstract class BaseJourneyLambda
         return ipAddress;
     }
 
-    protected abstract JourneyResponse handleRequest(JourneyRequest request, Context context);
+    protected abstract BaseResponse handleRequest(JourneyRequest request, Context context);
 }

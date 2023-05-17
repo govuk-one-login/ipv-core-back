@@ -30,6 +30,13 @@ class RequestHelperTest {
                     "Foo", "bar",
                     "baz", "bar");
 
+    private final String TEST_IPV_SESSION_ID = "a-session-id";
+    private final String TEST_IP_ADDRESS = "127.0.0.1";
+    private final String TEST_FEATURE_SET = "test-feature-set";
+
+    private final String TEST_CLIENT_SESSION_ID = "client-session-id";
+    private final String TEST_JOURNEY = DCMAW_CRI;
+
     @ParameterizedTest(name = "with matching header: {0}")
     @ValueSource(strings = {"Baz", "baz"})
     void matchHeaderByDownCasing(String headerName) {
@@ -68,6 +75,20 @@ class RequestHelperTest {
     void getIpvSessionIdShouldReturnSessionId() throws HttpResponseExceptionWithErrorBody {
         var event = new APIGatewayProxyRequestEvent();
         event.setHeaders(Map.of(IPV_SESSION_ID_HEADER, "a-session-id"));
+
+        assertEquals("a-session-id", RequestHelper.getIpvSessionId(event));
+    }
+
+    @Test
+    void getIpvSessionIdShouldReturnSessionIdFromJourney()
+            throws HttpResponseExceptionWithErrorBody {
+        var event =
+                new JourneyRequest(
+                        TEST_IPV_SESSION_ID,
+                        TEST_IP_ADDRESS,
+                        TEST_CLIENT_SESSION_ID,
+                        TEST_JOURNEY,
+                        TEST_FEATURE_SET);
 
         assertEquals("a-session-id", RequestHelper.getIpvSessionId(event));
     }
@@ -200,12 +221,15 @@ class RequestHelperTest {
         String clientSessionId = "client-session-id";
         String ipvSessionId = "a-session-id";
         String ipAddress = "a-ipaddress";
-        Map<String, String> pathParameters = Map.of("criId", DCMAW_CRI);
-        var event = new JourneyRequest(ipvSessionId, ipAddress, clientSessionId, pathParameters);
+        String featureSet = "a-feature-set";
+        String journey = DCMAW_CRI;
+        var event =
+                new JourneyRequest(ipvSessionId, ipAddress, clientSessionId, journey, featureSet);
 
         assertEquals(clientSessionId, RequestHelper.getClientOAuthSessionId(event));
         assertEquals(ipvSessionId, RequestHelper.getIpvSessionId(event));
         assertEquals(ipAddress, RequestHelper.getIpAddress(event));
+        assertEquals(featureSet, RequestHelper.getFeatureSet(event));
     }
 
     @Test
@@ -213,8 +237,9 @@ class RequestHelperTest {
             throws HttpResponseExceptionWithErrorBody {
         String clientSessionId = "client-session-id";
         String ipAddress = "a-ipaddress";
-        Map<String, String> pathParameters = Map.of("criId", DCMAW_CRI);
-        var event = new JourneyRequest(null, ipAddress, clientSessionId, pathParameters);
+        String featureSet = "a-feature-set";
+        String journey = DCMAW_CRI;
+        var event = new JourneyRequest(null, ipAddress, clientSessionId, journey, featureSet);
 
         assertNull(RequestHelper.getIpvSessionIdAllowNull(event));
     }
@@ -228,33 +253,34 @@ class RequestHelperTest {
     }
 
     @Test
-    void getFeatureSetShouldReturnDefault() {
-        var event = new APIGatewayProxyRequestEvent();
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put(FEATURE_SET_HEADER, null);
-
-        event.setHeaders(headers);
-
-        assertEquals("default", RequestHelper.getFeatureSet(event));
+    void getFeatureSetShouldReturnFeatureSetIdFromJourney() {
+        var event =
+                new JourneyRequest(
+                        TEST_IPV_SESSION_ID,
+                        TEST_IP_ADDRESS,
+                        TEST_CLIENT_SESSION_ID,
+                        TEST_JOURNEY,
+                        TEST_FEATURE_SET);
+        assertEquals("test-feature-set", RequestHelper.getFeatureSet(event));
     }
 
     @Test
     void getPathParametersShouldReturnPathParameters() {
         var event = new APIGatewayProxyRequestEvent();
-        event.setPathParameters(Map.of("criId", DCMAW_CRI));
+        event.setHeaders(Map.of(JOURNEY_HEADER, DCMAW_CRI));
 
-        Map<String, String> pathParameters = RequestHelper.getPathParameters(event);
+        String journey = RequestHelper.getJourney(event);
 
-        assertFalse(pathParameters.isEmpty());
-        assertEquals(DCMAW_CRI, pathParameters.get("criId"));
+        assertFalse(journey.isEmpty());
+        assertEquals(DCMAW_CRI, journey);
     }
 
     @Test
     void getPathParametersShouldReturnNullWithoutPathParameters() {
         var event = new APIGatewayProxyRequestEvent();
 
-        Map<String, String> pathParameters = RequestHelper.getPathParameters(event);
+        String journey = RequestHelper.getJourney(event);
 
-        assertNull(pathParameters);
+        assertNull(journey);
     }
 }
