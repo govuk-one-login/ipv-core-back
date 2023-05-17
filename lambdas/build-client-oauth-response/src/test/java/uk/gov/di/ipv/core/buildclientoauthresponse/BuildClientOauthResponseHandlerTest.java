@@ -121,7 +121,6 @@ class BuildClientOauthResponseHandlerTest {
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
-        verify(mockConfigService).setFeatureSet("default");
         assertEquals(AuditEventTypes.IPV_JOURNEY_END, auditEventCaptor.getValue().getEventName());
 
         URI expectedRedirectUrl =

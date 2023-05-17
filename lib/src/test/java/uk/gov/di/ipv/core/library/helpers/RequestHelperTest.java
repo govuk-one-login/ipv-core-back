@@ -246,17 +246,6 @@ class RequestHelperTest {
     }
 
     @Test
-    void getFeatureSetShouldReturnDefault() {
-        var event = new APIGatewayProxyRequestEvent();
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put(FEATURE_SET_HEADER, null);
-
-        event.setHeaders(headers);
-
-        assertEquals("default", RequestHelper.getFeatureSet(event));
-    }
-
-    @Test
     void getFeatureSetShouldReturnFeatureSetIdFromJourney() {
         var event =
                 new JourneyRequest(
@@ -265,21 +254,5 @@ class RequestHelperTest {
                         TEST_CLIENT_SESSION_ID,
                         TEST_FEATURE_SET);
         assertEquals("test-feature-set", RequestHelper.getFeatureSet(event));
-    }
-
-    @Test
-    void getFeatureSetShouldReturnDefaultFeatureSetIdFromJourneyWhenNotPresent() {
-        var event =
-                new JourneyRequest(
-                        TEST_IPV_SESSION_ID, TEST_IP_ADDRESS, TEST_CLIENT_SESSION_ID, null);
-        assertEquals("default", RequestHelper.getFeatureSet(event));
-    }
-
-    @Test
-    void getFeatureSetShouldReturnDefaultFeatureSetIdFromJourneyWhenEmpty() {
-        var event =
-                new JourneyRequest(
-                        TEST_IPV_SESSION_ID, TEST_IP_ADDRESS, TEST_CLIENT_SESSION_ID, "");
-        assertEquals("default", RequestHelper.getFeatureSet(event));
     }
 }

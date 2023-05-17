@@ -139,21 +139,12 @@ public class RequestHelper {
 
     public static String getFeatureSet(JourneyRequest request) {
         String featureSet = request.getFeatureSet();
-
-        if (featureSet == null || featureSet.isEmpty()) {
-            featureSet = "default";
-        }
         LogHelper.attachFeatureSetToLogs(featureSet);
         return featureSet;
     }
 
     public static String getFeatureSet(Map<String, String> headers) {
-        String featureSet = RequestHelper.getHeaderByKey(headers, FEATURE_SET_HEADER);
-        if (featureSet == null) {
-            LOGGER.warn("{} not present in header", FEATURE_SET_HEADER);
-            return "default";
-        }
-        return featureSet;
+        return RequestHelper.getHeaderByKey(headers, FEATURE_SET_HEADER);
     }
 
     public static String getFeatureSet(APIGatewayProxyRequestEvent event) {
