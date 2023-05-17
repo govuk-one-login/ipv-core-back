@@ -117,7 +117,11 @@ public class ConfigService {
     }
 
     public void setFeatureSet(String featureSet) {
-        this.featureSet = featureSet;
+        if (featureSet == null || featureSet.isBlank()) {
+            this.featureSet = null;
+        } else {
+            this.featureSet = featureSet;
+        }
     }
 
     public String getEnvironmentVariable(EnvironmentVariable environmentVariable) {

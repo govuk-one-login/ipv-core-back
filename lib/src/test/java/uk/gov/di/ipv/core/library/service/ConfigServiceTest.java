@@ -143,6 +143,14 @@ class ConfigServiceTest {
         assertTrue(result.getRequiresApiKey());
     }
 
+    @ParameterizedTest
+    @CsvSource({",", "' ',", "' \t\n',", "fs0001,fs0001"})
+    void shouldNormaliseNullAndEmptyFeatureSetsToNull(
+            String featureSet, String expectedFeatureSet) {
+        configService.setFeatureSet(featureSet);
+        assertEquals(expectedFeatureSet, configService.getFeatureSet());
+    }
+
     @Test
     void shouldReturnIsEnabled() {
         environmentVariables.set("ENVIRONMENT", "test");
