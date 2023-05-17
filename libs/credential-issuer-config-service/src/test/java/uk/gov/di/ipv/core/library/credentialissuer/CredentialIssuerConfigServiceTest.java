@@ -15,6 +15,7 @@ import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -26,9 +27,29 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SystemStubsExtension.class)
 class CredentialIssuerConfigServiceTest {
+
+    private static Map<String, String> TEST_CREDENTIAL_ISSUERS =
+            Map.of(
+                    "passportCri/tokenUrl",
+                    "passportTokenUrl",
+                    "passportCri/authorizeUrl",
+                    "passportAuthUrl",
+                    "passportCri/clientId",
+                    "passportCri",
+                    "passportCri/name",
+                    "passportIssuer",
+                    "stubCri/tokenUrl",
+                    "stubTokenUrl",
+                    "stubCri/authorizeUrl",
+                    "stubAuthUrl",
+                    "stubCri/clientId",
+                    "stubCri",
+                    "stubCri/name",
+                    "stubIssuer",
+                    "stubCri/allowedSharedAttributes",
+                    "name, birthDate, address");
     @SystemStub EnvironmentVariables environmentVariables;
     @Mock SSMProvider ssmProvider;
-    @Mock SSMProvider ssmProvider2;
     @Mock SecretsProvider secretsProvider;
 
     private CredentialIssuerConfigService credentialIssuerConfigService;
@@ -43,19 +64,11 @@ class CredentialIssuerConfigServiceTest {
     void shouldGetAllCredentialIssuersFromParameterStore()
             throws ParseCredentialIssuerConfigException {
         environmentVariables.set("ENVIRONMENT", "test");
-        HashMap<String, String> response = new HashMap<>();
-        response.put("passportCri/tokenUrl", "passportTokenUrl");
-        response.put("passportCri/authorizeUrl", "passportAuthUrl");
-        response.put("passportCri/clientId", "passportCri");
-        response.put("passportCri/name", "passportIssuer");
-        response.put("stubCri/tokenUrl", "stubTokenUrl");
-        response.put("stubCri/authorizeUrl", "stubAuthUrl");
-        response.put("stubCri/clientId", "stubCri");
-        response.put("stubCri/name", "stubIssuer");
-        response.put("stubCri/allowedSharedAttributes", "name, birthDate, address");
 
-        when(ssmProvider.recursive()).thenReturn(ssmProvider2);
-        when(ssmProvider2.getMultiple("/test/core/credentialIssuers")).thenReturn(response);
+        when(ssmProvider.recursive()).thenReturn(ssmProvider);
+        when(ssmProvider.getMultiple("/test/core/credentialIssuers"))
+                .thenReturn(TEST_CREDENTIAL_ISSUERS);
+
         List<CredentialIssuerConfig> result = credentialIssuerConfigService.getCredentialIssuers();
 
         assertEquals(2, result.size());
@@ -82,14 +95,11 @@ class CredentialIssuerConfigServiceTest {
     @Test
     void shouldThrowExceptionWhenCriConfigIsIncorrect() {
         environmentVariables.set("ENVIRONMENT", "test");
-        HashMap<String, String> response = new HashMap<>();
-        response.put("incorrectPathName", "passportTokenUrl");
-        response.put("passportCri/authorizeUrl", "passportAuthUrl");
-        response.put("passportCri/id", "passportCri");
-        response.put("passportCri/name", "passportIssuer");
+        Map<String, String> testResponse = new HashMap<>(TEST_CREDENTIAL_ISSUERS);
+        testResponse.put("incorrectPathName", "passportTokenUrl");
 
-        when(ssmProvider.recursive()).thenReturn(ssmProvider2);
-        when(ssmProvider2.getMultiple("/test/core/credentialIssuers")).thenReturn(response);
+        when(ssmProvider.recursive()).thenReturn(ssmProvider);
+        when(ssmProvider.getMultiple("/test/core/credentialIssuers")).thenReturn(testResponse);
         ParseCredentialIssuerConfigException exception =
                 assertThrows(
                         ParseCredentialIssuerConfigException.class,
@@ -103,16 +113,12 @@ class CredentialIssuerConfigServiceTest {
     void shouldGetAllCredentialIssuersFromParameterStoreNewAndIgnoreInExistingFields()
             throws ParseCredentialIssuerConfigException {
         environmentVariables.set("ENVIRONMENT", "test");
-        HashMap<String, String> response = new HashMap<>();
-        response.put("passportCri/clientId", "passportCri");
-        response.put("passportCri/tokenUrl", "passportTokenUrl");
-        response.put("stubCri/clientId", "stubCri");
-        response.put("stubCri/tokenUrl", "stubTokenUrl");
+        Map<String, String> testResponse = new HashMap<>(TEST_CREDENTIAL_ISSUERS);
         // This will be ignored - not in pojo
-        response.put("stubCri/ipclientid", "stubIpClient");
+        testResponse.put("stubCri/ipclientid", "stubIpClient");
 
-        when(ssmProvider.recursive()).thenReturn(ssmProvider2);
-        when(ssmProvider2.getMultiple("/test/core/credentialIssuers")).thenReturn(response);
+        when(ssmProvider.recursive()).thenReturn(ssmProvider);
+        when(ssmProvider.getMultiple("/test/core/credentialIssuers")).thenReturn(testResponse);
         List<CredentialIssuerConfig> result = credentialIssuerConfigService.getCredentialIssuers();
 
         Optional<CredentialIssuerConfig> passportIssuerConfig =
@@ -128,5 +134,54 @@ class CredentialIssuerConfigServiceTest {
                         .findFirst();
         assertTrue(stubIssuerConfig.isPresent());
         assertEquals("stubTokenUrl", stubIssuerConfig.get().getTokenUrl().toString());
+    }
+
+    @Test
+    void shouldGetAllCredentialIssuersFromParameterStoreWithFeatureSetOverrides()
+            throws ParseCredentialIssuerConfigException {
+        environmentVariables.set("ENVIRONMENT", "test");
+        Map<String, String> featureSetResponse =
+                Map.of(
+                        "passportCri/tokenUrl", "passportTokenUrlForFS01",
+                        "featureSetCri/tokenUrl", "featureSetTokenUrl",
+                        "featureSetCri/clientId", "featureSetCri");
+
+        when(ssmProvider.recursive()).thenReturn(ssmProvider);
+        when(ssmProvider.getMultiple("/test/core/credentialIssuers"))
+                .thenReturn(TEST_CREDENTIAL_ISSUERS);
+        when(ssmProvider.getMultiple("/test/core/features/FS01/credentialIssuers"))
+                .thenReturn(featureSetResponse);
+
+        credentialIssuerConfigService.setFeatureSet("FS01");
+        List<CredentialIssuerConfig> result = credentialIssuerConfigService.getCredentialIssuers();
+
+        assertEquals(3, result.size());
+
+        Optional<CredentialIssuerConfig> passportIssuerConfig =
+                result.stream()
+                        .filter(config -> Objects.equals(config.getClientId(), "passportCri"))
+                        .findFirst();
+        assertTrue(passportIssuerConfig.isPresent());
+        assertEquals(
+                "passportTokenUrlForFS01", passportIssuerConfig.get().getTokenUrl().toString());
+        assertEquals("passportAuthUrl", passportIssuerConfig.get().getAuthorizeUrl().toString());
+        assertEquals("passportCri", passportIssuerConfig.get().getClientId());
+
+        Optional<CredentialIssuerConfig> stubIssuerConfig =
+                result.stream()
+                        .filter(config -> Objects.equals(config.getClientId(), "stubCri"))
+                        .findFirst();
+        assertTrue(stubIssuerConfig.isPresent());
+        assertEquals("stubTokenUrl", stubIssuerConfig.get().getTokenUrl().toString());
+        assertEquals("stubAuthUrl", stubIssuerConfig.get().getAuthorizeUrl().toString());
+        assertEquals("stubCri", stubIssuerConfig.get().getClientId());
+
+        Optional<CredentialIssuerConfig> featureSetIssuerConfig =
+                result.stream()
+                        .filter(config -> Objects.equals(config.getClientId(), "featureSetCri"))
+                        .findFirst();
+        assertTrue(featureSetIssuerConfig.isPresent());
+        assertEquals("featureSetTokenUrl", featureSetIssuerConfig.get().getTokenUrl().toString());
+        assertEquals("featureSetCri", featureSetIssuerConfig.get().getClientId());
     }
 }
