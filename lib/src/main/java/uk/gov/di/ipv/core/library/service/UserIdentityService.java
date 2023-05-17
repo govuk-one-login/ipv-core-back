@@ -27,8 +27,6 @@ import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
 import java.text.Normalizer;
 import java.text.ParseException;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -36,9 +34,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.VC_VALID_DURATION;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
@@ -94,27 +90,6 @@ public class UserIdentityService {
         List<VcStoreItem> vcStoreItems = dataStore.getItems(userId);
 
         return vcStoreItems.stream().map(VcStoreItem::getCredential).collect(Collectors.toList());
-    }
-
-    public void deleteVcStoreItemsIfAnyExpired(String userId) {
-        List<VcStoreItem> expiredVcStoreItems =
-                this.dataStore.getItemsWithAttributeLessThanOrEqualValue(
-                        userId, "expirationTime", nowPlusSessionTimeout().toString());
-        if (!expiredVcStoreItems.isEmpty()) {
-            LOGGER.info("Found VCs due to expire within session timeout.");
-            deleteVcStoreItems(userId);
-        }
-    }
-
-    public void deleteVcStoreItemsIfAnyInvalid(String userId) {
-        Duration vcValidDuration = Duration.parse(configService.getSsmParameter(VC_VALID_DURATION));
-        List<String> credentials = getUserIssuedCredentials(userId);
-        credentials.removeIf(
-                credential -> isVcValid(credential, vcValidDuration, nowPlusSessionTimeout()));
-        if (!credentials.isEmpty()) {
-            LOGGER.info("Found invalid VCs within session timeout.");
-            deleteVcStoreItems(userId);
-        }
     }
 
     public void deleteVcStoreItems(String userId) {
@@ -388,30 +363,6 @@ public class UserIdentityService {
         }
         LOGGER.warn("Failed to find Driving Permit CRI credential");
         return Optional.empty();
-    }
-
-    private Instant nowPlusSessionTimeout() {
-        return Instant.now()
-                .plusSeconds(
-                        Long.parseLong(configService.getSsmParameter(BACKEND_SESSION_TIMEOUT)));
-    }
-
-    private boolean isVcValid(
-            String credential, Duration vcValidDuration, Instant nowPlusSessionTimeout) {
-        boolean isValid = true;
-        try {
-            SignedJWT credentialJWT = SignedJWT.parse(credential);
-            isValid =
-                    credentialJWT
-                            .getJWTClaimsSet()
-                            .getNotBeforeTime()
-                            .toInstant()
-                            .plus(vcValidDuration)
-                            .isAfter(nowPlusSessionTimeout);
-        } catch (ParseException e) {
-            LOGGER.warn("Failed to parse VC");
-        }
-        return isValid;
     }
 
     public boolean isVcSuccessful(List<VcStatusDto> currentVcStatuses, String criIss) {
