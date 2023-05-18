@@ -170,7 +170,27 @@ paths:
         uri:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildCriOauthRequestFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
-        type: "aws_proxy"
+        type: "aws"
+        requestTemplates:
+          application/x-www-form-urlencoded:
+            Fn::Sub: |
+              {
+                "ipvSessionId": "$input.params('ipv-session-id')",
+                "ipAddress": "$input.params('ip-address')",
+                "clientOAuthSessionId": "$input.params('client-session-id')",
+                "featureSet": "$input.params('feature-set')",
+                "journey": "$input.params('journey')"
+              }
+        responses:
+          default:
+            statusCode: 200
+            responseTemplates:
+              application/json: |
+                #set ($bodyObj = $util.parseJson($input.body))
+                #if ($bodyObj.statusCode)
+                #set($context.responseOverride.status = $bodyObj.statusCode)
+                #end
+                $input.body
 
   /journey/evaluate-gpg45-scores:
     post:
@@ -195,7 +215,8 @@ paths:
                 "ipvSessionId": "$input.params('ipv-session-id')",
                 "ipAddress": "$input.params('ip-address')",
                 "clientOAuthSessionId": "$input.params('client-session-id')",
-                "featureSet": "$input.params('feature-set')"
+                "featureSet": "$input.params('feature-set')",
+                "journey": "$input.params('journey')"
               }
         responses:
           default:
@@ -231,7 +252,8 @@ paths:
                 "ipvSessionId": "$input.params('ipv-session-id')",
                 "ipAddress": "$input.params('ip-address')",
                 "clientOAuthSessionId": "$input.params('client-session-id')",
-                "featureSet": "$input.params('feature-set')"
+                "featureSet": "$input.params('feature-set')",
+                "journey": "$input.params('journey')"
               }
         responses:
           default:
@@ -267,7 +289,8 @@ paths:
                 "ipvSessionId": "$input.params('ipv-session-id')",
                 "ipAddress": "$input.params('ip-address')",
                 "clientOAuthSessionId": "$input.params('client-session-id')",
-                "featureSet": "$input.params('feature-set')"
+                "featureSet": "$input.params('feature-set')",
+                "journey": "$input.params('journey')"
               }
         responses:
           default:
@@ -334,10 +357,11 @@ paths:
           application/x-www-form-urlencoded:
             Fn::Sub: |
               {
-                "ipvSessionId": "$input.params('ipv-session-id')", 
+                "ipvSessionId": "$input.params('ipv-session-id')",
                 "ipAddress": "$input.params('ip-address')",
                 "clientOAuthSessionId": "$input.params('client-session-id')",
-                "featureSet": "$input.params('feature-set')"
+                "featureSet": "$input.params('feature-set')",
+                "journey": "$input.params('journey')"
               }
         responses:
           default:
