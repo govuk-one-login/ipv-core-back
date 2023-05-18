@@ -54,13 +54,12 @@ public abstract class BaseJourneyLambda
                     OBJECT_MAPPER.convertValue(event, APIGatewayProxyRequestEvent.class);
 
             var clientOAuthSessionId = getClientOAuthSessionId(request);
-            var journey = getJourney(request);
             var featureSet = getFeatureSet(request);
             var journeyRequest =
                     JourneyRequest.builder()
                             .ipvSessionId(getIpvSessionId(request))
                             .ipAddress(getIpAddress(request))
-                            .journey(journey)
+                            .journey(getJourney(request))
                             .clientOAuthSessionId(clientOAuthSessionId)
                             .featureSet(featureSet)
                             .build();
@@ -101,6 +100,14 @@ public abstract class BaseJourneyLambda
             ipAddress = null;
         }
         return ipAddress;
+    }
+
+    private static String getJourney(APIGatewayProxyRequestEvent request) {
+        var journey = RequestHelper.getJourney(request);
+        if (!journey.isPresent()) {
+            return null;
+        }
+        return journey.get();
     }
 
     protected abstract BaseResponse handleRequest(JourneyRequest request, Context context);

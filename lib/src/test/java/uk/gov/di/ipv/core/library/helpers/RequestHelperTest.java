@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -267,20 +266,20 @@ class RequestHelperTest {
     @Test
     void getPathParametersShouldReturnPathParameters() {
         var event = new APIGatewayProxyRequestEvent();
-        event.setHeaders(Map.of(JOURNEY_HEADER, DCMAW_CRI));
+        event.setPathParameters(Map.of("criId", DCMAW_CRI));
 
-        String journey = RequestHelper.getJourney(event);
+        Optional<String> journey = getJourney(event);
 
-        assertFalse(journey.isEmpty());
-        assertEquals(DCMAW_CRI, journey);
+        assertTrue(journey.isPresent());
+        assertEquals(DCMAW_CRI, journey.get());
     }
 
     @Test
     void getPathParametersShouldReturnNullWithoutPathParameters() {
         var event = new APIGatewayProxyRequestEvent();
 
-        String journey = RequestHelper.getJourney(event);
+        Optional<String> journey = RequestHelper.getJourney(event);
 
-        assertNull(journey);
+        assertTrue(!journey.isPresent());
     }
 }

@@ -127,14 +127,15 @@ public class BuildCriOauthRequestHandler extends BaseJourneyLambda {
             String ipAddress = getIpAddress(input);
             String featureSet = getFeatureSet(input);
             credentialIssuerConfigService.setFeatureSet(featureSet);
-            String criId = getJourney(input);
+            String journey = getJourney(input);
 
-            var errorResponse = validate(criId);
+            var errorResponse = validate(journey);
             if (errorResponse.isPresent()) {
                 return new JourneyErrorResponse(
                         JOURNEY_ERROR_PATH, HttpStatus.SC_BAD_REQUEST, errorResponse.get());
             }
 
+            String criId = journey;
             CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(criId);
 
             if (credentialIssuerConfig == null) {
@@ -263,11 +264,11 @@ public class BuildCriOauthRequestHandler extends BaseJourneyLambda {
     }
 
     @Tracing
-    private Optional<ErrorResponse> validate(String criId) {
-        if (criId == null || StringUtils.isBlank(criId)) {
+    private Optional<ErrorResponse> validate(String journey) {
+        if (journey == null || StringUtils.isBlank(journey)) {
             return Optional.of(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
         }
-        LogHelper.attachCriIdToLogs(criId);
+        LogHelper.attachCriIdToLogs(journey);
         return Optional.empty();
     }
 

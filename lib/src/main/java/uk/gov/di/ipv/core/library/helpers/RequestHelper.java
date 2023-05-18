@@ -30,6 +30,7 @@ public class RequestHelper {
     public static final String IP_ADDRESS_HEADER = "ip-address";
     public static final String FEATURE_SET_HEADER = "feature-set";
     public static final String JOURNEY_HEADER = "journey";
+    private static final String CRI_ID = "criId";
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
@@ -157,12 +158,14 @@ public class RequestHelper {
         return request.getJourney();
     }
 
-    public static String getJourney(APIGatewayProxyRequestEvent event) {
-        return getJourney(event.getHeaders());
-    }
-
-    private static String getJourney(Map<String, String> headers) {
-        return RequestHelper.getHeaderByKey(headers, JOURNEY_HEADER);
+    public static Optional<String> getJourney(APIGatewayProxyRequestEvent event) {
+        Map<String, String> pathParameters = event.getPathParameters();
+        if (pathParameters == null || StringUtils.isBlank(pathParameters.get(CRI_ID))) {
+            return Optional.empty();
+        }
+        LogHelper.attachCriIdToLogs(pathParameters.get(CRI_ID));
+        String criId = pathParameters.get(CRI_ID);
+        return Optional.ofNullable(criId);
     }
 
     private static String getIpvSessionId(Map<String, String> headers, boolean allowNull)
