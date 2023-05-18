@@ -1379,6 +1379,7 @@ Resources:
       DefinitionUri: journey_engine.asl.json
       DefinitionSubstitutions:
         IPVProcessJourneyStepFunctionArn: !GetAtt IPVProcessJourneyStepFunction.Arn
+        CheckExistingIdentityFunctionArn: !GetAtt CheckExistingIdentityFunction.Arn
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1396,6 +1397,8 @@ Resources:
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref IPVProcessJourneyStepFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref CheckExistingIdentityFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow
