@@ -129,7 +129,7 @@ paths:
           application/x-www-form-urlencoded:
             Fn::Sub: |
               {
-                "input": "{\"ipvSessionId\": \"$input.params('ipv-session-id')\", \"ipAddress\": \"$input.params('ip-address')\", \"journey\": \"/journey/$input.params('journeyStep')\"}",
+                "input": "{\"ipvSessionId\": \"$input.params('ipv-session-id')\", \"ipAddress\": \"$input.params('ip-address')\", \"journey\": \"/journey/$input.params('journeyStep')\", \"clientOAuthSessionId\": \"$input.params('client-session-id')\", \"featureSet\": \"$input.params('feature-set')\"}",
                 "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${JourneyEngineStepFunction.Name}"
               }
         responses:
@@ -328,7 +328,9 @@ paths:
             Fn::Sub: |
               {
                 "ipvSessionId": "$input.params('ipv-session-id')", 
-                "ipAddress": "$input.params('ip-address')"
+                "ipAddress": "$input.params('ip-address')",
+                "clientOAuthSessionId": "$input.params('client-session-id')",
+                "featureSet": "$input.params('feature-set')"
               }
         responses:
           default:

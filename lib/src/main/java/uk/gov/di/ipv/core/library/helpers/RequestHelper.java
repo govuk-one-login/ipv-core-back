@@ -1,11 +1,8 @@
 package uk.gov.di.ipv.core.library.helpers;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.util.StringUtils;
 import org.apache.http.HttpStatus;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -13,8 +10,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
-import java.nio.charset.Charset;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -29,20 +24,9 @@ public class RequestHelper {
     public static final String CLIENT_SESSION_ID_HEADER = "client-session-id";
     public static final String IP_ADDRESS_HEADER = "ip-address";
     public static final String FEATURE_SET_HEADER = "feature-set";
-    private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final Logger LOGGER = LogManager.getLogger();
 
     private RequestHelper() {}
-
-    public static Map<String, String> parseRequestBody(String body) {
-        Map<String, String> queryPairs = new HashMap<>();
-
-        for (NameValuePair pair : URLEncodedUtils.parse(body, Charset.defaultCharset())) {
-            queryPairs.put(pair.getName(), pair.getValue());
-        }
-
-        return queryPairs;
-    }
 
     public static Optional<String> getHeader(Map<String, String> headers, String headerKey) {
         if (headers == null) {
@@ -124,7 +108,7 @@ public class RequestHelper {
                                 LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                 "Client session id missing in header.");
         validateClientOAuthSessionId(clientSessionId, message);
-        return clientSessionId;
+        return StringUtils.isBlank(clientSessionId) ? null : clientSessionId;
     }
 
     public static String getIpvSessionId(JourneyRequest request, boolean allowNull)
@@ -140,7 +124,7 @@ public class RequestHelper {
     public static String getFeatureSet(JourneyRequest request) {
         String featureSet = request.getFeatureSet();
         LogHelper.attachFeatureSetToLogs(featureSet);
-        return featureSet;
+        return StringUtils.isBlank(featureSet) ? null : featureSet;
     }
 
     private static String getFeatureSet(Map<String, String> headers) {
