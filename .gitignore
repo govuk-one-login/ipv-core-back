@@ -1,5 +1,6 @@
 # Compiled class file
 *.class
+lambdas/*/bin
 
 # Log file
 *.log
