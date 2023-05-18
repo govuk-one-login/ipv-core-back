@@ -159,13 +159,18 @@ public class RequestHelper {
     }
 
     public static Optional<String> getJourney(APIGatewayProxyRequestEvent event) {
+        Optional<String> criId = getPathVariableFromEvent(event, CRI_ID);
+        criId.ifPresent(LogHelper::attachCriIdToLogs);
+        return criId;
+    }
+
+    private static Optional<String> getPathVariableFromEvent(
+            APIGatewayProxyRequestEvent event, String pathVariable) {
         Map<String, String> pathParameters = event.getPathParameters();
-        if (pathParameters == null || StringUtils.isBlank(pathParameters.get(CRI_ID))) {
+        if (pathParameters == null) {
             return Optional.empty();
         }
-        LogHelper.attachCriIdToLogs(pathParameters.get(CRI_ID));
-        String criId = pathParameters.get(CRI_ID);
-        return Optional.ofNullable(criId);
+        return Optional.ofNullable(pathParameters.get(pathVariable));
     }
 
     private static String getIpvSessionId(Map<String, String> headers, boolean allowNull)

@@ -103,11 +103,7 @@ public abstract class BaseJourneyLambda
     }
 
     private static String getJourney(APIGatewayProxyRequestEvent request) {
-        var journey = RequestHelper.getJourney(request);
-        if (!journey.isPresent()) {
-            return null;
-        }
-        return journey.get();
+        return RequestHelper.getJourney(request).orElse(null);
     }
 
     protected abstract BaseResponse handleRequest(JourneyRequest request, Context context);
