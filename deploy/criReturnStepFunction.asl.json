@@ -33,7 +33,7 @@
         "ipAddress.$": "$.ipAddress"
       },
       "ResultPath": "$.lambdaResult",
-      "Next": "RouteJourneyResponse"
+      "Next": "ReturnToFrontend"
     },
     "RetrieveCriOAuthAccessTokenError": {
       "Type": "Pass",
