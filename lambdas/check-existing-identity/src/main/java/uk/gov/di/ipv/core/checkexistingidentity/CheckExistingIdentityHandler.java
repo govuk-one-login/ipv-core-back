@@ -134,9 +134,6 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
-            userIdentityService.deleteVcStoreItemsIfAnyExpired(userId);
-            userIdentityService.deleteVcStoreItemsIfAnyInvalid(userId);
-
             List<SignedJWT> credentials =
                     gpg45ProfileEvaluator.parseCredentials(
                             userIdentityService.getUserIssuedCredentials(userId));
