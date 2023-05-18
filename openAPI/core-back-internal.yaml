@@ -158,6 +158,12 @@ paths:
   /journey/cri/build-oauth-request/{criId}:
     post:
       description: Called when the frontend begins the CRI journey.
+      parameters:
+        - name: criId
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         200:
           description: "Returns the id, clientId and authorizationUrl for a CRI."
@@ -175,11 +181,11 @@ paths:
           application/x-www-form-urlencoded:
             Fn::Sub: |
               {
+                "journey": "$input.params('criId')",
                 "ipvSessionId": "$input.params('ipv-session-id')",
                 "ipAddress": "$input.params('ip-address')",
                 "clientOAuthSessionId": "$input.params('client-session-id')",
-                "featureSet": "$input.params('feature-set')",
-                "journey": "$input.params('journey')"
+                "featureSet": "$input.params('feature-set')"
               }
         responses:
           default:
@@ -215,8 +221,7 @@ paths:
                 "ipvSessionId": "$input.params('ipv-session-id')",
                 "ipAddress": "$input.params('ip-address')",
                 "clientOAuthSessionId": "$input.params('client-session-id')",
-                "featureSet": "$input.params('feature-set')",
-                "journey": "$input.params('journey')"
+                "featureSet": "$input.params('feature-set')"
               }
         responses:
           default:
@@ -252,8 +257,7 @@ paths:
                 "ipvSessionId": "$input.params('ipv-session-id')",
                 "ipAddress": "$input.params('ip-address')",
                 "clientOAuthSessionId": "$input.params('client-session-id')",
-                "featureSet": "$input.params('feature-set')",
-                "journey": "$input.params('journey')"
+                "featureSet": "$input.params('feature-set')"
               }
         responses:
           default:
@@ -289,8 +293,7 @@ paths:
                 "ipvSessionId": "$input.params('ipv-session-id')",
                 "ipAddress": "$input.params('ip-address')",
                 "clientOAuthSessionId": "$input.params('client-session-id')",
-                "featureSet": "$input.params('feature-set')",
-                "journey": "$input.params('journey')"
+                "featureSet": "$input.params('feature-set')"
               }
         responses:
           default:
@@ -360,8 +363,7 @@ paths:
                 "ipvSessionId": "$input.params('ipv-session-id')",
                 "ipAddress": "$input.params('ip-address')",
                 "clientOAuthSessionId": "$input.params('client-session-id')",
-                "featureSet": "$input.params('feature-set')",
-                "journey": "$input.params('journey')"
+                "featureSet": "$input.params('feature-set')"
               }
         responses:
           default:
