@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.ProvenUserIdentityDetails;
 import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -47,6 +49,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     private static final String SESSION_ID = "the-session-id";
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock private Context context;
     @Mock private ConfigService mockConfigService;
@@ -57,7 +60,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
     private BuildProvenUserIdentityDetailsHandler underTest;
     private ClientOAuthSessionItem clientOAuthSessionItem;
-    private ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() {
@@ -129,7 +131,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", "12345"));
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        var response = makeRequest(input, context);
+
+        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
 
         ProvenUserIdentityDetails provenUserIdentityDetails =
                 objectMapper.readValue(response.getBody(), ProvenUserIdentityDetails.class);
@@ -195,7 +199,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", "12345"));
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        var response = makeRequest(input, context);
 
         ProvenUserIdentityDetails provenUserIdentityDetails =
                 objectMapper.readValue(response.getBody(), ProvenUserIdentityDetails.class);
@@ -265,7 +269,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", "12345"));
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        var response = makeRequest(input, context);
 
         ProvenUserIdentityDetails provenUserIdentityDetails =
                 objectMapper.readValue(response.getBody(), ProvenUserIdentityDetails.class);
@@ -308,19 +312,17 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", "12345"));
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        var response = makeRequest(input, context);
+        JourneyErrorResponse errorResponse =
+                objectMapper.readValue(response.getBody(), JourneyErrorResponse.class);
 
-        Map<String, String> errorResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(500, response.getStatusCode());
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse.getStatusCode());
         assertEquals(
-                String.valueOf(
-                        ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getCode()),
-                errorResponse.get("code"));
+                ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getCode(),
+                errorResponse.getCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getMessage(),
-                errorResponse.get("message"));
+                errorResponse.getMessage());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
@@ -396,19 +398,18 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", "12345"));
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        var response = makeRequest(input, context);
 
-        Map<String, String> errorResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        JourneyErrorResponse errorResponse =
+                objectMapper.readValue(response.getBody(), JourneyErrorResponse.class);
 
-        assertEquals(500, response.getStatusCode());
+        assertEquals(500, errorResponse.getStatusCode());
         assertEquals(
-                String.valueOf(
-                        ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getCode()),
-                errorResponse.get("code"));
+                ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getCode(),
+                errorResponse.getCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getMessage(),
-                errorResponse.get("message"));
+                errorResponse.getMessage());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
@@ -489,19 +490,18 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", "12345"));
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        var response = makeRequest(input, context);
 
-        Map<String, String> errorResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        JourneyErrorResponse errorResponse =
+                objectMapper.readValue(response.getBody(), JourneyErrorResponse.class);
 
-        assertEquals(500, response.getStatusCode());
+        assertEquals(500, errorResponse.getStatusCode());
         assertEquals(
-                String.valueOf(
-                        ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getCode()),
-                errorResponse.get("code"));
+                ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getCode(),
+                errorResponse.getCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS.getMessage(),
-                errorResponse.get("message"));
+                errorResponse.getMessage());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
@@ -511,18 +511,14 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
         input.setHeaders(Map.of("ip-address", "12345"));
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        var response = makeRequest(input, context);
 
-        Map<String, String> errorResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        JourneyErrorResponse errorResponse =
+                objectMapper.readValue(response.getBody(), JourneyErrorResponse.class);
 
-        assertEquals(400, response.getStatusCode());
-        assertEquals(
-                String.valueOf(ErrorResponse.MISSING_IPV_SESSION_ID.getCode()),
-                errorResponse.get("error"));
-        assertEquals(
-                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(),
-                errorResponse.get("error_description"));
+        assertEquals(400, errorResponse.getStatusCode());
+        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), errorResponse.getCode());
+        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), errorResponse.getMessage());
     }
 
     @Test
@@ -550,18 +546,18 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
         input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", "12345"));
 
-        APIGatewayProxyResponseEvent response = underTest.handleRequest(input, context);
+        var response = makeRequest(input, context);
 
-        Map<String, String> errorResponse =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        JourneyErrorResponse errorResponse =
+                objectMapper.readValue(response.getBody(), JourneyErrorResponse.class);
 
-        assertEquals(500, response.getStatusCode());
+        assertEquals(500, errorResponse.getStatusCode());
         assertEquals(
-                String.valueOf(ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getCode()),
-                errorResponse.get("code"));
+                ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getCode(),
+                errorResponse.getCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(),
-                errorResponse.get("message"));
+                errorResponse.getMessage());
     }
 
     private APIGatewayProxyRequestEvent createRequestEvent() {
@@ -579,5 +575,14 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         vcStoreItem.setDateCreated(dateCreated);
         vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
         return vcStoreItem;
+    }
+
+    private APIGatewayProxyResponseEvent makeRequest(
+            APIGatewayProxyRequestEvent event, Context context) {
+        final var requestType = new TypeReference<Map<String, Object>>() {};
+        final var request = objectMapper.convertValue(event, requestType);
+        final var response = underTest.handleRequest(request, context);
+
+        return objectMapper.convertValue(response, APIGatewayProxyResponseEvent.class);
     }
 }
