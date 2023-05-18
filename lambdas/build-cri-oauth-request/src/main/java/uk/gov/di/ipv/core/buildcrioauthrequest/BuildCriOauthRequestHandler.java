@@ -265,7 +265,7 @@ public class BuildCriOauthRequestHandler extends BaseJourneyLambda {
 
     @Tracing
     private Optional<ErrorResponse> validate(String journey) {
-        if (journey == null || StringUtils.isBlank(journey)) {
+        if (StringUtils.isBlank(journey)) {
             return Optional.of(ErrorResponse.MISSING_CREDENTIAL_ISSUER_ID);
         }
         LogHelper.attachCriIdToLogs(journey);
