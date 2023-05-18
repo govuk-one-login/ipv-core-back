@@ -193,7 +193,9 @@ paths:
             Fn::Sub: |
               {
                 "ipvSessionId": "$input.params('ipv-session-id')",
-                "ipAddress": "$input.params('ip-address')"
+                "ipAddress": "$input.params('ip-address')",
+                "clientOAuthSessionId": "$input.params('client-session-id')",
+                "featureSet": "$input.params('feature-set')"
               }
         responses:
           default:
@@ -226,7 +228,10 @@ paths:
           application/x-www-form-urlencoded:
             Fn::Sub: |
               {
-                "ipvSessionId": "$input.params('ipv-session-id')"
+                "ipvSessionId": "$input.params('ipv-session-id')",
+                "ipAddress": "$input.params('ip-address')",
+                "clientOAuthSessionId": "$input.params('client-session-id')",
+                "featureSet": "$input.params('feature-set')"
               }
         responses:
           default:
@@ -259,9 +264,10 @@ paths:
           application/x-www-form-urlencoded:
             Fn::Sub: |
               {
-                "ipvSessionId": "$input.params('ipv-session-id')", 
+                "ipvSessionId": "$input.params('ipv-session-id')",
                 "ipAddress": "$input.params('ip-address')",
-                "clientOAuthSessionId": "$input.params('client-session-id')"
+                "clientOAuthSessionId": "$input.params('client-session-id')",
+                "featureSet": "$input.params('feature-set')"
               }
         responses:
           default:
@@ -273,6 +279,7 @@ paths:
                 #set($context.responseOverride.status = $bodyObj.statusCode)
                 #end
                 $input.body
+
   /journey/end-mitigation-journey/{mitigationId}:
     post:
       description: "Called when the user has completed the last step of a mitigation journey"
