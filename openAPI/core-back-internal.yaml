@@ -181,7 +181,7 @@ paths:
           application/x-www-form-urlencoded:
             Fn::Sub: |
               {
-                "journey": "$input.params('criId')",
+                "journey": "/journey/cri/build-oauth-request/$input.params('criId')",
                 "ipvSessionId": "$input.params('ipv-session-id')",
                 "ipAddress": "$input.params('ip-address')",
                 "clientOAuthSessionId": "$input.params('client-session-id')",
