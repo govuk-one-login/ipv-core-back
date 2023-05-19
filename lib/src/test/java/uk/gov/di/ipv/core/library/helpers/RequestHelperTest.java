@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -35,6 +36,7 @@ class RequestHelperTest {
 
     private final String TEST_CLIENT_SESSION_ID = "client-session-id";
     private final String TEST_JOURNEY = DCMAW_CRI;
+    private static final String CRI_ID = "criId";
 
     @ParameterizedTest(name = "with matching header: {0}")
     @ValueSource(strings = {"Baz", "baz"})
@@ -266,20 +268,20 @@ class RequestHelperTest {
     @Test
     void getPathParametersShouldReturnPathParameters() {
         var event = new APIGatewayProxyRequestEvent();
-        event.setPathParameters(Map.of("criId", DCMAW_CRI));
+        event.setPathParameters(Map.of(CRI_ID, DCMAW_CRI));
 
-        Optional<String> journey = getJourney(event);
+        String journey = getJourney(event, CRI_ID);
 
-        assertTrue(journey.isPresent());
-        assertEquals(DCMAW_CRI, journey.get());
+        assertNotNull(journey);
+        assertEquals(DCMAW_CRI, journey);
     }
 
     @Test
     void getPathParametersShouldReturnNullWithoutPathParameters() {
         var event = new APIGatewayProxyRequestEvent();
 
-        Optional<String> journey = RequestHelper.getJourney(event);
+        String journey = RequestHelper.getJourney(event, CRI_ID);
 
-        assertTrue(!journey.isPresent());
+        assertNull(journey);
     }
 }

@@ -25,7 +25,6 @@ public class RequestHelper {
     public static final String IP_ADDRESS_HEADER = "ip-address";
     public static final String FEATURE_SET_HEADER = "feature-set";
     public static final String JOURNEY_HEADER = "journey";
-    private static final String CRI_ID = "criId";
 
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -142,19 +141,21 @@ public class RequestHelper {
         return request.getJourney();
     }
 
-    public static Optional<String> getJourney(APIGatewayProxyRequestEvent event) {
-        Optional<String> criId = getPathVariableFromEvent(event, CRI_ID);
-        criId.ifPresent(LogHelper::attachCriIdToLogs);
+    public static String getJourney(APIGatewayProxyRequestEvent event, String pathVariable) {
+        String criId = getPathVariableFromEvent(event, pathVariable);
+        if (criId != null) {
+            LogHelper.attachCriIdToLogs(criId);
+        }
         return criId;
     }
 
-    private static Optional<String> getPathVariableFromEvent(
+    private static String getPathVariableFromEvent(
             APIGatewayProxyRequestEvent event, String pathVariable) {
         Map<String, String> pathParameters = event.getPathParameters();
-        if (pathParameters == null) {
-            return Optional.empty();
+        if (pathParameters != null) {
+            return pathParameters.get(pathVariable);
         }
-        return Optional.ofNullable(pathParameters.get(pathVariable));
+        return null;
     }
 
     private static String getIpvSessionId(Map<String, String> headers, boolean allowNull)

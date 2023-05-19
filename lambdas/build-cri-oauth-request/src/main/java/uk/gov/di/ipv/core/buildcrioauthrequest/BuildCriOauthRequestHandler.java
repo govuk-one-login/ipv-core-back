@@ -51,6 +51,8 @@ import uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -64,13 +66,13 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getJourney;
 
 public class BuildCriOauthRequestHandler extends BaseJourneyLambda {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String CRI_ID = "criId";
     private static final String DCMAW_CRI_ID = "dcmaw";
     public static final String SHARED_CLAIM_ATTR_NAME = "name";
     public static final String SHARED_CLAIM_ATTR_BIRTH_DATE = "birthDate";
     public static final String SHARED_CLAIM_ATTR_ADDRESS = "address";
     public static final String DEFAULT_ALLOWED_SHARED_ATTR = "name,birthDate,address";
     public static final String REGEX_COMMA_SEPARATION = "\\s*,\\s*";
+    public static final Pattern LAST_SEGMENT_PATTERN = Pattern.compile("/([^/]+)$");
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final CredentialIssuerConfigService credentialIssuerConfigService;
@@ -135,7 +137,7 @@ public class BuildCriOauthRequestHandler extends BaseJourneyLambda {
                         JOURNEY_ERROR_PATH, HttpStatus.SC_BAD_REQUEST, errorResponse.get());
             }
 
-            String criId = journey;
+            String criId = getCriIdFromJourney(journey);
             CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(criId);
 
             if (credentialIssuerConfig == null) {
@@ -221,6 +223,14 @@ public class BuildCriOauthRequestHandler extends BaseJourneyLambda {
                     ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI,
                     e.getMessage());
         }
+    }
+
+    private String getCriIdFromJourney(String journey) {
+        Matcher matcher = LAST_SEGMENT_PATTERN.matcher(journey);
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return journey;
     }
 
     private CriResponse getCriResponse(

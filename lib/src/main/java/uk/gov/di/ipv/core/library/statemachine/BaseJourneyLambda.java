@@ -21,7 +21,6 @@ import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getClientOAuthSessionId;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
-import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getJourney;
 
 public abstract class BaseJourneyLambda
         implements RequestHandler<Map<String, Object>, Map<String, Object>> {
@@ -30,6 +29,7 @@ public abstract class BaseJourneyLambda
     public static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
     public static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
     public static final JourneyResponse JOURNEY_ERROR = new JourneyResponse(JOURNEY_ERROR_PATH);
+    private static final String CRI_ID = "criId";
 
     private static final ObjectMapper OBJECT_MAPPER =
             new ObjectMapper()
@@ -57,7 +57,7 @@ public abstract class BaseJourneyLambda
                     JourneyRequest.builder()
                             .ipvSessionId(getIpvSessionId(request))
                             .ipAddress(getIpAddress(request))
-                            .journey(getJourney(request))
+                            .journey(RequestHelper.getJourney(request, CRI_ID))
                             .clientOAuthSessionId(getClientOAuthSessionId(request))
                             .featureSet(getFeatureSet(request))
                             .build();
@@ -98,10 +98,6 @@ public abstract class BaseJourneyLambda
             ipAddress = null;
         }
         return ipAddress;
-    }
-
-    private static String getJourney(APIGatewayProxyRequestEvent request) {
-        return RequestHelper.getJourney(request).orElse(null);
     }
 
     protected abstract BaseResponse handleRequest(JourneyRequest request, Context context);
