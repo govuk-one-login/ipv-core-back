@@ -23,6 +23,11 @@
           "Variable": "$.journey",
           "StringMatches": "/journey/check-existing-identity",
           "Next": "CheckExistingIdentityLambda"
+        },
+        {
+          "Variable": "$.journey",
+          "StringMatches": "/journey/select-cri",
+          "Next": "SelectCriLambda"
         }
       ],
       "Default": "Success"
@@ -30,6 +35,18 @@
     "CheckExistingIdentityLambda": {
       "Type": "Task",
       "Resource": "${CheckExistingIdentityFunctionArn}",
+      "Parameters": {
+        "journey.$": "$.journey",
+        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
+        "ipAddress.$": "$$.Execution.Input.ipAddress",
+        "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
+        "featureSet.$": "$$.Execution.Input.featureSet"
+      },
+      "Next": "ProcessNextJourney"
+    },
+    "SelectCriLambda": {
+      "Type": "Task",
+      "Resource": "${SelectCriFunctionArn}",
       "Parameters": {
         "journey.$": "$.journey",
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
