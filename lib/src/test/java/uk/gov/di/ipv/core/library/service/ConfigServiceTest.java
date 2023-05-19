@@ -6,6 +6,8 @@ import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import com.google.gson.Gson;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -30,8 +32,8 @@ import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 import uk.org.webcompere.systemstubs.properties.SystemProperties;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getAllServeEvents;
@@ -39,12 +41,12 @@ import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 
 @WireMockTest(httpPort = ConfigService.LOCALHOST_PORT)
@@ -52,9 +54,6 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PU
 @ExtendWith(SystemStubsExtension.class)
 class ConfigServiceTest {
 
-    private static final String TEST_TOKEN_URL = "testTokenUrl";
-    private static final String TEST_CREDENTIAL_URL = "testCredentialUrl";
-    private static final String TEST_REDIRECT_URL = "http:example.com/callbackUrl/testCri";
     private static final String TEST_CERT =
             "MIIC/TCCAeWgAwIBAgIBATANBgkqhkiG9w0BAQsFADAsMR0wGwYDVQQDDBRjcmktdWstcGFzc3BvcnQtYmFjazELMAkGA1UEBhMCR0IwHhcNMjExMjE3MTEwNTM5WhcNMjIxMjE3MTEwNTM5WjAsMR0wGwYDVQQDDBRjcmktdWstcGFzc3BvcnQtYmFjazELMAkGA1UEBhMCR0IwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDYIxWKwYNoz2MIDvYb2ip4nhCOGUccufIqwSHXl5FBOoOxOZh1rV57sWhdKO/hyZYbF5YUYTwzV4rW7DgLkfx0sN/p5igk74BZRSXvV/s+XCkVC5c0NDhNGh6WK5rc8Qbm0Ad5vEO1JpQih5y2mPGCwfLBqcY8AC7fwZinP/4YoMTCtEk5ueA0HwZLHXOEMWl/QCkj7WlSBL4i6ozk4So3RFL4awYP6nvhY7OLAcad7g/ZW0dXvztPOJnT9rwi1p6BNoD/Zk6jMJHhbvKyGsluUy7PYVGYCQ36Uuzby2Jq8cG5qNS+CBjy0/d/RmrClKd7gcnLY/J5NOC+YSynoHXRAgMBAAGjKjAoMA4GA1UdDwEB/wQEAwIFoDAWBgNVHSUBAf8EDDAKBggrBgEFBQcDBDANBgkqhkiG9w0BAQsFAAOCAQEAvHT2AGTymh02A9HWrnGm6PEXx2Ye3NXV9eJNU1z6J298mS2kYq0Z4D0hj9i8+IoCQRbWOxLTAWBNt/CmH7jWltE4uqoAwTZD6mDgkC2eo5dY+RcuydsvJNfTcvUOyi47KKGGEcddfLti4NuX51BQIY5vSBfqZXt8+y28WuWqBMh6eny2wJtxNHo20wQei5g7w19lqwJu2F+l/ykX9K5DHjhXqZUJ77YWmY8sy/WROLjOoZZRy6YuzV8S/+c/nsPzqDAkD4rpWwASjsEDaTcH22xpGq5XUAf1hwwNsuiyXKGUHCxafYYS781LR8pLg6DpEAgcn8tBbq6MoiEGVeOp7Q==";
     private static final String TEST_CERT_FS01 = "not a real cert";
@@ -101,46 +100,203 @@ class ConfigServiceTest {
         assertEquals(false, requestBody.get("WithDecryption"));
     }
 
-    @Test
-    void shouldGetCredentialIssuerFromParameterStore() throws Exception {
-        environmentVariables.set("ENVIRONMENT", "test");
-        Map<String, String> credentialIssuerParameters =
+    @Nested
+    @DisplayName("active credential issuer config")
+    class ActiveCredentialIssuerConfig {
+
+        private final Map<String, String> baseCredentialIssuerConfig =
                 Map.of(
-                        "activeConnection",
-                        "stub",
                         "tokenUrl",
-                        TEST_TOKEN_URL,
+                        "https://testTokenUrl",
                         "credentialUrl",
-                        TEST_CREDENTIAL_URL,
+                        "https://testCredentialUrl",
+                        "authorizeUrl",
+                        "https://testAuthoriseUrl",
+                        "clientId",
+                        "ipv-core-test",
+                        "signingKey",
+                        EC_PRIVATE_KEY_JWK,
                         "encryptionKey",
                         RSA_ENCRYPTION_PUBLIC_JWK,
+                        "componentId",
+                        "https://testComponentId",
+                        "clientCallbackUrl",
+                        "https://testClientCallBackUrl",
                         "requiresApiKey",
                         "true");
-        when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
-                .thenReturn("stub");
 
-        when(ssmProvider.getMultiple("/test/core/credentialIssuers/passportCri/connections/stub"))
-                .thenReturn(credentialIssuerParameters);
-
-        CredentialIssuerConfig result =
-                configService.getCredentialIssuerActiveConnectionConfig("passportCri");
-
-        CredentialIssuerConfig expected =
+        private final CredentialIssuerConfig expectedBaseCredentialIssuerConfig =
                 new CredentialIssuerConfig(
-                        URI.create(TEST_TOKEN_URL),
-                        URI.create(TEST_CREDENTIAL_URL),
-                        URI.create(TEST_CREDENTIAL_URL),
-                        "ipv-core",
-                        "{}",
+                        URI.create("https://testTokenUrl"),
+                        URI.create("https://testCredentialUrl"),
+                        URI.create("https://testAuthoriseUrl"),
+                        "ipv-core-test",
+                        EC_PRIVATE_KEY_JWK,
                         RSA_ENCRYPTION_PUBLIC_JWK,
-                        "test-audience",
-                        URI.create(TEST_REDIRECT_URL),
+                        "https://testComponentId",
+                        URI.create("https://testClientCallBackUrl"),
                         true);
 
-        assertEquals(expected.getTokenUrl(), result.getTokenUrl());
-        assertEquals(expected.getCredentialUrl(), result.getCredentialUrl());
-        assertEquals("RSA", result.getEncryptionKey().getKeyType().toString());
-        assertTrue(result.getRequiresApiKey());
+        private final Map<String, String> featureSetCredentialIssuerConfig =
+                Map.of(
+                        "tokenUrl", "https://testTokenUrl_for_fs01",
+                        "clientId", "client_for_fs01",
+                        "requiresApiKey", "false");
+
+        private final CredentialIssuerConfig expectedFeatureSetCredentialIssuerConfig =
+                new CredentialIssuerConfig(
+                        URI.create("https://testTokenUrl_for_fs01"),
+                        URI.create("https://testCredentialUrl"),
+                        URI.create("https://testAuthoriseUrl"),
+                        "client_for_fs01",
+                        EC_PRIVATE_KEY_JWK,
+                        RSA_ENCRYPTION_PUBLIC_JWK,
+                        "https://testComponentId",
+                        URI.create("https://testClientCallBackUrl"),
+                        false);
+
+        private void checkCredentialIssuerConfig(
+                CredentialIssuerConfig expected, CredentialIssuerConfig actual) {
+            // CredentialIssuerConfig equality currently checks only clientId, tokenUrl, and
+            // credentialUrl
+            assertEquals(expected, actual);
+            assertEquals(expected.getAuthorizeUrl(), actual.getAuthorizeUrl());
+            assertEquals(expected.getSigningKeyString(), actual.getSigningKeyString());
+            assertEquals(expected.getEncryptionKeyString(), actual.getEncryptionKeyString());
+            assertEquals(expected.getComponentId(), actual.getComponentId());
+            assertEquals(expected.getClientCallbackUrl(), actual.getClientCallbackUrl());
+            assertEquals(expected.getRequiresApiKey(), actual.getRequiresApiKey());
+        }
+
+        @Test
+        void shouldGetCredentialIssuerFromParameterStore() {
+            environmentVariables.set("ENVIRONMENT", "test");
+
+            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
+                    .thenReturn("stub");
+            when(ssmProvider.getMultiple(
+                            "/test/core/credentialIssuers/passportCri/connections/stub"))
+                    .thenReturn(baseCredentialIssuerConfig);
+
+            CredentialIssuerConfig result =
+                    configService.getCredentialIssuerActiveConnectionConfig("passportCri");
+
+            checkCredentialIssuerConfig(expectedBaseCredentialIssuerConfig, result);
+        }
+
+        @Test
+        void shouldApplyFeatureSetOverridesOnActiveConfiguration() {
+            environmentVariables.set("ENVIRONMENT", "test");
+            configService.setFeatureSet("fs01");
+
+            when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
+                    .thenReturn("stub");
+            when(ssmProvider.get(
+                            "/test/core/features/fs01/credentialIssuers/passportCri/activeConnection"))
+                    .thenThrow(ParameterNotFoundException.class);
+            when(ssmProvider.getMultiple(
+                            "/test/core/credentialIssuers/passportCri/connections/stub"))
+                    .thenReturn(baseCredentialIssuerConfig);
+            when(ssmProvider.getMultiple(
+                            "/test/core/features/fs01/credentialIssuers/passportCri/connections/stub"))
+                    .thenReturn(featureSetCredentialIssuerConfig);
+
+            CredentialIssuerConfig result =
+                    configService.getCredentialIssuerActiveConnectionConfig("passportCri");
+
+            checkCredentialIssuerConfig(expectedFeatureSetCredentialIssuerConfig, result);
+        }
+
+        @Test
+        void shouldOverrideActiveConfigurationForAFeatureSet() {
+            environmentVariables.set("ENVIRONMENT", "test");
+            configService.setFeatureSet("fs01");
+
+            when(ssmProvider.get(
+                            "/test/core/features/fs01/credentialIssuers/passportCri/activeConnection"))
+                    .thenReturn("main");
+            when(ssmProvider.getMultiple(
+                            "/test/core/credentialIssuers/passportCri/connections/main"))
+                    .thenReturn(baseCredentialIssuerConfig);
+
+            CredentialIssuerConfig result =
+                    configService.getCredentialIssuerActiveConnectionConfig("passportCri");
+
+            checkCredentialIssuerConfig(expectedBaseCredentialIssuerConfig, result);
+        }
+
+        @Test
+        void shouldApplyFeatureSetOverridesOnFeatureSetActiveConfiguration() {
+            environmentVariables.set("ENVIRONMENT", "test");
+            configService.setFeatureSet("fs01");
+
+            when(ssmProvider.get(
+                            "/test/core/features/fs01/credentialIssuers/passportCri/activeConnection"))
+                    .thenReturn("main");
+            when(ssmProvider.getMultiple(
+                            "/test/core/credentialIssuers/passportCri/connections/main"))
+                    .thenReturn(baseCredentialIssuerConfig);
+            when(ssmProvider.getMultiple(
+                            "/test/core/features/fs01/credentialIssuers/passportCri/connections/main"))
+                    .thenReturn(featureSetCredentialIssuerConfig);
+
+            CredentialIssuerConfig result =
+                    configService.getCredentialIssuerActiveConnectionConfig("passportCri");
+
+            checkCredentialIssuerConfig(expectedFeatureSetCredentialIssuerConfig, result);
+        }
+
+        @Test
+        void shouldGetComponentIdForActiveConnection() {
+            environmentVariables.set("ENVIRONMENT", "test");
+            final String testCredentialIssuerId = "address";
+            final String testComponentId = "testComponentId";
+            when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
+                    .thenReturn("stub");
+            when(ssmProvider.get(
+                            "/test/core/credentialIssuers/address/connections/stub/componentId"))
+                    .thenReturn(testComponentId);
+            assertEquals(testComponentId, configService.getComponentId(testCredentialIssuerId));
+        }
+
+        @Test
+        void shouldLookForFeatureSetOverrideOfComponentIdOnActiveConfiguration() {
+            environmentVariables.set("ENVIRONMENT", "test");
+            configService.setFeatureSet("fs01");
+            final String testCredentialIssuerId = "address";
+            final String testComponentId = "testComponentId";
+
+            when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
+                    .thenReturn("stub");
+            when(ssmProvider.get(
+                            "/test/core/features/fs01/credentialIssuers/address/activeConnection"))
+                    .thenThrow(ParameterNotFoundException.class);
+            when(ssmProvider.get(
+                            "/test/core/credentialIssuers/address/connections/stub/componentId"))
+                    .thenReturn(testComponentId);
+            when(ssmProvider.get(
+                            "/test/core/features/fs01/credentialIssuers/address/connections/stub/componentId"))
+                    .thenThrow(ParameterNotFoundException.class);
+            assertEquals(testComponentId, configService.getComponentId(testCredentialIssuerId));
+        }
+
+        @Test
+        void shouldApplyFeatureSetOverrideOfComponentIdOnActiveConfiguration() {
+            environmentVariables.set("ENVIRONMENT", "test");
+            configService.setFeatureSet("fs01");
+            final String testCredentialIssuerId = "address";
+            final String testComponentId = "testComponentId";
+
+            when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
+                    .thenReturn("stub");
+            when(ssmProvider.get(
+                            "/test/core/features/fs01/credentialIssuers/address/activeConnection"))
+                    .thenThrow(ParameterNotFoundException.class);
+            when(ssmProvider.get(
+                            "/test/core/features/fs01/credentialIssuers/address/connections/stub/componentId"))
+                    .thenReturn("testComponentId");
+            assertEquals(testComponentId, configService.getComponentId(testCredentialIssuerId));
+        }
     }
 
     @ParameterizedTest
@@ -151,51 +307,123 @@ class ConfigServiceTest {
         assertEquals(expectedFeatureSet, configService.getFeatureSet());
     }
 
-    @Test
-    void shouldReturnIsEnabled() {
-        environmentVariables.set("ENVIRONMENT", "test");
-        when(ssmProvider.get("/test/core/credentialIssuers/passportCri/enabled"))
-                .thenReturn("true");
+    @Nested
+    @DisplayName("credential issuer config items")
+    class CredentialIssuerConfigItems {
+        private void setupTestData(
+                String credentialIssuer,
+                String attributeName,
+                String baseValue,
+                String featureSet,
+                String featureSetValue) {
+            environmentVariables.set("ENVIRONMENT", "test");
+            configService.setFeatureSet(featureSet);
+            if (featureSet == null) {
+                when(ssmProvider.get(
+                                String.format(
+                                        "/test/core/credentialIssuers/%s/%s",
+                                        credentialIssuer, attributeName)))
+                        .thenReturn(baseValue);
+            } else {
+                when(ssmProvider.get(
+                                String.format(
+                                        "/test/core/features/%s/credentialIssuers/%s/%s",
+                                        featureSet, credentialIssuer, attributeName)))
+                        .thenReturn(featureSetValue);
+            }
+        }
 
-        boolean isEnabled = configService.isEnabled("passportCri");
-        assertTrue(isEnabled);
+        @ParameterizedTest
+        @CsvSource({"main,stub,,main", "main,stub,fs01,stub"})
+        void shouldGetActiveConnection(
+                String baseActiveConnection,
+                String featureSetActiveConnection,
+                String featureSet,
+                String expectedActiveConnection) {
+            final String credentialIssuer = "passportCri";
+            setupTestData(
+                    credentialIssuer,
+                    "activeConnection",
+                    baseActiveConnection,
+                    featureSet,
+                    featureSetActiveConnection);
+            assertEquals(
+                    expectedActiveConnection, configService.getActiveConnection(credentialIssuer));
+        }
+
+        @ParameterizedTest
+        @CsvSource({"true,false,,true", "true,false,fs01,false"})
+        void shouldReturnIsEnabled(
+                String baseIsEnabled,
+                String featureSetIsEnabled,
+                String featureSet,
+                String expectedIsEnabled) {
+            final String credentialIssuer = "passportCri";
+            setupTestData(
+                    credentialIssuer, "enabled", baseIsEnabled, featureSet, featureSetIsEnabled);
+            assertEquals(
+                    Boolean.parseBoolean(expectedIsEnabled),
+                    configService.isEnabled(credentialIssuer));
+        }
+
+        @ParameterizedTest
+        @CsvSource({"false,true,,false", "false,true,fs01,true"})
+        void shouldReturnIsUnavailableOrNot(
+                String baseIsUnavailable,
+                String featureSetIsUnavailable,
+                String featureSet,
+                String expectedIsUnavailable) {
+            final String credentialIssuer = "passportCri";
+            setupTestData(
+                    credentialIssuer,
+                    "unavailable",
+                    baseIsUnavailable,
+                    featureSet,
+                    featureSetIsUnavailable);
+            assertEquals(
+                    Boolean.parseBoolean(expectedIsUnavailable),
+                    configService.isUnavailable(credentialIssuer));
+        }
+
+        @ParameterizedTest
+        @CsvSource(
+                delimiter = '|',
+                value = {
+                    "address,name|address,name,dob||address,name",
+                    "address,name|address,name,dob|fs01|address,name,dob"
+                })
+        void shouldReturnAllowedSharedAttributes(
+                String baseAllowedSharedAttributes,
+                String featureSetAllowedSharedAttributes,
+                String featureSet,
+                String expectedIAllowedSharedAttributes) {
+            final String credentialIssuer = "passportCri";
+            setupTestData(
+                    credentialIssuer,
+                    "allowedSharedAttributes",
+                    baseAllowedSharedAttributes,
+                    featureSet,
+                    featureSetAllowedSharedAttributes);
+            assertEquals(
+                    expectedIAllowedSharedAttributes,
+                    configService.getAllowedSharedAttributes(credentialIssuer));
+        }
     }
 
-    @Test
-    void shouldReturnIsAvailableOrNot() {
+    @ParameterizedTest
+    @CsvSource({
+        "CLIENT_VALID_REDIRECT_URLS,",
+        "CLIENT_VALID_REDIRECT_URLS,FS05",
+        "CLIENT_VALID_REDIRECT_URLS,FS06_NO_OVERRIDE"
+    })
+    void shouldReturnListOfClientRedirectUrls(String testDataSet, String featureSet) {
         environmentVariables.set("ENVIRONMENT", "test");
-        when(ssmProvider.get("/test/core/credentialIssuers/passportCri/unavailable"))
-                .thenReturn("false");
-
-        boolean isUnavailable = configService.isUnavailable("passportCri");
-        assertFalse(isUnavailable);
-    }
-
-    @Test
-    void shouldReturnAllowedSharedAttributes() {
-        environmentVariables.set("ENVIRONMENT", "test");
-        when(ssmProvider.get("/test/core/credentialIssuers/passportCri/allowedSharedAttributes"))
-                .thenReturn("address,name");
-
-        String sharedAttributes = configService.getAllowedSharedAttributes("passportCri");
-        assertEquals("address,name", sharedAttributes);
-    }
-
-    @Test
-    void shouldReturnListOfClientRedirectUrls() {
-        environmentVariables.set("ENVIRONMENT", "test");
-        when(ssmProvider.get("/test/core/clients/aClientId/validRedirectUrls"))
-                .thenReturn(
-                        "one.example.com/callback,two.example.com/callback,three.example.com/callback");
-
-        var fetchedClientRedirectUrls = configService.getClientRedirectUrls("aClientId");
-
-        var expectedRedirectUrls =
-                List.of(
-                        "one.example.com/callback",
-                        "two.example.com/callback",
-                        "three.example.com/callback");
-        assertEquals(expectedRedirectUrls, fetchedClientRedirectUrls);
+        configService.setFeatureSet(featureSet);
+        TestConfiguration testConfiguration = TestConfiguration.valueOf(testDataSet);
+        testConfiguration.setupMockConfig(ssmProvider);
+        assertEquals(
+                Arrays.asList(testConfiguration.getExpectedValue(featureSet).split(",")),
+                configService.getClientRedirectUrls("aClientId"));
     }
 
     @Test
@@ -316,19 +544,6 @@ class ConfigServiceTest {
         assertEquals(testSigningKeyId, configService.getSigningKeyId());
     }
 
-    @Test
-    void shouldGetComponentIdForActiveConnection() {
-        environmentVariables.set("ENVIRONMENT", "test");
-        final String testCredentialIssuerId = "address";
-        final String testComponentId =
-                "https://development-di-ipv-cri-address-stub.london.cloudapps.digital";
-        when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
-                .thenReturn("stub");
-        when(ssmProvider.get("/test/core/credentialIssuers/address/connections/stub/componentId"))
-                .thenReturn(testComponentId);
-        assertEquals(testComponentId, configService.getComponentId(testCredentialIssuerId));
-    }
-
     @ParameterizedTest
     @CsvSource({
         "PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY,",
@@ -412,7 +627,12 @@ class ConfigServiceTest {
                 "self/backendSessionTtl",
                 "3600",
                 Map.of("FS03", "3700", "FS04", "3800"),
-                Map.of("FS05_NO_OVERRIDE", ParameterNotFoundException.class));
+                Map.of("FS05_NO_OVERRIDE", ParameterNotFoundException.class)),
+        CLIENT_VALID_REDIRECT_URLS(
+                "clients/aClientId/validRedirectUrls",
+                "one.example.com/callback,two.example.com/callback,three.example.com/callback",
+                Map.of("FS05", "one.example.com/callback,four.example.com/callback"),
+                Map.of("FS06_NO_OVERRIDE", ParameterNotFoundException.class));
 
         private final String path;
         private final String baseValue;
