@@ -1380,6 +1380,7 @@ Resources:
       DefinitionSubstitutions:
         IPVProcessJourneyStepFunctionArn: !GetAtt IPVProcessJourneyStepFunction.Arn
         CheckExistingIdentityFunctionArn: !GetAtt CheckExistingIdentityFunction.Arn
+        EvaluateGpg45ScoresFunctionArn: !GetAtt EvaluateGpg45ScoresFunction.Arn
         SelectCriFunctionArn: !GetAtt SelectCriFunction.Arn
       Events:
         IPVCorePrivateAPI:
@@ -1400,6 +1401,8 @@ Resources:
             FunctionName: !Ref IPVProcessJourneyStepFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CheckExistingIdentityFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref EvaluateGpg45ScoresFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref SelectCriFunction
         - Statement:
