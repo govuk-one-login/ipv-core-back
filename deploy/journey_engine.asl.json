@@ -7,7 +7,8 @@
       "Parameters": {
         "journey.$": "$.journey",
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
-        "ipAddress.$": "$$.Execution.Input.ipAddress"
+        "ipAddress.$": "$$.Execution.Input.ipAddress",
+        "featureSet.$": "$$.Execution.Input.featureSet"
       },
       "Next": "ProcessJourneyStepResult"
     },
@@ -28,6 +29,11 @@
           "Variable": "$.journey",
           "StringMatches": "/journey/evaluate-gpg45-scores",
           "Next": "EvaluateGpg45ScoresFunction"
+        },
+        {
+          "Variable": "$.journey",
+          "StringMatches": "/journey/select-cri",
+          "Next": "SelectCriLambda"
         }
       ],
       "Default": "Success"
@@ -47,6 +53,18 @@
     "EvaluateGpg45ScoresFunction": {
       "Type": "Task",
       "Resource": "${EvaluateGpg45ScoresFunctionArn}",
+      "Parameters": {
+        "journey.$": "$.journey",
+        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
+        "ipAddress.$": "$$.Execution.Input.ipAddress",
+        "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
+        "featureSet.$": "$$.Execution.Input.featureSet"
+      },
+      "Next": "ProcessNextJourney"
+    },
+    "SelectCriLambda": {
+      "Type": "Task",
+      "Resource": "${SelectCriFunctionArn}",
       "Parameters": {
         "journey.$": "$.journey",
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
