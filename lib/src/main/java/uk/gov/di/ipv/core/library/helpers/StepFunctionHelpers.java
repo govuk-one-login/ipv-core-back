@@ -42,7 +42,9 @@ public class StepFunctionHelpers {
     }
 
     public static String getFeatureSet(Map<String, String> input) {
-        return input.get(FEATURE_SET);
+        String featureSet = input.get(FEATURE_SET);
+        LogHelper.attachFeatureSetToLogs(featureSet);
+        return featureSet;
     }
 
     public static String getJourneyStep(Map<String, String> input)
