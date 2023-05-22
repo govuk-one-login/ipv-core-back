@@ -4,7 +4,7 @@ This the back-end code for the core of the Identity Proofing and Verification (I
 
 The following projects are related to the di-ipv-core-back, providing additional functionality:
 * [di-ipv-core-front](https://github.com/alphagov/di-ipv-core-front) - Front end code for the core of the Identity Proofing and Verification (IPV) system.
-* [di-ipv-core-test](https://github.com/alphagov/di-ipv-core-test) - Feature tests for the core of the Identity Proofing and Verification (IPV) system.
+* [di-ipv-core-tests](https://github.com/alphagov/di-ipv-core-tests) - Feature tests for the core of the Identity Proofing and Verification (IPV) system.
 * [di-ipv-config](https://github.com/alphagov/di-ipv-config) - Configuration for the core of the Identity Proofing and Verification (IPV) system. This is an internal project which contains the configuration required for IPV Core to interact with the other components of the IPV system.
 
 ## Development
@@ -22,7 +22,7 @@ brew install awscli
 brew install aws-sam-cli
 ```
 
-We us [pre-commit](https://pre-commit.com/) to help with linting. This configured through the [.pre-commit-config.yaml](pre-commit-config.yaml) configuration setup in this repo, this uses pre-commit to verify your commit before actually commiting, it runs the following checks:
+We use [pre-commit](https://pre-commit.com/) to help with linting. This configured through the [.pre-commit-config.yaml](pre-commit-config.yaml) configuration setup in this repo, this uses pre-commit to verify your commit before actually commiting, it runs the following checks:
 * Check Json files for formatting issues
 * Fixes end of file issues (it will auto correct if it spots an issue - you will need to run the git commit again after it has fixed the issue)
 * It automatically removes trailing whitespaces (again will need to run commit again after it detects and fixes the issue)
@@ -63,7 +63,7 @@ See the [Deployment Documentation](deploy/README.md) for information on deployin
 The di-ipv-core-back has a number of different tests:
 * Unit Tests - Each lambda contains unit tests which test a classes functionality in isolation. These tests can be found within the `lambda\*\src\test` folder.
 * Integration Tests - Integration tests are found in the `integration-test` folder and test the functionality of `di-ipv-core-back` running on an AWS test environment.
-* Feature Tests - Cucumber feature tests for the core of the Identity Proofing and Verification (IPV) system reside in the [di-ipv-core-test](https://github.com/alphagov/di-ipv-core-test) project. The tests run against a deployment of di-ipv-core-back and di-ipv-core-front and test the IPV Core user journeys.
+* Feature Tests - Cucumber feature tests for the core of the Identity Proofing and Verification (IPV) system reside in the [di-ipv-core-tests](https://github.com/alphagov/di-ipv-core-tests) project. The tests run against a deployment of di-ipv-core-back and di-ipv-core-front and test the IPV Core user journeys.
 
 ## Code structure
 The application is configured as a Gradle project with a sub-project for each Lambda. The following are the main folders and their use:
