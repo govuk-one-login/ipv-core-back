@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.buildcrioauthrequest;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,7 +47,6 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda;
 
 import java.net.URISyntaxException;
 import java.text.ParseException;
@@ -63,8 +63,10 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getJourney;
+import static uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda.JOURNEY_ERROR_PATH;
 
-public class BuildCriOauthRequestHandler extends BaseJourneyLambda {
+public class BuildCriOauthRequestHandler
+        implements RequestHandler<JourneyRequest, BaseResponse> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String DCMAW_CRI_ID = "dcmaw";
     public static final String SHARED_CLAIM_ATTR_NAME = "name";
@@ -122,7 +124,7 @@ public class BuildCriOauthRequestHandler extends BaseJourneyLambda {
     @Override
     @Tracing
     @Logging(clearState = true)
-    protected BaseResponse handleRequest(JourneyRequest input, Context context) {
+    public BaseResponse handleRequest(JourneyRequest input, Context context) {
         LogHelper.attachComponentIdToLogs();
         try {
             String ipvSessionId = getIpvSessionId(input);
