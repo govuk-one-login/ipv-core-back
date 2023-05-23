@@ -14,7 +14,8 @@ public abstract class JourneyRequestLambda implements RequestStreamHandler {
     private ObjectMapper mapper = new ObjectMapper();
 
     @Override
-    public void handleRequest(InputStream input, OutputStream output, Context context) throws IOException {
+    public void handleRequest(InputStream input, OutputStream output, Context context)
+            throws IOException {
         JourneyRequest request = mapper.readValue(input, JourneyRequest.class);
         BaseResponse response = handleRequest(request, context);
         mapper.writeValue(output, response);
