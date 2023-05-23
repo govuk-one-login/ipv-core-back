@@ -1,8 +1,6 @@
 package uk.gov.di.ipv.core.buildclientoauthresponse;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,6 +21,8 @@ import uk.gov.di.ipv.core.buildclientoauthresponse.validation.AuthRequestValidat
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -37,7 +37,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -53,25 +52,11 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BuildClientOauthResponseHandlerTest {
-    private static final Map<String, String> TEST_EVENT_HEADERS =
-            Map.of("ipv-session-id", "12345", "ip-address", "192.168.1.100");
-    private static final Map<String, String> TEST_EVENT_HEADERS_NO_IPV_SESSION =
-            Map.of(
-                    "client-session-id",
-                    "54321",
-                    "ip-address",
-                    "192.168.1.100",
-                    "feature-set",
-                    "fs-001");
-    private static final Map<String, String> TEST_EVENT_HEADERS_NO_IPV_AND_CLIENT_SESSION =
-            Map.of("ip-address", "192.168.1.100");
+    private static final String TEST_SESSION_ID = "test-session-id";
+    private static final String TEST_IP_ADDRESS = "192.168.1.100";
+    private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
+    public static final String TEST_FEATURE_SET = "fs-001";
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final Map<String, String> VALID_QUERY_PARAMS =
-            Map.of(
-                    OAuth2RequestParams.REDIRECT_URI, "http://example.com",
-                    OAuth2RequestParams.CLIENT_ID, "12345",
-                    OAuth2RequestParams.RESPONSE_TYPE, "code",
-                    OAuth2RequestParams.SCOPE, "openid");
 
     @Mock private Context context;
     @Mock private IpvSessionService mockSessionService;
@@ -105,16 +90,9 @@ class BuildClientOauthResponseHandlerTest {
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
 
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        event.setQueryStringParameters(VALID_QUERY_PARAMS);
-        event.setHeaders(TEST_EVENT_HEADERS);
+        JourneyRequest event = new JourneyRequest(TEST_SESSION_ID, TEST_IP_ADDRESS, null, null);
 
-        var response = makeRequest(event, context);
-
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-
-        ClientResponse responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+        var responseJson = makeRequest(event, context);
 
         verify(mockSessionService)
                 .setAuthorizationCode(eq(ipvSessionItem), anyString(), eq("https://example.com"));
@@ -129,7 +107,8 @@ class BuildClientOauthResponseHandlerTest {
                         .addParameter("state", "test-state")
                         .build();
 
-        URI actualRedirectUrl = new URI(responseBody.getClient().getRedirectUrl());
+        ClientResponse response = objectMapper.readValue(responseJson, ClientResponse.class);
+        URI actualRedirectUrl = new URI(response.getClient().getRedirectUrl());
         List<NameValuePair> params =
                 URLEncodedUtils.parse(actualRedirectUrl, StandardCharsets.UTF_8);
         assertEquals(expectedRedirectUrl.getHost(), actualRedirectUrl.getHost());
@@ -138,49 +117,42 @@ class BuildClientOauthResponseHandlerTest {
     }
 
     @Test
-    void shouldReturn200OnSuccessfulOauthRequest_withNullIpvSessionAndClientSessionIdInHeader()
+    void shouldReturn200OnSuccessfulOauthRequest_withNullIpvSessionAndClientSessionIdInRequest()
             throws JsonProcessingException, URISyntaxException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        event.setQueryStringParameters(VALID_QUERY_PARAMS);
-        event.setHeaders(TEST_EVENT_HEADERS_NO_IPV_SESSION);
-
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
 
-        var response = makeRequest(event, context);
+        JourneyRequest event =
+                new JourneyRequest(
+                        null, TEST_IP_ADDRESS, TEST_CLIENT_OAUTH_SESSION_ID, TEST_FEATURE_SET);
+        var responseJson = makeRequest(event, context);
 
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-
-        ClientResponse responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-        URI actualRedirectUrl = new URI(responseBody.getClient().getRedirectUrl());
+        ClientResponse response = objectMapper.readValue(responseJson, ClientResponse.class);
+        URI actualRedirectUrl = new URI(response.getClient().getRedirectUrl());
         List<NameValuePair> params =
                 URLEncodedUtils.parse(actualRedirectUrl, StandardCharsets.UTF_8);
         assertEquals("example.com", actualRedirectUrl.getHost());
         assertEquals("access_denied", params.get(0).getValue());
         assertEquals("Missing Context", params.get(1).getValue());
         assertEquals("test-state", params.get(2).getValue());
-        verify(mockConfigService).setFeatureSet("fs-001");
+        verify(mockConfigService).setFeatureSet(TEST_FEATURE_SET);
     }
 
     @Test
-    void shouldReturn400_withBothIpvSessionAndClientSessionIdNullInHeader()
+    void shouldReturn400_withBothIpvSessionAndClientSessionIdNullInRequest()
             throws JsonProcessingException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        event.setQueryStringParameters(VALID_QUERY_PARAMS);
-        event.setHeaders(TEST_EVENT_HEADERS_NO_IPV_AND_CLIENT_SESSION);
+        JourneyRequest event = new JourneyRequest(null, TEST_IP_ADDRESS, null, null);
+        var responseJson = makeRequest(event, context);
 
-        var response = makeRequest(event, context);
-
-        Map<String, Object> responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-        assertEquals(HttpStatus.SC_BAD_REQUEST, responseBody.get("statusCode"));
-        assertEquals(ErrorResponse.MISSING_SESSION_ID.getCode(), responseBody.get("code"));
-        assertEquals(ErrorResponse.MISSING_SESSION_ID.getMessage(), responseBody.get("message"));
+        JourneyErrorResponse response =
+                objectMapper.readValue(responseJson, JourneyErrorResponse.class);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(ErrorResponse.MISSING_SESSION_ID.getCode(), response.getCode());
+        assertEquals(ErrorResponse.MISSING_SESSION_ID.getMessage(), response.getMessage());
     }
 
     @Test
-    void shouldReturn200WhenStateNotInSession() {
+    void shouldReturn200WhenStateNotInSession() throws JsonProcessingException, URISyntaxException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSession(anyString())).thenReturn(generateIpvSessionItem());
@@ -189,13 +161,19 @@ class BuildClientOauthResponseHandlerTest {
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        event.setQueryStringParameters(VALID_QUERY_PARAMS);
-        event.setHeaders(TEST_EVENT_HEADERS);
-
-        var response = makeRequest(event, context);
-
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
+        JourneyRequest event = new JourneyRequest(TEST_SESSION_ID, TEST_IP_ADDRESS, null, null);
+        var responseJson = makeRequest(event, context);
+        ClientResponse response = objectMapper.readValue(responseJson, ClientResponse.class);
+        URI expectedRedirectUrl =
+                new URIBuilder("https://example.com")
+                        .addParameter("code", authorizationCode)
+                        .build();
+        URI actualRedirectUrl = new URI(response.getClient().getRedirectUrl());
+        List<NameValuePair> params =
+                URLEncodedUtils.parse(actualRedirectUrl, StandardCharsets.UTF_8);
+        assertEquals(expectedRedirectUrl.getHost(), actualRedirectUrl.getHost());
+        assertEquals(1, params.size());
+        assertNotNull(params.get(0).getValue());
     }
 
     @Test
@@ -206,19 +184,14 @@ class BuildClientOauthResponseHandlerTest {
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
 
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        event.setQueryStringParameters(new HashMap<>());
+        JourneyRequest event = new JourneyRequest(TEST_SESSION_ID, TEST_IP_ADDRESS, null, null);
+        var responseJson = makeRequest(event, context);
 
-        event.setHeaders(TEST_EVENT_HEADERS);
-
-        var response = makeRequest(event, context);
-        Map<String, Object> responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(HttpStatus.SC_BAD_REQUEST, responseBody.get("statusCode"));
-        assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getCode(), responseBody.get("code"));
-        assertEquals(
-                ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), responseBody.get("message"));
+        JourneyErrorResponse response =
+                objectMapper.readValue(responseJson, JourneyErrorResponse.class);
+        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getCode(), response.getCode());
+        assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), response.getMessage());
 
         verify(mockSessionService, never()).setAuthorizationCode(any(), anyString(), anyString());
     }
@@ -244,20 +217,18 @@ class BuildClientOauthResponseHandlerTest {
             when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                     .thenReturn(clientOAuthSessionItem);
 
-            APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-            event.setHeaders(TEST_EVENT_HEADERS);
+            JourneyRequest event = new JourneyRequest(TEST_SESSION_ID, TEST_IP_ADDRESS, null, null);
+            var responseJson = makeRequest(event, context);
 
-            var response = makeRequest(event, context);
-
-            Map<String, Object> responseBody =
-                    objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-            assertEquals(HttpStatus.SC_BAD_REQUEST, responseBody.get("statusCode"));
+            JourneyErrorResponse response =
+                    objectMapper.readValue(responseJson, JourneyErrorResponse.class);
+            assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
             assertEquals(
                     ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(),
-                    responseBody.get("code"));
+                    response.getCode());
             assertEquals(
                     ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
-                    responseBody.get("message"));
+                    response.getMessage());
             verify(mockSessionService, never())
                     .setAuthorizationCode(any(), anyString(), anyString());
         }
@@ -273,18 +244,11 @@ class BuildClientOauthResponseHandlerTest {
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        event.setQueryStringParameters(VALID_QUERY_PARAMS);
-        event.setHeaders(TEST_EVENT_HEADERS);
+        JourneyRequest event = new JourneyRequest(TEST_SESSION_ID, TEST_IP_ADDRESS, null, null);
+        var responseJson = makeRequest(event, context);
 
-        var response = makeRequest(event, context);
-
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-
-        ClientResponse responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-
-        URIBuilder uriBuilder = new URIBuilder(responseBody.getClient().getRedirectUrl());
+        ClientResponse response = objectMapper.readValue(responseJson, ClientResponse.class);
+        URIBuilder uriBuilder = new URIBuilder(response.getClient().getRedirectUrl());
         assertEquals(OAuth2Error.SERVER_ERROR_CODE, uriBuilder.getQueryParams().get(0).getValue());
         assertEquals("Test error description", uriBuilder.getQueryParams().get(1).getValue());
         assertEquals(
@@ -303,17 +267,12 @@ class BuildClientOauthResponseHandlerTest {
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        event.setQueryStringParameters(VALID_QUERY_PARAMS);
-        event.setHeaders(TEST_EVENT_HEADERS);
+        JourneyRequest event = new JourneyRequest(TEST_SESSION_ID, TEST_IP_ADDRESS, null, null);
+        var response = handler.handleRequest(event, context);
+        String responseJson =
+                getJsonResponse(objectMapper.convertValue(response, new TypeReference<>() {}));
 
-        var response = makeRequest(event, context);
-
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-
-        ClientResponse responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-
+        ClientResponse responseBody = objectMapper.readValue(responseJson, ClientResponse.class);
         URIBuilder uriBuilder = new URIBuilder(responseBody.getClient().getRedirectUrl());
         assertEquals(OAuth2Error.SERVER_ERROR_CODE, uriBuilder.getQueryParams().get(0).getValue());
         assertEquals("Test error description", uriBuilder.getQueryParams().get(1).getValue());
@@ -330,13 +289,11 @@ class BuildClientOauthResponseHandlerTest {
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
 
-        Map<String, Object> event = new HashMap<>();
-        event.put("ipvSessionId", "12345");
-        event.put("ipAddress", "192.168.1.100");
+        JourneyRequest event =
+                new JourneyRequest(
+                        TEST_SESSION_ID, TEST_IP_ADDRESS, TEST_CLIENT_OAUTH_SESSION_ID, null);
 
         var response = handler.handleRequest(event, context);
-
-        ClientResponse responseBody = objectMapper.convertValue(response, ClientResponse.class);
 
         verify(mockSessionService)
                 .setAuthorizationCode(eq(ipvSessionItem), anyString(), eq("https://example.com"));
@@ -351,6 +308,7 @@ class BuildClientOauthResponseHandlerTest {
                         .addParameter("state", "test-state")
                         .build();
 
+        ClientResponse responseBody = objectMapper.convertValue(response, ClientResponse.class);
         URI actualRedirectUrl = new URI(responseBody.getClient().getRedirectUrl());
         List<NameValuePair> params =
                 URLEncodedUtils.parse(actualRedirectUrl, StandardCharsets.UTF_8);
@@ -379,12 +337,14 @@ class BuildClientOauthResponseHandlerTest {
         return clientOAuthSessionItem;
     }
 
-    private APIGatewayProxyResponseEvent makeRequest(
-            APIGatewayProxyRequestEvent event, Context context) {
-        final var requestType = new TypeReference<Map<String, Object>>() {};
-        final var request = objectMapper.convertValue(event, requestType);
-        final var response = handler.handleRequest(request, context);
+    private static String getJsonResponse(Map<String, Object> response)
+            throws JsonProcessingException {
+        return objectMapper.writeValueAsString(response);
+    }
 
-        return objectMapper.convertValue(response, APIGatewayProxyResponseEvent.class);
+    private String makeRequest(JourneyRequest event, Context context)
+            throws JsonProcessingException {
+        final var response = handler.handleRequest(event, context);
+        return getJsonResponse(objectMapper.convertValue(response, new TypeReference<>() {}));
     }
 }
