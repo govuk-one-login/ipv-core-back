@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.buildclientoauthresponse;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
@@ -13,8 +14,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
-import uk.gov.di.ipv.core.buildclientoauthresponse.domain.ClientDetails;
-import uk.gov.di.ipv.core.buildclientoauthresponse.domain.ClientResponse;
 import uk.gov.di.ipv.core.buildclientoauthresponse.validation.AuthRequestValidator;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -25,6 +24,8 @@ import uk.gov.di.ipv.core.library.domain.BaseResponse;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
+import uk.gov.di.ipv.core.library.domain.buildclientoauthresponse.ClientDetails;
+import uk.gov.di.ipv.core.library.domain.buildclientoauthresponse.ClientResponse;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -34,7 +35,6 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda;
 
 import java.net.URISyntaxException;
 import java.util.Collections;
@@ -52,8 +52,10 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getClientOAuthSes
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionIdAllowNull;
+import static uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda.JOURNEY_ERROR_PATH;
 
-public class BuildClientOauthResponseHandler extends BaseJourneyLambda {
+public class BuildClientOauthResponseHandler
+        implements RequestHandler<JourneyRequest, BaseResponse> {
     private static final Logger LOGGER = LogManager.getLogger();
     private final IpvSessionService sessionService;
     private final ConfigService configService;
@@ -89,7 +91,7 @@ public class BuildClientOauthResponseHandler extends BaseJourneyLambda {
     @Override
     @Tracing
     @Logging(clearState = true)
-    protected BaseResponse handleRequest(JourneyRequest input, Context context) {
+    public BaseResponse handleRequest(JourneyRequest input, Context context) {
 
         LogHelper.attachComponentIdToLogs();
 

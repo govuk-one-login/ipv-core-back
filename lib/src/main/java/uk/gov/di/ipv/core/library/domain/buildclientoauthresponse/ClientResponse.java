@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.buildclientoauthresponse.domain;
+package uk.gov.di.ipv.core.library.domain.buildclientoauthresponse;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
