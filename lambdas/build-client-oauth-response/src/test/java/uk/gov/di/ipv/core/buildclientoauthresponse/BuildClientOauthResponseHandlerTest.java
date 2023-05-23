@@ -90,7 +90,8 @@ class BuildClientOauthResponseHandlerTest {
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
 
-        JourneyRequest event = new JourneyRequest(TEST_SESSION_ID, TEST_IP_ADDRESS, null, null);
+        JourneyRequest event =
+                new JourneyRequest(TEST_SESSION_ID, TEST_IP_ADDRESS, null, null, null);
 
         var responseJson = makeRequest(event, context);
 
@@ -124,7 +125,11 @@ class BuildClientOauthResponseHandlerTest {
 
         JourneyRequest event =
                 new JourneyRequest(
-                        null, TEST_IP_ADDRESS, TEST_CLIENT_OAUTH_SESSION_ID, TEST_FEATURE_SET);
+                        null,
+                        TEST_IP_ADDRESS,
+                        TEST_CLIENT_OAUTH_SESSION_ID,
+                        null,
+                        TEST_FEATURE_SET);
         var responseJson = makeRequest(event, context);
 
         ClientResponse response = objectMapper.readValue(responseJson, ClientResponse.class);
@@ -141,7 +146,7 @@ class BuildClientOauthResponseHandlerTest {
     @Test
     void shouldReturn400_withBothIpvSessionAndClientSessionIdNullInRequest()
             throws JsonProcessingException {
-        JourneyRequest event = new JourneyRequest(null, TEST_IP_ADDRESS, null, null);
+        JourneyRequest event = new JourneyRequest(null, TEST_IP_ADDRESS, null, null, null);
         var responseJson = makeRequest(event, context);
 
         JourneyErrorResponse response =
@@ -161,7 +166,8 @@ class BuildClientOauthResponseHandlerTest {
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest event = new JourneyRequest(TEST_SESSION_ID, TEST_IP_ADDRESS, null, null);
+        JourneyRequest event =
+                new JourneyRequest(TEST_SESSION_ID, TEST_IP_ADDRESS, null, null, null);
         var responseJson = makeRequest(event, context);
         ClientResponse response = objectMapper.readValue(responseJson, ClientResponse.class);
         URI expectedRedirectUrl =
@@ -184,7 +190,8 @@ class BuildClientOauthResponseHandlerTest {
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
 
-        JourneyRequest event = new JourneyRequest(TEST_SESSION_ID, TEST_IP_ADDRESS, null, null);
+        JourneyRequest event =
+                new JourneyRequest(TEST_SESSION_ID, TEST_IP_ADDRESS, null, null, null);
         var responseJson = makeRequest(event, context);
 
         JourneyErrorResponse response =
@@ -217,7 +224,8 @@ class BuildClientOauthResponseHandlerTest {
             when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                     .thenReturn(clientOAuthSessionItem);
 
-            JourneyRequest event = new JourneyRequest(TEST_SESSION_ID, TEST_IP_ADDRESS, null, null);
+            JourneyRequest event =
+                    new JourneyRequest(TEST_SESSION_ID, TEST_IP_ADDRESS, null, null, null);
             var responseJson = makeRequest(event, context);
 
             JourneyErrorResponse response =
@@ -244,7 +252,8 @@ class BuildClientOauthResponseHandlerTest {
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest event = new JourneyRequest(TEST_SESSION_ID, TEST_IP_ADDRESS, null, null);
+        JourneyRequest event =
+                new JourneyRequest(TEST_SESSION_ID, TEST_IP_ADDRESS, null, null, null);
         var responseJson = makeRequest(event, context);
 
         ClientResponse response = objectMapper.readValue(responseJson, ClientResponse.class);
@@ -267,7 +276,8 @@ class BuildClientOauthResponseHandlerTest {
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest event = new JourneyRequest(TEST_SESSION_ID, TEST_IP_ADDRESS, null, null);
+        JourneyRequest event =
+                new JourneyRequest(TEST_SESSION_ID, TEST_IP_ADDRESS, null, null, null);
         var response = handler.handleRequest(event, context);
         String responseJson =
                 getJsonResponse(objectMapper.convertValue(response, new TypeReference<>() {}));
@@ -291,7 +301,7 @@ class BuildClientOauthResponseHandlerTest {
 
         JourneyRequest event =
                 new JourneyRequest(
-                        TEST_SESSION_ID, TEST_IP_ADDRESS, TEST_CLIENT_OAUTH_SESSION_ID, null);
+                        TEST_SESSION_ID, TEST_IP_ADDRESS, TEST_CLIENT_OAUTH_SESSION_ID, null, null);
 
         var response = handler.handleRequest(event, context);
 
