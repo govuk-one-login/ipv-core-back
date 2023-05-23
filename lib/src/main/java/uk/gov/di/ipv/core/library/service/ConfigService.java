@@ -311,4 +311,8 @@ public class ConfigService {
         }
         return null;
     }
+
+    public String getFeatureFlag(String featureFlagName) {
+        return getSsmParameter(ConfigurationVariable.FEATURE_FLAGS, featureFlagName);
+    }
 }
