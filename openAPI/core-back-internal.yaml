@@ -234,42 +234,6 @@ paths:
                 #end
                 $input.body
 
-  /journey/select-cri:
-    post:
-      description: "Selects a CRI based on which CRIs the user has not visited. Returns journey response or journey fail"
-      responses:
-        200:
-          description: "Returns a journeyResponse or journeyFail"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/journeyType"
-      x-amazon-apigateway-integration:
-        httpMethod: "POST"
-        uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${SelectCriFunction.Arn}:live/invocations
-        passthroughBehavior: "when_no_match"
-        type: "aws"
-        requestTemplates:
-          application/x-www-form-urlencoded:
-            Fn::Sub: |
-              {
-                "ipvSessionId": "$input.params('ipv-session-id')",
-                "ipAddress": "$input.params('ip-address')",
-                "clientOAuthSessionId": "$input.params('client-session-id')",
-                "featureSet": "$input.params('feature-set')"
-              }
-        responses:
-          default:
-            statusCode: 200
-            responseTemplates:
-              application/json: |
-                #set ($bodyObj = $util.parseJson($input.body))
-                #if ($bodyObj.statusCode)
-                #set($context.responseOverride.status = $bodyObj.statusCode)
-                #end
-                $input.body
-
   /journey/build-client-oauth-response:
     post:
       description: "Called when the user has completed their user journey in IPV Core"

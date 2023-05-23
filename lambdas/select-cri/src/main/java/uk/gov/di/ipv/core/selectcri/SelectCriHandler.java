@@ -44,6 +44,7 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda.JOURNEY_ERROR_PATH;
 
+/** Selects a CRI based on which CRIs the user has not visited */
 public class SelectCriHandler implements RequestHandler<JourneyRequest, JourneyResponse> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String CRI_START_JOURNEY = "/journey/%s";
