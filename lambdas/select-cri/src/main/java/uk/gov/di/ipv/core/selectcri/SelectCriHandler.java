@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.selectcri;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -9,6 +8,7 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.domain.BaseResponse;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -23,6 +23,7 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.statemachine.JourneyRequestLambda;
 
 import java.text.ParseException;
 import java.util.Arrays;
@@ -44,7 +45,7 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda.JOURNEY_ERROR_PATH;
 
-public class SelectCriHandler implements RequestHandler<JourneyRequest, JourneyResponse> {
+public class SelectCriHandler extends JourneyRequestLambda {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String CRI_START_JOURNEY = "/journey/%s";
     private static final String JOURNEY_FAIL = "/journey/fail";
@@ -78,7 +79,7 @@ public class SelectCriHandler implements RequestHandler<JourneyRequest, JourneyR
     @Override
     @Tracing
     @Logging(clearState = true)
-    public JourneyResponse handleRequest(JourneyRequest event, Context context) {
+    protected BaseResponse handleRequest(JourneyRequest event, Context context) {
         LogHelper.attachComponentIdToLogs();
         try {
             String ipvSessionId = getIpvSessionId(event);
