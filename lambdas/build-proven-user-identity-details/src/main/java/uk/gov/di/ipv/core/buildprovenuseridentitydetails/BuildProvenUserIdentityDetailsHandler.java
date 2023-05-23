@@ -34,7 +34,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda;
+import uk.gov.di.ipv.core.library.statemachine.JourneyRequestLambda;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 
 import java.text.ParseException;
@@ -50,7 +50,7 @@ import static uk.gov.di.ipv.core.library.service.UserIdentityService.BIRTH_DATE_
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.NAME_PROPERTY_NAME;
 
-public class BuildProvenUserIdentityDetailsHandler extends BaseJourneyLambda {
+public class BuildProvenUserIdentityDetailsHandler extends JourneyRequestLambda {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final IpvSessionService ipvSessionService;
