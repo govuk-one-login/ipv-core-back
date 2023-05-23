@@ -81,7 +81,7 @@ paths:
             Fn::Sub: |
               #set($inputRoot = $input.path('$'))
               {
-                "input": "{\"ipvSessionId\": \"$input.params('ipv-session-id')\", \"ipAddress\": \"$input.params('ip-address')\"#foreach($key in $inputRoot.keySet()), \"$key\": \"$inputRoot.get($key)\"#end}",
+                "input": "{\"ipvSessionId\": \"$input.params('ipv-session-id')\", \"featureSet\": \"$input.params('feature-set')\", \"ipAddress\": \"$input.params('ip-address')\"#foreach($key in $inputRoot.keySet()), \"$key\": \"$inputRoot.get($key)\"#end}",
                 "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${CriReturnStepFunction.Name}"
               }
         responses:
@@ -129,7 +129,7 @@ paths:
           application/x-www-form-urlencoded:
             Fn::Sub: |
               {
-                "input": "{\"ipvSessionId\": \"$input.params('ipv-session-id')\", \"ipAddress\": \"$input.params('ip-address')\", \"journey\": \"/journey/$input.params('journeyStep')\", \"clientOAuthSessionId\": \"$input.params('client-session-id')\", \"featureSet\": \"$input.params('feature-set')\"}",
+                "input": "{\"ipvSessionId\": \"$input.params('ipv-session-id')\", \"featureSet\": \"$input.params('feature-set')\", \"ipAddress\": \"$input.params('ip-address')\", \"journey\": \"/journey/$input.params('journeyStep')\", \"clientOAuthSessionId\": \"$input.params('client-session-id')\", \"featureSet\": \"$input.params('feature-set')\"}",
                 "stateMachineArn": "arn:aws:states:${AWS::Region}:${AWS::AccountId}:stateMachine:${JourneyEngineStepFunction.Name}"
               }
         responses:
@@ -338,7 +338,26 @@ paths:
         uri:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildProvenUserIdentityDetailsFunction.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
-        type: "aws_proxy"
+        type: "aws"
+        requestTemplates:
+          application/x-www-form-urlencoded:
+            Fn::Sub: |
+              {
+                "ipvSessionId": "$input.params('ipv-session-id')",
+                "ipAddress": "$input.params('ip-address')",
+                "clientOAuthSessionId": "$input.params('client-session-id')",
+                "featureSet": "$input.params('feature-set')"
+              }
+        responses:
+          default:
+            statusCode: 200
+            responseTemplates:
+              application/json: |
+                #set ($bodyObj = $util.parseJson($input.body))
+                #if ($bodyObj.statusCode)
+                #set($context.responseOverride.status = $bodyObj.statusCode)
+                #end
+                $input.body
 
   /journey/check-existing-identity:
     post:

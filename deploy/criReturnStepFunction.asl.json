@@ -13,7 +13,8 @@
       "Parameters": {
         "ipvSessionId.$": "$.ipvSessionId",
         "ipAddress.$": "$.ipAddress",
-        "journey.$": "$.lambdaResult.journey"
+        "journey.$": "$.lambdaResult.journey",
+        "featureSet.$": "$.featureSet"
       },
       "Catch": [
         {
@@ -30,10 +31,11 @@
       "Resource": "${RetrieveCriCredentialFunctionArn}",
       "Parameters": {
         "ipvSessionId.$": "$.ipvSessionId",
-        "ipAddress.$": "$.ipAddress"
+        "ipAddress.$": "$.ipAddress",
+        "featureSet.$": "$.featureSet"
       },
       "ResultPath": "$.lambdaResult",
-      "Next": "RouteJourneyResponse"
+      "Next": "ReturnToFrontend"
     },
     "RetrieveCriOAuthAccessTokenError": {
       "Type": "Pass",

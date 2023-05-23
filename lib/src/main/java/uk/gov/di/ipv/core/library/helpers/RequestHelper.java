@@ -134,7 +134,9 @@ public class RequestHelper {
     }
 
     public static String getFeatureSet(APIGatewayProxyRequestEvent event) {
-        return getFeatureSet(event.getHeaders());
+        String featureSet = getFeatureSet(event.getHeaders());
+        LogHelper.attachFeatureSetToLogs(featureSet);
+        return featureSet;
     }
 
     public static String getJourney(JourneyRequest request) {

@@ -134,24 +134,24 @@ public class ConfigService {
 
     public String getSsmParameter(
             ConfigurationVariable configurationVariable, String... pathProperties) {
+        return getSsmParameterWithOverride(configurationVariable.getPath(), pathProperties);
+    }
+
+    private String getSsmParameterWithOverride(String templatePath, String... pathProperties) {
         if (getFeatureSet() != null) {
-            var featureSetPath =
-                    resolveFeatureSetPath(configurationVariable.getPath(), pathProperties);
             try {
-                return ssmProvider.get(featureSetPath);
+                return ssmProvider.get(resolveFeatureSetPath(templatePath, pathProperties));
             } catch (ParameterNotFoundException ignored) {
                 LOGGER.debug(
                         (new StringMapMessage())
                                 .with(
                                         LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                         "Parameter not present for featureSet")
-                                .with(
-                                        LOG_PARAMETER_PATH.getFieldName(),
-                                        configurationVariable.getPath())
+                                .with(LOG_PARAMETER_PATH.getFieldName(), templatePath)
                                 .with(LOG_FEATURE_SET.getFieldName(), getFeatureSet()));
             }
         }
-        return ssmProvider.get(resolvePath(configurationVariable.getPath(), pathProperties));
+        return ssmProvider.get(resolvePath(templatePath, pathProperties));
     }
 
     private String resolveBasePath() {
@@ -195,8 +195,7 @@ public class ConfigService {
 
     public List<String> getClientRedirectUrls(String clientId) {
         String redirectUrlStrings =
-                ssmProvider.get(resolvePath("clients/%s/validRedirectUrls", clientId));
-
+                getSsmParameter(ConfigurationVariable.CLIENT_VALID_REDIRECT_URLS, clientId);
         return Arrays.asList(redirectUrlStrings.split(CLIENT_REDIRECT_URL_SEPARATOR));
     }
 
@@ -236,7 +235,7 @@ public class ConfigService {
     public String getActiveConnection(String credentialIssuerId) {
         final String pathTemplate =
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/activeConnection";
-        return getSsmParameter(resolvePath(pathTemplate, credentialIssuerId));
+        return getSsmParameterWithOverride(pathTemplate, credentialIssuerId);
     }
 
     public String getComponentId(String credentialIssuerId) {
@@ -244,25 +243,25 @@ public class ConfigService {
         final String pathTemplate =
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath()
                         + "/%s/connections/%s/componentId";
-        return getSsmParameter(resolvePath(pathTemplate, credentialIssuerId, activeConnection));
+        return getSsmParameterWithOverride(pathTemplate, credentialIssuerId, activeConnection);
     }
 
     public boolean isUnavailable(String credentialIssuerId) {
         final String pathTemplate =
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/unavailable";
-        return Boolean.parseBoolean(getSsmParameter(resolvePath(pathTemplate, credentialIssuerId)));
+        return Boolean.parseBoolean(getSsmParameterWithOverride(pathTemplate, credentialIssuerId));
     }
 
     public String getAllowedSharedAttributes(String credentialIssuerId) {
         final String pathTemplate =
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/allowedSharedAttributes";
-        return getSsmParameter(resolvePath(pathTemplate, credentialIssuerId));
+        return getSsmParameterWithOverride(pathTemplate, credentialIssuerId);
     }
 
     public boolean isEnabled(String credentialIssuerId) {
         final String pathTemplate =
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/enabled";
-        return Boolean.parseBoolean(getSsmParameter(resolvePath(pathTemplate, credentialIssuerId)));
+        return Boolean.parseBoolean(getSsmParameterWithOverride(pathTemplate, credentialIssuerId));
     }
 
     public Map<String, ContraIndicatorScore> getContraIndicatorScoresMap() {

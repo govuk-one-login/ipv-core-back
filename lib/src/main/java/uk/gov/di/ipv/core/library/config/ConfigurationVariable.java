@@ -14,6 +14,7 @@ public enum ConfigurationVariable {
     DCMAW_ALLOWED_USER_IDS("self/journey/dcmawAllowedUserIds"),
     AUTH_CODE_EXPIRY_SECONDS("self/authCodeExpirySeconds"),
     PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY("clients/%s/publicKeyMaterialForCoreToVerify"),
+    CLIENT_VALID_REDIRECT_URLS("clients/%s/validRedirectUrls"),
     CI_SCORING_CONFIG("self/ci-scoring-config"),
     CI_SCORING_THRESHOLD("self/ciScoringThreshold"),
     CI_MITIGATION_JOURNEYS_ENABLED("self/journey/ciMitigationsEnabled"),
