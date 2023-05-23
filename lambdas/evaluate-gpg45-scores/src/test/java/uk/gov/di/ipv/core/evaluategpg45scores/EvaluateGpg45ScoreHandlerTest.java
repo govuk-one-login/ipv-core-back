@@ -128,7 +128,7 @@ class EvaluateGpg45ScoreHandlerTest {
 
     @BeforeAll
     static void setUp() throws Exception {
-        request = new JourneyRequest(TEST_SESSION_ID, TEST_CLIENT_SOURCE_IP, null, null);
+        request = new JourneyRequest(TEST_SESSION_ID, TEST_CLIENT_SOURCE_IP, null, null, null);
         for (String cred : CREDENTIALS) {
             PARSED_CREDENTIALS.add(SignedJWT.parse(cred));
         }
@@ -253,7 +253,7 @@ class EvaluateGpg45ScoreHandlerTest {
     @Test
     void shouldReturn400IfSessionIdNotInRequest() {
         JourneyRequest requestWithoutSessionId =
-                new JourneyRequest(null, TEST_CLIENT_SOURCE_IP, null, null);
+                new JourneyRequest(null, TEST_CLIENT_SOURCE_IP, null, null, null);
 
         var response =
                 (JourneyErrorResponse)

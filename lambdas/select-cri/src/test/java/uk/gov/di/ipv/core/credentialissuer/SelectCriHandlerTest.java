@@ -722,7 +722,7 @@ class SelectCriHandlerTest {
     }
 
     private JourneyRequest createRequestEvent() {
-        return new JourneyRequest(TEST_SESSION_ID, null, null, null);
+        return new JourneyRequest(TEST_SESSION_ID, null, null, null, null);
     }
 
     private CredentialIssuerConfig createCriConfig(String criId, String criIss, boolean enabled)
