@@ -349,13 +349,7 @@ Resources:
         - DynamoDBCrudPolicy:
             TableName: !Ref ClientAuthJwtIdsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/clients/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/clients/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/self/*
+            ParameterName: !Sub ${Environment}/core/*
       Events:
         IPVCoreExternalAPI:
           Type: Api
@@ -536,13 +530,7 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/clients/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/clients/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/self/*
+            ParameterName: !Sub ${Environment}/core/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -663,17 +651,7 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref CriOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/credentialIssuers
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/self/*
+            ParameterName: !Sub ${Environment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:${Environment}/credential-issuers/*/api-key-*
         - SQSSendMessagePolicy:
@@ -808,17 +786,7 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/credentialIssuers
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/self/*
+            ParameterName: !Sub ${Environment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:${Environment}/credential-issuers/*/api-key-*
         - SQSSendMessagePolicy:
@@ -945,17 +913,7 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref CriOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/credentialIssuers
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/self/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers
+            ParameterName: !Sub ${Environment}/core/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -1061,13 +1019,7 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/self/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
+            ParameterName: !Sub ${Environment}/core/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -1153,13 +1105,7 @@ Resources:
         - KMSDecryptPolicy:
             KeyId: !Ref DynamoDBKmsKey
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/credentialIssuers
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers
+            ParameterName: !Sub ${Environment}/core/*
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1246,9 +1192,7 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref UserIssuedCredentialsV2Table
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/self/*
+            ParameterName: !Sub ${Environment}/core/*
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1523,9 +1467,7 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref CriOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/self/*
+            ParameterName: !Sub ${Environment}/core/*
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
@@ -1615,13 +1557,7 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/self/*
+            ParameterName: !Sub ${Environment}/core/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - AWSSecretsManagerGetSecretValuePolicy:
@@ -1733,13 +1669,7 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/self/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
+            ParameterName: !Sub ${Environment}/core/*
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1831,13 +1761,7 @@ Resources:
         - DynamoDBWritePolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/self/*
+            ParameterName: !Sub ${Environment}/core/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
         - Statement:
@@ -1991,13 +1915,7 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/self/*
+            ParameterName: !Sub ${Environment}/core/*
         - SQSSendMessagePolicy:
             QueueName: !ImportValue AuditEventQueueName
       Events:
@@ -2092,13 +2010,7 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/self/*
+            ParameterName: !Sub ${Environment}/core/*
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -2202,13 +2114,7 @@ Resources:
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/self/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/credentialIssuers/*
-        - SSMParameterReadPolicy:
-            ParameterName: !Sub ${Environment}/core/features/*/self/*
+            ParameterName: !Sub ${Environment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-scoring-config-*
         - SQSSendMessagePolicy:
