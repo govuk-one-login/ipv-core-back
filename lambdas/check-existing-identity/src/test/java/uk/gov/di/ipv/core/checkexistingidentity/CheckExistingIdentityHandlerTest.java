@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.checkexistingidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeAll;
@@ -13,10 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
-import uk.gov.di.ipv.core.library.domain.JourneyRequest;
-import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.*;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
@@ -34,6 +32,9 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
@@ -91,6 +92,7 @@ class CheckExistingIdentityHandlerTest {
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     static {
         try {
@@ -164,8 +166,7 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyResponse journeyResponse =
-                checkExistingIdentityHandler.handleRequest(event, context);
+        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
 
         assertEquals(JOURNEY_REUSE, journeyResponse);
 
@@ -184,7 +185,8 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyReuseResponseIfScoresSatisfyM1BGpg45Profile() throws SqsException {
+    void shouldReturnJourneyReuseResponseIfScoresSatisfyM1BGpg45Profile()
+            throws SqsException, IOException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
@@ -194,8 +196,7 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyResponse journeyResponse =
-                checkExistingIdentityHandler.handleRequest(event, context);
+        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
         assertEquals(JOURNEY_REUSE, journeyResponse);
 
         verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
@@ -211,7 +212,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnJourneyNextResponseIfScoresDoNotSatisfyM1AGpg45Profile()
-            throws ParseException, SqsException {
+            throws ParseException, SqsException, IOException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
@@ -222,8 +223,7 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyResponse journeyResponse =
-                checkExistingIdentityHandler.handleRequest(event, context);
+        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
         assertEquals(JOURNEY_NEXT, journeyResponse);
 
         verify(userIdentityService).deleteVcStoreItems(TEST_USER_ID);
@@ -239,7 +239,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnJourneyNextResponseIfVcsFailCiScoreCheck()
-            throws ParseException, SqsException {
+            throws ParseException, SqsException, IOException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
@@ -248,8 +248,7 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyResponse journeyResponse =
-                checkExistingIdentityHandler.handleRequest(event, context);
+        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
         assertEquals("/journey/next", journeyResponse.getJourney());
 
         verify(userIdentityService).deleteVcStoreItems(TEST_USER_ID);
@@ -264,7 +263,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldNotSendAuditEventIfNewUser() throws ParseException, SqsException {
+    void shouldNotSendAuditEventIfNewUser() throws ParseException, SqsException, IOException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
                 .thenReturn(Collections.emptyList());
@@ -274,8 +273,7 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyResponse journeyResponse =
-                checkExistingIdentityHandler.handleRequest(event, context);
+        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
         assertEquals("/journey/next", journeyResponse.getJourney());
         verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
 
@@ -286,17 +284,17 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturn400IfSessionIdNotInHeader() {
+    void shouldReturn400IfSessionIdNotInHeader() throws IOException {
         JourneyRequest eventWithoutHeaders = new JourneyRequest(null, null, null, null, null);
 
-        JourneyResponse journeyResponse =
-                checkExistingIdentityHandler.handleRequest(eventWithoutHeaders, context);
+        var journeyResponse =
+                handleRequest(eventWithoutHeaders, context, JourneyErrorResponse.class);
         assertEquals("/journey/error", journeyResponse.getJourney());
 
-        JourneyErrorResponse errorResponse = (JourneyErrorResponse) journeyResponse;
-        assertEquals(HttpStatus.SC_BAD_REQUEST, errorResponse.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), errorResponse.getCode());
-        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), errorResponse.getMessage());
+        assertEquals(HttpStatus.SC_BAD_REQUEST, journeyResponse.getStatusCode());
+        assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), journeyResponse.getCode());
+        assertEquals(
+                ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), journeyResponse.getMessage());
         verify(clientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
     }
 
@@ -307,8 +305,7 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyResponse journeyResponse =
-                checkExistingIdentityHandler.handleRequest(event, context);
+        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
         assertEquals("/journey/error", journeyResponse.getJourney());
 
         JourneyErrorResponse errorResponse = (JourneyErrorResponse) journeyResponse;
@@ -331,8 +328,7 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyResponse journeyResponse =
-                checkExistingIdentityHandler.handleRequest(event, context);
+        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
         assertEquals("/journey/error", journeyResponse.getJourney());
 
         JourneyErrorResponse errorResponse = (JourneyErrorResponse) journeyResponse;
@@ -357,8 +353,7 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyResponse journeyResponse =
-                checkExistingIdentityHandler.handleRequest(event, context);
+        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
         assertEquals("/journey/error", journeyResponse.getJourney());
 
         JourneyErrorResponse errorResponse = (JourneyErrorResponse) journeyResponse;
@@ -385,8 +380,7 @@ class CheckExistingIdentityHandlerTest {
                 .when(auditService)
                 .sendAuditEvent((AuditEvent) any());
 
-        JourneyResponse journeyResponse =
-                checkExistingIdentityHandler.handleRequest(event, context);
+        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
         assertEquals("/journey/error", journeyResponse.getJourney());
 
         JourneyErrorResponse errorResponse = (JourneyErrorResponse) journeyResponse;
@@ -395,5 +389,15 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(
                 ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getMessage(), errorResponse.getMessage());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+    }
+
+    private <T extends BaseResponse> T handleRequest(
+            JourneyRequest request, Context context, Class<T> classType) throws IOException {
+        try (var inputStream =
+                        new ByteArrayInputStream(mapper.writeValueAsString(request).getBytes());
+                var outputStream = new ByteArrayOutputStream()) {
+            checkExistingIdentityHandler.handleRequest(inputStream, outputStream, context);
+            return mapper.readValue(outputStream.toString(), classType);
+        }
     }
 }
