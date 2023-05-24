@@ -3,9 +3,10 @@ package uk.gov.di.ipv.core.buildcrioauthrequest.domain;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
+import uk.gov.di.ipv.core.library.domain.BaseResponse;
 
 @Getter
-public class CriResponse {
+public class CriResponse implements BaseResponse {
     @JsonProperty private final CriDetails cri;
 
     @JsonCreator

@@ -1,6 +1,8 @@
-package uk.gov.di.ipv.core.credentialissuer;
+package uk.gov.di.ipv.core.selectcri;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,12 +21,12 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.selectcri.SelectCriHandler;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -61,7 +63,7 @@ class SelectCriHandlerTest {
     }
 
     @Test
-    void shouldReturnPassportCriJourneyResponse() throws URISyntaxException {
+    void shouldReturnPassportCriJourneyResponse() throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -74,14 +76,14 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/ukPassport", response.getJourney());
     }
 
     @Test
     void shouldReturnPassportAndDrivingLicenceCriJourneyResponseWhenDrivingLicenceCriEnabled()
-            throws URISyntaxException {
+            throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -96,13 +98,13 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/ukPassportAndDrivingLicence", response.getJourney());
     }
 
     @Test
-    void shouldReturnAddressCriJourneyResponseWhenVisitedPassport() throws URISyntaxException {
+    void shouldReturnAddressCriJourneyResponseWhenVisitedPassport() throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -122,14 +124,13 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/address", response.getJourney());
     }
 
     @Test
-    void shouldReturnAddressCriJourneyResponseWhenVisitedDrivingLicence()
-            throws URISyntaxException {
+    void shouldReturnAddressCriJourneyResponseWhenVisitedDrivingLicence() throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -149,14 +150,13 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/address", response.getJourney());
     }
 
     @Test
-    void shouldReturnPyiNoMatchErrorResponseIfAddressCriHasPreviouslyFailed()
-            throws URISyntaxException {
+    void shouldReturnPyiNoMatchErrorResponseIfAddressCriHasPreviouslyFailed() throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -174,13 +174,13 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/pyi-no-match", response.getJourney());
     }
 
     @Test
-    void shouldReturnFraudCriJourneyResponse() throws URISyntaxException {
+    void shouldReturnFraudCriJourneyResponse() throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -207,13 +207,13 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/fraud", response.getJourney());
     }
 
     @Test
-    void shouldReturnKBVCriJourneyResponse() throws URISyntaxException {
+    void shouldReturnKBVCriJourneyResponse() throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -245,13 +245,13 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/kbv", response.getJourney());
     }
 
     @Test
-    void shouldReturnJourneyFailedIfAllCriVisited() throws URISyntaxException {
+    void shouldReturnJourneyFailedIfAllCriVisited() throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -285,13 +285,13 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/fail", response.getJourney());
     }
 
     @Test
-    void shouldReturnDcmawCriJourneyResponseIfUserHasNotVisited() throws URISyntaxException {
+    void shouldReturnDcmawCriJourneyResponseIfUserHasNotVisited() throws Exception {
         mockIpvSessionService();
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
@@ -309,14 +309,14 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/dcmaw", response.getJourney());
     }
 
     @Test
     void shouldReturnDcmawSuccessJourneyResponseIfUserHasVisitedDcmawSuccessfully()
-            throws URISyntaxException {
+            throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
@@ -333,14 +333,14 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/dcmaw-success", response.getJourney());
     }
 
     @Test
     void shouldReturnFraudCriJourneyResponseIfUserHasVisitedDcmawAndAddressSuccessfully()
-            throws URISyntaxException {
+            throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
@@ -365,14 +365,14 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/fraud", response.getJourney());
     }
 
     @Test
     void shouldReturnAddressdCriJourneyResponseIfUserHasNotVistedAppButAlreadyHasPassportVC()
-            throws URISyntaxException {
+            throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
@@ -393,14 +393,14 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/address", response.getJourney());
     }
 
     @Test
     void shouldReturnPyiNoMatchJourneyResponseIfUserHasVisitedDcmawAndAddressAndFraudSuccessfully()
-            throws URISyntaxException {
+            throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
@@ -437,14 +437,14 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/fail", response.getJourney());
     }
 
     @Test
     void shouldReturnPassportCriJourneyResponseIfUserHasVisitedDcmawButItFailedWithAVc()
-            throws URISyntaxException {
+            throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
@@ -461,14 +461,14 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/ukPassport", response.getJourney());
     }
 
     @Test
     void shouldReturnPassportCriJourneyResponseIfUserHasVisitedDcmawButItFailedWithoutAVc()
-            throws URISyntaxException {
+            throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
@@ -488,14 +488,14 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/ukPassport", response.getJourney());
     }
 
     @Test
     void shouldReturnPyiNoMatchErrorJourneyResponseIfUserHasAPreviouslyFailedVisitToAddress()
-            throws URISyntaxException {
+            throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
@@ -515,14 +515,14 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/pyi-no-match", response.getJourney());
     }
 
     @Test
     void shouldReturnPyiNoMatchErrorJourneyResponseIfUserHasAPreviouslyFailedVisitToDrivingLicence()
-            throws URISyntaxException {
+            throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -539,14 +539,14 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/pyi-no-match", response.getJourney());
     }
 
     @Test
     void shouldReturnKbvThinFileErrorJourneyResponseIfUserHasAPreviouslyFailedVisitKbvWithoutCis()
-            throws URISyntaxException {
+            throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -578,13 +578,13 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/pyi-kbv-thin-file", response.getJourney());
     }
 
     @Test
-    void shouldReturnCorrectJourneyResponseWhenVcStatusesAreNull() throws URISyntaxException {
+    void shouldReturnCorrectJourneyResponseWhenVcStatusesAreNull() throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
@@ -600,14 +600,13 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/ukPassport", response.getJourney());
     }
 
     @Test
-    void shouldReturnDcmawCriJourneyResponseIfUserIsIncludedInAllowedList()
-            throws URISyntaxException {
+    void shouldReturnDcmawCriJourneyResponseIfUserIsIncludedInAllowedList() throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
@@ -626,14 +625,13 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/dcmaw", response.getJourney());
     }
 
     @Test
-    void shouldReturnDcmawCriJourneyResponseIfUserIdHasAppJourneyPrefix()
-            throws URISyntaxException {
+    void shouldReturnDcmawCriJourneyResponseIfUserIdHasAppJourneyPrefix() throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
@@ -654,14 +652,13 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/dcmaw", response.getJourney());
     }
 
     @Test
-    void shouldReturnPassportCriJourneyResponseIfUserIsNotIncludedInAllowedList()
-            throws URISyntaxException {
+    void shouldReturnPassportCriJourneyResponseIfUserIsNotIncludedInAllowedList() throws Exception {
         mockIpvSessionService();
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
@@ -684,14 +681,13 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/ukPassport", response.getJourney());
     }
 
     @Test
-    void shouldReturnDcmawCriJourneyResponseIfShouldSendAllUsersToAppVarIsTrue()
-            throws URISyntaxException {
+    void shouldReturnDcmawCriJourneyResponseIfShouldSendAllUsersToAppVarIsTrue() throws Exception {
         mockIpvSessionService();
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
@@ -710,7 +706,7 @@ class SelectCriHandlerTest {
 
         JourneyRequest input = createRequestEvent();
 
-        JourneyResponse response = underTest.handleRequest(input, context);
+        JourneyResponse response = handleRequest(input, context);
 
         assertEquals("/journey/dcmaw", response.getJourney());
     }
@@ -722,7 +718,7 @@ class SelectCriHandlerTest {
     }
 
     private JourneyRequest createRequestEvent() {
-        return new JourneyRequest(TEST_SESSION_ID, null, null, null);
+        return new JourneyRequest(TEST_SESSION_ID, null, null, null, null);
     }
 
     private CredentialIssuerConfig createCriConfig(String criId, String criIss, boolean enabled)
@@ -748,5 +744,18 @@ class SelectCriHandlerTest {
                 .govukSigninJourneyId("test-journey-id")
                 .userId("test-user-id")
                 .build();
+    }
+
+    private static String getJsonResponse(Map<String, Object> response)
+            throws JsonProcessingException {
+        return objectMapper.writeValueAsString(response);
+    }
+
+    private JourneyResponse handleRequest(JourneyRequest event, Context context)
+            throws JsonProcessingException {
+        var response = underTest.handleRequest(event, context);
+        var responseJson =
+                getJsonResponse(objectMapper.convertValue(response, new TypeReference<>() {}));
+        return objectMapper.readValue(responseJson, JourneyResponse.class);
     }
 }

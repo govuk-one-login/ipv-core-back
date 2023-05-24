@@ -426,6 +426,18 @@ class ConfigServiceTest {
                 configService.getClientRedirectUrls("aClientId"));
     }
 
+    @ParameterizedTest
+    @CsvSource({"FEATURE_FLAGS,", "FEATURE_FLAGS,FS07"})
+    void shouldGetNamedFeatureFlag(String testDataSet, String featureSet) {
+        environmentVariables.set("ENVIRONMENT", "test");
+        configService.setFeatureSet(featureSet);
+        TestConfiguration testConfiguration = TestConfiguration.valueOf(testDataSet);
+        testConfiguration.setupMockConfig(ssmProvider);
+        assertEquals(
+                testConfiguration.getExpectedValue(featureSet),
+                configService.getFeatureFlag("testFeature"));
+    }
+
     @Test
     void shouldGetSecretValueFromSecretsManager() {
         Map<String, String> apiKeySecret = Map.of("apiKey", "api-key-value");
@@ -632,7 +644,8 @@ class ConfigServiceTest {
                 "clients/aClientId/validRedirectUrls",
                 "one.example.com/callback,two.example.com/callback,three.example.com/callback",
                 Map.of("FS05", "one.example.com/callback,four.example.com/callback"),
-                Map.of("FS06_NO_OVERRIDE", ParameterNotFoundException.class));
+                Map.of("FS06_NO_OVERRIDE", ParameterNotFoundException.class)),
+        FEATURE_FLAGS("featureFlags/testFeature", "false", Map.of("FS07", "true"), Map.of());
 
         private final String path;
         private final String baseValue;

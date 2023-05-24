@@ -28,6 +28,8 @@ public abstract class BaseJourneyLambda
     public static final String JOURNEY_NEXT_PATH = "/journey/next";
     public static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
     public static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
+    public static final JourneyResponse JOURNEY_ERROR = new JourneyResponse(JOURNEY_ERROR_PATH);
+    private static final String CRI_ID = "criId";
 
     private static final ObjectMapper OBJECT_MAPPER =
             new ObjectMapper()
@@ -51,13 +53,14 @@ public abstract class BaseJourneyLambda
             APIGatewayProxyRequestEvent request =
                     OBJECT_MAPPER.convertValue(event, APIGatewayProxyRequestEvent.class);
 
-            var clientOAuthSessionId = getClientOAuthSessionId(request);
-            var ipvSessionId = getIpvSessionId(request);
-            var ipAddress = getIpAddress(request);
-            var featureSet = getFeatureSet(request);
             var journeyRequest =
-                    new JourneyRequest(ipvSessionId, ipAddress, clientOAuthSessionId, featureSet);
-
+                    JourneyRequest.builder()
+                            .ipvSessionId(getIpvSessionId(request))
+                            .ipAddress(getIpAddress(request))
+                            .journey(RequestHelper.getJourney(request, CRI_ID))
+                            .clientOAuthSessionId(getClientOAuthSessionId(request))
+                            .featureSet(getFeatureSet(request))
+                            .build();
             var journeyResponse = handleRequest(journeyRequest, context);
 
             apiGatewayResponse =

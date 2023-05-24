@@ -15,9 +15,11 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.*;
 
 class RequestHelperTest {
@@ -33,6 +35,8 @@ class RequestHelperTest {
     private final String TEST_FEATURE_SET = "test-feature-set";
 
     private final String TEST_CLIENT_SESSION_ID = "client-session-id";
+    private final String TEST_JOURNEY = DCMAW_CRI;
+    private static final String CRI_ID = "criId";
 
     @ParameterizedTest(name = "with matching header: {0}")
     @ValueSource(strings = {"Baz", "baz"})
@@ -84,6 +88,7 @@ class RequestHelperTest {
                         TEST_IPV_SESSION_ID,
                         TEST_IP_ADDRESS,
                         TEST_CLIENT_SESSION_ID,
+                        TEST_JOURNEY,
                         TEST_FEATURE_SET);
 
         assertEquals("a-session-id", RequestHelper.getIpvSessionId(event));
@@ -218,7 +223,9 @@ class RequestHelperTest {
         String ipvSessionId = "a-session-id";
         String ipAddress = "a-ipaddress";
         String featureSet = "a-feature-set";
-        var event = new JourneyRequest(ipvSessionId, ipAddress, clientSessionId, featureSet);
+        String journey = DCMAW_CRI;
+        var event =
+                new JourneyRequest(ipvSessionId, ipAddress, clientSessionId, journey, featureSet);
 
         assertEquals(clientSessionId, RequestHelper.getClientOAuthSessionId(event));
         assertEquals(ipvSessionId, RequestHelper.getIpvSessionId(event));
@@ -232,7 +239,8 @@ class RequestHelperTest {
         String clientSessionId = "client-session-id";
         String ipAddress = "a-ipaddress";
         String featureSet = "a-feature-set";
-        var event = new JourneyRequest(null, ipAddress, clientSessionId, featureSet);
+        String journey = DCMAW_CRI;
+        var event = new JourneyRequest(null, ipAddress, clientSessionId, journey, featureSet);
 
         assertNull(RequestHelper.getIpvSessionIdAllowNull(event));
     }
@@ -252,7 +260,28 @@ class RequestHelperTest {
                         TEST_IPV_SESSION_ID,
                         TEST_IP_ADDRESS,
                         TEST_CLIENT_SESSION_ID,
+                        TEST_JOURNEY,
                         TEST_FEATURE_SET);
         assertEquals("test-feature-set", RequestHelper.getFeatureSet(event));
+    }
+
+    @Test
+    void getPathParametersShouldReturnPathParameters() {
+        var event = new APIGatewayProxyRequestEvent();
+        event.setPathParameters(Map.of(CRI_ID, DCMAW_CRI));
+
+        String journey = getJourney(event, CRI_ID);
+
+        assertNotNull(journey);
+        assertEquals(DCMAW_CRI, journey);
+    }
+
+    @Test
+    void getPathParametersShouldReturnNullWithoutPathParameters() {
+        var event = new APIGatewayProxyRequestEvent();
+
+        String journey = RequestHelper.getJourney(event, CRI_ID);
+
+        assertNull(journey);
     }
 }
