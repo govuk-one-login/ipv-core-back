@@ -37,8 +37,13 @@
         },
         {
           "Variable": "$.journey",
+<<<<<<< Updated upstream
           "StringMatches": "/journey/cri/build-oauth-request/*",
           "Next": "BuildCriOauthRequestLambda"
+=======
+          "StringMatches": "/journey/select-cri",
+          "Next": "SelectCriLambda"
+>>>>>>> Stashed changes
         }
       ],
       "Default": "Success"
@@ -82,6 +87,18 @@
     "BuildCriOauthRequestLambda": {
       "Type": "Task",
       "Resource": "${BuildCriOauthRequestFunctionArn}",
+      "Parameters": {
+        "journey.$": "$.journey",
+        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
+        "ipAddress.$": "$$.Execution.Input.ipAddress",
+        "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
+        "featureSet.$": "$$.Execution.Input.featureSet"
+      },
+      "Next": "ProcessNextJourney"
+    },
+    "BuildClientOauthResponseLambda": {
+      "Type": "Task",
+      "Resource": "${BuildClientOauthResponseFunctionArn}",
       "Parameters": {
         "journey.$": "$.journey",
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
