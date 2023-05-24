@@ -1585,14 +1585,6 @@ Resources:
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
                       - environment
-      Events:
-        IPVCorePrivateAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCorePrivateAPI
-            Path: /journey/evaluate-gpg45-scores
-            Method: POST
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
@@ -2135,14 +2127,6 @@ Resources:
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
                       - environment
-      Events:
-        IPVCorePrivateAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCorePrivateAPI
-            Path: /journey/check-existing-identity
-            Method: POST
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
