@@ -725,9 +725,12 @@ class EvaluateGpg45ScoreHandlerTest {
         verify(userIdentityService, times(1)).checkBirthDateCorrelationInCredentials(any(), any());
     }
 
-    private <T extends BaseResponse> T handleRequest(JourneyRequest request, Context context, Class<T> classType) throws IOException {
-        try (var inputStream = new ByteArrayInputStream(new ObjectMapper().writeValueAsString(request).getBytes());
-             var outputStream = new ByteArrayOutputStream()) {
+    private <T extends BaseResponse> T handleRequest(
+            JourneyRequest request, Context context, Class<T> classType) throws IOException {
+        try (var inputStream =
+                        new ByteArrayInputStream(
+                                new ObjectMapper().writeValueAsString(request).getBytes());
+                var outputStream = new ByteArrayOutputStream()) {
             evaluateGpg45ScoresHandler.handleRequest(inputStream, outputStream, context);
             return mapper.readValue(outputStream.toString(), classType);
         }
