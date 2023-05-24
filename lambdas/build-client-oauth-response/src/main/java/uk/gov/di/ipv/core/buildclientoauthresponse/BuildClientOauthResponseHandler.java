@@ -52,7 +52,6 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getClientOAuthSes
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionIdAllowNull;
-import static uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda.JOURNEY_ERROR_PATH;
 
 public class BuildClientOauthResponseHandler extends JourneyRequestLambda {
     private static final Logger LOGGER = LogManager.getLogger();

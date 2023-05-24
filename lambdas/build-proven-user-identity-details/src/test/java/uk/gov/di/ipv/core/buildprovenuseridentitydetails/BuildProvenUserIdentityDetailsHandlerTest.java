@@ -1,9 +1,6 @@
 package uk.gov.di.ipv.core.buildprovenuseridentitydetails;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,8 +10,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.ProvenUserIdentityDetails;
 import uk.gov.di.ipv.core.library.domain.Address;
+import uk.gov.di.ipv.core.library.domain.BaseResponse;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -25,10 +24,12 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -49,7 +50,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     private static final String SESSION_ID = "the-session-id";
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock private Context context;
     @Mock private ConfigService mockConfigService;
@@ -127,18 +128,10 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
+        var provenUserIdentityDetails =
+                makeRequest(input, context, ProvenUserIdentityDetails.class);
 
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", "12345"));
-
-        var response = makeRequest(input, context);
-
-        assertEquals(HttpStatus.SC_OK, response.getStatusCode());
-
-        ProvenUserIdentityDetails provenUserIdentityDetails =
-                objectMapper.readValue(response.getBody(), ProvenUserIdentityDetails.class);
-
-        assertEquals(200, response.getStatusCode());
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
         assertEquals("1959-08-23", provenUserIdentityDetails.getDateOfBirth());
         assertEquals("BA2 5AA", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
@@ -195,17 +188,11 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
-
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", "12345"));
-
-        var response = makeRequest(input, context);
-
-        ProvenUserIdentityDetails provenUserIdentityDetails =
-                objectMapper.readValue(response.getBody(), ProvenUserIdentityDetails.class);
+        JourneyRequest input = createRequestEvent();
+        var provenUserIdentityDetails =
+                makeRequest(input, context, ProvenUserIdentityDetails.class);
 
         List<Address> addresses = provenUserIdentityDetails.getAddresses();
-        assertEquals(200, response.getStatusCode());
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
         assertEquals("1959-08-23", provenUserIdentityDetails.getDateOfBirth());
         assertEquals(3, addresses.size());
@@ -265,16 +252,10 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
+        JourneyRequest input = createRequestEvent();
+        var provenUserIdentityDetails =
+                makeRequest(input, context, ProvenUserIdentityDetails.class);
 
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", "12345"));
-
-        var response = makeRequest(input, context);
-
-        ProvenUserIdentityDetails provenUserIdentityDetails =
-                objectMapper.readValue(response.getBody(), ProvenUserIdentityDetails.class);
-
-        assertEquals(200, response.getStatusCode());
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
         assertEquals("1959-08-23", provenUserIdentityDetails.getDateOfBirth());
         assertEquals("BA2 5AA", provenUserIdentityDetails.getAddresses().get(0).getPostalCode());
@@ -308,13 +289,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        APIGatewayProxyRequestEvent input = createRequestEvent();
 
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", "12345"));
-
-        var response = makeRequest(input, context);
-        JourneyErrorResponse errorResponse =
-                objectMapper.readValue(response.getBody(), JourneyErrorResponse.class);
+        JourneyRequest input = createRequestEvent();
+        var errorResponse = makeRequest(input, context, JourneyErrorResponse.class);
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse.getStatusCode());
         assertEquals(
@@ -394,14 +371,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 true));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        APIGatewayProxyRequestEvent input = createRequestEvent();
 
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", "12345"));
-
-        var response = makeRequest(input, context);
-
-        JourneyErrorResponse errorResponse =
-                objectMapper.readValue(response.getBody(), JourneyErrorResponse.class);
+        JourneyRequest input = createRequestEvent();
+        var errorResponse = makeRequest(input, context, JourneyErrorResponse.class);
 
         assertEquals(500, errorResponse.getStatusCode());
         assertEquals(
@@ -486,14 +458,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 true));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        APIGatewayProxyRequestEvent input = createRequestEvent();
 
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", "12345"));
-
-        var response = makeRequest(input, context);
-
-        JourneyErrorResponse errorResponse =
-                objectMapper.readValue(response.getBody(), JourneyErrorResponse.class);
+        JourneyRequest input = createRequestEvent();
+        var errorResponse = makeRequest(input, context, JourneyErrorResponse.class);
 
         assertEquals(500, errorResponse.getStatusCode());
         assertEquals(
@@ -507,14 +474,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
     @Test
     void shouldReceive400ResponseCodeIfMissingSessionId() throws Exception {
-        APIGatewayProxyRequestEvent input = createRequestEvent();
-
-        input.setHeaders(Map.of("ip-address", "12345"));
-
-        var response = makeRequest(input, context);
-
-        JourneyErrorResponse errorResponse =
-                objectMapper.readValue(response.getBody(), JourneyErrorResponse.class);
+        JourneyRequest input =
+                JourneyRequest.builder().ipAddress("ip-address").featureSet("12345").build();
+        var errorResponse = makeRequest(input, context, JourneyErrorResponse.class);
 
         assertEquals(400, errorResponse.getStatusCode());
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), errorResponse.getCode());
@@ -542,14 +504,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
-        APIGatewayProxyRequestEvent input = createRequestEvent();
-
-        input.setHeaders(Map.of("ipv-session-id", SESSION_ID, "ip-address", "12345"));
-
-        var response = makeRequest(input, context);
-
-        JourneyErrorResponse errorResponse =
-                objectMapper.readValue(response.getBody(), JourneyErrorResponse.class);
+        JourneyRequest input = createRequestEvent();
+        var errorResponse = makeRequest(input, context, JourneyErrorResponse.class);
 
         assertEquals(500, errorResponse.getStatusCode());
         assertEquals(
@@ -560,10 +516,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 errorResponse.getMessage());
     }
 
-    private APIGatewayProxyRequestEvent createRequestEvent() {
-        APIGatewayProxyRequestEvent input = new APIGatewayProxyRequestEvent();
-        input.setHeaders(Map.of("ipv-session-id", "aSessionId", "ip-address", "1234"));
-        return input;
+    private JourneyRequest createRequestEvent() {
+        return JourneyRequest.builder().ipvSessionId(SESSION_ID).ipAddress("10.10.10.1").build();
     }
 
     private VcStoreItem createVcStoreItem(
@@ -577,12 +531,14 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         return vcStoreItem;
     }
 
-    private APIGatewayProxyResponseEvent makeRequest(
-            APIGatewayProxyRequestEvent event, Context context) {
-        final var requestType = new TypeReference<Map<String, Object>>() {};
-        final var request = objectMapper.convertValue(event, requestType);
-        final var response = underTest.handleRequest(request, context);
-
-        return objectMapper.convertValue(response, APIGatewayProxyResponseEvent.class);
+    private <T extends BaseResponse> T makeRequest(
+            JourneyRequest request, Context context, Class<T> classType) throws IOException {
+        try (var inputStream =
+                        new ByteArrayInputStream(
+                                objectMapper.writeValueAsString(request).getBytes());
+                var outputStream = new ByteArrayOutputStream()) {
+            underTest.handleRequest(inputStream, outputStream, context);
+            return objectMapper.readValue(outputStream.toString(), classType);
+        }
     }
 }
