@@ -305,17 +305,16 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
+        var journeyResponse = handleRequest(event, context, JourneyErrorResponse.class);
         assertEquals("/journey/error", journeyResponse.getJourney());
 
-        JourneyErrorResponse errorResponse = (JourneyErrorResponse) journeyResponse;
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse.getStatusCode());
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getCode(),
-                errorResponse.getCode());
+                journeyResponse.getCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(),
-                errorResponse.getMessage());
+                journeyResponse.getMessage());
 
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
@@ -328,17 +327,16 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
+        var journeyResponse = handleRequest(event, context, JourneyErrorResponse.class);
         assertEquals("/journey/error", journeyResponse.getJourney());
 
-        JourneyErrorResponse errorResponse = (JourneyErrorResponse) journeyResponse;
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse.getStatusCode());
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE.getCode(),
-                errorResponse.getCode());
+                journeyResponse.getCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE.getMessage(),
-                errorResponse.getMessage());
+                journeyResponse.getMessage());
 
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
@@ -353,14 +351,13 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
+        var journeyResponse = handleRequest(event, context, JourneyErrorResponse.class);
         assertEquals("/journey/error", journeyResponse.getJourney());
 
-        JourneyErrorResponse errorResponse = (JourneyErrorResponse) journeyResponse;
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_GET_STORED_CIS.getCode(), errorResponse.getCode());
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_GET_STORED_CIS.getCode(), journeyResponse.getCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_GET_STORED_CIS.getMessage(), errorResponse.getMessage());
+                ErrorResponse.FAILED_TO_GET_STORED_CIS.getMessage(), journeyResponse.getMessage());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
@@ -380,14 +377,14 @@ class CheckExistingIdentityHandlerTest {
                 .when(auditService)
                 .sendAuditEvent((AuditEvent) any());
 
-        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
+        var journeyResponse = handleRequest(event, context, JourneyErrorResponse.class);
         assertEquals("/journey/error", journeyResponse.getJourney());
 
-        JourneyErrorResponse errorResponse = (JourneyErrorResponse) journeyResponse;
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse.getStatusCode());
-        assertEquals(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getCode(), errorResponse.getCode());
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getCode(), journeyResponse.getCode());
         assertEquals(
-                ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getMessage(), errorResponse.getMessage());
+                ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getMessage(),
+                journeyResponse.getMessage());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
