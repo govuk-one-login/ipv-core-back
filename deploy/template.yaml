@@ -9,6 +9,8 @@ Globals:
     Environment:
       Variables:
         JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1
+        POWERTOOLS_TRACER_CAPTURE_RESPONSE: false
+        POWERTOOLS_TRACER_CAPTURE_ERROR: false
     CodeSigningConfigArn: !If
       - UseCodeSigning
       - !Ref CodeSigningConfigArn
@@ -1326,6 +1328,7 @@ Resources:
         CheckExistingIdentityFunctionArn: !GetAtt CheckExistingIdentityFunction.Arn
         EvaluateGpg45ScoresFunctionArn: !GetAtt EvaluateGpg45ScoresFunction.Arn
         SelectCriFunctionArn: !GetAtt SelectCriFunction.Arn
+        BuildCriOauthRequestFunctionArn: !GetAtt BuildCriOauthRequestFunction.Arn
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1349,6 +1352,8 @@ Resources:
             FunctionName: !Ref EvaluateGpg45ScoresFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref SelectCriFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref BuildCriOauthRequestFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow
@@ -1662,14 +1667,6 @@ Resources:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
-      Events:
-        IPVCorePrivateAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCorePrivateAPI
-            Path: /journey/select-cri
-            Method: POST
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
