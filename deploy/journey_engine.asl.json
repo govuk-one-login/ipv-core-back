@@ -34,6 +34,11 @@
           "Variable": "$.journey",
           "StringMatches": "/journey/select-cri",
           "Next": "SelectCriLambda"
+        },
+        {
+          "Variable": "$.journey",
+          "StringMatches": "/journey/cri/build-oauth-request/*",
+          "Next": "BuildCriOauthRequestLambda"
         }
       ],
       "Default": "Success"
@@ -65,6 +70,18 @@
     "SelectCriLambda": {
       "Type": "Task",
       "Resource": "${SelectCriFunctionArn}",
+      "Parameters": {
+        "journey.$": "$.journey",
+        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
+        "ipAddress.$": "$$.Execution.Input.ipAddress",
+        "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
+        "featureSet.$": "$$.Execution.Input.featureSet"
+      },
+      "Next": "ProcessNextJourney"
+    },
+    "BuildCriOauthRequestLambda": {
+      "Type": "Task",
+      "Resource": "${BuildCriOauthRequestFunctionArn}",
       "Parameters": {
         "journey.$": "$.journey",
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
