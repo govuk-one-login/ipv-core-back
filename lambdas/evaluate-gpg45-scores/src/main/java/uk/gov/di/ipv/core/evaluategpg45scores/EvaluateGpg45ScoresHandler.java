@@ -60,7 +60,6 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DE
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MITIGATION_JOURNEY_RESPONSE;
-import static uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda.JOURNEY_ERROR_PATH;
 
 /** Evaluate the gathered credentials against a desired GPG45 profile. */
 public class EvaluateGpg45ScoresHandler implements RequestHandler<JourneyRequest, JourneyResponse> {
@@ -70,6 +69,7 @@ public class EvaluateGpg45ScoresHandler implements RequestHandler<JourneyRequest
     private static final JourneyResponse JOURNEY_END = new JourneyResponse("/journey/end");
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
     private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
+    public static final String JOURNEY_ERROR_PATH = "/journey/error";
     private static final String VOT_P2 = "P2";
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int ONLY = 0;
