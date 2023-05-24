@@ -1326,6 +1326,7 @@ Resources:
         CheckExistingIdentityFunctionArn: !GetAtt CheckExistingIdentityFunction.Arn
         EvaluateGpg45ScoresFunctionArn: !GetAtt EvaluateGpg45ScoresFunction.Arn
         SelectCriFunctionArn: !GetAtt SelectCriFunction.Arn
+        BuildCriOauthRequestFunctionArn: !GetAtt BuildCriOauthRequestFunction.Arn
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1349,6 +1350,8 @@ Resources:
             FunctionName: !Ref EvaluateGpg45ScoresFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref SelectCriFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref BuildCriOauthRequestFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow
