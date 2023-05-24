@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.evaluategpg45scores;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
@@ -42,6 +41,7 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.statemachine.JourneyRequestLambda;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 
 import java.text.ParseException;
@@ -62,7 +62,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MITIGATION_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda.JOURNEY_ERROR_PATH;
 
-public class EvaluateGpg45ScoresHandler implements RequestHandler<JourneyRequest, JourneyResponse> {
+public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
 
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
@@ -116,7 +116,7 @@ public class EvaluateGpg45ScoresHandler implements RequestHandler<JourneyRequest
     @Override
     @Tracing
     @Logging(clearState = true)
-    public JourneyResponse handleRequest(JourneyRequest event, Context context) {
+    protected JourneyResponse handleRequest(JourneyRequest event, Context context) {
         LogHelper.attachComponentIdToLogs();
 
         try {

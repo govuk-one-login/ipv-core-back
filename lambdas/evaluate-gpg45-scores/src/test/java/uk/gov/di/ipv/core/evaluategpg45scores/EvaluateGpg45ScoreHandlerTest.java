@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.evaluategpg45scores;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeAll;
@@ -18,11 +17,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
-import uk.gov.di.ipv.core.library.domain.JourneyRequest;
-import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.*;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
@@ -41,6 +36,9 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
@@ -90,6 +88,7 @@ class EvaluateGpg45ScoreHandlerTest {
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
     private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     static {
         try {
@@ -109,8 +108,6 @@ class EvaluateGpg45ScoreHandlerTest {
         }
     }
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
     @Mock private Context context;
     @Mock private UserIdentityService userIdentityService;
     @Mock private IpvSessionService ipvSessionService;
@@ -120,8 +117,6 @@ class EvaluateGpg45ScoreHandlerTest {
     @Mock private AuditService auditService;
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     @InjectMocks private EvaluateGpg45ScoresHandler evaluateGpg45ScoresHandler;
-
-    private final Gson gson = new Gson();
 
     private IpvSessionItem ipvSessionItem;
     private ClientOAuthSessionItem clientOAuthSessionItem;
@@ -172,7 +167,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
-        var response = evaluateGpg45ScoresHandler.handleRequest(request, context);
+        JourneyResponse response = handleRequest(request, context, JourneyResponse.class);
 
         assertEquals(JOURNEY_END.getJourney(), response.getJourney());
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
@@ -221,7 +216,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
-        var response = evaluateGpg45ScoresHandler.handleRequest(request, context);
+        JourneyResponse response = handleRequest(request, context, JourneyResponse.class);
 
         assertEquals(JOURNEY_END.getJourney(), response.getJourney());
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
@@ -243,7 +238,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
-        var response = evaluateGpg45ScoresHandler.handleRequest(request, context);
+        JourneyResponse response = handleRequest(request, context, JourneyResponse.class);
 
         assertEquals(JOURNEY_NEXT.getJourney(), response.getJourney());
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
@@ -251,13 +246,11 @@ class EvaluateGpg45ScoreHandlerTest {
     }
 
     @Test
-    void shouldReturn400IfSessionIdNotInRequest() {
+    void shouldReturn400IfSessionIdNotInRequest() throws Exception {
         JourneyRequest requestWithoutSessionId =
                 new JourneyRequest(null, TEST_CLIENT_SOURCE_IP, null, null, null);
 
-        var response =
-                (JourneyErrorResponse)
-                        evaluateGpg45ScoresHandler.handleRequest(requestWithoutSessionId, context);
+        var response = handleRequest(requestWithoutSessionId, context, JourneyErrorResponse.class);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), response.getCode());
@@ -271,8 +264,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var response =
-                (JourneyErrorResponse) evaluateGpg45ScoresHandler.handleRequest(request, context);
+        var response = handleRequest(request, context, JourneyErrorResponse.class);
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals(
@@ -291,8 +283,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var response =
-                (JourneyErrorResponse) evaluateGpg45ScoresHandler.handleRequest(request, context);
+        var response = handleRequest(request, context, JourneyErrorResponse.class);
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals(
@@ -313,7 +304,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var response = evaluateGpg45ScoresHandler.handleRequest(request, context);
+        JourneyResponse response = handleRequest(request, context, JourneyResponse.class);
 
         assertEquals(JOURNEY_PYI_NO_MATCH, response.getJourney());
     }
@@ -327,8 +318,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var response =
-                (JourneyErrorResponse) evaluateGpg45ScoresHandler.handleRequest(request, context);
+        var response = handleRequest(request, context, JourneyErrorResponse.class);
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_STORED_CIS.getCode(), response.getCode());
@@ -361,7 +351,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
-        evaluateGpg45ScoresHandler.handleRequest(request, context);
+        handleRequest(request, context, JourneyResponse.class);
 
         ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
         verify(auditService).sendAuditEvent(auditEventCaptor.capture());
@@ -404,7 +394,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
-        evaluateGpg45ScoresHandler.handleRequest(request, context);
+        handleRequest(request, context, JourneyResponse.class);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -462,7 +452,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
-        evaluateGpg45ScoresHandler.handleRequest(request, context);
+        handleRequest(request, context, JourneyResponse.class);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -516,7 +506,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
-        evaluateGpg45ScoresHandler.handleRequest(request, context);
+        handleRequest(request, context, JourneyResponse.class);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -566,7 +556,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
-        evaluateGpg45ScoresHandler.handleRequest(request, context);
+        handleRequest(request, context, JourneyResponse.class);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -611,7 +601,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
-        var response = evaluateGpg45ScoresHandler.handleRequest(request, context);
+        JourneyResponse response = handleRequest(request, context, JourneyResponse.class);
 
         assertEquals(JOURNEY_END.getJourney(), response.getJourney());
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
@@ -665,7 +655,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
-        var response = evaluateGpg45ScoresHandler.handleRequest(request, context);
+        JourneyResponse response = handleRequest(request, context, JourneyResponse.class);
 
         assertEquals(JOURNEY_END.getJourney(), response.getJourney());
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
@@ -707,7 +697,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
                 .thenReturn(false);
 
-        var response = evaluateGpg45ScoresHandler.handleRequest(request, context);
+        var response = handleRequest(request, context, JourneyResponse.class);
 
         assertEquals(JOURNEY_PYI_NO_MATCH, response.getJourney());
 
@@ -727,11 +717,19 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(false);
 
-        var response = evaluateGpg45ScoresHandler.handleRequest(request, context);
+        var response = handleRequest(request, context, JourneyResponse.class);
 
         assertEquals(JOURNEY_PYI_NO_MATCH, response.getJourney());
 
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(userIdentityService, times(1)).checkBirthDateCorrelationInCredentials(any(), any());
+    }
+
+    private <T extends BaseResponse> T handleRequest(JourneyRequest request, Context context, Class<T> classType) throws IOException {
+        try (var inputStream = new ByteArrayInputStream(new ObjectMapper().writeValueAsString(request).getBytes());
+             var outputStream = new ByteArrayOutputStream()) {
+            evaluateGpg45ScoresHandler.handleRequest(inputStream, outputStream, context);
+            return mapper.readValue(outputStream.toString(), classType);
+        }
     }
 }
