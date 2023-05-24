@@ -1,8 +1,6 @@
 package uk.gov.di.ipv.core.buildprovenuseridentitydetails;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +10,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.ProvenUserIdentityDetails;
 import uk.gov.di.ipv.core.library.domain.Address;
+import uk.gov.di.ipv.core.library.domain.BaseResponse;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -25,10 +24,12 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -128,10 +129,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
 
         JourneyRequest input = createRequestEvent();
-        var responseJson = makeRequest(input, context);
-
-        ProvenUserIdentityDetails provenUserIdentityDetails =
-                objectMapper.readValue(responseJson, ProvenUserIdentityDetails.class);
+        var provenUserIdentityDetails =
+                makeRequest(input, context, ProvenUserIdentityDetails.class);
 
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
         assertEquals("1959-08-23", provenUserIdentityDetails.getDateOfBirth());
@@ -190,10 +189,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
 
         JourneyRequest input = createRequestEvent();
-        var responseJson = makeRequest(input, context);
-
-        ProvenUserIdentityDetails provenUserIdentityDetails =
-                objectMapper.readValue(responseJson, ProvenUserIdentityDetails.class);
+        var provenUserIdentityDetails =
+                makeRequest(input, context, ProvenUserIdentityDetails.class);
 
         List<Address> addresses = provenUserIdentityDetails.getAddresses();
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
@@ -256,10 +253,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
 
         JourneyRequest input = createRequestEvent();
-        var responseJson = makeRequest(input, context);
-
-        ProvenUserIdentityDetails provenUserIdentityDetails =
-                objectMapper.readValue(responseJson, ProvenUserIdentityDetails.class);
+        var provenUserIdentityDetails =
+                makeRequest(input, context, ProvenUserIdentityDetails.class);
 
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
         assertEquals("1959-08-23", provenUserIdentityDetails.getDateOfBirth());
@@ -296,10 +291,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
 
         JourneyRequest input = createRequestEvent();
-        var responseJson = makeRequest(input, context);
-
-        JourneyErrorResponse errorResponse =
-                objectMapper.readValue(responseJson, JourneyErrorResponse.class);
+        var errorResponse = makeRequest(input, context, JourneyErrorResponse.class);
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse.getStatusCode());
         assertEquals(
@@ -381,10 +373,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
 
         JourneyRequest input = createRequestEvent();
-        var responseJson = makeRequest(input, context);
-
-        JourneyErrorResponse errorResponse =
-                objectMapper.readValue(responseJson, JourneyErrorResponse.class);
+        var errorResponse = makeRequest(input, context, JourneyErrorResponse.class);
 
         assertEquals(500, errorResponse.getStatusCode());
         assertEquals(
@@ -471,10 +460,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
 
         JourneyRequest input = createRequestEvent();
-        var responseJson = makeRequest(input, context);
-
-        JourneyErrorResponse errorResponse =
-                objectMapper.readValue(responseJson, JourneyErrorResponse.class);
+        var errorResponse = makeRequest(input, context, JourneyErrorResponse.class);
 
         assertEquals(500, errorResponse.getStatusCode());
         assertEquals(
@@ -490,10 +476,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     void shouldReceive400ResponseCodeIfMissingSessionId() throws Exception {
         JourneyRequest input =
                 JourneyRequest.builder().ipAddress("ip-address").featureSet("12345").build();
-        var responseJson = makeRequest(input, context);
-
-        JourneyErrorResponse errorResponse =
-                objectMapper.readValue(responseJson, JourneyErrorResponse.class);
+        var errorResponse = makeRequest(input, context, JourneyErrorResponse.class);
 
         assertEquals(400, errorResponse.getStatusCode());
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), errorResponse.getCode());
@@ -522,10 +505,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
         JourneyRequest input = createRequestEvent();
-        var responseJson = makeRequest(input, context);
-
-        JourneyErrorResponse errorResponse =
-                objectMapper.readValue(responseJson, JourneyErrorResponse.class);
+        var errorResponse = makeRequest(input, context, JourneyErrorResponse.class);
 
         assertEquals(500, errorResponse.getStatusCode());
         assertEquals(
@@ -551,14 +531,14 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         return vcStoreItem;
     }
 
-    private static String getJsonResponse(Map<String, Object> response)
-            throws JsonProcessingException {
-        return objectMapper.writeValueAsString(response);
-    }
-
-    private String makeRequest(JourneyRequest event, Context context)
-            throws JsonProcessingException {
-        final var response = underTest.handleRequest(event, context);
-        return getJsonResponse(objectMapper.convertValue(response, new TypeReference<>() {}));
+    private <T extends BaseResponse> T makeRequest(
+            JourneyRequest request, Context context, Class<T> classType) throws IOException {
+        try (var inputStream =
+                        new ByteArrayInputStream(
+                                objectMapper.writeValueAsString(request).getBytes());
+                var outputStream = new ByteArrayOutputStream()) {
+            underTest.handleRequest(inputStream, outputStream, context);
+            return objectMapper.readValue(outputStream.toString(), classType);
+        }
     }
 }

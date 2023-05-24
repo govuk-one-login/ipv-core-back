@@ -1,8 +1,6 @@
 package uk.gov.di.ipv.core.buildclientoauthresponse;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
@@ -20,6 +18,7 @@ import uk.gov.di.ipv.core.buildclientoauthresponse.domain.ClientResponse;
 import uk.gov.di.ipv.core.buildclientoauthresponse.validation.AuthRequestValidator;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.domain.BaseResponse;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -33,12 +32,14 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.validation.ValidationResult;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -82,7 +83,7 @@ class BuildClientOauthResponseHandlerTest {
 
     @Test
     void shouldReturn200OnSuccessfulOauthRequest()
-            throws JsonProcessingException, SqsException, URISyntaxException {
+            throws IOException, SqsException, URISyntaxException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
         IpvSessionItem ipvSessionItem = generateIpvSessionItem();
@@ -95,8 +96,7 @@ class BuildClientOauthResponseHandlerTest {
                         .ipvSessionId(TEST_SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
                         .build();
-
-        var responseJson = makeRequest(event, context);
+        var clientResponse = makeRequest(event, context, ClientResponse.class);
 
         verify(mockSessionService)
                 .setAuthorizationCode(eq(ipvSessionItem), anyString(), eq("https://example.com"));
@@ -111,8 +111,7 @@ class BuildClientOauthResponseHandlerTest {
                         .addParameter("state", "test-state")
                         .build();
 
-        ClientResponse response = objectMapper.readValue(responseJson, ClientResponse.class);
-        URI actualRedirectUrl = new URI(response.getClient().getRedirectUrl());
+        URI actualRedirectUrl = new URI(clientResponse.getClient().getRedirectUrl());
         List<NameValuePair> params =
                 URLEncodedUtils.parse(actualRedirectUrl, StandardCharsets.UTF_8);
         assertEquals(expectedRedirectUrl.getHost(), actualRedirectUrl.getHost());
@@ -122,7 +121,7 @@ class BuildClientOauthResponseHandlerTest {
 
     @Test
     void shouldReturn200OnSuccessfulOauthRequest_withNullIpvSessionAndClientSessionIdInRequest()
-            throws JsonProcessingException, URISyntaxException {
+            throws IOException, URISyntaxException {
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
 
@@ -132,11 +131,9 @@ class BuildClientOauthResponseHandlerTest {
                         .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
                         .featureSet(TEST_FEATURE_SET)
                         .build();
+        var clientResponse = makeRequest(event, context, ClientResponse.class);
 
-        var responseJson = makeRequest(event, context);
-
-        ClientResponse response = objectMapper.readValue(responseJson, ClientResponse.class);
-        URI actualRedirectUrl = new URI(response.getClient().getRedirectUrl());
+        URI actualRedirectUrl = new URI(clientResponse.getClient().getRedirectUrl());
         List<NameValuePair> params =
                 URLEncodedUtils.parse(actualRedirectUrl, StandardCharsets.UTF_8);
         assertEquals("example.com", actualRedirectUrl.getHost());
@@ -147,20 +144,17 @@ class BuildClientOauthResponseHandlerTest {
     }
 
     @Test
-    void shouldReturn400_withBothIpvSessionAndClientSessionIdNullInRequest()
-            throws JsonProcessingException {
+    void shouldReturn400_withBothIpvSessionAndClientSessionIdNullInRequest() throws IOException {
         JourneyRequest event = JourneyRequest.builder().ipAddress(TEST_IP_ADDRESS).build();
-        var responseJson = makeRequest(event, context);
+        var errorResponse = makeRequest(event, context, JourneyErrorResponse.class);
 
-        JourneyErrorResponse response =
-                objectMapper.readValue(responseJson, JourneyErrorResponse.class);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_SESSION_ID.getCode(), response.getCode());
-        assertEquals(ErrorResponse.MISSING_SESSION_ID.getMessage(), response.getMessage());
+        assertEquals(HttpStatus.SC_BAD_REQUEST, errorResponse.getStatusCode());
+        assertEquals(ErrorResponse.MISSING_SESSION_ID.getCode(), errorResponse.getCode());
+        assertEquals(ErrorResponse.MISSING_SESSION_ID.getMessage(), errorResponse.getMessage());
     }
 
     @Test
-    void shouldReturn200WhenStateNotInSession() throws JsonProcessingException, URISyntaxException {
+    void shouldReturn200WhenStateNotInSession() throws IOException, URISyntaxException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSession(anyString())).thenReturn(generateIpvSessionItem());
@@ -174,13 +168,13 @@ class BuildClientOauthResponseHandlerTest {
                         .ipvSessionId(TEST_SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
                         .build();
-        var responseJson = makeRequest(event, context);
-        ClientResponse response = objectMapper.readValue(responseJson, ClientResponse.class);
+        var clientResponse = makeRequest(event, context, ClientResponse.class);
+
         URI expectedRedirectUrl =
                 new URIBuilder("https://example.com")
                         .addParameter("code", authorizationCode)
                         .build();
-        URI actualRedirectUrl = new URI(response.getClient().getRedirectUrl());
+        URI actualRedirectUrl = new URI(clientResponse.getClient().getRedirectUrl());
         List<NameValuePair> params =
                 URLEncodedUtils.parse(actualRedirectUrl, StandardCharsets.UTF_8);
         assertEquals(expectedRedirectUrl.getHost(), actualRedirectUrl.getHost());
@@ -189,7 +183,7 @@ class BuildClientOauthResponseHandlerTest {
     }
 
     @Test
-    void shouldReturn400IfRequestFailsValidation() throws JsonProcessingException {
+    void shouldReturn400IfRequestFailsValidation() throws IOException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(new ValidationResult<>(false, ErrorResponse.MISSING_QUERY_PARAMETERS));
         when(mockSessionService.getIpvSession(anyString())).thenReturn(generateIpvSessionItem());
@@ -201,20 +195,18 @@ class BuildClientOauthResponseHandlerTest {
                         .ipvSessionId(TEST_SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
                         .build();
-        var responseJson = makeRequest(event, context);
+        var errorResponse = makeRequest(event, context, JourneyErrorResponse.class);
 
-        JourneyErrorResponse response =
-                objectMapper.readValue(responseJson, JourneyErrorResponse.class);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
-        assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getCode(), response.getCode());
-        assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), response.getMessage());
+        assertEquals(HttpStatus.SC_BAD_REQUEST, errorResponse.getStatusCode());
+        assertEquals(ErrorResponse.MISSING_QUERY_PARAMETERS.getCode(), errorResponse.getCode());
+        assertEquals(
+                ErrorResponse.MISSING_QUERY_PARAMETERS.getMessage(), errorResponse.getMessage());
 
         verify(mockSessionService, never()).setAuthorizationCode(any(), anyString(), anyString());
     }
 
     @Test
-    void shouldReturn400IfCanNotParseAuthRequestFromQueryStringParams()
-            throws JsonProcessingException {
+    void shouldReturn400IfCanNotParseAuthRequestFromQueryStringParams() throws IOException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
         when(mockSessionService.getIpvSession(anyString())).thenReturn(generateIpvSessionItem());
@@ -238,17 +230,15 @@ class BuildClientOauthResponseHandlerTest {
                             .ipvSessionId(TEST_SESSION_ID)
                             .ipAddress(TEST_IP_ADDRESS)
                             .build();
-            var responseJson = makeRequest(event, context);
+            var errorResponse = makeRequest(event, context, JourneyErrorResponse.class);
 
-            JourneyErrorResponse response =
-                    objectMapper.readValue(responseJson, JourneyErrorResponse.class);
-            assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+            assertEquals(HttpStatus.SC_BAD_REQUEST, errorResponse.getStatusCode());
             assertEquals(
                     ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getCode(),
-                    response.getCode());
+                    errorResponse.getCode());
             assertEquals(
                     ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS.getMessage(),
-                    response.getMessage());
+                    errorResponse.getMessage());
             verify(mockSessionService, never())
                     .setAuthorizationCode(any(), anyString(), anyString());
         }
@@ -269,10 +259,9 @@ class BuildClientOauthResponseHandlerTest {
                         .ipvSessionId(TEST_SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
                         .build();
-        var responseJson = makeRequest(event, context);
+        var clientResponse = makeRequest(event, context, ClientResponse.class);
 
-        ClientResponse response = objectMapper.readValue(responseJson, ClientResponse.class);
-        URIBuilder uriBuilder = new URIBuilder(response.getClient().getRedirectUrl());
+        URIBuilder uriBuilder = new URIBuilder(clientResponse.getClient().getRedirectUrl());
         assertEquals(OAuth2Error.SERVER_ERROR_CODE, uriBuilder.getQueryParams().get(0).getValue());
         assertEquals("Test error description", uriBuilder.getQueryParams().get(1).getValue());
         assertEquals(
@@ -296,12 +285,9 @@ class BuildClientOauthResponseHandlerTest {
                         .ipvSessionId(TEST_SESSION_ID)
                         .ipAddress(TEST_IP_ADDRESS)
                         .build();
-        var response = handler.handleRequest(event, context);
-        String responseJson =
-                getJsonResponse(objectMapper.convertValue(response, new TypeReference<>() {}));
+        var clientResponse = makeRequest(event, context, ClientResponse.class);
 
-        ClientResponse responseBody = objectMapper.readValue(responseJson, ClientResponse.class);
-        URIBuilder uriBuilder = new URIBuilder(responseBody.getClient().getRedirectUrl());
+        URIBuilder uriBuilder = new URIBuilder(clientResponse.getClient().getRedirectUrl());
         assertEquals(OAuth2Error.SERVER_ERROR_CODE, uriBuilder.getQueryParams().get(0).getValue());
         assertEquals("Test error description", uriBuilder.getQueryParams().get(1).getValue());
         assertEquals(2, uriBuilder.getQueryParams().size());
@@ -309,7 +295,7 @@ class BuildClientOauthResponseHandlerTest {
 
     @Test
     void shouldReturn200OnSuccessfulOauthRequestForJsonRequest()
-            throws JsonProcessingException, SqsException, URISyntaxException {
+            throws SqsException, URISyntaxException {
         when(mockAuthRequestValidator.validateRequest(anyMap(), anyMap()))
                 .thenReturn(ValidationResult.createValidResult());
         IpvSessionItem ipvSessionItem = generateIpvSessionItem();
@@ -367,14 +353,14 @@ class BuildClientOauthResponseHandlerTest {
         return clientOAuthSessionItem;
     }
 
-    private static String getJsonResponse(Map<String, Object> response)
-            throws JsonProcessingException {
-        return objectMapper.writeValueAsString(response);
-    }
-
-    private String makeRequest(JourneyRequest event, Context context)
-            throws JsonProcessingException {
-        final var response = handler.handleRequest(event, context);
-        return getJsonResponse(objectMapper.convertValue(response, new TypeReference<>() {}));
+    private <T extends BaseResponse> T makeRequest(
+            JourneyRequest request, Context context, Class<T> classType) throws IOException {
+        try (var inputStream =
+                        new ByteArrayInputStream(
+                                objectMapper.writeValueAsString(request).getBytes());
+                var outputStream = new ByteArrayOutputStream()) {
+            handler.handleRequest(inputStream, outputStream, context);
+            return objectMapper.readValue(outputStream.toString(), classType);
+        }
     }
 }
