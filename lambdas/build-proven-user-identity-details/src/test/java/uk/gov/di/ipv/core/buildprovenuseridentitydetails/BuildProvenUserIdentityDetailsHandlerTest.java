@@ -488,7 +488,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
 
     @Test
     void shouldReceive400ResponseCodeIfMissingSessionId() throws Exception {
-        JourneyRequest input = new JourneyRequest(null, "ip-address", null, "12345");
+        JourneyRequest input =
+                JourneyRequest.builder().ipAddress("ip-address").featureSet("12345").build();
         var responseJson = makeRequest(input, context);
 
         JourneyErrorResponse errorResponse =
@@ -536,7 +537,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     }
 
     private JourneyRequest createRequestEvent() {
-        return new JourneyRequest(SESSION_ID, "10.10.10.1", null, null);
+        return JourneyRequest.builder().ipvSessionId(SESSION_ID).ipAddress("10.10.10.1").build();
     }
 
     private VcStoreItem createVcStoreItem(
