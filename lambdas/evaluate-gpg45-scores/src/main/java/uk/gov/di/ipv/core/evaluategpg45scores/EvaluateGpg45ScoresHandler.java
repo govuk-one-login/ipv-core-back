@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.BaseResponse;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -60,15 +61,13 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DE
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MITIGATION_JOURNEY_RESPONSE;
-import static uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda.JOURNEY_ERROR_PATH;
 
 /** Evaluate the gathered credentials against a desired GPG45 profile. */
 public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
-
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
-    private static final JourneyResponse JOURNEY_END = new JourneyResponse("/journey/end");
-    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
+    private static final JourneyResponse JOURNEY_END = new JourneyResponse(JOURNEY_ERROR_PATH);
+    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
     private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
     private static final String VOT_P2 = "P2";
     private static final Logger LOGGER = LogManager.getLogger();
@@ -82,6 +81,7 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final String componentId;
 
+    @SuppressWarnings("unused") // Used by tests through injection
     public EvaluateGpg45ScoresHandler(
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
@@ -101,6 +101,7 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
         componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
+    @SuppressWarnings("unused") // Used by AWS
     @ExcludeFromGeneratedCoverageReport
     public EvaluateGpg45ScoresHandler() {
         this.configService = new ConfigService();
@@ -117,7 +118,7 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
     @Override
     @Tracing
     @Logging(clearState = true)
-    protected JourneyResponse handleRequest(JourneyRequest event, Context context) {
+    protected BaseResponse handleRequest(JourneyRequest event, Context context) {
         LogHelper.attachComponentIdToLogs();
 
         try {
