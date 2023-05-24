@@ -37,13 +37,13 @@
         },
         {
           "Variable": "$.journey",
-<<<<<<< Updated upstream
           "StringMatches": "/journey/cri/build-oauth-request/*",
           "Next": "BuildCriOauthRequestLambda"
-=======
-          "StringMatches": "/journey/select-cri",
-          "Next": "SelectCriLambda"
->>>>>>> Stashed changes
+        },
+        {
+          "Variable": "$.journey",
+          "StringMatches": "/journey/build-client-oauth-response",
+          "Next": "BuildClientOauthResponseLambda"
         }
       ],
       "Default": "Success"
