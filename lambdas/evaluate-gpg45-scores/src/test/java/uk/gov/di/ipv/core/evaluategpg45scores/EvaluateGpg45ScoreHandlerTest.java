@@ -728,8 +728,7 @@ class EvaluateGpg45ScoreHandlerTest {
     private <T extends BaseResponse> T handleRequest(
             JourneyRequest request, Context context, Class<T> classType) throws IOException {
         try (var inputStream =
-                        new ByteArrayInputStream(
-                                new ObjectMapper().writeValueAsString(request).getBytes());
+                        new ByteArrayInputStream(mapper.writeValueAsString(request).getBytes());
                 var outputStream = new ByteArrayOutputStream()) {
             evaluateGpg45ScoresHandler.handleRequest(inputStream, outputStream, context);
             return mapper.readValue(outputStream.toString(), classType);
