@@ -167,7 +167,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
-        JourneyResponse response = handleRequest(request, context, JourneyResponse.class);
+        var response = handleRequest(request, context, JourneyResponse.class);
 
         assertEquals(JOURNEY_END.getJourney(), response.getJourney());
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
@@ -216,7 +216,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
-        JourneyResponse response = handleRequest(request, context, JourneyResponse.class);
+        var response = handleRequest(request, context, JourneyResponse.class);
 
         assertEquals(JOURNEY_END.getJourney(), response.getJourney());
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
@@ -238,7 +238,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
-        JourneyResponse response = handleRequest(request, context, JourneyResponse.class);
+        var response = handleRequest(request, context, JourneyResponse.class);
 
         assertEquals(JOURNEY_NEXT.getJourney(), response.getJourney());
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
@@ -304,7 +304,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyResponse response = handleRequest(request, context, JourneyResponse.class);
+        var response = handleRequest(request, context, JourneyResponse.class);
 
         assertEquals(JOURNEY_PYI_NO_MATCH, response.getJourney());
     }
@@ -601,7 +601,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
-        JourneyResponse response = handleRequest(request, context, JourneyResponse.class);
+        var response = handleRequest(request, context, JourneyResponse.class);
 
         assertEquals(JOURNEY_END.getJourney(), response.getJourney());
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
@@ -655,7 +655,7 @@ class EvaluateGpg45ScoreHandlerTest {
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
 
-        JourneyResponse response = handleRequest(request, context, JourneyResponse.class);
+        var response = handleRequest(request, context, JourneyResponse.class);
 
         assertEquals(JOURNEY_END.getJourney(), response.getJourney());
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
