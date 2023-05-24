@@ -11,7 +11,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public abstract class JourneyRequestLambda implements RequestStreamHandler {
-    private ObjectMapper mapper = new ObjectMapper();
+    public static final String JOURNEY_ERROR_PATH = "/journey/error";
+    public static final String JOURNEY_NEXT_PATH = "/journey/next";
+    private static ObjectMapper mapper = new ObjectMapper();
 
     @Override
     public void handleRequest(InputStream input, OutputStream output, Context context)
