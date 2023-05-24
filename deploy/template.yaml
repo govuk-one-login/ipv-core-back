@@ -1665,14 +1665,6 @@ Resources:
             TableName: !Ref ClientOAuthSessionsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
-      Events:
-        IPVCorePrivateAPI:
-          Type: Api
-          Properties:
-            RestApiId:
-              Ref: IPVCorePrivateAPI
-            Path: /journey/select-cri
-            Method: POST
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
