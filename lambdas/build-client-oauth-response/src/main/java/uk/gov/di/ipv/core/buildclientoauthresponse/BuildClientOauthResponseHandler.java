@@ -53,6 +53,7 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionIdAllowNull;
 
+/** Called when the user has completed their user journey in IPV Core */
 public class BuildClientOauthResponseHandler extends JourneyRequestLambda {
     private static final Logger LOGGER = LogManager.getLogger();
     private final IpvSessionService sessionService;
