@@ -54,7 +54,9 @@ public enum ErrorResponse {
     MISSING_IP_ADDRESS(1044, "Missing ip address header"),
     FAILED_BIRTHDATE_CORRELATION(1045, "Failed to correlate gathered birth dates"),
     FAILED_NAME_CORRELATION(1046, "Failed to correlate gathered names"),
-    FAILED_TO_CONSTRUCT_REDIRECT_URI(1047, "Failed to construct redirect uri");
+    FAILED_TO_CONSTRUCT_REDIRECT_URI(1047, "Failed to construct redirect uri"),
+    FAILED_TO_PARSE_JSON_MESSAGE(1048, "Failed to parse JSON message"),
+    FAILED_UNHANDLED_EXCEPTION(1049, "Unhandled exception");
 
     @JsonProperty("code")
     private final int code;
