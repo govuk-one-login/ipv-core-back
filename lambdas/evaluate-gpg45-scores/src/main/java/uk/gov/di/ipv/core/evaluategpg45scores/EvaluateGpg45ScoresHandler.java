@@ -66,7 +66,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MITIGATI
 public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
-    private static final JourneyResponse JOURNEY_END = new JourneyResponse(JOURNEY_ERROR_PATH);
+    private static final JourneyResponse JOURNEY_END = new JourneyResponse(JOURNEY_END_PATH);
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
     private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
     private static final String VOT_P2 = "P2";
