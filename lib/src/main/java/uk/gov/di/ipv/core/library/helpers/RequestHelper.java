@@ -12,41 +12,18 @@ import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MISSING_HEADER_FIELD;
 
 public class RequestHelper {
 
     public static final String IPV_SESSION_ID_HEADER = "ipv-session-id";
-    public static final String CLIENT_SESSION_ID_HEADER = "client-session-id";
     public static final String IP_ADDRESS_HEADER = "ip-address";
     public static final String FEATURE_SET_HEADER = "feature-set";
-    public static final String JOURNEY_HEADER = "journey";
-
     private static final Logger LOGGER = LogManager.getLogger();
 
     private RequestHelper() {}
-
-    public static Optional<String> getHeader(Map<String, String> headers, String headerKey) {
-        if (headers == null) {
-            return Optional.empty();
-        }
-        var values =
-                headers.entrySet().stream()
-                        .filter(e -> headerKey.equalsIgnoreCase(e.getKey()))
-                        .map(Map.Entry::getValue)
-                        .collect(Collectors.toList());
-        if (values.size() == 1) {
-            var value = values.get(0);
-            if (StringUtils.isNotBlank(value)) {
-                return Optional.of(value);
-            }
-        }
-        return Optional.empty();
-    }
 
     public static String getHeaderByKey(Map<String, String> headers, String headerKey) {
         if (Objects.isNull(headers)) {
@@ -76,11 +53,6 @@ public class RequestHelper {
         return getIpvSessionId(event, false);
     }
 
-    public static String getIpvSessionIdAllowNull(APIGatewayProxyRequestEvent event)
-            throws HttpResponseExceptionWithErrorBody {
-        return getIpvSessionId(event.getHeaders(), true);
-    }
-
     public static String getIpvSessionIdAllowNull(JourneyRequest event)
             throws HttpResponseExceptionWithErrorBody {
         return getIpvSessionId(event, true);
@@ -96,10 +68,6 @@ public class RequestHelper {
         String ipAddress = request.getIpAddress();
         validateIpAddress(ipAddress, "ipAddress not present in request.");
         return ipAddress;
-    }
-
-    public static String getClientOAuthSessionId(APIGatewayProxyRequestEvent event) {
-        return getClientOAuthSessionId(event.getHeaders());
     }
 
     public static String getClientOAuthSessionId(JourneyRequest event) {
@@ -143,23 +111,6 @@ public class RequestHelper {
         return request.getJourney();
     }
 
-    public static String getJourney(APIGatewayProxyRequestEvent event, String pathVariable) {
-        String criId = getPathVariableFromEvent(event, pathVariable);
-        if (criId != null) {
-            LogHelper.attachCriIdToLogs(criId);
-        }
-        return criId;
-    }
-
-    private static String getPathVariableFromEvent(
-            APIGatewayProxyRequestEvent event, String pathVariable) {
-        Map<String, String> pathParameters = event.getPathParameters();
-        if (pathParameters != null) {
-            return pathParameters.get(pathVariable);
-        }
-        return null;
-    }
-
     private static String getIpvSessionId(Map<String, String> headers, boolean allowNull)
             throws HttpResponseExceptionWithErrorBody {
         String ipvSessionId = RequestHelper.getHeaderByKey(headers, IPV_SESSION_ID_HEADER);
@@ -199,21 +150,6 @@ public class RequestHelper {
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_IP_ADDRESS);
         }
-    }
-
-    private static String getClientOAuthSessionId(Map<String, String> headers) {
-        String clientSessionId = RequestHelper.getHeaderByKey(headers, CLIENT_SESSION_ID_HEADER);
-
-        StringMapMessage message =
-                new StringMapMessage()
-                        .with(
-                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                "Client session id missing in header.")
-                        .with(LOG_MISSING_HEADER_FIELD.getFieldName(), CLIENT_SESSION_ID_HEADER);
-        validateClientOAuthSessionId(clientSessionId, message);
-
-        LogHelper.attachClientSessionIdToLogs(clientSessionId);
-        return clientSessionId;
     }
 
     private static void validateClientOAuthSessionId(

@@ -63,7 +63,6 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getJourney;
-import static uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda.JOURNEY_ERROR_PATH;
 
 public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
     private static final Logger LOGGER = LogManager.getLogger();

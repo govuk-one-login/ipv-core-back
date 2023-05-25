@@ -43,7 +43,6 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_R
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
-import static uk.gov.di.ipv.core.library.statemachine.BaseJourneyLambda.JOURNEY_ERROR_PATH;
 
 /** Selects a CRI based on which CRIs the user has not visited */
 public class SelectCriHandler extends JourneyRequestLambda {

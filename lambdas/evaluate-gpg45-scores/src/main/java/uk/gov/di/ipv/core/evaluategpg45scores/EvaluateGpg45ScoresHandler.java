@@ -69,6 +69,7 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
     private static final JourneyResponse JOURNEY_END = new JourneyResponse(JOURNEY_END_PATH);
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
     private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
+    public static final String JOURNEY_ERROR_PATH = "/journey/error";
     private static final String VOT_P2 = "P2";
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int ONLY = 0;
