@@ -446,6 +446,14 @@ Resources:
                 - 'kms:GenerateDataKey'
               Resource:
                 - !ImportValue AuditEventQueueEncryptionKeyArn
+      Events:
+        IPVCorePrivateAPI:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+            Path: /journey/build-client-oauth-response
+            Method: POST
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
