@@ -209,7 +209,11 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldReceive400ResponseCodeIfCredentialIssuerNotPresent() throws JsonProcessingException {
         JourneyRequest input =
-                new JourneyRequest("aSessionId", TEST_IP_ADDRESS, null, "CRI_ID", null);
+                JourneyRequest.builder()
+                        .ipvSessionId("aSessionId")
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(CRI_ID)
+                        .build();
 
         var response = handleRequest(input, context);
         assert400Response(response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
@@ -219,7 +223,11 @@ class BuildCriOauthRequestHandlerTest {
     void shouldReceive400ResponseCodeIfCredentialIssuerNotInPermittedSet()
             throws JsonProcessingException {
         JourneyRequest input =
-                new JourneyRequest("aSessionId", TEST_IP_ADDRESS, null, "Missing CriId", null);
+                JourneyRequest.builder()
+                        .ipvSessionId("aSessionId")
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey("Missing CriId")
+                        .build();
 
         var response = handleRequest(input, context);
         assert400Response(response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
@@ -253,7 +261,12 @@ class BuildCriOauthRequestHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest input = new JourneyRequest(SESSION_ID, TEST_IP_ADDRESS, null, CRI_ID, null);
+        JourneyRequest input =
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(CRI_ID)
+                        .build();
 
         var responseJson = handleRequest(input, context);
         CriResponse response = objectMapper.readValue(responseJson, CriResponse.class);
@@ -324,8 +337,11 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
 
         JourneyRequest input =
-                new JourneyRequest(
-                        SESSION_ID, TEST_IP_ADDRESS, null, JOURNEY_BASE_URL + CRI_ID, null);
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(JOURNEY_BASE_URL + CRI_ID)
+                        .build();
 
         var responseJson = handleRequest(input, context);
         CriResponse response = objectMapper.readValue(responseJson, CriResponse.class);
@@ -395,7 +411,12 @@ class BuildCriOauthRequestHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest input = new JourneyRequest(SESSION_ID, TEST_IP_ADDRESS, null, CRI_ID, null);
+        JourneyRequest input =
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(CRI_ID)
+                        .build();
 
         var responseJson = handleRequest(input, context);
         CriResponse response = objectMapper.readValue(responseJson, CriResponse.class);
@@ -465,7 +486,11 @@ class BuildCriOauthRequestHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
 
         JourneyRequest input =
-                new JourneyRequest(SESSION_ID, TEST_IP_ADDRESS, null, DCMAW_CRI, null);
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(DCMAW_CRI)
+                        .build();
 
         var responseJson = handleRequest(input, context);
         CriResponse response = objectMapper.readValue(responseJson, CriResponse.class);
@@ -509,7 +534,7 @@ class BuildCriOauthRequestHandlerTest {
 
     @Test
     void shouldReturn400IfSessionIdIsNull() throws JsonProcessingException {
-        JourneyRequest input = new JourneyRequest(null, null, CRI_ID, null, null);
+        JourneyRequest input = JourneyRequest.builder().journey(CRI_ID).build();
 
         var responseJson = handleRequest(input, context);
 
@@ -589,7 +614,12 @@ class BuildCriOauthRequestHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest input = new JourneyRequest(SESSION_ID, TEST_IP_ADDRESS, null, CRI_ID, null);
+        JourneyRequest input =
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(CRI_ID)
+                        .build();
 
         var responseJson = handleRequest(input, context);
         CriResponse response = objectMapper.readValue(responseJson, CriResponse.class);
@@ -643,7 +673,12 @@ class BuildCriOauthRequestHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest input = new JourneyRequest(SESSION_ID, TEST_IP_ADDRESS, null, CRI_ID, null);
+        JourneyRequest input =
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(CRI_ID)
+                        .build();
 
         var responseJson = handleRequest(input, context);
         CriResponse response = objectMapper.readValue(responseJson, CriResponse.class);
@@ -695,7 +730,12 @@ class BuildCriOauthRequestHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest input = new JourneyRequest(SESSION_ID, TEST_IP_ADDRESS, null, CRI_ID, null);
+        JourneyRequest input =
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(CRI_ID)
+                        .build();
 
         var responseJson = handleRequest(input, context);
         CriResponse response = objectMapper.readValue(responseJson, CriResponse.class);
@@ -768,7 +808,12 @@ class BuildCriOauthRequestHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest input = new JourneyRequest(SESSION_ID, TEST_IP_ADDRESS, null, CRI_ID, null);
+        JourneyRequest input =
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(CRI_ID)
+                        .build();
 
         var responseJson = handleRequest(input, context);
         CriResponse response = objectMapper.readValue(responseJson, CriResponse.class);
@@ -822,7 +867,12 @@ class BuildCriOauthRequestHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest input = new JourneyRequest(SESSION_ID, TEST_IP_ADDRESS, null, CRI_ID, null);
+        JourneyRequest input =
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(CRI_ID)
+                        .build();
 
         var responseJson = handleRequest(input, context);
         CriResponse response = objectMapper.readValue(responseJson, CriResponse.class);
@@ -878,7 +928,12 @@ class BuildCriOauthRequestHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        JourneyRequest input = new JourneyRequest(SESSION_ID, TEST_IP_ADDRESS, null, CRI_ID, null);
+        JourneyRequest input =
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(CRI_ID)
+                        .build();
 
         var responseJson = handleRequest(input, context);
         CriResponse response = objectMapper.readValue(responseJson, CriResponse.class);

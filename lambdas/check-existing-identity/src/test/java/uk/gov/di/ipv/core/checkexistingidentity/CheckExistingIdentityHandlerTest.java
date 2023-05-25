@@ -72,12 +72,13 @@ class CheckExistingIdentityHandlerTest {
     private static final String TEST_JOURNEY = DCMAW_CRI;
 
     private static final JourneyRequest event =
-            new JourneyRequest(
-                    TEST_SESSION_ID,
-                    TEST_CLIENT_SOURCE_IP,
-                    TEST_CLIENT_OAUTH_SESSION_ID,
-                    TEST_JOURNEY,
-                    TEST_FEATURE_SET);
+            JourneyRequest.builder()
+                    .ipvSessionId(TEST_SESSION_ID)
+                    .ipAddress(TEST_CLIENT_SOURCE_IP)
+                    .clientOAuthSessionId(TEST_CLIENT_SOURCE_IP)
+                    .journey(TEST_JOURNEY)
+                    .featureSet(TEST_FEATURE_SET)
+                    .build();
     private static final List<String> CREDENTIALS =
             List.of(
                     M1A_PASSPORT_VC,
@@ -285,7 +286,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturn400IfSessionIdNotInHeader() throws IOException {
-        JourneyRequest eventWithoutHeaders = new JourneyRequest(null, null, null, null, null);
+        JourneyRequest eventWithoutHeaders = JourneyRequest.builder().build();
 
         var journeyResponse =
                 handleRequest(eventWithoutHeaders, context, JourneyErrorResponse.class);
