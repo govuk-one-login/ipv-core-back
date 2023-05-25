@@ -84,12 +84,13 @@ class RequestHelperTest {
     void getIpvSessionIdShouldReturnSessionIdFromJourney()
             throws HttpResponseExceptionWithErrorBody {
         var event =
-                new JourneyRequest(
-                        TEST_IPV_SESSION_ID,
-                        TEST_IP_ADDRESS,
-                        TEST_CLIENT_SESSION_ID,
-                        TEST_JOURNEY,
-                        TEST_FEATURE_SET);
+                JourneyRequest.builder()
+                        .ipvSessionId(TEST_IPV_SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .clientOAuthSessionId(TEST_CLIENT_SESSION_ID)
+                        .journey(TEST_JOURNEY)
+                        .featureSet(TEST_FEATURE_SET)
+                        .build();
 
         assertEquals("a-session-id", RequestHelper.getIpvSessionId(event));
     }
@@ -225,7 +226,13 @@ class RequestHelperTest {
         String featureSet = "a-feature-set";
         String journey = DCMAW_CRI;
         var event =
-                new JourneyRequest(ipvSessionId, ipAddress, clientSessionId, journey, featureSet);
+                JourneyRequest.builder()
+                        .ipvSessionId(ipvSessionId)
+                        .ipAddress(ipAddress)
+                        .clientOAuthSessionId(clientSessionId)
+                        .journey(journey)
+                        .featureSet(featureSet)
+                        .build();
 
         assertEquals(clientSessionId, RequestHelper.getClientOAuthSessionId(event));
         assertEquals(ipvSessionId, RequestHelper.getIpvSessionId(event));
@@ -240,7 +247,13 @@ class RequestHelperTest {
         String ipAddress = "a-ipaddress";
         String featureSet = "a-feature-set";
         String journey = DCMAW_CRI;
-        var event = new JourneyRequest(null, ipAddress, clientSessionId, journey, featureSet);
+        var event =
+                JourneyRequest.builder()
+                        .ipAddress(ipAddress)
+                        .clientOAuthSessionId(clientSessionId)
+                        .journey(journey)
+                        .featureSet(featureSet)
+                        .build();
 
         assertNull(RequestHelper.getIpvSessionIdAllowNull(event));
     }
@@ -256,12 +269,13 @@ class RequestHelperTest {
     @Test
     void getFeatureSetShouldReturnFeatureSetIdFromJourney() {
         var event =
-                new JourneyRequest(
-                        TEST_IPV_SESSION_ID,
-                        TEST_IP_ADDRESS,
-                        TEST_CLIENT_SESSION_ID,
-                        TEST_JOURNEY,
-                        TEST_FEATURE_SET);
+                JourneyRequest.builder()
+                        .ipvSessionId(TEST_IPV_SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .clientOAuthSessionId(TEST_CLIENT_SESSION_ID)
+                        .journey(TEST_JOURNEY)
+                        .featureSet(TEST_FEATURE_SET)
+                        .build();
         assertEquals("test-feature-set", RequestHelper.getFeatureSet(event));
     }
 

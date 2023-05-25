@@ -718,7 +718,7 @@ class SelectCriHandlerTest {
     }
 
     private JourneyRequest createRequestEvent() {
-        return new JourneyRequest(TEST_SESSION_ID, null, null, null, null);
+        return JourneyRequest.builder().ipvSessionId(TEST_SESSION_ID).build();
     }
 
     private CredentialIssuerConfig createCriConfig(String criId, String criIss, boolean enabled)
