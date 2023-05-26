@@ -4,10 +4,12 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 @ExcludeFromGeneratedCoverageReport
 @EqualsAndHashCode(callSuper = true)
+@ToString
 @JsonIgnoreProperties(
         value = {"message"},
         allowGetters = true)
