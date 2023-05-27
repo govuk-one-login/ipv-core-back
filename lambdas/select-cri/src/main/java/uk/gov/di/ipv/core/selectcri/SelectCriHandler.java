@@ -35,6 +35,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_SHOU
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
@@ -53,6 +54,8 @@ public class SelectCriHandler extends JourneyRequestLambda {
     private static final String APP_JOURNEY_USER_ID_PREFIX = "urn:uuid:app-journey-user-";
     private static final String UK_PASSPORT_AND_DRIVING_LICENCE_PAGE =
             "ukPassportAndDrivingLicence";
+    private static final String UK_PASSPORT_AND_DRIVING_LICENCE_F2F_PAGE =
+            "ukPassportAndDrivingLicenceF2F";
     private static final String STUB_UK_PASSPORT_AND_DRIVING_LICENCE_PAGE =
             "stubUkPassportAndDrivingLicence";
 
@@ -302,7 +305,11 @@ public class SelectCriHandler extends JourneyRequestLambda {
         if (configService.getActiveConnection(DRIVING_LICENCE_CRI).equals("stub")) {
             return Optional.of(getJourneyResponse(STUB_UK_PASSPORT_AND_DRIVING_LICENCE_PAGE));
         }
-        return Optional.of(getJourneyResponse(UK_PASSPORT_AND_DRIVING_LICENCE_PAGE));
+        if (configService.isEnabled(F2F_CRI)){
+            return Optional.of(getJourneyResponse(UK_PASSPORT_AND_DRIVING_LICENCE_F2F_PAGE));
+        } else {
+            return Optional.of(getJourneyResponse(UK_PASSPORT_AND_DRIVING_LICENCE_PAGE));
+        }
     }
 
     private boolean hasPassportVc(List<VcStatusDto> currentVcStatuses) {
