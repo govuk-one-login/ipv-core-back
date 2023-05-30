@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.retrievecricredential.service;
+package uk.gov.di.ipv.core.library.verifiablecredential.service;
 
 import com.nimbusds.common.contenttype.ContentType;
 import com.nimbusds.jwt.SignedJWT;
@@ -22,7 +22,7 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.retrievecricredential.exception.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCredentialException;
 
 import java.io.IOException;
 import java.time.Instant;

@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.retrievecricredential.validation;
+package uk.gov.di.ipv.core.library.verifiablecredential.validation;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
@@ -16,7 +16,7 @@ import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
-import uk.gov.di.ipv.core.retrievecricredential.exception.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCredentialException;
 
 import java.text.ParseException;
 import java.util.Arrays;
