@@ -35,10 +35,15 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 public class VerifiableCredentialGenerator {
     public static String generateVerifiableCredential(Map<String, Object> vcClaim, String issuer)
             throws Exception {
+        return generateVerifiableCredential(vcClaim, "https://subject.example.com", issuer);
+    }
+
+    public static String generateVerifiableCredential(
+            Map<String, Object> vcClaim, String subject, String issuer) throws Exception {
         Instant now = Instant.now();
         JWTClaimsSet claimsSet =
                 new JWTClaimsSet.Builder()
-                        .claim(SUBJECT, "https://subject.example.com")
+                        .claim(SUBJECT, subject)
                         .claim(ISSUER, issuer)
                         .claim(NOT_BEFORE, now.getEpochSecond())
                         .claim(EXPIRATION_TIME, now.plusSeconds(600).getEpochSecond())
