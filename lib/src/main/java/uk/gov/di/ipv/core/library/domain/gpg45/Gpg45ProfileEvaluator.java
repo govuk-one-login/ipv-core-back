@@ -142,7 +142,7 @@ public class Gpg45ProfileEvaluator {
         List<CredentialEvidenceItem> evidenceItems = evidenceMap.get(evidenceType);
         for (CredentialEvidenceItem evidenceItem : evidenceItems) {
             List<CredentialEvidenceItem> gpg45EvidenceItems =
-                    convertEvidenceToGpg45EvidenceItem(evidenceItem, evidenceType);
+                    convertEvidenceToGpg45EvidenceItem(evidenceItem);
 
             for (CredentialEvidenceItem gpg45EvidenceItem : gpg45EvidenceItems) {
                 evidenceMap.get(gpg45EvidenceItem.getType()).add(gpg45EvidenceItem);
@@ -151,7 +151,7 @@ public class Gpg45ProfileEvaluator {
     }
 
     private List<CredentialEvidenceItem> convertEvidenceToGpg45EvidenceItem(
-            CredentialEvidenceItem evidenceItem, CredentialEvidenceItem.EvidenceType evidenceType)
+            CredentialEvidenceItem evidenceItem)
             throws UnknownEvidenceTypeException {
         if (isRelevantEvidence(evidenceItem)) {
             return convertEvidenceItemToGpg45EvidenceItems(evidenceItem);
