@@ -195,6 +195,13 @@ SELECT_CRI:
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/claimedIdentity
+    f2f:
+      type: basic
+      name: f2f
+      targetState: CRI_F2F
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/f2f
     kbv:
       type: basic
       name: kbv
@@ -290,6 +297,9 @@ CRI_FRAUD:
 CRI_CLAIMED_IDENTITY:
   name: CRI_CLAIMED_IDENTITY
   parent: CRI_STATE
+CRI_F2F:
+  name: CRI_F2F
+  parent: CRI_STATE
 CRI_KBV:
   name: CRI_KBV
   parent: CRI_STATE
@@ -364,12 +374,10 @@ MULTIPLE_DOC_CHECK_PAGE:
     end:
       type: basic
       name: end
-      # targetState: END
-      targetState: CRI_CLAIMED_IDENTITY
+      targetState: END
       response:
         type: journey
-        # journeyStepId: /journey/build-client-oauth-response
-        journeyStepId: /journey/cri/build-oauth-request/claimedIdentity
+        journeyStepId: /journey/build-client-oauth-response
 PRE_KBV_TRANSITION_PAGE:
   name: PRE_KBV_TRANSITION_PAGE
   parent: ATTEMPT_RECOVERY_STATE
