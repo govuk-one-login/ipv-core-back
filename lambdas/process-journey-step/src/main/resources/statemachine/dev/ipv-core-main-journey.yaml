@@ -188,6 +188,20 @@ SELECT_CRI:
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/fraud
+    claimedIdentity:
+      type: basic
+      name: claimedIdentity
+      targetState: CRI_CLAIMED_IDENTITY
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/claimedIdentity
+    f2f:
+      type: basic
+      name: f2f
+      targetState: CRI_F2F
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/f2f
     kbv:
       type: basic
       name: kbv
@@ -280,6 +294,12 @@ CRI_ADDRESS:
 CRI_FRAUD:
   name: CRI_FRAUD
   parent: CRI_STATE
+CRI_CLAIMED_IDENTITY:
+  name: CRI_CLAIMED_IDENTITY
+  parent: CRI_STATE
+CRI_F2F:
+  name: CRI_F2F
+  parent: CRI_STATE
 CRI_KBV:
   name: CRI_KBV
   parent: CRI_STATE
@@ -344,6 +364,13 @@ MULTIPLE_DOC_CHECK_PAGE:
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/drivingLicence
+    claimedIdentity:
+      type: basic
+      name: claimedIdentity
+      targetState: CRI_CLAIMED_IDENTITY
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/claimedIdentity
     end:
       type: basic
       name: end
