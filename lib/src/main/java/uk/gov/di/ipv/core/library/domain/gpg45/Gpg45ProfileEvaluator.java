@@ -151,8 +151,7 @@ public class Gpg45ProfileEvaluator {
     }
 
     private List<CredentialEvidenceItem> convertEvidenceToGpg45EvidenceItem(
-            CredentialEvidenceItem evidenceItem)
-            throws UnknownEvidenceTypeException {
+            CredentialEvidenceItem evidenceItem) throws UnknownEvidenceTypeException {
         if (isRelevantEvidence(evidenceItem)) {
             return convertEvidenceItemToGpg45EvidenceItems(evidenceItem);
         }
