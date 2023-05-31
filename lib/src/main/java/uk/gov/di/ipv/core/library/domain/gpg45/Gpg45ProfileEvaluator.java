@@ -153,12 +153,8 @@ public class Gpg45ProfileEvaluator {
     private List<CredentialEvidenceItem> convertEvidenceToGpg45EvidenceItem(
             CredentialEvidenceItem evidenceItem, CredentialEvidenceItem.EvidenceType evidenceType)
             throws UnknownEvidenceTypeException {
-        if (evidenceType == CredentialEvidenceItem.EvidenceType.DCMAW) {
-            return convertEvidenceItemToGpg45EvidenceItems(
-                    evidenceItem, CredentialEvidenceItem.EvidenceType.DCMAW);
-        } else if (evidenceType == CredentialEvidenceItem.EvidenceType.F2F) {
-            return convertEvidenceItemToGpg45EvidenceItems(
-                    evidenceItem, CredentialEvidenceItem.EvidenceType.F2F);
+        if (isRelevantEvidence(evidenceItem)) {
+            return convertEvidenceItemToGpg45EvidenceItems(evidenceItem);
         }
         return Collections.emptyList();
     }
@@ -180,10 +176,7 @@ public class Gpg45ProfileEvaluator {
                     parseCredentialEvidence(signedJWT);
             for (CredentialEvidenceItem evidenceItem : credentialEvidenceList) {
 
-                if (evidenceItem.getType().equals(CredentialEvidenceItem.EvidenceType.DCMAW)
-                        && doesEvidenceContainEvidenceType(evidenceItem, evidenceType)) {
-                    return Optional.of(signedJWT);
-                } else if (evidenceItem.getType().equals(CredentialEvidenceItem.EvidenceType.F2F)
+                if (isRelevantEvidence(evidenceItem)
                         && doesEvidenceContainEvidenceType(evidenceItem, evidenceType)) {
                     return Optional.of(signedJWT);
                 }
@@ -196,11 +189,17 @@ public class Gpg45ProfileEvaluator {
         return Optional.empty();
     }
 
+    private boolean isRelevantEvidence(CredentialEvidenceItem evidenceItem)
+            throws UnknownEvidenceTypeException {
+        return (evidenceItem.getType().equals(CredentialEvidenceItem.EvidenceType.DCMAW)
+                || evidenceItem.getType().equals(CredentialEvidenceItem.EvidenceType.F2F));
+    }
+
     private boolean doesEvidenceContainEvidenceType(
             CredentialEvidenceItem evidenceItem, CredentialEvidenceItem.EvidenceType evidenceType)
             throws UnknownEvidenceTypeException {
         List<CredentialEvidenceItem> evidenceItems =
-                convertEvidenceItemToGpg45EvidenceItems(evidenceItem, evidenceType);
+                convertEvidenceItemToGpg45EvidenceItems(evidenceItem);
         for (CredentialEvidenceItem item : evidenceItems) {
             if (item.getType().equals(evidenceType)) {
                 return true;
@@ -210,8 +209,7 @@ public class Gpg45ProfileEvaluator {
     }
 
     private List<CredentialEvidenceItem> convertEvidenceItemToGpg45EvidenceItems(
-            CredentialEvidenceItem evidenceItem, CredentialEvidenceItem.EvidenceType evidenceType)
-            throws UnknownEvidenceTypeException {
+            CredentialEvidenceItem evidenceItem) throws UnknownEvidenceTypeException {
         List<CredentialEvidenceItem> gpg45CredentialItems = new ArrayList<>();
 
         gpg45CredentialItems.add(
