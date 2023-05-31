@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.retrievecricredential.exception;
+package uk.gov.di.ipv.core.library.verifiablecredential.exception;
 
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 

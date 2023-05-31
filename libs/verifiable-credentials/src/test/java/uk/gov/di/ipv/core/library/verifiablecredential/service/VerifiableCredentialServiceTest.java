@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.retrievecricredential.service;
+package uk.gov.di.ipv.core.library.verifiablecredential.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -23,7 +23,7 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.retrievecricredential.exception.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCredentialException;
 
 import java.net.URI;
 import java.security.KeyFactory;
