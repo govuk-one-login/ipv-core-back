@@ -1,5 +1,7 @@
 package uk.gov.di.ipv.core.library.domain.gpg45.domain;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
@@ -9,6 +11,8 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.ToIntFunction;
 
+@AllArgsConstructor
+@Builder
 @Getter
 public class CredentialEvidenceItem {
     private String credentialIss;
@@ -17,8 +21,8 @@ public class CredentialEvidenceItem {
     private Integer strengthScore;
     private Integer validityScore;
     private Integer verificationScore;
-    private List<DcmawCheckMethod> checkDetails;
-    private List<DcmawCheckMethod> failedCheckDetails;
+    private List<CheckDetail> checkDetails;
+    private List<CheckDetail> failedCheckDetails;
     private final List<String> ci;
 
     public CredentialEvidenceItem(EvidenceType evidenceType, int score, List<String> ci) {
@@ -43,8 +47,8 @@ public class CredentialEvidenceItem {
             int validityScore,
             int activityHistoryScore,
             int verificationScore,
-            List<DcmawCheckMethod> checkDetails,
-            List<DcmawCheckMethod> failedCheckDetails,
+            List<CheckDetail> checkDetails,
+            List<CheckDetail> failedCheckDetails,
             List<String> ci) {
         this.strengthScore = strengthScore;
         this.validityScore = validityScore;
@@ -65,8 +69,11 @@ public class CredentialEvidenceItem {
         } else if (isVerification()) {
             return EvidenceType.VERIFICATION;
         }
+
         if (isDcmaw()) {
             return EvidenceType.DCMAW;
+        } else if (isF2F()) {
+            return EvidenceType.F2F;
         } else {
             throw new UnknownEvidenceTypeException();
         }
@@ -129,6 +136,14 @@ public class CredentialEvidenceItem {
                 && (checkDetails != null || failedCheckDetails != null);
     }
 
+    private boolean isF2F() {
+        return strengthScore != null
+                && validityScore != null
+                && identityFraudScore == null
+                && verificationScore != null
+                && (checkDetails != null || failedCheckDetails != null);
+    }
+
     @Getter
     public enum EvidenceType {
         ACTIVITY(
@@ -141,7 +156,8 @@ public class CredentialEvidenceItem {
         VERIFICATION(
                 generateComparator(CredentialEvidenceItem::getVerificationScore),
                 CredentialEvidenceItem::getVerificationScore),
-        DCMAW(null, null);
+        DCMAW(null, null),
+        F2F(null, null);
 
         public final Comparator<CredentialEvidenceItem> comparator;
         public final Function<CredentialEvidenceItem, Integer> scoreGetter;

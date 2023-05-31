@@ -11,8 +11,8 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.gpg45.domain.CheckDetail;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
-import uk.gov.di.ipv.core.library.domain.gpg45.domain.DcmawCheckMethod;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -115,16 +115,8 @@ public class Gpg45ProfileEvaluator {
     public Gpg45Scores buildScore(List<SignedJWT> credentials)
             throws UnknownEvidenceTypeException, ParseException {
         var evidenceMap = parseGpg45ScoresFromCredentials(credentials);
-        List<CredentialEvidenceItem> dcmawEvidenceItems =
-                evidenceMap.get(CredentialEvidenceItem.EvidenceType.DCMAW);
-
-        for (CredentialEvidenceItem dcmawEvidenceItem : dcmawEvidenceItems) {
-            List<CredentialEvidenceItem> gpg45EvidenceItems =
-                    convertDcmawEvidenceToGpg45EvidenceItems(dcmawEvidenceItem);
-            for (CredentialEvidenceItem gpg45EvidenceItem : gpg45EvidenceItems) {
-                evidenceMap.get(gpg45EvidenceItem.getType()).add(gpg45EvidenceItem);
-            }
-        }
+        processEvidenceItems(evidenceMap, CredentialEvidenceItem.EvidenceType.DCMAW);
+        processEvidenceItems(evidenceMap, CredentialEvidenceItem.EvidenceType.F2F);
 
         return Gpg45Scores.builder()
                 .withActivity(
@@ -143,6 +135,34 @@ public class Gpg45ProfileEvaluator {
                 .build();
     }
 
+    private void processEvidenceItems(
+            Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap,
+            CredentialEvidenceItem.EvidenceType evidenceType)
+            throws UnknownEvidenceTypeException {
+        List<CredentialEvidenceItem> evidenceItems = evidenceMap.get(evidenceType);
+        for (CredentialEvidenceItem evidenceItem : evidenceItems) {
+            List<CredentialEvidenceItem> gpg45EvidenceItems =
+                    convertEvidenceToGpg45EvidenceItem(evidenceItem, evidenceType);
+
+            for (CredentialEvidenceItem gpg45EvidenceItem : gpg45EvidenceItems) {
+                evidenceMap.get(gpg45EvidenceItem.getType()).add(gpg45EvidenceItem);
+            }
+        }
+    }
+
+    private List<CredentialEvidenceItem> convertEvidenceToGpg45EvidenceItem(
+            CredentialEvidenceItem evidenceItem, CredentialEvidenceItem.EvidenceType evidenceType)
+            throws UnknownEvidenceTypeException {
+        if (evidenceType == CredentialEvidenceItem.EvidenceType.DCMAW) {
+            return convertEvidenceItemToGpg45EvidenceItems(
+                    evidenceItem, CredentialEvidenceItem.EvidenceType.DCMAW);
+        } else if (evidenceType == CredentialEvidenceItem.EvidenceType.F2F) {
+            return convertEvidenceItemToGpg45EvidenceItems(
+                    evidenceItem, CredentialEvidenceItem.EvidenceType.F2F);
+        }
+        return Collections.emptyList();
+    }
+
     public List<SignedJWT> parseCredentials(List<String> credentials) throws ParseException {
         List<SignedJWT> parsedCredentials = new ArrayList<>();
         for (String credential : credentials) {
@@ -159,8 +179,12 @@ public class Gpg45ProfileEvaluator {
             List<CredentialEvidenceItem> credentialEvidenceList =
                     parseCredentialEvidence(signedJWT);
             for (CredentialEvidenceItem evidenceItem : credentialEvidenceList) {
+
                 if (evidenceItem.getType().equals(CredentialEvidenceItem.EvidenceType.DCMAW)
-                        && doesDcmawContainEvidenceType(evidenceItem, evidenceType)) {
+                        && doesEvidenceContainEvidenceType(evidenceItem, evidenceType)) {
+                    return Optional.of(signedJWT);
+                } else if (evidenceItem.getType().equals(CredentialEvidenceItem.EvidenceType.F2F)
+                        && doesEvidenceContainEvidenceType(evidenceItem, evidenceType)) {
                     return Optional.of(signedJWT);
                 }
 
@@ -172,17 +196,58 @@ public class Gpg45ProfileEvaluator {
         return Optional.empty();
     }
 
-    private boolean doesDcmawContainEvidenceType(
+    private boolean doesEvidenceContainEvidenceType(
             CredentialEvidenceItem evidenceItem, CredentialEvidenceItem.EvidenceType evidenceType)
             throws UnknownEvidenceTypeException {
-        List<CredentialEvidenceItem> dcmawEvidenceItems =
-                convertDcmawEvidenceToGpg45EvidenceItems(evidenceItem);
-        for (CredentialEvidenceItem dcmawEvidenceItem : dcmawEvidenceItems) {
-            if (dcmawEvidenceItem.getType().equals(evidenceType)) {
+        List<CredentialEvidenceItem> evidenceItems =
+                convertEvidenceItemToGpg45EvidenceItems(evidenceItem, evidenceType);
+        for (CredentialEvidenceItem item : evidenceItems) {
+            if (item.getType().equals(evidenceType)) {
                 return true;
             }
         }
         return false;
+    }
+
+    private List<CredentialEvidenceItem> convertEvidenceItemToGpg45EvidenceItems(
+            CredentialEvidenceItem evidenceItem, CredentialEvidenceItem.EvidenceType evidenceType)
+            throws UnknownEvidenceTypeException {
+        List<CredentialEvidenceItem> gpg45CredentialItems = new ArrayList<>();
+
+        gpg45CredentialItems.add(
+                CredentialEvidenceItem.builder()
+                        .strengthScore(evidenceItem.getStrengthScore())
+                        .validityScore(evidenceItem.getValidityScore())
+                        .ci(evidenceItem.getCi())
+                        .build());
+
+        int verificationScore;
+        if (evidenceItem.getType().equals(CredentialEvidenceItem.EvidenceType.DCMAW)) {
+            if (evidenceItem.getActivityHistoryScore() != null) {
+                gpg45CredentialItems.add(
+                        new CredentialEvidenceItem(
+                                CredentialEvidenceItem.EvidenceType.ACTIVITY,
+                                evidenceItem.getActivityHistoryScore(),
+                                Collections.emptyList()));
+            }
+
+            List<CheckDetail> checkDetails = evidenceItem.getCheckDetails();
+            if (checkDetails != null) {
+                verificationScore = getVerificationScoreValue(checkDetails);
+            } else {
+                verificationScore = 0;
+            }
+        } else {
+            verificationScore = evidenceItem.getVerificationScore();
+        }
+
+        gpg45CredentialItems.add(
+                new CredentialEvidenceItem(
+                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
+                        verificationScore,
+                        Collections.emptyList()));
+
+        return gpg45CredentialItems;
     }
 
     private List<CredentialEvidenceItem> parseCredentialEvidence(SignedJWT signedJWT)
@@ -208,7 +273,8 @@ public class Gpg45ProfileEvaluator {
                         CredentialEvidenceItem.EvidenceType.EVIDENCE, new ArrayList<>(),
                         CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD, new ArrayList<>(),
                         CredentialEvidenceItem.EvidenceType.VERIFICATION, new ArrayList<>(),
-                        CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>());
+                        CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.F2F, new ArrayList<>());
 
         for (SignedJWT signedJWT : credentials) {
             List<CredentialEvidenceItem> credentialEvidenceList =
@@ -222,41 +288,6 @@ public class Gpg45ProfileEvaluator {
         return evidenceMap;
     }
 
-    private List<CredentialEvidenceItem> convertDcmawEvidenceToGpg45EvidenceItems(
-            CredentialEvidenceItem dcmawEvidenceItem) {
-        List<CredentialEvidenceItem> gpg45CredentialItems = new ArrayList<>();
-
-        gpg45CredentialItems.add(
-                new CredentialEvidenceItem(
-                        dcmawEvidenceItem.getStrengthScore(),
-                        dcmawEvidenceItem.getValidityScore(),
-                        dcmawEvidenceItem.getCi()));
-
-        if (dcmawEvidenceItem.getActivityHistoryScore() != null) {
-            gpg45CredentialItems.add(
-                    new CredentialEvidenceItem(
-                            CredentialEvidenceItem.EvidenceType.ACTIVITY,
-                            dcmawEvidenceItem.getActivityHistoryScore(),
-                            Collections.emptyList()));
-        }
-
-        int dcmawVerificationScore;
-        List<DcmawCheckMethod> checkDetails = dcmawEvidenceItem.getCheckDetails();
-        if (checkDetails != null) {
-            dcmawVerificationScore = getDcmawVerificationScoreValue(checkDetails);
-        } else {
-            dcmawVerificationScore = 0;
-        }
-
-        gpg45CredentialItems.add(
-                new CredentialEvidenceItem(
-                        CredentialEvidenceItem.EvidenceType.VERIFICATION,
-                        dcmawVerificationScore,
-                        Collections.emptyList()));
-
-        return gpg45CredentialItems;
-    }
-
     private Integer extractMaxScoreFromEvidenceMap(
             Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap,
             CredentialEvidenceItem.EvidenceType evidenceType) {
@@ -266,13 +297,12 @@ public class Gpg45ProfileEvaluator {
                 .orElse(NO_SCORE);
     }
 
-    private int getDcmawVerificationScoreValue(List<DcmawCheckMethod> checkMethods) {
-        Optional<DcmawCheckMethod> checkMethodWithVerificationScore =
+    private int getVerificationScoreValue(List<CheckDetail> checkMethods) {
+        Optional<CheckDetail> checkMethodWithVerificationScore =
                 checkMethods.stream()
                         .filter(
-                                dcmawCheckMethod ->
-                                        dcmawCheckMethod.getBiometricVerificationProcessLevel()
-                                                != null)
+                                checkMethod ->
+                                        checkMethod.getBiometricVerificationProcessLevel() != null)
                         .findFirst();
 
         if (checkMethodWithVerificationScore.isPresent()) {
