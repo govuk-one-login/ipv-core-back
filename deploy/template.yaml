@@ -72,6 +72,7 @@ Mappings:
       criReturnStepFunctionLogLevel: ALL
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
+      f2fReturnQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueueOldDev"
     "175872367215": # New Development Account
       provisionedConcurrency: 0
       ciStorageAccountId: 322814139578 # di-ipv-cri-dev
@@ -79,6 +80,7 @@ Mappings:
       criReturnStepFunctionLogLevel: ALL
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
+      f2fReturnQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueueDev"
     "457601271792": # Build
       provisionedConcurrency: 1
       ciStorageAccountId: 755415363251 # di-ipv-contra-indicators-build
@@ -86,6 +88,7 @@ Mappings:
       criReturnStepFunctionLogLevel: ALL
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
+      f2fReturnQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueueBuild"
     "335257547869": # Staging
       provisionedConcurrency: 1
       ciStorageAccountId: 265689800486 # di-ipv-contra-indicators-staging
@@ -93,6 +96,7 @@ Mappings:
       criReturnStepFunctionLogLevel: ALL
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
+      f2fReturnQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueueDev"
     "991138514218": # Integration
       provisionedConcurrency: 1
       ciStorageAccountId: 697519714716 # di-ipv-contra-indicators-integration
@@ -100,6 +104,7 @@ Mappings:
       criReturnStepFunctionLogLevel: ERROR
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
+      f2fReturnQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueueDev"
     "075701497069": # Production
       provisionedConcurrency: 1
       ciStorageAccountId: 442136572379 # di-ipv-contra-indicators-prod
@@ -107,6 +112,7 @@ Mappings:
       criReturnStepFunctionLogLevel: ERROR
       pgw500ErrorLimit: 20
       egw500ErrorLimit: 2
+      f2fReturnQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueueDev"
   SecurityGroups:
     PrefixListIds:
       dynamodb: "pl-b3a742da"
