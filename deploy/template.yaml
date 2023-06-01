@@ -124,8 +124,8 @@ Mappings:
       criReturnStepFunctionLogLevel: ERROR
       pgw500ErrorLimit: 20
       egw500ErrorLimit: 2
-      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueueDev"
-      asyncCriResponseQueueKmsKeyArn: TBD
+      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:377086294028:f2f-cri-api-IPVCoreSQSQueue-CPbnPGKq0SL7"
+      asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:377086294028:key/db743f51-fe65-43f8-a44e-4a124f8a3ee6"
       asyncCriLambdaTimeout: TBD
   SecurityGroups:
     PrefixListIds:
