@@ -14,4 +14,6 @@ public class CriConstants {
     public static final String KBV_CRI = "kbv";
     public static final String ADDRESS_CRI = "address";
     public static final String DCMAW_CRI = "dcmaw";
+    public static final String CLAIMED_IDENTITY_CRI = "claimedIdentity";
+    public static final String F2F_CRI = "f2f";
 }

@@ -33,8 +33,10 @@ import java.util.Optional;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ALLOWED_USER_IDS;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_SHOULD_SEND_ALL_USERS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
@@ -136,6 +138,13 @@ public class SelectCriHandler extends JourneyRequestLambda {
             List<VcStatusDto> currentVcStatuses,
             String userId)
             throws ParseException {
+        Optional<JourneyResponse> claimedIdentityResponse =
+                getCriResponse(
+                        visitedCredentialIssuers,
+                        currentVcStatuses,
+                        CLAIMED_IDENTITY_CRI,
+                        CLAIMED_IDENTITY_CRI,
+                        userId);
         Optional<JourneyResponse> passportResponse =
                 getCriResponse(
                         visitedCredentialIssuers,
@@ -150,7 +159,9 @@ public class SelectCriHandler extends JourneyRequestLambda {
                         DRIVING_LICENCE_CRI,
                         DRIVING_LICENCE_CRI,
                         userId);
-        if (passportResponse.isPresent() && drivingLicenceResponse.isPresent()) {
+        // Check that at least one of the CRIs has been accessed in which it will be empty.
+        // If none of the CRIs has returned a valid response then execute one of them.
+        if (claimedIdentityResponse.isPresent() && passportResponse.isPresent() && drivingLicenceResponse.isPresent()) {
             if (userHasVisited(visitedCredentialIssuers, DRIVING_LICENCE_CRI)) {
                 return drivingLicenceResponse.get();
             }
@@ -175,11 +186,20 @@ public class SelectCriHandler extends JourneyRequestLambda {
             return fraudResponse.get();
         }
 
-        Optional<JourneyResponse> kbvResponse =
-                getCriResponse(
-                        visitedCredentialIssuers, currentVcStatuses, KBV_CRI, KBV_CRI, userId);
-        if (kbvResponse.isPresent()) {
-            return kbvResponse.get();
+        if (claimedIdentityResponse.isPresent()) {
+            Optional<JourneyResponse> kbvResponse =
+                    getCriResponse(
+                            visitedCredentialIssuers, currentVcStatuses, KBV_CRI, KBV_CRI, userId);
+            if (kbvResponse.isPresent()) {
+                return kbvResponse.get();
+            }
+        } else {
+            Optional<JourneyResponse> f2fResponse =
+                    getCriResponse(
+                            visitedCredentialIssuers, currentVcStatuses, F2F_CRI, F2F_CRI, userId);
+            if (f2fResponse.isPresent()) {
+                return f2fResponse.get();
+            }
         }
 
         LOGGER.info("Unable to determine next credential issuer.");
