@@ -87,6 +87,7 @@ These values are automatically assigned by terraform within the `aws_lambda_func
 * ACCESS_TOKENS_TABLE_NAME
 * AUTH_CODES_TABLE_NAME
 * USER_ISSUED_CREDENTIALS_TABLE_NAME
+* CRI_RESPONSE_TABLE_NAME
 
 # SAM (Serverless Application Model)
 ## Build
