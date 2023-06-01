@@ -7,7 +7,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 @Getter
 @Setter
 @ExcludeFromGeneratedCoverageReport
-public class DcmawCheckMethod {
+public class CheckDetail {
     private String checkMethod;
     private String identityCheckPolicy;
     private String activityFrom;

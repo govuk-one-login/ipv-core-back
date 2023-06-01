@@ -20,6 +20,7 @@ public class Gpg45Scores implements Comparable<Gpg45Scores> {
     public static final Evidence EV_22 = new Gpg45Scores.Evidence(2, 2);
     public static final Evidence EV_32 = new Gpg45Scores.Evidence(3, 2);
     public static final Evidence EV_33 = new Gpg45Scores.Evidence(3, 3);
+    public static final Evidence EV_40 = new Gpg45Scores.Evidence(4, 0);
     public static final Evidence EV_42 = new Gpg45Scores.Evidence(4, 2);
     public static final Evidence EV_43 = new Gpg45Scores.Evidence(4, 3);
     public static final Evidence EV_44 = new Gpg45Scores.Evidence(4, 4);

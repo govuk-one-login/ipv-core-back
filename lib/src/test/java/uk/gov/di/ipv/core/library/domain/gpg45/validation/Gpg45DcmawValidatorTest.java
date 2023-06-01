@@ -1,8 +1,8 @@
 package uk.gov.di.ipv.core.library.domain.gpg45.validation;
 
 import org.junit.jupiter.api.Test;
+import uk.gov.di.ipv.core.library.domain.gpg45.domain.CheckDetail;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
-import uk.gov.di.ipv.core.library.domain.gpg45.domain.DcmawCheckMethod;
 
 import java.util.Collections;
 
@@ -19,7 +19,7 @@ class Gpg45DcmawValidatorTest {
                         2,
                         1,
                         2,
-                        Collections.singletonList(new DcmawCheckMethod()),
+                        Collections.singletonList(new CheckDetail()),
                         null,
                         Collections.emptyList());
 
@@ -35,7 +35,7 @@ class Gpg45DcmawValidatorTest {
                         1,
                         2,
                         null,
-                        Collections.singletonList(new DcmawCheckMethod()),
+                        Collections.singletonList(new CheckDetail()),
                         Collections.emptyList());
 
         assertFalse(Gpg45DcmawValidator.isSuccessful(credentialEvidenceItem));
@@ -49,7 +49,7 @@ class Gpg45DcmawValidatorTest {
                         0,
                         1,
                         2,
-                        Collections.singletonList(new DcmawCheckMethod()),
+                        Collections.singletonList(new CheckDetail()),
                         null,
                         Collections.emptyList());
 
