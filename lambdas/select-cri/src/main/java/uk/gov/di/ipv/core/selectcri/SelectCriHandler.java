@@ -159,7 +159,9 @@ public class SelectCriHandler extends JourneyRequestLambda {
                         DRIVING_LICENCE_CRI,
                         DRIVING_LICENCE_CRI,
                         userId);
-        if (claimedIdentityResponse.isPresent() && passportResponse.isPresent() && drivingLicenceResponse.isPresent()) {
+        if (claimedIdentityResponse.isPresent()
+                && passportResponse.isPresent()
+                && drivingLicenceResponse.isPresent()) {
             if (userHasVisited(visitedCredentialIssuers, DRIVING_LICENCE_CRI)) {
                 return drivingLicenceResponse.get();
             }

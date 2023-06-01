@@ -157,7 +157,8 @@ class SelectCriHandlerTest {
     }
 
     @Test
-    void shouldReturnFraudCriJourneyResponseWhenVisitedClaimedIdentityAndAddress() throws Exception {
+    void shouldReturnFraudCriJourneyResponseWhenVisitedClaimedIdentityAndAddress()
+            throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
@@ -172,12 +173,15 @@ class SelectCriHandlerTest {
                 .thenReturn(createCriConfig(FRAUD_CRI_ISS));
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
-                List.of(new VisitedCredentialIssuerDetailsDto(CLAIMED_IDENTITY_CRI, true, null),
+                List.of(
+                        new VisitedCredentialIssuerDetailsDto(CLAIMED_IDENTITY_CRI, true, null),
                         new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null));
 
         when(mockIpvSessionItem.getCurrentVcStatuses())
-                .thenReturn(List.of(new VcStatusDto(CLAIMED_IDENTITY_CRI_ISS, true),
-                        new VcStatusDto(ADDRESS_CRI_ISS, true)));
+                .thenReturn(
+                        List.of(
+                                new VcStatusDto(CLAIMED_IDENTITY_CRI_ISS, true),
+                                new VcStatusDto(ADDRESS_CRI_ISS, true)));
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
@@ -189,7 +193,8 @@ class SelectCriHandlerTest {
     }
 
     @Test
-    void shouldReturnF2FCriJourneyResponseWhenVisitedClaimedIdentityAddressAndFraud() throws Exception {
+    void shouldReturnF2FCriJourneyResponseWhenVisitedClaimedIdentityAddressAndFraud()
+            throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
@@ -206,14 +211,17 @@ class SelectCriHandlerTest {
                 .thenReturn(createCriConfig(F2F_CRI_ISS));
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
-                List.of(new VisitedCredentialIssuerDetailsDto(CLAIMED_IDENTITY_CRI, true, null),
+                List.of(
+                        new VisitedCredentialIssuerDetailsDto(CLAIMED_IDENTITY_CRI, true, null),
                         new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null),
                         new VisitedCredentialIssuerDetailsDto(FRAUD_CRI, true, null));
 
         when(mockIpvSessionItem.getCurrentVcStatuses())
-                .thenReturn(List.of(new VcStatusDto(CLAIMED_IDENTITY_CRI_ISS, true),
-                        new VcStatusDto(ADDRESS_CRI_ISS, true),
-                        new VcStatusDto(FRAUD_CRI_ISS, true)));
+                .thenReturn(
+                        List.of(
+                                new VcStatusDto(CLAIMED_IDENTITY_CRI_ISS, true),
+                                new VcStatusDto(ADDRESS_CRI_ISS, true),
+                                new VcStatusDto(FRAUD_CRI_ISS, true)));
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
