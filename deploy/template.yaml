@@ -2172,6 +2172,7 @@ Resources:
 
   ProcessAsyncCriCredentialFunction:
     Type: AWS::Serverless::Function
+    Condition: IsDevelopment
     DependsOn:
       - "ProcessAsyncCriCredentialFunctionLogGroup"
     Properties:
