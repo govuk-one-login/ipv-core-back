@@ -6,7 +6,7 @@ import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
 import java.util.List;
 
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CRI_RESPONSE_TABLE_NAME;
 
 public class CriResponseService {
     private final ConfigService configService;
@@ -18,8 +18,7 @@ public class CriResponseService {
         boolean isRunningLocally = this.configService.isRunningLocally();
         this.dataStore =
                 new DataStore<>(
-                        this.configService.getEnvironmentVariable(
-                                USER_ISSUED_CREDENTIALS_TABLE_NAME),
+                        this.configService.getEnvironmentVariable(CRI_RESPONSE_TABLE_NAME),
                         CriResponseItem.class,
                         DataStore.getClient(isRunningLocally),
                         isRunningLocally,
