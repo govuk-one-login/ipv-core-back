@@ -20,7 +20,7 @@ import java.time.Instant;
 public class CriResponseItem implements DynamodbItem {
     private String userId;
     private String credentialIssuer;
-    private String credential;
+    private String issuerResponse;
     private Instant dateCreated;
     private Instant expirationTime;
     private long ttl;

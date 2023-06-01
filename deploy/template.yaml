@@ -1972,7 +1972,6 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2008,8 +2007,6 @@ Resources:
             TableName: !Ref UserIssuedCredentialsV2Table
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref CRIResponseTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
       Events:
@@ -2068,7 +2065,6 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CI_STORAGE_GET_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
@@ -2115,8 +2111,6 @@ Resources:
             TableName: !Ref UserIssuedCredentialsV2Table
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref CRIResponseTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
