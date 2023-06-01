@@ -159,8 +159,6 @@ public class SelectCriHandler extends JourneyRequestLambda {
                         DRIVING_LICENCE_CRI,
                         DRIVING_LICENCE_CRI,
                         userId);
-        // Check that at least one of the CRIs has been accessed in which it will be empty.
-        // If none of the CRIs has returned a valid response then execute one of them.
         if (claimedIdentityResponse.isPresent() && passportResponse.isPresent() && drivingLicenceResponse.isPresent()) {
             if (userHasVisited(visitedCredentialIssuers, DRIVING_LICENCE_CRI)) {
                 return drivingLicenceResponse.get();
