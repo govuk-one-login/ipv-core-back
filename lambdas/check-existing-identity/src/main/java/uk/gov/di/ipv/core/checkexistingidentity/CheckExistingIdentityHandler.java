@@ -34,21 +34,19 @@ import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiStorageService;
-import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
-import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
+import uk.gov.di.ipv.core.library.service.*;
 import uk.gov.di.ipv.core.library.statemachine.JourneyRequestLambda;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
@@ -71,6 +69,7 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
+    private final CriResponseService criResponseService;
     private final IpvSessionService ipvSessionService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final CiStorageService ciStorageService;
@@ -86,7 +85,8 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
             CiStorageService ciStorageService,
             AuditService auditService,
-            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService) {
+            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
+            CriResponseService criResponseService) {
         this.configService = configService;
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
@@ -95,6 +95,7 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+        this.criResponseService = criResponseService;
     }
 
     @SuppressWarnings("unused") // Used through dependency injection
@@ -108,6 +109,7 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+        this.criResponseService = new CriResponseService(configService);
     }
 
     @Override
@@ -132,6 +134,9 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
+
+            boolean userHasFaceToFaceRequest = criResponseService.userHasFaceToFaceRequest(userId);
+            VcStoreItem faceToFaceVc = userIdentityService.getVcStoreItem(userId, F2F_CRI);
 
             List<SignedJWT> credentials =
                     gpg45ProfileEvaluator.parseCredentials(
@@ -183,6 +188,19 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
 
                     return JOURNEY_REUSE;
                 }
+            }
+
+            if (userHasFaceToFaceRequest && Objects.isNull(faceToFaceVc)) {
+                var message =
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "F2F cri pending verification.");
+                LOGGER.info(message);
+                return new JourneyErrorResponse(
+                        JOURNEY_ERROR_PATH,
+                        HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                        ErrorResponse.PENDING_VERIFICATION_EXCEPTION);
             }
 
             if (!credentials.isEmpty()) {

@@ -30,6 +30,8 @@ public class CriResponseServiceTest {
     private CriResponseService criResponseService;
 
     private static final String USER_ID_1 = "user-id-1";
+    private static final String userId = "userId";
+    private static final String testCredentialIssuer = "f2f";
 
     private static final String TEST_USER_ID = UUID.randomUUID().toString();
     private static final String TEST_CREDENTIAL_ISSUER = "f2f";
@@ -63,8 +65,7 @@ public class CriResponseServiceTest {
 
     @Test
     void shouldReturnCredentialIssuersFromDataStoreForSpecificUserId() {
-        String userId = "userId";
-        String testCredentialIssuer = "f2f";
+
         List<CriResponseItem> criResponseItem =
                 List.of(
                         createCriResponseStoreItem(
@@ -103,6 +104,19 @@ public class CriResponseServiceTest {
         assertEquals(TEST_CREDENTIAL_ISSUER, persistedCriResponseItem.getCredentialIssuer());
         assertEquals(TEST_ISSUER_RESPONSE, persistedCriResponseItem.getIssuerResponse());
         assertEquals(TEST_OAUTH_STATE, persistedCriResponseItem.getOauthState());
+    }
+
+    @Test
+    void shouldReturnTrueWhenUserHasFaceToFaceRequest() {
+        String criId = "f2f";
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(USER_ID_1, criId, SIGNED_VC_1, Instant.now());
+
+        when(mockDataStore.getItem(USER_ID_1, criId)).thenReturn(criResponseItem);
+
+        boolean retrievedCredentialItem = criResponseService.userHasFaceToFaceRequest(USER_ID_1);
+
+        assertTrue(retrievedCredentialItem);
     }
 
     private CriResponseItem createCriResponseStoreItem(

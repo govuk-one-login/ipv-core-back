@@ -25,12 +25,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiStorageService;
-import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
-import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.service.*;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -53,7 +48,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
@@ -86,6 +83,7 @@ class CheckExistingIdentityHandlerTest {
                     M1A_FRAUD_VC,
                     M1A_VERIFICATION_VC,
                     M1B_DCMAW_VC);
+    private static final List<String> CRI_RESPONSE = List.of(M1A_F2F_VC);
     private static CredentialIssuerConfig addressConfig = null;
     private static CredentialIssuerConfig claimedIdentityConfig = null;
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
@@ -128,6 +126,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Mock private Context context;
     @Mock private UserIdentityService userIdentityService;
+    @Mock private CriResponseService criResponseService;
     @Mock private IpvSessionService ipvSessionService;
     @Mock private Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     @Mock private CiStorageService ciStorageService;
@@ -205,6 +204,7 @@ class CheckExistingIdentityHandlerTest {
             throws SqsException, IOException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(false);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
@@ -231,6 +231,7 @@ class CheckExistingIdentityHandlerTest {
             throws ParseException, SqsException, IOException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(false);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
@@ -258,6 +259,7 @@ class CheckExistingIdentityHandlerTest {
             throws ParseException, SqsException, IOException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(false);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
                 .thenReturn(Optional.of(new JourneyResponse("/journey/pyi-no-match")));
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
@@ -283,6 +285,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
                 .thenReturn(Collections.emptyList());
+        when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(false);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
@@ -312,6 +315,32 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(
                 ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), journeyResponse.getMessage());
         verify(clientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
+    }
+
+    @Test
+    void shouldReturn500IfFaceToFaceVerificationIsPending() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
+                .thenReturn(Collections.emptyList());
+        when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
+        when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(true);
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
+                .thenReturn(Optional.of(new JourneyResponse("/journey/pyi-no-match")));
+        when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        var journeyResponse = handleRequest(event, context, JourneyErrorResponse.class);
+        assertEquals("/journey/error", journeyResponse.getJourney());
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
+        assertEquals(
+                ErrorResponse.PENDING_VERIFICATION_EXCEPTION.getCode(), journeyResponse.getCode());
+        assertEquals(
+                ErrorResponse.PENDING_VERIFICATION_EXCEPTION.getMessage(),
+                journeyResponse.getMessage());
+
+        verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
@@ -355,6 +384,7 @@ class CheckExistingIdentityHandlerTest {
                 journeyResponse.getMessage());
 
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
+        verify(criResponseService).userHasFaceToFaceRequest(TEST_USER_ID);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
@@ -362,6 +392,7 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturn500IfFailedToRetrieveCisFromStorageSystem() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(false);
         when(ciStorageService.getCIs(anyString(), anyString(), anyString()))
                 .thenThrow(CiRetrievalException.class);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
