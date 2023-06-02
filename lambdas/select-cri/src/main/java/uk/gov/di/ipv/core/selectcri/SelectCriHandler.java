@@ -57,6 +57,8 @@ public class SelectCriHandler extends JourneyRequestLambda {
             "ukPassportAndDrivingLicence";
     private static final String STUB_UK_PASSPORT_AND_DRIVING_LICENCE_PAGE =
             "stubUkPassportAndDrivingLicence";
+    private static final String UK_PASSPORT_DRIVING_LICENCE_AND_F2F_PAGE =
+            "ukPassportDrivingLicenceAndF2F";
 
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
@@ -169,7 +171,9 @@ public class SelectCriHandler extends JourneyRequestLambda {
             if (userHasVisited(visitedCredentialIssuers, DRIVING_LICENCE_CRI)) {
                 return drivingLicenceResponse.get();
             }
-            return passportResponse.get();
+            return configService.isEnabled(F2F_CRI)
+                    ? claimedIdentityResponse.get()
+                    : passportResponse.get();
         }
 
         Optional<JourneyResponse> addressResponse =
@@ -280,8 +284,10 @@ public class SelectCriHandler extends JourneyRequestLambda {
                                     visitedCredentialIssuers, currentVcStatuses, userId));
                 }
 
-                if (criId.equals(PASSPORT_CRI) && configService.isEnabled(DRIVING_LICENCE_CRI)) {
-                    return getMultipleDocCheckPage();
+                if ((criId.equals(PASSPORT_CRI) && configService.isEnabled(DRIVING_LICENCE_CRI))
+                        || (criId.equals(CLAIMED_IDENTITY_CRI)
+                                && configService.isEnabled(F2F_CRI))) {
+                    return getMultipleDocCheckPage(criId);
                 }
 
                 return Optional.of(getJourneyResponse(journeyId));
@@ -322,11 +328,15 @@ public class SelectCriHandler extends JourneyRequestLambda {
         return Optional.empty();
     }
 
-    private Optional<JourneyResponse> getMultipleDocCheckPage() {
+    private Optional<JourneyResponse> getMultipleDocCheckPage(String criId) {
         if (configService.getActiveConnection(DRIVING_LICENCE_CRI).equals("stub")) {
             return Optional.of(getJourneyResponse(STUB_UK_PASSPORT_AND_DRIVING_LICENCE_PAGE));
         }
-        return Optional.of(getJourneyResponse(UK_PASSPORT_AND_DRIVING_LICENCE_PAGE));
+        JourneyResponse journeyResponse =
+                criId.equals(CLAIMED_IDENTITY_CRI)
+                        ? getJourneyResponse(UK_PASSPORT_DRIVING_LICENCE_AND_F2F_PAGE)
+                        : getJourneyResponse(UK_PASSPORT_AND_DRIVING_LICENCE_PAGE);
+        return Optional.of(journeyResponse);
     }
 
     private boolean hasPassportVc(List<VcStatusDto> currentVcStatuses) {

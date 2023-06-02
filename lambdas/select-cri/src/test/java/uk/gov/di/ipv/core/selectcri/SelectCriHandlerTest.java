@@ -57,6 +57,8 @@ class SelectCriHandlerTest {
     private static final String UK_PASSPORT_JOURNEY = "/journey/ukPassport";
     private static final String UK_PASSPORT_AND_DRIVING_LICENCE_JOURNEY =
             "/journey/ukPassportAndDrivingLicence";
+    private static final String UK_PASSPORT_DRIVING_LICENCE_AND_F2F_JOURNEY =
+            "/journey/ukPassportDrivingLicenceAndF2F";
     private static final String ADDRESS_JOURNEY = "/journey/address";
     private static final String PYI_NO_MATCH_JOURNEY = "/journey/pyi-no-match";
     private static final String FRAUD_JOURNEY = "/journey/fraud";
@@ -120,12 +122,40 @@ class SelectCriHandlerTest {
         when(mockConfigService.getActiveConnection(DRIVING_LICENCE_CRI)).thenReturn("main");
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(false);
         when(mockConfigService.isEnabled(DRIVING_LICENCE_CRI)).thenReturn(true);
+        when(mockConfigService.isEnabled(F2F_CRI)).thenReturn(false);
 
         JourneyRequest input = createRequestEvent();
 
         JourneyResponse response = handleRequest(input, context);
 
         assertEquals(UK_PASSPORT_AND_DRIVING_LICENCE_JOURNEY, response.getJourney());
+    }
+
+    @Test
+    void shouldReturnPassportDrivingLicenceAndF2FCriJourneyResponseWhenF2FCriEnabled()
+            throws Exception {
+        mockIpvSessionService();
+
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(createCriConfig(CLAIMED_IDENTITY_CRI_ISS));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI_ISS));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
+                .thenReturn(createCriConfig(DRIVING_LICENCE_CRI));
+        List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
+                List.of(new VisitedCredentialIssuerDetailsDto(CLAIMED_IDENTITY_CRI, true, null));
+        when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
+                .thenReturn(Collections.emptyList());
+        when(mockConfigService.getActiveConnection(DRIVING_LICENCE_CRI)).thenReturn("main");
+        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(false);
+        when(mockConfigService.isEnabled(DRIVING_LICENCE_CRI)).thenReturn(true);
+        when(mockConfigService.isEnabled(F2F_CRI)).thenReturn(true);
+
+        JourneyRequest input = createRequestEvent();
+
+        JourneyResponse response = handleRequest(input, context);
+
+        assertEquals(UK_PASSPORT_DRIVING_LICENCE_AND_F2F_JOURNEY, response.getJourney());
     }
 
     @Test
