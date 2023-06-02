@@ -157,7 +157,8 @@ class SelectCriHandlerTest {
     }
 
     @Test
-    void shouldReturnPyiNoMatchErrorResponseIfClaimedIdentityHasPreviouslyFailed() throws Exception {
+    void shouldReturnPyiNoMatchErrorResponseIfClaimedIdentityHasPreviouslyFailed()
+            throws Exception {
         mockIpvSessionService();
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
