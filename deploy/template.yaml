@@ -104,8 +104,8 @@ Mappings:
       criReturnStepFunctionLogLevel: ALL
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueueDev"
-      asyncCriResponseQueueKmsKeyArn: TBD
+      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:869230006441:f2f-cri-api-IPVCoreSQSQueue-IE674r63Z764"
+      asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:869230006441:key/09405695-4244-406a-b6bd-17381a49bf27"
       asyncCriLambdaTimeout: TBD
     "991138514218": # Integration
       provisionedConcurrency: 1
@@ -114,8 +114,8 @@ Mappings:
       criReturnStepFunctionLogLevel: ERROR
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueueDev"
-      asyncCriResponseQueueKmsKeyArn: TBD
+      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:766319219145:f2f-cri-api-IPVCoreSQSQueue-kuAgEry3qYXT"
+      asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:766319219145:key/98b3663f-5f14-495f-9d38-ec7effb69fe5"
       asyncCriLambdaTimeout: TBD
     "075701497069": # Production
       provisionedConcurrency: 1
