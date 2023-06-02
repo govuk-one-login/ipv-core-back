@@ -157,6 +157,32 @@ class SelectCriHandlerTest {
     }
 
     @Test
+    void shouldReturnPyiNoMatchErrorResponseIfClaimedIdentityHasPreviouslyFailed() throws Exception {
+        mockIpvSessionService();
+
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(createCriConfig(CLAIMED_IDENTITY_CRI_ISS));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
+                .thenReturn(createCriConfig(DRIVING_LICENSE_CRI_ISS));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI_ISS));
+
+        List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
+                List.of(new VisitedCredentialIssuerDetailsDto(CLAIMED_IDENTITY_CRI, false, null));
+
+        when(mockIpvSessionItem.getCurrentVcStatuses())
+                .thenReturn(List.of(new VcStatusDto(CLAIMED_IDENTITY_CRI_ISS, false)));
+
+        when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
+                .thenReturn(visitedCredentialIssuerDetails);
+
+        JourneyRequest input = createRequestEvent();
+        JourneyResponse response = handleRequest(input, context);
+
+        assertEquals(PYI_NO_MATCH_JOURNEY, response.getJourney());
+    }
+
+    @Test
     void shouldReturnFraudCriJourneyResponseWhenVisitedClaimedIdentityAndAddress()
             throws Exception {
         mockIpvSessionService();
@@ -190,6 +216,40 @@ class SelectCriHandlerTest {
         JourneyResponse response = handleRequest(input, context);
 
         assertEquals(FRAUD_JOURNEY, response.getJourney());
+    }
+
+    @Test
+    void shouldReturnPyiNoMatchErrorResponseWhenVisitedClaimedIdentityAndAddressFailed()
+            throws Exception {
+        mockIpvSessionService();
+
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(createCriConfig(CLAIMED_IDENTITY_CRI_ISS));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
+                .thenReturn(createCriConfig(DRIVING_LICENSE_CRI_ISS));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI_ISS));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(createCriConfig(ADDRESS_CRI_ISS));
+
+        List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
+                List.of(
+                        new VisitedCredentialIssuerDetailsDto(CLAIMED_IDENTITY_CRI, true, null),
+                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null));
+
+        when(mockIpvSessionItem.getCurrentVcStatuses())
+                .thenReturn(
+                        List.of(
+                                new VcStatusDto(CLAIMED_IDENTITY_CRI_ISS, true),
+                                new VcStatusDto(ADDRESS_CRI_ISS, false)));
+
+        when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
+                .thenReturn(visitedCredentialIssuerDetails);
+
+        JourneyRequest input = createRequestEvent();
+        JourneyResponse response = handleRequest(input, context);
+
+        assertEquals(PYI_NO_MATCH_JOURNEY, response.getJourney());
     }
 
     @Test
@@ -230,6 +290,44 @@ class SelectCriHandlerTest {
         JourneyResponse response = handleRequest(input, context);
 
         assertEquals(F2F_JOURNEY, response.getJourney());
+    }
+
+    @Test
+    void shouldReturnPyiNoMatchErrorResponseWhenVisitedClaimedIdentityAddressAndFraudFailed()
+            throws Exception {
+        mockIpvSessionService();
+
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(createCriConfig(CLAIMED_IDENTITY_CRI_ISS));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
+                .thenReturn(createCriConfig(DRIVING_LICENSE_CRI_ISS));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI_ISS));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(createCriConfig(ADDRESS_CRI_ISS));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI))
+                .thenReturn(createCriConfig(FRAUD_CRI_ISS));
+
+        List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
+                List.of(
+                        new VisitedCredentialIssuerDetailsDto(CLAIMED_IDENTITY_CRI, true, null),
+                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null),
+                        new VisitedCredentialIssuerDetailsDto(FRAUD_CRI, true, null));
+
+        when(mockIpvSessionItem.getCurrentVcStatuses())
+                .thenReturn(
+                        List.of(
+                                new VcStatusDto(CLAIMED_IDENTITY_CRI_ISS, true),
+                                new VcStatusDto(ADDRESS_CRI_ISS, true),
+                                new VcStatusDto(FRAUD_CRI_ISS, false)));
+
+        when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
+                .thenReturn(visitedCredentialIssuerDetails);
+
+        JourneyRequest input = createRequestEvent();
+        JourneyResponse response = handleRequest(input, context);
+
+        assertEquals(PYI_NO_MATCH_JOURNEY, response.getJourney());
     }
 
     @Test

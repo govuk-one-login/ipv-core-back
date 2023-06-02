@@ -71,6 +71,7 @@ public class SelectCriHandler extends JourneyRequestLambda {
         this.clientOAuthSessionService = clientOAuthSessionService;
     }
 
+    @SuppressWarnings("unused") // Used by AWS Lambda
     @ExcludeFromGeneratedCoverageReport
     public SelectCriHandler() {
         this.configService = new ConfigService();
@@ -162,6 +163,9 @@ public class SelectCriHandler extends JourneyRequestLambda {
         if (claimedIdentityResponse.isPresent()
                 && passportResponse.isPresent()
                 && drivingLicenceResponse.isPresent()) {
+            if (userHasVisited(visitedCredentialIssuers, CLAIMED_IDENTITY_CRI)) {
+                return claimedIdentityResponse.get();
+            }
             if (userHasVisited(visitedCredentialIssuers, DRIVING_LICENCE_CRI)) {
                 return drivingLicenceResponse.get();
             }
