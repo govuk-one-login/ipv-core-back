@@ -21,6 +21,7 @@ public class CriResponseItem implements DynamodbItem {
     private String userId;
     private String credentialIssuer;
     private String issuerResponse;
+    private String oauthState;
     private Instant dateCreated;
     private Instant expirationTime;
     private long ttl;

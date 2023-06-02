@@ -56,7 +56,8 @@ public enum ErrorResponse {
     FAILED_NAME_CORRELATION(1046, "Failed to correlate gathered names"),
     FAILED_TO_CONSTRUCT_REDIRECT_URI(1047, "Failed to construct redirect uri"),
     FAILED_TO_PARSE_JSON_MESSAGE(1048, "Failed to parse JSON message"),
-    FAILED_UNHANDLED_EXCEPTION(1049, "Unhandled exception");
+    FAILED_UNHANDLED_EXCEPTION(1049, "Unhandled exception"),
+    UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL(1050, "Unexpected async verifiable credential");
 
     @JsonProperty("code")
     private final int code;
