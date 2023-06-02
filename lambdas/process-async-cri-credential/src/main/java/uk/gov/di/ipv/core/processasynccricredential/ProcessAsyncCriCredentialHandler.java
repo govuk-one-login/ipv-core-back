@@ -24,19 +24,23 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validation.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.processasynccricredential.dto.CriResponseMessage;
+import uk.gov.di.ipv.core.processasynccricredential.exceptions.AsyncVerifiableCredentialException;
 
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 
 public class ProcessAsyncCriCredentialHandler
@@ -50,6 +54,8 @@ public class ProcessAsyncCriCredentialHandler
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     private final AuditService auditService;
     private final CiStorageService ciStorageService;
+
+    private final CriResponseService criResponseService;
     private final String componentId;
 
     public ProcessAsyncCriCredentialHandler(
@@ -57,13 +63,15 @@ public class ProcessAsyncCriCredentialHandler
             VerifiableCredentialService verifiableCredentialService,
             VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
             AuditService auditService,
-            CiStorageService ciStorageService) {
+            CiStorageService ciStorageService,
+            CriResponseService criResponseService) {
         this.configService = configService;
         this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
         this.verifiableCredentialService = verifiableCredentialService;
         this.auditService = auditService;
         this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
         this.ciStorageService = ciStorageService;
+        this.criResponseService = criResponseService;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -73,6 +81,7 @@ public class ProcessAsyncCriCredentialHandler
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.ciStorageService = new CiStorageService(configService);
+        this.criResponseService = new CriResponseService(configService);
         this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
@@ -85,7 +94,11 @@ public class ProcessAsyncCriCredentialHandler
         for (SQSMessage message : event.getRecords()) {
             try {
                 processMessage(message);
-            } catch (JsonProcessingException | ParseException | SqsException | CiPutException e) {
+            } catch (JsonProcessingException
+                    | ParseException
+                    | SqsException
+                    | CiPutException
+                    | AsyncVerifiableCredentialException e) {
                 LogHelper.logErrorMessage("Failed to process VC response message.", e.getMessage());
                 failedRecords.add(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
             }
@@ -94,19 +107,40 @@ public class ProcessAsyncCriCredentialHandler
     }
 
     public void processMessage(SQSMessage message)
-            throws JsonProcessingException, ParseException, SqsException, CiPutException {
+            throws JsonProcessingException, ParseException, SqsException, CiPutException,
+                    AsyncVerifiableCredentialException {
         final CriResponseMessage criResponseMessage =
                 mapper.readerFor(CriResponseMessage.class).readValue(message.getBody());
         if (criResponseMessage.getError() == null) {
+            String credentialIssuerId = criResponseMessage.getCredentialIssuer();
+            if (credentialIssuerId == null) {
+                credentialIssuerId = DEFAULT_CREDENTIAL_ISSUER;
+            }
+            final String userId = criResponseMessage.getUserId();
+            // Get the CRI response, if we can't find it, we're not expecting the VC and we throw an
+            // error
+            final CriResponseItem criResponseItem =
+                    criResponseService.getCriResponseItem(userId, credentialIssuerId);
+            if (criResponseItem == null) {
+                LOGGER.error(
+                        new StringMapMessage().with("errorDescription", "No response item found"));
+                throw new AsyncVerifiableCredentialException(
+                        UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL);
+            }
+            // oauthState should match between the initial F2F session and the async response
+            if (!criResponseItem.getOauthState().equals(criResponseMessage.getOauthState())) {
+                LOGGER.error(
+                        new StringMapMessage()
+                                .with(
+                                        "errorDescription",
+                                        "State mismatch between response item and async response message"));
+                throw new AsyncVerifiableCredentialException(
+                        UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL);
+            }
             final List<SignedJWT> verifiableCredentials = new ArrayList<>();
             for (String verifiableCredentialString :
                     criResponseMessage.getVerifiableCredentialJWTs()) {
                 verifiableCredentials.add(SignedJWT.parse(verifiableCredentialString));
-            }
-            final String userId = criResponseMessage.getUserId();
-            String credentialIssuerId = criResponseMessage.getCredentialIssuer();
-            if (credentialIssuerId == null) {
-                credentialIssuerId = DEFAULT_CREDENTIAL_ISSUER;
             }
             CredentialIssuerConfig credentialIssuerConfig =
                     configService.getCredentialIssuerActiveConnectionConfig(credentialIssuerId);
@@ -142,7 +176,7 @@ public class ProcessAsyncCriCredentialHandler
             throws ParseException, JsonProcessingException, SqsException {
         AuditEvent auditEvent =
                 new AuditEvent(
-                        AuditEventTypes.IPV_ASYNC_VC_RECEIVED,
+                        AuditEventTypes.IPV_F2F_CRI_VC_RECEIVED,
                         componentId,
                         auditEventUser,
                         getAuditExtensions(verifiableCredential, isSuccessful));
