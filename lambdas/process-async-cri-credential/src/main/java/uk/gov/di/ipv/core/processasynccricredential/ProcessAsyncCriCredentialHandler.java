@@ -7,6 +7,7 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
@@ -32,6 +33,7 @@ import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validation.VerifiableCredentialJwtValidator;
+import uk.gov.di.ipv.core.processasynccricredential.auditing.AuditRestrictedVcNameParts;
 import uk.gov.di.ipv.core.processasynccricredential.dto.CriResponseMessage;
 import uk.gov.di.ipv.core.processasynccricredential.exceptions.AsyncVerifiableCredentialException;
 
@@ -46,6 +48,9 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 public class ProcessAsyncCriCredentialHandler
         implements RequestHandler<SQSEvent, SQSBatchResponse> {
     private static final String EVIDENCE = "evidence";
+    private static final String VC_CREDENTIAL_SUBJECT = "credentialSubject";
+    private static final String VC_NAME = "name";
+    private static final String VC_NAME_PARTS = "nameParts";
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String DEFAULT_CREDENTIAL_ISSUER = "f2f";
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -156,11 +161,11 @@ public class ProcessAsyncCriCredentialHandler
 
                 sendIpvVcReceivedAuditEvent(auditEventUser, vc, isSuccessful);
 
-                submitVcToCiStorage(vc, "TBD", null);
+                submitVcToCiStorage(vc, null, null);
 
                 verifiableCredentialService.persistUserCredentials(vc, credentialIssuerId, userId);
 
-                // TODO: Audit IPV_ASYNC_CRI_MESSAGE_CONSUMED
+                sendIpvVcConsumedAuditEvent(auditEventUser, vc);
             }
         } else {
             LOGGER.error(
@@ -196,5 +201,29 @@ public class ProcessAsyncCriCredentialHandler
     private void submitVcToCiStorage(SignedJWT vc, String govukSigninJourneyId, String ipAddress)
             throws CiPutException {
         ciStorageService.submitVC(vc, govukSigninJourneyId, ipAddress);
+    }
+
+    private AuditRestrictedVcNameParts getVcNamePartsForAudit(SignedJWT verifiableCredential)
+            throws ParseException, JsonProcessingException {
+        var jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
+        var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
+        var credentialSubject = (JSONObject) vc.get(VC_CREDENTIAL_SUBJECT);
+        var name = (JSONArray) credentialSubject.get(VC_NAME);
+        var nameParts = ((JSONObject) name.get(0)).getAsString(VC_NAME_PARTS);
+        return new AuditRestrictedVcNameParts(mapper.readTree(nameParts));
+    }
+
+    @Tracing
+    private void sendIpvVcConsumedAuditEvent(
+            AuditEventUser auditEventUser, SignedJWT verifiableCredential)
+            throws ParseException, JsonProcessingException, SqsException {
+        AuditEvent auditEvent =
+                new AuditEvent(
+                        AuditEventTypes.IPV_F2F_CRI_VC_CONSUMED,
+                        componentId,
+                        auditEventUser,
+                        null,
+                        getVcNamePartsForAudit(verifiableCredential));
+        auditService.sendAuditEvent(auditEvent);
     }
 }
