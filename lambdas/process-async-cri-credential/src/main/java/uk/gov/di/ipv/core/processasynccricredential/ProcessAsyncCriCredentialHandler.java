@@ -6,9 +6,6 @@ import com.amazonaws.services.lambda.runtime.events.SQSBatchResponse;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent.SQSMessage;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.shaded.json.JSONArray;
-import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,12 +16,10 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.auditing.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
-import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
@@ -33,8 +28,9 @@ import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validation.VerifiableCredentialJwtValidator;
-import uk.gov.di.ipv.core.processasynccricredential.auditing.AuditRestrictedVcNameParts;
-import uk.gov.di.ipv.core.processasynccricredential.dto.CriResponseMessage;
+import uk.gov.di.ipv.core.processasynccricredential.domain.BaseAsyncCriResponse;
+import uk.gov.di.ipv.core.processasynccricredential.domain.ErrorAsyncCriResponse;
+import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.exceptions.AsyncVerifiableCredentialException;
 
 import java.text.ParseException;
@@ -43,17 +39,18 @@ import java.util.List;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL;
-import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.processasynccricredential.helpers.AsyncCriResponseHelper.getAsyncResponseMessage;
+import static uk.gov.di.ipv.core.processasynccricredential.helpers.AsyncCriResponseHelper.isSuccessAsyncCriResponse;
+import static uk.gov.di.ipv.core.processasynccricredential.helpers.AuditCriResponseHelper.getExtensionsForAudit;
+import static uk.gov.di.ipv.core.processasynccricredential.helpers.AuditCriResponseHelper.getVcNamePartsForAudit;
 
 public class ProcessAsyncCriCredentialHandler
         implements RequestHandler<SQSEvent, SQSBatchResponse> {
-    private static final String EVIDENCE = "evidence";
-    private static final String VC_CREDENTIAL_SUBJECT = "credentialSubject";
-    private static final String VC_NAME = "name";
-    private static final String VC_NAME_PARTS = "nameParts";
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String DEFAULT_CREDENTIAL_ISSUER = "f2f";
-    private static final ObjectMapper mapper = new ObjectMapper();
     private final ConfigService configService;
     private final VerifiableCredentialService verifiableCredentialService;
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
@@ -94,84 +91,119 @@ public class ProcessAsyncCriCredentialHandler
     @Tracing
     @Logging(clearState = true)
     public SQSBatchResponse handleRequest(SQSEvent event, Context context) {
-
         List<SQSBatchResponse.BatchItemFailure> failedRecords = new ArrayList<>();
+
         for (SQSMessage message : event.getRecords()) {
+
             try {
-                processMessage(message);
+                final BaseAsyncCriResponse asyncCriResponse =
+                        getAsyncResponseMessage(message.getBody());
+                if (isSuccessAsyncCriResponse(asyncCriResponse)) {
+                    processSuccessAsyncCriResponse((SuccessAsyncCriResponse) asyncCriResponse);
+                } else {
+                    processErrorAsyncCriResponse((ErrorAsyncCriResponse) asyncCriResponse);
+                }
             } catch (JsonProcessingException
                     | ParseException
                     | SqsException
                     | CiPutException
                     | AsyncVerifiableCredentialException e) {
-                LogHelper.logErrorMessage("Failed to process VC response message.", e.getMessage());
-                failedRecords.add(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
-            }
-        }
-        return SQSBatchResponse.builder().withBatchItemFailures(failedRecords).build();
-    }
-
-    public void processMessage(SQSMessage message)
-            throws JsonProcessingException, ParseException, SqsException, CiPutException,
-                    AsyncVerifiableCredentialException {
-        final CriResponseMessage criResponseMessage =
-                mapper.readerFor(CriResponseMessage.class).readValue(message.getBody());
-        if (criResponseMessage.getError() == null) {
-            String credentialIssuerId = criResponseMessage.getCredentialIssuer();
-            if (credentialIssuerId == null) {
-                credentialIssuerId = DEFAULT_CREDENTIAL_ISSUER;
-            }
-            final String userId = criResponseMessage.getUserId();
-            // Get the CRI response, if we can't find it, we're not expecting the VC and we throw an
-            // error
-            final CriResponseItem criResponseItem =
-                    criResponseService.getCriResponseItem(userId, credentialIssuerId);
-            if (criResponseItem == null) {
-                LOGGER.error(
-                        new StringMapMessage().with("errorDescription", "No response item found"));
-                throw new AsyncVerifiableCredentialException(
-                        UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL);
-            }
-            // oauthState should match between the initial F2F session and the async response
-            if (!criResponseItem.getOauthState().equals(criResponseMessage.getOauthState())) {
                 LOGGER.error(
                         new StringMapMessage()
                                 .with(
-                                        "errorDescription",
-                                        "State mismatch between response item and async response message"));
-                throw new AsyncVerifiableCredentialException(
-                        UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL);
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "Failed to process VC response message.")
+                                .with(LOG_ERROR_DESCRIPTION.getFieldName(), e.getMessage()));
+                failedRecords.add(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
             }
-            final List<SignedJWT> verifiableCredentials = new ArrayList<>();
-            for (String verifiableCredentialString :
-                    criResponseMessage.getVerifiableCredentialJWTs()) {
-                verifiableCredentials.add(SignedJWT.parse(verifiableCredentialString));
-            }
-            CredentialIssuerConfig credentialIssuerConfig =
-                    configService.getCredentialIssuerActiveConnectionConfig(credentialIssuerId);
-            for (SignedJWT vc : verifiableCredentials) {
-                verifiableCredentialJwtValidator.validate(vc, credentialIssuerConfig, userId);
-                CredentialIssuerConfig addressCriConfig =
-                        configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI);
-                boolean isSuccessful = VcHelper.isSuccessfulVc(vc, addressCriConfig);
+        }
 
-                // TODO: Can we get signin journey id?
-                // TODO: What to do for the ip address?
-                AuditEventUser auditEventUser = new AuditEventUser(userId, null, null, null);
+        return SQSBatchResponse.builder().withBatchItemFailures(failedRecords).build();
+    }
 
-                sendIpvVcReceivedAuditEvent(auditEventUser, vc, isSuccessful);
+    private void processErrorAsyncCriResponse(ErrorAsyncCriResponse errorAsyncCriResponse) {
+        LOGGER.error(
+                new StringMapMessage()
+                        .with(
+                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                "Error response received from Credential Issuer")
+                        .with(
+                                LOG_ERROR_DESCRIPTION.getFieldName(),
+                                errorAsyncCriResponse.getErrorDescription())
+                        .with(LOG_ERROR_CODE.getFieldName(), errorAsyncCriResponse.getError())
+                        .with(
+                                LOG_CRI_ISSUER.getFieldName(),
+                                errorAsyncCriResponse.getCredentialIssuer()));
+    }
 
-                submitVcToCiStorage(vc, null, null);
+    @Tracing
+    private void processSuccessAsyncCriResponse(SuccessAsyncCriResponse successAsyncCriResponse)
+            throws ParseException, SqsException, JsonProcessingException, CiPutException,
+                    AsyncVerifiableCredentialException {
 
-                verifiableCredentialService.persistUserCredentials(vc, credentialIssuerId, userId);
+        validateOAuthState(successAsyncCriResponse);
 
-                sendIpvVcConsumedAuditEvent(auditEventUser, vc);
-            }
-        } else {
+        final List<SignedJWT> verifiableCredentials =
+                parseVerifiableCredentialJWTs(
+                        successAsyncCriResponse.getVerifiableCredentialJWTs());
+
+        final CredentialIssuerConfig credentialIssuerConfig =
+                configService.getCredentialIssuerActiveConnectionConfig(
+                        successAsyncCriResponse.getCredentialIssuer());
+        final CredentialIssuerConfig addressCriConfig =
+                configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI);
+
+        for (SignedJWT verifiableCredential : verifiableCredentials) {
+            verifiableCredentialJwtValidator.validate(
+                    verifiableCredential,
+                    credentialIssuerConfig,
+                    successAsyncCriResponse.getUserId());
+
+            boolean isSuccessful = VcHelper.isSuccessfulVc(verifiableCredential, addressCriConfig);
+
+            AuditEventUser auditEventUser =
+                    new AuditEventUser(successAsyncCriResponse.getUserId(), null, null, null);
+            sendIpvVcReceivedAuditEvent(auditEventUser, verifiableCredential, isSuccessful);
+
+            ciStorageService.submitVC(verifiableCredential, null, null);
+
+            verifiableCredentialService.persistUserCredentials(
+                    verifiableCredential,
+                    successAsyncCriResponse.getCredentialIssuer(),
+                    successAsyncCriResponse.getUserId());
+
+            sendIpvVcConsumedAuditEvent(auditEventUser, verifiableCredential);
+        }
+    }
+
+    private List<SignedJWT> parseVerifiableCredentialJWTs(
+            List<String> verifiableCredentialJWTStrings) throws ParseException {
+        final List<SignedJWT> verifiableCredentials = new ArrayList<>();
+        for (String verifiableCredentialString : verifiableCredentialJWTStrings) {
+            verifiableCredentials.add(SignedJWT.parse(verifiableCredentialString));
+        }
+        return verifiableCredentials;
+    }
+
+    private void validateOAuthState(SuccessAsyncCriResponse successAsyncCriResponse)
+            throws AsyncVerifiableCredentialException {
+        final CriResponseItem criResponseItem =
+                criResponseService.getCriResponseItem(
+                        successAsyncCriResponse.getUserId(),
+                        successAsyncCriResponse.getCredentialIssuer());
+        if (criResponseItem == null) {
             LOGGER.error(
                     new StringMapMessage()
-                            .with("error", criResponseMessage.getError())
-                            .with("errorDescription", criResponseMessage.getErrorDescription()));
+                            .with(LOG_ERROR_DESCRIPTION.getFieldName(), "No response item found"));
+            throw new AsyncVerifiableCredentialException(UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL);
+        }
+        if (!criResponseItem.getOauthState().equals(successAsyncCriResponse.getOauthState())) {
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_ERROR_DESCRIPTION.getFieldName(),
+                                    "State mismatch between response item and async response message"));
+            throw new AsyncVerifiableCredentialException(UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL);
         }
     }
 
@@ -184,38 +216,12 @@ public class ProcessAsyncCriCredentialHandler
                         AuditEventTypes.IPV_F2F_CRI_VC_RECEIVED,
                         componentId,
                         auditEventUser,
-                        getAuditExtensions(verifiableCredential, isSuccessful));
+                        getExtensionsForAudit(verifiableCredential, isSuccessful));
         auditService.sendAuditEvent(auditEvent);
     }
 
-    private AuditExtensionsVcEvidence getAuditExtensions(
-            SignedJWT verifiableCredential, boolean isSuccessful)
-            throws ParseException, JsonProcessingException {
-        var jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
-        var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
-        var evidence = vc.getAsString(EVIDENCE);
-        return new AuditExtensionsVcEvidence(jwtClaimsSet.getIssuer(), evidence, isSuccessful);
-    }
-
     @Tracing
-    private void submitVcToCiStorage(SignedJWT vc, String govukSigninJourneyId, String ipAddress)
-            throws CiPutException {
-        ciStorageService.submitVC(vc, govukSigninJourneyId, ipAddress);
-    }
-
-    private AuditRestrictedVcNameParts getVcNamePartsForAudit(SignedJWT verifiableCredential)
-            throws ParseException, JsonProcessingException {
-        var jwtClaimsSet = verifiableCredential.getJWTClaimsSet();
-        var vc = (JSONObject) jwtClaimsSet.getClaim(VC_CLAIM);
-        var credentialSubject = (JSONObject) vc.get(VC_CREDENTIAL_SUBJECT);
-        var name = (JSONArray) credentialSubject.get(VC_NAME);
-        var nameParts = ((JSONObject) name.get(0)).getAsString(VC_NAME_PARTS);
-        return new AuditRestrictedVcNameParts(mapper.readTree(nameParts));
-    }
-
-    @Tracing
-    private void sendIpvVcConsumedAuditEvent(
-            AuditEventUser auditEventUser, SignedJWT verifiableCredential)
+    void sendIpvVcConsumedAuditEvent(AuditEventUser auditEventUser, SignedJWT verifiableCredential)
             throws ParseException, JsonProcessingException, SqsException {
         AuditEvent auditEvent =
                 new AuditEvent(

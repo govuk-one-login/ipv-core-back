@@ -14,7 +14,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class CriResponseMessage {
+public class CriResponseMessageDto {
     @JsonProperty("iss")
     private String credentialIssuer;
 
