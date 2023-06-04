@@ -25,8 +25,8 @@ import java.util.HashSet;
 import static com.nimbusds.jose.JWSAlgorithm.ES256;
 
 public class VerifiableCredentialJwtValidator {
-    private static final Logger LOGGER = LogManager.getLogger();
     public static final String VC_CLAIM_NAME = "vc";
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public void validate(
             SignedJWT verifiableCredential,

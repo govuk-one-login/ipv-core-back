@@ -72,7 +72,6 @@ public class CriResponseServiceTest {
         criResponseItem.setCredentialIssuer(credentialIssuer);
         criResponseItem.setIssuerResponse(issuerResponse);
         criResponseItem.setDateCreated(dateCreated);
-        criResponseItem.setExpirationTime(dateCreated.plusSeconds(1000L));
         return criResponseItem;
     }
 }

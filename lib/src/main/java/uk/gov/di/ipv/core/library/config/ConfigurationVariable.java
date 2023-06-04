@@ -20,7 +20,8 @@ public enum ConfigurationVariable {
     CI_MITIGATION_JOURNEYS_ENABLED("self/journey/ciMitigationsEnabled"),
     VC_TTL("self/vcTtl"),
     CREDENTIAL_ISSUERS("credentialIssuers"),
-    FEATURE_FLAGS("featureFlags/%s");
+    FEATURE_FLAGS("featureFlags/%s"),
+    CRI_RESPONSE_TTL("self/criResponseTtl");
 
     private final String path;
 
