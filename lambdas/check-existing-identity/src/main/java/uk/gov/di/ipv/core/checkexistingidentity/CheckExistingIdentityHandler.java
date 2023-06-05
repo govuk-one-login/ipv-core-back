@@ -268,7 +268,8 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
             List<CredentialIssuerConfig> excludedCriConfigs =
                     List.of(
                             configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI),
-                            configService.getCredentialIssuerActiveConnectionConfig();
+                            configService.getCredentialIssuerActiveConnectionConfig(
+                                    CLAIMED_IDENTITY_CRI));
             boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, excludedCriConfigs);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
