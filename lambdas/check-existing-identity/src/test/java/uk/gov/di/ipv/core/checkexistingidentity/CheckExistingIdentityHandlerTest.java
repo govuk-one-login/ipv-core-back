@@ -87,6 +87,7 @@ class CheckExistingIdentityHandlerTest {
                     M1A_VERIFICATION_VC,
                     M1B_DCMAW_VC);
     private static CredentialIssuerConfig addressConfig = null;
+    private static CredentialIssuerConfig claimedIdentityConfig = null;
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
 
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
@@ -106,6 +107,18 @@ class CheckExistingIdentityHandlerTest {
                             "test-jwk",
                             "test-encryption-jwk",
                             "test-audience",
+                            new URI("http://example.com/redirect"),
+                            true);
+
+            claimedIdentityConfig =
+                    new CredentialIssuerConfig(
+                            new URI("http://example.com/token"),
+                            new URI("http://example.com/credential"),
+                            new URI("http://example.com/authorize"),
+                            "ipv-core",
+                            "test-jwk",
+                            "test-encryption-jwk",
+                            "test-claimed-identity",
                             new URI("http://example.com/redirect"),
                             true);
         } catch (URISyntaxException e) {
@@ -164,6 +177,8 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
         when(configService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(addressConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig("claimedIdentity"))
+                .thenReturn(claimedIdentityConfig);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
