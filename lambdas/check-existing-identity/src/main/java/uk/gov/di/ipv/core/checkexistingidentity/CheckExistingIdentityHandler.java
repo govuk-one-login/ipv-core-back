@@ -49,6 +49,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
@@ -264,9 +265,11 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
         List<VcStatusDto> vcStatuses = new ArrayList<>();
         for (SignedJWT signedJWT : credentials) {
 
-            CredentialIssuerConfig addressCriConfig =
-                    configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI);
-            boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, addressCriConfig);
+            List<CredentialIssuerConfig> excludedCriConfigs =
+                    List.of(
+                            configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI),
+                            configService.getCredentialIssuerActiveConnectionConfig();
+            boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, excludedCriConfigs);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
         }
