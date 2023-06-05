@@ -99,6 +99,19 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("claimedIdentity"))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "https://review-c.integration.account.gov.uk",
+                                URI.create("https://example.com/callback"),
+                                true));
+
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
@@ -158,6 +171,19 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                         "user-id-1", "fraud", M1A_FRAUD_VC, Instant.now()),
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
+
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("claimedIdentity"))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "https://review-c.integration.account.gov.uk",
+                                URI.create("https://example.com/callback"),
+                                true));
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
                 .thenReturn(
@@ -224,6 +250,19 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
 
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("claimedIdentity"))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "https://review-c.integration.account.gov.uk",
+                                URI.create("https://example.com/callback"),
+                                true));
+
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
                 .thenReturn(
                         new CredentialIssuerConfig(
@@ -265,6 +304,18 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     @Test
     void shouldReceive400ResponseCodeWhenEvidenceVcIsMissing() throws Exception {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("claimedIdentity"))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "https://review-c.integration.account.gov.uk",
+                                URI.create("https://example.com/callback"),
+                                true));
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
                 .thenReturn(
                         new CredentialIssuerConfig(
@@ -277,6 +328,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 "https://review-a.integration.account.gov.uk",
                                 URI.create("https://example.com/callback"),
                                 true));
+
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
@@ -317,6 +369,19 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                         "user-id-1", "fraud", M1A_FRAUD_VC, Instant.now()),
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
+
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("claimedIdentity"))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "https://review-c.integration.account.gov.uk",
+                                URI.create("https://example.com/callback"),
+                                true));
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
                 .thenReturn(
@@ -404,6 +469,19 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                         "user-id-1", "fraud", M1A_FRAUD_VC, Instant.now()),
                                 createVcStoreItem(
                                         "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
+
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("claimedIdentity"))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                URI.create("https://example.com/token"),
+                                URI.create("https://example.com/credential"),
+                                URI.create("https://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-jwk",
+                                "https://review-c.integration.account.gov.uk",
+                                URI.create("https://example.com/callback"),
+                                true));
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
                 .thenReturn(
@@ -540,5 +618,18 @@ class BuildProvenUserIdentityDetailsHandlerTest {
             underTest.handleRequest(inputStream, outputStream, context);
             return objectMapper.readValue(outputStream.toString(), classType);
         }
+    }
+
+    private static CredentialIssuerConfig createCredentialIssuerConfig(String componentId) {
+        return new CredentialIssuerConfig(
+                URI.create("https://example.com/token"),
+                URI.create("https://example.com/credential"),
+                URI.create("https://example.com/authorize"),
+                "ipv-core",
+                "test-jwk",
+                "test-jwk",
+                componentId,
+                URI.create("https://example.com/callback"),
+                true);
     }
 }
