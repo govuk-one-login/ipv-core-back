@@ -498,7 +498,7 @@ class RetrieveCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyNextResponseOnSuccessfulPendingCriResponse() throws Exception {
+    void shouldReturnJourneyPendingResponseOnSuccessfulPendingCriResponse() throws Exception {
         final String expectedIssuerResponse =
                 "{\"sub\":\""
                         + TEST_USER_ID
@@ -519,7 +519,7 @@ class RetrieveCriCredentialHandlerTest {
 
         Map<String, Object> output = handler.handleRequest(testInput, context);
 
-        assertEquals("/journey/next", output.get("journey"));
+        assertEquals("/journey/pending", output.get("journey"));
         verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
 
         verifyPersistedCriResponse(

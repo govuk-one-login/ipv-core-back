@@ -68,6 +68,7 @@ public class RetrieveCriCredentialHandler
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Map<String, Object> JOURNEY_NEXT = Map.of(JOURNEY, "/journey/next");
     private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, "/journey/error");
+    private static final Map<String, Object> JOURNEY_PENDING = Map.of(JOURNEY, "/journey/pending");
 
     private final VerifiableCredentialService verifiableCredentialService;
     private final IpvSessionService ipvSessionService;
@@ -242,7 +243,7 @@ public class RetrieveCriCredentialHandler
                                 LOG_LAMBDA_RESULT.getFieldName(),
                                 "Successfully processed CRI pending response.")
                         .with(LOG_CRI_ID.getFieldName(), credentialIssuerId));
-        return JOURNEY_NEXT;
+        return JOURNEY_PENDING;
     }
 
     private Map<String, Object> processVerifiableCredentials(
