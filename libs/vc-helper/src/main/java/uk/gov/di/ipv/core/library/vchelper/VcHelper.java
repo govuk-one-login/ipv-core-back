@@ -27,28 +27,32 @@ public class VcHelper {
 
     private VcHelper() {}
 
-    public static boolean isSuccessfulVc(SignedJWT vc, CredentialIssuerConfig addressCriConfig)
-            throws ParseException {
+    public static boolean isSuccessfulVc(
+            SignedJWT vc, List<CredentialIssuerConfig> excludedCriConfig) throws ParseException {
         boolean shouldCheckContraIndicators = true;
-        return isSuccessfulVc(vc, addressCriConfig, shouldCheckContraIndicators);
+        return isSuccessfulVc(vc, excludedCriConfig, shouldCheckContraIndicators);
     }
 
     public static boolean isSuccessfulVcIgnoringCi(
-            SignedJWT vc, CredentialIssuerConfig addressCriConfig) throws ParseException {
+            SignedJWT vc, List<CredentialIssuerConfig> excludedCriConfig) throws ParseException {
         boolean shouldCheckContraIndicators = false;
-        return isSuccessfulVc(vc, addressCriConfig, shouldCheckContraIndicators);
+        return isSuccessfulVc(vc, excludedCriConfig, shouldCheckContraIndicators);
     }
 
     private static boolean isSuccessfulVc(
             SignedJWT vc,
-            CredentialIssuerConfig addressCriConfig,
+            List<CredentialIssuerConfig> excludedCriConfig,
             boolean shouldCheckContraIndicators)
             throws ParseException {
         JSONObject vcClaim = (JSONObject) vc.getJWTClaimsSet().getClaim(VC_CLAIM);
         JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
         if (evidenceArray == null) {
             String vcIss = vc.getJWTClaimsSet().getIssuer();
-            if (vcIss.equals(addressCriConfig.getComponentId())) {
+            boolean excludeConfig =
+                    excludedCriConfig.stream()
+                            .map(CredentialIssuerConfig::getComponentId)
+                            .anyMatch(vcIss::equals);
+            if (excludeConfig) {
                 return true;
             }
             LOGGER.warn("Unexpected missing evidence on VC from issuer: {}", vcIss);
