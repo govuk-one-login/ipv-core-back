@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -10,9 +11,13 @@ import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 
@@ -25,6 +30,16 @@ public class CriResponseServiceTest {
     private CriResponseService criResponseService;
 
     private static final String USER_ID_1 = "user-id-1";
+
+    private static final String TEST_USER_ID = UUID.randomUUID().toString();
+    private static final String TEST_CREDENTIAL_ISSUER = "f2f";
+    private static final String TEST_ISSUER_RESPONSE =
+            "{\"sub\":"
+                    + TEST_USER_ID
+                    + "\","
+                    + "\"https://vocab.account.gov.uk/v1/credentialStatus\":\"pending\"}";
+
+    private static final String TEST_OAUTH_STATE = UUID.randomUUID().toString();
 
     @BeforeEach
     void setUp() {
@@ -63,6 +78,31 @@ public class CriResponseServiceTest {
                 criResponseItems.stream()
                         .map(CriResponseItem::getCredentialIssuer)
                         .anyMatch(item -> testCredentialIssuer.equals(item)));
+    }
+
+    @Test
+    void shouldPersistCriResponse() {
+        final Instant testCreatedDate = Instant.now();
+        final CriResponseItem testCriResponseItem =
+                createCriResponseStoreItem(
+                        TEST_USER_ID,
+                        TEST_CREDENTIAL_ISSUER,
+                        TEST_ISSUER_RESPONSE,
+                        testCreatedDate);
+
+        criResponseService.persistCriResponse(
+                TEST_USER_ID, TEST_CREDENTIAL_ISSUER, TEST_ISSUER_RESPONSE, TEST_OAUTH_STATE);
+
+        ArgumentCaptor<CriResponseItem> persistedCriResponseItemCaptor =
+                ArgumentCaptor.forClass(CriResponseItem.class);
+        verify(mockDataStore, times(1)).create(persistedCriResponseItemCaptor.capture(), any());
+        assertEquals(1, persistedCriResponseItemCaptor.getAllValues().size());
+        final CriResponseItem persistedCriResponseItem =
+                persistedCriResponseItemCaptor.getAllValues().get(0);
+        assertEquals(TEST_USER_ID, persistedCriResponseItem.getUserId());
+        assertEquals(TEST_CREDENTIAL_ISSUER, persistedCriResponseItem.getCredentialIssuer());
+        assertEquals(TEST_ISSUER_RESPONSE, persistedCriResponseItem.getIssuerResponse());
+        assertEquals(TEST_OAUTH_STATE, persistedCriResponseItem.getOauthState());
     }
 
     private CriResponseItem createCriResponseStoreItem(
