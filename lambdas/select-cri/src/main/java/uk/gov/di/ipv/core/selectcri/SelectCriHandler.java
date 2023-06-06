@@ -55,6 +55,8 @@ public class SelectCriHandler extends JourneyRequestLambda {
     private static final String APP_JOURNEY_USER_ID_PREFIX = "urn:uuid:app-journey-user-";
     private static final String UK_PASSPORT_AND_DRIVING_LICENCE_PAGE =
             "ukPassportAndDrivingLicence";
+    private static final String UK_PASSPORT_AND_DRIVING_LICENCE_PAGE_F2F =
+            "ukPassportAndDrivingLicenceF2F";
     private static final String STUB_UK_PASSPORT_AND_DRIVING_LICENCE_PAGE =
             "stubUkPassportAndDrivingLicence";
 
@@ -323,6 +325,9 @@ public class SelectCriHandler extends JourneyRequestLambda {
     }
 
     private Optional<JourneyResponse> getMultipleDocCheckPage() {
+        if (configService.isEnabled(F2F_CRI)) {
+            return Optional.of(getJourneyResponse(UK_PASSPORT_AND_DRIVING_LICENCE_PAGE_F2F));
+        }
         if (configService.getActiveConnection(DRIVING_LICENCE_CRI).equals("stub")) {
             return Optional.of(getJourneyResponse(STUB_UK_PASSPORT_AND_DRIVING_LICENCE_PAGE));
         }
