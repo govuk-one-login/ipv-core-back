@@ -304,13 +304,12 @@ CRI_F2F:
     pending:
       type: basic
       name: pending
-      targetState: CRI_F2F_HANDOFF
+      targetState: F2F_HANDOFF_PAGE
       response:
         type: page
         pageId: page-face-to-face-handoff
-CRI_F2F_HANDOFF:
-  name: CRI_F2F_HANDOFF
-  parent: CRI_F2F
+F2F_HANDOFF_PAGE:
+  name: F2F_HANDOFF_PAGE
 CRI_KBV:
   name: CRI_KBV
   parent: CRI_STATE
