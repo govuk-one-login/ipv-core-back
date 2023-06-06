@@ -57,7 +57,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     private static final String TEST_OAUTH_STATE_2 = UUID.randomUUID().toString();
     private static final CriResponseItem TEST_CRI_RESPONSE_ITEM =
             new CriResponseItem(
-                    TEST_USER_ID, TEST_CREDENTIAL_ISSUER_ID, null, TEST_OAUTH_STATE, null, null, 0);
+                    TEST_USER_ID, TEST_CREDENTIAL_ISSUER_ID, null, TEST_OAUTH_STATE, null, 0);
 
     private static final String TEST_ASYNC_ERROR = "access_denied";
     private static final String TEST_ASYNC_ERROR_DESCRIPTION =
