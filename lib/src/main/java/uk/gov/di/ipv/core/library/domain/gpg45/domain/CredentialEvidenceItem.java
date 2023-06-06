@@ -74,6 +74,8 @@ public class CredentialEvidenceItem {
             return EvidenceType.DCMAW;
         } else if (isF2F()) {
             return EvidenceType.F2F;
+        } else if (isFraudWithActivity()) {
+            return EvidenceType.FRAUD_WITH_ACTIVITY;
         } else {
             throw new UnknownEvidenceTypeException();
         }
@@ -105,6 +107,14 @@ public class CredentialEvidenceItem {
     private boolean isIdentityFraud() {
         return identityFraudScore != null
                 && activityHistoryScore == null
+                && strengthScore == null
+                && validityScore == null
+                && verificationScore == null;
+    }
+
+    private boolean isFraudWithActivity() {
+        return identityFraudScore != null
+                && activityHistoryScore != null
                 && strengthScore == null
                 && validityScore == null
                 && verificationScore == null;
@@ -157,7 +167,8 @@ public class CredentialEvidenceItem {
                 generateComparator(CredentialEvidenceItem::getVerificationScore),
                 CredentialEvidenceItem::getVerificationScore),
         DCMAW(null, null),
-        F2F(null, null);
+        F2F(null, null),
+        FRAUD_WITH_ACTIVITY(null, null);
 
         public final Comparator<CredentialEvidenceItem> comparator;
         public final Function<CredentialEvidenceItem, Integer> scoreGetter;

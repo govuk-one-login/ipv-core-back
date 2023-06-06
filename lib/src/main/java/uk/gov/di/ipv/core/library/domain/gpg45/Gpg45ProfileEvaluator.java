@@ -117,6 +117,7 @@ public class Gpg45ProfileEvaluator {
         var evidenceMap = parseGpg45ScoresFromCredentials(credentials);
         processEvidenceItems(evidenceMap, CredentialEvidenceItem.EvidenceType.DCMAW);
         processEvidenceItems(evidenceMap, CredentialEvidenceItem.EvidenceType.F2F);
+        processFraudWithActivityItems(evidenceMap);
 
         return Gpg45Scores.builder()
                 .withActivity(
@@ -133,6 +134,27 @@ public class Gpg45ProfileEvaluator {
                                 .map(CredentialEvidenceItem::getEvidenceScore)
                                 .collect(Collectors.toList()))
                 .build();
+    }
+
+    private void processFraudWithActivityItems(
+            Map<CredentialEvidenceItem.EvidenceType, List<CredentialEvidenceItem>> evidenceMap) {
+        for (CredentialEvidenceItem evidenceItem :
+                evidenceMap.get(CredentialEvidenceItem.EvidenceType.FRAUD_WITH_ACTIVITY)) {
+            evidenceMap
+                    .get(CredentialEvidenceItem.EvidenceType.ACTIVITY)
+                    .add(
+                            new CredentialEvidenceItem(
+                                    CredentialEvidenceItem.EvidenceType.ACTIVITY,
+                                    evidenceItem.getActivityHistoryScore(),
+                                    Collections.emptyList()));
+            evidenceMap
+                    .get(CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD)
+                    .add(
+                            new CredentialEvidenceItem(
+                                    CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD,
+                                    evidenceItem.getIdentityFraudScore(),
+                                    Collections.emptyList()));
+        }
     }
 
     private void processEvidenceItems(
@@ -271,7 +293,8 @@ public class Gpg45ProfileEvaluator {
                         CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD, new ArrayList<>(),
                         CredentialEvidenceItem.EvidenceType.VERIFICATION, new ArrayList<>(),
                         CredentialEvidenceItem.EvidenceType.DCMAW, new ArrayList<>(),
-                        CredentialEvidenceItem.EvidenceType.F2F, new ArrayList<>());
+                        CredentialEvidenceItem.EvidenceType.F2F, new ArrayList<>(),
+                        CredentialEvidenceItem.EvidenceType.FRAUD_WITH_ACTIVITY, new ArrayList<>());
 
         for (SignedJWT signedJWT : credentials) {
             List<CredentialEvidenceItem> credentialEvidenceList =
