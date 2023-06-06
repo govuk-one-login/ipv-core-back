@@ -119,7 +119,6 @@ class SelectCriHandlerTest {
                 .thenReturn(Collections.emptyList());
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
                 .thenReturn(createCriConfig(DRIVING_LICENCE_CRI));
-        when(mockConfigService.getActiveConnection(DRIVING_LICENCE_CRI)).thenReturn("main");
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(false);
         when(mockConfigService.isEnabled(DRIVING_LICENCE_CRI)).thenReturn(true);
         when(mockConfigService.isEnabled(F2F_CRI)).thenReturn(false);
@@ -146,7 +145,6 @@ class SelectCriHandlerTest {
                 List.of(new VisitedCredentialIssuerDetailsDto(CLAIMED_IDENTITY_CRI, true, null));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(Collections.emptyList());
-        when(mockConfigService.getActiveConnection(DRIVING_LICENCE_CRI)).thenReturn("main");
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(false);
         when(mockConfigService.isEnabled(DRIVING_LICENCE_CRI)).thenReturn(true);
         when(mockConfigService.isEnabled(F2F_CRI)).thenReturn(true);
