@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
+import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validation.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.processasynccricredential.domain.BaseAsyncCriResponse;
@@ -38,6 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
@@ -115,6 +117,14 @@ public class ProcessAsyncCriCredentialHandler
                                         "Failed to process VC response message.")
                                 .with(LOG_ERROR_DESCRIPTION.getFieldName(), e.getMessage()));
                 failedRecords.add(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
+            } catch (VerifiableCredentialException e) {
+                LOGGER.error(
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "Failed to process VC response message.")
+                                .with(LOG_ERROR_DESCRIPTION.getFieldName(), e.getErrorResponse()));
+                failedRecords.add(new SQSBatchResponse.BatchItemFailure(message.getMessageId()));
             }
         }
 
@@ -150,8 +160,12 @@ public class ProcessAsyncCriCredentialHandler
         final CredentialIssuerConfig credentialIssuerConfig =
                 configService.getCredentialIssuerActiveConnectionConfig(
                         successAsyncCriResponse.getCredentialIssuer());
-        final CredentialIssuerConfig addressCriConfig =
-                configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI);
+
+        final List<CredentialIssuerConfig> excludedCriConfigs =
+                List.of(
+                        configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI),
+                        configService.getCredentialIssuerActiveConnectionConfig(
+                                CLAIMED_IDENTITY_CRI));
 
         for (SignedJWT verifiableCredential : verifiableCredentials) {
             verifiableCredentialJwtValidator.validate(
@@ -159,7 +173,8 @@ public class ProcessAsyncCriCredentialHandler
                     credentialIssuerConfig,
                     successAsyncCriResponse.getUserId());
 
-            boolean isSuccessful = VcHelper.isSuccessfulVc(verifiableCredential, addressCriConfig);
+            boolean isSuccessful =
+                    VcHelper.isSuccessfulVc(verifiableCredential, excludedCriConfigs);
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(successAsyncCriResponse.getUserId(), null, null, null);
@@ -197,7 +212,10 @@ public class ProcessAsyncCriCredentialHandler
                             .with(LOG_ERROR_DESCRIPTION.getFieldName(), "No response item found"));
             throw new AsyncVerifiableCredentialException(UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL);
         }
-        if (!criResponseItem.getOauthState().equals(successAsyncCriResponse.getOauthState())) {
+        if (criResponseItem.getOauthState() == null
+                || !criResponseItem
+                        .getOauthState()
+                        .equals(successAsyncCriResponse.getOauthState())) {
             LOGGER.error(
                     new StringMapMessage()
                             .with(

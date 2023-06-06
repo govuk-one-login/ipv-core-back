@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
+import uk.gov.di.ipv.core.library.domain.CriConstants;
 import uk.gov.di.ipv.core.processasynccricredential.domain.BaseAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.ErrorAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;
@@ -13,7 +14,7 @@ import uk.gov.di.ipv.core.processasynccricredential.dto.CriResponseMessageDto;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 
 public class AsyncCriResponseHelper {
-    public static final String DEFAULT_CREDENTIAL_ISSUER = "f2f";
+    public static final String DEFAULT_CREDENTIAL_ISSUER = CriConstants.F2F_CRI;
 
     private static final Logger LOGGER = LogManager.getLogger();
 

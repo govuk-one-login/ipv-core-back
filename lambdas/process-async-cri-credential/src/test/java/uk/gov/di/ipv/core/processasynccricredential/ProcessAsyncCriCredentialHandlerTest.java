@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
+import uk.gov.di.ipv.core.library.domain.CriConstants;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -21,12 +22,14 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
+import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.library.verifiablecredential.validation.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.processasynccricredential.dto.CriResponseMessageDto;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,9 +37,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 
@@ -44,10 +50,11 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 class ProcessAsyncCriCredentialHandlerTest {
 
     private static final String TEST_MESSAGE_ID = UUID.randomUUID().toString();
-    private static final String TEST_CREDENTIAL_ISSUER_ID = "f2f";
+    private static final String TEST_CREDENTIAL_ISSUER_ID = CriConstants.F2F_CRI;
     private static final String TEST_USER_ID = "urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6";
     private static final String TEST_COMPONENT_ID = "f2f";
     private static final String TEST_OAUTH_STATE = UUID.randomUUID().toString();
+    private static final String TEST_OAUTH_STATE_2 = UUID.randomUUID().toString();
     private static final CriResponseItem TEST_CRI_RESPONSE_ITEM =
             new CriResponseItem(
                     TEST_USER_ID, TEST_CREDENTIAL_ISSUER_ID, null, TEST_OAUTH_STATE, null, null, 0);
@@ -88,8 +95,16 @@ class ProcessAsyncCriCredentialHandlerTest {
     @Test
     void shouldProcessValidExpectedAsyncVerifiableCredentialSuccessfully()
             throws JsonProcessingException, SqsException, CiPutException {
-        final SQSEvent testEvent = createSuccessTestEvent();
-        mockServiceCalls();
+        final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE, SIGNED_VC_1);
+
+        when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
+                .thenReturn(TEST_CRI_RESPONSE_ITEM);
+        when(configService.getCredentialIssuerActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
         assertEquals(0, batchResponse.getBatchItemFailures().size());
@@ -109,10 +124,55 @@ class ProcessAsyncCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldRejectValidUnexpectedVerifiableCredential() {}
+    void shouldRejectValidUnexpectedVerifiableCredential() throws JsonProcessingException {
+        final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE_2, SIGNED_VC_1);
+
+        when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
+                .thenReturn(TEST_CRI_RESPONSE_ITEM);
+
+        final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
+        assertEquals(1, batchResponse.getBatchItemFailures().size());
+        assertEquals(
+                testEvent.getRecords().get(0).getMessageId(),
+                batchResponse.getBatchItemFailures().get(0).getItemIdentifier());
+    }
 
     @Test
-    void shouldRejectValidExpiredVerifiableCredential() {}
+    void shouldRejectValidUnsolicitedVerifiableCredential() throws JsonProcessingException {
+        final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE, SIGNED_VC_1);
+
+        when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
+                .thenReturn(null);
+
+        final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
+        assertEquals(1, batchResponse.getBatchItemFailures().size());
+        assertEquals(
+                testEvent.getRecords().get(0).getMessageId(),
+                batchResponse.getBatchItemFailures().get(0).getItemIdentifier());
+    }
+
+    @Test
+    void shouldRejectInvalidVerifiableCredential() throws JsonProcessingException, ParseException {
+        final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE, SIGNED_VC_1);
+
+        when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
+                .thenReturn(TEST_CRI_RESPONSE_ITEM);
+        when(configService.getCredentialIssuerActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
+        doThrow(VerifiableCredentialException.class)
+                .when(verifiableCredentialJwtValidator)
+                .validate(any(), any(), any());
+
+        final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
+        assertEquals(1, batchResponse.getBatchItemFailures().size());
+        assertEquals(
+                testEvent.getRecords().get(0).getMessageId(),
+                batchResponse.getBatchItemFailures().get(0).getItemIdentifier());
+    }
 
     private SQSEvent createErrorTestEvent() throws JsonProcessingException {
         final SQSEvent sqsEvent = new SQSEvent();
@@ -131,11 +191,18 @@ class ProcessAsyncCriCredentialHandlerTest {
         return sqsEvent;
     }
 
-    private SQSEvent createSuccessTestEvent() throws JsonProcessingException {
+    private SQSEvent createSuccessTestEvent(
+            String testOauthState, String signedVerifiableCredential)
+            throws JsonProcessingException {
         final SQSEvent sqsEvent = new SQSEvent();
         final CriResponseMessageDto criResponseMessageDto =
                 new CriResponseMessageDto(
-                        null, TEST_USER_ID, TEST_OAUTH_STATE, List.of(SIGNED_VC_1), null, null);
+                        null,
+                        TEST_USER_ID,
+                        testOauthState,
+                        List.of(signedVerifiableCredential),
+                        null,
+                        null);
         final SQSEvent.SQSMessage message = new SQSEvent.SQSMessage();
         message.setMessageId(TEST_MESSAGE_ID);
         message.setBody(OBJECT_MAPPER.writeValueAsString(criResponseMessageDto));
@@ -156,15 +223,6 @@ class ProcessAsyncCriCredentialHandlerTest {
         assertEquals(2, auditEvents.size());
         assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_RECEIVED, auditEvents.get(0).getEventName());
         assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_CONSUMED, auditEvents.get(1).getEventName());
-    }
-
-    private void mockServiceCalls() {
-        when(configService.getCredentialIssuerActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
-        when(configService.getCredentialIssuerActiveConnectionConfig("address"))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
-        when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
-                .thenReturn(TEST_CRI_RESPONSE_ITEM);
     }
 
     private void verifyCiStorageService() throws CiPutException {

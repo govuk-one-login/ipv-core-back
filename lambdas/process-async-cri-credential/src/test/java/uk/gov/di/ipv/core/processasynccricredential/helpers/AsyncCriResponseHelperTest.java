@@ -25,35 +25,14 @@ class AsyncCriResponseHelperTest {
     private static final String TEST_ERROR = "an error";
     private static final String TEST_ERROR_DESCRIPTION = "a description of the error";
     private static final String TEST_SUCCESS_ASYNC_RESPONSE_MESSAGE =
-            "{\n"
-                    + "  \"sub\": \""
-                    + TEST_USER
-                    + "\",\n"
-                    + "  \"state\": \""
-                    + TEST_OAUTH_STATE
-                    + "\",\n"
-                    + "  \"https://vocab.account.gov.uk/v1/credentialJWT\": ["
-                    + "    \""
-                    + TEST_JWT
-                    + "\"\n"
-                    + "  ]\n"
-                    + "}";
+            String.format(
+                    "{\"sub\":\"%s\",\"state\":\"%s\",\"https://vocab.account.gov.uk/v1/credentialJWT\":[\"%s\"]}",
+                    TEST_USER, TEST_OAUTH_STATE, TEST_JWT);
 
     private static final String TEST_ERROR_ASYNC_RESPONSE_MESSAGE =
-            "{\n"
-                    + "  \"sub\": \""
-                    + TEST_USER
-                    + "\",\n"
-                    + "  \"state\": \""
-                    + TEST_OAUTH_STATE
-                    + "\",\n"
-                    + "  \"error\": \""
-                    + TEST_ERROR
-                    + "\",\n"
-                    + "  \"error_description\": \""
-                    + TEST_ERROR_DESCRIPTION
-                    + "\"\n"
-                    + "}";
+            String.format(
+                    "{\"sub\":\"%s\",\"state\":\"%s\",\"error\":\"%s\",\"error_description\":\"%s\"}",
+                    TEST_USER, TEST_OAUTH_STATE, TEST_ERROR, TEST_ERROR_DESCRIPTION);
 
     @Test
     void shouldCreateSuccessResponseForSuccessResponseMessage() throws JsonProcessingException {
