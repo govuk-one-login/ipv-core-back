@@ -164,20 +164,11 @@ public class Gpg45ProfileEvaluator {
         List<CredentialEvidenceItem> evidenceItems = evidenceMap.get(evidenceType);
         for (CredentialEvidenceItem evidenceItem : evidenceItems) {
             List<CredentialEvidenceItem> gpg45EvidenceItems =
-                    convertEvidenceToGpg45EvidenceItem(evidenceItem);
-
+                    convertEvidenceItemToGpg45EvidenceItems(evidenceItem);
             for (CredentialEvidenceItem gpg45EvidenceItem : gpg45EvidenceItems) {
                 evidenceMap.get(gpg45EvidenceItem.getType()).add(gpg45EvidenceItem);
             }
         }
-    }
-
-    private List<CredentialEvidenceItem> convertEvidenceToGpg45EvidenceItem(
-            CredentialEvidenceItem evidenceItem) throws UnknownEvidenceTypeException {
-        if (isRelevantEvidence(evidenceItem)) {
-            return convertEvidenceItemToGpg45EvidenceItems(evidenceItem);
-        }
-        return Collections.emptyList();
     }
 
     public List<SignedJWT> parseCredentials(List<String> credentials) throws ParseException {
@@ -231,6 +222,9 @@ public class Gpg45ProfileEvaluator {
 
     private List<CredentialEvidenceItem> convertEvidenceItemToGpg45EvidenceItems(
             CredentialEvidenceItem evidenceItem) throws UnknownEvidenceTypeException {
+        if (!isRelevantEvidence(evidenceItem)) {
+            return Collections.emptyList();
+        }
         List<CredentialEvidenceItem> gpg45CredentialItems = new ArrayList<>();
 
         gpg45CredentialItems.add(
