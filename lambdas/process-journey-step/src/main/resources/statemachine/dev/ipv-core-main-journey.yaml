@@ -300,6 +300,17 @@ CRI_CLAIMED_IDENTITY:
 CRI_F2F:
   name: CRI_F2F
   parent: CRI_STATE
+  events:
+    pending:
+      type: basic
+      name: pending
+      targetState: CRI_F2F_HANDOFF
+      response:
+        type: page
+        pageId: page-face-to-face-handoff
+CRI_F2F_HANDOFF:
+  name: CRI_F2F_HANDOFF
+  parent: CRI_F2F
 CRI_KBV:
   name: CRI_KBV
   parent: CRI_STATE
