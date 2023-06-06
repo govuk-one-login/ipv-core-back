@@ -280,6 +280,19 @@ CRI_ADDRESS:
 CRI_FRAUD:
   name: CRI_FRAUD
   parent: CRI_STATE
+CRI_F2F:
+  name: CRI_F2F
+  parent: CRI_STATE
+  events:
+    pending:
+      type: basic
+      name: pending
+      targetState: F2F_HANDOFF_PAGE
+      response:
+        type: page
+        pageId: page-face-to-face-handoff
+F2F_HANDOFF_PAGE:
+  name: F2F_HANDOFF_PAGE
 CRI_KBV:
   name: CRI_KBV
   parent: CRI_STATE
