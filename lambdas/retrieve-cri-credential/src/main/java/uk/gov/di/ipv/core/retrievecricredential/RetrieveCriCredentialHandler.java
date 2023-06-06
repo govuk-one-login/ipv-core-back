@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -161,9 +162,13 @@ public class RetrieveCriCredentialHandler
             for (SignedJWT vc : verifiableCredentials) {
                 verifiableCredentialJwtValidator.validate(vc, credentialIssuerConfig, userId);
 
-                CredentialIssuerConfig addressCriConfig =
-                        configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI);
-                boolean isSuccessful = VcHelper.isSuccessfulVc(vc, addressCriConfig);
+                List<CredentialIssuerConfig> excludedCriConfigs =
+                        List.of(
+                                configService.getCredentialIssuerActiveConnectionConfig(
+                                        ADDRESS_CRI),
+                                configService.getCredentialIssuerActiveConnectionConfig(
+                                        CLAIMED_IDENTITY_CRI));
+                boolean isSuccessful = VcHelper.isSuccessfulVc(vc, excludedCriConfigs);
 
                 sendIpvVcReceivedAuditEvent(auditEventUser, vc, isSuccessful);
 

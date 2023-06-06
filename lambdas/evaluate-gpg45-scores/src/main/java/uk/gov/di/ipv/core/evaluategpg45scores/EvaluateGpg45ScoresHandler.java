@@ -53,6 +53,7 @@ import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_MITIGATION_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
@@ -369,12 +370,15 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
     private List<VcStatusDto> generateVcSuccessStatuses(List<SignedJWT> credentials)
             throws ParseException {
         List<VcStatusDto> vcStatuses = new ArrayList<>();
+        List<CredentialIssuerConfig> ignoredCriConfigurations =
+                List.of(
+                        configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI),
+                        configService.getCredentialIssuerActiveConnectionConfig(
+                                CLAIMED_IDENTITY_CRI));
 
         for (SignedJWT signedJWT : credentials) {
-
-            CredentialIssuerConfig addressCriConfig =
-                    configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI);
-            boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, addressCriConfig);
+            boolean isSuccessful =
+                    VcHelper.isSuccessfulVcIgnoringCi(signedJWT, ignoredCriConfigurations);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
         }
