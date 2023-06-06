@@ -1,13 +1,13 @@
 package uk.gov.di.ipv.core.library.verifiablecredential.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.common.contenttype.ContentType;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
-import net.minidev.json.JSONArray;
-import net.minidev.json.JSONObject;
 import org.apache.http.HttpHeaders;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,12 +16,14 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
+import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
+import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialResponseDto;
 import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCredentialException;
 
 import java.io.IOException;
@@ -39,6 +41,8 @@ public class VerifiableCredentialService {
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String API_KEY_HEADER = "x-api-key";
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private final DataStore<VcStoreItem> dataStore;
     private final ConfigService configService;
@@ -63,7 +67,7 @@ public class VerifiableCredentialService {
         this.dataStore = dataStore;
     }
 
-    public List<SignedJWT> getVerifiableCredential(
+    public VerifiableCredentialResponse getVerifiableCredentialResponse(
             BearerAccessToken accessToken,
             CredentialIssuerConfig config,
             String apiKey,
@@ -72,13 +76,12 @@ public class VerifiableCredentialService {
                 new HTTPRequest(HTTPRequest.Method.POST, config.getCredentialUrl());
 
         if (apiKey != null) {
-            var message =
+            LOGGER.info(
                     new StringMapMessage()
                             .with(
                                     LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                     "CRI has API key, sending key in header for credential request.")
-                            .with(LOG_CRI_ID.getFieldName(), credentialIssuerId);
-            LOGGER.info(message);
+                            .with(LOG_CRI_ID.getFieldName(), credentialIssuerId));
             credentialRequest.setHeader(API_KEY_HEADER, apiKey);
         }
 
@@ -99,30 +102,27 @@ public class VerifiableCredentialService {
             String responseContentType = response.getHeaderValue(HttpHeaders.CONTENT_TYPE);
             if (ContentType.APPLICATION_JWT.matches(ContentType.parse(responseContentType))) {
                 SignedJWT vcJwt = (SignedJWT) response.getContentAsJWT();
+                VerifiableCredentialResponse verifiableCredentialResponse =
+                        VerifiableCredentialResponse.builder()
+                                .verifiableCredentials(Collections.singletonList(vcJwt))
+                                .build();
                 LOGGER.info("Verifiable Credential retrieved.");
-                return Collections.singletonList(vcJwt);
+                return verifiableCredentialResponse;
             } else if (ContentType.APPLICATION_JSON.matches(
                     ContentType.parse(responseContentType))) {
-                JSONObject vcJson = response.getContentAsJSONObject();
-
-                JSONArray vcArray = (JSONArray) vcJson.get(UserIdentity.VCS_CLAIM_NAME);
-                List<SignedJWT> vcJwts = new ArrayList<>();
-                for (Object vc : vcArray) {
-                    vcJwts.add(SignedJWT.parse(vc.toString()));
-                }
-
+                VerifiableCredentialResponse verifiableCredentialResponse =
+                        getVerifiableCredentialResponse(response.getContent());
                 LOGGER.info("Verifiable Credential retrieved.");
-                return vcJwts;
+                return verifiableCredentialResponse;
             } else {
-                var message =
+                LOGGER.error(
                         new StringMapMessage()
                                 .with(
                                         LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                         "Error retrieving credential::Unknown response type received from CRI.")
                                 .with(
                                         LOG_RESPONSE_CONTENT_TYPE.getFieldName(),
-                                        responseContentType);
-                LOGGER.error(message);
+                                        responseContentType));
                 throw new VerifiableCredentialException(
                         HTTPResponse.SC_SERVER_ERROR,
                         ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
@@ -133,6 +133,29 @@ public class VerifiableCredentialService {
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
         }
+    }
+
+    private VerifiableCredentialResponse getVerifiableCredentialResponse(String responseString)
+            throws JsonProcessingException, java.text.ParseException {
+        VerifiableCredentialResponseDto verifiableCredentialResponse =
+                OBJECT_MAPPER.readValue(responseString, VerifiableCredentialResponseDto.class);
+        VerifiableCredentialResponse.VerifiableCredentialResponseBuilder
+                verifiableCredentialResponseBuilder =
+                        VerifiableCredentialResponse.builder()
+                                .userId(verifiableCredentialResponse.getUserId());
+        if (verifiableCredentialResponse.getVerifiableCredentials() != null) {
+            List<SignedJWT> vcJwts = new ArrayList<>();
+            for (String vc : verifiableCredentialResponse.getVerifiableCredentials()) {
+                vcJwts.add(SignedJWT.parse(vc));
+            }
+            verifiableCredentialResponseBuilder.verifiableCredentials(vcJwts);
+        }
+        if (verifiableCredentialResponse.getCredentialStatus() != null) {
+            verifiableCredentialResponseBuilder.credentialStatus(
+                    VerifiableCredentialStatus.fromStatusString(
+                            verifiableCredentialResponse.getCredentialStatus()));
+        }
+        return verifiableCredentialResponseBuilder.build();
     }
 
     public void persistUserCredentials(

@@ -1,9 +1,11 @@
 package uk.gov.di.ipv.core.library.service;
 
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
+import java.time.Instant;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CRI_RESPONSE_TABLE_NAME;
@@ -36,5 +38,18 @@ public class CriResponseService {
 
     public CriResponseItem getCriResponseItem(String userId, String criId) {
         return dataStore.getItem(userId, criId);
+    }
+
+    public void persistCriResponse(
+            String userId, String credentialIssuer, String issuerResponse, String oauthState) {
+        CriResponseItem criResponseItem =
+                CriResponseItem.builder()
+                        .userId(userId)
+                        .credentialIssuer(credentialIssuer)
+                        .issuerResponse(issuerResponse)
+                        .oauthState(oauthState)
+                        .dateCreated(Instant.now())
+                        .build();
+        dataStore.create(criResponseItem, ConfigurationVariable.CRI_RESPONSE_TTL);
     }
 }

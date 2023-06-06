@@ -23,6 +23,8 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
+import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCredentialException;
 
 import java.net.URI;
@@ -34,7 +36,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Date;
-import java.util.List;
+import java.util.UUID;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -343,11 +345,48 @@ class VerifiableCredentialServiceTest {
 
         BearerAccessToken accessToken = new BearerAccessToken();
 
-        List<SignedJWT> credentials =
-                verifiableCredentialService.getVerifiableCredential(
+        VerifiableCredentialResponse verifiableCredentialResponse =
+                verifiableCredentialService.getVerifiableCredentialResponse(
                         accessToken, credentialIssuerConfig, testApiKey, cri);
 
-        assertEquals(SIGNED_VC_1, credentials.get(0).serialize());
+        assertEquals(
+                SIGNED_VC_1,
+                verifiableCredentialResponse.getVerifiableCredentials().get(0).serialize());
+
+        verify(
+                postRequestedFor(urlEqualTo("/credentials/issue"))
+                        .withHeader("Authorization", equalTo("Bearer " + accessToken.getValue())));
+    }
+
+    @Test
+    void getVerifiableCredentialCorrectlyGetsAPendingResponseFromCredentialIssuer(
+            WireMockRuntimeInfo wmRuntimeInfo) {
+        final String testUserId = "urn:uuid" + UUID.randomUUID();
+        final String pendingResponse =
+                "{\"sub\":\""
+                        + testUserId
+                        + "\",\"https://vocab.account.gov.uk/v1/credentialStatus\":\"pending\"}";
+        stubFor(
+                post("/credentials/issue")
+                        .willReturn(
+                                aResponse()
+                                        .withHeader(
+                                                "Content-Type", "application/json;charset=utf-8")
+                                        .withBody(pendingResponse)));
+
+        CredentialIssuerConfig credentialIssuerConfig =
+                getStubCredentialIssuerConfig(wmRuntimeInfo);
+
+        BearerAccessToken accessToken = new BearerAccessToken();
+
+        VerifiableCredentialResponse verifiableCredentialResponse =
+                verifiableCredentialService.getVerifiableCredentialResponse(
+                        accessToken, credentialIssuerConfig, testApiKey, cri);
+
+        assertEquals(testUserId, verifiableCredentialResponse.getUserId());
+        assertEquals(
+                VerifiableCredentialStatus.PENDING,
+                verifiableCredentialResponse.getCredentialStatus());
 
         verify(
                 postRequestedFor(urlEqualTo("/credentials/issue"))
@@ -369,11 +408,13 @@ class VerifiableCredentialServiceTest {
 
         BearerAccessToken accessToken = new BearerAccessToken();
 
-        List<SignedJWT> credentials =
-                verifiableCredentialService.getVerifiableCredential(
+        VerifiableCredentialResponse verifiableCredentialResponse =
+                verifiableCredentialService.getVerifiableCredentialResponse(
                         accessToken, credentialIssuerConfig, null, cri);
 
-        assertEquals(SIGNED_VC_1, credentials.get(0).serialize());
+        assertEquals(
+                SIGNED_VC_1,
+                verifiableCredentialResponse.getVerifiableCredentials().get(0).serialize());
 
         verify(
                 postRequestedFor(urlEqualTo("/credentials/issue"))
@@ -399,11 +440,13 @@ class VerifiableCredentialServiceTest {
 
         BearerAccessToken accessToken = new BearerAccessToken();
 
-        List<SignedJWT> credentials =
-                verifiableCredentialService.getVerifiableCredential(
+        VerifiableCredentialResponse verifiableCredentialResponse =
+                verifiableCredentialService.getVerifiableCredentialResponse(
                         accessToken, credentialIssuerConfig, null, cri);
 
-        assertEquals(SIGNED_VC_1, credentials.get(0).serialize());
+        assertEquals(
+                SIGNED_VC_1,
+                verifiableCredentialResponse.getVerifiableCredentials().get(0).serialize());
 
         verify(
                 postRequestedFor(urlEqualTo("/credentials/issue"))
@@ -430,7 +473,7 @@ class VerifiableCredentialServiceTest {
                 assertThrows(
                         VerifiableCredentialException.class,
                         () ->
-                                verifiableCredentialService.getVerifiableCredential(
+                                verifiableCredentialService.getVerifiableCredentialResponse(
                                         accessToken, credentialIssuerConfig, testApiKey, cri));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
@@ -454,7 +497,7 @@ class VerifiableCredentialServiceTest {
                 assertThrows(
                         VerifiableCredentialException.class,
                         () ->
-                                verifiableCredentialService.getVerifiableCredential(
+                                verifiableCredentialService.getVerifiableCredentialResponse(
                                         accessToken, credentialIssuerConfig, testApiKey, cri));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
