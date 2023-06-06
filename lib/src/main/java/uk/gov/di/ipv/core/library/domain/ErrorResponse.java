@@ -57,6 +57,7 @@ public enum ErrorResponse {
     FAILED_TO_CONSTRUCT_REDIRECT_URI(1047, "Failed to construct redirect uri"),
     FAILED_TO_PARSE_JSON_MESSAGE(1048, "Failed to parse JSON message"),
     FAILED_UNHANDLED_EXCEPTION(1049, "Unhandled exception"),
+    UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL(1050, "Unexpected async verifiable credential"),
     FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE(
             1051, "Failed to validate verifiable credential response");
 
