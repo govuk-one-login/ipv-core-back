@@ -36,6 +36,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.FRAUD_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FAILED_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
@@ -51,6 +56,16 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
     private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final CredentialIssuerConfig ISSUER_CONFIG_ADDRESS =
+            createCredentialIssuerConfig("https://review-a.integration.account.gov.uk");
+    private static final CredentialIssuerConfig ISSUER_CONFIG_CLAIMED_IDENTITY =
+            createCredentialIssuerConfig("https://review-c.integration.account.gov.uk");
+    private static final CredentialIssuerConfig ISSUER_CONFIG_FRAUD =
+            createCredentialIssuerConfig("https://review-f.integration.account.gov.uk");
+    private static final CredentialIssuerConfig ISSUER_CONFIG_KBV =
+            createCredentialIssuerConfig("https://review-k.integration.account.gov.uk");
+    private static final CredentialIssuerConfig ISSUER_CONFIG_UK_PASSPORT =
+            createCredentialIssuerConfig("https://review-p.integration.account.gov.uk");
 
     @Mock private Context context;
     @Mock private ConfigService mockConfigService;
@@ -91,52 +106,20 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 createVcStoreItem(
-                                        "user-id-1", "ukPassport", M1A_PASSPORT_VC, Instant.now()),
+                                        PASSPORT_CRI, M1A_PASSPORT_VC, Instant.now()),
                                 createVcStoreItem(
-                                        "user-id-1", "address", M1A_ADDRESS_VC, Instant.now()),
+                                        ADDRESS_CRI, M1A_ADDRESS_VC, Instant.now()),
                                 createVcStoreItem(
-                                        "user-id-1", "fraud", M1A_FRAUD_VC, Instant.now()),
+                                        FRAUD_CRI, M1A_FRAUD_VC, Instant.now()),
                                 createVcStoreItem(
-                                        "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
+                                        KBV_CRI, M1A_VERIFICATION_VC, Instant.now())));
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("claimedIdentity"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-c.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
-
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-p.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
-
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-a.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(ISSUER_CONFIG_UK_PASSPORT);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(ISSUER_CONFIG_ADDRESS);
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -161,55 +144,22 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 createVcStoreItem(
-                                        "user-id-1", "ukPassport", M1A_PASSPORT_VC, Instant.now()),
+                                        PASSPORT_CRI, M1A_PASSPORT_VC, Instant.now()),
                                 createVcStoreItem(
-                                        "user-id-1",
-                                        "address",
+                                        ADDRESS_CRI,
                                         M1A_MULTI_ADDRESS_VC,
                                         Instant.now()),
                                 createVcStoreItem(
-                                        "user-id-1", "fraud", M1A_FRAUD_VC, Instant.now()),
+                                        FRAUD_CRI, M1A_FRAUD_VC, Instant.now()),
                                 createVcStoreItem(
-                                        "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
+                                        KBV_CRI, M1A_VERIFICATION_VC, Instant.now())));
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("claimedIdentity"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-c.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
-
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-p.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
-
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-a.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(ISSUER_CONFIG_UK_PASSPORT);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(ISSUER_CONFIG_ADDRESS);
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -239,55 +189,22 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 createVcStoreItem(
-                                        "user-id-1", "ukPassport", M1A_PASSPORT_VC, Instant.now()),
+                                        PASSPORT_CRI, M1A_PASSPORT_VC, Instant.now()),
                                 createVcStoreItem(
-                                        "user-id-1",
-                                        "address",
+                                        ADDRESS_CRI,
                                         M1A_MULTI_ADDRESS_VC_WITHOUT_VALID_FROM_FIELD,
                                         Instant.now()),
                                 createVcStoreItem(
-                                        "user-id-1", "fraud", M1A_FRAUD_VC, Instant.now()),
+                                        FRAUD_CRI, M1A_FRAUD_VC, Instant.now()),
                                 createVcStoreItem(
-                                        "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
+                                        KBV_CRI, M1A_VERIFICATION_VC, Instant.now())));
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("claimedIdentity"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-c.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
-
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-p.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
-
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-a.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(ISSUER_CONFIG_UK_PASSPORT);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(ISSUER_CONFIG_ADDRESS);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -304,41 +221,21 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     @Test
     void shouldReceive400ResponseCodeWhenEvidenceVcIsMissing() throws Exception {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("claimedIdentity"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-c.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-a.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(ISSUER_CONFIG_ADDRESS);
 
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
                 .thenReturn(
                         List.of(
                                 createVcStoreItem(
-                                        "user-id-1", "address", M1A_ADDRESS_VC, Instant.now()),
+                                        ADDRESS_CRI, M1A_ADDRESS_VC, Instant.now()),
                                 createVcStoreItem(
-                                        "user-id-1", "fraud", M1A_FRAUD_VC, Instant.now()),
+                                        FRAUD_CRI, M1A_FRAUD_VC, Instant.now()),
                                 createVcStoreItem(
-                                        "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
+                                        KBV_CRI, M1A_VERIFICATION_VC, Instant.now())));
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -364,76 +261,23 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 createVcStoreItem(
-                                        "user-id-1", "ukPassport", M1A_PASSPORT_VC, Instant.now()),
+                                        PASSPORT_CRI, M1A_PASSPORT_VC, Instant.now()),
                                 createVcStoreItem(
-                                        "user-id-1", "fraud", M1A_FRAUD_VC, Instant.now()),
+                                        FRAUD_CRI, M1A_FRAUD_VC, Instant.now()),
                                 createVcStoreItem(
-                                        "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
+                                        KBV_CRI, M1A_VERIFICATION_VC, Instant.now())));
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("claimedIdentity"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-c.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(ISSUER_CONFIG_UK_PASSPORT);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(ISSUER_CONFIG_ADDRESS);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI))
+                .thenReturn(ISSUER_CONFIG_FRAUD);
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-p.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
-
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-a.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
-
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("fraud"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-f.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
-
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("kbv"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-k.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(KBV_CRI))
+                .thenReturn(ISSUER_CONFIG_KBV);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -459,81 +303,27 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 createVcStoreItem(
-                                        "user-id-1",
-                                        "ukPassport",
+                                        PASSPORT_CRI,
                                         M1A_FAILED_PASSPORT_VC,
                                         Instant.now()),
                                 createVcStoreItem(
-                                        "user-id-1", "address", M1A_ADDRESS_VC, Instant.now()),
+                                        ADDRESS_CRI, M1A_ADDRESS_VC, Instant.now()),
                                 createVcStoreItem(
-                                        "user-id-1", "fraud", M1A_FRAUD_VC, Instant.now()),
+                                        FRAUD_CRI, M1A_FRAUD_VC, Instant.now()),
                                 createVcStoreItem(
-                                        "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
+                                        KBV_CRI, M1A_VERIFICATION_VC, Instant.now())));
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("claimedIdentity"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-c.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(ISSUER_CONFIG_UK_PASSPORT);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(ISSUER_CONFIG_ADDRESS);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI))
+                .thenReturn(ISSUER_CONFIG_FRAUD);
 
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("ukPassport"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-p.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
-
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("address"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-a.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
-
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("fraud"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-f.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
-
-        when(mockConfigService.getCredentialIssuerActiveConnectionConfig("kbv"))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                URI.create("https://example.com/token"),
-                                URI.create("https://example.com/credential"),
-                                URI.create("https://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-jwk",
-                                "https://review-k.integration.account.gov.uk",
-                                URI.create("https://example.com/callback"),
-                                true));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(KBV_CRI))
+                .thenReturn(ISSUER_CONFIG_KBV);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -571,16 +361,15 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(
                         List.of(
                                 createVcStoreItem(
-                                        "user-id-1",
-                                        "ukPassport",
+                                        PASSPORT_CRI,
                                         "invalid-credential",
                                         Instant.now()),
                                 createVcStoreItem(
-                                        "user-id-1", "address", M1A_ADDRESS_VC, Instant.now()),
+                                        ADDRESS_CRI, M1A_ADDRESS_VC, Instant.now()),
                                 createVcStoreItem(
-                                        "user-id-1", "fraud", M1A_FRAUD_VC, Instant.now()),
+                                        FRAUD_CRI, M1A_FRAUD_VC, Instant.now()),
                                 createVcStoreItem(
-                                        "user-id-1", "kbv", M1A_VERIFICATION_VC, Instant.now())));
+                                        KBV_CRI, M1A_VERIFICATION_VC, Instant.now())));
 
         JourneyRequest input = createRequestEvent();
         var errorResponse = makeRequest(input, context, JourneyErrorResponse.class);
@@ -599,9 +388,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     }
 
     private VcStoreItem createVcStoreItem(
-            String userId, String credentialIssuer, String credential, Instant dateCreated) {
+            String credentialIssuer, String credential, Instant dateCreated) {
         VcStoreItem vcStoreItem = new VcStoreItem();
-        vcStoreItem.setUserId(userId);
+        vcStoreItem.setUserId("user-id-1");
         vcStoreItem.setCredentialIssuer(credentialIssuer);
         vcStoreItem.setCredential(credential);
         vcStoreItem.setDateCreated(dateCreated);
