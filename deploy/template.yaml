@@ -50,6 +50,9 @@ Conditions:
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
   IsProduction: !Equals [ !Ref Environment, "production"]
   IsNotProduction: !Not [!Equals [ !Ref Environment, "production"]]
+  IsNotProdOrDev: !Or
+    - !Not [!Equals [ !Ref Environment, "production"]]
+    - !Not [ !Condition IsDevelopment ]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -2306,7 +2309,7 @@ Resources:
 
   ProcessAsyncCriCredentialFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotProduction
+    Condition: IsNotProdOrDev
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
