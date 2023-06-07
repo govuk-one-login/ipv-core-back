@@ -86,8 +86,8 @@ Mappings:
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueueDev"
-      asyncCriResponseQueueKmsKeyArn: TBD
-      asyncCriLambdaTimeout: TBD
+      asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:616199614141:key/a3025aad-6994-4b72-b3b6-5b361a8b7708"
+      asyncCriLambdaTimeout: 30
     "457601271792": # Build
       provisionedConcurrency: 1
       ciStorageAccountId: 755415363251 # di-ipv-contra-indicators-build
@@ -96,8 +96,8 @@ Mappings:
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueueBuild"
-      asyncCriResponseQueueKmsKeyArn: TBD
-      asyncCriLambdaTimeout: TBD
+      asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:616199614141:key/a3025aad-6994-4b72-b3b6-5b361a8b7708"
+      asyncCriLambdaTimeout: 30
     "335257547869": # Staging
       provisionedConcurrency: 1
       ciStorageAccountId: 265689800486 # di-ipv-contra-indicators-staging
@@ -107,7 +107,7 @@ Mappings:
       egw500ErrorLimit: 2
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:869230006441:f2f-cri-api-IPVCoreSQSQueue-IE674r63Z764"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:869230006441:key/09405695-4244-406a-b6bd-17381a49bf27"
-      asyncCriLambdaTimeout: TBD
+      asyncCriLambdaTimeout: 30
     "991138514218": # Integration
       provisionedConcurrency: 1
       ciStorageAccountId: 697519714716 # di-ipv-contra-indicators-integration
@@ -117,7 +117,7 @@ Mappings:
       egw500ErrorLimit: 2
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:766319219145:f2f-cri-api-IPVCoreSQSQueue-kuAgEry3qYXT"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:766319219145:key/98b3663f-5f14-495f-9d38-ec7effb69fe5"
-      asyncCriLambdaTimeout: TBD
+      asyncCriLambdaTimeout: 30
     "075701497069": # Production
       provisionedConcurrency: 1
       ciStorageAccountId: 442136572379 # di-ipv-contra-indicators-prod
@@ -127,7 +127,7 @@ Mappings:
       egw500ErrorLimit: 2
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:377086294028:f2f-cri-api-IPVCoreSQSQueue-CPbnPGKq0SL7"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:377086294028:key/db743f51-fe65-43f8-a44e-4a124f8a3ee6"
-      asyncCriLambdaTimeout: TBD
+      asyncCriLambdaTimeout: 30
   SecurityGroups:
     PrefixListIds:
       dynamodb: "pl-b3a742da"
