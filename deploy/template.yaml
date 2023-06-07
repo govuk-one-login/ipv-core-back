@@ -49,6 +49,7 @@ Conditions:
   IsOldDevelopment: !Equals [ !Ref AWS::AccountId, "130355686670"]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
   IsProduction: !Equals [ !Ref Environment, "production"]
+  IsNotProduction: !Not [!Equals [ !Ref Environment, "production"]]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -2172,7 +2173,7 @@ Resources:
 
   ProcessAsyncCriCredentialFunction:
     Type: AWS::Serverless::Function
-    Condition: IsDevelopment
+    Condition: IsNotProduction
     DependsOn:
       - "ProcessAsyncCriCredentialFunctionLogGroup"
     Properties:
@@ -2305,7 +2306,7 @@ Resources:
 
   ProcessAsyncCriCredentialFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotDevelopment
+    Condition: IsNotProduction
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
