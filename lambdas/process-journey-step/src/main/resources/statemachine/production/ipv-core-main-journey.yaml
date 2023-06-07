@@ -167,6 +167,20 @@ SELECT_CRI:
       response:
         type: page
         pageId: page-multiple-doc-check
+    stubUkPassportAndDrivingLicence:
+      type: basic
+      name: stubUkPassportAndDrivingLicence
+      targetState: MULTIPLE_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-multiple-doc-check
+    ukPassportAndDrivingLicenceF2F:
+      type: basic
+      name: ukPassportAndDrivingLicenceF2F
+      targetState: MULTIPLE_DOC_CHECK_PAGE_F2F
+      response:
+        type: page
+        pageId: page-multiple-doc-check
     address:
       type: basic
       name: address
@@ -181,6 +195,20 @@ SELECT_CRI:
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/fraud
+    claimedIdentity:
+      type: basic
+      name: claimedIdentity
+      targetState: CRI_CLAIMED_IDENTITY
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/claimedIdentity
+    f2f:
+      type: basic
+      name: f2f
+      targetState: CRI_F2F
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/f2f
     kbv:
       type: basic
       name: kbv
@@ -273,6 +301,22 @@ CRI_ADDRESS:
 CRI_FRAUD:
   name: CRI_FRAUD
   parent: CRI_STATE
+CRI_CLAIMED_IDENTITY:
+  name: CRI_CLAIMED_IDENTITY
+  parent: CRI_STATE
+CRI_F2F:
+  name: CRI_F2F
+  parent: CRI_STATE
+  events:
+    pending:
+      type: basic
+      name: pending
+      targetState: F2F_HANDOFF_PAGE
+      response:
+        type: page
+        pageId: page-face-to-face-handoff
+F2F_HANDOFF_PAGE:
+  name: F2F_HANDOFF_PAGE
 CRI_KBV:
   name: CRI_KBV
   parent: CRI_STATE
@@ -344,6 +388,38 @@ MULTIPLE_DOC_CHECK_PAGE:
       response:
         type: journey
         journeyStepId: /journey/build-client-oauth-response
+MULTIPLE_DOC_CHECK_PAGE_F2F:
+  name: MULTIPLE_DOC_CHECK_PAGE
+  parent: ATTEMPT_RECOVERY_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_UK_PASSPORT
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/ukPassport
+    ukPassport:
+      type: basic
+      name: ukPassport
+      targetState: CRI_UK_PASSPORT
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/ukPassport
+    drivingLicence:
+      type: basic
+      name: drivingLicence
+      targetState: CRI_DRIVING_LICENCE
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/drivingLicence
+    end:
+      type: basic
+      name: end
+      targetState: CRI_CLAIMED_IDENTITY
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/claimedIdentity
 PRE_KBV_TRANSITION_PAGE:
   name: PRE_KBV_TRANSITION_PAGE
   parent: ATTEMPT_RECOVERY_STATE
