@@ -50,9 +50,6 @@ Conditions:
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
   IsProduction: !Equals [ !Ref Environment, "production"]
   IsNotProduction: !Not [!Equals [ !Ref Environment, "production"]]
-  IsNotProdOrDev: !And
-    - !Not [!Equals [ !Ref Environment, "production"]]
-    - !Not [ !Condition IsDevelopment ]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -2312,12 +2309,11 @@ Resources:
 
   ProcessAsyncCriCredentialFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
-    Condition: IsNotProdOrDev
+    Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref ProcessAsyncCriCredentialFunctionLogGroup
-
 
   UserIssuedCredentialsV2Table:
     Type: AWS::DynamoDB::Table
