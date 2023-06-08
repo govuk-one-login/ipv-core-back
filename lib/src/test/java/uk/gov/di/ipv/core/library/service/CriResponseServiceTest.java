@@ -19,6 +19,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 
 @ExtendWith(MockitoExtension.class)
@@ -31,10 +32,10 @@ public class CriResponseServiceTest {
 
     private static final String USER_ID_1 = "user-id-1";
     private static final String userId = "userId";
-    private static final String testCredentialIssuer = "f2f";
+    private static final String testCredentialIssuer = F2F_CRI;
 
     private static final String TEST_USER_ID = UUID.randomUUID().toString();
-    private static final String TEST_CREDENTIAL_ISSUER = "f2f";
+    private static final String TEST_CREDENTIAL_ISSUER = F2F_CRI;
     private static final String TEST_ISSUER_RESPONSE =
             "{\"sub\":"
                     + TEST_USER_ID
@@ -108,11 +109,10 @@ public class CriResponseServiceTest {
 
     @Test
     void shouldReturnTrueWhenUserHasFaceToFaceRequest() {
-        String criId = "f2f";
         CriResponseItem criResponseItem =
-                createCriResponseStoreItem(USER_ID_1, criId, SIGNED_VC_1, Instant.now());
+                createCriResponseStoreItem(USER_ID_1, F2F_CRI, SIGNED_VC_1, Instant.now());
 
-        when(mockDataStore.getItem(USER_ID_1, criId)).thenReturn(criResponseItem);
+        when(mockDataStore.getItem(USER_ID_1, F2F_CRI)).thenReturn(criResponseItem);
 
         boolean retrievedCredentialItem = criResponseService.userHasFaceToFaceRequest(USER_ID_1);
 
