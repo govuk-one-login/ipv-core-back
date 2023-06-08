@@ -50,7 +50,7 @@ Conditions:
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
   IsProduction: !Equals [ !Ref Environment, "production"]
   IsNotProduction: !Not [!Equals [ !Ref Environment, "production"]]
-  IsNotProdOrDev: !Or
+  IsNotProdOrDev: !And
     - !Not [!Equals [ !Ref Environment, "production"]]
     - !Not [ !Condition IsDevelopment ]
   UseCodeSigning:
