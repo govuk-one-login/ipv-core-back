@@ -19,6 +19,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,9 +31,11 @@ public class CriResponseServiceTest {
     private CriResponseService criResponseService;
 
     private static final String USER_ID_1 = "user-id-1";
+    private static final String userId = "userId";
+    private static final String testCredentialIssuer = F2F_CRI;
 
     private static final String TEST_USER_ID = UUID.randomUUID().toString();
-    private static final String TEST_CREDENTIAL_ISSUER = "f2f";
+    private static final String TEST_CREDENTIAL_ISSUER = F2F_CRI;
     private static final String TEST_ISSUER_RESPONSE =
             "{\"sub\":"
                     + TEST_USER_ID
@@ -63,8 +66,7 @@ public class CriResponseServiceTest {
 
     @Test
     void shouldReturnCredentialIssuersFromDataStoreForSpecificUserId() {
-        String userId = "userId";
-        String testCredentialIssuer = "f2f";
+
         List<CriResponseItem> criResponseItem =
                 List.of(
                         createCriResponseStoreItem(
@@ -103,6 +105,18 @@ public class CriResponseServiceTest {
         assertEquals(TEST_CREDENTIAL_ISSUER, persistedCriResponseItem.getCredentialIssuer());
         assertEquals(TEST_ISSUER_RESPONSE, persistedCriResponseItem.getIssuerResponse());
         assertEquals(TEST_OAUTH_STATE, persistedCriResponseItem.getOauthState());
+    }
+
+    @Test
+    void shouldReturnTrueWhenUserHasFaceToFaceRequest() {
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(USER_ID_1, F2F_CRI, SIGNED_VC_1, Instant.now());
+
+        when(mockDataStore.getItem(USER_ID_1, F2F_CRI)).thenReturn(criResponseItem);
+
+        boolean retrievedCredentialItem = criResponseService.userHasFaceToFaceRequest(USER_ID_1);
+
+        assertTrue(retrievedCredentialItem);
     }
 
     private CriResponseItem createCriResponseStoreItem(
