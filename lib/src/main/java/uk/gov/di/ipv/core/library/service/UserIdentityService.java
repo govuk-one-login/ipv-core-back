@@ -39,6 +39,7 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
@@ -52,7 +53,7 @@ public class UserIdentityService {
     private static final List<String> DRIVING_PERMIT_CRI_TYPES =
             List.of(DCMAW_CRI, DRIVING_LICENCE_CRI);
     public static final List<String> EVIDENCE_CRI_TYPES =
-            List.of(PASSPORT_CRI, DCMAW_CRI, DRIVING_LICENCE_CRI);
+            List.of(PASSPORT_CRI, DCMAW_CRI, DRIVING_LICENCE_CRI, F2F_CRI);
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String PASSPORT_PROPERTY_NAME = "passport";
