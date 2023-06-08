@@ -55,8 +55,7 @@ class SelectCriHandlerTest {
     private static final String CLAIMED_IDENTITY_CRI_ISS = "test-claimed-identity-iss";
     private static final String F2F_CRI_ISS = "test-f2f-iss";
     private static final String UK_PASSPORT_JOURNEY = "/journey/ukPassport";
-    private static final String MULTIPLE_DOC_CHECK_PAGE_JOURNEY =
-            "/journey/multipleDocCheckPage";
+    private static final String MULTIPLE_DOC_CHECK_PAGE_JOURNEY = "/journey/multipleDocCheckPage";
     private static final String MULTIPLE_DOC_CHECK_WITH_F2F_PAGE_JOURNEY =
             "/journey/multipleDocCheckWithF2FPage";
     private static final String ADDRESS_JOURNEY = "/journey/address";

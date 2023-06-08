@@ -53,10 +53,8 @@ public class SelectCriHandler extends JourneyRequestLambda {
     private static final String JOURNEY_FAIL = "/journey/fail";
     private static final String DCMAW_SUCCESS_PAGE = "dcmaw-success";
     private static final String APP_JOURNEY_USER_ID_PREFIX = "urn:uuid:app-journey-user-";
-    private static final String MULTIPLE_DOC_CHECK_PAGE =
-            "multipleDocCheckPage";
-    private static final String MULTIPLE_DOC_CHECK_WITH_F2F_PAGE =
-            "multipleDocCheckWithF2FPage";
+    private static final String MULTIPLE_DOC_CHECK_PAGE = "multipleDocCheckPage";
+    private static final String MULTIPLE_DOC_CHECK_WITH_F2F_PAGE = "multipleDocCheckWithF2FPage";
 
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
