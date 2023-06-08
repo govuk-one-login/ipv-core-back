@@ -79,7 +79,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: ./gradlew sonarqube
 
-  test-sam:
+  sam-build:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
