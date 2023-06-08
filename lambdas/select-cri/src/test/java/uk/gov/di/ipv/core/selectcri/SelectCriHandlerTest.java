@@ -55,10 +55,10 @@ class SelectCriHandlerTest {
     private static final String CLAIMED_IDENTITY_CRI_ISS = "test-claimed-identity-iss";
     private static final String F2F_CRI_ISS = "test-f2f-iss";
     private static final String UK_PASSPORT_JOURNEY = "/journey/ukPassport";
-    private static final String UK_PASSPORT_AND_DRIVING_LICENCE_JOURNEY =
-            "/journey/ukPassportAndDrivingLicence";
-    private static final String UK_PASSPORT_DRIVING_LICENCE_AND_F2F_JOURNEY =
-            "/journey/ukPassportAndDrivingLicenceF2F";
+    private static final String MULTIPLE_DOC_CHECK_PAGE_JOURNEY =
+            "/journey/multipleDocCheckPage";
+    private static final String MULTIPLE_DOC_CHECK_WITH_F2F_PAGE_JOURNEY =
+            "/journey/multipleDocCheckWithF2FPage";
     private static final String ADDRESS_JOURNEY = "/journey/address";
     private static final String PYI_NO_MATCH_JOURNEY = "/journey/pyi-no-match";
     private static final String FRAUD_JOURNEY = "/journey/fraud";
@@ -119,7 +119,6 @@ class SelectCriHandlerTest {
                 .thenReturn(Collections.emptyList());
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
                 .thenReturn(createCriConfig(DRIVING_LICENCE_CRI));
-        when(mockConfigService.getActiveConnection(DRIVING_LICENCE_CRI)).thenReturn("main");
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(false);
         when(mockConfigService.isEnabled(DRIVING_LICENCE_CRI)).thenReturn(true);
 
@@ -127,7 +126,7 @@ class SelectCriHandlerTest {
 
         JourneyResponse response = handleRequest(input, context);
 
-        assertEquals(UK_PASSPORT_AND_DRIVING_LICENCE_JOURNEY, response.getJourney());
+        assertEquals(MULTIPLE_DOC_CHECK_PAGE_JOURNEY, response.getJourney());
     }
 
     @Test
@@ -153,7 +152,7 @@ class SelectCriHandlerTest {
 
         JourneyResponse response = handleRequest(input, context);
 
-        assertEquals(UK_PASSPORT_DRIVING_LICENCE_AND_F2F_JOURNEY, response.getJourney());
+        assertEquals(MULTIPLE_DOC_CHECK_WITH_F2F_PAGE_JOURNEY, response.getJourney());
     }
 
     @Test

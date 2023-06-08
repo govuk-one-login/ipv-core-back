@@ -167,23 +167,16 @@ SELECT_CRI:
       response:
         type: page
         pageId: page-driving-licence-doc-check
-    ukPassportAndDrivingLicence:
+    multipleDocCheckPage:
       type: basic
-      name: ukPassportAndDrivingLicence
+      name: multipleDocCheck
       targetState: MULTIPLE_DOC_CHECK_PAGE
       response:
         type: page
         pageId: page-multiple-doc-check
-    stubUkPassportAndDrivingLicence:
+    multipleDocCheckWithF2FPage:
       type: basic
-      name: stubUkPassportAndDrivingLicence
-      targetState: MULTIPLE_DOC_CHECK_PAGE
-      response:
-        type: page
-        pageId: page-multiple-doc-check
-    ukPassportAndDrivingLicenceF2F:
-      type: basic
-      name: ukPassportAndDrivingLicenceF2F
+      name: multipleDocCheckWithF2F
       targetState: MULTIPLE_DOC_CHECK_PAGE_F2F
       response:
         type: page
