@@ -105,3 +105,19 @@ jobs:
           restore-keys: ${{ runner.os }}-gradle
 
       - run: sam build -t deploy/template.yaml
+
+  validate-sam:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - run: sam validate -t deploy/template.yaml
