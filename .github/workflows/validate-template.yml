@@ -1,11 +1,13 @@
 
-name: Run Checkov static analysis on the template
+name: Run static analysis on the template
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
       - "deploy/template.yaml"
+env:
+  SAM_CLI_TELEMETRY: "0"
 jobs:
   RunCheckov:
     runs-on: ubuntu-latest
@@ -31,11 +33,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-
       - uses: aws-actions/setup-sam@v2
         with:
           use-installer: true
-
-      - env:
-          SAM_CLI_TELEMETRY: "0"
-        run: sam validate -t deploy/template.yaml --region eu-west-2 --lint
+      - run: sam validate -t deploy/template.yaml --region eu-west-2 --lint
