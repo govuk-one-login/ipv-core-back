@@ -75,16 +75,18 @@ public class VcHelper {
                 if (shouldCheckContraIndicators && item.hasContraIndicators()) {
                     return false;
                 }
-                if (item.getType().equals(CredentialEvidenceItem.EvidenceType.EVIDENCE)) {
-                    return Gpg45EvidenceValidator.isSuccessful(item);
-                } else if (item.getType()
-                        .equals(CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD)) {
-                    return Gpg45FraudValidator.isSuccessful(item);
-                } else if (item.getType()
-                        .equals(CredentialEvidenceItem.EvidenceType.VERIFICATION)) {
-                    return Gpg45VerificationValidator.isSuccessful(item);
-                } else if (item.getType().equals(CredentialEvidenceItem.EvidenceType.DCMAW)) {
-                    return Gpg45DcmawValidator.isSuccessful(item);
+                CredentialEvidenceItem.EvidenceType evidenceType = item.getType();
+
+                switch (evidenceType) {
+                    case EVIDENCE:
+                        return Gpg45EvidenceValidator.isSuccessful(item);
+                    case IDENTITY_FRAUD:
+                    case FRAUD_WITH_ACTIVITY:
+                        return Gpg45FraudValidator.isSuccessful(item);
+                    case VERIFICATION:
+                        return Gpg45VerificationValidator.isSuccessful(item);
+                    case DCMAW:
+                        return Gpg45DcmawValidator.isSuccessful(item);
                 }
             }
             return false;

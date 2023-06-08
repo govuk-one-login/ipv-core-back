@@ -9,7 +9,6 @@ import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeExce
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.ToIntFunction;
 
 @AllArgsConstructor
 @Builder
@@ -74,6 +73,8 @@ public class CredentialEvidenceItem {
             return EvidenceType.DCMAW;
         } else if (isF2F()) {
             return EvidenceType.F2F;
+        } else if (isFraudWithActivity()) {
+            return EvidenceType.FRAUD_WITH_ACTIVITY;
         } else {
             throw new UnknownEvidenceTypeException();
         }
@@ -87,13 +88,6 @@ public class CredentialEvidenceItem {
         return ci != null && !ci.isEmpty();
     }
 
-    private int numberOfContraIndicators() {
-        if (ci != null) {
-            return ci.size();
-        }
-        return 0;
-    }
-
     private boolean isActivityHistory() {
         return activityHistoryScore != null
                 && identityFraudScore == null
@@ -105,6 +99,14 @@ public class CredentialEvidenceItem {
     private boolean isIdentityFraud() {
         return identityFraudScore != null
                 && activityHistoryScore == null
+                && strengthScore == null
+                && validityScore == null
+                && verificationScore == null;
+    }
+
+    private boolean isFraudWithActivity() {
+        return identityFraudScore != null
+                && activityHistoryScore != null
                 && strengthScore == null
                 && validityScore == null
                 && verificationScore == null;
@@ -147,17 +149,18 @@ public class CredentialEvidenceItem {
     @Getter
     public enum EvidenceType {
         ACTIVITY(
-                generateComparator(CredentialEvidenceItem::getActivityHistoryScore),
+                Comparator.comparingInt(CredentialEvidenceItem::getActivityHistoryScore),
                 CredentialEvidenceItem::getActivityHistoryScore),
         IDENTITY_FRAUD(
-                generateComparator(CredentialEvidenceItem::getIdentityFraudScore),
+                Comparator.comparingInt(CredentialEvidenceItem::getIdentityFraudScore),
                 CredentialEvidenceItem::getIdentityFraudScore),
         EVIDENCE(null, null),
         VERIFICATION(
-                generateComparator(CredentialEvidenceItem::getVerificationScore),
+                Comparator.comparingInt(CredentialEvidenceItem::getVerificationScore),
                 CredentialEvidenceItem::getVerificationScore),
         DCMAW(null, null),
-        F2F(null, null);
+        F2F(null, null),
+        FRAUD_WITH_ACTIVITY(null, null);
 
         public final Comparator<CredentialEvidenceItem> comparator;
         public final Function<CredentialEvidenceItem, Integer> scoreGetter;
@@ -167,15 +170,6 @@ public class CredentialEvidenceItem {
                 Function<CredentialEvidenceItem, Integer> scoreGetter) {
             this.comparator = comparator;
             this.scoreGetter = scoreGetter;
-        }
-
-        private static Comparator<CredentialEvidenceItem> generateComparator(
-                ToIntFunction<CredentialEvidenceItem> keyExtractor) {
-            return Comparator.comparingInt(keyExtractor)
-                    .thenComparing(
-                            Comparator.comparingInt(
-                                            CredentialEvidenceItem::numberOfContraIndicators)
-                                    .reversed());
         }
     }
 
