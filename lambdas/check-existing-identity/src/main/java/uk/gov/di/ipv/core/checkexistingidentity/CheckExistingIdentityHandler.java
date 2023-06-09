@@ -196,17 +196,25 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
                 }
             }
 
-            if (userHasFaceToFaceRequest && Objects.isNull(faceToFaceVc)) {
-                var message =
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "F2F cri pending verification.");
-                LOGGER.info(message);
-                return new JourneyErrorResponse(
-                        JOURNEY_ERROR_PATH,
-                        HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                        ErrorResponse.PENDING_VERIFICATION_EXCEPTION);
+            if (userHasFaceToFaceRequest) {
+                if (Objects.isNull(faceToFaceVc)) {
+                    var message =
+                            new StringMapMessage()
+                                    .with(
+                                            LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                            "F2F cri pending verification. No VC to delete.");
+                    LOGGER.info(message);
+                } else {
+                    userIdentityService.deleteVcStoreItems(userId);
+                    var message =
+                            new StringMapMessage()
+                                    .with(
+                                            LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                            "F2F cri pending verification. Existing F2F VC deleted.");
+                    LOGGER.info(message);
+                }
+
+                return JOURNEY_NEXT;
             }
 
             if (!credentials.isEmpty()) {
@@ -257,6 +265,12 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
         } catch (SqsException e) {
+            LOGGER.error("Failed to send audit event to SQS queue", e);
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
+        } catch (Exception e) {
             LOGGER.error("Failed to send audit event to SQS queue", e);
             return new JourneyErrorResponse(
                     JOURNEY_ERROR_PATH,

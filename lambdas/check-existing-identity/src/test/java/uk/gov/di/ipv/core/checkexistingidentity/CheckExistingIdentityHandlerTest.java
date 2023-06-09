@@ -337,13 +337,13 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
 
         var journeyResponse = handleRequest(event, context, JourneyErrorResponse.class);
-        assertEquals("/journey/error", journeyResponse.getJourney());
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
-        assertEquals(
-                ErrorResponse.PENDING_VERIFICATION_EXCEPTION.getCode(), journeyResponse.getCode());
-        assertEquals(
-                ErrorResponse.PENDING_VERIFICATION_EXCEPTION.getMessage(),
-                journeyResponse.getMessage());
+        assertEquals(JOURNEY_NEXT, journeyResponse);
+
+        verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
+
+        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
+                ArgumentCaptor.forClass(AuditEvent.class);
+        verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
 
         verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
