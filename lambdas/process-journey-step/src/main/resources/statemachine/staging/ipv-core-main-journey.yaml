@@ -174,27 +174,6 @@ SELECT_CRI:
       response:
         type: page
         pageId: page-multiple-doc-check
-    ukPassportAndDrivingLicence: # Replaced with multipleDocCheckPage, will be deleted in next PR
-      type: basic
-      name: ukPassportAndDrivingLicence
-      targetState: MULTIPLE_DOC_CHECK_PAGE
-      response:
-        type: page
-        pageId: page-multiple-doc-check
-    stubUkPassportAndDrivingLicence: # Replaced with multipleDocCheckPage, will be deleted in next PR
-      type: basic
-      name: stubUkPassportAndDrivingLicence
-      targetState: MULTIPLE_DOC_CHECK_PAGE
-      response:
-        type: page
-        pageId: page-multiple-doc-check
-    ukPassportAndDrivingLicenceF2F: # Replaced with multipleDocCheckWithF2FPage, will be deleted in next PR
-      type: basic
-      name: ukPassportAndDrivingLicenceF2F
-      targetState: MULTIPLE_DOC_CHECK_PAGE_F2F
-      response:
-        type: page
-        pageId: page-multiple-doc-check
     address:
       type: basic
       name: address
