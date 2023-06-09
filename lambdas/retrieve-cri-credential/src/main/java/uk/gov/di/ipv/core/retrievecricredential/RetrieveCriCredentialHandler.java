@@ -141,6 +141,7 @@ public class RetrieveCriCredentialHandler
         CriOAuthSessionItem criOAuthSessionItem =
                 criOAuthSessionService.getCriOauthSessionItem(
                         ipvSessionItem.getCriOAuthSessionId());
+        String criOAuthState = criOAuthSessionItem.getCriOAuthSessionId();
         String credentialIssuerId = criOAuthSessionItem.getCriId();
         try {
             ClientOAuthSessionItem clientOAuthSessionItem =
@@ -174,7 +175,7 @@ public class RetrieveCriCredentialHandler
                         userId,
                         credentialIssuerId,
                         verifiableCredentialResponse,
-                        clientOAuthSessionItem,
+                        criOAuthState,
                         ipvSessionItem);
             } else {
                 return processVerifiableCredentials(
@@ -213,7 +214,7 @@ public class RetrieveCriCredentialHandler
             String userId,
             String credentialIssuerId,
             VerifiableCredentialResponse verifiableCredentialResponse,
-            ClientOAuthSessionItem clientOAuthSessionItem,
+            String criOAuthState,
             IpvSessionItem ipvSessionItem)
             throws JsonProcessingException {
         // Validate the response
@@ -233,7 +234,7 @@ public class RetrieveCriCredentialHandler
                 userId,
                 credentialIssuerId,
                 OBJECT_MAPPER.writeValueAsString(verifiableCredentialResponseDto),
-                clientOAuthSessionItem.getState());
+                criOAuthState);
         // Update session to indicate no VC, but no error
         updateVisitedCredentials(ipvSessionItem, credentialIssuerId, false, null);
         // Audit

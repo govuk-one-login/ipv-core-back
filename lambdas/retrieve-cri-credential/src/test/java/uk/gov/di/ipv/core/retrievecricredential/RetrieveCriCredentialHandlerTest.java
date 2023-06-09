@@ -72,7 +72,8 @@ class RetrieveCriCredentialHandlerTest {
     private static final String ACCESS_TOKEN = "Bearer dGVzdAo=";
     private static final String CREDENTIAL_ISSUER_ID = "PassportIssuer";
     private static final String TEST_USER_ID = "test-user-id";
-    private static final String TEST_STATE = "test-state";
+    private static final String TEST_CLIENT_OAUTH_STATE = "test-client-oauth-state";
+    private static final String TEST_CRI_OAUTH_STATE = "test-cri-oauth-state";
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
     private static final String CODE = "code";
     private static final String MESSAGE = "message";
@@ -154,7 +155,7 @@ class RetrieveCriCredentialHandlerTest {
 
         criOAuthSessionItem =
                 CriOAuthSessionItem.builder()
-                        .criOAuthSessionId(TEST_STATE)
+                        .criOAuthSessionId(TEST_CRI_OAUTH_STATE)
                         .criId(CREDENTIAL_ISSUER_ID)
                         .accessToken(ACCESS_TOKEN)
                         .build();
@@ -523,7 +524,7 @@ class RetrieveCriCredentialHandlerTest {
         verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
 
         verifyPersistedCriResponse(
-                TEST_USER_ID, CREDENTIAL_ISSUER_ID, expectedIssuerResponse, TEST_STATE);
+                TEST_USER_ID, CREDENTIAL_ISSUER_ID, expectedIssuerResponse, TEST_CRI_OAUTH_STATE);
 
         verifyPersistedVisitedCredentialIssuerDetails(CREDENTIAL_ISSUER_ID, false, null);
     }
@@ -584,7 +585,7 @@ class RetrieveCriCredentialHandlerTest {
         return ClientOAuthSessionItem.builder()
                 .clientOAuthSessionId(SecureTokenHelper.generate())
                 .responseType("code")
-                .state(TEST_STATE)
+                .state(TEST_CLIENT_OAUTH_STATE)
                 .redirectUri("https://example.com/redirect")
                 .govukSigninJourneyId("test-journey-id")
                 .userId("test-user-id")
