@@ -53,12 +53,8 @@ public class SelectCriHandler extends JourneyRequestLambda {
     private static final String JOURNEY_FAIL = "/journey/fail";
     private static final String DCMAW_SUCCESS_PAGE = "dcmaw-success";
     private static final String APP_JOURNEY_USER_ID_PREFIX = "urn:uuid:app-journey-user-";
-    private static final String UK_PASSPORT_AND_DRIVING_LICENCE_PAGE =
-            "ukPassportAndDrivingLicence";
-    private static final String UK_PASSPORT_AND_DRIVING_LICENCE_PAGE_F2F =
-            "ukPassportAndDrivingLicenceF2F";
-    private static final String STUB_UK_PASSPORT_AND_DRIVING_LICENCE_PAGE =
-            "stubUkPassportAndDrivingLicence";
+    private static final String MULTIPLE_DOC_CHECK_PAGE = "multipleDocCheckPage";
+    private static final String MULTIPLE_DOC_CHECK_WITH_F2F_PAGE = "multipleDocCheckWithF2FPage";
 
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
@@ -326,12 +322,9 @@ public class SelectCriHandler extends JourneyRequestLambda {
 
     private Optional<JourneyResponse> getMultipleDocCheckPage() {
         if (configService.isEnabled(F2F_CRI)) {
-            return Optional.of(getJourneyResponse(UK_PASSPORT_AND_DRIVING_LICENCE_PAGE_F2F));
+            return Optional.of(getJourneyResponse(MULTIPLE_DOC_CHECK_WITH_F2F_PAGE));
         }
-        if (configService.getActiveConnection(DRIVING_LICENCE_CRI).equals("stub")) {
-            return Optional.of(getJourneyResponse(STUB_UK_PASSPORT_AND_DRIVING_LICENCE_PAGE));
-        }
-        return Optional.of(getJourneyResponse(UK_PASSPORT_AND_DRIVING_LICENCE_PAGE));
+        return Optional.of(getJourneyResponse(MULTIPLE_DOC_CHECK_PAGE));
     }
 
     private boolean hasPassportVc(List<VcStatusDto> currentVcStatuses) {
