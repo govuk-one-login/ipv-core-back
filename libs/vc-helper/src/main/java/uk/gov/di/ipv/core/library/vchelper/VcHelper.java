@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45DcmawValidator;
 import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45EvidenceValidator;
+import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45F2fValidator;
 import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45FraudValidator;
 import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45VerificationValidator;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -87,6 +88,8 @@ public class VcHelper {
                         return Gpg45VerificationValidator.isSuccessful(item);
                     case DCMAW:
                         return Gpg45DcmawValidator.isSuccessful(item);
+                    case F2F:
+                        return Gpg45F2fValidator.isSuccessful(item);
                 }
             }
             return false;
