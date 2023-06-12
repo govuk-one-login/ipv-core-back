@@ -47,6 +47,7 @@ Conditions:
     - !Equals [ !Ref AWS::AccountId, "130355686670"]
     - !Equals [ !Ref AWS::AccountId, "175872367215"]
   IsOldDevelopment: !Equals [ !Ref AWS::AccountId, "130355686670"]
+  IsNewDevelopment: !Equals [ !Ref AWS::AccountId, "175872367215"]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
   IsProduction: !Equals [ !Ref Environment, "production"]
   IsNotProduction: !Not [!Equals [ !Ref Environment, "production"]]
@@ -159,6 +160,51 @@ Resources:
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
 
+  # ssl cert
+  CoreBackDevSSLCert:
+    Type: AWS::CertificateManager::Certificate
+    Condition: IsNewDevelopment
+    Properties:
+      DomainName: !Sub "core-back-${Environment}.dev.identity.account.gov.uk"
+      DomainValidationOptions:
+        - DomainName: !Sub "core-back-${Environment}.dev.identity.account.gov.uk"
+          HostedZoneId: !ImportValue DevIdentityHostedZoneId
+      ValidationMethod: DNS
+
+  # dns rcord
+  CoreBackDevDNSRecord:
+    Type: AWS::Route53::RecordSet
+    Condition: IsNewDevelopment
+    Properties:
+      Type: A
+      Name: !Sub "core-back-${Environment}.dev.identity.account.gov.uk"
+      HostedZoneId: !ImportValue DevIdentityHostedZoneId
+      AliasTarget:
+        DNSName: !GetAtt CoreBackDevRestApiDomain.RegionalDomainName
+        HostedZoneId: !GetAtt CoreBackDevRestApiDomain.RegionalHostedZoneId
+
+  # api domain entries / mapping
+  CoreBackDevRestApiDomain:
+    Type: AWS::ApiGateway::DomainName
+    Condition: IsNewDevelopment
+    Properties:
+      RegionalCertificateArn: !Ref CoreBackDevSSLCert
+      DomainName: !Sub "core-back-${Environment}.dev.identity.account.gov.uk"
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      SecurityPolicy: TLS_1_2
+
+  CoreBackDevRestApiMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    Condition: IsNewDevelopment
+    Properties:
+      DomainName: !Sub "core-back-${Environment}.dev.identity.account.gov.uk"
+      RestApiId: !Ref IPVCoreExternalAPI
+      Stage: !Sub "${Environment}"
+    DependsOn:
+      - CoreBackDevRestApiDomain
+
   LambdaSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
@@ -207,8 +253,9 @@ Resources:
         Type: PRIVATE
         VPCEndpointIds: !If
           - IsOldDevelopment
-          - - !ImportValue "network-shared-development-ApiGatewayVpcEndpointId"
-          - - Fn::ImportValue: !Sub "${VpcStackName}-ExecuteApiGatewayEndpointId"
+          - !ImportValue "network-shared-development-ApiGatewayVpcEndpointId"
+          - Fn::ImportValue:
+              !Sub "${VpcStackName}-ExecuteApiGatewayEndpointId"
       DefinitionBody:
         openapi: "3.0.3" # workaround to get `sam validate` to work
         paths: # workaround to get `sam validate` to work
@@ -278,6 +325,11 @@ Resources:
     Properties:
       # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
       Name: !Sub IPV Core External API Gateway ${Environment}
+      EndpointConfiguration:
+        Type: !If
+          - IsNewDevelopment
+          - REGIONAL
+          - EDGE
       StageName: !Sub ${Environment}
       TracingEnabled: true
       DefinitionBody:
