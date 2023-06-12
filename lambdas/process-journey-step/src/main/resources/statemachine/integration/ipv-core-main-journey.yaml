@@ -310,6 +310,7 @@ CRI_F2F:
         pageId: page-face-to-face-handoff
 F2F_HANDOFF_PAGE:
   name: F2F_HANDOFF_PAGE
+  parent: ATTEMPT_RECOVERY_STATE
 CRI_KBV:
   name: CRI_KBV
   parent: CRI_STATE
