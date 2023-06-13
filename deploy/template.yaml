@@ -161,49 +161,48 @@ Resources:
         - !Ref AWS::NoValue
 
   # ssl cert
-  CoreBackDevSSLCert:
+  DevSSLCert:
     Type: AWS::CertificateManager::Certificate
     Condition: IsNewDevelopment
     Properties:
-      DomainName: !Sub "core-back-${Environment}.dev.identity.account.gov.uk"
+      DomainName: !Sub "api-${Environment}.dev.identity.account.gov.uk"
       DomainValidationOptions:
-        - DomainName: !Sub "core-back-${Environment}.dev.identity.account.gov.uk"
+        - DomainName: !Sub "api-${Environment}.dev.identity.account.gov.uk"
           HostedZoneId: !ImportValue DevIdentityHostedZoneId
       ValidationMethod: DNS
 
   # dns rcord
-  CoreBackDevDNSRecord:
+  DevDNSRecord:
     Type: AWS::Route53::RecordSet
     Condition: IsNewDevelopment
     Properties:
       Type: A
-      Name: !Sub "core-back-${Environment}.dev.identity.account.gov.uk"
+      Name: !Sub "api-${Environment}.dev.identity.account.gov.uk"
       HostedZoneId: !ImportValue DevIdentityHostedZoneId
       AliasTarget:
-        DNSName: !GetAtt CoreBackDevRestApiDomain.RegionalDomainName
-        HostedZoneId: !GetAtt CoreBackDevRestApiDomain.RegionalHostedZoneId
+        DNSName: !GetAtt DevApiDomain.RegionalDomainName
+        HostedZoneId: !GetAtt DevApiDomain.RegionalHostedZoneId
 
   # api domain entries / mapping
-  CoreBackDevRestApiDomain:
-    Type: AWS::ApiGateway::DomainName
+  DevApiDomain:
+    Type: AWS::ApiGatewayV2::DomainName
     Condition: IsNewDevelopment
     Properties:
-      RegionalCertificateArn: !Ref CoreBackDevSSLCert
-      DomainName: !Sub "core-back-${Environment}.dev.identity.account.gov.uk"
-      EndpointConfiguration:
-        Types:
-          - REGIONAL
-      SecurityPolicy: TLS_1_2
+      DomainName: !Sub "api-${Environment}.dev.identity.account.gov.uk"
+      DomainNameConfigurations:
+        - CertificateArn: !Ref DevSSLCert
+          EndpointType: REGIONAL
+          SecurityPolicy: TLS_1_2
 
-  CoreBackDevRestApiMapping:
-    Type: AWS::ApiGateway::BasePathMapping
+  DevApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
     Condition: IsNewDevelopment
     Properties:
-      DomainName: !Sub "core-back-${Environment}.dev.identity.account.gov.uk"
-      RestApiId: !Ref IPVCoreExternalAPI
+      DomainName: !Sub "api-${Environment}.dev.identity.account.gov.uk"
+      ApiId: !Ref IPVCoreExternalAPI
       Stage: !Sub "${Environment}"
     DependsOn:
-      - CoreBackDevRestApiDomain
+      - DevApiDomain
 
   LambdaSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
@@ -324,11 +323,6 @@ Resources:
     Properties:
       # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
       Name: !Sub IPV Core External API Gateway ${Environment}
-      EndpointConfiguration:
-        Type: !If
-          - IsNewDevelopment
-          - REGIONAL
-          - EDGE
       StageName: !Sub ${Environment}
       TracingEnabled: true
       DefinitionBody:
