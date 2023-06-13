@@ -51,6 +51,7 @@ public class SelectCriHandler extends JourneyRequestLambda {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String CRI_START_JOURNEY = "/journey/%s";
     private static final String JOURNEY_FAIL = "/journey/fail";
+    private static final String JOURNEY_PENDING = "/journey/pending";
     private static final String DCMAW_SUCCESS_PAGE = "dcmaw-success";
     private static final String APP_JOURNEY_USER_ID_PREFIX = "urn:uuid:app-journey-user-";
     private static final String MULTIPLE_DOC_CHECK_PAGE = "multipleDocCheckPage";
@@ -284,6 +285,11 @@ public class SelectCriHandler extends JourneyRequestLambda {
 
                 return Optional.of(getJourneyResponse(journeyId));
             }
+
+            if (criId.equals(F2F_CRI)) {
+                return Optional.of(new JourneyResponse(JOURNEY_PENDING));
+            }
+
             var message =
                     new StringMapMessage()
                             .with(

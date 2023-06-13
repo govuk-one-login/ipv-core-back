@@ -67,6 +67,7 @@ class SelectCriHandlerTest {
     private static final String DCMAW_SUCCESS_JOURNEY = "/journey/dcmaw-success";
     private static final String PYI_KBV_THIN_FILE_JOURNEY = "/journey/pyi-kbv-thin-file";
     private static final String F2F_JOURNEY = "/journey/f2f";
+    private static final String F2F_PENDING_JOURNEY = "/journey/pending";
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Mock private Context context;
@@ -139,8 +140,6 @@ class SelectCriHandlerTest {
                 .thenReturn(createCriConfig(PASSPORT_CRI_ISS));
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
                 .thenReturn(createCriConfig(DRIVING_LICENCE_CRI));
-        List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
-                List.of(new VisitedCredentialIssuerDetailsDto(CLAIMED_IDENTITY_CRI, true, null));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(Collections.emptyList());
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(false);
@@ -152,6 +151,46 @@ class SelectCriHandlerTest {
         JourneyResponse response = handleRequest(input, context);
 
         assertEquals(MULTIPLE_DOC_CHECK_WITH_F2F_PAGE_JOURNEY, response.getJourney());
+    }
+
+    @Test
+    void shouldReturnF2FPendingJourneyResponseWhenF2FVisitedAndNoF2FVC() throws Exception {
+        mockIpvSessionService();
+
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(createCriConfig(CLAIMED_IDENTITY_CRI_ISS));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(createCriConfig(PASSPORT_CRI_ISS));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
+                .thenReturn(createCriConfig(DRIVING_LICENSE_CRI_ISS));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(createCriConfig(ADDRESS_CRI_ISS));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(FRAUD_CRI))
+                .thenReturn(createCriConfig(FRAUD_CRI_ISS));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(F2F_CRI))
+                .thenReturn(createCriConfig(F2F_CRI_ISS));
+
+        List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
+                List.of(
+                        new VisitedCredentialIssuerDetailsDto(CLAIMED_IDENTITY_CRI, true, null),
+                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null),
+                        new VisitedCredentialIssuerDetailsDto(FRAUD_CRI, true, null),
+                        new VisitedCredentialIssuerDetailsDto(F2F_CRI, false, null));
+        when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
+                .thenReturn(visitedCredentialIssuerDetails);
+
+        when(mockIpvSessionItem.getCurrentVcStatuses())
+                .thenReturn(
+                        List.of(
+                                new VcStatusDto(CLAIMED_IDENTITY_CRI_ISS, true),
+                                new VcStatusDto(ADDRESS_CRI_ISS, true),
+                                new VcStatusDto(FRAUD_CRI_ISS, true)));
+
+        JourneyRequest input = createRequestEvent();
+
+        JourneyResponse response = handleRequest(input, context);
+
+        assertEquals(F2F_PENDING_JOURNEY, response.getJourney());
     }
 
     @Test

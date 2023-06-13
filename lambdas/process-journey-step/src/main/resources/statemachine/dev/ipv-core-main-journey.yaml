@@ -202,6 +202,13 @@ SELECT_CRI:
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/f2f
+    pending:
+      type: basic
+      name: pending
+      targetState: F2F_HANDOFF_PAGE
+      response:
+        type: page
+        pageId: page-face-to-face-handoff
     kbv:
       type: basic
       name: kbv
