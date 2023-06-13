@@ -200,7 +200,7 @@ Resources:
     Properties:
       DomainName: !Sub "api-${Environment}.dev.identity.account.gov.uk"
       ApiId: !Ref IPVCoreExternalAPI
-      Stage: !Sub "${Environment}"
+      Stage: !Ref IPVCoreExternalAPI.Stage
     DependsOn:
       - DevApiDomain
 
