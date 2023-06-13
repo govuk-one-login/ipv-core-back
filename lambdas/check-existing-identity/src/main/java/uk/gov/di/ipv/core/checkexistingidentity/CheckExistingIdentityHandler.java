@@ -144,6 +144,15 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
             boolean userHasFaceToFaceRequest = criResponseService.userHasFaceToFaceRequest(userId);
             VcStoreItem faceToFaceVc = userIdentityService.getVcStoreItem(userId, F2F_CRI);
 
+            if (userHasFaceToFaceRequest && Objects.isNull(faceToFaceVc)) {
+                var message =
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "F2F cri pending verification.");
+                LOGGER.info(message);
+            }
+
             List<SignedJWT> credentials =
                     gpg45ProfileEvaluator.parseCredentials(
                             userIdentityService.getUserIssuedCredentials(userId));
@@ -194,19 +203,6 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
 
                     return JOURNEY_REUSE;
                 }
-            }
-
-            if (userHasFaceToFaceRequest && Objects.isNull(faceToFaceVc)) {
-                var message =
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "F2F cri pending verification.");
-                LOGGER.info(message);
-                return new JourneyErrorResponse(
-                        JOURNEY_ERROR_PATH,
-                        HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                        ErrorResponse.PENDING_VERIFICATION_EXCEPTION);
             }
 
             if (!credentials.isEmpty()) {
