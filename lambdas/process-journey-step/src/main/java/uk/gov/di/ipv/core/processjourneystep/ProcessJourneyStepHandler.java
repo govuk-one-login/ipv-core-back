@@ -34,6 +34,7 @@ import java.time.Instant;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_STEP;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_USER_STATE;
@@ -52,17 +53,30 @@ public class ProcessJourneyStepHandler
     public ProcessJourneyStepHandler(
             IpvSessionService ipvSessionService,
             ConfigService configService,
-            ClientOAuthSessionDetailsService clientOAuthSessionService) {
+            ClientOAuthSessionDetailsService clientOAuthSessionService)
+            throws IOException {
         this.ipvSessionService = ipvSessionService;
         this.configService = configService;
         this.clientOAuthSessionService = clientOAuthSessionService;
+        this.stateMachine =
+                new StateMachine(
+                        new StateMachineInitializer(
+                                configService.getEnvironmentVariable(
+                                        EnvironmentVariable.ENVIRONMENT),
+                                IPV_CORE_MAIN_JOURNEY));
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public ProcessJourneyStepHandler() {
+    public ProcessJourneyStepHandler() throws IOException {
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
+        this.stateMachine =
+                new StateMachine(
+                        new StateMachineInitializer(
+                                configService.getEnvironmentVariable(
+                                        EnvironmentVariable.ENVIRONMENT),
+                                IPV_CORE_MAIN_JOURNEY));
     }
 
     @Override
@@ -84,13 +98,6 @@ public class ProcessJourneyStepHandler
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_SESSION_ID);
             }
 
-            this.stateMachine =
-                    new StateMachine(
-                            new StateMachineInitializer(
-                                    configService.getEnvironmentVariable(
-                                            EnvironmentVariable.ENVIRONMENT),
-                                    ipvSessionItem.getJourneyType()));
-
             ClientOAuthSessionItem clientOAuthSessionItem;
             if (ipvSessionItem.getClientOAuthSessionId() != null) {
                 clientOAuthSessionItem =
@@ -108,11 +115,6 @@ public class ProcessJourneyStepHandler
         } catch (JourneyEngineException e) {
             return StepFunctionHelpers.generateErrorOutputMap(
                     HttpStatus.SC_INTERNAL_SERVER_ERROR, ErrorResponse.FAILED_JOURNEY_ENGINE_STEP);
-        } catch (IOException e) {
-            LOGGER.error("Failed to initialise state machine", e);
-            return StepFunctionHelpers.generateErrorOutputMap(
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_INITIALISE_STATE_MACHINE);
         }
     }
 
