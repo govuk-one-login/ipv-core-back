@@ -25,7 +25,6 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
-import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
@@ -325,51 +324,21 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnNextIfFaceToFaceVerificationIsPending() throws Exception {
+    void shouldReturnNextDeleteVcIfFaceToFaceVerificationIsPending() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
-                .thenReturn(Collections.emptyList());
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
         when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(true);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
-                .thenReturn(Optional.of(new JourneyResponse("/journey/pyi-no-match")));
+                .thenReturn(Optional.empty());
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
+                .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
         var journeyResponse = handleRequest(event, context, JourneyResponse.class);
         assertEquals(JOURNEY_NEXT, journeyResponse);
-
-        verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
-
-        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
-                ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
-
-        verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void shouldReturnNextDeleteVcIfFaceToFaceVerificationIsPending() throws Exception {
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
-                .thenReturn(Collections.emptyList());
-        when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI))
-                .thenReturn(new VcStoreItem());
-        when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(true);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
-                .thenReturn(Optional.of(new JourneyResponse("/journey/pyi-no-match")));
-        when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
-        assertEquals(JOURNEY_NEXT, journeyResponse);
-
-        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
-                ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
 
         verify(userIdentityService, times(1)).deleteVcStoreItems(TEST_USER_ID);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
