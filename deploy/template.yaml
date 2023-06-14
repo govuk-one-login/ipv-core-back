@@ -47,6 +47,7 @@ Conditions:
     - !Equals [ !Ref AWS::AccountId, "130355686670"]
     - !Equals [ !Ref AWS::AccountId, "175872367215"]
   IsOldDevelopment: !Equals [ !Ref AWS::AccountId, "130355686670"]
+  IsNewDevelopment: !Equals [ !Ref AWS::AccountId, "175872367215"]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
   IsProduction: !Equals [ !Ref Environment, "production"]
   IsNotProduction: !Not [!Equals [ !Ref Environment, "production"]]
@@ -158,6 +159,50 @@ Resources:
         - UsePermissionsBoundary
         - !Ref PermissionsBoundary
         - !Ref AWS::NoValue
+
+  # ssl cert
+  DevSSLCert:
+    Type: AWS::CertificateManager::Certificate
+    Condition: IsNewDevelopment
+    Properties:
+      DomainName: !Sub "api-${Environment}.dev.identity.account.gov.uk"
+      DomainValidationOptions:
+        - DomainName: !Sub "api-${Environment}.dev.identity.account.gov.uk"
+          HostedZoneId: !ImportValue DevIdentityHostedZoneId
+      ValidationMethod: DNS
+
+  # dns rcord
+  DevDNSRecord:
+    Type: AWS::Route53::RecordSet
+    Condition: IsNewDevelopment
+    Properties:
+      Type: A
+      Name: !Sub "api-${Environment}.dev.identity.account.gov.uk"
+      HostedZoneId: !ImportValue DevIdentityHostedZoneId
+      AliasTarget:
+        DNSName: !GetAtt DevApiDomain.RegionalDomainName
+        HostedZoneId: !GetAtt DevApiDomain.RegionalHostedZoneId
+
+  # api domain entries / mapping
+  DevApiDomain:
+    Type: AWS::ApiGatewayV2::DomainName
+    Condition: IsNewDevelopment
+    Properties:
+      DomainName: !Sub "api-${Environment}.dev.identity.account.gov.uk"
+      DomainNameConfigurations:
+        - CertificateArn: !Ref DevSSLCert
+          EndpointType: REGIONAL
+          SecurityPolicy: TLS_1_2
+
+  DevApiMapping:
+    Type: AWS::ApiGatewayV2::ApiMapping
+    Condition: IsNewDevelopment
+    Properties:
+      DomainName: !Sub "api-${Environment}.dev.identity.account.gov.uk"
+      ApiId: !Ref IPVCoreExternalAPI
+      Stage: !Ref IPVCoreExternalAPI.Stage
+    DependsOn:
+      - DevApiDomain
 
   LambdaSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
