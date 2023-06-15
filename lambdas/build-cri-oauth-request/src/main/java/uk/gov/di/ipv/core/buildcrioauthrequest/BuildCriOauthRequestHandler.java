@@ -43,10 +43,12 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.statemachine.JourneyRequestLambda;
+import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 
 import java.net.URISyntaxException;
 import java.text.ParseException;
@@ -55,6 +57,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -83,6 +86,7 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
     private final CriOAuthSessionService criOAuthSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final String componentId;
+    private final ConfigService configService;
 
     public BuildCriOauthRequestHandler(
             CredentialIssuerConfigService credentialIssuerConfigService,
@@ -91,8 +95,9 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
             AuditService auditService,
             IpvSessionService ipvSessionService,
             CriOAuthSessionService criOAuthSessionService,
-            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService) {
-
+            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
+            ConfigService configService) {
+        this.configService = configService;
         this.credentialIssuerConfigService = credentialIssuerConfigService;
         this.userIdentityService = userIdentityService;
         this.signer = signer;
@@ -106,6 +111,7 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
 
     @ExcludeFromGeneratedCoverageReport
     public BuildCriOauthRequestHandler() {
+        this.configService = new ConfigService();
         this.credentialIssuerConfigService = new CredentialIssuerConfigService();
         this.userIdentityService = new UserIdentityService(credentialIssuerConfigService);
         this.signer = new KmsEs256Signer(credentialIssuerConfigService.getSigningKeyId());
@@ -156,8 +162,6 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
 
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
-            List<VcStatusDto> currentVcStatuses = ipvSessionItem.getCurrentVcStatuses();
-
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             String oauthState = SecureTokenHelper.generate();
@@ -167,7 +171,6 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
                             userId,
                             oauthState,
                             govukSigninJourneyId,
-                            currentVcStatuses,
                             criId);
 
             CriResponse criResponse = getCriResponse(credentialIssuerConfig, jweObject, criId);
@@ -254,11 +257,10 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
             String userId,
             String oauthState,
             String govukSigninJourneyId,
-            List<VcStatusDto> currentVcStatuses,
             String criId)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException {
         SharedClaimsResponse sharedClaimsResponse =
-                getSharedAttributes(userId, currentVcStatuses, criId);
+                getSharedAttributes(userId, criId);
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
                         sharedClaimsResponse,
@@ -289,13 +291,14 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
 
     @Tracing
     private SharedClaimsResponse getSharedAttributes(
-            String userId, List<VcStatusDto> currentVcStatuses, String criId)
-            throws HttpResponseExceptionWithErrorBody {
+            String userId, String criId)
+            throws HttpResponseExceptionWithErrorBody, ParseException {
         CredentialIssuerConfig addressCriConfig =
                 credentialIssuerConfigService.getCredentialIssuerActiveConnectionConfig(
                         ADDRESS_CRI);
 
         List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
+        List<VcStatusDto> currentVcStatuses = generateVcSuccessStatuses(credentials);
 
         Set<SharedClaims> sharedClaimsSet = new HashSet<>();
         List<String> criAllowedSharedClaimAttrs = getAllowedSharedClaimAttrs(criId);
@@ -381,5 +384,44 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
     private void persistCriOauthState(
             String oauthState, String criId, String clientOAuthSessionId) {
         criOAuthSessionService.persistCriOAuthSession(oauthState, criId, clientOAuthSessionId);
+    }
+
+    // Lifted from evalGPG45 lambda
+//    @Tracing
+//    private void updateSuccessfulVcStatuses(
+//            IpvSessionItem ipvSessionItem, List<SignedJWT> credentials) throws ParseException {
+//
+//        // get list of success vc's
+//        List<VcStatusDto> currentVcStatusDtos = ipvSessionItem.getCurrentVcStatuses();
+//
+//        if (currentVcStatusDtos == null) {
+//            currentVcStatusDtos = new ArrayList<>();
+//        }
+//
+//        if (currentVcStatusDtos.size() != credentials.size()) {
+//            List<VcStatusDto> updatedStatuses = generateVcSuccessStatuses(credentials);
+//            ipvSessionItem.setCurrentVcStatuses(updatedStatuses);
+//            ipvSessionService.updateIpvSession(ipvSessionItem);
+//        }
+//    }
+
+    @Tracing
+    private List<VcStatusDto> generateVcSuccessStatuses(List<String> credentials)
+            throws ParseException {
+        List<VcStatusDto> vcStatuses = new ArrayList<>();
+        List<CredentialIssuerConfig> ignoredCriConfigurations =
+                List.of(
+                        configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI),
+                        configService.getCredentialIssuerActiveConnectionConfig(
+                                CLAIMED_IDENTITY_CRI));
+
+        for (String cred : credentials) {
+            SignedJWT signedJWT = SignedJWT.parse(cred);
+            boolean isSuccessful =
+                    VcHelper.isSuccessfulVcIgnoringCi(signedJWT, ignoredCriConfigurations);
+
+            vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
+        }
+        return vcStatuses;
     }
 }
