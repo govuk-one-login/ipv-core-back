@@ -26,12 +26,9 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.statemachine.JourneyRequestLambda;
 
 import java.text.ParseException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ALLOWED_USER_IDS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_SHOULD_SEND_ALL_USERS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
@@ -53,7 +50,6 @@ public class SelectCriHandler extends JourneyRequestLambda {
     private static final String JOURNEY_FAIL = "/journey/fail";
     private static final String JOURNEY_PENDING = "/journey/pending";
     private static final String DCMAW_SUCCESS_PAGE = "dcmaw-success";
-    private static final String APP_JOURNEY_USER_ID_PREFIX = "urn:uuid:app-journey-user-";
     private static final String MULTIPLE_DOC_CHECK_PAGE = "multipleDocCheckPage";
     private static final String MULTIPLE_DOC_CHECK_WITH_F2F_PAGE = "multipleDocCheckWithF2FPage";
 
@@ -103,7 +99,7 @@ public class SelectCriHandler extends JourneyRequestLambda {
             String userId = clientOAuthSessionItem.getUserId();
 
             JourneyResponse response;
-            if (shouldSendUserToApp(userId)) {
+            if (configService.isEnabled(DCMAW_CRI)) {
                 response =
                         getNextAppJourneyCri(visitedCredentialIssuers, currentVcStatuses, userId);
             } else {
@@ -366,25 +362,5 @@ public class SelectCriHandler extends JourneyRequestLambda {
     private boolean userHasVisited(
             List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuers, String criId) {
         return visitedCredentialIssuers.stream().anyMatch(cri -> cri.getCriId().equals(criId));
-    }
-
-    private boolean shouldSendUserToApp(String userId) {
-        boolean dcmawEnabled = configService.isEnabled(DCMAW_CRI);
-        if (dcmawEnabled) {
-            boolean shouldSendAllUsers =
-                    Boolean.parseBoolean(
-                            configService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS));
-            if (!shouldSendAllUsers) {
-                if (userId.startsWith(APP_JOURNEY_USER_ID_PREFIX)) {
-                    return true;
-                }
-                String userIds = configService.getSsmParameter(DCMAW_ALLOWED_USER_IDS);
-                List<String> dcmawAllowedUserIds = Arrays.asList(userIds.split(","));
-                return dcmawAllowedUserIds.contains(userId);
-            }
-            return true;
-        } else {
-            return false;
-        }
     }
 }
