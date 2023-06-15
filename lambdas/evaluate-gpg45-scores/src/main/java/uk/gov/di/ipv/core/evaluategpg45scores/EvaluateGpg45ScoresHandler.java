@@ -9,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
+import software.amazon.lambda.powertools.tracing.CaptureMode;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
@@ -118,7 +119,7 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
     }
 
     @Override
-    @Tracing
+    @Tracing(captureMode = CaptureMode.ENVIRONMENT_VAR)
     @Logging(clearState = true)
     protected BaseResponse handleRequest(JourneyRequest event, Context context) {
         LogHelper.attachComponentIdToLogs();
@@ -231,6 +232,7 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
         }
     }
 
+    @Tracing(captureMode = CaptureMode.ENVIRONMENT_VAR)
     private boolean checkCorrelation(String userId, List<VcStatusDto> currentVcStatuses)
             throws HttpResponseExceptionWithErrorBody {
         if (!userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(
@@ -263,7 +265,7 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
         return true;
     }
 
-    @Tracing
+    @Tracing(captureMode = CaptureMode.ENVIRONMENT_VAR)
     private JourneyResponse checkForMatchingGpg45Profile(
             StringMapMessage message,
             IpvSessionItem ipvSessionItem,
@@ -297,7 +299,7 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
         }
     }
 
-    @Tracing
+    @Tracing(captureMode = CaptureMode.ENVIRONMENT_VAR)
     private Optional<JourneyResponse> getNextMitigationJourneyResponse(
             IpvSessionItem ipvSessionItem, List<ContraIndicatorItem> ciItems) {
         List<ContraIndicatorMitigationDetailsDto> currentMitigationDetails =
@@ -348,7 +350,7 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
         return Optional.empty();
     }
 
-    @Tracing
+    @Tracing(captureMode = CaptureMode.ENVIRONMENT_VAR)
     private void updateSuccessfulVcStatuses(
             IpvSessionItem ipvSessionItem, List<SignedJWT> credentials) throws ParseException {
 
@@ -366,7 +368,7 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
         }
     }
 
-    @Tracing
+    @Tracing(captureMode = CaptureMode.ENVIRONMENT_VAR)
     private List<VcStatusDto> generateVcSuccessStatuses(List<SignedJWT> credentials)
             throws ParseException {
         List<VcStatusDto> vcStatuses = new ArrayList<>();
@@ -385,7 +387,7 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
         return vcStatuses;
     }
 
-    @Tracing
+    @Tracing(captureMode = CaptureMode.ENVIRONMENT_VAR)
     private AuditEvent buildProfileMatchedAuditEvent(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
@@ -408,7 +410,7 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
                         gpg45Profile, gpg45Scores, extractTxnIdsFromCredentials(credentials)));
     }
 
-    @Tracing
+    @Tracing(captureMode = CaptureMode.ENVIRONMENT_VAR)
     private List<String> extractTxnIdsFromCredentials(List<SignedJWT> credentials)
             throws ParseException {
         List<String> txnIds = new ArrayList<>();
@@ -424,7 +426,7 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
         return txnIds;
     }
 
-    @Tracing
+    @Tracing(captureMode = CaptureMode.ENVIRONMENT_VAR)
     private boolean isCiMitigationInProgress(
             List<ContraIndicatorMitigationDetailsDto> currentMitigationDetails) {
         if (currentMitigationDetails != null) {
