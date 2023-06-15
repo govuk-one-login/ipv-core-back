@@ -50,7 +50,6 @@ Conditions:
   IsNewDevelopment: !Equals [ !Ref AWS::AccountId, "175872367215"]
   IsNotDevelopment: !Not [ !Condition IsDevelopment ]
   IsProduction: !Equals [ !Ref Environment, "production"]
-  IsNotProduction: !Not [!Equals [ !Ref Environment, "production"]]
   UseCodeSigning:
     Fn::Not:
       - Fn::Equals:
@@ -2224,7 +2223,6 @@ Resources:
 
   ProcessAsyncCriCredentialFunction:
     Type: AWS::Serverless::Function
-    Condition: IsNotProduction
     DependsOn:
       - "ProcessAsyncCriCredentialFunctionLogGroup"
     Properties:
