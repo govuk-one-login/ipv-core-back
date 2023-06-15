@@ -259,8 +259,7 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
             String govukSigninJourneyId,
             String criId)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException {
-        SharedClaimsResponse sharedClaimsResponse =
-                getSharedAttributes(userId, criId);
+        SharedClaimsResponse sharedClaimsResponse = getSharedAttributes(userId, criId);
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
                         sharedClaimsResponse,
@@ -290,8 +289,7 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
     }
 
     @Tracing
-    private SharedClaimsResponse getSharedAttributes(
-            String userId, String criId)
+    private SharedClaimsResponse getSharedAttributes(String userId, String criId)
             throws HttpResponseExceptionWithErrorBody, ParseException {
         CredentialIssuerConfig addressCriConfig =
                 credentialIssuerConfigService.getCredentialIssuerActiveConnectionConfig(
@@ -387,23 +385,24 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
     }
 
     // Lifted from evalGPG45 lambda
-//    @Tracing
-//    private void updateSuccessfulVcStatuses(
-//            IpvSessionItem ipvSessionItem, List<SignedJWT> credentials) throws ParseException {
-//
-//        // get list of success vc's
-//        List<VcStatusDto> currentVcStatusDtos = ipvSessionItem.getCurrentVcStatuses();
-//
-//        if (currentVcStatusDtos == null) {
-//            currentVcStatusDtos = new ArrayList<>();
-//        }
-//
-//        if (currentVcStatusDtos.size() != credentials.size()) {
-//            List<VcStatusDto> updatedStatuses = generateVcSuccessStatuses(credentials);
-//            ipvSessionItem.setCurrentVcStatuses(updatedStatuses);
-//            ipvSessionService.updateIpvSession(ipvSessionItem);
-//        }
-//    }
+    //    @Tracing
+    //    private void updateSuccessfulVcStatuses(
+    //            IpvSessionItem ipvSessionItem, List<SignedJWT> credentials) throws ParseException
+    // {
+    //
+    //        // get list of success vc's
+    //        List<VcStatusDto> currentVcStatusDtos = ipvSessionItem.getCurrentVcStatuses();
+    //
+    //        if (currentVcStatusDtos == null) {
+    //            currentVcStatusDtos = new ArrayList<>();
+    //        }
+    //
+    //        if (currentVcStatusDtos.size() != credentials.size()) {
+    //            List<VcStatusDto> updatedStatuses = generateVcSuccessStatuses(credentials);
+    //            ipvSessionItem.setCurrentVcStatuses(updatedStatuses);
+    //            ipvSessionService.updateIpvSession(ipvSessionItem);
+    //        }
+    //    }
 
     @Tracing
     private List<VcStatusDto> generateVcSuccessStatuses(List<String> credentials)
