@@ -160,6 +160,13 @@ MULTIPLE_DOC_CHECK_PAGE_J2:
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/ukPassport
+    drivingLicence:
+      type: basic
+      name: drivingLicence
+      targetState: CRI_DRIVING_LICENCE_J3
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/drivingLicence
 
 CRI_UK_PASSPORT_J2:
   name: CRI_UK_PASSPORT_J2
@@ -215,6 +222,64 @@ CRI_KBV_J2:
       response:
         type: journey
         journeyStepId: /journey/evaluate-gpg45-scores
+
+# DRIVING LICENSE SUCCESS BRANCH
+CRI_DRIVING_LICENCE_J3:
+  name: CRI_DRIVING_LICENCE_J3
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_ADDRESS_J3
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/address
+
+CRI_ADDRESS_J3:
+  name: CRI_ADDRESS_J3
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_FRAUD_J3
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/fraud
+
+CRI_FRAUD_J3:
+  name: CRI_FRAUD_J3
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: PRE_KBV_TRANSITION_PAGE_J3
+      response:
+        type: page
+        pageId: page-pre-kbv-transition
+
+PRE_KBV_TRANSITION_PAGE_J3:
+  name: PRE_KBV_TRANSITION_PAGE_J3
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_KBV_J3
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/kbv
+
+CRI_KBV_J3:
+  name: CRI_KBV_J3
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: EVALUATE_GPG45_SCORES
+      response:
+        type: journey
+        journeyStepId: /journey/evaluate-gpg45-scores
+
+
 
 
 IPV_IDENTITY_REUSE_PAGE:
