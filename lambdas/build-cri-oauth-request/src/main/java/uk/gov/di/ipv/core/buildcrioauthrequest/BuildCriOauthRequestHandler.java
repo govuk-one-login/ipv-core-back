@@ -304,7 +304,8 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
             try {
                 SignedJWT signedJWT = SignedJWT.parse(credential);
                 String credentialIss = signedJWT.getJWTClaimsSet().getIssuer();
-
+                LOGGER.info(String.format("credentialIss: %s", credentialIss));
+                LOGGER.info(String.format("currentVcStatuses size: %d", currentVcStatuses.size()));
                 VcStatusDto vcStatus =
                         currentVcStatuses.stream()
                                 .filter(
