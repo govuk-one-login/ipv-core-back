@@ -15,7 +15,6 @@ import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterExce
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
 import software.amazon.awssdk.services.ssm.SsmClient;
-import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.lambda.powertools.parameters.ParamManager;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
@@ -25,6 +24,7 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -139,9 +139,14 @@ public class ConfigService {
 
     private String getSsmParameterWithOverride(String templatePath, String... pathProperties) {
         if (getFeatureSet() != null) {
-            try {
-                return ssmProvider.get(resolveFeatureSetPath(templatePath, pathProperties));
-            } catch (ParameterNotFoundException ignored) {
+            final Path featureSetPath =
+                    Path.of(resolveFeatureSetPath(templatePath, pathProperties));
+            final String terminal = featureSetPath.getFileName().toString();
+            final String basePath = featureSetPath.getParent().toString();
+            final Map<String, String> overrides = ssmProvider.getMultiple(basePath);
+            if (overrides.containsKey(terminal)) {
+                return overrides.get(terminal);
+            } else {
                 LOGGER.debug(
                         (new StringMapMessage())
                                 .with(
