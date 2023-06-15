@@ -20,7 +20,6 @@ import software.amazon.awssdk.services.secretsmanager.model.InternalServiceError
 import software.amazon.awssdk.services.secretsmanager.model.InvalidParameterException;
 import software.amazon.awssdk.services.secretsmanager.model.InvalidRequestException;
 import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundException;
-import software.amazon.awssdk.services.ssm.model.ParameterNotFoundException;
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
@@ -32,6 +31,7 @@ import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 import uk.org.webcompere.systemstubs.properties.SystemProperties;
 
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -191,9 +191,8 @@ class ConfigServiceTest {
 
             when(ssmProvider.get("/test/core/credentialIssuers/passportCri/activeConnection"))
                     .thenReturn("stub");
-            when(ssmProvider.get(
-                            "/test/core/features/fs01/credentialIssuers/passportCri/activeConnection"))
-                    .thenThrow(ParameterNotFoundException.class);
+            when(ssmProvider.getMultiple("/test/core/features/fs01/credentialIssuers/passportCri"))
+                    .thenReturn(Map.of());
             when(ssmProvider.getMultiple(
                             "/test/core/credentialIssuers/passportCri/connections/stub"))
                     .thenReturn(baseCredentialIssuerConfig);
@@ -212,9 +211,8 @@ class ConfigServiceTest {
             environmentVariables.set("ENVIRONMENT", "test");
             configService.setFeatureSet("fs01");
 
-            when(ssmProvider.get(
-                            "/test/core/features/fs01/credentialIssuers/passportCri/activeConnection"))
-                    .thenReturn("main");
+            when(ssmProvider.getMultiple("/test/core/features/fs01/credentialIssuers/passportCri"))
+                    .thenReturn(Map.of("activeConnection", "main"));
             when(ssmProvider.getMultiple(
                             "/test/core/credentialIssuers/passportCri/connections/main"))
                     .thenReturn(baseCredentialIssuerConfig);
@@ -230,9 +228,8 @@ class ConfigServiceTest {
             environmentVariables.set("ENVIRONMENT", "test");
             configService.setFeatureSet("fs01");
 
-            when(ssmProvider.get(
-                            "/test/core/features/fs01/credentialIssuers/passportCri/activeConnection"))
-                    .thenReturn("main");
+            when(ssmProvider.getMultiple("/test/core/features/fs01/credentialIssuers/passportCri"))
+                    .thenReturn(Map.of("activeConnection", "main"));
             when(ssmProvider.getMultiple(
                             "/test/core/credentialIssuers/passportCri/connections/main"))
                     .thenReturn(baseCredentialIssuerConfig);
@@ -268,15 +265,14 @@ class ConfigServiceTest {
 
             when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
                     .thenReturn("stub");
-            when(ssmProvider.get(
-                            "/test/core/features/fs01/credentialIssuers/address/activeConnection"))
-                    .thenThrow(ParameterNotFoundException.class);
+            when(ssmProvider.getMultiple("/test/core/features/fs01/credentialIssuers/address"))
+                    .thenReturn(Map.of());
             when(ssmProvider.get(
                             "/test/core/credentialIssuers/address/connections/stub/componentId"))
                     .thenReturn(testComponentId);
-            when(ssmProvider.get(
-                            "/test/core/features/fs01/credentialIssuers/address/connections/stub/componentId"))
-                    .thenThrow(ParameterNotFoundException.class);
+            when(ssmProvider.getMultiple(
+                            "/test/core/features/fs01/credentialIssuers/address/connections/stub"))
+                    .thenReturn(Map.of());
             assertEquals(testComponentId, configService.getComponentId(testCredentialIssuerId));
         }
 
@@ -289,12 +285,11 @@ class ConfigServiceTest {
 
             when(ssmProvider.get("/test/core/credentialIssuers/address/activeConnection"))
                     .thenReturn("stub");
-            when(ssmProvider.get(
-                            "/test/core/features/fs01/credentialIssuers/address/activeConnection"))
-                    .thenThrow(ParameterNotFoundException.class);
-            when(ssmProvider.get(
-                            "/test/core/features/fs01/credentialIssuers/address/connections/stub/componentId"))
-                    .thenReturn("testComponentId");
+            when(ssmProvider.getMultiple("/test/core/features/fs01/credentialIssuers/address"))
+                    .thenReturn(Map.of());
+            when(ssmProvider.getMultiple(
+                            "/test/core/features/fs01/credentialIssuers/address/connections/stub"))
+                    .thenReturn(Map.of("componentId", "testComponentId"));
             assertEquals(testComponentId, configService.getComponentId(testCredentialIssuerId));
         }
     }
@@ -325,11 +320,11 @@ class ConfigServiceTest {
                                         credentialIssuer, attributeName)))
                         .thenReturn(baseValue);
             } else {
-                when(ssmProvider.get(
+                when(ssmProvider.getMultiple(
                                 String.format(
-                                        "/test/core/features/%s/credentialIssuers/%s/%s",
-                                        featureSet, credentialIssuer, attributeName)))
-                        .thenReturn(featureSetValue);
+                                        "/test/core/features/%s/credentialIssuers/%s",
+                                        featureSet, credentialIssuer)))
+                        .thenReturn(Map.of(attributeName, featureSetValue));
             }
         }
 
@@ -608,83 +603,54 @@ class ConfigServiceTest {
         PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY(
                 "clients/aClientId/publicKeyMaterialForCoreToVerify",
                 TEST_CERT,
-                Map.of("FS01", TEST_CERT_FS01),
-                Map.of()),
+                Map.of("FS01", TEST_CERT_FS01)),
         CLIENT_ISSUER(
-                "clients/aClientId/issuer",
-                "aClientIssuer",
-                Map.of("FS02", "aDifferentIssuer"),
-                Map.of("FS03_NO_OVERRIDE", ParameterNotFoundException.class)),
+                "clients/aClientId/issuer", "aClientIssuer", Map.of("FS02", "aDifferentIssuer")),
         MAX_ALLOWED_AUTH_CLIENT_TTL(
                 "self/maxAllowedAuthClientTtl",
                 "aClientTokenTtl",
-                Map.of("FS01", "aDifferentClientTokenTtl"),
-                Map.of()),
+                Map.of("FS01", "aDifferentClientTokenTtl")),
         CORE_FRONT_CALLBACK_URL(
                 "self/coreFrontCallbackUrl",
                 "aCoreFrontCallbackUrl",
-                Map.of("FS01", "aDifferentCoreFrontCallbackUrl"),
-                Map.of()),
+                Map.of("FS01", "aDifferentCoreFrontCallbackUrl")),
         CORE_VTM_CLAIM(
-                "self/coreVtmClaim",
-                "aCoreVtmClaim",
-                Map.of("FS02", "aDifferentCoreVtmClaim"),
-                Map.of()),
+                "self/coreVtmClaim", "aCoreVtmClaim", Map.of("FS02", "aDifferentCoreVtmClaim")),
         BACKEND_SESSION_TIMEOUT(
-                "self/backendSessionTimeout",
-                "7200",
-                Map.of("FS02", "7300", "FS03", "7400"),
-                Map.of()),
+                "self/backendSessionTimeout", "7200", Map.of("FS02", "7300", "FS03", "7400")),
         BACKEND_SESSION_TTL(
-                "self/backendSessionTtl",
-                "3600",
-                Map.of("FS03", "3700", "FS04", "3800"),
-                Map.of("FS05_NO_OVERRIDE", ParameterNotFoundException.class)),
+                "self/backendSessionTtl", "3600", Map.of("FS03", "3700", "FS04", "3800")),
         CLIENT_VALID_REDIRECT_URLS(
                 "clients/aClientId/validRedirectUrls",
                 "one.example.com/callback,two.example.com/callback,three.example.com/callback",
-                Map.of("FS05", "one.example.com/callback,four.example.com/callback"),
-                Map.of("FS06_NO_OVERRIDE", ParameterNotFoundException.class)),
-        FEATURE_FLAGS("featureFlags/testFeature", "false", Map.of("FS07", "true"), Map.of());
+                Map.of("FS05", "one.example.com/callback,four.example.com/callback")),
+        FEATURE_FLAGS("featureFlags/testFeature", "false", Map.of("FS07", "true"));
 
         private final String path;
         private final String baseValue;
         private final Map<String, String> featureSetValues;
-        private final Map<String, Class> featureSetExceptions;
 
-        TestConfiguration(
-                String path,
-                String baseValue,
-                Map<String, String> featureSetValues,
-                Map<String, Class> featureSetExceptions) {
+        TestConfiguration(String path, String baseValue, Map<String, String> featureSetValues) {
             this.path = path;
             this.baseValue = baseValue;
             this.featureSetValues = featureSetValues;
-            this.featureSetExceptions = featureSetExceptions;
         }
 
         public void setupMockConfig(SSMProvider ssmProvider) {
             Mockito.lenient().when(ssmProvider.get("/test/core/" + path)).thenReturn(baseValue);
+            final Path parameterPath = Path.of(path);
+            final String terminal = parameterPath.getFileName().toString();
+            final String basePath = parameterPath.getParent().toString();
             featureSetValues.forEach(
                     (featureSet, valueOverride) ->
                             Mockito.lenient()
                                     .when(
-                                            ssmProvider.get(
+                                            ssmProvider.getMultiple(
                                                     "/test/core/features/"
                                                             + featureSet
                                                             + "/"
-                                                            + path))
-                                    .thenReturn(valueOverride));
-            featureSetExceptions.forEach(
-                    (featureSet, clazz) ->
-                            Mockito.lenient()
-                                    .when(
-                                            ssmProvider.get(
-                                                    "/test/core/features/"
-                                                            + featureSet
-                                                            + "/"
-                                                            + path))
-                                    .thenThrow(clazz));
+                                                            + basePath))
+                                    .thenReturn(Map.of(terminal, valueOverride)));
         }
 
         public String getExpectedValue(String featureSet) {
