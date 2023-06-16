@@ -303,7 +303,10 @@ Resources:
   IPVCorePrivateAPILogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-CoreBackPrivate-API-GW-AccessLogs
+      LogGroupName: !If
+        - IsNewDevelopment
+        - !Sub /aws/vendedlogs/apigateway/${AWS::StackName}-CoreBackPrivate-API-GW-AccessLogs
+        - !Sub /aws/apigateway/${AWS::StackName}-CoreBackPrivate-API-GW-AccessLogs
       RetentionInDays: 14
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -348,7 +351,10 @@ Resources:
   IPVCoreExternalAPILogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub /aws/apigateway/${AWS::StackName}-CoreBackExternal-API-GW-AccessLogs
+      LogGroupName: !If
+        - IsNewDevelopment
+        - !Sub /aws/vendedlogs/apigateway/${AWS::StackName}-CoreBackExternal-API-GW-AccessLogs
+        - !Sub /aws/apigateway/${AWS::StackName}-CoreBackExternal-API-GW-AccessLogs
       RetentionInDays: 14
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
