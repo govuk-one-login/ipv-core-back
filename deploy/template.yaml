@@ -85,7 +85,7 @@ Mappings:
       criReturnStepFunctionLogLevel: ALL
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueueDev"
+      asyncCriResponseQueueArn: !Sub "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue_${Environment}"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:616199614141:key/a3025aad-6994-4b72-b3b6-5b361a8b7708"
       asyncCriLambdaTimeout: 30
     "457601271792": # Build
@@ -95,7 +95,7 @@ Mappings:
       criReturnStepFunctionLogLevel: ALL
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueueBuild"
+      asyncCriResponseQueueArn: !Sub "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue_${Environment}"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:616199614141:key/a3025aad-6994-4b72-b3b6-5b361a8b7708"
       asyncCriLambdaTimeout: 30
     "335257547869": # Staging
