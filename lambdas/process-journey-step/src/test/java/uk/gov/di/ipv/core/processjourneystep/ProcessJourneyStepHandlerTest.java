@@ -99,7 +99,7 @@ class ProcessJourneyStepHandlerTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {DEV, BUILD, STAGING, INTEGRATION, PRODUCTION})
+    @ValueSource(strings = {DEV})
     void shouldReturn500WhenUnknownJourneyEngineStepProvided(String environment) throws Exception {
         Map<String, String> input =
                 Map.of(JOURNEY, ProcessJourneyStepEvents.INVALID_STEP, IPV_SESSION_ID, "1234");

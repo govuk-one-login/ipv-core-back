@@ -164,6 +164,25 @@ MULTIPLE_DOC_CHECK_PAGE_J2:
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/drivingLicence
+    end:
+      type: featureSet
+      name: end
+      featureSets:
+        default:
+          type: basic
+          name: default
+          targetState: END
+          response:
+            type: journey
+            journeyStepId: /journey/build-client-oauth-response
+        f2fBeta:
+          type: basic
+          name: f2fBeta
+          targetState: CRI_CLAIMED_IDENTITY
+          response:
+            type: journey
+            journeyStepId: /journey/cri/build-oauth-request/claimedIdentity
+
 
 CRI_UK_PASSPORT_J2:
   name: CRI_UK_PASSPORT_J2

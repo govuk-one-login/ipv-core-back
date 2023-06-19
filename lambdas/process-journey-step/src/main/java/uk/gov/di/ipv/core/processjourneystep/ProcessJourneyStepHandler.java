@@ -132,7 +132,7 @@ public class ProcessJourneyStepHandler
                     stateMachine.transition(
                             ipvSessionItem.getUserState(),
                             journeyStep,
-                            JourneyContext.emptyContext());
+                            JourneyContext.withFeatureSet(configService.getFeatureSet()));
 
             updateUserState(
                     ipvSessionItem.getUserState(),

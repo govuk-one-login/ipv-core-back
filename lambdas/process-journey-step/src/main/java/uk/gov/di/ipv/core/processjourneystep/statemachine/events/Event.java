@@ -6,7 +6,10 @@ import uk.gov.di.ipv.core.processjourneystep.statemachine.StateMachineResult;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyContext;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-@JsonSubTypes({@JsonSubTypes.Type(value = BasicEvent.class, name = "basic")})
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = BasicEvent.class, name = "basic"),
+        @JsonSubTypes.Type(value = FeatureSetEvent.class, name = "featureSet")
+})
 public interface Event {
     StateMachineResult resolve(JourneyContext journeyContext);
 }
