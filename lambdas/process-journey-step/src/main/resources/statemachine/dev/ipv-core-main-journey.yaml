@@ -10,17 +10,11 @@ ATTEMPT_RECOVERY_STATE:
       response:
         type: journey
         journeyStepId: /journey/evaluate-gpg45-scores
+#  parent: ATTEMPT_RECOVERY_STATE
+# The above is removed from CRI_STATE. Will stick it back later.
 CRI_STATE:
   name: CRI_STATE
-  parent: ATTEMPT_RECOVERY_STATE
   events:
-    next:
-      type: basic
-      name: next
-      targetState: EVALUATE_GPG45_SCORES
-      response:
-        type: journey
-        journeyStepId: /journey/evaluate-gpg45-scores
     error:
       type: basic
       name: error
@@ -108,9 +102,10 @@ CHECK_EXISTING_IDENTITY:
         type: page
         pageId: page-ipv-reuse
 
-# DCMAW SUCCESS BRANCH
+# DCMAW BRANCH
 CRI_DCMAW_J1:
   name: CRI_DCMAW_J1
+  parent: CRI_STATE
   events:
     next:
       type: basic
@@ -129,6 +124,7 @@ CRI_DCMAW_J1:
 
 CRI_ADDRESS_J1:
   name: CRI_ADDRESS_J1
+  parent: CRI_STATE
   events:
     next:
       type: basic
@@ -140,6 +136,7 @@ CRI_ADDRESS_J1:
 
 CRI_FRAUD_J1:
   name: CRI_FRAUD_J1
+  parent: CRI_STATE
   events:
     next:
       type: basic
@@ -149,7 +146,7 @@ CRI_FRAUD_J1:
         type: journey
         journeyStepId: /journey/evaluate-gpg45-scores
 
-# PASSPORT SUCCESS BRANCH
+# PASSPORT BRANCH
 MULTIPLE_DOC_CHECK_PAGE_J2:
   name: MULTIPLE_DOC_CHECK_PAGE_J2
   events:
@@ -170,6 +167,7 @@ MULTIPLE_DOC_CHECK_PAGE_J2:
 
 CRI_UK_PASSPORT_J2:
   name: CRI_UK_PASSPORT_J2
+  parent: CRI_STATE
   events:
     next:
       type: basic
@@ -181,6 +179,7 @@ CRI_UK_PASSPORT_J2:
 
 CRI_ADDRESS_J2:
   name: CRI_ADDRESS_J2
+  parent: CRI_STATE
   events:
     next:
       type: basic
@@ -192,6 +191,7 @@ CRI_ADDRESS_J2:
 
 CRI_FRAUD_J2:
   name: CRI_FRAUD_J2
+  parent: CRI_STATE
   events:
     next:
       type: basic
@@ -214,6 +214,7 @@ PRE_KBV_TRANSITION_PAGE_J2:
 
 CRI_KBV_J2:
   name: CRI_KBV_J2
+  parent: CRI_STATE
   events:
     next:
       type: basic
@@ -223,9 +224,10 @@ CRI_KBV_J2:
         type: journey
         journeyStepId: /journey/evaluate-gpg45-scores
 
-# DRIVING LICENSE SUCCESS BRANCH
+# DRIVING LICENSE BRANCH
 CRI_DRIVING_LICENCE_J3:
   name: CRI_DRIVING_LICENCE_J3
+  parent: CRI_STATE
   events:
     next:
       type: basic
@@ -237,6 +239,7 @@ CRI_DRIVING_LICENCE_J3:
 
 CRI_ADDRESS_J3:
   name: CRI_ADDRESS_J3
+  parent: CRI_STATE
   events:
     next:
       type: basic
@@ -248,6 +251,7 @@ CRI_ADDRESS_J3:
 
 CRI_FRAUD_J3:
   name: CRI_FRAUD_J3
+  parent: CRI_STATE
   events:
     next:
       type: basic
@@ -270,6 +274,7 @@ PRE_KBV_TRANSITION_PAGE_J3:
 
 CRI_KBV_J3:
   name: CRI_KBV_J3
+  parent: CRI_STATE
   events:
     next:
       type: basic
@@ -280,7 +285,7 @@ CRI_KBV_J3:
         journeyStepId: /journey/evaluate-gpg45-scores
 
 
-
+# Original stuff below here. I think.
 
 IPV_IDENTITY_REUSE_PAGE:
   name: IPV_IDENTITY_REUSE_PAGE
