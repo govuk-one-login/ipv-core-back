@@ -461,6 +461,13 @@ CRI_DCMAW:
       response:
         type: page
         pageId: page-multiple-doc-check
+    access-denied-multi-f2f-doc:
+      type: basic
+      name: access-denied-multi-f2f-doc
+      targetState: MULTIPLE_DOC_CHECK_PAGE_F2F
+      response:
+        type: page
+        pageId: page-multiple-doc-check
     access-denied:
       type: basic
       name: access-denied
