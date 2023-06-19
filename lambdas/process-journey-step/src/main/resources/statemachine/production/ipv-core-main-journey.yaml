@@ -96,10 +96,10 @@ CHECK_EXISTING_IDENTITY:
     next:
       type: basic
       name: next
-      targetState: CRI_DCMAW_NEW
+      targetState: EVALUATE_GPG45_SCORES
       response:
         type: journey
-        journeyStepId: /journey/cri/build-oauth-request/dcmaw
+        journeyStepId: /journey/evaluate-gpg45-scores
     reuse:
       type: basic
       name: reuse
@@ -107,40 +107,6 @@ CHECK_EXISTING_IDENTITY:
       response:
         type: page
         pageId: page-ipv-reuse
-
-CRI_DCMAW_NEW:
-  name: CRI_DCMAW_NEW
-  events:
-    next:
-      type: basic
-      name: next
-      targetState: CRI_ADDRESS_NEW
-      response:
-        type: journey
-        journeyStepId: /journey/cri/build-oauth-request/address
-
-CRI_ADDRESS_NEW:
-  name: CRI_ADDRESS_NEW
-  events:
-    next:
-      type: basic
-      name: next
-      targetState: CRI_FRAUD_NEW
-      response:
-        type: journey
-        journeyStepId: /journey/cri/build-oauth-request/fraud
-
-CRI_FRAUD_NEW:
-  name: CRI_FRAUD_NEW
-  events:
-    next:
-      type: basic
-      name: next
-      targetState: EVALUATE_GPG45_SCORES
-      response:
-        type: journey
-        journeyStepId: /journey/evaluate-gpg45-scores
-
 IPV_IDENTITY_REUSE_PAGE:
   name: IPV_IDENTITY_REUSE_PAGE
   parent: END_JOURNEY
