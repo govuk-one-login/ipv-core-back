@@ -138,13 +138,13 @@ CRI_FRAUD_J1:
   name: CRI_FRAUD_J1
   parent: CRI_STATE
   events:
-    next:
+    end:
       type: basic
-      name: next
-      targetState: EVALUATE_GPG45_SCORES
+      name: end
+      targetState: IPV_SUCCESS_PAGE
       response:
-        type: journey
-        journeyStepId: /journey/evaluate-gpg45-scores
+        type: page
+        pageId: page-ipv-success
 
 # PASSPORT BRANCH
 MULTIPLE_DOC_CHECK_PAGE_J2:
@@ -216,13 +216,13 @@ CRI_KBV_J2:
   name: CRI_KBV_J2
   parent: CRI_STATE
   events:
-    next:
+    end:
       type: basic
-      name: next
-      targetState: EVALUATE_GPG45_SCORES
+      name: end
+      targetState: IPV_SUCCESS_PAGE
       response:
-        type: journey
-        journeyStepId: /journey/evaluate-gpg45-scores
+        type: page
+        pageId: page-ipv-success
 
 # DRIVING LICENSE BRANCH
 CRI_DRIVING_LICENCE_J3:
@@ -276,13 +276,13 @@ CRI_KBV_J3:
   name: CRI_KBV_J3
   parent: CRI_STATE
   events:
-    next:
+    end:
       type: basic
-      name: next
-      targetState: EVALUATE_GPG45_SCORES
+      name: end
+      targetState: IPV_SUCCESS_PAGE
       response:
-        type: journey
-        journeyStepId: /journey/evaluate-gpg45-scores
+        type: page
+        pageId: page-ipv-success
 
 
 # Original stuff below here. I think.

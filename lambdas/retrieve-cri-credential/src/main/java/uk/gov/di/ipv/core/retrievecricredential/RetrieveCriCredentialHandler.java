@@ -66,7 +66,7 @@ public class RetrieveCriCredentialHandler
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final Map<String, Object> JOURNEY_NEXT = Map.of(JOURNEY, "/journey/next");
+    private static final Map<String, Object> JOURNEY_EVALUATE = Map.of(JOURNEY, "/journey/evaluate");
     private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, "/journey/error");
     private static final Map<String, Object> JOURNEY_PENDING = Map.of(JOURNEY, "/journey/pending");
 
@@ -290,7 +290,7 @@ public class RetrieveCriCredentialHandler
                                 "Successfully retrieved CRI credential.")
                         .with(LOG_CRI_ID.getFieldName(), credentialIssuerId));
 
-        return JOURNEY_NEXT;
+        return JOURNEY_EVALUATE;
     }
 
     @Tracing

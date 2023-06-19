@@ -35,6 +35,17 @@
         "featureSet.$": "$.featureSet"
       },
       "ResultPath": "$.lambdaResult",
+      "Next": "RouteJourneyResponse"
+    },
+    "EvaluateGpg45Scores": {
+      "Type": "Task",
+      "Resource": "${EvaluateGpg45ScoresFunctionArn}",
+      "Parameters": {
+        "ipvSessionId.$": "$.ipvSessionId",
+        "ipAddress.$": "$.ipAddress",
+        "featureSet.$": "$.featureSet"
+      },
+      "ResultPath": "$.lambdaResult",
       "Next": "ReturnToFrontend"
     },
     "RetrieveCriOAuthAccessTokenError": {
@@ -62,6 +73,11 @@
           "Variable": "$.lambdaResult.journey",
           "StringEquals": "/journey/cri/access-token",
           "Next": "RetrieveCriOauthAccessToken"
+        },
+        {
+          "Variable": "$.lambdaResult.journey",
+          "StringEquals": "/journey/evaluate",
+          "Next": "EvaluateGpg45Scores"
         }
       ],
       "Default": "ReturnToFrontend"
