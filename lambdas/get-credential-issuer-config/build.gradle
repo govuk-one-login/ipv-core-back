@@ -21,7 +21,7 @@ dependencies {
 
 	testImplementation "com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			"org.junit.jupiter:junit-jupiter:5.9.3",
-			"org.mockito:mockito-junit-jupiter:5.3.1",
+			"org.mockito:mockito-junit-jupiter:5.4.0",
 			project(":lib").sourceSets.test.output
 }
 
