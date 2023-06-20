@@ -22,7 +22,7 @@ dependencies {
 
 	testImplementation "com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson",
 			"org.junit.jupiter:junit-jupiter:5.9.3",
-			"org.mockito:mockito-junit-jupiter:5.3.1",
+			"org.mockito:mockito-junit-jupiter:5.4.0",
 			project(":lib").sourceSets.test.output
 }
 
