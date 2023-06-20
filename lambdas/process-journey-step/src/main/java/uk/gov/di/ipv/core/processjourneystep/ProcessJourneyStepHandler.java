@@ -145,7 +145,9 @@ public class ProcessJourneyStepHandler
             return new PageResponse(PYIC_TIMEOUT_UNRECOVERABLE_ID).value(configService);
         }
 
-        StateMachine stateMachine = stateMachineMap.get(ipvSessionItem.getJourneyType());
+        IpvJourneyTypes journeyType = ipvSessionItem.getJourneyType();
+        LOGGER.info("Journey type: {}", journeyType);
+        StateMachine stateMachine = stateMachineMap.get(journeyType);
 
         try {
             StateMachineResult stateMachineResult =

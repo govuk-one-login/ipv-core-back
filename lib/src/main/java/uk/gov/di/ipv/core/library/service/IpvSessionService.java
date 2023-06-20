@@ -109,7 +109,8 @@ public class IpvSessionService {
 
         ipvSessionItem.setVot(VOT_P0);
 
-        ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
+        LOGGER.info("Setting journey type to: {}", IpvJourneyTypes.IPV_CORE_NO_SELECT_CRI_JOURNEY);
+        ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_NO_SELECT_CRI_JOURNEY);
 
         if (errorObject != null) {
             ipvSessionItem.setErrorCode(errorObject.getCode());

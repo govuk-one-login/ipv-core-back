@@ -126,6 +126,7 @@ public class InitialiseIpvSessionHandler
 
             String clientOAuthSessionId = SecureTokenHelper.generate();
 
+            LOGGER.info("Generating session");
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
                             clientOAuthSessionId,
