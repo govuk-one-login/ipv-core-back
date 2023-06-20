@@ -85,7 +85,7 @@ Mappings:
       criReturnStepFunctionLogLevel: ALL
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueueDev"
+      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:616199614141:key/a3025aad-6994-4b72-b3b6-5b361a8b7708"
       asyncCriLambdaTimeout: 30
     "457601271792": # Build
@@ -95,7 +95,7 @@ Mappings:
       criReturnStepFunctionLogLevel: ALL
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueueBuild"
+      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue_build"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:616199614141:key/a3025aad-6994-4b72-b3b6-5b361a8b7708"
       asyncCriLambdaTimeout: 30
     "335257547869": # Staging
@@ -2330,7 +2330,13 @@ Resources:
                 - sqs:DeleteMessage
                 - sqs:GetQueueAttributes
                 - sqs:ReceiveMessage
-              Resource: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriResponseQueueArn ]
+              Resource: !If
+                - IsNewDevelopment
+                - !Join
+                  - ''
+                  - - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriResponseQueueArn ]
+                    - !Sub "_${Environment}"
+                - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriResponseQueueArn ]
             - Sid: asyncCriResponseQueueKmsKeyPermission
               Effect: Allow
               Action:
@@ -2341,7 +2347,13 @@ Resources:
           Type: SQS
           Properties:
             Enabled: true
-            Queue: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriResponseQueueArn ]
+            Queue: !If
+              - IsNewDevelopment
+              - !Join
+                - ''
+                - - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriResponseQueueArn ]
+                  - !Sub "_${Environment}"
+              - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriResponseQueueArn ]
             BatchSize: 1
             FunctionResponseTypes:
               - ReportBatchItemFailures
