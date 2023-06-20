@@ -12,6 +12,7 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
@@ -35,6 +36,7 @@ import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_NO_SELECT_CRI_JOURNEY;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_STEP;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_USER_STATE;
@@ -48,7 +50,7 @@ public class ProcessJourneyStepHandler
     private final IpvSessionService ipvSessionService;
     private final ConfigService configService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
-    private StateMachine stateMachine;
+    private final Map<IpvJourneyTypes, StateMachine> stateMachineMap;
 
     public ProcessJourneyStepHandler(
             IpvSessionService ipvSessionService,
@@ -58,12 +60,20 @@ public class ProcessJourneyStepHandler
         this.ipvSessionService = ipvSessionService;
         this.configService = configService;
         this.clientOAuthSessionService = clientOAuthSessionService;
-        this.stateMachine =
-                new StateMachine(
-                        new StateMachineInitializer(
-                                configService.getEnvironmentVariable(
-                                        EnvironmentVariable.ENVIRONMENT),
-                                IPV_CORE_MAIN_JOURNEY));
+        this.stateMachineMap =
+                Map.of(
+                        IPV_CORE_MAIN_JOURNEY,
+                                new StateMachine(
+                                        new StateMachineInitializer(
+                                                configService.getEnvironmentVariable(
+                                                        EnvironmentVariable.ENVIRONMENT),
+                                                IPV_CORE_MAIN_JOURNEY)),
+                        IPV_CORE_NO_SELECT_CRI_JOURNEY,
+                                new StateMachine(
+                                        new StateMachineInitializer(
+                                                configService.getEnvironmentVariable(
+                                                        EnvironmentVariable.ENVIRONMENT),
+                                                IPV_CORE_NO_SELECT_CRI_JOURNEY)));
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -71,12 +81,20 @@ public class ProcessJourneyStepHandler
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
-        this.stateMachine =
-                new StateMachine(
-                        new StateMachineInitializer(
-                                configService.getEnvironmentVariable(
-                                        EnvironmentVariable.ENVIRONMENT),
-                                IPV_CORE_MAIN_JOURNEY));
+        this.stateMachineMap =
+                Map.of(
+                        IPV_CORE_MAIN_JOURNEY,
+                                new StateMachine(
+                                        new StateMachineInitializer(
+                                                configService.getEnvironmentVariable(
+                                                        EnvironmentVariable.ENVIRONMENT),
+                                                IPV_CORE_MAIN_JOURNEY)),
+                        IPV_CORE_NO_SELECT_CRI_JOURNEY,
+                                new StateMachine(
+                                        new StateMachineInitializer(
+                                                configService.getEnvironmentVariable(
+                                                        EnvironmentVariable.ENVIRONMENT),
+                                                IPV_CORE_NO_SELECT_CRI_JOURNEY)));
     }
 
     @Override
@@ -126,6 +144,8 @@ public class ProcessJourneyStepHandler
             updateUserSessionForTimeout(currentUserState, ipvSessionItem);
             return new PageResponse(PYIC_TIMEOUT_UNRECOVERABLE_ID).value(configService);
         }
+
+        StateMachine stateMachine = stateMachineMap.get(ipvSessionItem.getJourneyType());
 
         try {
             StateMachineResult stateMachineResult =

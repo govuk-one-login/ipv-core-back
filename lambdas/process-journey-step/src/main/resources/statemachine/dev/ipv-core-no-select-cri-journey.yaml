@@ -10,17 +10,11 @@ ATTEMPT_RECOVERY_STATE:
       response:
         type: journey
         journeyStepId: /journey/evaluate-gpg45-scores
+
 CRI_STATE:
   name: CRI_STATE
   parent: ATTEMPT_RECOVERY_STATE
   events:
-    next:
-      type: basic
-      name: next
-      targetState: EVALUATE_GPG45_SCORES
-      response:
-        type: journey
-        journeyStepId: /journey/evaluate-gpg45-scores
     error:
       type: basic
       name: error
@@ -96,10 +90,10 @@ CHECK_EXISTING_IDENTITY:
     next:
       type: basic
       name: next
-      targetState: EVALUATE_GPG45_SCORES
+      targetState: CRI_DCMAW_J1
       response:
         type: journey
-        journeyStepId: /journey/evaluate-gpg45-scores
+        journeyStepId: /journey/cri/build-oauth-request/dcmaw
     reuse:
       type: basic
       name: reuse
@@ -107,6 +101,265 @@ CHECK_EXISTING_IDENTITY:
       response:
         type: page
         pageId: page-ipv-reuse
+
+# DCMAW BRANCH
+CRI_DCMAW_J1:
+  name: CRI_DCMAW_J1
+  parent: CRI_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_ADDRESS_J1
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/address
+    access-denied-multi-doc:
+      type: basic
+      name: access-denied-multi-doc
+      targetState: MULTIPLE_DOC_CHECK_PAGE_J2
+      response:
+        type: page
+        pageId: page-multiple-doc-check
+
+CRI_ADDRESS_J1:
+  name: CRI_ADDRESS_J1
+  parent: CRI_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_FRAUD_J1
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/fraud
+
+CRI_FRAUD_J1:
+  name: CRI_FRAUD_J1
+  parent: CRI_STATE
+  events:
+    end:
+      type: basic
+      name: end
+      targetState: IPV_SUCCESS_PAGE
+      response:
+        type: page
+        pageId: page-ipv-success
+
+# PASSPORT BRANCH
+MULTIPLE_DOC_CHECK_PAGE_J2:
+  name: MULTIPLE_DOC_CHECK_PAGE_J2
+  events:
+    ukPassport:
+      type: basic
+      name: ukPassport
+      targetState: CRI_UK_PASSPORT_J2
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/ukPassport
+    drivingLicence:
+      type: basic
+      name: drivingLicence
+      targetState: CRI_DRIVING_LICENCE_J3
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/drivingLicence
+    end:
+      type: featureSet
+      name: end
+      featureSets:
+        default:
+          type: basic
+          name: default
+          targetState: END
+          response:
+            type: journey
+            journeyStepId: /journey/build-client-oauth-response
+        f2fBeta:
+          type: basic
+          name: f2fBeta
+          targetState: CRI_CLAIMED_IDENTITY_J4
+          response:
+            type: journey
+            journeyStepId: /journey/cri/build-oauth-request/claimedIdentity
+
+
+CRI_UK_PASSPORT_J2:
+  name: CRI_UK_PASSPORT_J2
+  parent: CRI_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_ADDRESS_J2
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/address
+
+CRI_ADDRESS_J2:
+  name: CRI_ADDRESS_J2
+  parent: CRI_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_FRAUD_J2
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/fraud
+
+CRI_FRAUD_J2:
+  name: CRI_FRAUD_J2
+  parent: CRI_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: PRE_KBV_TRANSITION_PAGE_J2
+      response:
+        type: page
+        pageId: page-pre-kbv-transition
+
+PRE_KBV_TRANSITION_PAGE_J2:
+  name: PRE_KBV_TRANSITION_PAGEJ2
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_KBV_J2
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/kbv
+
+CRI_KBV_J2:
+  name: CRI_KBV_J2
+  parent: CRI_STATE
+  events:
+    end:
+      type: basic
+      name: end
+      targetState: IPV_SUCCESS_PAGE
+      response:
+        type: page
+        pageId: page-ipv-success
+
+# DRIVING LICENSE BRANCH
+CRI_DRIVING_LICENCE_J3:
+  name: CRI_DRIVING_LICENCE_J3
+  parent: CRI_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_ADDRESS_J3
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/address
+
+CRI_ADDRESS_J3:
+  name: CRI_ADDRESS_J3
+  parent: CRI_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_FRAUD_J3
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/fraud
+
+CRI_FRAUD_J3:
+  name: CRI_FRAUD_J3
+  parent: CRI_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: PRE_KBV_TRANSITION_PAGE_J3
+      response:
+        type: page
+        pageId: page-pre-kbv-transition
+
+PRE_KBV_TRANSITION_PAGE_J3:
+  name: PRE_KBV_TRANSITION_PAGE_J3
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_KBV_J3
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/kbv
+
+CRI_KBV_J3:
+  name: CRI_KBV_J3
+  parent: CRI_STATE
+  events:
+    end:
+      type: basic
+      name: end
+      targetState: IPV_SUCCESS_PAGE
+      response:
+        type: page
+        pageId: page-ipv-success
+
+# F2F branch
+CRI_CLAIMED_IDENTITY_J4:
+  name: CRI_CLAIMED_IDENTITY_J4
+  parent: CRI_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_ADDRESS_J4
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/address
+
+CRI_ADDRESS_J4:
+  name: CRI_ADDRESS_J4
+  parent: CRI_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_FRAUD_J4
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/fraud
+
+CRI_FRAUD_J4:
+  name: CRI_FRAUD_J4
+  parent: CRI_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_F2F_J4
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/f2f
+
+CRI_F2F_J4:
+  name: CRI_F2F_J4
+  parent: CRI_STATE
+  events:
+    pending:
+      type: basic
+      name: pending
+      targetState: F2F_HANDOFF_PAGE_J4
+      response:
+        type: page
+        pageId: page-face-to-face-handoff
+
+F2F_HANDOFF_PAGE_J4:
+  name: F2F_HANDOFF_PAGE
+  parent: ATTEMPT_RECOVERY_STATE
+
+
+
+# Original stuff below here. I think.
+
 IPV_IDENTITY_REUSE_PAGE:
   name: IPV_IDENTITY_REUSE_PAGE
   parent: END_JOURNEY
@@ -451,13 +704,6 @@ CRI_DCMAW:
       type: basic
       name: access-denied-multi-doc
       targetState: MULTIPLE_DOC_CHECK_PAGE
-      response:
-        type: page
-        pageId: page-multiple-doc-check
-    access-denied-multi-f2f-doc:
-      type: basic
-      name: access-denied-multi-f2f-doc
-      targetState: MULTIPLE_DOC_CHECK_PAGE_F2F
       response:
         type: page
         pageId: page-multiple-doc-check
