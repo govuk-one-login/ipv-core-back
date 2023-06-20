@@ -10,10 +10,10 @@ ATTEMPT_RECOVERY_STATE:
       response:
         type: journey
         journeyStepId: /journey/evaluate-gpg45-scores
-#  parent: ATTEMPT_RECOVERY_STATE
-# The above is removed from CRI_STATE. Will stick it back later.
+
 CRI_STATE:
   name: CRI_STATE
+  parent: ATTEMPT_RECOVERY_STATE
   events:
     error:
       type: basic
