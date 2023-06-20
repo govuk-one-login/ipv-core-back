@@ -178,7 +178,7 @@ MULTIPLE_DOC_CHECK_PAGE_J2:
         f2fBeta:
           type: basic
           name: f2fBeta
-          targetState: CRI_CLAIMED_IDENTITY
+          targetState: CRI_CLAIMED_IDENTITY_J4
           response:
             type: journey
             journeyStepId: /journey/cri/build-oauth-request/claimedIdentity
@@ -302,6 +302,60 @@ CRI_KBV_J3:
       response:
         type: page
         pageId: page-ipv-success
+
+# F2F branch
+CRI_CLAIMED_IDENTITY_J4:
+  name: CRI_CLAIMED_IDENTITY_J4
+  parent: CRI_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_ADDRESS_J4
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/address
+
+CRI_ADDRESS_J4:
+  name: CRI_ADDRESS_J4
+  parent: CRI_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_FRAUD_J4
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/fraud
+
+CRI_FRAUD_J4:
+  name: CRI_FRAUD_J4
+  parent: CRI_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CRI_F2F_J4
+      response:
+        type: journey
+        journeyStepId: /journey/cri/build-oauth-request/f2f
+
+CRI_F2F_J4:
+  name: CRI_F2F_J4
+  parent: CRI_STATE
+  events:
+    pending:
+      type: basic
+      name: pending
+      targetState: F2F_HANDOFF_PAGE_J4
+      response:
+        type: page
+        pageId: page-face-to-face-handoff
+
+F2F_HANDOFF_PAGE_J4:
+  name: F2F_HANDOFF_PAGE
+  parent: ATTEMPT_RECOVERY_STATE
+
 
 
 # Original stuff below here. I think.
