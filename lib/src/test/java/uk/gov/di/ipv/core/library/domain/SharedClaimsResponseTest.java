@@ -13,6 +13,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_2;
 
 class SharedClaimsResponseTest {
 
+    private static final String TEST_EMAIL_ADDRESS = "test@test.com";
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
@@ -51,10 +52,12 @@ class SharedClaimsResponseTest {
 
         Set<SharedClaims> sharedAttributes = Set.of(sharedClaims1, sharedClaims2);
 
-        SharedClaimsResponse sharedClaimsResponse = SharedClaimsResponse.from(sharedAttributes);
+        SharedClaimsResponse sharedClaimsResponse =
+                SharedClaimsResponse.from(sharedAttributes, TEST_EMAIL_ADDRESS);
 
         assertEquals(2, sharedClaimsResponse.getName().size());
         assertEquals(2, sharedClaimsResponse.getAddress().size());
         assertEquals(2, sharedClaimsResponse.getBirthDate().size());
+        assertEquals(TEST_EMAIL_ADDRESS, sharedClaimsResponse.getEmail());
     }
 }

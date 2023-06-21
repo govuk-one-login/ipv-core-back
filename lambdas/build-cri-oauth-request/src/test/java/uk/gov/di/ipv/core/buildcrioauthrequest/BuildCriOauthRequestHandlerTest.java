@@ -68,6 +68,7 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_3;
@@ -83,7 +84,6 @@ import static uk.gov.di.ipv.core.library.helpers.VerifiableCredentialGenerator.v
 class BuildCriOauthRequestHandlerTest {
 
     private static final String CRI_ID = "PassportIssuer";
-    private static final String CRI_NAME = "any";
     private static final String CRI_TOKEN_URL = "http://www.example.com";
     private static final String CRI_CREDENTIAL_URL = "http://www.example.com/credential";
     private static final String CRI_AUTHORIZE_URL = "http://www.example.com/authorize";
@@ -100,6 +100,7 @@ class BuildCriOauthRequestHandlerTest {
     public static final String CRI_OAUTH_SESSION_ID = "cri-oauth-session-id";
 
     private static final String JOURNEY_BASE_URL = "/journey/cri/build-oauth-request/";
+    private static final String TEST_EMAIL_ADDRESS = "test@test.com";
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -118,6 +119,7 @@ class BuildCriOauthRequestHandlerTest {
     private CredentialIssuerConfig addressCredentialIssuerConfig;
     private CredentialIssuerConfig dcmawCredentialIssuerConfig;
     private CredentialIssuerConfig kbvCredentialIssuerConfig;
+    private CredentialIssuerConfig f2fCredentialIssuerConfig;
     private BuildCriOauthRequestHandler underTest;
     private CriOAuthSessionItem criOAuthSessionItem;
     private ClientOAuthSessionItem clientOAuthSessionItem;
@@ -185,6 +187,18 @@ class BuildCriOauthRequestHandlerTest {
                         URI.create("http://www.example.com/callback/criId"),
                         true);
 
+        f2fCredentialIssuerConfig =
+                new CredentialIssuerConfig(
+                        new URI(CRI_TOKEN_URL),
+                        new URI(CRI_CREDENTIAL_URL),
+                        new URI(CRI_AUTHORIZE_URL),
+                        IPV_CLIENT_ID,
+                        "{}",
+                        RSA_ENCRYPTION_PUBLIC_JWK,
+                        "http://www.example.com/audience",
+                        URI.create("http://www.example.com/callback/criId"),
+                        true);
+
         criOAuthSessionItem =
                 CriOAuthSessionItem.builder()
                         .criOAuthSessionId(CRI_OAUTH_SESSION_ID)
@@ -216,7 +230,8 @@ class BuildCriOauthRequestHandlerTest {
                         .build();
 
         var response = handleRequest(input, context);
-        assert400Response(response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
+        assertErrorResponse(
+                HttpStatus.SC_BAD_REQUEST, response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
     }
 
     @Test
@@ -230,7 +245,8 @@ class BuildCriOauthRequestHandlerTest {
                         .build();
 
         var response = handleRequest(input, context);
-        assert400Response(response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
+        assertErrorResponse(
+                HttpStatus.SC_BAD_REQUEST, response, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
     }
 
     @Test
@@ -555,7 +571,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(TEST_USER_ID, signedJWT.getJWTClaimsSet().getSubject());
         assertEquals(CRI_AUDIENCE, signedJWT.getJWTClaimsSet().getAudience().get(0));
 
-        assertEquals(3, claimsSet.get(TEST_SHARED_CLAIMS).size());
+        assertEquals(4, claimsSet.get(TEST_SHARED_CLAIMS).size());
         JsonNode vcAttributes = claimsSet.get(TEST_SHARED_CLAIMS);
 
         JsonNode address = vcAttributes.get("address");
@@ -903,11 +919,14 @@ class BuildCriOauthRequestHandlerTest {
     void shouldOnlyAllowCRIConfiguredSharedClaimAttr() throws Exception {
         when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
                 .thenReturn(kbvCredentialIssuerConfig);
+        when(configService.getAllowedSharedAttributes(CRI_ID))
+                .thenReturn("name,birthDate,address,email");
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionItem.getEmail()).thenReturn(null);
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(
                         List.of(
@@ -955,6 +974,70 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(3, sharedClaims.get("name").size());
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(1, sharedClaims.get("address").size());
+        assertTrue(sharedClaims.get("email").isNull());
+        verify(mockIpvSessionService, times(1)).updateIpvSession(any());
+    }
+
+    @Test
+    void shouldOnlyEmailForF2FAndAllowCRIConfiguredSharedClaimAttr() throws Exception {
+        when(configService.getCredentialIssuerActiveConnectionConfig(F2F_CRI))
+                .thenReturn(f2fCredentialIssuerConfig);
+        when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(addressCredentialIssuerConfig);
+        when(configService.getAllowedSharedAttributes(F2F_CRI))
+                .thenReturn("name,birthDate,address,email");
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionItem.getEmail()).thenReturn(TEST_EMAIL_ADDRESS);
+        when(mockIpvSessionItem.getCurrentVcStatuses())
+                .thenReturn(
+                        List.of(
+                                new VcStatusDto(IPV_ISSUER, true),
+                                new VcStatusDto(ADDRESS_ISSUER, true)));
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER),
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_3), ADDRESS_ISSUER)));
+        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any(), any()))
+                .thenReturn(criOAuthSessionItem);
+        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        JourneyRequest input =
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(F2F_CRI)
+                        .build();
+
+        var responseJson = handleRequest(input, context);
+        CriResponse response = objectMapper.readValue(responseJson, CriResponse.class);
+
+        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
+        List<NameValuePair> queryParams = redirectUri.getQueryParams();
+
+        Optional<NameValuePair> request =
+                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
+
+        assertTrue(request.isPresent());
+        JWEObject jweObject = JWEObject.parse(request.get().getValue());
+        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
+
+        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
+        JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
+
+        JsonNode sharedClaims = claimsSet.get(TEST_SHARED_CLAIMS);
+        assertEquals(3, sharedClaims.get("name").size());
+        assertEquals(2, sharedClaims.get("birthDate").size());
+        assertEquals(1, sharedClaims.get("address").size());
+        assertEquals(TEST_EMAIL_ADDRESS, sharedClaims.get("email").asText());
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
     }
 
@@ -963,11 +1046,12 @@ class BuildCriOauthRequestHandlerTest {
         return objectMapper.readValue(response.getBody(), Map.class);
     }
 
-    private void assert400Response(String responseJson, ErrorResponse errorResponse)
+    private void assertErrorResponse(
+            int httpStatusCode, String responseJson, ErrorResponse errorResponse)
             throws JsonProcessingException {
         JourneyErrorResponse response =
                 objectMapper.readValue(responseJson, JourneyErrorResponse.class);
-        assertEquals(HttpStatus.SC_BAD_REQUEST, response.getStatusCode());
+        assertEquals(httpStatusCode, response.getStatusCode());
         assertEquals(errorResponse.getCode(), response.getCode());
         assertEquals(errorResponse.getMessage(), response.getMessage());
     }
