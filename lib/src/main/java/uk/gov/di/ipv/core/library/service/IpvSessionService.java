@@ -93,7 +93,10 @@ public class IpvSessionService {
     }
 
     public IpvSessionItem generateIpvSession(
-            String clientOAuthSessionId, ErrorObject errorObject, Boolean debugJourney, String email) {
+            String clientOAuthSessionId,
+            ErrorObject errorObject,
+            Boolean debugJourney,
+            String email) {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());

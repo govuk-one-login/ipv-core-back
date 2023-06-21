@@ -112,7 +112,8 @@ class IpvSessionServiceTest {
     @Test
     void shouldCreateSessionItem() {
         IpvSessionItem ipvSessionItem =
-                ipvSessionService.generateIpvSession(SecureTokenHelper.generate(), null, false, null);
+                ipvSessionService.generateIpvSession(
+                        SecureTokenHelper.generate(), null, false, null);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -131,7 +132,8 @@ class IpvSessionServiceTest {
     @Test
     void shouldCreateSessionItemForDebugJourney() {
         IpvSessionItem ipvSessionItem =
-                ipvSessionService.generateIpvSession(SecureTokenHelper.generate(), null, true, null);
+                ipvSessionService.generateIpvSession(
+                        SecureTokenHelper.generate(), null, true, null);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
