@@ -88,12 +88,17 @@ CHECK_EXISTING_IDENTITY:
   parent: ATTEMPT_RECOVERY_STATE
   events:
     next:
-      type: basic
+      type: cri
       name: next
       targetState: CRI_DCMAW_J1
-      response:
-        type: journey
-        journeyStepId: /journey/cri/build-oauth-request/dcmaw
+      criId: dcmaw
+      disabled:
+        type: basic
+        name: access-denied-multi-doc
+        targetState: MULTIPLE_DOC_CHECK_PAGE_J2
+        response:
+          type: page
+          pageId: page-multiple-doc-check
     reuse:
       type: basic
       name: reuse

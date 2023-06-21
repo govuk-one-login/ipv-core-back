@@ -744,6 +744,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(validateOauthCallback);
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.generate());
+        ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_NO_SELECT_CRI_JOURNEY);
 
         when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockConfigService.getEnvironmentVariable(EnvironmentVariable.ENVIRONMENT))
