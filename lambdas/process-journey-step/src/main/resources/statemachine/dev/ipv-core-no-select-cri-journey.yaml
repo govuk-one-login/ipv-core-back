@@ -13,7 +13,6 @@ ATTEMPT_RECOVERY_STATE:
 
 CRI_STATE:
   name: CRI_STATE
-  parent: ATTEMPT_RECOVERY_STATE
   events:
     error:
       type: basic
@@ -212,6 +211,11 @@ CRI_ADDRESS_J2:
       response:
         type: journey
         journeyStepId: /journey/cri/build-oauth-request/fraud
+    attempt-recovery:
+      type: cri
+      name: attempt-recovery
+      targetState: CRI_ADDRESS_J2
+      criId: address
 
 CRI_FRAUD_J2:
   name: CRI_FRAUD_J2
