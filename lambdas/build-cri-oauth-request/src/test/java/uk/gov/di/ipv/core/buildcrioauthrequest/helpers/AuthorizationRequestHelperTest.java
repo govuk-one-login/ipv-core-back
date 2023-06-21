@@ -68,13 +68,15 @@ class AuthorizationRequestHelperTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_JOURNEY_ID = "test-journey-id";
     private static final String TEST_SHARED_CLAIMS = "shared_claims";
+    private static final String TEST_EMAIL_ADDRESS = "test@hotmail.com";
     private static final String OAUTH_STATE = SecureTokenHelper.generate();
 
     private final SharedClaimsResponse sharedClaims =
             new SharedClaimsResponse(
                     Set.of(new Name(List.of(new NameParts("Dan", "first_name")))),
                     Set.of(new BirthDate("2011-01-01")),
-                    Set.of(new Address()));
+                    Set.of(new Address()),
+                    TEST_EMAIL_ADDRESS);
 
     private ECDSASigner signer;
 

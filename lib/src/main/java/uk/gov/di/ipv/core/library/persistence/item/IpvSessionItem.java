@@ -37,6 +37,7 @@ public class IpvSessionItem implements DynamodbItem {
     private long ttl;
     private IpvJourneyTypes journeyType;
     private List<ContraIndicatorMitigationDetailsDto> contraIndicatorMitigationDetails;
+    private String email;
 
     @DynamoDbPartitionKey
     public String getIpvSessionId() {

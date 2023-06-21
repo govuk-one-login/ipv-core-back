@@ -8,7 +8,7 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-@JsonPropertyOrder({"name", "birthDate", "address"})
+@JsonPropertyOrder({"name", "birthDate", "address", "email"})
 public class SharedClaimsResponse {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -16,11 +16,14 @@ public class SharedClaimsResponse {
     private final Set<Name> name;
     private final Set<BirthDate> birthDate;
     private final Set<Address> address;
+    private final String email;
 
-    public SharedClaimsResponse(Set<Name> name, Set<BirthDate> birthDate, Set<Address> address) {
+    public SharedClaimsResponse(
+            Set<Name> name, Set<BirthDate> birthDate, Set<Address> address, String email) {
         this.name = name;
         this.birthDate = birthDate;
         this.address = address;
+        this.email = email;
     }
 
     public Set<Name> getName() {
@@ -35,7 +38,11 @@ public class SharedClaimsResponse {
         return address;
     }
 
-    public static SharedClaimsResponse from(Set<SharedClaims> sharedAttributes) {
+    public String getEmail() {
+        return email;
+    }
+
+    public static SharedClaimsResponse from(Set<SharedClaims> sharedAttributes, String email) {
         Set<Name> nameSet = new LinkedHashSet<>();
         Set<BirthDate> birthDateSet = new LinkedHashSet<>();
         Set<Address> addressSet = new LinkedHashSet<>();
@@ -55,6 +62,6 @@ public class SharedClaimsResponse {
                         .with("addresses", addressSet.size());
         LOGGER.info(message);
 
-        return new SharedClaimsResponse(nameSet, birthDateSet, addressSet);
+        return new SharedClaimsResponse(nameSet, birthDateSet, addressSet, email);
     }
 }

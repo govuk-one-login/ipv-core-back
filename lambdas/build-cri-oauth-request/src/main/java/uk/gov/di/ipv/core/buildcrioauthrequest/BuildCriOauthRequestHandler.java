@@ -70,6 +70,7 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
     public static final String SHARED_CLAIM_ATTR_NAME = "name";
     public static final String SHARED_CLAIM_ATTR_BIRTH_DATE = "birthDate";
     public static final String SHARED_CLAIM_ATTR_ADDRESS = "address";
+    public static final String SHARED_CLAIM_ATTR_EMAIL = "email";
     public static final String DEFAULT_ALLOWED_SHARED_ATTR = "name,birthDate,address";
     public static final String REGEX_COMMA_SEPARATION = "\\s*,\\s*";
     public static final Pattern LAST_SEGMENT_PATTERN = Pattern.compile("/([^/]+)$");
@@ -163,6 +164,7 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
             String oauthState = SecureTokenHelper.generate();
             JWEObject jweObject =
                     signEncryptJar(
+                            ipvSessionItem,
                             credentialIssuerConfig,
                             userId,
                             oauthState,
@@ -250,6 +252,7 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
     }
 
     private JWEObject signEncryptJar(
+            IpvSessionItem ipvSessionItem,
             CredentialIssuerConfig credentialIssuerConfig,
             String userId,
             String oauthState,
@@ -258,7 +261,7 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
             String criId)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException {
         SharedClaimsResponse sharedClaimsResponse =
-                getSharedAttributes(userId, currentVcStatuses, criId);
+                getSharedAttributes(ipvSessionItem, userId, currentVcStatuses, criId);
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
                         sharedClaimsResponse,
@@ -289,7 +292,10 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
 
     @Tracing
     private SharedClaimsResponse getSharedAttributes(
-            String userId, List<VcStatusDto> currentVcStatuses, String criId)
+            IpvSessionItem ipvSessionItem,
+            String userId,
+            List<VcStatusDto> currentVcStatuses,
+            String criId)
             throws HttpResponseExceptionWithErrorBody {
         CredentialIssuerConfig addressCriConfig =
                 credentialIssuerConfigService.getCredentialIssuerActiveConnectionConfig(
@@ -346,7 +352,18 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
                         500, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
             }
         }
-        return SharedClaimsResponse.from(sharedClaimsSet);
+        return SharedClaimsResponse.from(
+                sharedClaimsSet,
+                getEmailAddressFromIpvSession(ipvSessionItem, criAllowedSharedClaimAttrs));
+    }
+
+    private String getEmailAddressFromIpvSession(
+            IpvSessionItem ipvSessionItem, List<String> allowedSharedAttr) {
+        if (ipvSessionItem.getEmail() != null
+                && allowedSharedAttr.contains(SHARED_CLAIM_ATTR_EMAIL)) {
+            return ipvSessionItem.getEmail();
+        }
+        return null;
     }
 
     private void verifyForAllowedSharedClaimAttrs(
