@@ -874,7 +874,6 @@ class SelectCriHandlerTest {
                                 new VcStatusDto(ADDRESS_CRI_ISS, true),
                                 new VcStatusDto(FRAUD_CRI_ISS, true),
                                 new VcStatusDto(KBV_CRI_ISS, false)));
-        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(false);
 
         JourneyRequest input = createRequestEvent();
 
@@ -894,9 +893,6 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(Collections.emptyList());
         when(mockIpvSessionItem.getCurrentVcStatuses()).thenReturn(null);
-
-        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(false);
-
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
                 .thenReturn(createCriConfig(DRIVING_LICENCE_CRI));
 
@@ -966,9 +962,6 @@ class SelectCriHandlerTest {
                 .thenReturn(createCriConfig(CLAIMED_IDENTITY_CRI_ISS));
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
                 .thenReturn(createCriConfig(PASSPORT_CRI_ISS));
-
-        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(false);
-
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
                 .thenReturn(createCriConfig(DRIVING_LICENCE_CRI));
         ClientOAuthSessionItem clientOAuthSessionItem = getClientOAuthSessionItem();
