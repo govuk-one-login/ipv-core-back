@@ -92,12 +92,36 @@ CHECK_EXISTING_IDENTITY:
       targetState: CRI_DCMAW_J1
       criId: dcmaw
       disabled:
-        type: basic
+        type: conditional
         name: access-denied-multi-doc
         targetState: MULTIPLE_DOC_CHECK_PAGE_J2
         response:
           type: page
           pageId: page-multiple-doc-check
+
+        requires:
+          - type: enabledCris
+            requiredCount: 2
+            criIds:
+              - ukPassport
+              - drivingLicence
+              - claimedIdentity
+        requiredNotMet:
+          type: firstEnabled
+          criEvents:
+            - type: cri
+              name: next
+              targetState: CRI_UK_PASSPORT_J2
+              criId: ukPassport
+            - type: cri
+              name: next
+              targetState: CRI_DRIVING_LICENCE_J3
+              criId: drivingLicence
+            - type: cri
+              name: next
+              targetState: CRI_CLAIMED_IDENTITY_J4
+              criId: claimedIdentity
+
     reuse:
       type: basic
       name: reuse

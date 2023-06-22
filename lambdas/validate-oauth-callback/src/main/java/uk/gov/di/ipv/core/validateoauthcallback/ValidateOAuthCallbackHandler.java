@@ -52,16 +52,16 @@ public class ValidateOAuthCallbackHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String JOURNEY = "journey";
     private static final Map<String, Object> JOURNEY_ACCESS_TOKEN =
-            Map.of(JOURNEY, "/journey/cri/access-token");
+            Map.of(JOURNEY, "/journey/cri/access-token"); // Routed in step function to retrieve CRI access token
     private static final Map<String, Object> JOURNEY_ACCESS_DENIED =
-            Map.of(JOURNEY, "/journey/access-denied");
+            Map.of(JOURNEY, "/journey/access-denied"); // return to frontend
     private static final Map<String, Object> JOURNEY_ACCESS_DENIED_MULTI =
-            Map.of(JOURNEY, "/journey/access-denied-multi-doc");
+            Map.of(JOURNEY, "/journey/access-denied-multi-doc"); // return to frontend
     private static final Map<String, Object> JOURNEY_ACCESS_DENIED_MULTI_WITH_F2F =
-            Map.of(JOURNEY, "/journey/access-denied-multi-f2f-doc");
+            Map.of(JOURNEY, "/journey/access-denied-multi-f2f-doc"); // return to frontend
     private static final Map<String, Object> JOURNEY_TEMPORARILY_UNAVAILABLE =
-            Map.of(JOURNEY, "/journey/temporarily-unavailable");
-    private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, "/journey/error");
+            Map.of(JOURNEY, "/journey/temporarily-unavailable"); // return to frontend
+    private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, "/journey/error"); // return to frontend
     private static final List<String> ALLOWED_OAUTH_ERROR_CODES =
             Arrays.asList(
                     OAuth2Error.INVALID_REQUEST_CODE,

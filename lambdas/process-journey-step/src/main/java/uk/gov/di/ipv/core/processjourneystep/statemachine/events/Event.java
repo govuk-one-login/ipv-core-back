@@ -9,7 +9,8 @@ import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyConte
 @JsonSubTypes({
     @JsonSubTypes.Type(value = BasicEvent.class, name = "basic"),
     @JsonSubTypes.Type(value = FeatureSetEvent.class, name = "featureSet"),
-    @JsonSubTypes.Type(value = CriEvent.class, name = "cri")
+    @JsonSubTypes.Type(value = CriEvent.class, name = "cri"),
+    @JsonSubTypes.Type(value = ConditionalEvent.class, name = "conditional")
 })
 public interface Event {
     StateMachineResult resolve(JourneyContext journeyContext);

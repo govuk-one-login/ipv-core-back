@@ -138,21 +138,21 @@ public class SelectCriHandler extends JourneyRequestLambda {
             List<VcStatusDto> currentVcStatuses,
             String userId)
             throws ParseException {
-        Optional<JourneyResponse> claimedIdentityResponse =
+        Optional<JourneyResponse> claimedIdentityResponse = // claimed identity journey
                 getCriResponse(
                         visitedCredentialIssuers,
                         currentVcStatuses,
                         CLAIMED_IDENTITY_CRI,
                         CLAIMED_IDENTITY_CRI,
                         userId);
-        Optional<JourneyResponse> passportResponse =
+        Optional<JourneyResponse> passportResponse = // if driving licence enabled then multidoc page, else passport journey
                 getCriResponse(
                         visitedCredentialIssuers,
                         currentVcStatuses,
                         PASSPORT_CRI,
                         PASSPORT_CRI,
                         userId);
-        Optional<JourneyResponse> drivingLicenceResponse =
+        Optional<JourneyResponse> drivingLicenceResponse = // driving licence journey
                 getCriResponse(
                         visitedCredentialIssuers,
                         currentVcStatuses,
