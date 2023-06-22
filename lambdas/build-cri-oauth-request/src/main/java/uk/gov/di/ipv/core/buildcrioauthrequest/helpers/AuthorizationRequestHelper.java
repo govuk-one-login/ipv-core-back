@@ -19,6 +19,7 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
+import uk.gov.di.ipv.core.library.domain.SharedClaimsResponseDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -77,7 +78,16 @@ public class AuthorizationRequestHelper {
                         .claim("govuk_signin_journey_id", govukSigninJourneyId);
 
         if (Objects.nonNull(sharedClaims)) {
-            claimsSetBuilder.claim(SHARED_CLAIMS, sharedClaims);
+            if (sharedClaims.getEmailAddress() != null) {
+                claimsSetBuilder.claim(SHARED_CLAIMS, sharedClaims);
+            } else {
+                SharedClaimsResponseDto response =
+                        new SharedClaimsResponseDto(
+                                sharedClaims.getName(),
+                                sharedClaims.getBirthDate(),
+                                sharedClaims.getAddress());
+                claimsSetBuilder.claim(SHARED_CLAIMS, response);
+            }
         }
 
         SignedJWT signedJWT = new SignedJWT(header, claimsSetBuilder.build());

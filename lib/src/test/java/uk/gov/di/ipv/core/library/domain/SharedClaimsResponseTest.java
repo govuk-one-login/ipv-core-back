@@ -58,6 +58,6 @@ class SharedClaimsResponseTest {
         assertEquals(2, sharedClaimsResponse.getName().size());
         assertEquals(2, sharedClaimsResponse.getAddress().size());
         assertEquals(2, sharedClaimsResponse.getBirthDate().size());
-        assertEquals(TEST_EMAIL_ADDRESS, sharedClaimsResponse.getEmail());
+        assertEquals(TEST_EMAIL_ADDRESS, sharedClaimsResponse.getEmailAddress());
     }
 }
