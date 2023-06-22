@@ -18,6 +18,7 @@ import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -112,7 +113,8 @@ class IpvSessionServiceTest {
     @Test
     void shouldCreateSessionItem() {
         IpvSessionItem ipvSessionItem =
-                ipvSessionService.generateIpvSession(SecureTokenHelper.generate(), null, false);
+                ipvSessionService.generateIpvSession(
+                        SecureTokenHelper.generate(), null, false, null);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -131,7 +133,30 @@ class IpvSessionServiceTest {
     @Test
     void shouldCreateSessionItemForDebugJourney() {
         IpvSessionItem ipvSessionItem =
-                ipvSessionService.generateIpvSession(SecureTokenHelper.generate(), null, true);
+                ipvSessionService.generateIpvSession(
+                        SecureTokenHelper.generate(), null, true, null);
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockDataStore)
+                .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
+        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
+        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
+        assertNull(ipvSessionItemArgumentCaptor.getValue().getEmail());
+
+        assertEquals(
+                ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
+                ipvSessionItem.getIpvSessionId());
+        assertEquals(
+                DEBUG_EVALUATE_GPG45_SCORES_STATE,
+                ipvSessionItemArgumentCaptor.getValue().getUserState());
+    }
+
+    @Test
+    void shouldCreateSessionItemWithEmail() {
+        IpvSessionItem ipvSessionItem =
+                ipvSessionService.generateIpvSession(
+                        SecureTokenHelper.generate(), null, true, "test@test.com");
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -146,6 +171,7 @@ class IpvSessionServiceTest {
         assertEquals(
                 DEBUG_EVALUATE_GPG45_SCORES_STATE,
                 ipvSessionItemArgumentCaptor.getValue().getUserState());
+        assertEquals(ipvSessionItemArgumentCaptor.getValue().getEmail(), "test@test.com");
     }
 
     @Test
@@ -153,7 +179,7 @@ class IpvSessionServiceTest {
         ErrorObject testErrorObject = new ErrorObject("server_error", "Test error");
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
-                        SecureTokenHelper.generate(), testErrorObject, false);
+                        SecureTokenHelper.generate(), testErrorObject, false, null);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
