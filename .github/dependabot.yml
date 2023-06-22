@@ -17,3 +17,18 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: [ "version-update:semver-patch" ]
+  - package-ecosystem: "npm"
+    directory: "/lambdas/delete-user-data"
+    schedule:
+      interval: "daily"
+      time: "03:00"
+    target-branch: main
+    labels:
+    - dependabot
+    commit-message:
+      prefix: BAU
+    allow:
+      - dependency-type: "all"
+    ignore:
+      - dependency-name: "*"
+        update-types: [ "version-update:semver-patch" ]
