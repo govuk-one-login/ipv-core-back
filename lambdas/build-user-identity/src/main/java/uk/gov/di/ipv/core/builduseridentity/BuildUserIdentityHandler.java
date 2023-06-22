@@ -70,7 +70,7 @@ public class BuildUserIdentityHandler
 
     @ExcludeFromGeneratedCoverageReport
     public BuildUserIdentityHandler() {
-        this.configService = new ConfigService();
+        this.configService = ConfigService.getInstance();
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);

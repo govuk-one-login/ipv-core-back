@@ -105,7 +105,7 @@ public class RetrieveCriCredentialHandler
 
     @ExcludeFromGeneratedCoverageReport
     public RetrieveCriCredentialHandler() {
-        this.configService = new ConfigService();
+        this.configService = ConfigService.getInstance();
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);

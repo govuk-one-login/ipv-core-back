@@ -69,7 +69,7 @@ public class IssueClientAccessTokenHandler
 
     @ExcludeFromGeneratedCoverageReport
     public IssueClientAccessTokenHandler() {
-        this.configService = new ConfigService();
+        this.configService = ConfigService.getInstance();
         this.accessTokenService = new AccessTokenService(configService);
         this.sessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);

@@ -64,7 +64,7 @@ public class BuildClientOauthResponseHandler extends JourneyRequestLambda {
 
     @ExcludeFromGeneratedCoverageReport
     public BuildClientOauthResponseHandler() {
-        this.configService = new ConfigService();
+        this.configService = ConfigService.getInstance();
         this.sessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.authRequestValidator = new AuthRequestValidator(configService);

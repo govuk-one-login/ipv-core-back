@@ -55,7 +55,7 @@ public class DataStoreIpvSessionIT {
                     "The environment variable 'IPV_SESSIONS_TABLE_NAME' must be provided to run this test");
         }
 
-        ConfigService configService = new ConfigService();
+        ConfigService configService = ConfigService.getInstance();
 
         ipvSessionItemDataStore =
                 new DataStore<>(

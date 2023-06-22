@@ -73,7 +73,7 @@ public class EndMitigationJourneyHandler
 
     @ExcludeFromGeneratedCoverageReport
     public EndMitigationJourneyHandler() {
-        this.configService = new ConfigService();
+        this.configService = ConfigService.getInstance();
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.ciStorageService = new CiStorageService(configService);

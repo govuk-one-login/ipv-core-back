@@ -67,7 +67,7 @@ public class RetrieveCriOauthAccessTokenHandler
 
     @ExcludeFromGeneratedCoverageReport
     public RetrieveCriOauthAccessTokenHandler() {
-        this.configService = new ConfigService();
+        this.configService = ConfigService.getInstance();
         this.authCodeToAccessTokenService =
                 new AuthCodeToAccessTokenService(
                         configService, new KmsEs256Signer(configService.getSigningKeyId()));

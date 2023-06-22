@@ -74,7 +74,7 @@ public class BuildProvenUserIdentityDetailsHandler extends JourneyRequestLambda 
 
     @ExcludeFromGeneratedCoverageReport
     public BuildProvenUserIdentityDetailsHandler() {
-        this.configService = new ConfigService();
+        this.configService = ConfigService.getInstance();
         this.ipvSessionService = new IpvSessionService(configService);
         this.userIdentityService = new UserIdentityService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);

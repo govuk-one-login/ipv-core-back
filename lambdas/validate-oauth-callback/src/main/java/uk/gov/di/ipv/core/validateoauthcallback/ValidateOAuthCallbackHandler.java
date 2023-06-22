@@ -96,7 +96,7 @@ public class ValidateOAuthCallbackHandler
 
     @ExcludeFromGeneratedCoverageReport
     public ValidateOAuthCallbackHandler() {
-        this.configService = new ConfigService();
+        this.configService = ConfigService.getInstance();
         this.ipvSessionService = new IpvSessionService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.componentId = this.configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);

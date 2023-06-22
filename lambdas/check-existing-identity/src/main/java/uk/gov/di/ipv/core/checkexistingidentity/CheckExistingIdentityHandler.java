@@ -107,7 +107,7 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
     @SuppressWarnings("unused") // Used through dependency injection
     @ExcludeFromGeneratedCoverageReport
     public CheckExistingIdentityHandler() {
-        this.configService = new ConfigService();
+        this.configService = ConfigService.getInstance();
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService);

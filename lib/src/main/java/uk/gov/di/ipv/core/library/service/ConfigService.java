@@ -52,11 +52,19 @@ public class ConfigService {
     private static final String API_KEY = "apiKey";
     private static final String CORE_BASE_PATH = "/%s/core/";
     private static final Logger LOGGER = LogManager.getLogger();
+    private static ConfigService instance;
     private final SSMProvider ssmProvider;
     private final SecretsProvider secretsProvider;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private String featureSet;
+
+    public static ConfigService getInstance() {
+        if (instance == null) {
+            instance = new ConfigService();
+        }
+        return instance;
+    }
 
     public ConfigService(
             SSMProvider ssmProvider, SecretsProvider secretsProvider, String featureSet) {
@@ -69,7 +77,7 @@ public class ConfigService {
         this(ssmProvider, secretsProvider, null);
     }
 
-    public ConfigService(String featureSet) {
+    protected ConfigService() {
         if (isRunningLocally()) {
             this.ssmProvider =
                     ParamManager.getSsmProvider(
@@ -101,11 +109,6 @@ public class ConfigService {
                                             .build())
                             .defaultMaxAge(3, MINUTES);
         }
-        setFeatureSet(featureSet);
-    }
-
-    public ConfigService() {
-        this(null);
     }
 
     public SSMProvider getSsmProvider() {

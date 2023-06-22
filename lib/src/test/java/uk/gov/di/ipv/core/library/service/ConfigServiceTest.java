@@ -87,7 +87,7 @@ class ConfigServiceTest {
                 "software.amazon.awssdk.http.service.impl",
                 "software.amazon.awssdk.http.urlconnection.UrlConnectionSdkHttpService");
 
-        SSMProvider ssmProvider = new ConfigService().getSsmProvider();
+        SSMProvider ssmProvider = ConfigService.getInstance().getSsmProvider();
         assertThrows(NullPointerException.class, () -> ssmProvider.get("any-old-thing"));
 
         HashMap requestBody =
