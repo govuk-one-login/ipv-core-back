@@ -30,8 +30,6 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_ALLOWED_USER_IDS;
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.DCMAW_SHOULD_SEND_ALL_USERS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
@@ -608,9 +606,7 @@ class SelectCriHandlerTest {
                 .thenReturn(createCriConfig(PASSPORT_CRI_ISS));
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
                 .thenReturn(createCriConfig(DRIVING_LICENSE_CRI_ISS));
-
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
-        when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
         JourneyRequest input = createRequestEvent();
 
@@ -634,7 +630,6 @@ class SelectCriHandlerTest {
                 .thenReturn(List.of(new VisitedCredentialIssuerDetailsDto(DCMAW_CRI, true, null)));
 
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
-        when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
         JourneyRequest input = createRequestEvent();
 
@@ -659,14 +654,12 @@ class SelectCriHandlerTest {
                         List.of(
                                 new VcStatusDto(DCMAW_CRI_ISS, true),
                                 new VcStatusDto(ADDRESS_CRI_ISS, true)));
-
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(
                         List.of(
                                 new VisitedCredentialIssuerDetailsDto(DCMAW_CRI, true, null),
                                 new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null)));
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
-        when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
         JourneyRequest input = createRequestEvent();
 
@@ -692,11 +685,9 @@ class SelectCriHandlerTest {
                 .thenReturn(createCriConfig(ADDRESS_CRI_ISS));
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(List.of(new VcStatusDto(PASSPORT_CRI_ISS, true)));
-
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(Collections.emptyList());
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
-        when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
         JourneyRequest input = createRequestEvent();
 
@@ -733,8 +724,6 @@ class SelectCriHandlerTest {
                                 new VcStatusDto(ADDRESS_CRI_ISS, true),
                                 new VcStatusDto(FRAUD_CRI_ISS, true)));
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
-        when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
-
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
                 .thenReturn(createCriConfig(DCMAW_CRI_ISS));
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
@@ -763,8 +752,6 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(List.of(new VisitedCredentialIssuerDetailsDto(DCMAW_CRI, true, null)));
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
-        when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
-
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
                 .thenReturn(createCriConfig(DRIVING_LICENCE_CRI));
 
@@ -792,7 +779,6 @@ class SelectCriHandlerTest {
                                 new VisitedCredentialIssuerDetailsDto(
                                         DCMAW_CRI, false, "access_denied")));
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
-        when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
                 .thenReturn(createCriConfig(DRIVING_LICENCE_CRI));
@@ -822,7 +808,6 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(List.of(new VcStatusDto(DCMAW_CRI_ISS, true)));
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
-        when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("true");
 
         JourneyRequest input = createRequestEvent();
 
@@ -889,7 +874,6 @@ class SelectCriHandlerTest {
                                 new VcStatusDto(ADDRESS_CRI_ISS, true),
                                 new VcStatusDto(FRAUD_CRI_ISS, true),
                                 new VcStatusDto(KBV_CRI_ISS, false)));
-        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(false);
 
         JourneyRequest input = createRequestEvent();
 
@@ -909,9 +893,6 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(Collections.emptyList());
         when(mockIpvSessionItem.getCurrentVcStatuses()).thenReturn(null);
-
-        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(false);
-
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
                 .thenReturn(createCriConfig(DRIVING_LICENCE_CRI));
 
@@ -936,9 +917,6 @@ class SelectCriHandlerTest {
                 .thenReturn(Collections.emptyList());
 
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
-        when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("false");
-        when(mockConfigService.getSsmParameter(DCMAW_ALLOWED_USER_IDS))
-                .thenReturn("test-user-id,test-user-id-2,test-user-id-3");
 
         JourneyRequest input = createRequestEvent();
 
@@ -965,7 +943,6 @@ class SelectCriHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
 
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
-        when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("false");
 
         JourneyRequest input = createRequestEvent();
 
@@ -985,12 +962,6 @@ class SelectCriHandlerTest {
                 .thenReturn(createCriConfig(CLAIMED_IDENTITY_CRI_ISS));
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
                 .thenReturn(createCriConfig(PASSPORT_CRI_ISS));
-
-        when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
-        when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS)).thenReturn("false");
-        when(mockConfigService.getSsmParameter(DCMAW_ALLOWED_USER_IDS))
-                .thenReturn("test-user-id,test-user-id-2,test-user-id-3");
-
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
                 .thenReturn(createCriConfig(DRIVING_LICENCE_CRI));
         ClientOAuthSessionItem clientOAuthSessionItem = getClientOAuthSessionItem();
@@ -1020,8 +991,6 @@ class SelectCriHandlerTest {
                 .thenReturn(createCriConfig(DRIVING_LICENSE_CRI_ISS));
 
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
-        when(mockConfigService.getSsmParameter(DCMAW_SHOULD_SEND_ALL_USERS))
-                .thenReturn(String.valueOf(true));
 
         JourneyRequest input = createRequestEvent();
 

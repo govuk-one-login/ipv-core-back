@@ -10,8 +10,6 @@ public enum ConfigurationVariable {
     JAR_KMS_ENCRYPTION_KEY_ID("self/jarKmsEncryptionKeyId"),
     JWT_TTL_SECONDS("self/jwtTtlSeconds"),
     MAX_ALLOWED_AUTH_CLIENT_TTL("self/maxAllowedAuthClientTtl"),
-    DCMAW_SHOULD_SEND_ALL_USERS("self/journey/dcmawShouldSendAllUsers"),
-    DCMAW_ALLOWED_USER_IDS("self/journey/dcmawAllowedUserIds"),
     AUTH_CODE_EXPIRY_SECONDS("self/authCodeExpirySeconds"),
     PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY("clients/%s/publicKeyMaterialForCoreToVerify"),
     CLIENT_VALID_REDIRECT_URLS("clients/%s/validRedirectUrls"),
