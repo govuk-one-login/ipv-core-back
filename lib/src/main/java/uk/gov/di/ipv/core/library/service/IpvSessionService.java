@@ -96,7 +96,7 @@ public class IpvSessionService {
             String clientOAuthSessionId,
             ErrorObject errorObject,
             Boolean debugJourney,
-            String email) {
+            String emailAddress) {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
@@ -119,8 +119,8 @@ public class IpvSessionService {
             ipvSessionItem.setErrorDescription(errorObject.getDescription());
         }
 
-        if (email != null) {
-            ipvSessionItem.setEmail(email);
+        if (emailAddress != null) {
+            ipvSessionItem.setEmailAddress(emailAddress);
         }
 
         dataStore.create(ipvSessionItem, BACKEND_SESSION_TTL);

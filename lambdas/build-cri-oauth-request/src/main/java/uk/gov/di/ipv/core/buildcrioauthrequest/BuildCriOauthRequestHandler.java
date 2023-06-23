@@ -70,7 +70,7 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
     public static final String SHARED_CLAIM_ATTR_NAME = "name";
     public static final String SHARED_CLAIM_ATTR_BIRTH_DATE = "birthDate";
     public static final String SHARED_CLAIM_ATTR_ADDRESS = "address";
-    public static final String SHARED_CLAIM_ATTR_EMAIL = "email";
+    public static final String SHARED_CLAIM_ATTR_EMAIL = "emailAddress";
     public static final String DEFAULT_ALLOWED_SHARED_ATTR = "name,birthDate,address";
     public static final String REGEX_COMMA_SEPARATION = "\\s*,\\s*";
     public static final Pattern LAST_SEGMENT_PATTERN = Pattern.compile("/([^/]+)$");
@@ -359,9 +359,9 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
 
     private String getEmailAddressFromIpvSession(
             IpvSessionItem ipvSessionItem, List<String> allowedSharedAttr) {
-        if (ipvSessionItem.getEmail() != null
+        if (ipvSessionItem.getEmailAddress() != null
                 && allowedSharedAttr.contains(SHARED_CLAIM_ATTR_EMAIL)) {
-            return ipvSessionItem.getEmail();
+            return ipvSessionItem.getEmailAddress();
         }
         return null;
     }

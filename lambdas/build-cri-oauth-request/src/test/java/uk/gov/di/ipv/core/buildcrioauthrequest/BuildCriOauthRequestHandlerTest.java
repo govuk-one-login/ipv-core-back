@@ -926,7 +926,7 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionItem.getEmail()).thenReturn(null);
+        when(mockIpvSessionItem.getEmailAddress()).thenReturn(null);
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(
                         List.of(
@@ -989,7 +989,7 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getAllowedSharedAttributes(F2F_CRI))
                 .thenReturn("name,birthDate,address,email");
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionItem.getEmail()).thenReturn(TEST_EMAIL_ADDRESS);
+        when(mockIpvSessionItem.getEmailAddress()).thenReturn(TEST_EMAIL_ADDRESS);
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(
                         List.of(
