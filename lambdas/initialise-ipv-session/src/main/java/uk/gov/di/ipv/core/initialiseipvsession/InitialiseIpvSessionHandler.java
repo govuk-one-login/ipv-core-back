@@ -122,7 +122,7 @@ public class InitialiseIpvSessionHandler
                             signedJWT, sessionParams.get(CLIENT_ID_PARAM_KEY));
 
             String govukSigninJourneyId = claimsSet.getStringClaim("govuk_signin_journey_id");
-            String email = claimsSet.getStringClaim("email");
+            String emailAddress = claimsSet.getStringClaim("email_address");
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             String clientOAuthSessionId = SecureTokenHelper.generate();
@@ -132,7 +132,7 @@ public class InitialiseIpvSessionHandler
                             clientOAuthSessionId,
                             null,
                             Boolean.parseBoolean(sessionParams.get(IS_DEBUG_JOURNEY_PARAM_KEY)),
-                            email);
+                            emailAddress);
 
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.generateClientSessionDetails(

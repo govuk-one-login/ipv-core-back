@@ -142,7 +142,7 @@ class IpvSessionServiceTest {
                 .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
         assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
         assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
-        assertNull(ipvSessionItemArgumentCaptor.getValue().getEmail());
+        assertNull(ipvSessionItemArgumentCaptor.getValue().getEmailAddress());
 
         assertEquals(
                 ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
@@ -171,7 +171,7 @@ class IpvSessionServiceTest {
         assertEquals(
                 DEBUG_EVALUATE_GPG45_SCORES_STATE,
                 ipvSessionItemArgumentCaptor.getValue().getUserState());
-        assertEquals(ipvSessionItemArgumentCaptor.getValue().getEmail(), "test@test.com");
+        assertEquals(ipvSessionItemArgumentCaptor.getValue().getEmailAddress(), "test@test.com");
     }
 
     @Test
