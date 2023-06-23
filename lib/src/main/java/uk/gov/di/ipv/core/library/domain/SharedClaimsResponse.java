@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.domain;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -8,7 +9,7 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-@JsonPropertyOrder({"name", "birthDate", "address", "email"})
+@JsonPropertyOrder({"name", "birthDate", "address", "emailAddress"})
 public class SharedClaimsResponse {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -16,14 +17,14 @@ public class SharedClaimsResponse {
     private final Set<Name> name;
     private final Set<BirthDate> birthDate;
     private final Set<Address> address;
-    private final String email;
+    private final String emailAddress;
 
     public SharedClaimsResponse(
-            Set<Name> name, Set<BirthDate> birthDate, Set<Address> address, String email) {
+            Set<Name> name, Set<BirthDate> birthDate, Set<Address> address, String emailAddress) {
         this.name = name;
         this.birthDate = birthDate;
         this.address = address;
-        this.email = email;
+        this.emailAddress = emailAddress;
     }
 
     public Set<Name> getName() {
@@ -38,11 +39,13 @@ public class SharedClaimsResponse {
         return address;
     }
 
-    public String getEmail() {
-        return email;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public String getEmailAddress() {
+        return emailAddress;
     }
 
-    public static SharedClaimsResponse from(Set<SharedClaims> sharedAttributes, String email) {
+    public static SharedClaimsResponse from(
+            Set<SharedClaims> sharedAttributes, String emailAddress) {
         Set<Name> nameSet = new LinkedHashSet<>();
         Set<BirthDate> birthDateSet = new LinkedHashSet<>();
         Set<Address> addressSet = new LinkedHashSet<>();
@@ -62,6 +65,6 @@ public class SharedClaimsResponse {
                         .with("addresses", addressSet.size());
         LOGGER.info(message);
 
-        return new SharedClaimsResponse(nameSet, birthDateSet, addressSet, email);
+        return new SharedClaimsResponse(nameSet, birthDateSet, addressSet, emailAddress);
     }
 }

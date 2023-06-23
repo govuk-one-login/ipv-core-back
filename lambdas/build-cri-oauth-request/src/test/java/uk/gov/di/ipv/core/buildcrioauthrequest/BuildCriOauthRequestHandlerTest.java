@@ -571,7 +571,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(TEST_USER_ID, signedJWT.getJWTClaimsSet().getSubject());
         assertEquals(CRI_AUDIENCE, signedJWT.getJWTClaimsSet().getAudience().get(0));
 
-        assertEquals(4, claimsSet.get(TEST_SHARED_CLAIMS).size());
+        assertEquals(3, claimsSet.get(TEST_SHARED_CLAIMS).size());
         JsonNode vcAttributes = claimsSet.get(TEST_SHARED_CLAIMS);
 
         JsonNode address = vcAttributes.get("address");
@@ -974,7 +974,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(3, sharedClaims.get("name").size());
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(1, sharedClaims.get("address").size());
-        assertTrue(sharedClaims.get("email").isNull());
+        assertFalse(sharedClaims.has("emailAddress"));
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
     }
 
@@ -1037,7 +1037,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(3, sharedClaims.get("name").size());
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(1, sharedClaims.get("address").size());
-        assertEquals(TEST_EMAIL_ADDRESS, sharedClaims.get("email").asText());
+        assertEquals(TEST_EMAIL_ADDRESS, sharedClaims.get("emailAddress").asText());
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
     }
 
