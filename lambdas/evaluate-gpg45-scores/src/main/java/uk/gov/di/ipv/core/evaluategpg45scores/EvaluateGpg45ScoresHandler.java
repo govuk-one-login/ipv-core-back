@@ -51,7 +51,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_MITIGATION_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -61,7 +60,6 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CO
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MITIGATION_JOURNEY_RESPONSE;
 
 /** Evaluate the gathered credentials against a desired GPG45 profile. */
 public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
@@ -151,44 +149,23 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
             JourneyResponse journeyResponse;
             var message = new StringMapMessage();
 
-            boolean ciMitigationJourneysEnabled =
-                    Boolean.parseBoolean(
-                            configService.getSsmParameter(CI_MITIGATION_JOURNEYS_ENABLED));
-            Optional<JourneyResponse> mitigationJourneyResponse = Optional.empty();
-            if (ciMitigationJourneysEnabled) {
-                mitigationJourneyResponse =
-                        getNextMitigationJourneyResponse(ipvSessionItem, ciItems);
-            }
-
-            if (mitigationJourneyResponse.isPresent()) {
-                journeyResponse = mitigationJourneyResponse.get();
-                message.with(
-                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                "Returning mitigation journey response.")
-                        .with(
-                                LOG_MITIGATION_JOURNEY_RESPONSE.getFieldName(),
-                                journeyResponse.toString());
+            Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
+                    gpg45ProfileEvaluator.getJourneyResponseForStoredCis(ciItems);
+            if (contraIndicatorErrorJourneyResponse.isEmpty()) {
+                journeyResponse =
+                        checkForMatchingGpg45Profile(
+                                message,
+                                ipvSessionItem,
+                                clientOAuthSessionItem,
+                                credentials,
+                                ipAddress);
             } else {
-                Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
-                        gpg45ProfileEvaluator.getJourneyResponseForStoredCis(ciItems);
-                if (contraIndicatorErrorJourneyResponse.isEmpty()) {
-                    journeyResponse =
-                            checkForMatchingGpg45Profile(
-                                    message,
-                                    ipvSessionItem,
-                                    clientOAuthSessionItem,
-                                    credentials,
-                                    ipAddress);
-                } else {
-                    message.with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "Returning CI error response.")
-                            .with(
-                                    LOG_ERROR_JOURNEY_RESPONSE.getFieldName(),
-                                    contraIndicatorErrorJourneyResponse.get().toString());
-                    LOGGER.info(message);
-                    return contraIndicatorErrorJourneyResponse.get();
-                }
+                message.with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Returning CI error response.")
+                        .with(
+                                LOG_ERROR_JOURNEY_RESPONSE.getFieldName(),
+                                contraIndicatorErrorJourneyResponse.get().toString());
+                LOGGER.info(message);
+                return contraIndicatorErrorJourneyResponse.get();
             }
 
             updateSuccessfulVcStatuses(ipvSessionItem, credentials);
