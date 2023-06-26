@@ -49,6 +49,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 import uk.gov.di.ipv.core.library.verifiablecredential.validation.VerifiableCredentialJwtValidator;
 
 import java.text.ParseException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -69,6 +70,7 @@ public class RetrieveCriCredentialHandler
     private static final Map<String, Object> JOURNEY_NEXT = Map.of(JOURNEY, "/journey/next");
     private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, "/journey/error");
     private static final Map<String, Object> JOURNEY_PENDING = Map.of(JOURNEY, "/journey/pending");
+    public static final String JOURNEY_TYPE_KEY = "journeyType";
 
     private final VerifiableCredentialService verifiableCredentialService;
     private final IpvSessionService ipvSessionService;
@@ -244,7 +246,13 @@ public class RetrieveCriCredentialHandler
                                 LOG_LAMBDA_RESULT.getFieldName(),
                                 "Successfully processed CRI pending response.")
                         .with(LOG_CRI_ID.getFieldName(), credentialIssuerId));
-        return JOURNEY_PENDING;
+
+        // Add journey type to the response to allow temporary flow control in step function while
+        // refactoring journey
+        HashMap<String, Object> pendingLambdaResult = new HashMap<>(JOURNEY_PENDING);
+        pendingLambdaResult.put(JOURNEY_TYPE_KEY, ipvSessionItem.getJourneyType().getValue());
+
+        return pendingLambdaResult;
     }
 
     private Map<String, Object> processVerifiableCredentials(
@@ -290,7 +298,12 @@ public class RetrieveCriCredentialHandler
                                 "Successfully retrieved CRI credential.")
                         .with(LOG_CRI_ID.getFieldName(), credentialIssuerId));
 
-        return JOURNEY_NEXT;
+        // Add journey type to the response to allow temporary flow control in step function while
+        // refactoring journey
+        HashMap<String, Object> nextLambdaResult = new HashMap<>(JOURNEY_NEXT);
+        nextLambdaResult.put(JOURNEY_TYPE_KEY, ipvSessionItem.getJourneyType().getValue());
+
+        return nextLambdaResult;
     }
 
     @Tracing

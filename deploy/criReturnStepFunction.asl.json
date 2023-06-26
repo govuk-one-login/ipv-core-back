@@ -35,6 +35,17 @@
         "featureSet.$": "$.featureSet"
       },
       "ResultPath": "$.lambdaResult",
+      "Next": "RunEvaluateGpg45ScoresForRefactorJourney"
+    },
+    "EvaluateGpg45Scores": {
+      "Type": "Task",
+      "Resource": "${EvaluateGpg45ScoresFunctionArn}",
+      "Parameters": {
+        "ipvSessionId.$": "$.ipvSessionId",
+        "ipAddress.$": "$.ipAddress",
+        "featureSet.$": "$.featureSet"
+      },
+      "ResultPath": "$.lambdaResult",
       "Next": "ReturnToFrontend"
     },
     "RetrieveCriOAuthAccessTokenError": {
@@ -62,6 +73,17 @@
           "Variable": "$.lambdaResult.journey",
           "StringEquals": "/journey/cri/access-token",
           "Next": "RetrieveCriOauthAccessToken"
+        }
+      ],
+      "Default": "ReturnToFrontend"
+    },
+    "RunEvaluateGpg45ScoresForRefactorJourney": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Variable": "$.lambdaResult.journeyType",
+          "StringEquals": "ipv-core-refactor-journey",
+          "Next": "EvaluateGpg45Scores"
         }
       ],
       "Default": "ReturnToFrontend"
