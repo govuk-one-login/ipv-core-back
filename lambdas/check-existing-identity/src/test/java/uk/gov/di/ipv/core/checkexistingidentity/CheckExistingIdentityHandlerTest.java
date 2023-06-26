@@ -98,6 +98,7 @@ class CheckExistingIdentityHandlerTest {
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
+    private static final JourneyResponse JOURNEY_PENDING = new JourneyResponse("/journey/pending");
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {
@@ -324,24 +325,16 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnNextDeleteVcIfFaceToFaceVerificationIsPending() throws Exception {
+    void shouldReturnPendingResponseIfFaceToFaceVerificationIsPending() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
         when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(true);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
-                .thenReturn(Optional.empty());
-        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
-                .thenReturn(Optional.empty());
-        when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
         var journeyResponse = handleRequest(event, context, JourneyResponse.class);
-        assertEquals(JOURNEY_NEXT, journeyResponse);
-
-        verify(userIdentityService, times(1)).deleteVcStoreItems(TEST_USER_ID);
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+        assertEquals(JOURNEY_PENDING, journeyResponse);
+        verify(userIdentityService, times(0)).deleteVcStoreItems(TEST_USER_ID);
     }
 
     @Test
