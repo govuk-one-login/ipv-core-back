@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -23,19 +24,16 @@ class ContraIndicationsTest {
                     TEST_CI3,
                     new ContraIndicatorScore(TEST_CI3, 2, -1, null, null));
     private static final ContraIndications TEST_NO_CONTRAINDICATORS =
-            ContraIndications.builder()
-                    .contraIndicatorScoreMap(CONTRA_INDICATOR_SCORE_MAP)
-                    .contraIndicatorMap(Map.of())
-                    .build();
+            ContraIndications.builder().contraIndicatorMap(Map.of()).build();
     private static final ContraIndications TEST_CONTRAINDICATORS =
             ContraIndications.builder()
-                    .contraIndicatorScoreMap(CONTRA_INDICATOR_SCORE_MAP)
                     .contraIndicatorMap(
                             Map.of(
                                     TEST_CI1,
                                     ContraIndicator.builder()
                                             .contraIndicatorCode(TEST_CI1)
                                             .issuanceDate(BASE_TIME.minus(1, ChronoUnit.SECONDS))
+                                            .mitigations(List.of(Mitigation.builder().build()))
                                             .build(),
                                     TEST_CI2,
                                     ContraIndicator.builder()
@@ -46,12 +44,23 @@ class ContraIndicationsTest {
 
     @Test
     void shouldReturnZeroScoreForEmptyContraIndications() {
-        assertEquals(0, TEST_NO_CONTRAINDICATORS.getContraIndicatorScore());
+        assertEquals(
+                0,
+                TEST_NO_CONTRAINDICATORS.getContraIndicatorScore(
+                        CONTRA_INDICATOR_SCORE_MAP, false));
     }
 
     @Test
-    void shouldCalculateContraIndicatorScore() {
-        assertEquals(7, TEST_CONTRAINDICATORS.getContraIndicatorScore());
+    void shouldOnlySumDetectedScoresIfExcludingMitigations() {
+        assertEquals(
+                7,
+                TEST_CONTRAINDICATORS.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, false));
+    }
+
+    @Test
+    void shouldSumDetectedScoresAndCheckedScoresIfIncludingMitigations() {
+        assertEquals(
+                4, TEST_CONTRAINDICATORS.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, true));
     }
 
     @Test
