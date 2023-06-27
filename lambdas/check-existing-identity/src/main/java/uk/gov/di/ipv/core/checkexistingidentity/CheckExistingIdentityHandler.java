@@ -71,6 +71,7 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
+    private static final JourneyResponse JOURNEY_PENDING = new JourneyResponse("/journey/pending");
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
 
     private final ConfigService configService;
@@ -151,6 +152,7 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
                                         LOG_MESSAGE_DESCRIPTION.getFieldName(),
                                         "F2F cri pending verification.");
                 LOGGER.info(message);
+                return JOURNEY_PENDING;
             }
 
             List<SignedJWT> credentials =
