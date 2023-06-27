@@ -52,7 +52,8 @@ public class LogHelper {
         LOG_PAYLOAD("payload"),
         LOG_STATUS_CODE("statusCode"),
         LOG_PARAMETER_PATH("parameterPath"),
-        LOG_FEATURE_SET("featureSet");
+        LOG_FEATURE_SET("featureSet"),
+        LOG_JOURNEY_TYPE("journeyType");
         private final String fieldName;
 
         LogField(String fieldName) {

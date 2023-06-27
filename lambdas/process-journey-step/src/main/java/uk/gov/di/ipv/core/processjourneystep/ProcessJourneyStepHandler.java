@@ -12,6 +12,7 @@ import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.StepFunctionHelpers;
@@ -24,6 +25,7 @@ import uk.gov.di.ipv.core.processjourneystep.exceptions.JourneyEngineException;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.StateMachine;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.StateMachineInitializer;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.StateMachineResult;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.exceptions.StateMachineNotFoundException;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.exceptions.UnknownStateException;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyContext;
@@ -31,11 +33,15 @@ import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.PageResponse
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_REFACTOR_JOURNEY;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_STEP;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_USER_STATE;
 
@@ -48,22 +54,18 @@ public class ProcessJourneyStepHandler
     private final IpvSessionService ipvSessionService;
     private final ConfigService configService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
-    private StateMachine stateMachine;
+    private final Map<IpvJourneyTypes, StateMachine> stateMachines;
 
     public ProcessJourneyStepHandler(
             IpvSessionService ipvSessionService,
             ConfigService configService,
-            ClientOAuthSessionDetailsService clientOAuthSessionService)
+            ClientOAuthSessionDetailsService clientOAuthSessionService,
+            List<IpvJourneyTypes> journeyTypes)
             throws IOException {
         this.ipvSessionService = ipvSessionService;
         this.configService = configService;
         this.clientOAuthSessionService = clientOAuthSessionService;
-        this.stateMachine =
-                new StateMachine(
-                        new StateMachineInitializer(
-                                configService.getEnvironmentVariable(
-                                        EnvironmentVariable.ENVIRONMENT),
-                                IPV_CORE_MAIN_JOURNEY));
+        this.stateMachines = loadStateMachines(journeyTypes);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -71,12 +73,8 @@ public class ProcessJourneyStepHandler
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
-        this.stateMachine =
-                new StateMachine(
-                        new StateMachineInitializer(
-                                configService.getEnvironmentVariable(
-                                        EnvironmentVariable.ENVIRONMENT),
-                                IPV_CORE_MAIN_JOURNEY));
+        this.stateMachines =
+                loadStateMachines(List.of(IPV_CORE_MAIN_JOURNEY, IPV_CORE_REFACTOR_JOURNEY));
     }
 
     @Override
@@ -128,6 +126,17 @@ public class ProcessJourneyStepHandler
         }
 
         try {
+            StateMachine stateMachine = stateMachines.get(ipvSessionItem.getJourneyType());
+            if (stateMachine == null) {
+                throw new StateMachineNotFoundException(
+                        String.format(
+                                "State machine not found for journey type: '%s'",
+                                ipvSessionItem.getJourneyType()));
+            }
+            LOGGER.info(
+                    "Found state machine for journey type: {}",
+                    ipvSessionItem.getJourneyType().getValue());
+
             StateMachineResult stateMachineResult =
                     stateMachine.transition(
                             ipvSessionItem.getUserState(),
@@ -159,6 +168,16 @@ public class ProcessJourneyStepHandler
                             .with(LOG_JOURNEY_STEP.getFieldName(), journeyStep));
             throw new JourneyEngineException(
                     "Invalid journey event provided, failed to execute journey engine step.");
+        } catch (StateMachineNotFoundException e) {
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), e.getMessage())
+                            .with(LOG_JOURNEY_STEP.getFieldName(), journeyStep)
+                            .with(
+                                    LOG_JOURNEY_TYPE.getFieldName(),
+                                    ipvSessionItem.getJourneyType()));
+            throw new JourneyEngineException(
+                    "State machine not found for journey type, failed to execute journey engine step");
         }
     }
 
@@ -210,5 +229,22 @@ public class ProcessJourneyStepHandler
                                                 Long.parseLong(
                                                         configService.getSsmParameter(
                                                                 BACKEND_SESSION_TIMEOUT))));
+    }
+
+    @Tracing
+    private Map<IpvJourneyTypes, StateMachine> loadStateMachines(List<IpvJourneyTypes> journeyTypes)
+            throws IOException {
+        EnumMap<IpvJourneyTypes, StateMachine> stateMachinesMap =
+                new EnumMap<>(IpvJourneyTypes.class);
+        for (IpvJourneyTypes journeyType : journeyTypes) {
+            stateMachinesMap.put(
+                    journeyType,
+                    new StateMachine(
+                            new StateMachineInitializer(
+                                    configService.getEnvironmentVariable(
+                                            EnvironmentVariable.ENVIRONMENT),
+                                    journeyType)));
+        }
+        return stateMachinesMap;
     }
 }
