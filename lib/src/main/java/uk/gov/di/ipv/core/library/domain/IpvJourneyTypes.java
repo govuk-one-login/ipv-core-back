@@ -13,8 +13,4 @@ public enum IpvJourneyTypes {
     public String getValue() {
         return value;
     }
-
-    public static IpvJourneyTypes get(String journeyType) {
-        return IpvJourneyTypes.valueOf(journeyType.toUpperCase().replace("-", "_"));
-    }
 }

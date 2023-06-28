@@ -114,7 +114,7 @@ public class IpvSessionService {
         ipvSessionItem.setVot(VOT_P0);
 
         String journeyType = this.configService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE);
-        ipvSessionItem.setJourneyType(IpvJourneyTypes.get(journeyType));
+        ipvSessionItem.setJourneyType(IpvJourneyTypes.valueOf(journeyType));
 
         if (errorObject != null) {
             ipvSessionItem.setErrorCode(errorObject.getCode());

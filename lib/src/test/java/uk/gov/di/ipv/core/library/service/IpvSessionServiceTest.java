@@ -115,7 +115,7 @@ class IpvSessionServiceTest {
     @Test
     void shouldCreateSessionItem() {
         when(mockConfigService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE))
-                .thenReturn("ipv-core-main-journey");
+                .thenReturn("IPV_CORE_MAIN_JOURNEY");
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
                         SecureTokenHelper.generate(), null, false, null);
@@ -137,7 +137,7 @@ class IpvSessionServiceTest {
     @Test
     void shouldCreateSessionItemForDebugJourney() {
         when(mockConfigService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE))
-                .thenReturn("ipv-core-main-journey");
+                .thenReturn("IPV_CORE_MAIN_JOURNEY");
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
                         SecureTokenHelper.generate(), null, true, null);
@@ -161,7 +161,7 @@ class IpvSessionServiceTest {
     @Test
     void shouldCreateSessionItemForRefactorJourney() {
         when(mockConfigService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE))
-                .thenReturn("ipv-core-refactor-journey");
+                .thenReturn("IPV_CORE_REFACTOR_JOURNEY");
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
                         SecureTokenHelper.generate(), null, false, null);
@@ -184,7 +184,7 @@ class IpvSessionServiceTest {
     @Test
     void shouldCreateSessionItemWithEmail() {
         when(mockConfigService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE))
-                .thenReturn("ipv-core-main-journey");
+                .thenReturn("IPV_CORE_MAIN_JOURNEY");
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
                         SecureTokenHelper.generate(), null, true, "test@test.com");
@@ -208,7 +208,7 @@ class IpvSessionServiceTest {
     @Test
     void shouldCreateSessionItemWithErrorObject() {
         when(mockConfigService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE))
-                .thenReturn("ipv-core-main-journey");
+                .thenReturn("IPV_CORE_MAIN_JOURNEY");
         ErrorObject testErrorObject = new ErrorObject("server_error", "Test error");
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
