@@ -142,6 +142,13 @@ IPV_IDENTITY_PENDING_PAGE:
       response:
         type: page
         pageId: page-face-to-face-handoff
+    restart:
+      type: basic
+      name: restart
+      targetState: RESET_IDENTITY
+      response:
+        type: journey
+        journeyStepId: /journey/reset-identity
 EVALUATE_GPG45_SCORES:
   name: EVALUATE_GPG45_SCORES
   parent: ATTEMPT_RECOVERY_STATE

@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.statemachine.JourneyRequestLambda;
 
+import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 
 public class ResetIdentityHandler extends JourneyRequestLambda {
@@ -88,6 +89,7 @@ public class ResetIdentityHandler extends JourneyRequestLambda {
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             userIdentityService.deleteVcStoreItems(userId);
+            criResponseService.deleteCriResponseItem(userId, F2F_CRI);
 
             return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody e) {

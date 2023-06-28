@@ -147,6 +147,13 @@ IPV_IDENTITY_PENDING_PAGE:
       response:
         type: page
         pageId: page-ipv-pending
+    restart:
+      type: basic
+      name: restart
+      targetState: RESET_IDENTITY
+      response:
+        type: journey
+        journeyStepId: /journey/reset-identity
 
 CRI_DCMAW:
   name: CRI_DCMAW
