@@ -7,6 +7,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.dto.AuthorizationCodeMetadata;
@@ -112,7 +113,8 @@ public class IpvSessionService {
 
         ipvSessionItem.setVot(VOT_P0);
 
-        ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
+        String journeyType = this.configService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE);
+        ipvSessionItem.setJourneyType(IpvJourneyTypes.get(journeyType));
 
         if (errorObject != null) {
             ipvSessionItem.setErrorCode(errorObject.getCode());
