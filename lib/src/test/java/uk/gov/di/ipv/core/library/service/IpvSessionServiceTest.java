@@ -178,7 +178,7 @@ class IpvSessionServiceTest {
                 ipvSessionItem.getIpvSessionId());
         assertEquals(
                 INITIAL_IPV_JOURNEY_STATE, ipvSessionItemArgumentCaptor.getValue().getUserState());
-        assertEquals(ipvSessionItem.getJourneyType(), IpvJourneyTypes.IPV_CORE_REFACTOR_JOURNEY);
+        assertEquals(IpvJourneyTypes.IPV_CORE_REFACTOR_JOURNEY, ipvSessionItem.getJourneyType());
     }
 
     @Test
