@@ -16,9 +16,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionGpg45ProfileMatched;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.BaseResponse;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -27,7 +25,6 @@ import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
@@ -48,7 +45,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,20 +54,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC_WITH_CI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1a_FRAUD_VC_WITH_CI_A01;
 
 @ExtendWith(MockitoExtension.class)
-class EvaluateGpg45ScoreHandlerTest {
+class EvaluateGpg45ScoresHandlerTest {
     private static final String TEST_SESSION_ID = "test-session-id";
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_JOURNEY_ID = "test-journey-id";
@@ -143,8 +136,6 @@ class EvaluateGpg45ScoreHandlerTest {
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setIpvSessionId(TEST_SESSION_ID);
-        ipvSessionItem.setContraIndicatorMitigationDetails(
-                List.of(new ContraIndicatorMitigationDetailsDto(A01)));
 
         clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()
@@ -380,321 +371,6 @@ class EvaluateGpg45ScoreHandlerTest {
         assertEquals(
                 List.of("123ab93d-3a43-46ef-a2c1-3c6444206408", "RB000103490087", "abc1234"),
                 extension.getVcTxnIds());
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void shouldRecordCiToBeMitigatedInSessionWhenNewCiIsReceived() throws Exception {
-        List<SignedJWT> parsedM1ACreds =
-                List.of(
-                        SignedJWT.parse(M1A_PASSPORT_VC),
-                        SignedJWT.parse(M1A_ADDRESS_VC),
-                        SignedJWT.parse(M1a_FRAUD_VC_WITH_CI_A01));
-        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
-                .thenReturn(addressConfig);
-        when(configService.getSsmParameter(ConfigurationVariable.CI_MITIGATION_JOURNEYS_ENABLED))
-                .thenReturn("true");
-        when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedM1ACreds);
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
-                .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
-                .thenReturn(true);
-
-        handleRequest(request, context, JourneyResponse.class);
-
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
-
-        IpvSessionItem ipvSessionItem = ipvSessionItemArgumentCaptor.getValue();
-        assertEquals(1, ipvSessionItem.getContraIndicatorMitigationDetails().size());
-        assertEquals(A01, ipvSessionItem.getContraIndicatorMitigationDetails().get(0).getCi());
-        assertEquals(
-                Collections.emptyList(),
-                ipvSessionItem
-                        .getContraIndicatorMitigationDetails()
-                        .get(0)
-                        .getMitigationJourneys());
-        assertTrue(ipvSessionItem.getContraIndicatorMitigationDetails().get(0).isMitigatable());
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void shouldNotCheckGpg45ProfileIfNewCiIsReceived() throws Exception {
-        List<SignedJWT> parsedM1ACreds =
-                List.of(
-                        SignedJWT.parse(M1A_PASSPORT_VC_WITH_CI),
-                        SignedJWT.parse(M1A_ADDRESS_VC),
-                        SignedJWT.parse(M1a_FRAUD_VC_WITH_CI_A01));
-        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
-                .thenReturn(addressConfig);
-        when(configService.getSsmParameter(ConfigurationVariable.CI_MITIGATION_JOURNEYS_ENABLED))
-                .thenReturn("true");
-        when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedM1ACreds);
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(ciStorageService.getCIs(any(), any(), any()))
-                .thenReturn(
-                        List.of(
-                                new ContraIndicatorItem(
-                                        "test-user",
-                                        "1234",
-                                        "test-iss",
-                                        "1234",
-                                        A01,
-                                        "1234",
-                                        "1234"),
-                                new ContraIndicatorItem(
-                                        "test-user",
-                                        "1234",
-                                        "test-iss",
-                                        "1234",
-                                        "D02",
-                                        "1234",
-                                        "1234")));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
-                .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
-                .thenReturn(true);
-
-        handleRequest(request, context, JourneyResponse.class);
-
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-        verify(ipvSessionService, times(2))
-                .updateIpvSession(ipvSessionItemArgumentCaptor.capture());
-
-        IpvSessionItem ipvSessionItem = ipvSessionItemArgumentCaptor.getValue();
-        assertEquals(2, ipvSessionItem.getContraIndicatorMitigationDetails().size());
-        assertEquals(A01, ipvSessionItem.getContraIndicatorMitigationDetails().get(0).getCi());
-        assertEquals(
-                Collections.emptyList(),
-                ipvSessionItem
-                        .getContraIndicatorMitigationDetails()
-                        .get(0)
-                        .getMitigationJourneys());
-        assertTrue(ipvSessionItem.getContraIndicatorMitigationDetails().get(0).isMitigatable());
-
-        verify(gpg45ProfileEvaluator, never()).getFirstMatchingProfile(any(), any());
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void shouldNotCheckGpg45ProfileIfNewCiIsReceivedAndNoPreviousMitigation() throws Exception {
-        List<SignedJWT> parsedM1ACreds =
-                List.of(
-                        SignedJWT.parse(M1A_PASSPORT_VC_WITH_CI),
-                        SignedJWT.parse(M1A_ADDRESS_VC),
-                        SignedJWT.parse(M1a_FRAUD_VC_WITH_CI_A01));
-        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
-                .thenReturn(addressConfig);
-        when(configService.getSsmParameter(ConfigurationVariable.CI_MITIGATION_JOURNEYS_ENABLED))
-                .thenReturn("true");
-        when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedM1ACreds);
-        ipvSessionItem.setContraIndicatorMitigationDetails(null);
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(ciStorageService.getCIs(any(), any(), any()))
-                .thenReturn(
-                        List.of(
-                                new ContraIndicatorItem(
-                                        "test-user",
-                                        "1234",
-                                        "test-iss",
-                                        "1234",
-                                        A01,
-                                        "1234",
-                                        "1234")));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
-                .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
-                .thenReturn(true);
-
-        handleRequest(request, context, JourneyResponse.class);
-
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-        verify(ipvSessionService, times(2))
-                .updateIpvSession(ipvSessionItemArgumentCaptor.capture());
-
-        IpvSessionItem ipvSessionItem = ipvSessionItemArgumentCaptor.getValue();
-        assertEquals(1, ipvSessionItem.getContraIndicatorMitigationDetails().size());
-        assertEquals(A01, ipvSessionItem.getContraIndicatorMitigationDetails().get(0).getCi());
-        assertEquals(
-                Collections.emptyList(),
-                ipvSessionItem
-                        .getContraIndicatorMitigationDetails()
-                        .get(0)
-                        .getMitigationJourneys());
-        assertTrue(ipvSessionItem.getContraIndicatorMitigationDetails().get(0).isMitigatable());
-
-        verify(gpg45ProfileEvaluator, never()).getFirstMatchingProfile(any(), any());
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void shouldNotCheckGpg45ProfileIfMitigationInProgress() throws Exception {
-        List<SignedJWT> parsedM1ACreds =
-                List.of(SignedJWT.parse(M1A_PASSPORT_VC), SignedJWT.parse(M1A_ADDRESS_VC));
-        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
-                .thenReturn(addressConfig);
-        when(configService.getSsmParameter(ConfigurationVariable.CI_MITIGATION_JOURNEYS_ENABLED))
-                .thenReturn("true");
-        when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedM1ACreds);
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(ciStorageService.getCIs(any(), any(), any()))
-                .thenReturn(
-                        List.of(
-                                new ContraIndicatorItem(
-                                        "test-user",
-                                        "1234",
-                                        "test-iss",
-                                        "1234",
-                                        A01,
-                                        "1234",
-                                        "1234")));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
-                .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
-                .thenReturn(true);
-
-        handleRequest(request, context, JourneyResponse.class);
-
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
-
-        IpvSessionItem ipvSessionItem = ipvSessionItemArgumentCaptor.getValue();
-        assertEquals(1, ipvSessionItem.getContraIndicatorMitigationDetails().size());
-        assertEquals(A01, ipvSessionItem.getContraIndicatorMitigationDetails().get(0).getCi());
-        assertEquals(
-                Collections.emptyList(),
-                ipvSessionItem
-                        .getContraIndicatorMitigationDetails()
-                        .get(0)
-                        .getMitigationJourneys());
-        assertTrue(ipvSessionItem.getContraIndicatorMitigationDetails().get(0).isMitigatable());
-
-        verify(gpg45ProfileEvaluator, never()).getFirstMatchingProfile(any(), any());
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void shouldCheckGpg45ProfileIfMitigationHasCompleted() throws Exception {
-        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
-                .thenReturn(addressConfig);
-        when(configService.getSsmParameter(ConfigurationVariable.CI_MITIGATION_JOURNEYS_ENABLED))
-                .thenReturn("true");
-        ipvSessionItem.setContraIndicatorMitigationDetails(
-                List.of(
-                        new ContraIndicatorMitigationDetailsDto(
-                                A01, Collections.emptyList(), false)));
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
-                .thenReturn(Optional.empty());
-        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
-                .thenReturn(Optional.of(Gpg45Profile.M1A));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
-                .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
-                .thenReturn(true);
-
-        var response = handleRequest(request, context, JourneyResponse.class);
-
-        assertEquals(JOURNEY_END.getJourney(), response.getJourney());
-        verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
-
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
-        IpvSessionItem updatedSessionItem = ipvSessionItemArgumentCaptor.getValue();
-
-        List<VcStatusDto> currentVcStatuses = updatedSessionItem.getCurrentVcStatuses();
-        assertEquals(5, currentVcStatuses.size());
-
-        assertTrue(currentVcStatuses.get(0).getIsSuccessfulVc());
-        assertEquals(
-                "https://review-p.integration.account.gov.uk",
-                currentVcStatuses.get(0).getCriIss());
-        assertFalse(currentVcStatuses.get(1).getIsSuccessfulVc());
-        assertEquals(
-                "https://review-a.integration.account.gov.uk",
-                currentVcStatuses.get(1).getCriIss());
-        assertTrue(currentVcStatuses.get(2).getIsSuccessfulVc());
-        assertEquals(
-                "https://review-f.integration.account.gov.uk",
-                currentVcStatuses.get(2).getCriIss());
-        assertTrue(currentVcStatuses.get(3).getIsSuccessfulVc());
-        assertEquals(
-                "https://review-k.integration.account.gov.uk",
-                currentVcStatuses.get(3).getCriIss());
-        assertTrue(currentVcStatuses.get(4).getIsSuccessfulVc());
-        assertEquals("test-dcmaw-iss", currentVcStatuses.get(4).getCriIss());
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void shouldCheckGpg45ProfileWhenNoNewCiAndNoCurrentMitigationInProgress() throws Exception {
-        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
-                .thenReturn(addressConfig);
-        when(configService.getSsmParameter(ConfigurationVariable.CI_MITIGATION_JOURNEYS_ENABLED))
-                .thenReturn("true");
-        ipvSessionItem.setContraIndicatorMitigationDetails(Collections.emptyList());
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
-                .thenReturn(Optional.empty());
-        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
-                .thenReturn(Optional.of(Gpg45Profile.M1A));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
-                .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
-                .thenReturn(true);
-
-        var response = handleRequest(request, context, JourneyResponse.class);
-
-        assertEquals(JOURNEY_END.getJourney(), response.getJourney());
-        verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
-
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
-        IpvSessionItem updatedSessionItem = ipvSessionItemArgumentCaptor.getValue();
-
-        List<VcStatusDto> currentVcStatuses = updatedSessionItem.getCurrentVcStatuses();
-        assertEquals(5, currentVcStatuses.size());
-
-        assertTrue(currentVcStatuses.get(0).getIsSuccessfulVc());
-        assertEquals(
-                "https://review-p.integration.account.gov.uk",
-                currentVcStatuses.get(0).getCriIss());
-        assertFalse(currentVcStatuses.get(1).getIsSuccessfulVc());
-        assertEquals(
-                "https://review-a.integration.account.gov.uk",
-                currentVcStatuses.get(1).getCriIss());
-        assertTrue(currentVcStatuses.get(2).getIsSuccessfulVc());
-        assertEquals(
-                "https://review-f.integration.account.gov.uk",
-                currentVcStatuses.get(2).getCriIss());
-        assertTrue(currentVcStatuses.get(3).getIsSuccessfulVc());
-        assertEquals(
-                "https://review-k.integration.account.gov.uk",
-                currentVcStatuses.get(3).getCriIss());
-        assertTrue(currentVcStatuses.get(4).getIsSuccessfulVc());
-        assertEquals("test-dcmaw-iss", currentVcStatuses.get(4).getCriIss());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
