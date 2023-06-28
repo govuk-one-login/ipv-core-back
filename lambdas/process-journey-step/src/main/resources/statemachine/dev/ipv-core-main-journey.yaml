@@ -109,6 +109,14 @@ IPV_IDENTITY_REUSE_PAGE:
 IPV_IDENTITY_PENDING_PAGE:
   name: IPV_IDENTITY_PENDING_PAGE
   parent: END_JOURNEY
+  events:
+    continue:
+      type: basic
+      name: continue
+      targetState: F2F_HANDOFF_PAGE
+      response:
+        type: page
+        pageId: page-face-to-face-handoff
 EVALUATE_GPG45_SCORES:
   name: EVALUATE_GPG45_SCORES
   parent: ATTEMPT_RECOVERY_STATE
