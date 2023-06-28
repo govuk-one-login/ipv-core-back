@@ -106,6 +106,14 @@ CHECK_EXISTING_IDENTITY:
 IPV_IDENTITY_REUSE_PAGE:
   name: IPV_IDENTITY_REUSE_PAGE
   parent: END_JOURNEY
+  events:
+    pending:
+      type: basic
+      name: pending
+      targetState: F2F_HANDOFF_PAGE
+      response:
+        type: page
+        pageId: page-face-to-face-handoff
 IPV_IDENTITY_PENDING_PAGE:
   name: IPV_IDENTITY_PENDING_PAGE
   parent: END_JOURNEY
