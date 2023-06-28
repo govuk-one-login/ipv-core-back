@@ -80,7 +80,7 @@ Mappings:
       asyncCriLambdaTimeout: 30
     "175872367215": # New Development Account
       provisionedConcurrency: 0
-      ciStorageAccountId: 322814139578 # di-ipv-cri-dev
+      ciStorageAccountId: 158853307826 # new CIMIT dev
       environment: dev
       criReturnStepFunctionLogLevel: ALL
       pgw500ErrorLimit: 2
