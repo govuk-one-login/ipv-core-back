@@ -88,7 +88,7 @@ public class CiStorageService {
                                                 ipAddress,
                                                 verifiableCredentialList)));
 
-        LOGGER.info("Sending mitigating VC's to CI storage system.");
+        LOGGER.info("Sending mitigating VCs to CI storage system.");
         InvokeResult result = lambdaClient.invoke(request);
 
         if (lambdaExecutionFailed(result)) {

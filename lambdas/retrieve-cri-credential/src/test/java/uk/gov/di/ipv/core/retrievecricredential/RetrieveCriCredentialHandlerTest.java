@@ -21,6 +21,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
+import uk.gov.di.ipv.core.library.exceptions.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -53,6 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -82,6 +84,9 @@ class RetrieveCriCredentialHandlerTest {
 
     private static final String TEST_IPV_SESSION_ID = UUID.randomUUID().toString();
     private static final String passportIssuerId = CREDENTIAL_ISSUER_ID;
+
+    private static final String USE_POST_MITIGATIONS_FEATURE_FLAG = "usePostMitigations";
+    private static final SignedJWT TEST_SIGNED_ADDRESS_VC;
 
     @Mock private Context context;
     @Mock private VerifiableCredentialService verifiableCredentialService;
@@ -133,6 +138,11 @@ class RetrieveCriCredentialHandlerTest {
                             true);
         } catch (URISyntaxException e) {
             e.printStackTrace();
+        }
+        try {
+            TEST_SIGNED_ADDRESS_VC = SignedJWT.parse(SIGNED_ADDRESS_VC);
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -365,6 +375,7 @@ class RetrieveCriCredentialHandlerTest {
         assertEquals("0", evidenceItem.get("verificationScore").asText());
         assertEquals("[ \"A02\", \"A03\" ]", evidenceItem.get("ci").toPrettyString());
         verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
+        verify(ciStorageService, never()).submitMitigatingVcList(any(), any(), any());
     }
 
     @Test
@@ -428,6 +439,7 @@ class RetrieveCriCredentialHandlerTest {
         when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
+        when(configService.getFeatureFlag(USE_POST_MITIGATIONS_FEATURE_FLAG)).thenReturn("true");
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         when(criOAuthSessionService.getCriOauthSessionItem(any())).thenReturn(criOAuthSessionItem);
@@ -440,6 +452,127 @@ class RetrieveCriCredentialHandlerTest {
         handler.handleRequest(testInput, context);
 
         verify(verifiableCredentialService, never()).persistUserCredentials(any(), any(), any());
+        verify(ciStorageService, never()).submitMitigatingVcList(any(), any(), any());
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+        var updatedIpvSessionItem = ipvSessionItemArgumentCaptor.getValue();
+        assertEquals(1, updatedIpvSessionItem.getVisitedCredentialIssuerDetails().size());
+        assertEquals(
+                CREDENTIAL_ISSUER_ID,
+                updatedIpvSessionItem.getVisitedCredentialIssuerDetails().get(0).getCriId());
+        assertFalse(
+                updatedIpvSessionItem
+                        .getVisitedCredentialIssuerDetails()
+                        .get(0)
+                        .isReturnedWithVc());
+        assertEquals(
+                OAuth2Error.SERVER_ERROR_CODE,
+                updatedIpvSessionItem.getVisitedCredentialIssuerDetails().get(0).getOauthError());
+        verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
+    }
+
+    @Test
+    void shouldSendVCToCIMITPostMitigationsWhenFeatureEnabled() throws Exception {
+        when(verifiableCredentialService.getVerifiableCredentialResponse(
+                        testBearerAccessToken,
+                        testPassportIssuer,
+                        testApiKey,
+                        CREDENTIAL_ISSUER_ID))
+                .thenReturn(
+                        VerifiableCredentialResponse.builder()
+                                .verifiableCredentials(List.of(TEST_SIGNED_ADDRESS_VC))
+                                .build());
+        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
+                .thenReturn(testPassportIssuer);
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(addressConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(claimedIdentityConfig);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
+        when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
+        when(configService.getFeatureFlag(USE_POST_MITIGATIONS_FEATURE_FLAG)).thenReturn("true");
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
+        when(criOAuthSessionService.getCriOauthSessionItem(any())).thenReturn(criOAuthSessionItem);
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
+        handler.handleRequest(testInput, context);
+
+        ArgumentCaptor<SignedJWT> persistedVcCaptor = ArgumentCaptor.forClass(SignedJWT.class);
+        verify(verifiableCredentialService)
+                .persistUserCredentials(persistedVcCaptor.capture(), any(), any());
+        var persistedVc = persistedVcCaptor.getValue();
+        assertEquals(TEST_SIGNED_ADDRESS_VC, persistedVc);
+
+        ArgumentCaptor<SignedJWT> submittedVcCaptor = ArgumentCaptor.forClass(SignedJWT.class);
+        verify(ciStorageService).submitVC(submittedVcCaptor.capture(), anyString(), anyString());
+        var submittedVc = submittedVcCaptor.getValue();
+        assertEquals(TEST_SIGNED_ADDRESS_VC, submittedVc);
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<String>> postedVcsCaptor = ArgumentCaptor.forClass(List.class);
+        verify(ciStorageService)
+                .submitMitigatingVcList(postedVcsCaptor.capture(), anyString(), anyString());
+        var postedVcs = postedVcsCaptor.getValue();
+        assertEquals(1, postedVcs.size());
+        assertEquals(TEST_SIGNED_ADDRESS_VC.serialize(), postedVcs.get(0));
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+        var visitedCredentialIssuerDetails =
+                ipvSessionItemArgumentCaptor.getValue().getVisitedCredentialIssuerDetails();
+        assertEquals(1, visitedCredentialIssuerDetails.size());
+        assertEquals(CREDENTIAL_ISSUER_ID, visitedCredentialIssuerDetails.get(0).getCriId());
+        assertTrue(visitedCredentialIssuerDetails.get(0).isReturnedWithVc());
+        assertNull(visitedCredentialIssuerDetails.get(0).getOauthError());
+
+        verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
+    }
+
+    @Test
+    void shouldNotStoreVcIfFailedToPostMitigationsToCIMIT() throws Exception {
+        when(verifiableCredentialService.getVerifiableCredentialResponse(
+                        testBearerAccessToken,
+                        testPassportIssuer,
+                        testApiKey,
+                        CREDENTIAL_ISSUER_ID))
+                .thenReturn(
+                        VerifiableCredentialResponse.builder()
+                                .verifiableCredentials(List.of(TEST_SIGNED_ADDRESS_VC))
+                                .build());
+        when(configService.getCredentialIssuerActiveConnectionConfig(CREDENTIAL_ISSUER_ID))
+                .thenReturn(testPassportIssuer);
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(addressConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(claimedIdentityConfig);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
+        when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
+        when(configService.getFeatureFlag(USE_POST_MITIGATIONS_FEATURE_FLAG)).thenReturn("true");
+
+        IpvSessionItem ipvSessionItem = new IpvSessionItem();
+        when(criOAuthSessionService.getCriOauthSessionItem(any())).thenReturn(criOAuthSessionItem);
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
+        doThrow(new CiPostMitigationsException("Lambda execution failed"))
+                .when(ciStorageService)
+                .submitMitigatingVcList(anyList(), anyString(), anyString());
+
+        handler.handleRequest(testInput, context);
+
+        verify(verifiableCredentialService, never()).persistUserCredentials(any(), any(), any());
+        ArgumentCaptor<SignedJWT> submittedVcCaptor = ArgumentCaptor.forClass(SignedJWT.class);
+        verify(ciStorageService).submitVC(submittedVcCaptor.capture(), anyString(), anyString());
+        var submittedVc = submittedVcCaptor.getValue();
+        assertEquals(TEST_SIGNED_ADDRESS_VC, submittedVc);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
