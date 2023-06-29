@@ -43,6 +43,17 @@ public class StateMachineInitializer {
 
     private File getConfigFile(String environment, IpvJourneyTypes journeyType) {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+
+        if (journeyType.equals(IpvJourneyTypes.IPV_CORE_REFACTOR_JOURNEY)) {
+            return new File(
+                    Objects.requireNonNull(
+                                    classLoader.getResource(
+                                            String.format(
+                                                    "statemachine/%s.yaml",
+                                                    journeyType.getValue())))
+                            .getFile());
+        }
+
         if (environment.contains("dev-")) {
             return new File(
                     Objects.requireNonNull(
