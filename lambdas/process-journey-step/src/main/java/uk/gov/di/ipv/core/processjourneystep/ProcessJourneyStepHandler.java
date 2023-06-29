@@ -141,7 +141,7 @@ public class ProcessJourneyStepHandler
                     stateMachine.transition(
                             ipvSessionItem.getUserState(),
                             journeyStep,
-                            JourneyContext.emptyContext());
+                            JourneyContext.withFeatureSet(configService.getFeatureSet()));
 
             updateUserState(
                     ipvSessionItem.getUserState(),
@@ -157,14 +157,14 @@ public class ProcessJourneyStepHandler
         } catch (UnknownStateException e) {
             LOGGER.error(
                     new StringMapMessage()
-                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Unknown journey state.")
+                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), e.getMessage())
                             .with(LOG_USER_STATE.getFieldName(), ipvSessionItem.getUserState()));
             throw new JourneyEngineException(
                     "Invalid journey state encountered, failed to execute journey engine step.");
         } catch (UnknownEventException e) {
             LOGGER.error(
                     new StringMapMessage()
-                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Unknown journey event.")
+                            .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), e.getMessage())
                             .with(LOG_JOURNEY_STEP.getFieldName(), journeyStep));
             throw new JourneyEngineException(
                     "Invalid journey event provided, failed to execute journey engine step.");

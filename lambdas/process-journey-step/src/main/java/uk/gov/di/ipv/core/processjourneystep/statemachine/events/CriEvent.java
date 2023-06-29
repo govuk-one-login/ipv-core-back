@@ -33,6 +33,7 @@ public class CriEvent implements Event {
 
     @Override
     public StateMachineResult resolve(JourneyContext journeyContext) {
+        configService.setFeatureSet(journeyContext.getFeatureSet());
         if (checkIfDisabled != null) {
             Optional<String> firstDisabledCri =
                     checkIfDisabled.keySet().stream()
@@ -40,7 +41,7 @@ public class CriEvent implements Event {
                             .findFirst();
             if (firstDisabledCri.isPresent()) {
                 String disabledCriId = firstDisabledCri.get();
-                LOGGER.info("CRI with ID '{}' is disabled. Using alternative event", criId);
+                LOGGER.info("CRI with ID '{}' is disabled. Using alternative event", disabledCriId);
                 return checkIfDisabled.get(disabledCriId).resolve(journeyContext);
             }
         }
