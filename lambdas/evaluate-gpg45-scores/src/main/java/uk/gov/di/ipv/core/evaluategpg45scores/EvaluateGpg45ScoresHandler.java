@@ -26,7 +26,6 @@ import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
@@ -49,9 +48,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_MITIGATION_JOURNEYS_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -61,7 +58,6 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CO
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MITIGATION_JOURNEY_RESPONSE;
 
 /** Evaluate the gathered credentials against a desired GPG45 profile. */
 public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
@@ -151,44 +147,23 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
             JourneyResponse journeyResponse;
             var message = new StringMapMessage();
 
-            boolean ciMitigationJourneysEnabled =
-                    Boolean.parseBoolean(
-                            configService.getSsmParameter(CI_MITIGATION_JOURNEYS_ENABLED));
-            Optional<JourneyResponse> mitigationJourneyResponse = Optional.empty();
-            if (ciMitigationJourneysEnabled) {
-                mitigationJourneyResponse =
-                        getNextMitigationJourneyResponse(ipvSessionItem, ciItems);
-            }
-
-            if (mitigationJourneyResponse.isPresent()) {
-                journeyResponse = mitigationJourneyResponse.get();
-                message.with(
-                                LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                "Returning mitigation journey response.")
-                        .with(
-                                LOG_MITIGATION_JOURNEY_RESPONSE.getFieldName(),
-                                journeyResponse.toString());
+            Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
+                    gpg45ProfileEvaluator.getJourneyResponseForStoredCis(ciItems);
+            if (contraIndicatorErrorJourneyResponse.isEmpty()) {
+                journeyResponse =
+                        checkForMatchingGpg45Profile(
+                                message,
+                                ipvSessionItem,
+                                clientOAuthSessionItem,
+                                credentials,
+                                ipAddress);
             } else {
-                Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
-                        gpg45ProfileEvaluator.getJourneyResponseForStoredCis(ciItems);
-                if (contraIndicatorErrorJourneyResponse.isEmpty()) {
-                    journeyResponse =
-                            checkForMatchingGpg45Profile(
-                                    message,
-                                    ipvSessionItem,
-                                    clientOAuthSessionItem,
-                                    credentials,
-                                    ipAddress);
-                } else {
-                    message.with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "Returning CI error response.")
-                            .with(
-                                    LOG_ERROR_JOURNEY_RESPONSE.getFieldName(),
-                                    contraIndicatorErrorJourneyResponse.get().toString());
-                    LOGGER.info(message);
-                    return contraIndicatorErrorJourneyResponse.get();
-                }
+                message.with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Returning CI error response.")
+                        .with(
+                                LOG_ERROR_JOURNEY_RESPONSE.getFieldName(),
+                                contraIndicatorErrorJourneyResponse.get().toString());
+                LOGGER.info(message);
+                return contraIndicatorErrorJourneyResponse.get();
             }
 
             updateSuccessfulVcStatuses(ipvSessionItem, credentials);
@@ -298,57 +273,6 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
     }
 
     @Tracing
-    private Optional<JourneyResponse> getNextMitigationJourneyResponse(
-            IpvSessionItem ipvSessionItem, List<ContraIndicatorItem> ciItems) {
-        List<ContraIndicatorMitigationDetailsDto> currentMitigationDetails =
-                ipvSessionItem.getContraIndicatorMitigationDetails();
-        boolean ciMitigationInProgress = isCiMitigationInProgress(currentMitigationDetails);
-
-        List<ContraIndicatorItem> newCiItems =
-                ciItems.stream()
-                        .filter(
-                                ciItem -> {
-                                    if (currentMitigationDetails != null) {
-                                        Optional<ContraIndicatorMitigationDetailsDto> matchingCI =
-                                                currentMitigationDetails.stream()
-                                                        .filter(
-                                                                mitigationDetails ->
-                                                                        mitigationDetails
-                                                                                .getCi()
-                                                                                .equals(
-                                                                                        ciItem
-                                                                                                .getCi()))
-                                                        .findAny();
-                                        return matchingCI.isEmpty();
-                                    }
-                                    return true;
-                                })
-                        .collect(Collectors.toList());
-
-        if (!newCiItems.isEmpty()) {
-            List<ContraIndicatorMitigationDetailsDto> newMitigationDetails = new ArrayList<>();
-
-            if (ipvSessionItem.getContraIndicatorMitigationDetails() != null) {
-                newMitigationDetails.addAll(ipvSessionItem.getContraIndicatorMitigationDetails());
-            }
-
-            newCiItems.forEach(
-                    contraIndicatorItem ->
-                            newMitigationDetails.add(
-                                    new ContraIndicatorMitigationDetailsDto(
-                                            contraIndicatorItem.getCi())));
-
-            ipvSessionItem.setContraIndicatorMitigationDetails(newMitigationDetails);
-            ipvSessionService.updateIpvSession(ipvSessionItem);
-
-            return Optional.of(JOURNEY_NEXT);
-        } else if (ciMitigationInProgress) {
-            return Optional.of(JOURNEY_NEXT);
-        }
-        return Optional.empty();
-    }
-
-    @Tracing
     private void updateSuccessfulVcStatuses(
             IpvSessionItem ipvSessionItem, List<SignedJWT> credentials) throws ParseException {
 
@@ -422,18 +346,5 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
             }
         }
         return txnIds;
-    }
-
-    @Tracing
-    private boolean isCiMitigationInProgress(
-            List<ContraIndicatorMitigationDetailsDto> currentMitigationDetails) {
-        if (currentMitigationDetails != null) {
-            Optional<ContraIndicatorMitigationDetailsDto> inProgressCiMitigation =
-                    currentMitigationDetails.stream()
-                            .filter(ContraIndicatorMitigationDetailsDto::isMitigatable)
-                            .findAny();
-            return inProgressCiMitigation.isPresent();
-        }
-        return false;
     }
 }
