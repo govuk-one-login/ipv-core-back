@@ -12,6 +12,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -84,6 +85,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setCriOAuthSessionId(TEST_OAUTH_STATE);
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
+        ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
 
         clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()
@@ -339,6 +341,30 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     }
 
     @Test
+    void shouldReceiveAccessDeniedJourneyResponseWhenRunningRefactorJourney() {
+        CriCallbackRequest criCallbackRequestWithAccessDenied = validCriCallbackRequest();
+        criCallbackRequestWithAccessDenied.setError(TEST_OAUTH_ACCESS_DENIED_ERROR);
+        criCallbackRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
+
+        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_REFACTOR_JOURNEY);
+
+        when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
+                .thenReturn(criOAuthSessionItem);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockConfigService.isEnabled(PASSPORT_CRI)).thenReturn(true);
+
+        when(mockConfigService.isEnabled(DRIVING_LICENCE_CRI)).thenReturn(true);
+
+        Map<String, Object> output =
+                underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
+
+        assertEquals("/journey/access-denied", output.get("journey"));
+        verify(mockCriOAuthSessionService, times(1)).getCriOauthSessionItem(any());
+    }
+
+    @Test
     void shouldReceiveAccessDeniedJourneyResponseWhenOauthErrorAccessDeniedAndOnlyPassportEnabled()
             throws URISyntaxException {
         CriCallbackRequest criCallbackRequestWithAccessDenied = validCriCallbackRequest();
@@ -361,8 +387,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
 
     @Test
     void
-            shouldReceiveAccessDeniedMultiJourneyResponseWhenOauthErrorAccessDeniedAndBothPassportAndDrivingLicenceEnabled()
-                    throws URISyntaxException {
+            shouldReceiveAccessDeniedMultiJourneyResponseWhenOauthErrorAccessDeniedAndBothPassportAndDrivingLicenceEnabled() {
         CriCallbackRequest criCallbackRequestWithAccessDenied = validCriCallbackRequest();
         criCallbackRequestWithAccessDenied.setError(TEST_OAUTH_ACCESS_DENIED_ERROR);
         criCallbackRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
