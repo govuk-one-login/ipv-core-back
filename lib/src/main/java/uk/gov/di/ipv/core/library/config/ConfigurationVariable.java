@@ -18,7 +18,9 @@ public enum ConfigurationVariable {
     VC_TTL("self/vcTtl"),
     CREDENTIAL_ISSUERS("credentialIssuers"),
     FEATURE_FLAGS("featureFlags/%s"),
-    CRI_RESPONSE_TTL("self/criResponseTtl");
+    CRI_RESPONSE_TTL("self/criResponseTtl"),
+    CIMIT_COMPONENT_ID("core/cimit/componentId"),
+    CIMIT_SIGNING_KEY("core/cimit/signingKey");
 
     private final String path;
 
