@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensions;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -265,7 +266,9 @@ public class ValidateOAuthCallbackHandler
 
         if (OAuth2Error.ACCESS_DENIED_CODE.equals(error)) {
             if (configService.isEnabled(PASSPORT_CRI)
-                    && configService.isEnabled(DRIVING_LICENCE_CRI)) {
+                    && configService.isEnabled(DRIVING_LICENCE_CRI)
+                    && ipvSessionItem.getJourneyType() == IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY) {
+                // This branch should be removed after we move the newly refactored journey
                 return getMultipleDocCheckPage();
             }
             return JOURNEY_ACCESS_DENIED;
