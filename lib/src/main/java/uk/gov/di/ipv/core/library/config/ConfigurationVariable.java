@@ -19,7 +19,8 @@ public enum ConfigurationVariable {
     VC_TTL("self/vcTtl"),
     CREDENTIAL_ISSUERS("credentialIssuers"),
     FEATURE_FLAGS("featureFlags/%s"),
-    CRI_RESPONSE_TTL("self/criResponseTtl");
+    CRI_RESPONSE_TTL("self/criResponseTtl"),
+    JOURNEY_TYPE("self/journey/type");
 
     private final String path;
 

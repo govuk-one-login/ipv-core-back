@@ -9,6 +9,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -112,6 +114,8 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldCreateSessionItem() {
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE))
+                .thenReturn("IPV_CORE_MAIN_JOURNEY");
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
                         SecureTokenHelper.generate(), null, false, null);
@@ -132,6 +136,8 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldCreateSessionItemForDebugJourney() {
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE))
+                .thenReturn("IPV_CORE_MAIN_JOURNEY");
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
                         SecureTokenHelper.generate(), null, true, null);
@@ -153,7 +159,32 @@ class IpvSessionServiceTest {
     }
 
     @Test
+    void shouldCreateSessionItemForRefactorJourney() {
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE))
+                .thenReturn("IPV_CORE_REFACTOR_JOURNEY");
+        IpvSessionItem ipvSessionItem =
+                ipvSessionService.generateIpvSession(
+                        SecureTokenHelper.generate(), null, false, null);
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(mockDataStore)
+                .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
+        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
+        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
+
+        assertEquals(
+                ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
+                ipvSessionItem.getIpvSessionId());
+        assertEquals(
+                INITIAL_IPV_JOURNEY_STATE, ipvSessionItemArgumentCaptor.getValue().getUserState());
+        assertEquals(IpvJourneyTypes.IPV_CORE_REFACTOR_JOURNEY, ipvSessionItem.getJourneyType());
+    }
+
+    @Test
     void shouldCreateSessionItemWithEmail() {
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE))
+                .thenReturn("IPV_CORE_MAIN_JOURNEY");
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
                         SecureTokenHelper.generate(), null, true, "test@test.com");
@@ -176,6 +207,8 @@ class IpvSessionServiceTest {
 
     @Test
     void shouldCreateSessionItemWithErrorObject() {
+        when(mockConfigService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE))
+                .thenReturn("IPV_CORE_MAIN_JOURNEY");
         ErrorObject testErrorObject = new ErrorObject("server_error", "Test error");
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
