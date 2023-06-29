@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.domain;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,6 +12,7 @@ import java.util.Optional;
 
 @Getter
 @Builder
+@ToString
 public class ContraIndications {
     private final Map<String, ContraIndicator> contraIndicatorMap;
 

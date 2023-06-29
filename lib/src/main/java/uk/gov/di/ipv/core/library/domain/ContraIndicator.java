@@ -2,12 +2,14 @@ package uk.gov.di.ipv.core.library.domain;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.time.Instant;
 import java.util.List;
 
 @Getter
 @Builder
+@ToString
 public class ContraIndicator implements Comparable<ContraIndicator> {
     private final String contraIndicatorCode;
     private final Instant issuanceDate;
