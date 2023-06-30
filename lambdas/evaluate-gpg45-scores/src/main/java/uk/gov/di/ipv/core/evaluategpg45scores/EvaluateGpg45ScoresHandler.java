@@ -139,18 +139,20 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
                     gpg45ProfileEvaluator.parseCredentials(
                             userIdentityService.getUserIssuedCredentials(userId));
 
-            List<ContraIndicatorItem> ciItems;
-            ciItems =
-                    ciStorageService.getCIs(
-                            clientOAuthSessionItem.getUserId(),
-                            clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            ipAddress);
+            boolean useContraIndicatorVC =
+                    Boolean.parseBoolean(configService.getFeatureFlag("useContraIndicatorVC"));
+            final Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
+                    Boolean.parseBoolean(configService.getFeatureFlag("useContraIndicatorVC"))
+                            ? gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
+                                    ciStorageService.getContraIndicatorsVC(
+                                            userId, govukSigninJourneyId, ipAddress))
+                            : gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
+                                    ciStorageService.getCIs(
+                                            userId, govukSigninJourneyId, ipAddress));
 
             JourneyResponse journeyResponse;
             var message = new StringMapMessage();
 
-            Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
-                    gpg45ProfileEvaluator.getJourneyResponseForStoredCis(ciItems);
             if (contraIndicatorErrorJourneyResponse.isEmpty()) {
                 journeyResponse =
                         checkForMatchingGpg45Profile(
