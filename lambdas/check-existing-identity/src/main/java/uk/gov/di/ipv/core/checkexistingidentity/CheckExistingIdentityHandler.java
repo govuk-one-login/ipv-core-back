@@ -17,7 +17,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
+import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeExce
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
@@ -189,15 +190,14 @@ public class CheckExistingIdentityHandler
                     gpg45ProfileEvaluator.parseCredentials(
                             userIdentityService.getUserIssuedCredentials(userId));
 
-            List<ContraIndicatorItem> ciItems =
-                    ciMitService.getCIs(
-                            clientOAuthSessionItem.getUserId(),
-                            clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            ipAddress);
-
-            Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
-                    gpg45ProfileEvaluator.getJourneyResponseForStoredCis(ciItems);
-
+            final Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
+                    configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)
+                            ? gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
+                                    ciMitService.getContraIndicatorsVC(
+                                            userId, govukSigninJourneyId, ipAddress),
+                                    true)
+                            : gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
+                                    ciMitService.getCIs(userId, govukSigninJourneyId, ipAddress));
             if (contraIndicatorErrorJourneyResponse.isPresent()) {
                 return contraIndicatorErrorJourneyResponse.get().toObjectMap();
             }
@@ -313,6 +313,13 @@ public class CheckExistingIdentityHandler
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             ErrorResponse.UNRECOGNISED_CI_CODE)
+                    .toObjectMap();
+        } catch (ConfigException e) {
+            LOGGER.error("Configuration error", e);
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_PARSE_CONFIG)
                     .toObjectMap();
         }
     }

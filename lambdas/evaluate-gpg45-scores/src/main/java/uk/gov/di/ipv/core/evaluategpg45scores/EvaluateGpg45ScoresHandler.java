@@ -17,7 +17,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
+import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -30,6 +30,7 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.NoVisitedCriFoundException;
@@ -150,18 +151,18 @@ public class EvaluateGpg45ScoresHandler
                     gpg45ProfileEvaluator.parseCredentials(
                             userIdentityService.getUserIssuedCredentials(userId));
 
-            List<ContraIndicatorItem> ciItems;
-            ciItems =
-                    ciMitService.getCIs(
-                            clientOAuthSessionItem.getUserId(),
-                            clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            ipAddress);
+            final Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
+                    configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)
+                            ? gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
+                                    ciMitService.getContraIndicatorsVC(
+                                            userId, govukSigninJourneyId, ipAddress),
+                                    false)
+                            : gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
+                                    ciMitService.getCIs(userId, govukSigninJourneyId, ipAddress));
 
             JourneyResponse journeyResponse;
             var message = new StringMapMessage();
 
-            Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
-                    gpg45ProfileEvaluator.getJourneyResponseForStoredCis(ciItems);
             if (contraIndicatorErrorJourneyResponse.isEmpty()) {
                 journeyResponse =
                         checkForMatchingGpg45Profile(
@@ -247,6 +248,13 @@ public class EvaluateGpg45ScoresHandler
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER)
+                    .toObjectMap();
+        } catch (ConfigException e) {
+            LOGGER.error("Configuration error", e);
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_PARSE_CONFIG)
                     .toObjectMap();
         }
     }

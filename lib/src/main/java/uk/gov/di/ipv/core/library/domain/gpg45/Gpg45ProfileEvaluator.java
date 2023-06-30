@@ -8,12 +8,15 @@ import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
+import uk.gov.di.ipv.core.library.domain.ContraIndications;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorMitigation;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CheckDetail;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -48,6 +51,42 @@ public class Gpg45ProfileEvaluator {
 
     public Gpg45ProfileEvaluator(ConfigService configService) {
         this.configService = configService;
+    }
+
+    public Optional<JourneyResponse> getJourneyResponseForStoredContraIndicators(
+            ContraIndications contraIndications, boolean separateSession) throws ConfigException {
+        LOGGER.info(
+                new StringMapMessage()
+                        .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Retrieved user's CI items.")
+                        .with(
+                                LOG_NO_OF_CI_ITEMS.getFieldName(),
+                                contraIndications.getContraIndicators().size()));
+        final int ciScore =
+                contraIndications.getContraIndicatorScore(
+                        configService.getContraIndicatorScoresMap(), false);
+        LOGGER.info(
+                new StringMapMessage()
+                        .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Calculated user's CI score.")
+                        .with(LOG_CI_SCORE.getFieldName(), ciScore));
+
+        if (ciScore <= Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD))) {
+            return Optional.empty();
+        }
+
+        final String latestContraIndicatorCode =
+                contraIndications.getLatestContraIndicator().get().getCode();
+        Map<String, ContraIndicatorMitigation> ciMitConfig = configService.getCiMitConfig();
+        if (ciMitConfig.containsKey(latestContraIndicatorCode)) {
+            final ContraIndicatorMitigation contraIndicatorMitigation =
+                    ciMitConfig.get(latestContraIndicatorCode);
+            return Optional.of(
+                    new JourneyResponse(
+                            separateSession
+                                    ? contraIndicatorMitigation.getSeparateSessionStep()
+                                    : contraIndicatorMitigation.getSameSessionStep()));
+        }
+
+        return Optional.of(JOURNEY_RESPONSE_PYI_NO_MATCH);
     }
 
     public Optional<JourneyResponse> getJourneyResponseForStoredCis(
