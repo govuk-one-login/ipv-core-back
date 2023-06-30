@@ -98,6 +98,8 @@ class CheckExistingIdentityHandlerTest {
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
+    private static final JourneyResponse JOURNEY_RESET_IDENTITY =
+            new JourneyResponse("/journey/reset-identity");
     private static final JourneyResponse JOURNEY_PENDING = new JourneyResponse("/journey/pending");
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -234,7 +236,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyNextResponseIfScoresDoNotSatisfyM1AGpg45Profile()
+    void shouldReturnJourneyResetIdentityResponseIfScoresDoNotSatisfyM1AGpg45Profile()
             throws ParseException, SqsException, IOException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
@@ -248,9 +250,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
 
         var journeyResponse = handleRequest(event, context, JourneyResponse.class);
-        assertEquals(JOURNEY_NEXT, journeyResponse);
-
-        verify(userIdentityService).deleteVcStoreItems(TEST_USER_ID);
+        assertEquals(JOURNEY_RESET_IDENTITY, journeyResponse);
 
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
                 ArgumentCaptor.forClass(AuditEvent.class);
@@ -262,7 +262,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyNextResponseIfVcsFailCiScoreCheck()
+    void shouldReturnJourneyResetIdentityResponseIfVcsFailCiScoreCheck()
             throws ParseException, SqsException, IOException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
@@ -274,9 +274,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
 
         var journeyResponse = handleRequest(event, context, JourneyResponse.class);
-        assertEquals("/journey/next", journeyResponse.getJourney());
-
-        verify(userIdentityService).deleteVcStoreItems(TEST_USER_ID);
+        assertEquals("/journey/reset-identity", journeyResponse.getJourney());
 
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
                 ArgumentCaptor.forClass(AuditEvent.class);

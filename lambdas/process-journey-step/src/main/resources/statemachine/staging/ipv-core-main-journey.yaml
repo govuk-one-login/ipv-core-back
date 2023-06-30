@@ -89,6 +89,13 @@ CHECK_EXISTING_IDENTITY:
       response:
         type: journey
         journeyStepId: /journey/evaluate-gpg45-scores
+    reset-identity:
+      type: basic
+      name: next
+      targetState: RESET_IDENTITY
+      response:
+        type: journey
+        journeyStepId: /journey/reset-identity
     reuse:
       type: basic
       name: reuse
@@ -103,6 +110,17 @@ CHECK_EXISTING_IDENTITY:
       response:
         type: page
         pageId: page-ipv-pending
+RESET_IDENTITY:
+  name: RESET_IDENTITY
+  parent: ATTEMPT_RECOVERY_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: EVALUATE_GPG45_SCORES
+      response:
+        type: journey
+        journeyStepId: /journey/evaluate-gpg45-scores
 IPV_IDENTITY_REUSE_PAGE:
   name: IPV_IDENTITY_REUSE_PAGE
   parent: END_JOURNEY

@@ -27,6 +27,11 @@
         },
         {
           "Variable": "$.journey",
+          "StringMatches": "/journey/reset-identity",
+          "Next": "ResetIdentityLambda"
+        },
+        {
+          "Variable": "$.journey",
           "StringMatches": "/journey/evaluate-gpg45-scores",
           "Next": "EvaluateGpg45ScoresFunction"
         },
@@ -51,6 +56,18 @@
     "CheckExistingIdentityLambda": {
       "Type": "Task",
       "Resource": "${CheckExistingIdentityFunctionArn}",
+      "Parameters": {
+        "journey.$": "$.journey",
+        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
+        "ipAddress.$": "$$.Execution.Input.ipAddress",
+        "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
+        "featureSet.$": "$$.Execution.Input.featureSet"
+      },
+      "Next": "ProcessNextJourney"
+    },
+    "ResetIdentityLambda": {
+      "Type": "Task",
+      "Resource": "${ResetIdentityFunctionArn}",
       "Parameters": {
         "journey.$": "$.journey",
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
