@@ -73,6 +73,8 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
     private static final JourneyResponse JOURNEY_PENDING = new JourneyResponse("/journey/pending");
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
+    private static final JourneyResponse JOURNEY_RESET_IDENTITY =
+            new JourneyResponse("/journey/reset-identity");
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -212,7 +214,7 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
                         new StringMapMessage()
                                 .with(
                                         LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "Failed to match profile so clearing VCs and returning next.");
+                                        "Failed to match profile so resetting identity.");
                 LOGGER.info(message);
 
                 auditService.sendAuditEvent(
@@ -221,15 +223,15 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
                                 componentId,
                                 auditEventUser));
 
-                userIdentityService.deleteVcStoreItems(userId);
-            } else {
-                var message =
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "New user so returning next.");
-                LOGGER.info(message);
+                return JOURNEY_RESET_IDENTITY;
             }
+
+            var message =
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "New user so returning next.");
+            LOGGER.info(message);
 
             return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody e) {
