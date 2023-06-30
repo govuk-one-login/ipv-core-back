@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -170,9 +171,15 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             ipAddress);
 
-            Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
-                    gpg45ProfileEvaluator.getJourneyResponseForStoredCis(ciItems);
-
+            final Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
+                    Boolean.parseBoolean(
+                                    configService.getFeatureFlag(
+                                            FeatureFlag.USE_CONTRA_INDICATOR_VC))
+                            ? gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
+                                    ciMitService.getContraIndicatorsVC(
+                                            userId, govukSigninJourneyId, ipAddress))
+                            : gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
+                                    ciMitService.getCIs(userId, govukSigninJourneyId, ipAddress));
             if (contraIndicatorErrorJourneyResponse.isPresent()) {
                 return contraIndicatorErrorJourneyResponse.get();
             }

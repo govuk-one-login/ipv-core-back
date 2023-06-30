@@ -8,6 +8,7 @@ import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
+import uk.gov.di.ipv.core.library.domain.ContraIndications;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -48,6 +49,35 @@ public class Gpg45ProfileEvaluator {
 
     public Gpg45ProfileEvaluator(ConfigService configService) {
         this.configService = configService;
+    }
+
+    public Optional<JourneyResponse> getJourneyResponseForStoredContraIndicators(
+            ContraIndications contraIndications) {
+        LOGGER.info(
+                new StringMapMessage()
+                        .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Retrieved user's CI items.")
+                        .with(
+                                LOG_NO_OF_CI_ITEMS.getFieldName(),
+                                contraIndications.getContraIndicators().size()));
+
+        int ciScore =
+                contraIndications.getContraIndicatorScore(
+                        configService.getContraIndicatorScoresMap(), false);
+        LOGGER.info(
+                new StringMapMessage()
+                        .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Calculated user's CI score.")
+                        .with(LOG_CI_SCORE.getFieldName(), ciScore));
+
+        int ciScoreThreshold =
+                Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
+        if (ciScore > ciScoreThreshold) {
+            return Optional.of(
+                    contraIndications.getLatestContraIndicator().get().getCode().equals("TBD")
+                            ? JOURNEY_RESPONSE_PYI_KBV_FAIL
+                            : JOURNEY_RESPONSE_PYI_NO_MATCH);
+        } else {
+            return Optional.empty();
+        }
     }
 
     public Optional<JourneyResponse> getJourneyResponseForStoredCis(
