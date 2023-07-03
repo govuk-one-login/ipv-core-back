@@ -27,23 +27,7 @@ class ContraIndicationsTest {
 
     @BeforeEach
     void setup() {
-        contraIndications =
-                ContraIndications.builder()
-                        .contraIndicatorScores(CONTRA_INDICATOR_SCORE_MAP)
-                        .contraIndicators(Map.of())
-                        .build();
-    }
-
-    @Test
-    void shouldReturnZeroScoreForEmptyContraIndications() {
-        assertEquals(0, contraIndications.getContraIndicatorScores());
-    }
-
-    @Test
-    void shouldCalculateContraIndicatorScore() {
-        addContraIndicators(TEST_CI1, BASE_TIME.minusSeconds(1));
-        addContraIndicators(TEST_CI2, BASE_TIME.minusSeconds(2));
-        assertEquals(7, contraIndications.getContraIndicatorScores());
+        contraIndications = ContraIndications.builder().contraIndicators(Map.of()).build();
     }
 
     @Test
