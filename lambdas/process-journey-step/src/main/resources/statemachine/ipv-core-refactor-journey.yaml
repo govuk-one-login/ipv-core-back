@@ -57,6 +57,13 @@ CRI_STATE:
       response:
         type: page
         pageId: pyi-kbv-fail
+    fail-with-no-ci:
+      type: basic
+      name: fail-with-no-ci
+      targetState: PYI_KBV_THIN_FILE
+      response:
+        type: page
+        pageId: pyi-kbv-thin-file
 
 # Shared states
 INITIAL_IPV_JOURNEY:
