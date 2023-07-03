@@ -63,6 +63,20 @@ class VerifiableCredentialJwtValidatorTest {
     }
 
     @Test
+    void validatesThrowParseException() throws ParseException {
+        when(credentialIssuerConfig.getSigningKey()).thenThrow(new ParseException("Whoops", 0));
+        var exception =
+                assertThrows(
+                        VerifiableCredentialException.class,
+                        () -> {
+                            vcJwtValidator.validate(
+                                    verifiableCredentials, credentialIssuerConfig, TEST_USER);
+                        });
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_PARSE_JWK, exception.getErrorResponse());
+    }
+
+    @Test
     void validateThrowsErrorOnInvalidVerifiableCredentials() {
         setCredentialIssuerConfigMockResponses(TEST_SIGNING_KEY);
         var exception =
@@ -141,6 +155,16 @@ class VerifiableCredentialJwtValidatorTest {
         assertEquals(
                 ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL,
                 exception.getErrorResponse());
+    }
+
+    @Test
+    void validatesValidVCSuccessfully() throws ParseException {
+        setCredentialIssuerConfigMockResponses(TEST_SIGNING_KEY);
+        vcJwtValidator.validate(
+                verifiableCredentials,
+                credentialIssuerConfig.getSigningKey(),
+                credentialIssuerConfig.getComponentId(),
+                TEST_USER);
     }
 
     private void setCredentialIssuerConfigMockResponses(ECKey signingKey) {

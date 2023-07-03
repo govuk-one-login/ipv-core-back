@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.verifiablecredential.validation;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jose.crypto.impl.ECDSA;
+import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.proc.SimpleSecurityContext;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWTClaimNames;
@@ -25,7 +26,7 @@ import java.util.HashSet;
 import static com.nimbusds.jose.JWSAlgorithm.ES256;
 
 public class VerifiableCredentialJwtValidator {
-    public static final String VC_CLAIM_NAME = "vc";
+    private static final String VC_CLAIM_NAME = "vc";
     private static final Logger LOGGER = LogManager.getLogger();
 
     public void validate(
@@ -33,13 +34,27 @@ public class VerifiableCredentialJwtValidator {
             CredentialIssuerConfig credentialIssuerConfig,
             String userId)
             throws VerifiableCredentialException {
-        validateSignature(verifiableCredential, credentialIssuerConfig);
-        validateClaimsSet(verifiableCredential, credentialIssuerConfig, userId);
+        LOGGER.info("Validating Verifiable Credential.");
+        ECKey signingKey;
+        try {
+            signingKey = credentialIssuerConfig.getSigningKey();
+        } catch (ParseException e) {
+            LOGGER.error("Error parsing credential issuer public JWK: '{}'", e.getMessage());
+            throw new VerifiableCredentialException(
+                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_JWK);
+        }
+        validate(verifiableCredential, signingKey, credentialIssuerConfig.getComponentId(), userId);
+    }
+
+    public void validate(
+            SignedJWT verifiableCredential, ECKey signingKey, String componentId, String userId)
+            throws VerifiableCredentialException {
+        validateSignature(verifiableCredential, signingKey);
+        validateClaimsSet(verifiableCredential, componentId, userId);
         LOGGER.info("Verifiable Credential validated.");
     }
 
-    private void validateSignature(
-            SignedJWT verifiableCredential, CredentialIssuerConfig credentialIssuerConfig) {
+    private void validateSignature(SignedJWT verifiableCredential, ECKey signingKey) {
 
         SignedJWT concatSignatureVerifiableCredential;
         try {
@@ -55,7 +70,7 @@ public class VerifiableCredentialJwtValidator {
         }
 
         try {
-            ECDSAVerifier verifier = new ECDSAVerifier(credentialIssuerConfig.getSigningKey());
+            ECDSAVerifier verifier = new ECDSAVerifier(signingKey);
             if (!concatSignatureVerifiableCredential.verify(verifier)) {
                 LOGGER.error("Verifiable credential signature not valid");
                 throw new VerifiableCredentialException(
@@ -67,10 +82,6 @@ public class VerifiableCredentialJwtValidator {
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
-        } catch (ParseException e) {
-            LOGGER.error("Error parsing credential issuer public JWK: '{}'", e.getMessage());
-            throw new VerifiableCredentialException(
-                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_JWK);
         }
     }
 
@@ -91,15 +102,10 @@ public class VerifiableCredentialJwtValidator {
     }
 
     private void validateClaimsSet(
-            SignedJWT verifiableCredential,
-            CredentialIssuerConfig credentialIssuerConfig,
-            String userId) {
+            SignedJWT verifiableCredential, String componentId, String userId) {
         DefaultJWTClaimsVerifier<SimpleSecurityContext> verifier =
                 new DefaultJWTClaimsVerifier<>(
-                        new JWTClaimsSet.Builder()
-                                .issuer(credentialIssuerConfig.getComponentId())
-                                .subject(userId)
-                                .build(),
+                        new JWTClaimsSet.Builder().issuer(componentId).subject(userId).build(),
                         new HashSet<>(Arrays.asList(JWTClaimNames.NOT_BEFORE, VC_CLAIM_NAME)));
 
         try {
