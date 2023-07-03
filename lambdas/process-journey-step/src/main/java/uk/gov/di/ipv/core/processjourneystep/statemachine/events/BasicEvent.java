@@ -1,13 +1,11 @@
 package uk.gov.di.ipv.core.processjourneystep.statemachine.events;
 
 import lombok.Data;
-import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.State;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.StateMachineResult;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyContext;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyStepResponse;
 
-@ExcludeFromGeneratedCoverageReport
 @Data
 public class BasicEvent implements Event {
 
