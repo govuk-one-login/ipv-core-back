@@ -40,9 +40,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 
 @ExtendWith(MockitoExtension.class)
 class ValidateOAuthCallbackHandlerHandlerTest {
@@ -341,7 +338,7 @@ class ValidateOAuthCallbackHandlerHandlerTest {
     }
 
     @Test
-    void shouldReceiveAccessDeniedJourneyResponseWhenRunningRefactorJourney() {
+    void shouldReceiveAccessDeniedJourneyResponseWhenAccessDeniedOAuthErrorReceived() {
         CriCallbackRequest criCallbackRequestWithAccessDenied = validCriCallbackRequest();
         criCallbackRequestWithAccessDenied.setError(TEST_OAUTH_ACCESS_DENIED_ERROR);
         criCallbackRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
@@ -353,82 +350,11 @@ class ValidateOAuthCallbackHandlerHandlerTest {
                 .thenReturn(criOAuthSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockConfigService.isEnabled(PASSPORT_CRI)).thenReturn(true);
-
-        when(mockConfigService.isEnabled(DRIVING_LICENCE_CRI)).thenReturn(true);
 
         Map<String, Object> output =
                 underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
 
         assertEquals("/journey/access-denied", output.get("journey"));
-        verify(mockCriOAuthSessionService, times(1)).getCriOauthSessionItem(any());
-    }
-
-    @Test
-    void shouldReceiveAccessDeniedJourneyResponseWhenOauthErrorAccessDeniedAndOnlyPassportEnabled()
-            throws URISyntaxException {
-        CriCallbackRequest criCallbackRequestWithAccessDenied = validCriCallbackRequest();
-        criCallbackRequestWithAccessDenied.setError(TEST_OAUTH_ACCESS_DENIED_ERROR);
-        criCallbackRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
-
-        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
-                .thenReturn(criOAuthSessionItem);
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockConfigService.isEnabled(PASSPORT_CRI)).thenReturn(true);
-
-        when(mockConfigService.isEnabled(DRIVING_LICENCE_CRI)).thenReturn(false);
-        Map<String, Object> output =
-                underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
-
-        assertEquals("/journey/access-denied", output.get("journey"));
-    }
-
-    @Test
-    void
-            shouldReceiveAccessDeniedMultiJourneyResponseWhenOauthErrorAccessDeniedAndBothPassportAndDrivingLicenceEnabled() {
-        CriCallbackRequest criCallbackRequestWithAccessDenied = validCriCallbackRequest();
-        criCallbackRequestWithAccessDenied.setError(TEST_OAUTH_ACCESS_DENIED_ERROR);
-        criCallbackRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
-
-        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
-                .thenReturn(criOAuthSessionItem);
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockConfigService.isEnabled(PASSPORT_CRI)).thenReturn(true);
-
-        when(mockConfigService.isEnabled(DRIVING_LICENCE_CRI)).thenReturn(true);
-
-        Map<String, Object> output =
-                underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
-
-        assertEquals("/journey/access-denied-multi-doc", output.get("journey"));
-        verify(mockCriOAuthSessionService, times(1)).getCriOauthSessionItem(any());
-    }
-
-    @Test
-    void
-            shouldReceiveAccessDeniedMultiJourneyResponseWhenOauthErrorAccessDeniedAndBothPassportDLicenceF2FEnabled()
-                    throws URISyntaxException {
-        CriCallbackRequest criCallbackRequestWithAccessDenied = validCriCallbackRequest();
-        criCallbackRequestWithAccessDenied.setError(TEST_OAUTH_ACCESS_DENIED_ERROR);
-        criCallbackRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
-
-        when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
-                .thenReturn(criOAuthSessionItem);
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockConfigService.isEnabled(PASSPORT_CRI)).thenReturn(true);
-        when(mockConfigService.isEnabled(DRIVING_LICENCE_CRI)).thenReturn(true);
-        when(mockConfigService.isEnabled(F2F_CRI)).thenReturn(true);
-
-        Map<String, Object> output =
-                underTest.handleRequest(criCallbackRequestWithAccessDenied, context);
-
-        assertEquals("/journey/access-denied-multi-f2f-doc", output.get("journey"));
         verify(mockCriOAuthSessionService, times(1)).getCriOauthSessionItem(any());
     }
 
