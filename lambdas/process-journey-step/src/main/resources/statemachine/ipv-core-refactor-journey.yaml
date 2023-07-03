@@ -147,6 +147,20 @@ IPV_IDENTITY_PENDING_PAGE:
       response:
         type: page
         pageId: page-ipv-pending
+    continue:
+      type: basic
+      name: continue
+      targetState: F2F_HANDOFF_PAGE
+      response:
+        type: page
+        pageId: page-face-to-face-handoff
+    restart:
+      type: basic
+      name: restart
+      targetState: RESET_IDENTITY
+      response:
+        type: journey
+        journeyStepId: /journey/reset-identity
 
 CRI_DCMAW:
   name: CRI_DCMAW

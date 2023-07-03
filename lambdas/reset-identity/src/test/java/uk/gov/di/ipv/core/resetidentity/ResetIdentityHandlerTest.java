@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 
 @ExtendWith(MockitoExtension.class)
 public class ResetIdentityHandlerTest {
@@ -81,6 +82,7 @@ public class ResetIdentityHandlerTest {
         var journeyResponse = resetIdentityHandler.handleRequest(event, context);
 
         verify(userIdentityService).deleteVcStoreItems(TEST_USER_ID);
+        verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);
         assertEquals(JOURNEY_NEXT.getJourney(), journeyResponse.getJourney());
     }
 }

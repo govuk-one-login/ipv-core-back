@@ -58,4 +58,8 @@ public class CriResponseService {
         CriResponseItem userRequest = dataStore.getItem(userId, "f2f");
         return !Objects.isNull(userRequest);
     }
+
+    public void deleteCriResponseItem(String userId, String credentialIssuer) {
+        dataStore.delete(userId, credentialIssuer);
+    }
 }

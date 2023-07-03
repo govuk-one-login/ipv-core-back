@@ -53,7 +53,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
@@ -72,16 +71,8 @@ class CheckExistingIdentityHandlerTest {
     private static final String TEST_FEATURE_SET = "test-feature-set";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
 
-    private static final String TEST_JOURNEY = DCMAW_CRI;
+    private static final String TEST_JOURNEY = "journey/check-existing-identity";
 
-    private static final JourneyRequest event =
-            JourneyRequest.builder()
-                    .ipvSessionId(TEST_SESSION_ID)
-                    .ipAddress(TEST_CLIENT_SOURCE_IP)
-                    .clientOAuthSessionId(TEST_CLIENT_SOURCE_IP)
-                    .journey(TEST_JOURNEY)
-                    .featureSet(TEST_FEATURE_SET)
-                    .build();
     private static final List<String> CREDENTIALS =
             List.of(
                     M1A_PASSPORT_VC,
@@ -144,6 +135,7 @@ class CheckExistingIdentityHandlerTest {
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     @InjectMocks private CheckExistingIdentityHandler checkExistingIdentityHandler;
 
+    private JourneyRequest event;
     private IpvSessionItem ipvSessionItem;
     private ClientOAuthSessionItem clientOAuthSessionItem;
 
@@ -156,6 +148,15 @@ class CheckExistingIdentityHandlerTest {
 
     @BeforeEach
     void setUpEach() {
+        event =
+                JourneyRequest.builder()
+                        .ipvSessionId(TEST_SESSION_ID)
+                        .ipAddress(TEST_CLIENT_SOURCE_IP)
+                        .clientOAuthSessionId(TEST_CLIENT_SOURCE_IP)
+                        .journey(TEST_JOURNEY)
+                        .featureSet(TEST_FEATURE_SET)
+                        .build();
+
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setIpvSessionId(TEST_SESSION_ID);
