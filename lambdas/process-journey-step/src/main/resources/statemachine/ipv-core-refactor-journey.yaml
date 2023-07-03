@@ -102,6 +102,13 @@ CHECK_EXISTING_IDENTITY:
           response:
             type: page
             pageId: page-multiple-doc-check
+    reset-identity:
+      type: basic
+      name: next
+      targetState: RESET_IDENTITY
+      response:
+        type: journey
+        journeyStepId: /journey/reset-identity
     reuse:
       type: basic
       name: reuse
@@ -124,6 +131,29 @@ CHECK_EXISTING_IDENTITY:
         type: journey
         journeyStepId: /journey/check-existing-identity
 
+RESET_IDENTITY:
+  name: RESET_IDENTITY
+  events:
+    next:
+      type: cri
+      criId: dcmaw
+      targetState: CRI_DCMAW
+      checkIfDisabled:
+        dcmaw:
+          type: basic
+          name: dcmaw-cri-disabled
+          targetState: MULTIPLE_DOC_CHECK_PAGE
+          response:
+            type: page
+            pageId: page-multiple-doc-check
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: RESET_IDENTITY
+      response:
+        type: journey
+        journeyStepId: /journey/reset-identity
+
 IPV_IDENTITY_REUSE_PAGE:
   name: IPV_IDENTITY_REUSE_PAGE
   parent: END_JOURNEY
@@ -140,6 +170,20 @@ IPV_IDENTITY_PENDING_PAGE:
   name: IPV_IDENTITY_PENDING_PAGE
   parent: END_JOURNEY
   events:
+    continue:
+      type: basic
+      name: continue
+      targetState: F2F_HANDOFF_PAGE_J4res
+      response:
+        type: page
+        pageId: page-face-to-face-handoff
+    restart:
+      type: basic
+      name: restart
+      targetState: RESET_IDENTITY
+      response:
+        type: journey
+        journeyStepId: /journey/reset-identity
     attempt-recovery:
       type: basic
       name: attempt-recovery
