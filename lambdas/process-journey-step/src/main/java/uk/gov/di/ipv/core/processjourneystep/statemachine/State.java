@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.processjourneystep.statemachine;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.events.Event;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyContext;
@@ -12,7 +11,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-@ExcludeFromGeneratedCoverageReport
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

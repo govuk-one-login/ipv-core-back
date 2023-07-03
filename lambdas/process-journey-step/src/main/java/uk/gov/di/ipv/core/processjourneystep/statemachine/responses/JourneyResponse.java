@@ -3,12 +3,10 @@ package uk.gov.di.ipv.core.processjourneystep.statemachine.responses;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.Map;
 
-@ExcludeFromGeneratedCoverageReport
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

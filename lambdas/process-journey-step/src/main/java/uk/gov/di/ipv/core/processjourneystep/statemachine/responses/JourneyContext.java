@@ -1,10 +1,8 @@
 package uk.gov.di.ipv.core.processjourneystep.statemachine.responses;
 
 import lombok.Data;
-import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 @Data
-@ExcludeFromGeneratedCoverageReport
 public class JourneyContext {
     private String featureSet;
 

@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.processjourneystep.statemachine;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 
 import java.io.File;
@@ -11,7 +10,6 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 
-@ExcludeFromGeneratedCoverageReport
 public class StateMachineInitializer {
     private static final String PRODUCTION_CONFIG_FILE_PATH =
             "statemachine/production/ipv-core-main-journey.yaml";
