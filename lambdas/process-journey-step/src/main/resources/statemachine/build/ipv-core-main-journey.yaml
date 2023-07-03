@@ -73,7 +73,7 @@ INITIAL_IPV_JOURNEY:
       targetState: IPV_IDENTITY_START_PAGE
       response:
         type: page
-        pageId: page-ipv-identity-start
+        pageId: page-ipv-identity-document-start
 IPV_IDENTITY_START_PAGE:
   name: IPV_IDENTITY_START_PAGE
   parent: ATTEMPT_RECOVERY_STATE
