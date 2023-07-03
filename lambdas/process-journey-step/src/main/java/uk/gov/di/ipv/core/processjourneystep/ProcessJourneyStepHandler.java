@@ -10,7 +10,6 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -38,7 +37,6 @@ import java.util.List;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
-import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_REFACTOR_JOURNEY;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_STEP;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
@@ -73,8 +71,7 @@ public class ProcessJourneyStepHandler
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
-        this.stateMachines =
-                loadStateMachines(List.of(IPV_CORE_MAIN_JOURNEY, IPV_CORE_REFACTOR_JOURNEY));
+        this.stateMachines = loadStateMachines(List.of(IPV_CORE_REFACTOR_JOURNEY));
     }
 
     @Override
@@ -238,12 +235,7 @@ public class ProcessJourneyStepHandler
                 new EnumMap<>(IpvJourneyTypes.class);
         for (IpvJourneyTypes journeyType : journeyTypes) {
             stateMachinesMap.put(
-                    journeyType,
-                    new StateMachine(
-                            new StateMachineInitializer(
-                                    configService.getEnvironmentVariable(
-                                            EnvironmentVariable.ENVIRONMENT),
-                                    journeyType)));
+                    journeyType, new StateMachine(new StateMachineInitializer(journeyType)));
         }
         return stateMachinesMap;
     }
