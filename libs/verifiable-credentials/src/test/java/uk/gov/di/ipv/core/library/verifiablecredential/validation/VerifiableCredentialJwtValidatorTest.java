@@ -182,15 +182,4 @@ class VerifiableCredentialJwtValidatorTest {
         return SignedJWT.parse(
                 generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_2), subject, issuer));
     }
-
-    /**
-     * Base64URL transcodedSignatureBase64 = Base64URL.encode( ECDSA.transcodeSignatureToConcat(
-     * vc.getSignature().decode(), ECDSA.getSignatureByteArrayLength(ES256)));
-     *
-     * <p>Base64URL transcodedSignatureBase64 = Base64URL.encode( ECDSA.transcodeSignatureToConcat(
-     * vc.getSignature().decode(), ECDSA.getSignatureByteArrayLength(ES256)));
-     *
-     * <p>Base64URL[] jwtParts = vc.getParsedParts(); return new SignedJWT(jwtParts[0], jwtParts[1],
-     * transcodedSignatureBase64);
-     */
 }
