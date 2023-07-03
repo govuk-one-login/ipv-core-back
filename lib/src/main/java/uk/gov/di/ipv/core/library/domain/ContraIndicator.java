@@ -11,7 +11,7 @@ import java.util.List;
 @Builder
 @ExcludeFromGeneratedCoverageReport
 public class ContraIndicator {
-    private final String contraIndicatorCode;
+    private final String code;
     private final Instant issuanceDate;
     private final String documentId;
     private final List<String> transactionIds;

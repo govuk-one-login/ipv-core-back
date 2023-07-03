@@ -10,5 +10,5 @@ import java.util.Map;
 @Builder
 @ExcludeFromGeneratedCoverageReport
 public class ContraIndications {
-    private final Map<String, ContraIndicator> contraIndicatorMap;
+    private final Map<String, ContraIndicator> contraIndicators;
 }

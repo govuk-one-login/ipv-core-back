@@ -10,6 +10,6 @@ import java.util.List;
 @Builder
 @ExcludeFromGeneratedCoverageReport
 public class Mitigation {
-    private final String mitigationCode;
+    private final String code;
     private final List<MitigatingCredential> mitigatingCredentials;
 }
