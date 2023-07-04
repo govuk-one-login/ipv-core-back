@@ -13,5 +13,5 @@ public class MitigatingCredential {
     private final String issuer;
     private final Instant validFrom;
     private final String transactionId;
-    private final String userId;
+    private final String id;
 }
