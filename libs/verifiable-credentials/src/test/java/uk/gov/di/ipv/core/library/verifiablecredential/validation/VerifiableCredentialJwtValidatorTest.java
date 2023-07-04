@@ -63,6 +63,20 @@ class VerifiableCredentialJwtValidatorTest {
     }
 
     @Test
+    void validatesThrowParseException() throws ParseException {
+        when(credentialIssuerConfig.getSigningKey()).thenThrow(new ParseException("Whoops", 0));
+        var exception =
+                assertThrows(
+                        VerifiableCredentialException.class,
+                        () -> {
+                            vcJwtValidator.validate(
+                                    verifiableCredentials, credentialIssuerConfig, TEST_USER);
+                        });
+        assertEquals(HTTPResponse.SC_SERVER_ERROR, exception.getHttpStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_PARSE_JWK, exception.getErrorResponse());
+    }
+
+    @Test
     void validateThrowsErrorOnInvalidVerifiableCredentials() {
         setCredentialIssuerConfigMockResponses(TEST_SIGNING_KEY);
         var exception =
@@ -143,6 +157,16 @@ class VerifiableCredentialJwtValidatorTest {
                 exception.getErrorResponse());
     }
 
+    @Test
+    void validatesValidVCSuccessfully() throws ParseException {
+        setCredentialIssuerConfigMockResponses(TEST_SIGNING_KEY);
+        vcJwtValidator.validate(
+                verifiableCredentials,
+                credentialIssuerConfig.getSigningKey(),
+                credentialIssuerConfig.getComponentId(),
+                TEST_USER);
+    }
+
     private void setCredentialIssuerConfigMockResponses(ECKey signingKey) {
         when(credentialIssuerConfig.getComponentId())
                 .thenReturn("https://staging-di-ipv-cri-address-front.london.cloudapps.digital");
@@ -158,15 +182,4 @@ class VerifiableCredentialJwtValidatorTest {
         return SignedJWT.parse(
                 generateVerifiableCredential(vcClaim(CREDENTIAL_ATTRIBUTES_2), subject, issuer));
     }
-
-    /**
-     * Base64URL transcodedSignatureBase64 = Base64URL.encode( ECDSA.transcodeSignatureToConcat(
-     * vc.getSignature().decode(), ECDSA.getSignatureByteArrayLength(ES256)));
-     *
-     * <p>Base64URL transcodedSignatureBase64 = Base64URL.encode( ECDSA.transcodeSignatureToConcat(
-     * vc.getSignature().decode(), ECDSA.getSignatureByteArrayLength(ES256)));
-     *
-     * <p>Base64URL[] jwtParts = vc.getParsedParts(); return new SignedJWT(jwtParts[0], jwtParts[1],
-     * transcodedSignatureBase64);
-     */
 }
