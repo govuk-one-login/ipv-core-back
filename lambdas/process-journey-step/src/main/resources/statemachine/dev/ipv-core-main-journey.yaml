@@ -71,13 +71,20 @@ IPV_IDENTITY_START_PAGE:
   name: IPV_IDENTITY_START_PAGE
   parent: ATTEMPT_RECOVERY_STATE
   events:
-    next:
+    document:
       type: basic
       name: next
       targetState: CHECK_EXISTING_IDENTITY
       response:
         type: journey
         journeyStepId: /journey/check-existing-identity
+    postoffice:
+      type: basic
+      name: postoffice
+      targetState: CHECK_EXISTING_IDENTITY
+      response:
+        type: page
+        pageId: page-ipv-identity-postoffice-start
 CHECK_EXISTING_IDENTITY:
   name: CHECK_EXISTING_IDENTITY
   parent: ATTEMPT_RECOVERY_STATE
