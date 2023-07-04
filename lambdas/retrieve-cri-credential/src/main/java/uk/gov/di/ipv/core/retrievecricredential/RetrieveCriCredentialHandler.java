@@ -70,6 +70,8 @@ public class RetrieveCriCredentialHandler
     private static final Map<String, Object> JOURNEY_NEXT = Map.of(JOURNEY, "/journey/next");
     private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, "/journey/error");
     private static final Map<String, Object> JOURNEY_PENDING = Map.of(JOURNEY, "/journey/pending");
+    private static final Map<String, Object> JOURNEY_FAIL_WITH_NO_CI =
+            Map.of(JOURNEY, "/journey/fail-with-no-ci");
     public static final String JOURNEY_TYPE_KEY = "journeyType";
 
     private final VerifiableCredentialService verifiableCredentialService;
@@ -287,6 +289,16 @@ public class RetrieveCriCredentialHandler
             submitVcToCiStorage(vc, clientOAuthSessionItem.getGovukSigninJourneyId(), ipAddress);
 
             verifiableCredentialService.persistUserCredentials(vc, credentialIssuerId, userId);
+
+            if (!isSuccessful) {
+                // Add journey type to the response to allow temporary flow control in step function
+                // while
+                // refactoring journey
+                HashMap<String, Object> failLambdaResult = new HashMap<>(JOURNEY_FAIL_WITH_NO_CI);
+                failLambdaResult.put(JOURNEY_TYPE_KEY, ipvSessionItem.getJourneyType().getValue());
+
+                return failLambdaResult;
+            }
         }
 
         updateVisitedCredentials(ipvSessionItem, credentialIssuerId, true, null);
