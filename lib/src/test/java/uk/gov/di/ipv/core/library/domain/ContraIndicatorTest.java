@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.library.domain;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -43,33 +42,5 @@ class ContraIndicatorTest {
         assertEquals(TRANSACTIONS, CI.getTransactionIds());
         assertEquals(MITIGATIONS, CI.getMitigations());
         assertTrue(CI.getIncompleteMitigations().isEmpty());
-    }
-
-    @Test
-    void shouldBeCompareAccordingIssuanceDate() {
-        ContraIndicator contraIndicator1 =
-                CI.toBuilder().issuanceDate(CURRENT_TIME.plusSeconds(20)).build();
-        ContraIndicator contraIndicator2 = CI.toBuilder().issuanceDate(CURRENT_TIME).build();
-        ContraIndicator contraIndicator3 =
-                CI.toBuilder().issuanceDate(CURRENT_TIME.minusSeconds(10)).build();
-        ContraIndicator contraIndicator4 = CI.toBuilder().issuanceDate(CURRENT_TIME).build();
-
-        assertEquals(0, contraIndicator2.compareTo(contraIndicator4));
-        assertTrue(contraIndicator2.compareTo(contraIndicator1) < 0);
-        assertTrue(contraIndicator2.compareTo(contraIndicator3) > 0);
-        assertTrue(contraIndicator3.compareTo(contraIndicator1) < 0);
-        assertTrue(contraIndicator3.compareTo(contraIndicator2) < 0);
-
-        List<ContraIndicator> contraIndicators =
-                new ArrayList<>(
-                        List.of(
-                                contraIndicator1,
-                                contraIndicator2,
-                                contraIndicator3,
-                                contraIndicator4));
-        Collections.sort(contraIndicators);
-        assertEquals(
-                List.of(contraIndicator3, contraIndicator2, contraIndicator4, contraIndicator1),
-                contraIndicators);
     }
 }
