@@ -21,9 +21,9 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processjourneystep.exceptions.JourneyEngineException;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.State;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.StateMachine;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.StateMachineInitializer;
-import uk.gov.di.ipv.core.processjourneystep.statemachine.StateMachineResult;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.exceptions.StateMachineNotFoundException;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.exceptions.UnknownStateException;
@@ -134,23 +134,19 @@ public class ProcessJourneyStepHandler
                     "Found state machine for journey type: {}",
                     ipvSessionItem.getJourneyType().getValue());
 
-            StateMachineResult stateMachineResult =
+            State newState =
                     stateMachine.transition(
                             ipvSessionItem.getUserState(),
                             journeyStep,
                             JourneyContext.withFeatureSet(configService.getFeatureSet()));
 
-            updateUserState(
-                    ipvSessionItem.getUserState(),
-                    stateMachineResult.getState().getName(),
-                    journeyStep,
-                    ipvSessionItem);
+            updateUserState(ipvSessionItem.getUserState(), newState, journeyStep, ipvSessionItem);
 
             clearOauthSessionIfExists(ipvSessionItem);
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            return stateMachineResult.getJourneyStepResponse().value(configService);
+            return newState.getResponse().value(configService);
         } catch (UnknownStateException e) {
             LOGGER.error(
                     new StringMapMessage()
@@ -180,17 +176,14 @@ public class ProcessJourneyStepHandler
 
     @Tracing
     private void updateUserState(
-            String oldState,
-            String updatedStateValue,
-            String journeyStep,
-            IpvSessionItem ipvSessionItem) {
-        ipvSessionItem.setUserState(updatedStateValue);
+            String oldState, State newState, String journeyStep, IpvSessionItem ipvSessionItem) {
+        ipvSessionItem.setUserState(newState.getName());
         var message =
                 new StringMapMessage()
                         .with("journeyEngine", "State transition")
                         .with("event", journeyStep)
                         .with("from", oldState)
-                        .with("to", updatedStateValue);
+                        .with("to", newState.getName());
         LOGGER.info(message);
     }
 

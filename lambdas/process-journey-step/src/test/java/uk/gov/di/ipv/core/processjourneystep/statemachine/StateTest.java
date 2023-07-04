@@ -1,15 +1,14 @@
 package uk.gov.di.ipv.core.processjourneystep.statemachine;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.events.BasicEvent;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyContext;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyResponse;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.util.Map;
@@ -17,35 +16,63 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@ExtendWith(MockitoExtension.class)
 @ExtendWith(SystemStubsExtension.class)
-public class StateTest {
-    @Mock private static ConfigService mockConfigService;
-    public static final State CURRENT_STATE = new State("CURRENT_STATE");
-    private static final State TARGET_STATE = new State("TARGET_STATE");
-    private static final JourneyResponse JOURNEY_RESPONSE = new JourneyResponse("stepId");
+class StateTest {
 
-    @BeforeEach
-    private void beforeEach() {
-        BasicEvent CURRENT_TO_TARGET_EVENT = new BasicEvent(mockConfigService);
-        CURRENT_TO_TARGET_EVENT.setName("eventName");
-        CURRENT_TO_TARGET_EVENT.setTargetState(TARGET_STATE);
-        CURRENT_TO_TARGET_EVENT.setResponse(JOURNEY_RESPONSE);
-        CURRENT_STATE.setEvents(Map.of("next", CURRENT_TO_TARGET_EVENT));
+    @SystemStub private static EnvironmentVariables environmentVariables;
+
+    @BeforeAll
+    private static void beforeAll() {
+        environmentVariables.set("IS_LOCAL", "true");
     }
 
     @Test
-    void transitionShouldReturnAStateMachineResult() throws Exception {
-        StateMachineResult stateMachineResult =
-                CURRENT_STATE.transition("next", JourneyContext.emptyContext());
+    void transitionShouldReturnAState() throws Exception {
+        State targetState = new State();
+        JourneyResponse journeyResponse = new JourneyResponse("stepId");
+        targetState.setResponse(journeyResponse);
 
-        assertEquals(TARGET_STATE, stateMachineResult.getState());
+        State currentState = new State();
+        BasicEvent currentToTargetEvent = new BasicEvent();
+        currentToTargetEvent.setTargetStateObj(targetState);
+        currentState.setEvents(Map.of("next", currentToTargetEvent));
+
+        State transitionedState = currentState.transition("next", JourneyContext.emptyContext());
+
+        assertEquals(targetState, transitionedState);
+        assertEquals(journeyResponse, transitionedState.getResponse());
+    }
+
+    @Test
+    void transitionShouldUseEventsFromParentState() throws Exception {
+        BasicEvent parentEvent = new BasicEvent();
+        State parentEventTargetState = new State();
+        parentEvent.setTargetStateObj(parentEventTargetState);
+
+        State parentState = new State();
+        parentState.setEvents(Map.of("parent-event", parentEvent));
+
+        State currentState = new State();
+        currentState.setParentObj(parentState);
+
+        State transitionedState =
+                currentState.transition("parent-event", JourneyContext.emptyContext());
+
+        assertEquals(parentEventTargetState, transitionedState);
     }
 
     @Test
     void transitionShouldThrowIfEventNotFound() {
         assertThrows(
                 UnknownEventException.class,
-                () -> CURRENT_STATE.transition("unknown-event", JourneyContext.emptyContext()));
+                () -> new State().transition("unknown-event", JourneyContext.emptyContext()));
+    }
+
+    @Test
+    void toStringShouldReturnName() {
+        State state = new State();
+        state.setName("Bungle");
+
+        assertEquals("Bungle", state.toString());
     }
 }

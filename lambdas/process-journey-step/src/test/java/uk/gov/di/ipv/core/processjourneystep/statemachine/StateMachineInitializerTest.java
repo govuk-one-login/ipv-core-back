@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.processjourneystep.statemachine;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -13,6 +14,7 @@ import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -26,19 +28,23 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 @ExtendWith(SystemStubsExtension.class)
 class StateMachineInitializerTest {
 
-    @SystemStub private EnvironmentVariables environmentVariables;
+    @SystemStub private static EnvironmentVariables environmentVariables;
+
+    @BeforeAll
+    static void beforeAll() {
+        environmentVariables.set("IS_LOCAL", "true");
+    }
 
     @ParameterizedTest
     @EnumSource
-    void stateMachineInitializerShouldHandleAllStateFiles(IpvJourneyTypes journeyType) {
-        assertDoesNotThrow(() -> new StateMachineInitializer(journeyType));
+    void stateMachineInitializerShouldHandleAllStateFiles(IpvJourneyTypes journeyType) throws Exception {
+        assertDoesNotThrow(() -> new StateMachineInitializer(journeyType)).initialize();
     }
 
     // This is to make sure any yaml files not covered by the journey type / envs above are at least
     // loaded.
     @Test
     void allStateMachineFilesShouldLoadWithoutError() throws Exception {
-        environmentVariables.set("IS_LOCAL", "true");
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         URL statemachineDir = classLoader.getResource("statemachine");
 

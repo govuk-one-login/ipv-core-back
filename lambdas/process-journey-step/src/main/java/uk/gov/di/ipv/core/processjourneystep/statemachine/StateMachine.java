@@ -15,8 +15,7 @@ public class StateMachine {
         this.states = initializer.initialize();
     }
 
-    public StateMachineResult transition(
-            String startState, String event, JourneyContext journeyContext)
+    public State transition(String startState, String event, JourneyContext journeyContext)
             throws UnknownEventException, UnknownStateException {
         var state = states.get(startState);
 

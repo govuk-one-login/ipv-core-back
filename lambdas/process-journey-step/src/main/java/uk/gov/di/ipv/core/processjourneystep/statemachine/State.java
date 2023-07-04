@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.events.Event;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyContext;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyStepResponse;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,14 +17,12 @@ import java.util.Optional;
 @AllArgsConstructor
 public class State {
     private String name;
-    private State parent;
+    private String parent;
+    private State parentObj;
+    private JourneyStepResponse response;
     private Map<String, Event> events = new HashMap<>();
 
-    public State(String name) {
-        this.name = name;
-    }
-
-    public StateMachineResult transition(String eventName, JourneyContext journeyContext)
+    public State transition(String eventName, JourneyContext journeyContext)
             throws UnknownEventException {
         var event = getEvent(eventName);
         if (event.isPresent()) {
@@ -35,9 +34,14 @@ public class State {
 
     private Optional<Event> getEvent(String eventName) {
         var event = events.get(eventName);
-        if (event == null && parent != null) {
-            return parent.getEvent(eventName);
+        if (event == null && parentObj != null) {
+            return parentObj.getEvent(eventName);
         }
         return Optional.ofNullable(event);
+    }
+
+    @Override
+    public String toString() {
+        return this.name;
     }
 }
