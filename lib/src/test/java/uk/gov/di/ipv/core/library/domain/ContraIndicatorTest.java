@@ -10,7 +10,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class ContraIndicatorTest {
+class ContraIndicatorTest {
 
     private static final Instant CURRENT_TIME = Instant.now();
 
@@ -36,7 +36,7 @@ public class ContraIndicatorTest {
                     .build();
 
     @Test
-    public void checkGetterMethods() {
+    void checkGetterMethods() {
         assertEquals(CODE, CI.getCode());
         assertEquals(CURRENT_TIME, CI.getIssuanceDate());
         assertEquals(DOCUMENT_ID, CI.getDocumentId());
@@ -46,7 +46,7 @@ public class ContraIndicatorTest {
     }
 
     @Test
-    public void shouldBeCompareAccordingIssuanceDate() {
+    void shouldBeCompareAccordingIssuanceDate() {
         ContraIndicator contraIndicator1 =
                 CI.toBuilder().issuanceDate(CURRENT_TIME.plusSeconds(20)).build();
         ContraIndicator contraIndicator2 = CI.toBuilder().issuanceDate(CURRENT_TIME).build();
