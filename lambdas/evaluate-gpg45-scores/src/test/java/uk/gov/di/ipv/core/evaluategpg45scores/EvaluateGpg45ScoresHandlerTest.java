@@ -45,6 +45,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -85,6 +86,7 @@ class EvaluateGpg45ScoresHandlerTest {
     private static final JourneyResponse JOURNEY_END = new JourneyResponse("/journey/end");
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
     private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
+    private static final String JOURNEY_FAIL_WITH_NO_CI = "/journey/fail-with-no-ci";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -307,6 +309,26 @@ class EvaluateGpg45ScoresHandlerTest {
         var response = handleRequest(request, context, JourneyResponse.class);
 
         assertEquals(JOURNEY_PYI_NO_MATCH, response.getJourney());
+    }
+
+    @Test
+    void shouldReturnFailWithNoCiJourneyResponseIfAnyVcStatusesUnsuccessful() throws Exception {
+        IpvSessionItem testIpvSessionItem = new IpvSessionItem();
+        testIpvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
+        testIpvSessionItem.setIpvSessionId(TEST_SESSION_ID);
+        testIpvSessionItem.setCurrentVcStatuses(
+                Arrays.asList(new VcStatusDto("test1", false), new VcStatusDto("test2", true)));
+
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(testIpvSessionItem);
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
+                .thenReturn(Optional.empty());
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        var response = handleRequest(request, context, JourneyResponse.class);
+
+        assertEquals(JOURNEY_FAIL_WITH_NO_CI, response.getJourney());
     }
 
     @Test

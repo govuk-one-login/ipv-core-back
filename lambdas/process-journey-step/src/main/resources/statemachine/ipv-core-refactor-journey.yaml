@@ -180,6 +180,13 @@ CRI_DCMAW:
       response:
         type: page
         pageId: page-multiple-doc-check
+    fail-with-no-ci:
+      type: basic
+      name: fail-with-no-ci
+      targetState: MULTIPLE_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-multiple-doc-check
     attempt-recovery:
       type: cri
       criId: dcmaw

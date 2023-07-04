@@ -564,28 +564,6 @@ class RetrieveCriCredentialHandlerTest {
                 CREDENTIAL_ISSUER_ID, false, OAuth2Error.SERVER_ERROR_CODE);
     }
 
-    @Test
-    void shouldReturnFailWithNoCiJourneyOnVcWithNoCi() throws ParseException {
-        when(verifiableCredentialService.getVerifiableCredentialResponse(
-                        testBearerAccessToken,
-                        testPassportIssuer,
-                        testApiKey,
-                        CREDENTIAL_ISSUER_ID))
-                .thenReturn(
-                        VerifiableCredentialResponse.builder()
-                                .verifiableCredentials(List.of(SignedJWT.parse(SIGNED_ADDRESS_VC)))
-                                .build());
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
-                .thenReturn(addressConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(claimedIdentityConfig);
-        mockServiceCallsAndSessionItem();
-        when(ipvSessionItem.getJourneyType()).thenReturn(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
-
-        Map<String, Object> output = handler.handleRequest(testInput, context);
-        assertEquals("/journey/fail-with-no-ci", output.get("journey"));
-    }
-
     private void mockServiceCallsAndSessionItem() {
         mockServiceCalls();
         when(ipvSessionItem.getIpvSessionId()).thenReturn(testSessionId);

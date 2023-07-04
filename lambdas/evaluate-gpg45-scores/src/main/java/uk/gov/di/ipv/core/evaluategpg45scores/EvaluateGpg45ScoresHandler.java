@@ -67,6 +67,7 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
     private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
     private static final String JOURNEY_ERROR_PATH = "/journey/error";
+    private static final String JOURNEY_FAIL_WITH_NO_CI = "/journey/fail-with-no-ci";
     private static final String VOT_P2 = "P2";
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int ONLY = 0;
@@ -166,7 +167,15 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
                 return contraIndicatorErrorJourneyResponse.get();
             }
 
-            updateSuccessfulVcStatuses(ipvSessionItem, credentials);
+            List<VcStatusDto> currentVcStatusDtos = getVcStatuses(ipvSessionItem);
+
+            if (currentVcStatusDtos.stream()
+                    .anyMatch(vcStatusDto -> !vcStatusDto.getIsSuccessfulVc())) {
+                // Handle scenario where VCs without CIs should be redirected
+                return new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI);
+            }
+
+            updateSuccessfulVcStatuses(currentVcStatusDtos, ipvSessionItem, credentials);
 
             if (!checkCorrelation(userId, ipvSessionItem.getCurrentVcStatuses())) {
                 return new JourneyResponse(JOURNEY_PYI_NO_MATCH);
@@ -273,15 +282,21 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
     }
 
     @Tracing
-    private void updateSuccessfulVcStatuses(
-            IpvSessionItem ipvSessionItem, List<SignedJWT> credentials) throws ParseException {
-
-        // get list of success vc's
+    List<VcStatusDto> getVcStatuses(IpvSessionItem ipvSessionItem) {
         List<VcStatusDto> currentVcStatusDtos = ipvSessionItem.getCurrentVcStatuses();
 
         if (currentVcStatusDtos == null) {
             currentVcStatusDtos = new ArrayList<>();
         }
+        return currentVcStatusDtos;
+    }
+
+    @Tracing
+    private void updateSuccessfulVcStatuses(
+            List<VcStatusDto> currentVcStatusDtos,
+            IpvSessionItem ipvSessionItem,
+            List<SignedJWT> credentials)
+            throws ParseException {
 
         if (currentVcStatusDtos.size() != credentials.size()) {
             List<VcStatusDto> updatedStatuses = generateVcSuccessStatuses(credentials);
