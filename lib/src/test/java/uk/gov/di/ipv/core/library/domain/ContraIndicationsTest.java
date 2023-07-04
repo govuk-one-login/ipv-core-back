@@ -36,6 +36,19 @@ class ContraIndicationsTest {
     }
 
     @Test
+    void shouldReturnZeroScoreForEmptyContraIndications() {
+        assertEquals(0, contraIndications.getContraIndicatorScores(CONTRA_INDICATOR_SCORE_MAP));
+    }
+
+    @Test
+    void shouldCalculateContraIndicatorScore() {
+        addContraIndicators(TEST_CI1, BASE_TIME.minusSeconds(1));
+        addContraIndicators(TEST_CI2, BASE_TIME.minusSeconds(2));
+        assertEquals(7, contraIndications.getContraIndicatorScores(CONTRA_INDICATOR_SCORE_MAP));
+        contraIndications = ContraIndications.builder().contraIndicators(Map.of()).build();
+    }
+
+    @Test
     void shouldIdentifyLatestContraIndicator() {
         addContraIndicators(TEST_CI1, BASE_TIME.minusSeconds(1));
         addContraIndicators(TEST_CI2, BASE_TIME.minusSeconds(2));

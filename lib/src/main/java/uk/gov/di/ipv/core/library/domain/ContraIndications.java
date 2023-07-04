@@ -12,6 +12,15 @@ import java.util.Optional;
 public class ContraIndications {
     private final Map<String, ContraIndicator> contraIndicators;
 
+    public Integer getContraIndicatorScores(
+            final Map<String, ContraIndicatorScore> contraIndicatorScores) {
+        return contraIndicators.keySet().stream()
+                .map(
+                        contraIndicatorCode ->
+                                contraIndicatorScores.get(contraIndicatorCode).getDetectedScore())
+                .reduce(0, Integer::sum);
+    }
+
     public Optional<ContraIndicator> getLatestContraIndicator() {
         return contraIndicators.values().stream()
                 .max(Comparator.comparing(ContraIndicator::getIssuanceDate));
