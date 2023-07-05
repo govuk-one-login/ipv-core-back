@@ -60,7 +60,8 @@ public enum ErrorResponse {
     UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL(1050, "Unexpected async verifiable credential"),
     PENDING_VERIFICATION_EXCEPTION(1051, "Pending face to face verification exception"),
     FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE(
-            1051, "Failed to validate verifiable credential response");
+            1051, "Failed to validate verifiable credential response"),
+    FAILED_TO_FIND_VISITED_CRI(1052, "Failed to find a visited CRI");
 
     @JsonProperty("code")
     private final int code;

@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 public class VisitedCredentialIssuerDetailsDto {
 
     private String criId;
+    private String criIssuer;
     private boolean returnedWithVc;
     private String oauthError;
 }

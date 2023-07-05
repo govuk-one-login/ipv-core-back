@@ -259,7 +259,7 @@ public class ValidateOAuthCallbackHandler
 
         ipvSessionItem.addVisitedCredentialIssuerDetails(
                 new VisitedCredentialIssuerDetailsDto(
-                        callbackRequest.getCredentialIssuerId(), false, error));
+                        callbackRequest.getCredentialIssuerId(), null, false, error));
         ipvSessionService.updateIpvSession(ipvSessionItem);
 
         LogHelper.logOauthError("OAuth error received from CRI", error, errorDescription);
@@ -354,7 +354,7 @@ public class ValidateOAuthCallbackHandler
             boolean returnedWithVc,
             String oauthError) {
         ipvSessionItem.addVisitedCredentialIssuerDetails(
-                new VisitedCredentialIssuerDetailsDto(criId, returnedWithVc, oauthError));
+                new VisitedCredentialIssuerDetailsDto(criId, null, returnedWithVc, oauthError));
     }
 
     @Tracing

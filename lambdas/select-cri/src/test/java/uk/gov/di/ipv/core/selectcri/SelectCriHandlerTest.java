@@ -170,10 +170,11 @@ class SelectCriHandlerTest {
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(
-                        new VisitedCredentialIssuerDetailsDto(CLAIMED_IDENTITY_CRI, true, null),
-                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null),
-                        new VisitedCredentialIssuerDetailsDto(FRAUD_CRI, true, null),
-                        new VisitedCredentialIssuerDetailsDto(F2F_CRI, false, null));
+                        new VisitedCredentialIssuerDetailsDto(
+                                CLAIMED_IDENTITY_CRI, null, true, null),
+                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, null, true, null),
+                        new VisitedCredentialIssuerDetailsDto(FRAUD_CRI, null, true, null),
+                        new VisitedCredentialIssuerDetailsDto(F2F_CRI, null, false, null));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
 
@@ -205,7 +206,9 @@ class SelectCriHandlerTest {
                 .thenReturn(createCriConfig(ADDRESS_CRI_ISS));
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
-                List.of(new VisitedCredentialIssuerDetailsDto(CLAIMED_IDENTITY_CRI, true, null));
+                List.of(
+                        new VisitedCredentialIssuerDetailsDto(
+                                CLAIMED_IDENTITY_CRI, null, true, null));
 
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(List.of(new VcStatusDto(CLAIMED_IDENTITY_CRI_ISS, true)));
@@ -232,7 +235,9 @@ class SelectCriHandlerTest {
                 .thenReturn(createCriConfig(PASSPORT_CRI_ISS));
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
-                List.of(new VisitedCredentialIssuerDetailsDto(CLAIMED_IDENTITY_CRI, false, null));
+                List.of(
+                        new VisitedCredentialIssuerDetailsDto(
+                                CLAIMED_IDENTITY_CRI, null, false, null));
 
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(List.of(new VcStatusDto(CLAIMED_IDENTITY_CRI_ISS, false)));
@@ -264,8 +269,9 @@ class SelectCriHandlerTest {
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(
-                        new VisitedCredentialIssuerDetailsDto(CLAIMED_IDENTITY_CRI, true, null),
-                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null));
+                        new VisitedCredentialIssuerDetailsDto(
+                                CLAIMED_IDENTITY_CRI, null, true, null),
+                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, null, true, null));
 
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(
@@ -298,8 +304,9 @@ class SelectCriHandlerTest {
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(
-                        new VisitedCredentialIssuerDetailsDto(CLAIMED_IDENTITY_CRI, true, null),
-                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null));
+                        new VisitedCredentialIssuerDetailsDto(
+                                CLAIMED_IDENTITY_CRI, null, true, null),
+                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, null, true, null));
 
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(
@@ -336,9 +343,10 @@ class SelectCriHandlerTest {
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(
-                        new VisitedCredentialIssuerDetailsDto(CLAIMED_IDENTITY_CRI, true, null),
-                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null),
-                        new VisitedCredentialIssuerDetailsDto(FRAUD_CRI, true, null));
+                        new VisitedCredentialIssuerDetailsDto(
+                                CLAIMED_IDENTITY_CRI, null, true, null),
+                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, null, true, null),
+                        new VisitedCredentialIssuerDetailsDto(FRAUD_CRI, null, true, null));
 
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(
@@ -374,9 +382,10 @@ class SelectCriHandlerTest {
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(
-                        new VisitedCredentialIssuerDetailsDto(CLAIMED_IDENTITY_CRI, true, null),
-                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null),
-                        new VisitedCredentialIssuerDetailsDto(FRAUD_CRI, true, null));
+                        new VisitedCredentialIssuerDetailsDto(
+                                CLAIMED_IDENTITY_CRI, null, true, null),
+                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, null, true, null),
+                        new VisitedCredentialIssuerDetailsDto(FRAUD_CRI, null, true, null));
 
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(
@@ -410,7 +419,7 @@ class SelectCriHandlerTest {
                 .thenReturn(List.of(new VcStatusDto(PASSPORT_CRI_ISS, true)));
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
-                List.of(new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI, true, null));
+                List.of(new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI, null, true, null));
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
@@ -438,7 +447,9 @@ class SelectCriHandlerTest {
                 .thenReturn(List.of(new VcStatusDto(PASSPORT_CRI_ISS, true)));
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
-                List.of(new VisitedCredentialIssuerDetailsDto(DRIVING_LICENCE_CRI, true, null));
+                List.of(
+                        new VisitedCredentialIssuerDetailsDto(
+                                DRIVING_LICENCE_CRI, null, true, null));
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
@@ -463,8 +474,9 @@ class SelectCriHandlerTest {
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(
-                        new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI, true, null),
-                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, false, "access_denied"));
+                        new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI, null, true, null),
+                        new VisitedCredentialIssuerDetailsDto(
+                                ADDRESS_CRI, null, false, "access_denied"));
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
@@ -498,8 +510,8 @@ class SelectCriHandlerTest {
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(
-                        new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI, true, null),
-                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null));
+                        new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI, null, true, null),
+                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, null, true, null));
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
@@ -537,9 +549,9 @@ class SelectCriHandlerTest {
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(
-                        new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI, true, null),
-                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null),
-                        new VisitedCredentialIssuerDetailsDto(FRAUD_CRI, true, null));
+                        new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI, null, true, null),
+                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, null, true, null),
+                        new VisitedCredentialIssuerDetailsDto(FRAUD_CRI, null, true, null));
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
@@ -578,10 +590,10 @@ class SelectCriHandlerTest {
 
         List<VisitedCredentialIssuerDetailsDto> visitedCredentialIssuerDetails =
                 List.of(
-                        new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI, true, null),
-                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null),
-                        new VisitedCredentialIssuerDetailsDto(FRAUD_CRI, true, null),
-                        new VisitedCredentialIssuerDetailsDto(KBV_CRI, true, null));
+                        new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI, null, true, null),
+                        new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, null, true, null),
+                        new VisitedCredentialIssuerDetailsDto(FRAUD_CRI, null, true, null),
+                        new VisitedCredentialIssuerDetailsDto(KBV_CRI, null, true, null));
 
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(visitedCredentialIssuerDetails);
@@ -627,7 +639,10 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(List.of(new VcStatusDto(DCMAW_CRI_ISS, true)));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
-                .thenReturn(List.of(new VisitedCredentialIssuerDetailsDto(DCMAW_CRI, true, null)));
+                .thenReturn(
+                        List.of(
+                                new VisitedCredentialIssuerDetailsDto(
+                                        DCMAW_CRI, null, true, null)));
 
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
 
@@ -657,8 +672,9 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(
                         List.of(
-                                new VisitedCredentialIssuerDetailsDto(DCMAW_CRI, true, null),
-                                new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null)));
+                                new VisitedCredentialIssuerDetailsDto(DCMAW_CRI, null, true, null),
+                                new VisitedCredentialIssuerDetailsDto(
+                                        ADDRESS_CRI, null, true, null)));
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
 
         JourneyRequest input = createRequestEvent();
@@ -713,9 +729,11 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(
                         List.of(
-                                new VisitedCredentialIssuerDetailsDto(DCMAW_CRI, true, null),
-                                new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null),
-                                new VisitedCredentialIssuerDetailsDto(FRAUD_CRI, true, null)));
+                                new VisitedCredentialIssuerDetailsDto(DCMAW_CRI, null, true, null),
+                                new VisitedCredentialIssuerDetailsDto(
+                                        ADDRESS_CRI, null, true, null),
+                                new VisitedCredentialIssuerDetailsDto(
+                                        FRAUD_CRI, null, true, null)));
 
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(
@@ -750,7 +768,10 @@ class SelectCriHandlerTest {
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
                 .thenReturn(createCriConfig(PASSPORT_CRI_ISS));
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
-                .thenReturn(List.of(new VisitedCredentialIssuerDetailsDto(DCMAW_CRI, true, null)));
+                .thenReturn(
+                        List.of(
+                                new VisitedCredentialIssuerDetailsDto(
+                                        DCMAW_CRI, null, true, null)));
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
                 .thenReturn(createCriConfig(DRIVING_LICENCE_CRI));
@@ -777,7 +798,7 @@ class SelectCriHandlerTest {
                 .thenReturn(
                         List.of(
                                 new VisitedCredentialIssuerDetailsDto(
-                                        DCMAW_CRI, false, "access_denied")));
+                                        DCMAW_CRI, null, false, "access_denied")));
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
 
         when(mockConfigService.getCredentialIssuerActiveConnectionConfig(DRIVING_LICENCE_CRI))
@@ -802,9 +823,9 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(
                         List.of(
-                                new VisitedCredentialIssuerDetailsDto(DCMAW_CRI, true, null),
+                                new VisitedCredentialIssuerDetailsDto(DCMAW_CRI, null, true, null),
                                 new VisitedCredentialIssuerDetailsDto(
-                                        ADDRESS_CRI, false, "access_denied")));
+                                        ADDRESS_CRI, null, false, "access_denied")));
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(List.of(new VcStatusDto(DCMAW_CRI_ISS, true)));
         when(mockConfigService.isEnabled(DCMAW_CRI)).thenReturn(true);
@@ -831,7 +852,7 @@ class SelectCriHandlerTest {
                 .thenReturn(
                         List.of(
                                 new VisitedCredentialIssuerDetailsDto(
-                                        DRIVING_LICENCE_CRI, true, null)));
+                                        DRIVING_LICENCE_CRI, null, true, null)));
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(List.of(new VcStatusDto(DRIVING_LICENSE_CRI_ISS, false)));
 
@@ -862,11 +883,13 @@ class SelectCriHandlerTest {
         when(mockIpvSessionItem.getVisitedCredentialIssuerDetails())
                 .thenReturn(
                         List.of(
-                                new VisitedCredentialIssuerDetailsDto(PASSPORT_CRI, true, null),
-                                new VisitedCredentialIssuerDetailsDto(ADDRESS_CRI, true, null),
-                                new VisitedCredentialIssuerDetailsDto(FRAUD_CRI, true, null),
                                 new VisitedCredentialIssuerDetailsDto(
-                                        KBV_CRI, false, "access_denied")));
+                                        PASSPORT_CRI, null, true, null),
+                                new VisitedCredentialIssuerDetailsDto(
+                                        ADDRESS_CRI, null, true, null),
+                                new VisitedCredentialIssuerDetailsDto(FRAUD_CRI, null, true, null),
+                                new VisitedCredentialIssuerDetailsDto(
+                                        KBV_CRI, null, false, "access_denied")));
         when(mockIpvSessionItem.getCurrentVcStatuses())
                 .thenReturn(
                         List.of(

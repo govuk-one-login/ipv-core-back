@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
+import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -57,6 +58,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_REFACTOR_JOURNEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
@@ -85,6 +87,7 @@ class EvaluateGpg45ScoresHandlerTest {
     private static final JourneyResponse JOURNEY_END = new JourneyResponse("/journey/end");
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
     private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
+    private static final String JOURNEY_FAIL_WITH_NO_CI = "/journey/fail-with-no-ci";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -136,6 +139,13 @@ class EvaluateGpg45ScoresHandlerTest {
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setIpvSessionId(TEST_SESSION_ID);
+        ipvSessionItem.setVisitedCredentialIssuerDetails(
+                List.of(
+                        new VisitedCredentialIssuerDetailsDto(
+                                "criId",
+                                "https://review-a.integration.account.gov.uk",
+                                true,
+                                null)));
 
         clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()
@@ -307,6 +317,70 @@ class EvaluateGpg45ScoresHandlerTest {
         var response = handleRequest(request, context, JourneyResponse.class);
 
         assertEquals(JOURNEY_PYI_NO_MATCH, response.getJourney());
+    }
+
+    @Test
+    void shouldReturnFailWithNoCiJourneyResponseIfLastVcStatusesUnsuccessful() throws Exception {
+        IpvSessionItem testIpvSessionItem = new IpvSessionItem();
+        testIpvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
+        testIpvSessionItem.setIpvSessionId(TEST_SESSION_ID);
+        testIpvSessionItem.setJourneyType(IPV_CORE_REFACTOR_JOURNEY);
+        testIpvSessionItem.setVisitedCredentialIssuerDetails(
+                List.of(
+                        new VisitedCredentialIssuerDetailsDto(
+                                "criIdB",
+                                "https://review-b.integration.account.gov.uk",
+                                true,
+                                null),
+                        new VisitedCredentialIssuerDetailsDto(
+                                "criIdC",
+                                "https://review-c.integration.account.gov.uk",
+                                true,
+                                null),
+                        new VisitedCredentialIssuerDetailsDto(
+                                "criIdA",
+                                "https://review-a.integration.account.gov.uk",
+                                true,
+                                null)));
+
+        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(addressConfig);
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(testIpvSessionItem);
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
+                .thenReturn(Optional.empty());
+        when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        var response = handleRequest(request, context, JourneyResponse.class);
+
+        assertEquals(JOURNEY_FAIL_WITH_NO_CI, response.getJourney());
+    }
+
+    @Test
+    void shouldReturn500IfNoVisitedCredentialIssuersFound() throws Exception {
+        IpvSessionItem testIpvSessionItem = new IpvSessionItem();
+        testIpvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
+        testIpvSessionItem.setIpvSessionId(TEST_SESSION_ID);
+        testIpvSessionItem.setJourneyType(IPV_CORE_REFACTOR_JOURNEY);
+        testIpvSessionItem.setVisitedCredentialIssuerDetails(List.of());
+
+        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(addressConfig);
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(testIpvSessionItem);
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
+                .thenReturn(Optional.empty());
+        when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        var response = handleRequest(request, context, JourneyErrorResponse.class);
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_FIND_VISITED_CRI.getCode(), response.getCode());
+        assertEquals(ErrorResponse.FAILED_TO_FIND_VISITED_CRI.getMessage(), response.getMessage());
     }
 
     @Test
