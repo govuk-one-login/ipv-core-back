@@ -169,13 +169,13 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
 
             List<VcStatusDto> currentVcStatusDtos = getVcStatuses(ipvSessionItem);
 
+            updateSuccessfulVcStatuses(currentVcStatusDtos, ipvSessionItem, credentials);
+
             if (currentVcStatusDtos.stream()
                     .anyMatch(vcStatusDto -> !vcStatusDto.getIsSuccessfulVc())) {
                 // Handle scenario where VCs without CIs should be redirected
                 return new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI);
             }
-
-            updateSuccessfulVcStatuses(currentVcStatusDtos, ipvSessionItem, credentials);
 
             if (!checkCorrelation(userId, ipvSessionItem.getCurrentVcStatuses())) {
                 return new JourneyResponse(JOURNEY_PYI_NO_MATCH);

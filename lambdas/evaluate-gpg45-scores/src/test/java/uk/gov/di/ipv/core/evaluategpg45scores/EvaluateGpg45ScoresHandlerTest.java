@@ -58,6 +58,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_REFACTOR_JOURNEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
@@ -316,9 +317,12 @@ class EvaluateGpg45ScoresHandlerTest {
         IpvSessionItem testIpvSessionItem = new IpvSessionItem();
         testIpvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         testIpvSessionItem.setIpvSessionId(TEST_SESSION_ID);
+        testIpvSessionItem.setJourneyType(IPV_CORE_REFACTOR_JOURNEY);
         testIpvSessionItem.setCurrentVcStatuses(
                 Arrays.asList(new VcStatusDto("test1", false), new VcStatusDto("test2", true)));
 
+        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(addressConfig);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(testIpvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
