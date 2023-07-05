@@ -55,7 +55,6 @@ public class VerifiableCredentialJwtValidator {
     }
 
     private void validateSignature(SignedJWT verifiableCredential, ECKey signingKey) {
-
         SignedJWT concatSignatureVerifiableCredential;
         try {
             concatSignatureVerifiableCredential =
