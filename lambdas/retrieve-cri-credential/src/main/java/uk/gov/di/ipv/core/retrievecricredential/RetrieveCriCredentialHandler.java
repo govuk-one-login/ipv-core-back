@@ -24,6 +24,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
+import uk.gov.di.ipv.core.library.exceptions.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -65,6 +66,7 @@ public class RetrieveCriCredentialHandler
     private static final String EVIDENCE = "evidence";
     private static final String JOURNEY = "journey";
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final String USE_POST_MITIGATIONS_FEATURE_FLAG = "usePostMitigations";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Map<String, Object> JOURNEY_NEXT = Map.of(JOURNEY, "/journey/next");
@@ -192,7 +194,8 @@ public class RetrieveCriCredentialHandler
 
         } catch (VerifiableCredentialException
                 | VerifiableCredentialResponseException
-                | CiPutException e) {
+                | CiPutException
+                | CiPostMitigationsException e) {
             updateVisitedCredentials(
                     ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
 
@@ -263,7 +266,11 @@ public class RetrieveCriCredentialHandler
             List<SignedJWT> verifiableCredentials,
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem)
-            throws ParseException, SqsException, JsonProcessingException, CiPutException {
+            throws ParseException, SqsException, JsonProcessingException, CiPutException,
+                    CiPostMitigationsException {
+        final boolean postMitigatingVcs =
+                Boolean.parseBoolean(
+                        configService.getFeatureFlag(USE_POST_MITIGATIONS_FEATURE_FLAG));
         final AuditEventUser auditEventUser =
                 new AuditEventUser(
                         userId,
@@ -276,6 +283,7 @@ public class RetrieveCriCredentialHandler
                         configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI),
                         configService.getCredentialIssuerActiveConnectionConfig(
                                 CLAIMED_IDENTITY_CRI));
+        final String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
         for (SignedJWT vc : verifiableCredentials) {
             verifiableCredentialJwtValidator.validate(vc, credentialIssuerConfig, userId);
@@ -284,7 +292,10 @@ public class RetrieveCriCredentialHandler
 
             sendIpvVcReceivedAuditEvent(auditEventUser, vc, isSuccessful);
 
-            submitVcToCiStorage(vc, clientOAuthSessionItem.getGovukSigninJourneyId(), ipAddress);
+            submitVcToCiStorage(vc, govukSigninJourneyId, ipAddress);
+            if (postMitigatingVcs) {
+                postMitigatingVc(vc, govukSigninJourneyId, ipAddress);
+            }
 
             verifiableCredentialService.persistUserCredentials(vc, credentialIssuerId, userId);
         }
@@ -332,6 +343,13 @@ public class RetrieveCriCredentialHandler
     private void submitVcToCiStorage(SignedJWT vc, String govukSigninJourneyId, String ipAddress)
             throws CiPutException {
         ciStorageService.submitVC(vc, govukSigninJourneyId, ipAddress);
+    }
+
+    @Tracing
+    private void postMitigatingVc(SignedJWT vc, String govukSigninJourneyId, String ipAddress)
+            throws CiPostMitigationsException {
+        ciStorageService.submitMitigatingVcList(
+                List.of(vc.serialize()), govukSigninJourneyId, ipAddress);
     }
 
     @Tracing
