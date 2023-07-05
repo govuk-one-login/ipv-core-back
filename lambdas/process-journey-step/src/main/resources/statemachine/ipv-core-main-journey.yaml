@@ -2,35 +2,27 @@
 END_JOURNEY:
   events:
     next:
-      type: basic
       targetState: END
 
 CRI_STATE:
   events:
     error:
-      type: basic
       targetState: CRI_ERROR
     access-denied:
-      type: basic
       targetState: PYI_NO_MATCH
     temporarily-unavailable:
-      type: basic
       targetState: PYI_NO_MATCH
     end:
-      type: basic
       targetState: IPV_SUCCESS_PAGE
     pyi-no-match:
-      type: basic
       targetState: PYI_NO_MATCH
     pyi-kbv-fail:
-      type: basic
       targetState: PYI_KBV_FAIL
 
 # Shared states
 INITIAL_IPV_JOURNEY:
   events:
     next:
-      type: basic
       targetState: IPV_IDENTITY_START_PAGE
 
 IPV_IDENTITY_START_PAGE:
@@ -39,7 +31,6 @@ IPV_IDENTITY_START_PAGE:
     pageId: page-ipv-identity-start
   events:
     next:
-      type: basic
       targetState: CHECK_EXISTING_IDENTITY
     end:
       targetState: PYI_ANOTHER_WAY
@@ -72,26 +63,19 @@ CHECK_EXISTING_IDENTITY:
     journeyStepId: /journey/check-existing-identity
   events:
     next:
-      type: basic
       targetState: CRI_DCMAW
       checkIfDisabled:
         dcmaw:
-          type: basic
           targetState: MULTIPLE_DOC_CHECK_PAGE
     reset-identity:
-      type: basic
       targetState: RESET_IDENTITY
     reuse:
-      type: basic
       targetState: IPV_IDENTITY_REUSE_PAGE
     pending:
-      type: basic
       targetState: IPV_IDENTITY_PENDING_PAGE
     pyi-no-match:
-      type: basic
       targetState: PYI_NO_MATCH
     pyi-kbv-fail:
-      type: basic
       targetState: PYI_KBV_FAIL
 
 RESET_IDENTITY:
@@ -100,11 +84,9 @@ RESET_IDENTITY:
     journeyStepId: /journey/reset-identity
   events:
     next:
-      type: basic
       targetState: CRI_DCMAW
       checkIfDisabled:
         dcmaw:
-          type: basic
           targetState: MULTIPLE_DOC_CHECK_PAGE
 
 IPV_IDENTITY_REUSE_PAGE:
@@ -120,10 +102,8 @@ IPV_IDENTITY_PENDING_PAGE:
     pageId: page-ipv-pending
   events:
     next:
-      type: basic
       targetState: F2F_HANDOFF_PAGE_J4
     restart:
-      type: basic
       targetState: RESET_IDENTITY
 
 CRI_DCMAW:
@@ -133,16 +113,12 @@ CRI_DCMAW:
     criId: dcmaw
   events:
     next:
-      type: basic
       targetState: POST_DCMAW_SUCCESS_PAGE
     access-denied:
-      type: basic
       targetState: MULTIPLE_DOC_CHECK_PAGE
     temporarily-unavailable:
-      type: basic
       targetState: MULTIPLE_DOC_CHECK_PAGE
     fail-with-no-ci:
-      type: basic
       targetState: MULTIPLE_DOC_CHECK_PAGE
 
 MULTIPLE_DOC_CHECK_PAGE:
@@ -151,17 +127,13 @@ MULTIPLE_DOC_CHECK_PAGE:
     pageId: page-multiple-doc-check
   events:
     ukPassport:
-      type: basic
       targetState: CRI_UK_PASSPORT_J2
     drivingLicence:
-      type: basic
       targetState: CRI_DRIVING_LICENCE_J3
     end:
-      type: basic
       targetState: CRI_CLAIMED_IDENTITY_J4
       checkIfDisabled:
         f2f:
-          type: basic
           targetState: END
 
 PYI_NO_MATCH:
@@ -188,13 +160,10 @@ PYI_ESCAPE:
     pageId: pyi-escape
   events:
     next:
-      type: basic
       targetState: RESET_IDENTITY
     end:
-      type: basic
       targetState: END
     attempt-recovery:
-      type: basic
       targetState: PYI_ESCAPE
 
 CRI_ERROR:
@@ -228,7 +197,6 @@ POST_DCMAW_SUCCESS_PAGE:
     pageId: page-dcmaw-success
   events:
     next:
-      type: basic
       targetState: CRI_ADDRESS_J1
 
 CRI_ADDRESS_J1:
@@ -238,7 +206,6 @@ CRI_ADDRESS_J1:
     criId: address
   events:
     next:
-      type: basic
       targetState: CRI_FRAUD_J1
 
 CRI_FRAUD_J1:
@@ -248,7 +215,6 @@ CRI_FRAUD_J1:
     criId: fraud
   events:
     end:
-      type: basic
       targetState: IPV_SUCCESS_PAGE
 
 # Passport journey (J2)
@@ -259,10 +225,8 @@ CRI_UK_PASSPORT_J2:
     criId: ukPassport
   events:
     next:
-      type: basic
       targetState: CRI_ADDRESS_J2
     access-denied:
-      type: basic
       targetState: MULTIPLE_DOC_CHECK_PAGE
 
 CRI_ADDRESS_J2:
@@ -272,7 +236,6 @@ CRI_ADDRESS_J2:
     criId: address
   events:
     next:
-      type: basic
       targetState: CRI_FRAUD_J2
 
 CRI_FRAUD_J2:
@@ -282,7 +245,6 @@ CRI_FRAUD_J2:
     criId: fraud
   events:
     next:
-      type: basic
       targetState: PRE_KBV_TRANSITION_PAGE_J2
 
 PRE_KBV_TRANSITION_PAGE_J2:
@@ -291,7 +253,6 @@ PRE_KBV_TRANSITION_PAGE_J2:
     pageId: page-pre-kbv-transition
   events:
     next:
-      type: basic
       targetState: CRI_KBV_J2
 
 CRI_KBV_J2:
@@ -301,10 +262,8 @@ CRI_KBV_J2:
     criId: kbv
   events:
     end:
-      type: basic
       targetState: IPV_SUCCESS_PAGE
     fail-with-no-ci:
-      type: basic
       targetState: PYI_KBV_THIN_FILE
 
 # Driving licence journey (J3)
@@ -315,10 +274,8 @@ CRI_DRIVING_LICENCE_J3:
     criId: drivingLicence
   events:
     next:
-      type: basic
       targetState: CRI_ADDRESS_J3
     access-denied:
-      type: basic
       targetState: MULTIPLE_DOC_CHECK_PAGE
 
 CRI_ADDRESS_J3:
@@ -328,7 +285,6 @@ CRI_ADDRESS_J3:
     criId: address
   events:
     next:
-      type: basic
       targetState: CRI_FRAUD_J3
 
 CRI_FRAUD_J3:
@@ -338,7 +294,6 @@ CRI_FRAUD_J3:
     criId: fraud
   events:
     next:
-      type: basic
       targetState: PRE_KBV_TRANSITION_PAGE_J3
 
 PRE_KBV_TRANSITION_PAGE_J3:
@@ -347,7 +302,6 @@ PRE_KBV_TRANSITION_PAGE_J3:
     pageId: page-pre-kbv-transition
   events:
     next:
-      type: basic
       targetState: CRI_KBV_J3
 
 CRI_KBV_J3:
@@ -357,10 +311,8 @@ CRI_KBV_J3:
     criId: kbv
   events:
     end:
-      type: basic
       targetState: IPV_SUCCESS_PAGE
     fail-with-no-ci:
-      type: basic
       targetState: PYI_KBV_THIN_FILE
 
 # F2F journey (J4)
@@ -371,7 +323,6 @@ CRI_CLAIMED_IDENTITY_J4:
     criId: claimedIdentity
   events:
     next:
-      type: basic
       targetState: CRI_ADDRESS_J4
 
 CRI_ADDRESS_J4:
@@ -381,7 +332,6 @@ CRI_ADDRESS_J4:
     criId: address
   events:
     next:
-      type: basic
       targetState: CRI_FRAUD_J4
 
 CRI_FRAUD_J4:
@@ -391,7 +341,6 @@ CRI_FRAUD_J4:
     criId: fraud
   events:
     next:
-      type: basic
       targetState: CRI_F2F_J4
 
 CRI_F2F_J4:
@@ -401,7 +350,6 @@ CRI_F2F_J4:
     criId: f2f
   events:
     next:
-      type: basic
       targetState: F2F_HANDOFF_PAGE_J4
 
 F2F_HANDOFF_PAGE_J4:

@@ -14,7 +14,6 @@ import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,7 +36,8 @@ class StateMachineInitializerTest {
 
     @ParameterizedTest
     @EnumSource
-    void stateMachineInitializerShouldHandleAllStateFiles(IpvJourneyTypes journeyType) throws Exception {
+    void stateMachineInitializerShouldHandleAllStateFiles(IpvJourneyTypes journeyType)
+            throws Exception {
         assertDoesNotThrow(() -> new StateMachineInitializer(journeyType)).initialize();
     }
 

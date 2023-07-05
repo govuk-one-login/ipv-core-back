@@ -10,7 +10,6 @@ import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyStepR
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 @Data
