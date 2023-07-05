@@ -43,9 +43,6 @@ IPV_IDENTITY_START_PAGE:
       targetState: CHECK_EXISTING_IDENTITY
     end:
       targetState: PYI_ANOTHER_WAY
-    attempt-recovery:
-      type: basic
-      targetState: IPV_IDENTITY_START_PAGE
 
 F2F_START_PAGE:
   name: F2F_START_PAGE
@@ -96,9 +93,6 @@ CHECK_EXISTING_IDENTITY:
     pyi-kbv-fail:
       type: basic
       targetState: PYI_KBV_FAIL
-    attempt-recovery:
-      type: basic
-      targetState: CHECK_EXISTING_IDENTITY
 
 RESET_IDENTITY:
   response:
@@ -112,19 +106,12 @@ RESET_IDENTITY:
         dcmaw:
           type: basic
           targetState: MULTIPLE_DOC_CHECK_PAGE
-    attempt-recovery:
-      type: basic
-      targetState: RESET_IDENTITY
 
 IPV_IDENTITY_REUSE_PAGE:
   parent: END_JOURNEY
   response:
     type: page
     pageId: page-ipv-reuse
-  events:
-    attempt-recovery:
-      type: basic
-      targetState: IPV_IDENTITY_REUSE_PAGE
 
 IPV_IDENTITY_PENDING_PAGE:
   parent: END_JOURNEY
@@ -138,9 +125,6 @@ IPV_IDENTITY_PENDING_PAGE:
     restart:
       type: basic
       targetState: RESET_IDENTITY
-    attempt-recovery:
-      type: basic
-      targetState: IPV_IDENTITY_PENDING_PAGE
 
 CRI_DCMAW:
   parent: CRI_STATE
@@ -160,9 +144,6 @@ CRI_DCMAW:
     fail-with-no-ci:
       type: basic
       targetState: MULTIPLE_DOC_CHECK_PAGE
-    attempt-recovery:
-      type: basic
-      targetState: CRI_DCMAW
 
 MULTIPLE_DOC_CHECK_PAGE:
   response:
@@ -182,39 +163,24 @@ MULTIPLE_DOC_CHECK_PAGE:
         f2f:
           type: basic
           targetState: END
-    attempt-recovery:
-      type: basic
-      targetState: MULTIPLE_DOC_CHECK_PAGE
 
 PYI_NO_MATCH:
   parent: END_JOURNEY
   response:
     type: page
     pageId: pyi-no-match
-  events:
-    attempt-recovery:
-      type: basic
-      targetState: PYI_NO_MATCH
 
 PYI_KBV_FAIL:
   parent: END_JOURNEY
   response:
     type: page
     pageId: pyi-kbv-fail
-  events:
-    attempt-recovery:
-      type: basic
-      targetState: PYI_KBV_FAIL
 
 PYI_KBV_THIN_FILE:
   parent: END_JOURNEY
   response:
     type: page
     pageId: pyi-kbv-thin-file
-  events:
-    attempt-recovery:
-      type: basic
-      targetState: PYI_KBV_THIN_FILE
 
 PYI_ESCAPE:
   response:
@@ -237,30 +203,18 @@ CRI_ERROR:
     type: error
     pageId: pyi-technical
     statusCode: 500
-  events:
-    attempt-recovery:
-      type: basic
-      targetState: CRI_ERROR
 
 CORE_SESSION_TIMEOUT:
   parent: END_JOURNEY
   response:
     type: page
     pageId: pyi-timeout-unrecoverable
-  events:
-    attempt-recovery:
-      type: basic
-      targetState: CORE_SESSION_TIMEOUT
 
 IPV_SUCCESS_PAGE:
   parent: END_JOURNEY
   response:
     type: page
     pageId: page-ipv-success
-  events:
-    attempt-recovery:
-      type: basic
-      targetState: IPV_SUCCESS_PAGE
 
 END:
   response:
@@ -286,9 +240,6 @@ CRI_ADDRESS_J1:
     next:
       type: basic
       targetState: CRI_FRAUD_J1
-    attempt-recovery:
-      type: basic
-      targetState: CRI_ADDRESS_J1
 
 CRI_FRAUD_J1:
   parent: CRI_STATE
@@ -299,9 +250,6 @@ CRI_FRAUD_J1:
     end:
       type: basic
       targetState: IPV_SUCCESS_PAGE
-    attempt-recovery:
-      type: basic
-      targetState: CRI_FRAUD_J1
 
 # Passport journey (J2)
 CRI_UK_PASSPORT_J2:
@@ -316,9 +264,6 @@ CRI_UK_PASSPORT_J2:
     access-denied:
       type: basic
       targetState: MULTIPLE_DOC_CHECK_PAGE
-    attempt-recovery:
-      type: basic
-      targetState: CRI_UK_PASSPORT_J2
 
 CRI_ADDRESS_J2:
   parent: CRI_STATE
@@ -329,9 +274,6 @@ CRI_ADDRESS_J2:
     next:
       type: basic
       targetState: CRI_FRAUD_J2
-    attempt-recovery:
-      type: basic
-      targetState: CRI_ADDRESS_J2
 
 CRI_FRAUD_J2:
   parent: CRI_STATE
@@ -342,9 +284,6 @@ CRI_FRAUD_J2:
     next:
       type: basic
       targetState: PRE_KBV_TRANSITION_PAGE_J2
-    attempt-recovery:
-      type: basic
-      targetState: CRI_FRAUD_J2
 
 PRE_KBV_TRANSITION_PAGE_J2:
   response:
@@ -354,9 +293,6 @@ PRE_KBV_TRANSITION_PAGE_J2:
     next:
       type: basic
       targetState: CRI_KBV_J2
-    attempt-recovery:
-      type: basic
-      targetState: PRE_KBV_TRANSITION_PAGE_J2
 
 CRI_KBV_J2:
   parent: CRI_STATE
@@ -370,9 +306,6 @@ CRI_KBV_J2:
     fail-with-no-ci:
       type: basic
       targetState: PYI_KBV_THIN_FILE
-    attempt-recovery:
-      type: basic
-      targetState: CRI_KBV_J2
 
 # Driving licence journey (J3)
 CRI_DRIVING_LICENCE_J3:
@@ -387,9 +320,6 @@ CRI_DRIVING_LICENCE_J3:
     access-denied:
       type: basic
       targetState: MULTIPLE_DOC_CHECK_PAGE
-    attempt-recovery:
-      type: basic
-      targetState: CRI_DRIVING_LICENCE_J3
 
 CRI_ADDRESS_J3:
   parent: CRI_STATE
@@ -400,9 +330,6 @@ CRI_ADDRESS_J3:
     next:
       type: basic
       targetState: CRI_FRAUD_J3
-    attempt-recovery:
-      type: basic
-      targetState: CRI_ADDRESS_J3
 
 CRI_FRAUD_J3:
   parent: CRI_STATE
@@ -413,9 +340,6 @@ CRI_FRAUD_J3:
     next:
       type: basic
       targetState: PRE_KBV_TRANSITION_PAGE_J3
-    attempt-recovery:
-      type: basic
-      targetState: CRI_FRAUD_J3
 
 PRE_KBV_TRANSITION_PAGE_J3:
   response:
@@ -425,9 +349,6 @@ PRE_KBV_TRANSITION_PAGE_J3:
     next:
       type: basic
       targetState: CRI_KBV_J3
-    attempt-recovery:
-      type: basic
-      targetState: PRE_KBV_TRANSITION_PAGE_J3
 
 CRI_KBV_J3:
   parent: CRI_STATE
@@ -441,9 +362,6 @@ CRI_KBV_J3:
     fail-with-no-ci:
       type: basic
       targetState: PYI_KBV_THIN_FILE
-    attempt-recovery:
-      type: basic
-      targetState: CRI_KBV_J3
 
 # F2F journey (J4)
 CRI_CLAIMED_IDENTITY_J4:
@@ -455,9 +373,6 @@ CRI_CLAIMED_IDENTITY_J4:
     next:
       type: basic
       targetState: CRI_ADDRESS_J4
-    attempt-recovery:
-      type: basic
-      targetState: CRI_CLAIMED_IDENTITY_J4
 
 CRI_ADDRESS_J4:
   parent: CRI_STATE
@@ -468,9 +383,6 @@ CRI_ADDRESS_J4:
     next:
       type: basic
       targetState: CRI_FRAUD_J4
-    attempt-recovery:
-      type: basic
-      targetState: CRI_ADDRESS_J4
 
 CRI_FRAUD_J4:
   parent: CRI_STATE
@@ -481,9 +393,6 @@ CRI_FRAUD_J4:
     next:
       type: basic
       targetState: CRI_F2F_J4
-    attempt-recovery:
-      type: basic
-      targetState: CRI_FRAUD_J4
 
 CRI_F2F_J4:
   parent: CRI_STATE
@@ -494,18 +403,11 @@ CRI_F2F_J4:
     next:
       type: basic
       targetState: F2F_HANDOFF_PAGE_J4
-    attempt-recovery:
-      type: basic
-      targetState: CRI_F2F_J4
 
 F2F_HANDOFF_PAGE_J4:
   response:
     type: page
     pageId: page-face-to-face-handoff
-  events:
-    attempt-recovery:
-      type: basic
-      targetState: F2F_HANDOFF_PAGE_J4
 
 PYI_ANOTHER_WAY:
   parent: END_JOURNEY

@@ -10,12 +10,14 @@ import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyStepR
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class State {
+    public static final String ATTEMPT_RECOVERY_EVENT = "attempt-recovery";
     private String name;
     private String parent;
     private State parentObj;
@@ -24,6 +26,11 @@ public class State {
 
     public State transition(String eventName, JourneyContext journeyContext)
             throws UnknownEventException {
+
+        if (ATTEMPT_RECOVERY_EVENT.equals(eventName)) {
+            return this;
+        }
+
         var event = getEvent(eventName);
         if (event.isPresent()) {
             return event.get().resolve(journeyContext);
