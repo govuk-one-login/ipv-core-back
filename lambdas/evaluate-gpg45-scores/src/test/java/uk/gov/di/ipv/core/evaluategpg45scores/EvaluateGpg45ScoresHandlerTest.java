@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
+import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -45,7 +46,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -139,6 +139,13 @@ class EvaluateGpg45ScoresHandlerTest {
         ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         ipvSessionItem.setIpvSessionId(TEST_SESSION_ID);
+        ipvSessionItem.setVisitedCredentialIssuerDetails(
+                List.of(
+                        new VisitedCredentialIssuerDetailsDto(
+                                "criId",
+                                "https://review-a.integration.account.gov.uk",
+                                true,
+                                null)));
 
         clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()
@@ -313,13 +320,28 @@ class EvaluateGpg45ScoresHandlerTest {
     }
 
     @Test
-    void shouldReturnFailWithNoCiJourneyResponseIfAnyVcStatusesUnsuccessful() throws Exception {
+    void shouldReturnFailWithNoCiJourneyResponseIfLastVcStatusesUnsuccessful() throws Exception {
         IpvSessionItem testIpvSessionItem = new IpvSessionItem();
         testIpvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         testIpvSessionItem.setIpvSessionId(TEST_SESSION_ID);
         testIpvSessionItem.setJourneyType(IPV_CORE_REFACTOR_JOURNEY);
-        testIpvSessionItem.setCurrentVcStatuses(
-                Arrays.asList(new VcStatusDto("test1", false), new VcStatusDto("test2", true)));
+        testIpvSessionItem.setVisitedCredentialIssuerDetails(
+                List.of(
+                        new VisitedCredentialIssuerDetailsDto(
+                                "criIdB",
+                                "https://review-b.integration.account.gov.uk",
+                                true,
+                                null),
+                        new VisitedCredentialIssuerDetailsDto(
+                                "criIdC",
+                                "https://review-c.integration.account.gov.uk",
+                                true,
+                                null),
+                        new VisitedCredentialIssuerDetailsDto(
+                                "criIdA",
+                                "https://review-a.integration.account.gov.uk",
+                                true,
+                                null)));
 
         when(configService.getCredentialIssuerActiveConnectionConfig(any()))
                 .thenReturn(addressConfig);
@@ -334,6 +356,31 @@ class EvaluateGpg45ScoresHandlerTest {
         var response = handleRequest(request, context, JourneyResponse.class);
 
         assertEquals(JOURNEY_FAIL_WITH_NO_CI, response.getJourney());
+    }
+
+    @Test
+    void shouldReturn500IfNoVisitedCredentialIssuersFound() throws Exception {
+        IpvSessionItem testIpvSessionItem = new IpvSessionItem();
+        testIpvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
+        testIpvSessionItem.setIpvSessionId(TEST_SESSION_ID);
+        testIpvSessionItem.setJourneyType(IPV_CORE_REFACTOR_JOURNEY);
+        testIpvSessionItem.setVisitedCredentialIssuerDetails(List.of());
+
+        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(addressConfig);
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(testIpvSessionItem);
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
+                .thenReturn(Optional.empty());
+        when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        var response = handleRequest(request, context, JourneyErrorResponse.class);
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_FIND_VISITED_CRI.getCode(), response.getCode());
+        assertEquals(ErrorResponse.FAILED_TO_FIND_VISITED_CRI.getMessage(), response.getMessage());
     }
 
     @Test

@@ -82,6 +82,7 @@ class RetrieveCriCredentialHandlerTest {
 
     private static final String TEST_IPV_SESSION_ID = UUID.randomUUID().toString();
     private static final String passportIssuerId = CREDENTIAL_ISSUER_ID;
+    public static final String TEST_ISSUER = "test-issuer";
 
     @Mock private Context context;
     @Mock private VerifiableCredentialService verifiableCredentialService;
@@ -234,6 +235,7 @@ class RetrieveCriCredentialHandlerTest {
                 ipvSessionItemArgumentCaptor.getValue().getVisitedCredentialIssuerDetails();
         assertEquals(1, visitedCredentialIssuerDetails.size());
         assertEquals(passportIssuerId, visitedCredentialIssuerDetails.get(0).getCriId());
+        assertEquals(TEST_ISSUER, visitedCredentialIssuerDetails.get(0).getCriIssuer());
         assertTrue(visitedCredentialIssuerDetails.get(0).isReturnedWithVc());
         assertNull(visitedCredentialIssuerDetails.get(0).getOauthError());
         verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());

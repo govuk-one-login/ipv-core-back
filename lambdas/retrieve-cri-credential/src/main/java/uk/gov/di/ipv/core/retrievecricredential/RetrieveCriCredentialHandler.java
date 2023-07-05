@@ -194,20 +194,18 @@ public class RetrieveCriCredentialHandler
                 | VerifiableCredentialResponseException
                 | CiPutException e) {
             updateVisitedCredentials(
-                    ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
-
+                    ipvSessionItem, credentialIssuerId, null, false, OAuth2Error.SERVER_ERROR_CODE);
             return JOURNEY_ERROR;
         } catch (ParseException | JsonProcessingException | SqsException e) {
             LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
             updateVisitedCredentials(
-                    ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
+                    ipvSessionItem, credentialIssuerId, null, false, OAuth2Error.SERVER_ERROR_CODE);
             return JOURNEY_ERROR;
         } catch (com.nimbusds.oauth2.sdk.ParseException e) {
             LogHelper.logErrorMessage("Failed to parse access token.", e.getMessage());
 
             updateVisitedCredentials(
-                    ipvSessionItem, credentialIssuerId, false, OAuth2Error.SERVER_ERROR_CODE);
-
+                    ipvSessionItem, credentialIssuerId, null, false, OAuth2Error.SERVER_ERROR_CODE);
             return JOURNEY_ERROR;
         }
     }
@@ -238,7 +236,7 @@ public class RetrieveCriCredentialHandler
                 OBJECT_MAPPER.writeValueAsString(verifiableCredentialResponseDto),
                 criOAuthState);
         // Update session to indicate no VC, but no error
-        updateVisitedCredentials(ipvSessionItem, credentialIssuerId, false, null);
+        updateVisitedCredentials(ipvSessionItem, credentialIssuerId, null, false, null);
         // Audit
         LOGGER.info(
                 new StringMapMessage()
@@ -277,6 +275,7 @@ public class RetrieveCriCredentialHandler
                         configService.getCredentialIssuerActiveConnectionConfig(
                                 CLAIMED_IDENTITY_CRI));
 
+        String issuer = null;
         for (SignedJWT vc : verifiableCredentials) {
             verifiableCredentialJwtValidator.validate(vc, credentialIssuerConfig, userId);
 
@@ -287,9 +286,11 @@ public class RetrieveCriCredentialHandler
             submitVcToCiStorage(vc, clientOAuthSessionItem.getGovukSigninJourneyId(), ipAddress);
 
             verifiableCredentialService.persistUserCredentials(vc, credentialIssuerId, userId);
+
+            issuer = vc.getJWTClaimsSet().getIssuer();
         }
 
-        updateVisitedCredentials(ipvSessionItem, credentialIssuerId, true, null);
+        updateVisitedCredentials(ipvSessionItem, credentialIssuerId, issuer, true, null);
 
         LOGGER.info(
                 new StringMapMessage()
@@ -338,10 +339,11 @@ public class RetrieveCriCredentialHandler
     private void updateVisitedCredentials(
             IpvSessionItem ipvSessionItem,
             String criId,
+            String issuer,
             boolean returnedWithVc,
             String oauthError) {
         ipvSessionItem.addVisitedCredentialIssuerDetails(
-                new VisitedCredentialIssuerDetailsDto(criId, returnedWithVc, oauthError));
+                new VisitedCredentialIssuerDetailsDto(criId, issuer, returnedWithVc, oauthError));
         ipvSessionService.updateIpvSession(ipvSessionItem);
     }
 }

@@ -29,8 +29,10 @@ import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
+import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.NoVisitedCriFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -169,13 +171,11 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
             }
 
             updateSuccessfulVcStatuses(ipvSessionItem, credentials);
-            List<VcStatusDto> updatedVcStatuses = getVcStatuses(ipvSessionItem);
 
-            if (updatedVcStatuses.stream().anyMatch(vcStatusDto -> !vcStatusDto.getIsSuccessfulVc())
-                    && ipvSessionItem.getJourneyType()
-                            == IpvJourneyTypes.IPV_CORE_REFACTOR_JOURNEY) {
-                // Handle scenario where VCs without CIs should be redirected
-                return new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI);
+            Optional<JourneyResponse> journeyResponseForFailWithNoCi =
+                    getJourneyResponseForFailWithNoCi(ipvSessionItem);
+            if (journeyResponseForFailWithNoCi.isPresent()) {
+                return journeyResponseForFailWithNoCi.get();
             }
 
             if (!checkCorrelation(userId, ipvSessionItem.getCurrentVcStatuses())) {
@@ -213,6 +213,12 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
                     JOURNEY_ERROR_PATH,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
+        } catch (NoVisitedCriFoundException e) {
+            LOGGER.error("No visited CRIs found.", e);
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_FIND_VISITED_CRI);
         }
     }
 
@@ -295,7 +301,6 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
     @Tracing
     private void updateSuccessfulVcStatuses(
             IpvSessionItem ipvSessionItem, List<SignedJWT> credentials) throws ParseException {
-
         List<VcStatusDto> currentVcStatusDtos = getVcStatuses(ipvSessionItem);
 
         if (currentVcStatusDtos.size() != credentials.size()) {
@@ -361,5 +366,27 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
             }
         }
         return txnIds;
+    }
+
+    @Tracing
+    private Optional<JourneyResponse> getJourneyResponseForFailWithNoCi(
+            IpvSessionItem ipvSessionItem) {
+        VisitedCredentialIssuerDetailsDto lastVisitedCri =
+                ipvSessionItem.getVisitedCredentialIssuerDetails().stream()
+                        .reduce((first, second) -> second)
+                        .orElseThrow(NoVisitedCriFoundException::new);
+
+        Optional<VcStatusDto> lastVisitedCriVcStatus =
+                getVcStatuses(ipvSessionItem).stream()
+                        .filter(status -> status.getCriIss().equals(lastVisitedCri.getCriIssuer()))
+                        .findFirst();
+
+        if (lastVisitedCriVcStatus.isPresent()
+                && Boolean.FALSE.equals(lastVisitedCriVcStatus.get().getIsSuccessfulVc())
+                && ipvSessionItem.getJourneyType() == IpvJourneyTypes.IPV_CORE_REFACTOR_JOURNEY) {
+            // Handle scenario where VCs without CIs should be redirected
+            return Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI));
+        }
+        return Optional.empty();
     }
 }
