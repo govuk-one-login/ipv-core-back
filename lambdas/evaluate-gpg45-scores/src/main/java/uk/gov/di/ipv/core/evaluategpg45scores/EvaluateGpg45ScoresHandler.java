@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.BaseResponse;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -167,12 +168,12 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
                 return contraIndicatorErrorJourneyResponse.get();
             }
 
-            List<VcStatusDto> currentVcStatusDtos = getVcStatuses(ipvSessionItem);
+            updateSuccessfulVcStatuses(ipvSessionItem, credentials);
+            List<VcStatusDto> updatedVcStatuses = getVcStatuses(ipvSessionItem);
 
-            updateSuccessfulVcStatuses(currentVcStatusDtos, ipvSessionItem, credentials);
-
-            if (currentVcStatusDtos.stream()
-                    .anyMatch(vcStatusDto -> !vcStatusDto.getIsSuccessfulVc())) {
+            if (updatedVcStatuses.stream().anyMatch(vcStatusDto -> !vcStatusDto.getIsSuccessfulVc())
+                    && ipvSessionItem.getJourneyType()
+                            == IpvJourneyTypes.IPV_CORE_REFACTOR_JOURNEY) {
                 // Handle scenario where VCs without CIs should be redirected
                 return new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI);
             }
@@ -293,10 +294,9 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
 
     @Tracing
     private void updateSuccessfulVcStatuses(
-            List<VcStatusDto> currentVcStatusDtos,
-            IpvSessionItem ipvSessionItem,
-            List<SignedJWT> credentials)
-            throws ParseException {
+            IpvSessionItem ipvSessionItem, List<SignedJWT> credentials) throws ParseException {
+
+        List<VcStatusDto> currentVcStatusDtos = getVcStatuses(ipvSessionItem);
 
         if (currentVcStatusDtos.size() != credentials.size()) {
             List<VcStatusDto> updatedStatuses = generateVcSuccessStatuses(credentials);
