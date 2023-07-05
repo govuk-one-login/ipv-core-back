@@ -295,6 +295,20 @@ PYI_ESCAPE:
       response:
         type: page
         pageId: pyi-escape
+    next:
+      type: basic
+      name: next
+      targetState: RESET_IDENTITY
+      response:
+        type: journey
+        journeyStepId: /journey/reset-identity
+    end:
+      type: basic
+      name: end
+      targetState: END
+      response:
+        type: journey
+        journeyStepId: /journey/build-client-oauth-response
 CRI_ERROR:
   name: CRI_ERROR
   parent: END_JOURNEY
