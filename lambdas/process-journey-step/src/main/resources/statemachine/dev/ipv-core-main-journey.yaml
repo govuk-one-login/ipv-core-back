@@ -126,22 +126,15 @@ IPV_IDENTITY_REUSE_PAGE:
   parent: END_JOURNEY
 IPV_IDENTITY_PENDING_PAGE:
   name: IPV_IDENTITY_PENDING_PAGE
-  parent: END_JOURNEY
+  parent: ATTEMPT_RECOVERY_STATE
   events:
-    continue:
+    next:
       type: basic
-      name: continue
-      targetState: F2F_HANDOFF_PAGE
+      name: next
+      targetState: PYI_ESCAPE
       response:
         type: page
-        pageId: page-face-to-face-handoff
-    restart:
-      type: basic
-      name: restart
-      targetState: RESET_IDENTITY
-      response:
-        type: journey
-        journeyStepId: /journey/reset-identity
+        pageId: pyi-escape
 EVALUATE_GPG45_SCORES:
   name: EVALUATE_GPG45_SCORES
   parent: ATTEMPT_RECOVERY_STATE
@@ -513,6 +506,8 @@ PYI_KBV_FAIL:
 PYI_KBV_THIN_FILE:
   name: PYI_KBV_THIN_FILE
   parent: END_JOURNEY
+PYI_ESCAPE:
+  name: PYI_ESCAPE
 CRI_ERROR:
   name: CRI_ERROR
   parent: END_JOURNEY
