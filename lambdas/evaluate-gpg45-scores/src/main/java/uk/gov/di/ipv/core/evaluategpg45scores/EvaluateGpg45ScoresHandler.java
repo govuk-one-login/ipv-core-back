@@ -172,10 +172,12 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
 
             updateSuccessfulVcStatuses(ipvSessionItem, credentials);
 
-            Optional<JourneyResponse> journeyResponseForFailWithNoCi =
-                    getJourneyResponseForFailWithNoCi(ipvSessionItem);
-            if (journeyResponseForFailWithNoCi.isPresent()) {
-                return journeyResponseForFailWithNoCi.get();
+            if (ipvSessionItem.getJourneyType() == IpvJourneyTypes.IPV_CORE_REFACTOR_JOURNEY) {
+                Optional<JourneyResponse> journeyResponseForFailWithNoCi =
+                        getJourneyResponseForFailWithNoCi(ipvSessionItem);
+                if (journeyResponseForFailWithNoCi.isPresent()) {
+                    return journeyResponseForFailWithNoCi.get();
+                }
             }
 
             if (!checkCorrelation(userId, ipvSessionItem.getCurrentVcStatuses())) {
