@@ -12,13 +12,35 @@ import java.util.Optional;
 public class ContraIndications {
     private final Map<String, ContraIndicator> contraIndicators;
 
-    public Integer getContraIndicatorScores(
+    private Integer calculateDetectedScore(
             final Map<String, ContraIndicatorScore> contraIndicatorScores) {
         return contraIndicators.keySet().stream()
                 .map(
                         contraIndicatorCode ->
                                 contraIndicatorScores.get(contraIndicatorCode).getDetectedScore())
                 .reduce(0, Integer::sum);
+    }
+
+    private Integer calculateCheckedScore(
+            final Map<String, ContraIndicatorScore> contraIndicatorScoreMap) {
+        return contraIndicators.values().stream()
+                .filter(
+                        contraIndicator ->
+                                (contraIndicator.getMitigations() != null)
+                                        && !contraIndicator.getMitigations().isEmpty())
+                .map(
+                        contraIndicator ->
+                                contraIndicatorScoreMap
+                                        .get(contraIndicator.getCode())
+                                        .getCheckedScore())
+                .reduce(0, Integer::sum);
+    }
+
+    public Integer getContraIndicatorScore(
+            final Map<String, ContraIndicatorScore> contraIndicatorScoreMap,
+            final boolean includeMitigation) {
+        return calculateDetectedScore(contraIndicatorScoreMap)
+                + (includeMitigation ? calculateCheckedScore(contraIndicatorScoreMap) : 0);
     }
 
     public Optional<ContraIndicator> getLatestContraIndicator() {
