@@ -4,10 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -68,7 +65,7 @@ class ContraIndicationsTest {
     void shouldCalculateContraIndicatorScoreIncludeMitigationAndSomeEmptyMitigations() {
         addContraIndicators(
                 TEST_CI1, BASE_TIME.minusSeconds(1), List.of(Mitigation.builder().build()));
-        addContraIndicators(TEST_CI2, BASE_TIME.minusSeconds(2), null);
+        addContraIndicators(TEST_CI2, BASE_TIME.minusSeconds(2), Collections.emptyList());
         addContraIndicators(TEST_CI3, BASE_TIME.minusSeconds(4), null);
         assertEquals(
                 6, contraIndications.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, true));
@@ -78,7 +75,7 @@ class ContraIndicationsTest {
     @Test
     void shouldFindLatestContraIndicator() {
         addContraIndicators(TEST_CI1, BASE_TIME.minusSeconds(1), null);
-        addContraIndicators(TEST_CI2, BASE_TIME.minusSeconds(2), null);
+        addContraIndicators(TEST_CI2, BASE_TIME.minusSeconds(2), Collections.emptyList());
         addContraIndicators(TEST_CI3, BASE_TIME.plusSeconds(3), null);
         Optional<ContraIndicator> latestContraIndicator =
                 contraIndications.getLatestContraIndicator();
