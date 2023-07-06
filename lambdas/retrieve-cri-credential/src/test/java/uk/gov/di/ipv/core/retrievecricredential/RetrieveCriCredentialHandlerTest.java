@@ -191,7 +191,6 @@ class RetrieveCriCredentialHandlerTest {
                                 .build());
 
         mockServiceCallsAndSessionItem();
-        when(ipvSessionItem.getJourneyType()).thenReturn(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
 
         Map<String, Object> output = handler.handleRequest(testInput, context);
 
@@ -203,8 +202,7 @@ class RetrieveCriCredentialHandlerTest {
         verify(verifiableCredentialJwtValidator)
                 .validate(any(SignedJWT.class), eq(testPassportIssuer), eq(TEST_USER_ID));
 
-        assertEquals("/journey/next", output.get("journey"));
-        assertEquals("ipv-core-main-journey", output.get("journeyType"));
+        assertEquals("/journey/evaluate", output.get("journey"));
         verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
     }
 
@@ -354,7 +352,6 @@ class RetrieveCriCredentialHandlerTest {
                                         List.of(SignedJWT.parse(SIGNED_CONTRA_INDICATORS)))
                                 .build());
         mockServiceCallsAndSessionItem();
-        when(ipvSessionItem.getJourneyType()).thenReturn(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
 
         handler.handleRequest(testInput, context);
 
@@ -396,7 +393,6 @@ class RetrieveCriCredentialHandlerTest {
         when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
                 .thenReturn(claimedIdentityConfig);
         mockServiceCallsAndSessionItem();
-        when(ipvSessionItem.getJourneyType()).thenReturn(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
 
         handler.handleRequest(testInput, context);
 
@@ -618,7 +614,6 @@ class RetrieveCriCredentialHandlerTest {
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(criOAuthSessionService.getCriOauthSessionItem(any())).thenReturn(criOAuthSessionItem);
         when(ipvSessionItem.getIpvSessionId()).thenReturn(testSessionId);
-        when(ipvSessionItem.getJourneyType()).thenReturn(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
@@ -637,11 +632,11 @@ class RetrieveCriCredentialHandlerTest {
                         testCriNotRequiringApiKey,
                         null,
                         CREDENTIAL_ISSUER_ID);
-        assertEquals("/journey/next", output.get("journey"));
+        assertEquals("/journey/evaluate", output.get("journey"));
     }
 
     @Test
-    void shouldReturnJourneyPendingResponseOnSuccessfulPendingCriResponse() {
+    void shouldReturnJourneyEvaluateResponseOnSuccessfulPendingCriResponse() {
         final String expectedIssuerResponse =
                 "{\"sub\":\""
                         + TEST_USER_ID
@@ -659,13 +654,11 @@ class RetrieveCriCredentialHandlerTest {
                                 .build());
 
         IpvSessionItem testIpvSessionItem = makeTestIpvSessionItem(TEST_IPV_SESSION_ID);
-        testIpvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
         mockServiceCalls(testIpvSessionItem);
 
         Map<String, Object> output = handler.handleRequest(testInput, context);
 
-        assertEquals("/journey/pending", output.get("journey"));
-        assertEquals("ipv-core-main-journey", output.get("journeyType"));
+        assertEquals("/journey/evaluate", output.get("journey"));
         verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
 
         verifyPersistedCriResponse(
