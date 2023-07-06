@@ -23,7 +23,7 @@ export const deleteVCs = async (userId: string): Promise<number> => {
     })
   );
   await Promise.all(deletePromises);
-  logger.info("Deleted user's VCs", { userId, count: deleteCount });
+  logger.info("Deleted user's VCs", { count: deleteCount });
   return deleteCount;
 };
 
@@ -37,9 +37,9 @@ const getVCItemKeys = async (userId: string): Promise<VCItemKey[]> => {
     },
   });
   if (!itemKeys || itemKeys.length === 0) {
-    logger.info("No VCs found for user", { userId });
+    logger.info("No VCs found for user");
     return [];
   }
-  logger.info("Found user's VCs", { userId, count: itemKeys.length });
+  logger.info("Found user's VCs", { count: itemKeys.length });
   return itemKeys as VCItemKey[];
 };
