@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensions;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -40,9 +39,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CLIENT_OAUTH_SESSION_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
@@ -56,10 +52,6 @@ public class ValidateOAuthCallbackHandler
             Map.of(JOURNEY, "/journey/cri/access-token");
     private static final Map<String, Object> JOURNEY_ACCESS_DENIED =
             Map.of(JOURNEY, "/journey/access-denied");
-    private static final Map<String, Object> JOURNEY_ACCESS_DENIED_MULTI =
-            Map.of(JOURNEY, "/journey/access-denied-multi-doc");
-    private static final Map<String, Object> JOURNEY_ACCESS_DENIED_MULTI_WITH_F2F =
-            Map.of(JOURNEY, "/journey/access-denied-multi-f2f-doc");
     private static final Map<String, Object> JOURNEY_TEMPORARILY_UNAVAILABLE =
             Map.of(JOURNEY, "/journey/temporarily-unavailable");
     private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, "/journey/error");
@@ -265,12 +257,6 @@ public class ValidateOAuthCallbackHandler
         LogHelper.logOauthError("OAuth error received from CRI", error, errorDescription);
 
         if (OAuth2Error.ACCESS_DENIED_CODE.equals(error)) {
-            if (configService.isEnabled(PASSPORT_CRI)
-                    && configService.isEnabled(DRIVING_LICENCE_CRI)
-                    && ipvSessionItem.getJourneyType() == IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY) {
-                // This branch should be removed after we move the newly refactored journey
-                return getMultipleDocCheckPage();
-            }
             return JOURNEY_ACCESS_DENIED;
         } else if (OAuth2Error.TEMPORARILY_UNAVAILABLE_CODE.equals(error)) {
             return JOURNEY_TEMPORARILY_UNAVAILABLE;
@@ -315,13 +301,6 @@ public class ValidateOAuthCallbackHandler
             throw new HttpResponseExceptionWithErrorBody(
                     HttpStatus.SC_BAD_REQUEST, ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
         }
-    }
-
-    private Map<String, Object> getMultipleDocCheckPage() {
-        if (configService.isEnabled(F2F_CRI)) {
-            return JOURNEY_ACCESS_DENIED_MULTI_WITH_F2F;
-        }
-        return JOURNEY_ACCESS_DENIED_MULTI;
     }
 
     @Tracing
