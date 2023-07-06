@@ -60,13 +60,6 @@ Conditions:
       - Fn::Equals:
           - !Ref PermissionsBoundary
           - "none"
-  TurnOffCriReturnStepFunctionLogging: !Equals
-    - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, criReturnStepFunctionLogLevel ]
-    - OFF
-  TurnOffJourneyEngineStepFunctionLogging: !Equals
-    - !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, journeyEngineStepFunctionLogLevel ]
-    - OFF
-
 
 # The AWS Account Id is used in the following mapping section because we have
 # multiple developer environments and it is undesirable to have to keep this
@@ -77,8 +70,8 @@ Mappings:
       provisionedConcurrency: 0
       ciStorageAccountId: 322814139578 # di-ipv-cri-dev
       environment: dev
-      criReturnStepFunctionLogLevel: ALL
-      journeyEngineStepFunctionLogLevel: ALL
+      criReturnStepFunctionLogLevel: "ALL"
+      journeyEngineStepFunctionLogLevel: "ALL"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueueOldDev"
@@ -90,8 +83,8 @@ Mappings:
       provisionedConcurrency: 0
       ciStorageAccountId: 158853307826 # new CIMIT dev
       environment: dev
-      criReturnStepFunctionLogLevel: ALL
-      journeyEngineStepFunctionLogLevel: ALL
+      criReturnStepFunctionLogLevel: "ALL"
+      journeyEngineStepFunctionLogLevel: "ALL"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue"
@@ -101,8 +94,8 @@ Mappings:
       provisionedConcurrency: 1
       ciStorageAccountId: 755415363251 # di-ipv-contra-indicators-build
       environment: build
-      criReturnStepFunctionLogLevel: ALL
-      journeyEngineStepFunctionLogLevel: ALL
+      criReturnStepFunctionLogLevel: "ALL"
+      journeyEngineStepFunctionLogLevel: "ALL"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue_build"
@@ -112,8 +105,8 @@ Mappings:
       provisionedConcurrency: 1
       ciStorageAccountId: 265689800486 # di-ipv-contra-indicators-staging
       environment: staging
-      criReturnStepFunctionLogLevel: ALL
-      journeyEngineStepFunctionLogLevel: ALL
+      criReturnStepFunctionLogLevel: "ALL"
+      journeyEngineStepFunctionLogLevel: "ALL"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue_staging"
@@ -123,8 +116,8 @@ Mappings:
       provisionedConcurrency: 1
       ciStorageAccountId: 697519714716 # di-ipv-contra-indicators-integration
       environment: integration
-      criReturnStepFunctionLogLevel: OFF
-      journeyEngineStepFunctionLogLevel: OFF
+      criReturnStepFunctionLogLevel: "OFF"
+      journeyEngineStepFunctionLogLevel: "OFF"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue_integration"
@@ -134,8 +127,8 @@ Mappings:
       provisionedConcurrency: 1
       ciStorageAccountId: 442136572379 # di-ipv-contra-indicators-prod
       environment: production
-      criReturnStepFunctionLogLevel: OFF
-      journeyEngineStepFunctionLogLevel: OFF
+      criReturnStepFunctionLogLevel: "OFF"
+      journeyEngineStepFunctionLogLevel: "OFF"
       pgw500ErrorLimit: 20
       egw500ErrorLimit: 2
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue_production"
@@ -1355,14 +1348,12 @@ Resources:
               Ref: IPVCorePrivateAPI
             Path: /journey/cri/callback
             Method: POST
-      Logging: !If
-        - TurnOffCriReturnStepFunctionLogging
-        - Ref: AWS::NoValue
-        - Destinations:
-            - CloudWatchLogsLogGroup:
-                LogGroupArn: !GetAtt CriReturnStepFunctionLogGroup.Arn
-          IncludeExecutionData: true
-          Level: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, criReturnStepFunctionLogLevel ]
+      Logging:
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt CriReturnStepFunctionLogGroup.Arn
+        IncludeExecutionData: true
+        Level: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, criReturnStepFunctionLogLevel ]
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref IPVProcessJourneyStepFunction
@@ -1456,14 +1447,12 @@ Resources:
               Ref: IPVCorePrivateAPI
             Path: /journey/{journeyStep}
             Method: POST
-      Logging: !If
-        - TurnOffJourneyEngineStepFunctionLogging
-        - Ref: AWS::NoValue
-        - Destinations:
-            - CloudWatchLogsLogGroup:
-                LogGroupArn: !GetAtt JourneyEngineStepFunctionLogGroup.Arn
-          IncludeExecutionData: true
-          Level: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, journeyEngineStepFunctionLogLevel ]
+      Logging:
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt JourneyEngineStepFunctionLogGroup.Arn
+        IncludeExecutionData: true
+        Level: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, journeyEngineStepFunctionLogLevel ]
       Policies:
         - LambdaInvokePolicy:
             FunctionName: !Ref IPVProcessJourneyStepFunction
