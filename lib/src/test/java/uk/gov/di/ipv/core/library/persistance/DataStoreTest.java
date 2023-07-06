@@ -14,7 +14,6 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbIndex;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
-import software.amazon.awssdk.enhanced.dynamodb.model.DescribeTableEnhancedResponse;
 import software.amazon.awssdk.enhanced.dynamodb.model.Page;
 import software.amazon.awssdk.enhanced.dynamodb.model.PageIterable;
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
@@ -103,11 +102,6 @@ class DataStoreTest {
                 TableDescription.builder().tableName("test-table").build();
         DescribeTableResponse describeTableResponse =
                 DescribeTableResponse.builder().table(tableDescription).build();
-        when(mockDynamoDbTable.describeTable())
-                .thenReturn(
-                        new DescribeTableEnhancedResponse.Builder()
-                                .response(describeTableResponse)
-                                .build());
 
         dataStore.getItem("partition-key-12345", "sort-key-12345");
 
@@ -128,11 +122,6 @@ class DataStoreTest {
                 TableDescription.builder().tableName("test-table").build();
         DescribeTableResponse describeTableResponse =
                 DescribeTableResponse.builder().table(tableDescription).build();
-        when(mockDynamoDbTable.describeTable())
-                .thenReturn(
-                        new DescribeTableEnhancedResponse.Builder()
-                                .response(describeTableResponse)
-                                .build());
 
         dataStore.getItem("partition-key-12345");
 
