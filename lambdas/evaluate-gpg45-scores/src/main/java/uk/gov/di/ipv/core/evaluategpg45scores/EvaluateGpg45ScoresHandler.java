@@ -19,7 +19,6 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.BaseResponse;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
@@ -172,12 +171,10 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
 
             updateSuccessfulVcStatuses(ipvSessionItem, credentials);
 
-            if (ipvSessionItem.getJourneyType() == IpvJourneyTypes.IPV_CORE_REFACTOR_JOURNEY) {
-                Optional<JourneyResponse> journeyResponseForFailWithNoCi =
-                        getJourneyResponseForFailWithNoCi(ipvSessionItem);
-                if (journeyResponseForFailWithNoCi.isPresent()) {
-                    return journeyResponseForFailWithNoCi.get();
-                }
+            Optional<JourneyResponse> journeyResponseForFailWithNoCi =
+                    getJourneyResponseForFailWithNoCi(ipvSessionItem);
+            if (journeyResponseForFailWithNoCi.isPresent()) {
+                return journeyResponseForFailWithNoCi.get();
             }
 
             if (!checkCorrelation(userId, ipvSessionItem.getCurrentVcStatuses())) {
@@ -384,8 +381,7 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
                         .findFirst();
 
         if (lastVisitedCriVcStatus.isPresent()
-                && Boolean.FALSE.equals(lastVisitedCriVcStatus.get().getIsSuccessfulVc())
-                && ipvSessionItem.getJourneyType() == IpvJourneyTypes.IPV_CORE_REFACTOR_JOURNEY) {
+                && Boolean.FALSE.equals(lastVisitedCriVcStatus.get().getIsSuccessfulVc())) {
             // Handle scenario where VCs without CIs should be redirected
             return Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI));
         }
