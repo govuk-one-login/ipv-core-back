@@ -112,7 +112,7 @@ Mappings:
       provisionedConcurrency: 1
       ciStorageAccountId: 697519714716 # di-ipv-contra-indicators-integration
       environment: integration
-      criReturnStepFunctionLogLevel: OFF
+      criReturnStepFunctionLogLevel: "OFF"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:766319219145:f2f-cri-api-IPVCoreSQSQueue-kuAgEry3qYXT"
@@ -122,7 +122,7 @@ Mappings:
       provisionedConcurrency: 1
       ciStorageAccountId: 442136572379 # di-ipv-contra-indicators-prod
       environment: production
-      criReturnStepFunctionLogLevel: OFF
+      criReturnStepFunctionLogLevel: "OFF"
       pgw500ErrorLimit: 20
       egw500ErrorLimit: 2
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:377086294028:f2f-cri-api-IPVCoreSQSQueue-CPbnPGKq0SL7"
