@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.domain;
 
+import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -22,25 +23,24 @@ public class ContraIndications {
     }
 
     private Integer calculateCheckedScore(
-            final Map<String, ContraIndicatorScore> contraIndicatorScoreMap) {
+            final Map<String, ContraIndicatorScore> contraIndicatorScores) {
         return contraIndicators.values().stream()
                 .filter(
                         contraIndicator ->
-                                (contraIndicator.getMitigations() != null)
-                                        && !contraIndicator.getMitigations().isEmpty())
+                                !CollectionUtils.isEmpty(contraIndicator.getMitigations()))
                 .map(
                         contraIndicator ->
-                                contraIndicatorScoreMap
+                                contraIndicatorScores
                                         .get(contraIndicator.getCode())
                                         .getCheckedScore())
                 .reduce(0, Integer::sum);
     }
 
     public Integer getContraIndicatorScore(
-            final Map<String, ContraIndicatorScore> contraIndicatorScoreMap,
+            final Map<String, ContraIndicatorScore> contraIndicatorScores,
             final boolean includeMitigation) {
-        return calculateDetectedScore(contraIndicatorScoreMap)
-                + (includeMitigation ? calculateCheckedScore(contraIndicatorScoreMap) : 0);
+        return calculateDetectedScore(contraIndicatorScores)
+                + (includeMitigation ? calculateCheckedScore(contraIndicatorScores) : 0);
     }
 
     public Optional<ContraIndicator> getLatestContraIndicator() {
