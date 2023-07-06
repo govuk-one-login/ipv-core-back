@@ -71,11 +71,11 @@ public class DataStore<T extends DynamodbItem> {
 
     public T getItem(String partitionValue, String sortValue) {
         var key = Key.builder().partitionValue(partitionValue).sortValue(sortValue).build();
-        return getItemByKey(key, false);
+        return getItemByKey(key, true);
     }
 
     public T getItem(String partitionValue) {
-        return getItem(partitionValue, false);
+        return getItem(partitionValue, true);
     }
 
     public T getItem(String partitionValue, boolean warnOnNull) {
@@ -157,8 +157,7 @@ public class DataStore<T extends DynamodbItem> {
             var message =
                     new StringMapMessage()
                             .with("datastore", "Null result retrieved from DynamoDB")
-                            .with("table", table.describeTable().table().tableName())
-                            .with("field", key.partitionKeyValue().toString());
+                            .with("table", table.describeTable().table().tableName());
             LOGGER.warn(message);
         }
         return result;
