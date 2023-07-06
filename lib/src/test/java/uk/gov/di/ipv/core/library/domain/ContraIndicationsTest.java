@@ -4,7 +4,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -31,37 +33,79 @@ class ContraIndicationsTest {
     }
 
     @Test
-    void shouldReturnEmptyOptionalForLatestContraIndicatorFromEmptyContraIndications() {
+    void shouldReturnEmptyOptionalWhenNoContraIndicatorExistInContraIndications() {
         assertFalse(contraIndications.getLatestContraIndicator().isPresent());
     }
 
     @Test
-    void shouldReturnZeroScoreForEmptyContraIndications() {
-        assertEquals(0, contraIndications.getContraIndicatorScores(CONTRA_INDICATOR_SCORE_MAP));
+    void shouldReturnZeroScoreWhenNoContraIndicatorExistInContraIndications() {
+        assertEquals(
+                0, contraIndications.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, false));
     }
 
     @Test
-    void shouldCalculateContraIndicatorScore() {
-        addContraIndicators(TEST_CI1, BASE_TIME.minusSeconds(1));
-        addContraIndicators(TEST_CI2, BASE_TIME.minusSeconds(2));
-        assertEquals(7, contraIndications.getContraIndicatorScores(CONTRA_INDICATOR_SCORE_MAP));
+    void shouldCalculateContraIndicatorScoreExcludeMitigation() {
+        addContraIndicators(
+                TEST_CI1, BASE_TIME.minusSeconds(1), List.of(Mitigation.builder().build()));
+        addContraIndicators(
+                TEST_CI2, BASE_TIME.minusSeconds(2), List.of(Mitigation.builder().build()));
+        assertEquals(
+                7, contraIndications.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, false));
         contraIndications = ContraIndications.builder().contraIndicators(Map.of()).build();
     }
 
     @Test
-    void shouldIdentifyLatestContraIndicator() {
-        addContraIndicators(TEST_CI1, BASE_TIME.minusSeconds(1));
-        addContraIndicators(TEST_CI2, BASE_TIME.minusSeconds(2));
-        addContraIndicators(TEST_CI3, BASE_TIME.plusSeconds(3));
+    void shouldCalculateContraIndicatorScoreIncludeMitigation() {
+        addContraIndicators(
+                TEST_CI1, BASE_TIME.minusSeconds(1), List.of(Mitigation.builder().build()));
+        addContraIndicators(
+                TEST_CI2, BASE_TIME.minusSeconds(2), List.of(Mitigation.builder().build()));
+        assertEquals(
+                1, contraIndications.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, true));
+        contraIndications = ContraIndications.builder().contraIndicators(Map.of()).build();
+    }
+
+    @Test
+    void shouldCalculateContraIndicatorScoreIncludeMitigationAndSomeEmptyMitigations() {
+        addContraIndicators(
+                TEST_CI1, BASE_TIME.minusSeconds(1), List.of(Mitigation.builder().build()));
+        addContraIndicators(TEST_CI2, BASE_TIME.minusSeconds(2), Collections.emptyList());
+        addContraIndicators(TEST_CI3, BASE_TIME.minusSeconds(4), null);
+        assertEquals(
+                6, contraIndications.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, true));
+        contraIndications = ContraIndications.builder().contraIndicators(Map.of()).build();
+    }
+
+    @Test
+    void shouldFindLatestContraIndicator() {
+        addContraIndicators(TEST_CI1, BASE_TIME.minusSeconds(1), null);
+        addContraIndicators(TEST_CI2, BASE_TIME.minusSeconds(2), Collections.emptyList());
+        addContraIndicators(TEST_CI3, BASE_TIME.plusSeconds(3), null);
         Optional<ContraIndicator> latestContraIndicator =
                 contraIndications.getLatestContraIndicator();
         assertTrue(latestContraIndicator.isPresent());
         assertEquals(TEST_CI3, latestContraIndicator.get().getCode());
     }
 
-    private void addContraIndicators(final String code, Instant issuanceDate) {
+    @Test
+    void shouldFindLatestContraIndicatorWhenMultipleIndicatorsAtSameTime() {
+        addContraIndicators(TEST_CI1, BASE_TIME, null);
+        addContraIndicators(TEST_CI2, BASE_TIME, null);
+        addContraIndicators(TEST_CI3, BASE_TIME.minusSeconds(3), null);
+        Optional<ContraIndicator> latestContraIndicator =
+                contraIndications.getLatestContraIndicator();
+        assertTrue(latestContraIndicator.isPresent());
+        assertEquals(TEST_CI2, latestContraIndicator.get().getCode());
+    }
+
+    private void addContraIndicators(
+            final String code, Instant issuanceDate, List<Mitigation> mitigations) {
         ContraIndicator contraIndicator =
-                ContraIndicator.builder().code(code).issuanceDate(issuanceDate).build();
+                ContraIndicator.builder()
+                        .code(code)
+                        .issuanceDate(issuanceDate)
+                        .mitigations(mitigations)
+                        .build();
         Map<String, ContraIndicator> updatedContraIndicators =
                 new HashMap<>(contraIndications.getContraIndicators());
         updatedContraIndicators.put(code, contraIndicator);
