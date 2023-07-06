@@ -1,6 +1,5 @@
 package uk.gov.di.ipv.core.library.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,7 +13,5 @@ import java.util.List;
 @AllArgsConstructor
 public class MitigationDto {
     private String code;
-
-    @JsonProperty("id")
     private List<MitigationCredentialDto> mitigatingCredential;
 }
