@@ -170,7 +170,9 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
 
             Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
                     gpg45ProfileEvaluator.getJourneyResponseForStoredCis(ciItems);
-            if (contraIndicatorErrorJourneyResponse.isEmpty()) {
+            if (contraIndicatorErrorJourneyResponse.isPresent()) {
+                return contraIndicatorErrorJourneyResponse.get();
+            } else {
                 Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
                 Optional<Gpg45Profile> matchedProfile =
                         gpg45ProfileEvaluator.getFirstMatchingProfile(
@@ -207,33 +209,34 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
 
                     return JOURNEY_REUSE;
                 }
-            }
 
-            if (!credentials.isEmpty()) {
+                if (!credentials.isEmpty()) {
+                    var message =
+                            new StringMapMessage()
+                                    .with(
+                                            LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                            "Failed to match profile so resetting identity.");
+                    LOGGER.info(message);
+
+                    auditService.sendAuditEvent(
+                            new AuditEvent(
+                                    AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
+                                    componentId,
+                                    auditEventUser));
+
+                    return JOURNEY_RESET_IDENTITY;
+                }
+
                 var message =
                         new StringMapMessage()
                                 .with(
                                         LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "Failed to match profile so resetting identity.");
+                                        "New user so returning next.");
                 LOGGER.info(message);
 
-                auditService.sendAuditEvent(
-                        new AuditEvent(
-                                AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
-                                componentId,
-                                auditEventUser));
-
-                return JOURNEY_RESET_IDENTITY;
+                return JOURNEY_NEXT;
             }
 
-            var message =
-                    new StringMapMessage()
-                            .with(
-                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                    "New user so returning next.");
-            LOGGER.info(message);
-
-            return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("Unable to parse existing credentials", e);
             return new JourneyErrorResponse(

@@ -263,7 +263,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyResetIdentityResponseIfVcsFailCiScoreCheck()
+    void shouldReturnPyiNoMatchIfVcsFailCiScoreCheck()
             throws ParseException, SqsException, IOException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
@@ -275,14 +275,8 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
 
         var journeyResponse = handleRequest(event, context, JourneyResponse.class);
-        assertEquals("/journey/reset-identity", journeyResponse.getJourney());
+        assertEquals("/journey/pyi-no-match", journeyResponse.getJourney());
 
-        ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
-                ArgumentCaptor.forClass(AuditEvent.class);
-        verify(auditService).sendAuditEvent(auditEventArgumentCaptor.capture());
-        assertEquals(
-                AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
-                auditEventArgumentCaptor.getValue().getEventName());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
