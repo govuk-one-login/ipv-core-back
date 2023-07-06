@@ -71,11 +71,11 @@ public class DataStore<T extends DynamodbItem> {
 
     public T getItem(String partitionValue, String sortValue) {
         var key = Key.builder().partitionValue(partitionValue).sortValue(sortValue).build();
-        return getItemByKey(key, true);
+        return getItemByKey(key, false);
     }
 
     public T getItem(String partitionValue) {
-        return getItem(partitionValue, true);
+        return getItem(partitionValue, false);
     }
 
     public T getItem(String partitionValue, boolean warnOnNull) {
