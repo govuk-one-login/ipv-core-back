@@ -123,6 +123,20 @@ CHECK_EXISTING_IDENTITY:
       response:
         type: page
         pageId: page-ipv-pending
+    pyi-no-match:
+      type: basic
+      name: pyi-no-match
+      targetState: PYI_NO_MATCH
+      response:
+        type: page
+        pageId: pyi-no-match
+    pyi-kbv-fail:
+      type: basic
+      name: pyi-kbv-fail
+      targetState: PYI_KBV_FAIL
+      response:
+        type: page
+        pageId: pyi-kbv-fail
     attempt-recovery:
       type: basic
       name: attempt-recovery
