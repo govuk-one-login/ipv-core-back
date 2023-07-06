@@ -15,6 +15,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.domain.CriConstants;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.exceptions.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
@@ -29,15 +30,16 @@ import uk.gov.di.ipv.core.processasynccricredential.dto.CriResponseMessageDto;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.ParseException;
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -64,6 +66,7 @@ class ProcessAsyncCriCredentialHandlerTest {
             "Additional information on the error";
     private static final CredentialIssuerConfig TEST_CREDENTIAL_ISSUER_CONFIG;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final String USE_POST_MITIGATIONS_FEATURE_FLAG = "usePostMitigations";
 
     static {
         try {
@@ -95,7 +98,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     @Test
     void shouldProcessValidExpectedAsyncVerifiableCredentialSuccessfully()
             throws JsonProcessingException, SqsException, CiPutException {
-        final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE, SIGNED_VC_1);
+        final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
 
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
@@ -107,10 +110,38 @@ class ProcessAsyncCriCredentialHandlerTest {
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
+
         assertEquals(0, batchResponse.getBatchItemFailures().size());
 
         verifyVerifiableCredentialJwtValidator();
-        verifyCiStorageService();
+        verifyCiStorageServicePutContraIndicators();
+        verifyVerifiableCredentialService();
+        verifyAuditService();
+    }
+
+    @Test
+    void shouldSendValidExpectedAsyncVerifiableCredentialToCIMITPostMitigationWhenFeatureEnabled()
+            throws JsonProcessingException, SqsException, CiPutException,
+                    CiPostMitigationsException {
+        final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
+
+        when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
+                .thenReturn(TEST_CRI_RESPONSE_ITEM);
+        when(configService.getCredentialIssuerActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
+        when(configService.getFeatureFlag(USE_POST_MITIGATIONS_FEATURE_FLAG)).thenReturn("true");
+
+        final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
+
+        assertEquals(0, batchResponse.getBatchItemFailures().size());
+
+        verifyVerifiableCredentialJwtValidator();
+        verifyCiStorageServicePutContraIndicators();
+        verifyCiStorageServicePostMitigations();
         verifyVerifiableCredentialService();
         verifyAuditService();
     }
@@ -120,40 +151,46 @@ class ProcessAsyncCriCredentialHandlerTest {
         final SQSEvent testEvent = createErrorTestEvent();
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
+
         assertEquals(0, batchResponse.getBatchItemFailures().size());
     }
 
     @Test
-    void shouldRejectValidUnexpectedVerifiableCredential() throws JsonProcessingException {
-        final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE_2, SIGNED_VC_1);
+    void shouldRejectValidUnexpectedVerifiableCredential()
+            throws JsonProcessingException, CiPostMitigationsException, CiPutException,
+                    SqsException {
+        final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE_2);
 
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
-        assertEquals(1, batchResponse.getBatchItemFailures().size());
-        assertEquals(
-                testEvent.getRecords().get(0).getMessageId(),
-                batchResponse.getBatchItemFailures().get(0).getItemIdentifier());
+
+        verifyVerifiableCredentialNotProcessedFurther();
+        verifyBatchResponseFailures(testEvent, batchResponse);
     }
 
     @Test
-    void shouldRejectValidUnsolicitedVerifiableCredential() throws JsonProcessingException {
-        final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE, SIGNED_VC_1);
+    void shouldRejectValidUnsolicitedVerifiableCredential()
+            throws JsonProcessingException, CiPostMitigationsException, CiPutException,
+                    SqsException {
+        final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
 
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(null);
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
-        assertEquals(1, batchResponse.getBatchItemFailures().size());
-        assertEquals(
-                testEvent.getRecords().get(0).getMessageId(),
-                batchResponse.getBatchItemFailures().get(0).getItemIdentifier());
+
+        verifyVerifiableCredentialNotProcessedFurther();
+
+        verifyBatchResponseFailures(testEvent, batchResponse);
     }
 
     @Test
-    void shouldRejectInvalidVerifiableCredential() throws JsonProcessingException, ParseException {
-        final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE, SIGNED_VC_1);
+    void shouldRejectInvalidVerifiableCredential()
+            throws JsonProcessingException, CiPutException, CiPostMitigationsException,
+                    SqsException {
+        final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
 
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
@@ -168,10 +205,69 @@ class ProcessAsyncCriCredentialHandlerTest {
                 .validate(any(), any(), any());
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
-        assertEquals(1, batchResponse.getBatchItemFailures().size());
-        assertEquals(
-                testEvent.getRecords().get(0).getMessageId(),
-                batchResponse.getBatchItemFailures().get(0).getItemIdentifier());
+
+        verifyVerifiableCredentialNotProcessedFurther();
+
+        verifyBatchResponseFailures(testEvent, batchResponse);
+    }
+
+    @Test
+    void willnotPersistVerifiableCredentialIfFailsToPutCredentialToCIMIT()
+            throws JsonProcessingException, CiPutException, SqsException {
+        final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
+
+        when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
+                .thenReturn(TEST_CRI_RESPONSE_ITEM);
+        when(configService.getCredentialIssuerActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
+
+        doThrow(new CiPutException("Lambda execution failed"))
+                .when(ciStorageService)
+                .submitVC(any(SignedJWT.class), eq(null), eq(null));
+
+        final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
+
+        verifyVerifiableCredentialJwtValidator();
+        verify(auditService, times(1))
+                .sendAuditEvent(ArgumentCaptor.forClass(AuditEvent.class).capture());
+        verify(verifiableCredentialService, never()).persistUserCredentials(any(), any(), any());
+
+        verifyBatchResponseFailures(testEvent, batchResponse);
+    }
+
+    @Test
+    void willnotPersistVerifiableCredentialIfFailsToPostMitigatingCredentialToCIMIT()
+            throws JsonProcessingException, CiPostMitigationsException, SqsException,
+                    CiPutException {
+        final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
+
+        when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
+                .thenReturn(TEST_CRI_RESPONSE_ITEM);
+        when(configService.getCredentialIssuerActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
+        when(configService.getFeatureFlag(USE_POST_MITIGATIONS_FEATURE_FLAG)).thenReturn("true");
+
+        doThrow(new CiPostMitigationsException("Lambda execution failed"))
+                .when(ciStorageService)
+                .submitMitigatingVcList(anyList(), eq(null), eq(null));
+
+        final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
+
+        verifyVerifiableCredentialJwtValidator();
+        verify(auditService, times(1))
+                .sendAuditEvent(ArgumentCaptor.forClass(AuditEvent.class).capture());
+        verify(ciStorageService, times(1)).submitVC(any(), any(), any());
+        verify(verifiableCredentialService, never()).persistUserCredentials(any(), any(), any());
+
+        verifyBatchResponseFailures(testEvent, batchResponse);
     }
 
     private SQSEvent createErrorTestEvent() throws JsonProcessingException {
@@ -191,16 +287,14 @@ class ProcessAsyncCriCredentialHandlerTest {
         return sqsEvent;
     }
 
-    private SQSEvent createSuccessTestEvent(
-            String testOauthState, String signedVerifiableCredential)
-            throws JsonProcessingException {
+    private SQSEvent createSuccessTestEvent(String testOauthState) throws JsonProcessingException {
         final SQSEvent sqsEvent = new SQSEvent();
         final CriResponseMessageDto criResponseMessageDto =
                 new CriResponseMessageDto(
                         null,
                         TEST_USER_ID,
                         testOauthState,
-                        List.of(signedVerifiableCredential),
+                        List.of(uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1),
                         null,
                         null);
         final SQSEvent.SQSMessage message = new SQSEvent.SQSMessage();
@@ -225,7 +319,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         assertEquals(AuditEventTypes.IPV_F2F_CRI_VC_CONSUMED, auditEvents.get(1).getEventName());
     }
 
-    private void verifyCiStorageService() throws CiPutException {
+    private void verifyCiStorageServicePutContraIndicators() throws CiPutException {
         ArgumentCaptor<SignedJWT> ciVerifiableCredentialCaptor =
                 ArgumentCaptor.forClass(SignedJWT.class);
         ArgumentCaptor<String> govukSigninJourneyIdCaptor = ArgumentCaptor.forClass(String.class);
@@ -238,6 +332,27 @@ class ProcessAsyncCriCredentialHandlerTest {
         List<SignedJWT> ciVerifiableCredentials = ciVerifiableCredentialCaptor.getAllValues();
         assertEquals(1, ciVerifiableCredentials.size());
         assertEquals(SIGNED_VC_1, ciVerifiableCredentials.get(0).serialize());
+        List<String> ciJourneyIds = govukSigninJourneyIdCaptor.getAllValues();
+        assertEquals(1, ciJourneyIds.size());
+        assertNull(ciJourneyIds.get(0));
+        List<String> ciIpAddresses = ipAddressCaptor.getAllValues();
+        assertEquals(1, ciIpAddresses.size());
+        assertNull(ciIpAddresses.get(0));
+    }
+
+    private void verifyCiStorageServicePostMitigations() throws CiPostMitigationsException {
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<String>> postedVcsCaptor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<String> govukSigninJourneyIdCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> ipAddressCaptor = ArgumentCaptor.forClass(String.class);
+        verify(ciStorageService, times(1))
+                .submitMitigatingVcList(
+                        postedVcsCaptor.capture(),
+                        govukSigninJourneyIdCaptor.capture(),
+                        ipAddressCaptor.capture());
+        var postedVcs = postedVcsCaptor.getValue();
+        assertEquals(1, postedVcs.size());
+        assertEquals(SIGNED_VC_1, postedVcs.get(0));
         List<String> ciJourneyIds = govukSigninJourneyIdCaptor.getAllValues();
         assertEquals(1, ciJourneyIds.size());
         assertNull(ciJourneyIds.get(0));
@@ -266,5 +381,22 @@ class ProcessAsyncCriCredentialHandlerTest {
         List<String> userIds = userIdCaptor.getAllValues();
         assertEquals(1, userIds.size());
         assertEquals(TEST_USER_ID, userIds.get(0));
+    }
+
+    private void verifyVerifiableCredentialNotProcessedFurther()
+            throws CiPutException, CiPostMitigationsException, SqsException {
+        verify(auditService, never())
+                .sendAuditEvent(ArgumentCaptor.forClass(AuditEvent.class).capture());
+        verify(verifiableCredentialService, never()).persistUserCredentials(any(), any(), any());
+        verify(ciStorageService, never()).submitVC(any(), any(), any());
+        verify(ciStorageService, never()).submitMitigatingVcList(any(), any(), any());
+    }
+
+    private static void verifyBatchResponseFailures(
+            SQSEvent testEvent, SQSBatchResponse batchResponse) {
+        assertEquals(1, batchResponse.getBatchItemFailures().size());
+        assertEquals(
+                testEvent.getRecords().get(0).getMessageId(),
+                batchResponse.getBatchItemFailures().get(0).getItemIdentifier());
     }
 }

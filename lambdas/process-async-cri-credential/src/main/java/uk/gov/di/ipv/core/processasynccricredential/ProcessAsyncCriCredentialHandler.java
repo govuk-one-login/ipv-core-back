@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.exceptions.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
@@ -53,6 +54,7 @@ import static uk.gov.di.ipv.core.processasynccricredential.helpers.AuditCriRespo
 public class ProcessAsyncCriCredentialHandler
         implements RequestHandler<SQSEvent, SQSBatchResponse> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final String USE_POST_MITIGATIONS_FEATURE_FLAG = "usePostMitigations";
     private final ConfigService configService;
     private final VerifiableCredentialService verifiableCredentialService;
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
@@ -109,7 +111,8 @@ public class ProcessAsyncCriCredentialHandler
                     | ParseException
                     | SqsException
                     | CiPutException
-                    | AsyncVerifiableCredentialException e) {
+                    | AsyncVerifiableCredentialException
+                    | CiPostMitigationsException e) {
                 LOGGER.error(
                         new StringMapMessage()
                                 .with(
@@ -149,7 +152,11 @@ public class ProcessAsyncCriCredentialHandler
     @Tracing
     private void processSuccessAsyncCriResponse(SuccessAsyncCriResponse successAsyncCriResponse)
             throws ParseException, SqsException, JsonProcessingException, CiPutException,
-                    AsyncVerifiableCredentialException {
+                    AsyncVerifiableCredentialException, CiPostMitigationsException {
+
+        final boolean postMitigatingVcs =
+                Boolean.parseBoolean(
+                        configService.getFeatureFlag(USE_POST_MITIGATIONS_FEATURE_FLAG));
 
         validateOAuthState(successAsyncCriResponse);
 
@@ -180,7 +187,10 @@ public class ProcessAsyncCriCredentialHandler
                     new AuditEventUser(successAsyncCriResponse.getUserId(), null, null, null);
             sendIpvVcReceivedAuditEvent(auditEventUser, verifiableCredential, isSuccessful);
 
-            ciStorageService.submitVC(verifiableCredential, null, null);
+            submitVcToCiStorage(verifiableCredential);
+            if (postMitigatingVcs) {
+                postMitigatingVc(verifiableCredential);
+            }
 
             verifiableCredentialService.persistUserCredentials(
                     verifiableCredential,
@@ -249,5 +259,15 @@ public class ProcessAsyncCriCredentialHandler
                         null,
                         getVcNamePartsForAudit(verifiableCredential));
         auditService.sendAuditEvent(auditEvent);
+    }
+
+    @Tracing
+    private void submitVcToCiStorage(SignedJWT vc) throws CiPutException {
+        ciStorageService.submitVC(vc, null, null);
+    }
+
+    @Tracing
+    private void postMitigatingVc(SignedJWT vc) throws CiPostMitigationsException {
+        ciStorageService.submitMitigatingVcList(List.of(vc.serialize()), null, null);
     }
 }
