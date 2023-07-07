@@ -10,7 +10,6 @@ import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
-import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,6 +43,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -70,7 +70,7 @@ public class CiStorageService {
     public CiStorageService(ConfigService configService) {
         this.lambdaClient = AWSLambdaClientBuilder.defaultClient();
         this.configService = configService;
-        verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator();
+        this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator();
     }
 
     public CiStorageService(
@@ -100,7 +100,7 @@ public class CiStorageService {
         InvokeResult result = lambdaClient.invoke(request);
 
         if (lambdaExecutionFailed(result)) {
-            logLambdaExecutionError(result);
+            logLambdaExecutionError(result, CI_STORAGE_PUT_LAMBDA_ARN);
             throw new CiPutException(FAILED_LAMBDA_MESSAGE);
         }
     }
@@ -124,7 +124,7 @@ public class CiStorageService {
         InvokeResult result = lambdaClient.invoke(request);
 
         if (lambdaExecutionFailed(result)) {
-            logLambdaExecutionError(result);
+            logLambdaExecutionError(result, CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN);
             throw new CiPostMitigationsException(FAILED_LAMBDA_MESSAGE);
         }
     }
@@ -162,7 +162,7 @@ public class CiStorageService {
     }
 
     private InvokeResult invokeClientToGetCIResult(
-            EnvironmentVariable cimitGetContraindicatorsLambdaArn,
+            EnvironmentVariable lambdaArnToInvoke,
             String govukSigninJourneyId,
             String ipAddress,
             String userId,
@@ -170,9 +170,7 @@ public class CiStorageService {
             throws CiRetrievalException {
         InvokeRequest request =
                 new InvokeRequest()
-                        .withFunctionName(
-                                configService.getEnvironmentVariable(
-                                        cimitGetContraindicatorsLambdaArn))
+                        .withFunctionName(configService.getEnvironmentVariable(lambdaArnToInvoke))
                         .withPayload(
                                 gson.toJson(
                                         new GetCiRequest(govukSigninJourneyId, ipAddress, userId)));
@@ -181,7 +179,7 @@ public class CiStorageService {
         InvokeResult result = lambdaClient.invoke(request);
 
         if (lambdaExecutionFailed(result)) {
-            logLambdaExecutionError(result);
+            logLambdaExecutionError(result, lambdaArnToInvoke);
             throw new CiRetrievalException(FAILED_LAMBDA_MESSAGE);
         }
         return result;
@@ -214,8 +212,11 @@ public class CiStorageService {
                     contraIndicatorsJwt, ECKey.parse(cimitSigningKey), cimitComponentId, userId);
         } catch (ParseException e) {
             LOGGER.error("Error parsing CIMIT signing key: '{}'", e.getMessage());
-            throw new VerifiableCredentialException(
-                    HTTPResponse.SC_SERVER_ERROR, ErrorResponse.FAILED_TO_PARSE_CIMIT_SIGNING_KEY);
+            throw new CiRetrievalException(
+                    ErrorResponse.FAILED_TO_PARSE_CIMIT_SIGNING_KEY.getMessage());
+        } catch (VerifiableCredentialException vcEx) {
+            LOGGER.error(vcEx.getErrorResponse().getMessage());
+            throw new CiRetrievalException(vcEx.getErrorResponse().getMessage());
         }
 
         return contraIndicatorsJwt;
@@ -236,7 +237,7 @@ public class CiStorageService {
         }
 
         JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
-        if (evidenceArray.size() != 1) {
+        if (evidenceArray == null || evidenceArray.size() != 1) {
             String message = "Unexpected evidence count.";
             LOGGER.error(
                     new StringMapMessage()
@@ -245,7 +246,7 @@ public class CiStorageService {
                                     LOG_ERROR_DESCRIPTION.getFieldName(),
                                     String.format(
                                             "Expected one evidence item, got %d.",
-                                            evidenceArray.size())));
+                                            evidenceArray == null ? 0 : evidenceArray.size())));
             throw new CiRetrievalException(message);
         }
 
@@ -323,13 +324,16 @@ public class CiStorageService {
         return payload == null ? null : new String(payload.array(), StandardCharsets.UTF_8);
     }
 
-    private void logLambdaExecutionError(InvokeResult result) {
+    private void logLambdaExecutionError(
+            InvokeResult result, EnvironmentVariable lambdaArnToInvoke) {
         HashMap<String, String> message = new HashMap<>();
-        message.put(LOG_MESSAGE_DESCRIPTION.getFieldName(), "CI storage lambda execution failed.");
+        message.put(
+                LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                "Lambda execution failed for arn:" + lambdaArnToInvoke);
         message.put(LOG_ERROR.getFieldName(), result.getFunctionError());
         message.put(LOG_STATUS_CODE.getFieldName(), String.valueOf(result.getStatusCode()));
         message.put(LOG_PAYLOAD.getFieldName(), getPayloadOrNull(result));
-        message.values().removeAll(Collections.singleton(null));
+        message.values().removeIf(Objects::isNull);
         LOGGER.error(new StringMapMessage(message));
     }
 }

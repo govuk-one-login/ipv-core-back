@@ -5,6 +5,7 @@ import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -15,20 +16,22 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndications;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
+import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.text.ParseException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN;
@@ -230,7 +233,7 @@ class CiStorageServiceTest {
     }
 
     @Test
-    void getContraIndicatorsVC() throws Exception {
+    void getContraIndicatorsVC() throws CiRetrievalException {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
@@ -253,7 +256,7 @@ class CiStorageServiceTest {
         verify(verifiableCredentialJwtValidator)
                 .validate(
                         any(SignedJWT.class),
-                        eq(ECKey.parse(EC_PUBLIC_JWK)),
+                        any(ECKey.class),
                         eq(CIMIT_COMPONENT_ID),
                         eq(TEST_USER_ID));
 
@@ -322,8 +325,42 @@ class CiStorageServiceTest {
     }
 
     @Test
+    void getContraIndicatorsVCThrowsExceptionIfVCValidationFails() {
+        when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
+                .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
+        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
+                .thenReturn(CIMIT_COMPONENT_ID);
+        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
+                .thenReturn(EC_PUBLIC_JWK);
+        when(lambdaClient.invoke(requestCaptor.capture()))
+                .thenReturn(
+                        new InvokeResult()
+                                .withStatusCode(200)
+                                .withPayload(
+                                        ByteBuffer.wrap(
+                                                SIGNED_CONTRA_INDICATOR_VC.getBytes(
+                                                        StandardCharsets.UTF_8))));
+        doThrow(
+                        new VerifiableCredentialException(
+                                HTTPResponse.SC_SERVER_ERROR,
+                                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL))
+                .when(verifiableCredentialJwtValidator)
+                .validate(
+                        any(SignedJWT.class),
+                        any(ECKey.class),
+                        eq(CIMIT_COMPONENT_ID),
+                        eq(TEST_USER_ID));
+
+        assertThrows(
+                CiRetrievalException.class,
+                () ->
+                        ciStorageService.getContraIndicatorsVC(
+                                TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
+    }
+
+    @Test
     void getContraIndicatorCredentialsReturnEmptyCIIfInvalidEvidenceWithNoCI()
-            throws ParseException, CiRetrievalException {
+            throws CiRetrievalException {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
@@ -346,7 +383,7 @@ class CiStorageServiceTest {
         verify(verifiableCredentialJwtValidator)
                 .validate(
                         any(SignedJWT.class),
-                        eq(ECKey.parse(EC_PUBLIC_JWK)),
+                        any(ECKey.class),
                         eq(CIMIT_COMPONENT_ID),
                         eq(TEST_USER_ID));
 
