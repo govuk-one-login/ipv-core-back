@@ -79,6 +79,13 @@ IPV_IDENTITY_START_PAGE:
       response:
         type: journey
         journeyStepId: /journey/check-existing-identity
+    end:
+      type: basic
+      name: end
+      targetState: CHECK_EXISTING_IDENTITY
+      response:
+        type: page
+        pageId: page-ipv-identity-postoffice-start
     attempt-recovery:
       type: basic
       name: attempt-recovery
