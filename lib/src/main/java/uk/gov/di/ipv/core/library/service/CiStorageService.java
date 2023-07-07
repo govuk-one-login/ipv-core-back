@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.service;
 
 import com.amazonaws.services.lambda.AWSLambda;
 import com.amazonaws.services.lambda.AWSLambdaClientBuilder;
+import com.amazonaws.services.lambda.model.AWSLambdaException;
 import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
 import com.google.gson.Gson;
@@ -168,6 +169,7 @@ public class CiStorageService {
             String userId,
             String message)
             throws CiRetrievalException {
+        LOGGER.info(message);
         InvokeRequest request =
                 new InvokeRequest()
                         .withFunctionName(configService.getEnvironmentVariable(lambdaArnToInvoke))
@@ -175,8 +177,18 @@ public class CiStorageService {
                                 gson.toJson(
                                         new GetCiRequest(govukSigninJourneyId, ipAddress, userId)));
 
-        LOGGER.info(message);
-        InvokeResult result = lambdaClient.invoke(request);
+        InvokeResult result = null;
+        try {
+            result = lambdaClient.invoke(request);
+        } catch (AWSLambdaException awsLEx) {
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "AWSLambda client invocation failed.")
+                            .with(LOG_ERROR_DESCRIPTION.getFieldName(), awsLEx.getMessage()));
+            throw new CiRetrievalException(FAILED_LAMBDA_MESSAGE);
+        }
 
         if (lambdaExecutionFailed(result)) {
             logLambdaExecutionError(result, lambdaArnToInvoke);

@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.library.service;
 
 import com.amazonaws.services.lambda.AWSLambda;
+import com.amazonaws.services.lambda.model.AWSLambdaException;
 import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
 import com.nimbusds.jose.jwk.ECKey;
@@ -316,6 +317,21 @@ class CiStorageServiceTest {
                                 .withPayload(
                                         ByteBuffer.wrap(
                                                 "NOT_A_JWT".getBytes(StandardCharsets.UTF_8))));
+
+        assertThrows(
+                CiRetrievalException.class,
+                () ->
+                        ciStorageService.getContraIndicatorsVC(
+                                TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
+    }
+
+    @Test
+    void getContraIndicatorVCThrowsErrorForExceptionFromAWSLambdaClient() {
+        when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
+                .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
+        doThrow(new AWSLambdaException("AWSLambda client invocation failed"))
+                .when(lambdaClient)
+                .invoke(any());
 
         assertThrows(
                 CiRetrievalException.class,
