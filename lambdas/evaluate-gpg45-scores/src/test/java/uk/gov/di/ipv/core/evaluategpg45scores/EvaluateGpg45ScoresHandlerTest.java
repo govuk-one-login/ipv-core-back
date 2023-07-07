@@ -50,7 +50,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -79,7 +78,6 @@ class EvaluateGpg45ScoresHandlerTest {
                     M1A_VERIFICATION_VC,
                     M1B_DCMAW_VC);
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
-    private static final String A01 = "A01";
     public static CredentialIssuerConfig addressConfig = null;
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
@@ -101,7 +99,7 @@ class EvaluateGpg45ScoresHandlerTest {
                             "ipv-core",
                             "test-jwk",
                             "test-encryption-jwk",
-                            "test-audience",
+                            "https://review-a.integration.account.gov.uk",
                             new URI("http://example.com/redirect"),
                             true);
         } catch (URISyntaxException e) {
@@ -194,7 +192,7 @@ class EvaluateGpg45ScoresHandlerTest {
         assertEquals(
                 "https://review-p.integration.account.gov.uk",
                 currentVcStatuses.get(0).getCriIss());
-        assertFalse(currentVcStatuses.get(1).getIsSuccessfulVc());
+        assertTrue(currentVcStatuses.get(1).getIsSuccessfulVc());
         assertEquals(
                 "https://review-a.integration.account.gov.uk",
                 currentVcStatuses.get(1).getCriIss());
@@ -215,6 +213,7 @@ class EvaluateGpg45ScoresHandlerTest {
     void shouldReturnJourneySessionEndIfScoresSatisfyM1BGpg45Profile() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
@@ -225,6 +224,8 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
+        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(addressConfig);
 
         var response = handleRequest(request, context, JourneyResponse.class);
 
@@ -324,7 +325,6 @@ class EvaluateGpg45ScoresHandlerTest {
         IpvSessionItem testIpvSessionItem = new IpvSessionItem();
         testIpvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         testIpvSessionItem.setIpvSessionId(TEST_SESSION_ID);
-        testIpvSessionItem.setJourneyType(IPV_CORE_REFACTOR_JOURNEY);
         testIpvSessionItem.setVisitedCredentialIssuerDetails(
                 List.of(
                         new VisitedCredentialIssuerDetailsDto(
@@ -352,6 +352,18 @@ class EvaluateGpg45ScoresHandlerTest {
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
+                .thenReturn(
+                        new CredentialIssuerConfig(
+                                new URI("http://example.com/token"),
+                                new URI("http://example.com/credential"),
+                                new URI("http://example.com/authorize"),
+                                "ipv-core",
+                                "test-jwk",
+                                "test-encryption-jwk",
+                                "http://example.com",
+                                new URI("http://example.com/redirect"),
+                                true));
 
         var response = handleRequest(request, context, JourneyResponse.class);
 
@@ -420,10 +432,6 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
-                .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
-                .thenReturn(true);
 
         handleRequest(request, context, JourneyResponse.class);
 
