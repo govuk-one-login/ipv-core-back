@@ -3,6 +3,7 @@ package uk.gov.di.ipv.core.library.domain;
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.util.Comparator;
 import java.util.Map;
@@ -10,6 +11,7 @@ import java.util.Optional;
 
 @Getter
 @Builder(toBuilder = true)
+@ToString
 public class ContraIndications {
     private final Map<String, ContraIndicator> contraIndicators;
 
