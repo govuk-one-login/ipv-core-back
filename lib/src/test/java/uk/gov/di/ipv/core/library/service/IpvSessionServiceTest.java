@@ -19,7 +19,6 @@ import java.util.Date;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
@@ -29,7 +28,6 @@ import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SE
 @ExtendWith(MockitoExtension.class)
 class IpvSessionServiceTest {
     private static final String INITIAL_IPV_JOURNEY_STATE = "INITIAL_IPV_JOURNEY";
-    private static final String DEBUG_EVALUATE_GPG45_SCORES_STATE = "DEBUG_EVALUATE_GPG45_SCORES";
     private static final String FAILED_CLIENT_JAR_STATE = "FAILED_CLIENT_JAR";
     private static final String IPV_SUCCESS_PAGE_STATE = "IPV_SUCCESS_PAGE";
 
@@ -116,8 +114,7 @@ class IpvSessionServiceTest {
         when(mockConfigService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE))
                 .thenReturn("IPV_CORE_MAIN_JOURNEY");
         IpvSessionItem ipvSessionItem =
-                ipvSessionService.generateIpvSession(
-                        SecureTokenHelper.generate(), null, false, null);
+                ipvSessionService.generateIpvSession(SecureTokenHelper.generate(), null, null);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -134,36 +131,12 @@ class IpvSessionServiceTest {
     }
 
     @Test
-    void shouldCreateSessionItemForDebugJourney() {
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE))
-                .thenReturn("IPV_CORE_MAIN_JOURNEY");
-        IpvSessionItem ipvSessionItem =
-                ipvSessionService.generateIpvSession(
-                        SecureTokenHelper.generate(), null, true, null);
-
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-        verify(mockDataStore)
-                .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
-        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
-        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
-        assertNull(ipvSessionItemArgumentCaptor.getValue().getEmailAddress());
-
-        assertEquals(
-                ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
-                ipvSessionItem.getIpvSessionId());
-        assertEquals(
-                DEBUG_EVALUATE_GPG45_SCORES_STATE,
-                ipvSessionItemArgumentCaptor.getValue().getUserState());
-    }
-
-    @Test
     void shouldCreateSessionItemWithEmail() {
         when(mockConfigService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE))
                 .thenReturn("IPV_CORE_MAIN_JOURNEY");
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
-                        SecureTokenHelper.generate(), null, true, "test@test.com");
+                        SecureTokenHelper.generate(), null, "test@test.com");
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -176,8 +149,7 @@ class IpvSessionServiceTest {
                 ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
                 ipvSessionItem.getIpvSessionId());
         assertEquals(
-                DEBUG_EVALUATE_GPG45_SCORES_STATE,
-                ipvSessionItemArgumentCaptor.getValue().getUserState());
+                INITIAL_IPV_JOURNEY_STATE, ipvSessionItemArgumentCaptor.getValue().getUserState());
         assertEquals(ipvSessionItemArgumentCaptor.getValue().getEmailAddress(), "test@test.com");
     }
 
@@ -188,7 +160,7 @@ class IpvSessionServiceTest {
         ErrorObject testErrorObject = new ErrorObject("server_error", "Test error");
         IpvSessionItem ipvSessionItem =
                 ipvSessionService.generateIpvSession(
-                        SecureTokenHelper.generate(), testErrorObject, false, null);
+                        SecureTokenHelper.generate(), testErrorObject, null);
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);

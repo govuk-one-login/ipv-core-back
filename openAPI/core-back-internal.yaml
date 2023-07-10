@@ -22,22 +22,7 @@ paths:
           Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetCredentialIssuerConfig.Arn}:live/invocations
         passthroughBehavior: "when_no_match"
         type: "aws_proxy"
-  /debug-credential-data:
-    get:
-      description: "Debug endpoint - only used by core-front debug page to get a list of current retrieved credentials for users journey"
-      responses:
-        200:
-          description: "Map of retrieved cri credentials"
-          content:
-            application/json:
-              schema:
-                type: "object"
-      x-amazon-apigateway-integration:
-        httpMethod: "POST"
-        uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildDebugCredentialDataFunction.Arn}:live/invocations
-        passthroughBehavior: "when_no_match"
-        type: "aws_proxy"
+
   /session/initialise:
     post:
       description: "Creates a new ipv core-back session"
