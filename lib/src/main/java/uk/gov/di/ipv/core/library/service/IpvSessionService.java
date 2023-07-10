@@ -26,7 +26,6 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IPV_SESSIONS
 public class IpvSessionService {
     private static final String INITIAL_IPV_JOURNEY_STATE = "INITIAL_IPV_JOURNEY";
     private static final String FAILED_CLIENT_JAR_STATE = "FAILED_CLIENT_JAR";
-    private static final String DEBUG_EVALUATE_GPG45_SCORES_STATE = "DEBUG_EVALUATE_GPG45_SCORES";
     private static final String VOT_P0 = "P0";
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -94,10 +93,7 @@ public class IpvSessionService {
     }
 
     public IpvSessionItem generateIpvSession(
-            String clientOAuthSessionId,
-            ErrorObject errorObject,
-            Boolean debugJourney,
-            String emailAddress) {
+            String clientOAuthSessionId, ErrorObject errorObject, String emailAddress) {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
@@ -106,8 +102,7 @@ public class IpvSessionService {
 
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
 
-        String userState = generateStartingState(debugJourney, errorObject);
-        ipvSessionItem.setUserState(userState);
+        ipvSessionItem.setUserState(generateStartingState(errorObject));
 
         ipvSessionItem.setVisitedCredentialIssuerDetails(Collections.emptyList());
 
@@ -162,11 +157,11 @@ public class IpvSessionService {
         dataStore.update(updatedIpvSessionItem);
     }
 
-    private String generateStartingState(boolean isDebugJourney, ErrorObject errorObject) {
+    private String generateStartingState(ErrorObject errorObject) {
         if (errorObject != null) {
             return FAILED_CLIENT_JAR_STATE;
         } else {
-            return isDebugJourney ? DEBUG_EVALUATE_GPG45_SCORES_STATE : INITIAL_IPV_JOURNEY_STATE;
+            return INITIAL_IPV_JOURNEY_STATE;
         }
     }
 

@@ -4,40 +4,6 @@ info:
   description: "The internal api presented by IPV Core Back for use by IPV Core Front"
   version: "1.0.0"
 paths:
-  /request-config:
-    get:
-      description: "Returns details of all Credential Issuers (CRIs) configured for use with IPV Core"
-      responses:
-        200:
-          description: "A list of cri configurations"
-          content:
-            application/json:
-              schema:
-                type: "array"
-                items:
-                  type: object
-      x-amazon-apigateway-integration:
-        httpMethod: "POST"
-        uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetCredentialIssuerConfig.Arn}:live/invocations
-        passthroughBehavior: "when_no_match"
-        type: "aws_proxy"
-  /debug-credential-data:
-    get:
-      description: "Debug endpoint - only used by core-front debug page to get a list of current retrieved credentials for users journey"
-      responses:
-        200:
-          description: "Map of retrieved cri credentials"
-          content:
-            application/json:
-              schema:
-                type: "object"
-      x-amazon-apigateway-integration:
-        httpMethod: "POST"
-        uri:
-          Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${BuildDebugCredentialDataFunction.Arn}:live/invocations
-        passthroughBehavior: "when_no_match"
-        type: "aws_proxy"
   /session/initialise:
     post:
       description: "Creates a new ipv core-back session"

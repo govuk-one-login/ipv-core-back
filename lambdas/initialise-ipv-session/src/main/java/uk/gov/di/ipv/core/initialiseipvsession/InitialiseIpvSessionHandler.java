@@ -54,7 +54,6 @@ public class InitialiseIpvSessionHandler
     private static final String IPV_SESSION_ID_KEY = "ipvSessionId";
     private static final String CLIENT_ID_PARAM_KEY = "clientId";
     private static final String REQUEST_PARAM_KEY = "request";
-    private static final String IS_DEBUG_JOURNEY_PARAM_KEY = "isDebugJourney";
 
     private final ConfigService configService;
     private final IpvSessionService ipvSessionService;
@@ -128,11 +127,7 @@ public class InitialiseIpvSessionHandler
             String clientOAuthSessionId = SecureTokenHelper.generate();
 
             IpvSessionItem ipvSessionItem =
-                    ipvSessionService.generateIpvSession(
-                            clientOAuthSessionId,
-                            null,
-                            Boolean.parseBoolean(sessionParams.get(IS_DEBUG_JOURNEY_PARAM_KEY)),
-                            emailAddress);
+                    ipvSessionService.generateIpvSession(clientOAuthSessionId, null, emailAddress);
 
             ClientOAuthSessionItem clientOAuthSessionItem =
                     clientOAuthSessionService.generateClientSessionDetails(
@@ -170,7 +165,7 @@ public class InitialiseIpvSessionHandler
 
             IpvSessionItem ipvSessionItem =
                     ipvSessionService.generateIpvSession(
-                            clientOAuthSessionId, e.getErrorObject(), false, null);
+                            clientOAuthSessionId, e.getErrorObject(), null);
             clientOAuthSessionService.generateErrorClientSessionDetails(
                     clientOAuthSessionId,
                     e.getRedirectUri(),

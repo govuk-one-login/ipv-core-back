@@ -123,7 +123,7 @@ class InitialiseIpvSessionHandlerTest {
     @Test
     void shouldReturnIpvSessionIdWhenProvidedValidRequest()
             throws JsonProcessingException, JarValidationException, ParseException, SqsException {
-        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), any()))
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateClientSessionDetails(any(), any(), any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -250,7 +250,7 @@ class InitialiseIpvSessionHandlerTest {
     @Test
     void shouldReturnIpvSessionIdWhenRecoverableErrorFound()
             throws JsonProcessingException, JarValidationException, ParseException {
-        when(mockIpvSessionService.generateIpvSession(any(), any(), any(), any()))
+        when(mockIpvSessionService.generateIpvSession(any(), any(), any()))
                 .thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionDetailsService.generateErrorClientSessionDetails(
                         any(), any(), any(), any(), any()))
