@@ -54,7 +54,7 @@ class CriEventTest {
         criEventWithCheckIfDisabledConfigured.setTargetState(new State());
         criEventWithCheckIfDisabledConfigured.setCriId("aCriId");
 
-        BasicEvent alternativeEvent = new BasicEvent();
+        BasicEvent alternativeEvent = new BasicEvent(mockConfigService);
         State alternativeState = new State("THE_TARGET_STATE_FOR_THE_ALTERNATIVE_RESULT");
         JourneyResponse alternativeJourneyResponse = new JourneyResponse();
         alternativeJourneyResponse.setJourneyStepId("alternativeStepId");
@@ -65,8 +65,8 @@ class CriEventTest {
         when(mockConfigService.isEnabled("anotherEnabledCri")).thenReturn(true);
         when(mockConfigService.isEnabled("aDisabledCri")).thenReturn(false);
         LinkedHashMap<String, Event> checkIfDisabled = new LinkedHashMap<>();
-        checkIfDisabled.put("anEnabledCri", new BasicEvent());
-        checkIfDisabled.put("anotherEnabledCri", new BasicEvent());
+        checkIfDisabled.put("anEnabledCri", new BasicEvent(mockConfigService));
+        checkIfDisabled.put("anotherEnabledCri", new BasicEvent(mockConfigService));
         checkIfDisabled.put("aDisabledCri", alternativeEvent);
         criEventWithCheckIfDisabledConfigured.setCheckIfDisabled(checkIfDisabled);
 
@@ -85,7 +85,7 @@ class CriEventTest {
         criEventWithCheckIfDisabledConfigured.setTargetState(new State());
         criEventWithCheckIfDisabledConfigured.setCriId("aCriId");
 
-        BasicEvent alternativeEvent = new BasicEvent();
+        BasicEvent alternativeEvent = new BasicEvent(mockConfigService);
         State alternativeState = new State("THE_TARGET_STATE_FOR_THE_ALTERNATIVE_RESULT");
         JourneyResponse alternativeJourneyResponse = new JourneyResponse();
         alternativeJourneyResponse.setJourneyStepId("alternativeStepId");
@@ -95,9 +95,9 @@ class CriEventTest {
         when(mockConfigService.isEnabled("anEnabledCri")).thenReturn(true);
         when(mockConfigService.isEnabled("aDisabledCri")).thenReturn(false);
         LinkedHashMap<String, Event> checkIfDisabled = new LinkedHashMap<>();
-        checkIfDisabled.put("anEnabledCri", new BasicEvent());
+        checkIfDisabled.put("anEnabledCri", new BasicEvent(mockConfigService));
         checkIfDisabled.put("aDisabledCri", alternativeEvent);
-        checkIfDisabled.put("anotherDisabledCri", new BasicEvent());
+        checkIfDisabled.put("anotherDisabledCri", new BasicEvent(mockConfigService));
         criEventWithCheckIfDisabledConfigured.setCheckIfDisabled(checkIfDisabled);
 
         StateMachineResult result =
@@ -121,9 +121,9 @@ class CriEventTest {
         when(mockConfigService.isEnabled("anotherEnabledCri")).thenReturn(true);
         when(mockConfigService.isEnabled("oneMoreEnabledCri")).thenReturn(true);
         LinkedHashMap<String, Event> checkIfDisabled = new LinkedHashMap<>();
-        checkIfDisabled.put("anEnabledCri", new BasicEvent());
-        checkIfDisabled.put("anotherEnabledCri", new BasicEvent());
-        checkIfDisabled.put("oneMoreEnabledCri", new BasicEvent());
+        checkIfDisabled.put("anEnabledCri", new BasicEvent(mockConfigService));
+        checkIfDisabled.put("anotherEnabledCri", new BasicEvent(mockConfigService));
+        checkIfDisabled.put("oneMoreEnabledCri", new BasicEvent(mockConfigService));
         criEventWithCheckIfDisabledConfigured.setCheckIfDisabled(checkIfDisabled);
 
         StateMachineResult result =
