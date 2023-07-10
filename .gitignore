@@ -39,3 +39,6 @@ build
 
 # Ignore node/TS output
 node_modules
+
+# Ignore template written by dev-deploy tool
+deploy/core-back-*.yaml
