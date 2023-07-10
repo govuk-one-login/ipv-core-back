@@ -1,0 +1,665 @@
+# parent states
+END_JOURNEY:
+  name: END_JOURNEY
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: END
+      response:
+        type: journey
+        journeyStepId: /journey/build-client-oauth-response
+
+CRI_STATE:
+  name: CRI_STATE
+  parent: ATTEMPT_RECOVERY_STATE
+  events:
+    error:
+      type: basic
+      name: error
+      targetState: CRI_ERROR
+      response:
+        type: error
+        pageId: pyi-technical
+        statusCode: 500
+    access-denied:
+      type: basic
+      name: access-denied
+      targetState: PYI_NO_MATCH
+      response:
+        type: page
+        pageId: pyi-no-match
+    temporarily-unavailable:
+      type: basic
+      name: temporarily-unavailable
+      targetState: PYI_NO_MATCH
+      response:
+        type: page
+        pageId: pyi-no-match
+    end:
+      type: basic
+      name: end
+      targetState: IPV_SUCCESS_PAGE
+      response:
+        type: page
+        pageId: page-ipv-success
+    pyi-no-match:
+      type: basic
+      name: pyi-no-match
+      targetState: PYI_NO_MATCH
+      response:
+        type: page
+        pageId: pyi-no-match
+    pyi-kbv-fail:
+      type: basic
+      name: pyi-kbv-fail
+      targetState: PYI_KBV_FAIL
+      response:
+        type: page
+        pageId: pyi-kbv-fail
+
+# Shared states
+INITIAL_IPV_JOURNEY:
+  name: INIT
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: IPV_IDENTITY_START_PAGE
+      response:
+        type: page
+        pageId: page-ipv-identity-start
+IPV_IDENTITY_START_PAGE:
+  name: IPV_IDENTITY_START_PAGE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: CHECK_EXISTING_IDENTITY
+      response:
+        type: journey
+        journeyStepId: /journey/check-existing-identity
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: IPV_IDENTITY_START_PAGE
+      response:
+        type: page
+        pageId: page-ipv-identity-start
+
+CHECK_EXISTING_IDENTITY:
+  name: CHECK_EXISTING_IDENTITY
+  events:
+    next:
+      type: cri
+      criId: dcmaw
+      targetState: CRI_DCMAW
+      checkIfDisabled:
+        dcmaw:
+          type: basic
+          name: dcmaw-cri-disabled
+          targetState: MULTIPLE_DOC_CHECK_PAGE
+          response:
+            type: page
+            pageId: page-multiple-doc-check
+    reset-identity:
+      type: basic
+      name: next
+      targetState: RESET_IDENTITY
+      response:
+        type: journey
+        journeyStepId: /journey/reset-identity
+    reuse:
+      type: basic
+      name: reuse
+      targetState: IPV_IDENTITY_REUSE_PAGE
+      response:
+        type: page
+        pageId: page-ipv-reuse
+    pending:
+      type: basic
+      name: pending
+      targetState: IPV_IDENTITY_PENDING_PAGE
+      response:
+        type: page
+        pageId: page-ipv-pending
+    pyi-no-match:
+      type: basic
+      name: pyi-no-match
+      targetState: PYI_NO_MATCH
+      response:
+        type: page
+        pageId: pyi-no-match
+    pyi-kbv-fail:
+      type: basic
+      name: pyi-kbv-fail
+      targetState: PYI_KBV_FAIL
+      response:
+        type: page
+        pageId: pyi-kbv-fail
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: CHECK_EXISTING_IDENTITY
+      response:
+        type: journey
+        journeyStepId: /journey/check-existing-identity
+
+RESET_IDENTITY:
+  name: RESET_IDENTITY
+  events:
+    next:
+      type: cri
+      criId: dcmaw
+      targetState: CRI_DCMAW
+      checkIfDisabled:
+        dcmaw:
+          type: basic
+          name: dcmaw-cri-disabled
+          targetState: MULTIPLE_DOC_CHECK_PAGE
+          response:
+            type: page
+            pageId: page-multiple-doc-check
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: RESET_IDENTITY
+      response:
+        type: journey
+        journeyStepId: /journey/reset-identity
+
+IPV_IDENTITY_REUSE_PAGE:
+  name: IPV_IDENTITY_REUSE_PAGE
+  parent: END_JOURNEY
+  events:
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: IPV_IDENTITY_REUSE_PAGE
+      response:
+        type: page
+        pageId: page-ipv-reuse
+
+IPV_IDENTITY_PENDING_PAGE:
+  name: IPV_IDENTITY_PENDING_PAGE
+  events:
+    next:
+      type: basic
+      name: continue
+      targetState: PYI_ESCAPE
+      response:
+        type: page
+        pageId: pyi-escape
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: IPV_IDENTITY_PENDING_PAGE
+      response:
+        type: page
+        pageId: page-ipv-pending
+
+CRI_DCMAW:
+  name: CRI_DCMAW
+  parent: CRI_STATE
+  events:
+    next:
+      type: basic
+      name: dcmaw-success
+      targetState: POST_DCMAW_SUCCESS_PAGE
+      response:
+        type: page
+        pageId: page-dcmaw-success
+    access-denied:
+      type: basic
+      name: access-denied
+      targetState: MULTIPLE_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-multiple-doc-check
+    temporarily-unavailable:
+      type: basic
+      name: temporarily-unavailable
+      targetState: MULTIPLE_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-multiple-doc-check
+    fail-with-no-ci:
+      type: basic
+      name: fail-with-no-ci
+      targetState: MULTIPLE_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-multiple-doc-check
+    attempt-recovery:
+      type: cri
+      criId: dcmaw
+      targetState: CRI_DCMAW
+
+MULTIPLE_DOC_CHECK_PAGE:
+  name: MULTIPLE_DOC_CHECK_PAGE
+  events:
+    ukPassport:
+      type: cri
+      criId: ukPassport
+      targetState: CRI_UK_PASSPORT_J2
+    drivingLicence:
+      type: cri
+      criId: drivingLicence
+      targetState: CRI_DRIVING_LICENCE_J3
+    end:
+      type: cri
+      criId: claimedIdentity
+      targetState: CRI_CLAIMED_IDENTITY_J4
+      checkIfDisabled:
+        f2f:
+          type: basic
+          name: end
+          targetState: END
+          response:
+            type: journey
+            journeyStepId: /journey/build-client-oauth-response
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: MULTIPLE_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-multiple-doc-check
+
+PYI_NO_MATCH:
+  name: PYI_NO_MATCH
+  parent: END_JOURNEY
+  events:
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: PYI_NO_MATCH
+      response:
+        type: page
+        pageId: pyi-no-match
+PYI_KBV_FAIL:
+  name: PYI_KBV_FAIL
+  parent: END_JOURNEY
+  events:
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: PYI_KBV_FAIL
+      response:
+        type: page
+        pageId: pyi-kbv-fail
+PYI_KBV_THIN_FILE:
+  name: PYI_KBV_THIN_FILE
+  parent: END_JOURNEY
+  events:
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: PYI_KBV_THIN_FILE
+      response:
+        type: page
+        pageId: pyi-kbv-thin-file
+PYI_ESCAPE:
+  name: PYI_ESCAPE
+  events:
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: PYI_ESCAPE
+      response:
+        type: page
+        pageId: pyi-escape
+    next:
+      type: basic
+      name: next
+      targetState: RESET_IDENTITY
+      response:
+        type: journey
+        journeyStepId: /journey/reset-identity
+    end:
+      type: basic
+      name: end
+      targetState: END
+      response:
+        type: journey
+        journeyStepId: /journey/build-client-oauth-response
+CRI_ERROR:
+  name: CRI_ERROR
+  parent: END_JOURNEY
+  events:
+    attempt-recovery:
+      type: basic
+      name: error
+      targetState: CRI_ERROR
+      response:
+        type: error
+        pageId: pyi-technical
+        statusCode: 500
+CORE_SESSION_TIMEOUT:
+  name: CORE_SESSION_TIMEOUT
+  parent: END_JOURNEY
+  events:
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: CORE_SESSION_TIMEOUT
+      response:
+        type: page
+        pageId: pyi-timeout-unrecoverable
+
+# DCMAW journey (J1)
+POST_DCMAW_SUCCESS_PAGE:
+  name: POST_DCMAW_SUCCESS_PAGE
+  events:
+    next:
+      type: cri
+      criId: address
+      targetState: CRI_ADDRESS_J1
+
+CRI_ADDRESS_J1:
+  name: CRI_ADDRESS_J1
+  parent: CRI_STATE
+  events:
+    next:
+      type: cri
+      criId: fraud
+      targetState: CRI_FRAUD_J1
+    attempt-recovery:
+      type: cri
+      criId: address
+      targetState: CRI_ADDRESS_J1
+
+CRI_FRAUD_J1:
+  name: CRI_FRAUD_J1
+  parent: CRI_STATE
+  events:
+    end:
+      type: basic
+      name: end
+      targetState: IPV_SUCCESS_PAGE_J1
+      response:
+        type: page
+        pageId: page-ipv-success
+    attempt-recovery:
+      type: cri
+      criId: fraud
+      targetState: CRI_FRAUD_J1
+
+IPV_SUCCESS_PAGE_J1:
+  name: IPV_SUCCESS_PAGE_J1
+  parent: END_JOURNEY
+  events:
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: IPV_SUCCESS_PAGE
+      response:
+        type: page
+        pageId: page-ipv-success
+
+# Passport journey (J2)
+CRI_UK_PASSPORT_J2:
+  name: CRI_UK_PASSPORT_J2
+  parent: CRI_STATE
+  events:
+    next:
+      type: cri
+      criId: address
+      targetState: CRI_ADDRESS_J2
+    access-denied:
+      type: basic
+      name: access-denied
+      targetState: MULTIPLE_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-multiple-doc-check
+    attempt-recovery:
+      type: cri
+      criId: ukPassport
+      targetState: CRI_UK_PASSPORT_J2
+
+CRI_ADDRESS_J2:
+  name: CRI_ADDRESS_J2
+  parent: CRI_STATE
+  events:
+    next:
+      type: cri
+      criId: fraud
+      targetState: CRI_FRAUD_J2
+    attempt-recovery:
+      type: cri
+      criId: address
+      targetState: CRI_ADDRESS_J2
+
+CRI_FRAUD_J2:
+  name: CRI_FRAUD_J2
+  parent: CRI_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: PRE_KBV_TRANSITION_PAGE_J2
+      response:
+        type: page
+        pageId: page-pre-kbv-transition
+    attempt-recovery:
+      type: cri
+      criId: fraud
+      targetState: CRI_FRAUD_J2
+
+PRE_KBV_TRANSITION_PAGE_J2:
+  name: PRE_KBV_TRANSITION_PAGEJ2
+  events:
+    next:
+      type: cri
+      criId: kbv
+      targetState: CRI_KBV_J2
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: PRE_KBV_TRANSITION_PAGE_J2
+      response:
+        type: page
+        pageId: page-pre-kbv-transition
+
+CRI_KBV_J2:
+  name: CRI_KBV_J2
+  parent: CRI_STATE
+  events:
+    end:
+      type: basic
+      name: end
+      targetState: IPV_SUCCESS_PAGE_J2
+      response:
+        type: page
+        pageId: page-ipv-success
+    fail-with-no-ci:
+      type: basic
+      name: fail-with-no-ci
+      targetState: PYI_KBV_THIN_FILE
+      response:
+        type: page
+        pageId: pyi-kbv-thin-file
+    attempt-recovery:
+      type: cri
+      criId: kbv
+      targetState: CRI_KBV_J2
+
+IPV_SUCCESS_PAGE_J2:
+  name: IPV_SUCCESS_PAGE_J2
+  parent: END_JOURNEY
+  events:
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: IPV_SUCCESS_PAGE_J2
+      response:
+        type: page
+        pageId: page-ipv-success
+
+# Driving licence journey (J3)
+CRI_DRIVING_LICENCE_J3:
+  name: CRI_DRIVING_LICENCE_J3
+  parent: CRI_STATE
+  events:
+    next:
+      type: cri
+      criId: address
+      targetState: CRI_ADDRESS_J3
+    access-denied:
+      type: basic
+      name: access-denied
+      targetState: MULTIPLE_DOC_CHECK_PAGE
+      response:
+        type: page
+        pageId: page-multiple-doc-check
+    attempt-recovery:
+      type: cri
+      criId: drivingLicence
+      targetState: CRI_DRIVING_LICENCE_J3
+
+CRI_ADDRESS_J3:
+  name: CRI_ADDRESS_J3
+  parent: CRI_STATE
+  events:
+    next:
+      type: cri
+      criId: fraud
+      targetState: CRI_FRAUD_J3
+    attempt-recovery:
+      type: cri
+      criId: address
+      targetState: CRI_ADDRESS_J3
+
+CRI_FRAUD_J3:
+  name: CRI_FRAUD_J3
+  parent: CRI_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: PRE_KBV_TRANSITION_PAGE_J3
+      response:
+        type: page
+        pageId: page-pre-kbv-transition
+    attempt-recovery:
+      type: cri
+      criId: fraud
+      targetState: CRI_FRAUD_J3
+
+PRE_KBV_TRANSITION_PAGE_J3:
+  name: PRE_KBV_TRANSITION_PAGE_J3
+  events:
+    next:
+      type: cri
+      criId: kbv
+      targetState: CRI_KBV_J3
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: PRE_KBV_TRANSITION_PAGE_J3
+      response:
+        type: page
+        pageId: page-pre-kbv-transition
+
+CRI_KBV_J3:
+  name: CRI_KBV_J3
+  parent: CRI_STATE
+  events:
+    end:
+      type: basic
+      name: end
+      targetState: IPV_SUCCESS_PAGE_J3
+      response:
+        type: page
+        pageId: page-ipv-success
+    fail-with-no-ci:
+      type: basic
+      name: fail-with-no-ci
+      targetState: PYI_KBV_THIN_FILE
+      response:
+        type: page
+        pageId: pyi-kbv-thin-file
+    attempt-recovery:
+      type: cri
+      criId: kbv
+      targetState: CRI_KBV_J3
+
+IPV_SUCCESS_PAGE_J3:
+  name: IPV_SUCCESS_PAGE_J3
+  parent: END_JOURNEY
+  events:
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: IPV_SUCCESS_PAGE_J3
+      response:
+        type: page
+        pageId: page-ipv-success
+
+# F2F journey (J4)
+CRI_CLAIMED_IDENTITY_J4:
+  name: CRI_CLAIMED_IDENTITY_J4
+  parent: CRI_STATE
+  events:
+    next:
+      type: cri
+      criId: address
+      targetState: CRI_ADDRESS_J4
+    attempt-recovery:
+      type: cri
+      criId: claimedIdentity
+      targetState: CRI_CLAIMED_IDENTITY_J4
+
+CRI_ADDRESS_J4:
+  name: CRI_ADDRESS_J4
+  parent: CRI_STATE
+  events:
+    next:
+      type: cri
+      criId: fraud
+      targetState: CRI_FRAUD_J4
+    attempt-recovery:
+      type: cri
+      criId: address
+      targetState: CRI_ADDRESS_J4
+
+CRI_FRAUD_J4:
+  name: CRI_FRAUD_J4
+  parent: CRI_STATE
+  events:
+    next:
+      type: cri
+      criId: f2f
+      targetState: CRI_F2F_J4
+    attempt-recovery:
+      type: cri
+      criId: fraud
+      targetState: CRI_FRAUD_J4
+
+CRI_F2F_J4:
+  name: CRI_F2F_J4
+  parent: CRI_STATE
+  events:
+    next:
+      type: basic
+      name: next
+      targetState: F2F_HANDOFF_PAGE_J4
+      response:
+        type: page
+        pageId: page-face-to-face-handoff
+    attempt-recovery:
+      type: cri
+      criId: f2f
+      targetState: CRI_F2F_J4
+
+F2F_HANDOFF_PAGE_J4:
+  name: F2F_HANDOFF_PAGE_J4
+  events:
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: F2F_HANDOFF_PAGE_J4
+      response:
+        type: page
+        pageId: page-face-to-face-handoff
