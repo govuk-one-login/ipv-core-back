@@ -36,7 +36,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY;
-import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_REFACTOR_JOURNEY;
 
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SystemStubsExtension.class)
@@ -133,10 +132,14 @@ class ProcessJourneyStepHandlerTest {
 
         mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.IPV_IDENTITY_START_PAGE_STATE);
 
-        mockIpvSessionService.getIpvSession("anything").setJourneyType(IPV_CORE_MAIN_JOURNEY);
+        ProcessJourneyStepHandler processJourneyStepHandler =
+                new ProcessJourneyStepHandler(
+                        mockIpvSessionService,
+                        mockConfigService,
+                        mockClientOAuthSessionService,
+                        List.of());
 
-        Map<String, Object> output =
-                getProcessJourneyStepHandler().handleRequest(input, mockContext);
+        Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), output.get(CODE));
@@ -183,7 +186,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(ProcessJourneyStepStates.CORE_SESSION_TIMEOUT_STATE);
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.generate());
-        ipvSessionItem.setJourneyType(IPV_CORE_REFACTOR_JOURNEY);
+        ipvSessionItem.setJourneyType(IPV_CORE_MAIN_JOURNEY);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
@@ -223,7 +226,7 @@ class ProcessJourneyStepHandlerTest {
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
         ipvSessionItem.setUserState(userState);
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.generate());
-        ipvSessionItem.setJourneyType(IPV_CORE_REFACTOR_JOURNEY);
+        ipvSessionItem.setJourneyType(IPV_CORE_MAIN_JOURNEY);
 
         when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("7200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
@@ -247,6 +250,6 @@ class ProcessJourneyStepHandlerTest {
                 mockIpvSessionService,
                 mockConfigService,
                 mockClientOAuthSessionService,
-                List.of(IPV_CORE_REFACTOR_JOURNEY));
+                List.of(IPV_CORE_MAIN_JOURNEY));
     }
 }
