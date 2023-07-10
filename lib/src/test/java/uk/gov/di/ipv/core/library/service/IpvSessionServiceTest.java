@@ -10,7 +10,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
@@ -156,29 +155,6 @@ class IpvSessionServiceTest {
         assertEquals(
                 DEBUG_EVALUATE_GPG45_SCORES_STATE,
                 ipvSessionItemArgumentCaptor.getValue().getUserState());
-    }
-
-    @Test
-    void shouldCreateSessionItemForRefactorJourney() {
-        when(mockConfigService.getSsmParameter(ConfigurationVariable.JOURNEY_TYPE))
-                .thenReturn("IPV_CORE_REFACTOR_JOURNEY");
-        IpvSessionItem ipvSessionItem =
-                ipvSessionService.generateIpvSession(
-                        SecureTokenHelper.generate(), null, false, null);
-
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-        verify(mockDataStore)
-                .create(ipvSessionItemArgumentCaptor.capture(), eq(BACKEND_SESSION_TTL));
-        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getIpvSessionId());
-        assertNotNull(ipvSessionItemArgumentCaptor.getValue().getCreationDateTime());
-
-        assertEquals(
-                ipvSessionItemArgumentCaptor.getValue().getIpvSessionId(),
-                ipvSessionItem.getIpvSessionId());
-        assertEquals(
-                INITIAL_IPV_JOURNEY_STATE, ipvSessionItemArgumentCaptor.getValue().getUserState());
-        assertEquals(IpvJourneyTypes.IPV_CORE_REFACTOR_JOURNEY, ipvSessionItem.getJourneyType());
     }
 
     @Test

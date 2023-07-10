@@ -344,8 +344,6 @@ class ValidateOAuthCallbackHandlerHandlerTest {
         criCallbackRequestWithAccessDenied.setErrorDescription(TEST_ERROR_DESCRIPTION);
 
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
-        ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_REFACTOR_JOURNEY);
-
         when(mockCriOAuthSessionService.getCriOauthSessionItem(any()))
                 .thenReturn(criOAuthSessionItem);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
