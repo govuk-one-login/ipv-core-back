@@ -35,27 +35,11 @@ IPV_IDENTITY_START_PAGE:
     end:
       targetState: PYI_ANOTHER_WAY
 
-F2F_START_PAGE:
-  name: F2F_START_PAGE
-  events:
-    next:
-      type: cri
-      criId: claimedIdentity
-      targetState: CRI_CLAIMED_IDENTITY_J4
-    end:
-      type: basic
-      name: end
-      targetState: PYI_ESCAPE
-      response:
-        type: page
-        pageId: pyi-escape
-    attempt-recovery:
-      type: basic
-      name: attempt-recovery
-      targetState: F2F_START_PAGE
-      response:
-        type: page
-        pageId: page-ipv-identity-postoffice-start
+PYI_ANOTHER_WAY:
+  parent: END_JOURNEY
+  response:
+    type: page
+    pageId: pyi-another-way
 
 CHECK_EXISTING_IDENTITY:
   response:
@@ -316,6 +300,17 @@ CRI_KBV_J3:
       targetState: PYI_KBV_THIN_FILE
 
 # F2F journey (J4)
+
+F2F_START_PAGE:
+  response:
+    type: page
+    pageId: page-ipv-identity-postoffice-start
+  events:
+    next:
+      targetState: CRI_CLAIMED_IDENTITY_J4
+    end:
+      targetState: PYI_ESCAPE
+
 CRI_CLAIMED_IDENTITY_J4:
   parent: CRI_STATE
   response:
@@ -356,9 +351,3 @@ F2F_HANDOFF_PAGE_J4:
   response:
     type: page
     pageId: page-face-to-face-handoff
-
-PYI_ANOTHER_WAY:
-  parent: END_JOURNEY
-  response:
-    type: page
-    pageId: pyi-another-way
