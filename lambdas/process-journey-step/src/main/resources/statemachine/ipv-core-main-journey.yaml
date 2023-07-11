@@ -65,16 +65,6 @@ INITIAL_IPV_JOURNEY:
     next:
       type: basic
       name: next
-      targetState: IPV_IDENTITY_START_PAGE
-      response:
-        type: page
-        pageId: page-ipv-identity-document-start
-IPV_IDENTITY_START_PAGE:
-  name: IPV_IDENTITY_START_PAGE
-  events:
-    next:
-      type: basic
-      name: next
       targetState: CHECK_EXISTING_IDENTITY
       response:
         type: journey
@@ -120,17 +110,10 @@ CHECK_EXISTING_IDENTITY:
   name: CHECK_EXISTING_IDENTITY
   events:
     next:
-      type: cri
-      criId: dcmaw
-      targetState: CRI_DCMAW
-      checkIfDisabled:
-        dcmaw:
-          type: basic
-          name: dcmaw-cri-disabled
-          targetState: MULTIPLE_DOC_CHECK_PAGE
-          response:
-            type: page
-            pageId: page-multiple-doc-check
+      targetState: IPV_IDENTITY_START_PAGE
+      response:
+        type: page
+        pageId: page-ipv-identity-document-start
     reset-identity:
       type: basic
       name: next
@@ -226,6 +209,29 @@ IPV_IDENTITY_PENDING_PAGE:
       response:
         type: page
         pageId: page-ipv-pending
+
+IPV_IDENTITY_START_PAGE:
+  name: IPV_IDENTITY_START_PAGE
+  events:
+    next:
+      type: cri
+      criId: dcmaw
+      targetState: CRI_DCMAW
+      checkIfDisabled:
+        dcmaw:
+          type: basic
+          name: dcmaw-cri-disabled
+          targetState: MULTIPLE_DOC_CHECK_PAGE
+          response:
+            type: page
+            pageId: page-multiple-doc-check
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: IPV_IDENTITY_START_PAGE
+      response:
+        type: page
+        pageId: page-ipv-identity-document-start
 
 CRI_DCMAW:
   name: CRI_DCMAW
