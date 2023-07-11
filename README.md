@@ -1,6 +1,5 @@
 # Digital Identity IPV Core Back
 
-This the back-end code for the core of the Identity Proofing and Verification (IPV) system within the GDS digital identity platform, GOV.UK One Login.
 
 The following projects are related to the di-ipv-core-back, providing additional functionality:
 * [di-ipv-core-front](https://github.com/alphagov/di-ipv-core-front) - Front end code for the core of the Identity Proofing and Verification (IPV) system.
