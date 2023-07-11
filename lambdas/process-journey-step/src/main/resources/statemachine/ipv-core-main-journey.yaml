@@ -110,6 +110,8 @@ CHECK_EXISTING_IDENTITY:
   name: CHECK_EXISTING_IDENTITY
   events:
     next:
+      type: basic
+      name: next
       targetState: IPV_IDENTITY_START_PAGE
       response:
         type: page
