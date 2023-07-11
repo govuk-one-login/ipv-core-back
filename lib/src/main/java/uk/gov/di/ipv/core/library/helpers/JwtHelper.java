@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.helpers;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JOSEObjectType;
@@ -37,8 +38,8 @@ public class JwtHelper {
     private static <T> JWTClaimsSet generateClaims(T claimInput) {
         var claimsBuilder = new JWTClaimsSet.Builder();
 
-        mapper.convertValue(claimInput, Map.class)
-                .forEach((key, value) -> claimsBuilder.claim((String) key, value));
+        mapper.convertValue(claimInput, new TypeReference<Map<String, Object>>() {})
+                .forEach(claimsBuilder::claim);
 
         return claimsBuilder.build();
     }

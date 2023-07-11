@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.type.CollectionType;
+import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jwt.SignedJWT;
 import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
@@ -28,7 +29,6 @@ import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import java.text.Normalizer;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -178,7 +178,13 @@ public class UserIdentityService {
             throw new HttpResponseExceptionWithErrorBody(
                     500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
         } else if (propertyNode.isMissingNode()) {
-            return (T) Collections.emptyList();
+            try {
+                return objectMapper.readValue(new JSONArray().toJSONString(), valueType);
+            } catch (JsonProcessingException e) {
+                LOGGER.error("Failed to generate empty list: {}", e.getMessage());
+                throw new HttpResponseExceptionWithErrorBody(
+                        500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM);
+            }
         }
         try {
             return objectMapper.treeToValue(propertyNode, valueType);
