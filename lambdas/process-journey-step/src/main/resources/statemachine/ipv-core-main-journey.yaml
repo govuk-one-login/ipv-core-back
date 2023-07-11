@@ -69,20 +69,6 @@ INITIAL_IPV_JOURNEY:
       response:
         type: journey
         journeyStepId: /journey/check-existing-identity
-    end:
-      type: basic
-      name: end
-      targetState: PYI_ANOTHER_WAY
-      response:
-        type: page
-        pageId: pyi-another-way
-    attempt-recovery:
-      type: basic
-      name: attempt-recovery
-      targetState: IPV_IDENTITY_START_PAGE
-      response:
-        type: page
-        pageId: page-ipv-identity-document-start
 
 F2F_START_PAGE:
   name: F2F_START_PAGE
@@ -227,6 +213,13 @@ IPV_IDENTITY_START_PAGE:
           response:
             type: page
             pageId: page-multiple-doc-check
+    end:
+      type: basic
+      name: end
+      targetState: PYI_ANOTHER_WAY
+      response:
+        type: page
+        pageId: pyi-another-way
     attempt-recovery:
       type: basic
       name: attempt-recovery
