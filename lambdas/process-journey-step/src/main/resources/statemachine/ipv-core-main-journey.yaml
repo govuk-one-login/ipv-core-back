@@ -79,6 +79,13 @@ IPV_IDENTITY_START_PAGE:
       response:
         type: journey
         journeyStepId: /journey/check-existing-identity
+    end:
+      type: basic
+      name: end
+      targetState: PYI_ANOTHER_WAY
+      response:
+        type: page
+        pageId: pyi-another-way
     attempt-recovery:
       type: basic
       name: attempt-recovery
@@ -685,3 +692,15 @@ F2F_HANDOFF_PAGE_J4:
       response:
         type: page
         pageId: page-face-to-face-handoff
+
+PYI_ANOTHER_WAY:
+  name: PYI_ANOTHER_WAY
+  parent: END_JOURNEY
+  events:
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: PYI_ANOTHER_WAY
+      response:
+        type: page
+        pageId: pyi-another-way
