@@ -87,6 +87,28 @@ IPV_IDENTITY_START_PAGE:
         type: page
         pageId: page-ipv-identity-start
 
+F2F_START_PAGE:
+  name: F2F_START_PAGE
+  events:
+    next:
+      type: cri
+      criId: claimedIdentity
+      targetState: CRI_CLAIMED_IDENTITY_J4
+    end:
+      type: basic
+      name: end
+      targetState: PYI_ESCAPE
+      response:
+        type: page
+        pageId: pyi-escape
+    attempt-recovery:
+      type: basic
+      name: attempt-recovery
+      targetState: F2F_START_PAGE
+      response:
+        type: page
+        pageId: page-ipv-identity-postoffice-start
+
 CHECK_EXISTING_IDENTITY:
   name: CHECK_EXISTING_IDENTITY
   events:
