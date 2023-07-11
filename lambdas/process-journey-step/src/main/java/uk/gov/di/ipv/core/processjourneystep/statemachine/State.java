@@ -29,7 +29,8 @@ public class State {
         if (event.isPresent()) {
             return event.get().resolve(journeyContext);
         }
-        throw new UnknownEventException(eventName);
+        throw new UnknownEventException(
+                String.format("Unknown event provided to '%s' state: '%s'", name, eventName));
     }
 
     private Optional<Event> getEvent(String eventName) {
