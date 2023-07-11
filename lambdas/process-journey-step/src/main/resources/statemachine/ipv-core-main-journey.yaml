@@ -68,7 +68,7 @@ INITIAL_IPV_JOURNEY:
       targetState: IPV_IDENTITY_START_PAGE
       response:
         type: page
-        pageId: page-ipv-identity-document-start
+        pageId: page-ipv-identity-start
 IPV_IDENTITY_START_PAGE:
   name: IPV_IDENTITY_START_PAGE
   events:
@@ -92,7 +92,7 @@ IPV_IDENTITY_START_PAGE:
       targetState: IPV_IDENTITY_START_PAGE
       response:
         type: page
-        pageId: page-ipv-identity-document-start
+        pageId: page-ipv-identity-start
 
 F2F_START_PAGE:
   name: F2F_START_PAGE
