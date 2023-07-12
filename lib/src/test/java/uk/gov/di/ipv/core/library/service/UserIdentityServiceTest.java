@@ -13,16 +13,11 @@ import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.interfaces.ECPrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.*;
-import java.util.Base64;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -117,8 +112,32 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void checkBirthDateCorrelationInCredentialsReturnsTrueWhenBirthDatesSame()
-            throws HttpResponseExceptionWithErrorBody {
+    void generateUserIdentityShouldThrowIfNoVcStatusFoundForIssuer() {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()));
+
+        List<VcStatusDto> currentVcStatuses =
+                List.of(new VcStatusDto("test-issuer", true), new VcStatusDto("test-issuer", true));
+
+        when(mockConfigService.getSsmParameter(CORE_VTM_CLAIM)).thenReturn("mock-vtm-claim");
+        when(mockDataStore.getItems(anyString())).thenReturn(vcStoreItems);
+        when(mockConfigService.getComponentId("ukPassport")).thenReturn("bad-issuer");
+
+        HttpResponseExceptionWithErrorBody thrown =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> {
+                            userIdentityService.generateUserIdentity(
+                                    USER_ID_1, "test-sub", "P2", currentVcStatuses);
+                        });
+
+        assertEquals(ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER, thrown.getErrorResponse());
+    }
+
+    @Test
+    void checkBirthDateCorrelationInCredentialsReturnsTrueWhenBirthDatesSame() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_2, Instant.now()),
@@ -137,8 +156,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void checkNameCorrelationInCredentialsReturnTrueWhenSameName()
-            throws HttpResponseExceptionWithErrorBody {
+    void checkNameCorrelationInCredentialsReturnTrueWhenSameName() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_5, Instant.now()),
@@ -157,8 +175,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void checkBirthDateCorrelationInCredentialsReturnsFalseWhenBirthDatesDiffer()
-            throws HttpResponseExceptionWithErrorBody {
+    void checkBirthDateCorrelationInCredentialsReturnsFalseWhenBirthDatesDiffer() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
@@ -177,8 +194,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void checkNameCorrelationInCredentialsReturnFalseWhenNameDiffer()
-            throws HttpResponseExceptionWithErrorBody {
+    void checkNameCorrelationInCredentialsReturnFalseWhenNameDiffer() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_2, Instant.now()),
@@ -198,7 +214,7 @@ class UserIdentityServiceTest {
 
     @Test
     void checkNameCorrelationWithSameNamesAndMissingNameCredentialsForReturnTrue()
-            throws HttpResponseExceptionWithErrorBody {
+            throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -227,8 +243,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void checkNameCorrelationWithMissingNameCredentialsForReturnTrue()
-            throws HttpResponseExceptionWithErrorBody {
+    void checkNameCorrelationWithMissingNameCredentialsForReturnTrue() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -256,7 +271,7 @@ class UserIdentityServiceTest {
 
     @Test
     void checkNameCorrelationWithSameBirthDatesAndMissingBirthDateCredentialsForReturnTrue()
-            throws HttpResponseExceptionWithErrorBody {
+            throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -285,8 +300,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void checkNameCorrelationWithMissingBirthDateCredentialsForReturnTrue()
-            throws HttpResponseExceptionWithErrorBody {
+    void checkNameCorrelationWithMissingBirthDateCredentialsForReturnTrue() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(
@@ -313,7 +327,7 @@ class UserIdentityServiceTest {
     }
 
     @Test
-    void shouldSetIdentityClaimWhenVotIsP2() throws HttpResponseExceptionWithErrorBody, Exception {
+    void shouldSetIdentityClaimWhenVotIsP2() throws Exception {
         List<VcStoreItem> vcStoreItems =
                 List.of(
                         createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
@@ -895,6 +909,20 @@ class UserIdentityServiceTest {
         assertFalse(userIdentityService.checkNamesForCorrelation(fullNames));
     }
 
+    @Test
+    void isVcSuccessfulShouldThrowIfNoStatusFoundForIssuer() {
+        List<VcStatusDto> vcStatusDtos =
+                List.of(
+                        new VcStatusDto("issuer1", true),
+                        new VcStatusDto("issuer2", true),
+                        new VcStatusDto("issuer3", true));
+        assertThrows(
+                NoVcStatusForIssuerException.class,
+                () -> {
+                    userIdentityService.isVcSuccessful(vcStatusDtos, "badIssuer");
+                });
+    }
+
     private VcStoreItem createVcStoreItem(
             String userId, String credentialIssuer, String credential, Instant dateCreated) {
         VcStoreItem vcStoreItem = new VcStoreItem();
@@ -904,13 +932,5 @@ class UserIdentityServiceTest {
         vcStoreItem.setDateCreated(dateCreated);
         vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
         return vcStoreItem;
-    }
-
-    private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {
-        return (ECPrivateKey)
-                KeyFactory.getInstance("EC")
-                        .generatePrivate(
-                                new PKCS8EncodedKeySpec(
-                                        Base64.getDecoder().decode(EC_PRIVATE_KEY)));
     }
 }

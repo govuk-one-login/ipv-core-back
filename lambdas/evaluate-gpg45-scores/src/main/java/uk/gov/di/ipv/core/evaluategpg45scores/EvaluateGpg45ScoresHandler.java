@@ -31,6 +31,7 @@ import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.NoVisitedCriFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
@@ -225,11 +226,17 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
                     JOURNEY_ERROR_PATH,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.UNRECOGNISED_CI_CODE);
+        } catch (NoVcStatusForIssuerException e) {
+            LOGGER.error("No VC status found for CRI issuer", e);
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER);
         }
     }
 
     private boolean checkCorrelation(String userId, List<VcStatusDto> currentVcStatuses)
-            throws HttpResponseExceptionWithErrorBody {
+            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
         if (!userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(
                 userId, currentVcStatuses)) {
             var message = new StringMapMessage();

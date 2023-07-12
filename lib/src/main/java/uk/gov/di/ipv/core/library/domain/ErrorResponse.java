@@ -63,7 +63,8 @@ public enum ErrorResponse {
             1051, "Failed to validate verifiable credential response"),
     FAILED_TO_FIND_VISITED_CRI(1052, "Failed to find a visited CRI"),
     FAILED_TO_PARSE_CIMIT_SIGNING_KEY(1053, "Failed to parse CIMIT signing key"),
-    UNRECOGNISED_CI_CODE(1054, "Unrecognised CI code");
+    UNRECOGNISED_CI_CODE(1054, "Unrecognised CI code"),
+    NO_VC_STATUS_FOR_CREDENTIAL_ISSUER(1055, "No VC status found for issuer");
 
     @JsonProperty("code")
     private final int code;

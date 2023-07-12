@@ -15,6 +15,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -347,6 +348,42 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 errorResponse.getCode());
         assertEquals(
                 ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS.getMessage(),
+                errorResponse.getMessage());
+    }
+
+    @Test
+    void shouldReturn500IfNoVcStatusForIssuer() throws Exception {
+        when(mockUserIdentityService.isVcSuccessful(any(), any()))
+                .thenThrow(new NoVcStatusForIssuerException("Bad"));
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
+        when(mockUserIdentityService.getVcStoreItems(TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                createVcStoreItem(PASSPORT_CRI, M1A_PASSPORT_VC),
+                                createVcStoreItem(ADDRESS_CRI, M1A_ADDRESS_VC),
+                                createVcStoreItem(FRAUD_CRI, M1A_FRAUD_VC),
+                                createVcStoreItem(KBV_CRI, M1A_VERIFICATION_VC)));
+
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(PASSPORT_CRI))
+                .thenReturn(ISSUER_CONFIG_UK_PASSPORT);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(ISSUER_CONFIG_ADDRESS);
+
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        JourneyRequest input = createRequestEvent();
+        var errorResponse = makeRequest(input, context, JourneyErrorResponse.class);
+
+        assertEquals(500, errorResponse.getStatusCode());
+        assertEquals(
+                ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER.getCode(),
+                errorResponse.getCode());
+        assertEquals(
+                ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER.getMessage(),
                 errorResponse.getMessage());
     }
 
