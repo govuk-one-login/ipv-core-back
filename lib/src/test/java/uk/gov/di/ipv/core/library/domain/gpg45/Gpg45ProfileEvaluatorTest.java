@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
+import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.Collections;
@@ -21,6 +22,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
@@ -57,7 +59,7 @@ class Gpg45ProfileEvaluatorTest {
             "eyJhbGciOiJFUzI1NiJ9.eyJ2YyI6eyJ0eXBlIjpbIlZlcmlmaWFibGVDcmVkZW50aWFsIiwiSWRlbnRpdHlDaGVja0NyZWRlbnRpYWwiXSwiY3JlZGVudGlhbFN1YmplY3QiOnsibmFtZSI6W3sibmFtZVBhcnRzIjpbeyJ0eXBlIjoiR2l2ZW5OYW1lIiwidmFsdWUiOiJNYXJ5In0seyJ0eXBlIjoiRmFtaWx5TmFtZSIsInZhbHVlIjoiV2F0c29uIn1dfV0sImJpcnRoRGF0ZSI6W3sidmFsdWUiOiIxOTMyLTAyLTI1In1dLCJwYXNzcG9ydCI6W3siZXhwaXJ5RGF0ZSI6IjIwMzAtMDEtMDEiLCJkb2N1bWVudE51bWJlciI6IjgyNDE1OTEyMSJ9XX0sImV2aWRlbmNlIjpbeyJ0eXBlIjoiSWRlbnRpdHlDaGVjayIsInN0cmVuZ3RoU2NvcmUiOjQsInZhbGlkaXR5U2NvcmUiOjAsInZlcmlmaWNhdGlvblNjb3JlIjozLCJjaSI6WyJEMTQiXSwiZmFpbGVkQ2hlY2tEZXRhaWxzIjpbeyJjaGVja01ldGhvZCI6InZjcnlwdCIsImlkZW50aXR5Q2hlY2tQb2xpY3kiOiJwdWJsaXNoZWQifSx7ImNoZWNrTWV0aG9kIjoiYnZyIiwiYmlvbWV0cmljVmVyaWZpY2F0aW9uUHJvY2Vzc0xldmVsIjozfV19XX0sImlzcyI6Imh0dHBzOi8vZGV2ZWxvcG1lbnQtZGktaXB2LWNyaS11ay1wYXNzcG9ydC1zdHViLmxvbmRvbi5jbG91ZGFwcHMuZGlnaXRhbCIsInN1YiI6InVybjp1dWlkOmFmMTBlYzk0LWQxMWMtNDU5Zi04NzgyLWUyZTAzNzNiODEwMSIsIm5iZiI6MTY4NTQ1MzY5M30.XLGc1AIvEJdpo7ArSRTWaDfWbWRC1Q2VgXXQQ4_fPX9_d0OdUFMmyAfPIEcvmBmwi8Z7ixZ4GO7UrOa_tl4sQQ";
 
     @Test
-    void getFirstMatchingProfileShouldReturnSatisfiedProfile() throws Exception {
+    void getFirstMatchingProfileShouldReturnSatisfiedProfile() {
         Gpg45Scores m1aScores = new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2);
         assertEquals(
                 Optional.of(Gpg45Profile.M1A),
@@ -66,7 +68,7 @@ class Gpg45ProfileEvaluatorTest {
     }
 
     @Test
-    void getFirstMatchingProfileShouldReturnEmptyOptionalIfNoProfilesMatched() throws Exception {
+    void getFirstMatchingProfileShouldReturnEmptyOptionalIfNoProfilesMatched() {
         Gpg45Scores lowScores = new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 0);
         assertEquals(
                 Optional.empty(),
@@ -175,6 +177,26 @@ class Gpg45ProfileEvaluatorTest {
         assertEquals(
                 Optional.of(JOURNEY_RESPONSE_PYI_NO_MATCH),
                 evaluator.getJourneyResponseForStoredCis(List.of(otherCiItem, kbvCiItem)));
+    }
+
+    @Test
+    void getJourneyResponseForStoredCisShouldThrowIfUnrecognisedCi() {
+        ContraIndicatorItem contraIndicatorItem =
+                new ContraIndicatorItem(
+                        TEST_USER_ID,
+                        "Y03#hash",
+                        "issuer",
+                        "2022-09-21T07:57:14.332Z",
+                        "Y03",
+                        "123456789",
+                        null);
+
+        when(mockConfigService.getContraIndicatorScoresMap())
+                .thenReturn(Map.of("NO", new ContraIndicatorScore()));
+
+        assertThrows(
+                UnrecognisedCiException.class,
+                () -> evaluator.getJourneyResponseForStoredCis(List.of(contraIndicatorItem)));
     }
 
     @Test

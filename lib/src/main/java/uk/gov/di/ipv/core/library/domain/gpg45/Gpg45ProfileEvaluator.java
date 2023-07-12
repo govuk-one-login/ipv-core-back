@@ -14,6 +14,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CheckDetail;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
+import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.text.ParseException;
@@ -50,7 +51,7 @@ public class Gpg45ProfileEvaluator {
     }
 
     public Optional<JourneyResponse> getJourneyResponseForStoredCis(
-            List<ContraIndicatorItem> ciItems) {
+            List<ContraIndicatorItem> ciItems) throws UnrecognisedCiException {
         List<ContraIndicatorItem> contraIndicatorItems = new ArrayList<>(ciItems);
         LOGGER.info(
                 new StringMapMessage()
@@ -67,6 +68,10 @@ public class Gpg45ProfileEvaluator {
 
         int ciScore = 0;
         for (String ci : ciSet) {
+            if (!contraIndicatorScoresMap.containsKey(ci)) {
+                throw new UnrecognisedCiException(
+                        "Unrecognised CI code received from CI storage system");
+            }
             ContraIndicatorScore scoresConfig = contraIndicatorScoresMap.get(ci);
             ciScore += scoresConfig.getDetectedScore();
         }

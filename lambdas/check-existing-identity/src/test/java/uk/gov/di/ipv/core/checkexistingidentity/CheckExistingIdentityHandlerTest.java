@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
+import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -210,8 +211,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyReuseResponseIfScoresSatisfyM1BGpg45Profile()
-            throws SqsException, IOException {
+    void shouldReturnJourneyReuseResponseIfScoresSatisfyM1BGpg45Profile() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(false);
@@ -238,7 +238,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnJourneyResetIdentityResponseIfScoresDoNotSatisfyM1AGpg45Profile()
-            throws ParseException, SqsException, IOException {
+            throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(false);
@@ -263,8 +263,7 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnPyiNoMatchIfVcsFailCiScoreCheck()
-            throws ParseException, SqsException, IOException {
+    void shouldReturnPyiNoMatchIfVcsFailCiScoreCheck() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(false);
@@ -281,7 +280,27 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldNotSendAuditEventIfNewUser() throws ParseException, SqsException, IOException {
+    void shouldReturnJourneyErrorIfUnrecognisedCiReceived() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(false);
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
+                .thenThrow(new UnrecognisedCiException("Not recognised"));
+        when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        var journeyResponse = handleRequest(event, context, JourneyErrorResponse.class);
+        assertEquals("/journey/error", journeyResponse.getJourney());
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
+        assertEquals(ErrorResponse.UNRECOGNISED_CI_CODE.getCode(), journeyResponse.getCode());
+        assertEquals(ErrorResponse.UNRECOGNISED_CI_CODE.getMessage(), journeyResponse.getMessage());
+
+        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+    }
+
+    @Test
+    void shouldNotSendAuditEventIfNewUser() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
                 .thenReturn(Collections.emptyList());
