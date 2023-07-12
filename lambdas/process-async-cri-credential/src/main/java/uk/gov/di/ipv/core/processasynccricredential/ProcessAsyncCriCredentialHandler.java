@@ -83,7 +83,7 @@ public class ProcessAsyncCriCredentialHandler
     @ExcludeFromGeneratedCoverageReport
     public ProcessAsyncCriCredentialHandler() {
         this.configService = new ConfigService();
-        this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator();
+        this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.ciStorageService = new CiStorageService(configService);

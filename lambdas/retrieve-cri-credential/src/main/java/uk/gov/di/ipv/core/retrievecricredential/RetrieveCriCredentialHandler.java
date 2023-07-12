@@ -111,7 +111,7 @@ public class RetrieveCriCredentialHandler
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
-        this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator();
+        this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator(configService);
         this.ciStorageService = new CiStorageService(configService);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);

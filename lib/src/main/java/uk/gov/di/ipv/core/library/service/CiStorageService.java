@@ -71,7 +71,7 @@ public class CiStorageService {
     public CiStorageService(ConfigService configService) {
         this.lambdaClient = AWSLambdaClientBuilder.defaultClient();
         this.configService = configService;
-        this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator();
+        this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator(configService);
     }
 
     public CiStorageService(

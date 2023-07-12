@@ -1,10 +1,14 @@
 package uk.gov.di.ipv.core.library.validation;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jose.crypto.impl.ECDSA;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jose.proc.SimpleSecurityContext;
+import com.nimbusds.jose.shaded.json.JSONArray;
+import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWTClaimNames;
 import com.nimbusds.jwt.JWTClaimsSet;
@@ -14,20 +18,33 @@ import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 import static com.nimbusds.jose.JWSAlgorithm.ES256;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
+import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
 public class VerifiableCredentialJwtValidator {
     private static final String VC_CLAIM_NAME = "vc";
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final Gson gson = new Gson();
+    private final ConfigService configService;
+
+    public VerifiableCredentialJwtValidator(ConfigService configService) {
+        this.configService = configService;
+    }
 
     public void validate(
             SignedJWT verifiableCredential,
@@ -51,6 +68,7 @@ public class VerifiableCredentialJwtValidator {
             throws VerifiableCredentialException {
         validateSignature(verifiableCredential, signingKey);
         validateClaimsSet(verifiableCredential, componentId, userId);
+        validateCiCodes(verifiableCredential);
         LOGGER.info("Verifiable Credential validated.");
     }
 
@@ -111,6 +129,51 @@ public class VerifiableCredentialJwtValidator {
             verifier.verify(verifiableCredential.getJWTClaimsSet(), null);
         } catch (BadJWTException | ParseException e) {
             LOGGER.error("Verifiable credential claims set not valid: '{}'", e.getMessage());
+            throw new VerifiableCredentialException(
+                    HTTPResponse.SC_SERVER_ERROR,
+                    ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
+        }
+    }
+
+    private void validateCiCodes(SignedJWT verifiableCredential) {
+        Map<String, ContraIndicatorScore> contraIndicatorScoresMap =
+                configService.getContraIndicatorScoresMap();
+
+        try {
+            JSONObject vcClaim =
+                    (JSONObject) verifiableCredential.getJWTClaimsSet().getClaim(VC_CLAIM);
+            JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
+            if (evidenceArray != null) {
+                List<CredentialEvidenceItem> credentialEvidenceList =
+                        gson.fromJson(
+                                evidenceArray.toJSONString(),
+                                new TypeToken<List<CredentialEvidenceItem>>() {}.getType());
+
+                boolean anyUnrecognisedCiCodes = false;
+                for (CredentialEvidenceItem evidenceItem : credentialEvidenceList) {
+                    List<String> cis = evidenceItem.getCi();
+                    if (cis != null) {
+                        anyUnrecognisedCiCodes =
+                                cis.stream()
+                                        .anyMatch(
+                                                ciCode ->
+                                                        !contraIndicatorScoresMap.containsKey(
+                                                                ciCode));
+                        if (anyUnrecognisedCiCodes) {
+                            break;
+                        }
+                    }
+                }
+
+                if (anyUnrecognisedCiCodes) {
+                    LOGGER.error("Verifiable credential contains unrecognised CI codes");
+                    throw new VerifiableCredentialException(
+                            HTTPResponse.SC_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
+                }
+            }
+        } catch (ParseException e) {
+            LOGGER.error("Failed to parse verifiable credential claims set: {}", e.getMessage());
             throw new VerifiableCredentialException(
                     HTTPResponse.SC_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL);
