@@ -212,13 +212,6 @@ IPV_IDENTITY_REUSE_PAGE:
 IPV_IDENTITY_PENDING_PAGE:
   name: IPV_IDENTITY_PENDING_PAGE
   events:
-    next:
-      type: basic
-      name: continue
-      targetState: PYI_ESCAPE
-      response:
-        type: page
-        pageId: pyi-escape
     attempt-recovery:
       type: basic
       name: attempt-recovery
