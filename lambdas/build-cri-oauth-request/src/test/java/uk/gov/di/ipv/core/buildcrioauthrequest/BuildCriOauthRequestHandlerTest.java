@@ -1,7 +1,6 @@
 package uk.gov.di.ipv.core.buildcrioauthrequest;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -1039,11 +1038,6 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(1, sharedClaims.get("address").size());
         assertEquals(TEST_EMAIL_ADDRESS, sharedClaims.get("emailAddress").asText());
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-    }
-
-    private Map<String, Map<String, String>> getResponseBodyAsMap(
-            APIGatewayProxyResponseEvent response) throws JsonProcessingException {
-        return objectMapper.readValue(response.getBody(), Map.class);
     }
 
     private void assertErrorResponse(
