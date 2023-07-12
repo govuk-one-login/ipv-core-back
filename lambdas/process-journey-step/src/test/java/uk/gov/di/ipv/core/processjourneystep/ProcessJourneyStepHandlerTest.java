@@ -210,7 +210,7 @@ class ProcessJourneyStepHandlerTest {
         Map<String, String> input =
                 Map.of(JOURNEY, ProcessJourneyStepEvents.JOURNEY_NEXT, IPV_SESSION_ID, "1234");
 
-        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.IPV_IDENTITY_START_PAGE_STATE);
+        mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.INITIAL_IPV_JOURNEY_STATE);
 
         getProcessJourneyStepHandler().handleRequest(input, mockContext);
 
