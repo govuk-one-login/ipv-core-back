@@ -383,7 +383,7 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
 
     @Tracing
     private Optional<JourneyResponse> getJourneyResponseForFailWithNoCi(
-            IpvSessionItem ipvSessionItem) {
+            IpvSessionItem ipvSessionItem) throws NoVisitedCriFoundException {
         VisitedCredentialIssuerDetailsDto lastVisitedCri =
                 ipvSessionItem.getVisitedCredentialIssuerDetails().stream()
                         .reduce((first, second) -> second)
