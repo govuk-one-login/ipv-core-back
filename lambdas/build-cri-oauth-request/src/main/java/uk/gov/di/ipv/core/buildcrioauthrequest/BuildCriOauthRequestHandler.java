@@ -312,6 +312,13 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
                 SignedJWT signedJWT = SignedJWT.parse(credential);
                 String credentialIss = signedJWT.getJWTClaimsSet().getIssuer();
 
+                if (currentVcStatuses == null) {
+                    throw new NoVcStatusForIssuerException(
+                            String.format(
+                                    "User has credential from issuer '%s' but currentVcStatuses is null",
+                                    credentialIss));
+                }
+
                 if (getVcStatus(currentVcStatuses, credentialIss)
                         .getIsSuccessfulVc()
                         .equals(Boolean.TRUE)) {
@@ -346,8 +353,7 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
                 throw new HttpResponseExceptionWithErrorBody(
                         500, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
             } catch (NoVcStatusForIssuerException e) {
-                LogHelper.logErrorMessage(
-                        "Failed to match VC issuer with VC status", e.getMessage());
+                LogHelper.logErrorMessage("Error getting VC status", e.getMessage());
                 throw new HttpResponseExceptionWithErrorBody(
                         500, ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER);
             }
