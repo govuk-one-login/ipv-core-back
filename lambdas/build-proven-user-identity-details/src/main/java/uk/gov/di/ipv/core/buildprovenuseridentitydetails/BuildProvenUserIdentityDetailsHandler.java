@@ -25,6 +25,7 @@ import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -131,13 +132,20 @@ public class BuildProvenUserIdentityDetailsHandler extends JourneyRequestLambda 
                     JOURNEY_ERROR_PATH,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS);
+        } catch (NoVcStatusForIssuerException e) {
+            LOGGER.error("No VC status found for issuer", e);
+            return new JourneyErrorResponse(
+                    JOURNEY_ERROR_PATH,
+                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                    ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER);
         }
     }
 
     @Tracing
     private NameAndDateOfBirth getProvenIdentityNameAndDateOfBirth(
             List<VcStoreItem> credentialIssuerItems, List<VcStatusDto> currentVcStatuses)
-            throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException {
+            throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException,
+                    NoVcStatusForIssuerException {
         for (VcStoreItem item : credentialIssuerItems) {
             CredentialIssuerConfig credentialIssuerConfig =
                     configService.getCredentialIssuerActiveConnectionConfig(
@@ -183,7 +191,8 @@ public class BuildProvenUserIdentityDetailsHandler extends JourneyRequestLambda 
     @Tracing
     private List<Address> getProvenIdentityAddresses(
             List<VcStoreItem> credentialIssuerItems, List<VcStatusDto> currentVcStatuses)
-            throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException {
+            throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException,
+                    NoVcStatusForIssuerException {
         for (VcStoreItem item : credentialIssuerItems) {
             CredentialIssuerConfig credentialIssuerConfig =
                     configService.getCredentialIssuerActiveConnectionConfig(

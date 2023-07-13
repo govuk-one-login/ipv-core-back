@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
@@ -133,20 +134,26 @@ public class UserIdentityService {
                 UserIdentity.builder().vcs(vcJwts).sub(sub).vot(vot).vtm(vtm);
 
         if (vot.equals(VectorOfTrust.P2.toString())) {
-            Optional<IdentityClaim> identityClaim =
-                    generateIdentityClaim(vcStoreItems, currentVcStatuses);
-            identityClaim.ifPresent(userIdentityBuilder::identityClaim);
+            try {
+                Optional<IdentityClaim> identityClaim =
+                        generateIdentityClaim(vcStoreItems, currentVcStatuses);
+                identityClaim.ifPresent(userIdentityBuilder::identityClaim);
 
-            Optional<JsonNode> addressClaim = generateAddressClaim(vcStoreItems);
-            addressClaim.ifPresent(userIdentityBuilder::addressClaim);
+                Optional<JsonNode> addressClaim = generateAddressClaim(vcStoreItems);
+                addressClaim.ifPresent(userIdentityBuilder::addressClaim);
 
-            Optional<JsonNode> passportClaim =
-                    generatePassportClaim(vcStoreItems, currentVcStatuses);
-            passportClaim.ifPresent(userIdentityBuilder::passportClaim);
+                Optional<JsonNode> passportClaim =
+                        generatePassportClaim(vcStoreItems, currentVcStatuses);
+                passportClaim.ifPresent(userIdentityBuilder::passportClaim);
 
-            Optional<JsonNode> drivingPermitClaim =
-                    generateDrivingPermitClaim(vcStoreItems, currentVcStatuses);
-            drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
+                Optional<JsonNode> drivingPermitClaim =
+                        generateDrivingPermitClaim(vcStoreItems, currentVcStatuses);
+                drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
+            } catch (NoVcStatusForIssuerException e) {
+                throw new HttpResponseExceptionWithErrorBody(
+                        HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                        ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER);
+            }
         }
 
         return userIdentityBuilder.build();
@@ -223,7 +230,7 @@ public class UserIdentityService {
 
     private Optional<IdentityClaim> generateIdentityClaim(
             List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
-            throws HttpResponseExceptionWithErrorBody {
+            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
         for (VcStoreItem item : vcStoreItems) {
             String componentId = configService.getComponentId(item.getCredentialIssuer());
 
@@ -275,7 +282,7 @@ public class UserIdentityService {
 
     private Optional<JsonNode> generatePassportClaim(
             List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
-            throws HttpResponseExceptionWithErrorBody {
+            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
         for (VcStoreItem item : vcStoreItems) {
             String componentId = configService.getComponentId(item.getCredentialIssuer());
             if (PASSPORT_CRI_TYPES.contains(item.getCredentialIssuer())
@@ -321,7 +328,7 @@ public class UserIdentityService {
 
     private Optional<JsonNode> generateDrivingPermitClaim(
             List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
-            throws HttpResponseExceptionWithErrorBody {
+            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
         for (VcStoreItem item : vcStoreItems) {
             String componentId = configService.getComponentId(item.getCredentialIssuer());
             if (DRIVING_PERMIT_CRI_TYPES.contains(item.getCredentialIssuer())
@@ -372,17 +379,22 @@ public class UserIdentityService {
         return Optional.empty();
     }
 
-    public boolean isVcSuccessful(List<VcStatusDto> currentVcStatuses, String criIss) {
+    public boolean isVcSuccessful(List<VcStatusDto> currentVcStatuses, String criIss)
+            throws NoVcStatusForIssuerException {
         return currentVcStatuses.stream()
                 .filter(vcStatusDto -> vcStatusDto.getCriIss().equals(criIss))
                 .findFirst()
-                .orElseThrow()
+                .orElseThrow(
+                        () ->
+                                new NoVcStatusForIssuerException(
+                                        String.format(
+                                                "No VC status found for issuer '%s'", criIss)))
                 .getIsSuccessfulVc();
     }
 
     private List<IdentityClaim> getIdentityClaims(
             List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
-            throws HttpResponseExceptionWithErrorBody {
+            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
         List<IdentityClaim> identityClaims = new ArrayList<>();
         for (VcStoreItem item : vcStoreItems) {
             String componentId = configService.getComponentId(item.getCredentialIssuer());
@@ -397,7 +409,7 @@ public class UserIdentityService {
 
     public boolean checkBirthDateCorrelationInCredentials(
             String userId, List<VcStatusDto> currentVcStatuses)
-            throws HttpResponseExceptionWithErrorBody {
+            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
         if (currentVcStatuses != null) {
             List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
             List<IdentityClaim> identityClaims = getIdentityClaims(vcStoreItems, currentVcStatuses);
@@ -414,7 +426,7 @@ public class UserIdentityService {
 
     public boolean checkNameAndFamilyNameCorrelationInCredentials(
             String userId, List<VcStatusDto> currentVcStatuses)
-            throws HttpResponseExceptionWithErrorBody {
+            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
         if (currentVcStatuses != null) {
             List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
 
