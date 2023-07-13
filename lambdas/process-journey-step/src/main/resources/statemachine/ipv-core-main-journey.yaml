@@ -17,7 +17,7 @@ CRI_STATE:
     error:
       type: basic
       name: error
-      targetState: CRI_ERROR
+      targetState: ERROR
       response:
         type: error
         pageId: pyi-technical
@@ -137,6 +137,14 @@ CHECK_EXISTING_IDENTITY:
       response:
         type: page
         pageId: pyi-kbv-fail
+    error:
+      type: basic
+      name: error
+      targetState: ERROR
+      response:
+        type: error
+        pageId: pyi-technical
+        statusCode: 500
     attempt-recovery:
       type: basic
       name: attempt-recovery
@@ -346,14 +354,14 @@ PYI_ESCAPE:
       response:
         type: journey
         journeyStepId: /journey/build-client-oauth-response
-CRI_ERROR:
-  name: CRI_ERROR
+ERROR:
+  name: ERROR
   parent: END_JOURNEY
   events:
     attempt-recovery:
       type: basic
       name: error
-      targetState: CRI_ERROR
+      targetState: ERROR
       response:
         type: error
         pageId: pyi-technical
