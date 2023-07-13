@@ -217,10 +217,18 @@ IPV_IDENTITY_START_PAGE:
     end:
       type: basic
       name: end
-      targetState: PYI_ANOTHER_WAY
+      targetState: F2F_START_PAGE
       response:
         type: page
-        pageId: pyi-another-way
+        pageId: page-ipv-identity-postoffice-start
+      checkIfDisabled:
+        f2f:
+          type: basic
+          name: f2f-cri-disabled
+          targetState: PYI_ANOTHER_WAY
+          response:
+            type: page
+            pageId: pyi-another-way
     attempt-recovery:
       type: basic
       name: attempt-recovery
