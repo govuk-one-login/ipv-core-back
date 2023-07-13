@@ -217,7 +217,7 @@ IPV_IDENTITY_START_PAGE:
     end:
       type: basic
       name: end
-      targetState: IPV_IDENTITY_POSTOFFICE_START_PAGE
+      targetState: F2F_START_PAGE
       response:
         type: page
         pageId: page-ipv-identity-postoffice-start
