@@ -78,8 +78,6 @@ class Gpg45ProfileEvaluatorTest {
 
     @Test
     void getJourneyResponseForStoredCisShouldReturnEmptyOptionalIfNoCis() throws Exception {
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
-
         assertTrue(evaluator.getJourneyResponseForStoredCis(List.of()).isEmpty());
     }
 
@@ -197,6 +195,109 @@ class Gpg45ProfileEvaluatorTest {
         assertThrows(
                 UnrecognisedCiException.class,
                 () -> evaluator.getJourneyResponseForStoredCis(List.of(contraIndicatorItem)));
+    }
+
+    @Test
+    void getJourneyResponseForStoredCisEmptyCiItemsReturnEmptyOptional()
+            throws UnrecognisedCiException {
+        assertTrue(evaluator.getJourneyResponseForStoredCis(null).isEmpty());
+    }
+
+    @Test
+    void getJourneyResponseForStoredCisNullContraIndicatorItemAndCiReturnEmptyOptional()
+            throws UnrecognisedCiException {
+        List<ContraIndicatorItem> contraIndicatorItems =
+                Collections.singletonList(
+                        new ContraIndicatorItem(
+                                TEST_USER_ID,
+                                "Y03#hash",
+                                "issuer",
+                                "2022-09-21T07:57:14.332Z",
+                                null,
+                                "123456789",
+                                null));
+        Optional<JourneyResponse> result =
+                evaluator.getJourneyResponseForStoredCis(contraIndicatorItems);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void getJourneyResponseForStoredCisNullScoresConfigThrowsUnrecognisedCiException() {
+        List<ContraIndicatorItem> contraIndicatorItems =
+                Collections.singletonList(
+                        new ContraIndicatorItem(
+                                TEST_USER_ID,
+                                "Y03#hash",
+                                "issuer",
+                                "2022-09-21T07:57:14.332Z",
+                                "Y03",
+                                "123456789",
+                                null));
+        when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(Collections.emptyMap());
+        assertThrows(
+                UnrecognisedCiException.class,
+                () -> {
+                    evaluator.getJourneyResponseForStoredCis(contraIndicatorItems);
+                });
+    }
+
+    @Test
+    void getJourneyResponseForStoredCisNullDetectedScoresDefaultToZero()
+            throws UnrecognisedCiException {
+        List<ContraIndicatorItem> contraIndicatorItems =
+                Collections.singletonList(
+                        new ContraIndicatorItem(
+                                TEST_USER_ID,
+                                "Y03#hash",
+                                "issuer",
+                                "2022-09-21T07:57:14.332Z",
+                                "Y03",
+                                "123456789",
+                                null));
+        Map<String, ContraIndicatorScore> ciScoresMap = new HashMap<>();
+        ciScoresMap.put(
+                "Y03", new ContraIndicatorScore("Y03", null, -2, null, Collections.emptyList()));
+        when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
+
+        Optional<JourneyResponse> result =
+                evaluator.getJourneyResponseForStoredCis(contraIndicatorItems);
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void getJourneyResponseForStoredCisLastIssIsNull() throws Exception {
+        ContraIndicatorItem otherCiItem =
+                new ContraIndicatorItem(
+                        TEST_USER_ID,
+                        "X98#hash",
+                        "otherIssuer",
+                        "2022-09-21T08:00:00.000Z",
+                        "X98",
+                        "123456789",
+                        null);
+        ContraIndicatorItem kbvCiItem =
+                new ContraIndicatorItem(
+                        TEST_USER_ID,
+                        "X99#hash",
+                        null,
+                        "2022-09-21T08:01:00.000Z",
+                        "X99",
+                        "123456789",
+                        null);
+
+        Map<String, ContraIndicatorScore> ciScoresMap = new HashMap<>();
+        ciScoresMap.put(
+                "X98", new ContraIndicatorScore("X98", 1, -1, null, Collections.emptyList()));
+        ciScoresMap.put(
+                "X99", new ContraIndicatorScore("X99", 3, -2, null, Collections.emptyList()));
+        when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
+        when(mockConfigService.getComponentId("kbv")).thenReturn("kbvIssuer");
+
+        assertEquals(
+                Optional.of(JOURNEY_RESPONSE_PYI_NO_MATCH),
+                evaluator.getJourneyResponseForStoredCis(List.of(otherCiItem, kbvCiItem)));
     }
 
     @Test

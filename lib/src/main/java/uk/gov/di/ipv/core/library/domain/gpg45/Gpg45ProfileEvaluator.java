@@ -5,6 +5,7 @@ import com.google.gson.reflect.TypeToken;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -52,49 +54,61 @@ public class Gpg45ProfileEvaluator {
 
     public Optional<JourneyResponse> getJourneyResponseForStoredCis(
             List<ContraIndicatorItem> ciItems) throws UnrecognisedCiException {
-        List<ContraIndicatorItem> contraIndicatorItems = new ArrayList<>(ciItems);
-        LOGGER.info(
-                new StringMapMessage()
-                        .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Retrieved user's CI items.")
-                        .with(LOG_NO_OF_CI_ITEMS.getFieldName(), ciItems.size()));
+        if (!CollectionUtils.isEmpty(ciItems)) {
+            List<ContraIndicatorItem> contraIndicatorItems = new ArrayList<>(ciItems);
+            LOGGER.info(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "Retrieved user's CI items.")
+                            .with(LOG_NO_OF_CI_ITEMS.getFieldName(), ciItems.size()));
 
-        Set<String> ciSet =
-                contraIndicatorItems.stream()
-                        .map(ContraIndicatorItem::getCi)
-                        .collect(Collectors.toSet());
+            Set<String> ciSet =
+                    contraIndicatorItems.stream()
+                            .filter(Objects::nonNull)
+                            .map(ContraIndicatorItem::getCi)
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toSet());
 
-        Map<String, ContraIndicatorScore> contraIndicatorScoresMap =
-                configService.getContraIndicatorScoresMap();
+            Map<String, ContraIndicatorScore> contraIndicatorScoresMap =
+                    configService.getContraIndicatorScoresMap();
 
-        int ciScore = 0;
-        for (String ci : ciSet) {
-            if (!contraIndicatorScoresMap.containsKey(ci)) {
-                throw new UnrecognisedCiException(
-                        "Unrecognised CI code received from CI storage system");
+            int ciScore = 0;
+            for (String ci : ciSet) {
+                ContraIndicatorScore scoresConfig = contraIndicatorScoresMap.get(ci);
+                if (scoresConfig == null) {
+                    throw new UnrecognisedCiException(
+                            "Unrecognised CI code received from CI storage system");
+                }
+                ciScore +=
+                        scoresConfig.getDetectedScore() != null
+                                ? scoresConfig.getDetectedScore()
+                                : 0;
             }
-            ContraIndicatorScore scoresConfig = contraIndicatorScoresMap.get(ci);
-            ciScore += scoresConfig.getDetectedScore();
-        }
-        LOGGER.info(
-                new StringMapMessage()
-                        .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Calculated user's CI score.")
-                        .with(LOG_CI_SCORE.getFieldName(), ciScore));
+            if (ciScore != 0) {
+                LOGGER.info(
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "Calculated user's CI score.")
+                                .with(LOG_CI_SCORE.getFieldName(), ciScore));
 
-        int ciScoreThreshold =
-                Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
-        if (ciScore > ciScoreThreshold) {
-            Collections.sort(contraIndicatorItems);
-            String lastCiIssuer =
-                    contraIndicatorItems.get(contraIndicatorItems.size() - 1).getIss();
-            String kbvIssuer = configService.getComponentId(KBV_CRI);
+                int ciScoreThreshold =
+                        Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
+                if (ciScore > ciScoreThreshold) {
+                    Collections.sort(contraIndicatorItems);
+                    String lastCiIssuer =
+                            contraIndicatorItems.get(contraIndicatorItems.size() - 1).getIss();
+                    String kbvIssuer = configService.getComponentId(KBV_CRI);
 
-            return Optional.of(
-                    lastCiIssuer.equals(kbvIssuer)
-                            ? JOURNEY_RESPONSE_PYI_KBV_FAIL
-                            : JOURNEY_RESPONSE_PYI_NO_MATCH);
-        } else {
-            return Optional.empty();
+                    return Optional.of(
+                            lastCiIssuer != null && lastCiIssuer.equals(kbvIssuer)
+                                    ? JOURNEY_RESPONSE_PYI_KBV_FAIL
+                                    : JOURNEY_RESPONSE_PYI_NO_MATCH);
+                }
+            }
         }
+        return Optional.empty();
     }
 
     public Optional<Gpg45Profile> getFirstMatchingProfile(
