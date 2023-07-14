@@ -548,6 +548,82 @@ class BuildCriOauthRequestHandlerTest {
     }
 
     @Test
+    void shouldReturn500ResponseIfNoVcStatusFoundForVcIssuer() throws Exception {
+        when(configService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
+                .thenReturn(dcmawCredentialIssuerConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(addressCredentialIssuerConfig);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionItem.getCurrentVcStatuses())
+                .thenReturn(
+                        List.of(
+                                new VcStatusDto("a bad issuer", true),
+                                new VcStatusDto("another bad issuer", true)));
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER)));
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        JourneyRequest input =
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(DCMAW_CRI)
+                        .build();
+
+        JourneyErrorResponse response =
+                objectMapper.readValue(handleRequest(input, context), JourneyErrorResponse.class);
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(
+                ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER.getCode(), response.getCode());
+        assertEquals(
+                ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER.getMessage(),
+                response.getMessage());
+    }
+
+    @Test
+    void shouldReturn500ResponseIfUserHasCredentialButVcStatuesIsNull() throws Exception {
+        when(configService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
+                .thenReturn(dcmawCredentialIssuerConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(addressCredentialIssuerConfig);
+        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
+        when(mockIpvSessionItem.getCurrentVcStatuses()).thenReturn(null);
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
+                .thenReturn(
+                        List.of(
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
+                                generateVerifiableCredential(
+                                        vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER)));
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        JourneyRequest input =
+                JourneyRequest.builder()
+                        .ipvSessionId(SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .journey(DCMAW_CRI)
+                        .build();
+
+        JourneyErrorResponse response =
+                objectMapper.readValue(handleRequest(input, context), JourneyErrorResponse.class);
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(
+                ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER.getCode(), response.getCode());
+        assertEquals(
+                ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER.getMessage(),
+                response.getMessage());
+    }
+
+    @Test
     void shouldReturn400IfSessionIdIsNull() throws JsonProcessingException {
         JourneyRequest input = JourneyRequest.builder().journey(CRI_ID).build();
 
