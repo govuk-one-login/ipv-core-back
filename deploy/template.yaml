@@ -37,6 +37,15 @@ Parameters:
     Description: "The ARN of the permissions boundary to apply when creating IAM roles"
     Type: String
     Default: "none"
+  IndividualCiMitStubs:
+    Type: String
+    Description: |
+      Which CIMIT stubs to use in development environment.
+      If "True" use individual's CIMIT stubs, if "False" use environment's CIMIT stubs.
+    AllowedValues:
+      - "False"
+      - "True"
+    Default: "False"
 
 Conditions:
   AddProvisionedConcurrency: !Not
@@ -60,6 +69,9 @@ Conditions:
       - Fn::Equals:
           - !Ref PermissionsBoundary
           - "none"
+  UseIndividualCiMitStubs: !And
+    - !Condition IsDevelopment
+    - !Equals [ !Ref IndividualCiMitStubs, "True"]
 
 # The AWS Account Id is used in the following mapping section because we have
 # multiple developer environments and it is undesirable to have to keep this
@@ -691,10 +703,13 @@ Resources:
                 - EnvironmentConfiguration
                 - !Ref AWS::AccountId
                 - ciStorageAccountId
-              env: !FindInMap
-                - EnvironmentConfiguration
-                - !Ref AWS::AccountId
-                - environment
+              env: !If
+                - UseIndividualCiMitStubs
+                - !Sub ${Environment}
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - environment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -760,10 +775,13 @@ Resources:
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
                       - ciStorageAccountId
-                    env: !FindInMap
-                      - EnvironmentConfiguration
-                      - !Ref AWS::AccountId
-                      - environment
+                    env: !If
+                      - UseIndividualCiMitStubs
+                      - !Sub ${Environment}
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - environment
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -829,20 +847,26 @@ Resources:
                 - EnvironmentConfiguration
                 - !Ref AWS::AccountId
                 - ciStorageAccountId
-              env: !FindInMap
-                - EnvironmentConfiguration
-                - !Ref AWS::AccountId
-                - environment
+              env: !If
+                - UseIndividualCiMitStubs
+                - !Sub ${Environment}
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - environment
           CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:postMitigations-${env}"
             - contra_indicator_storage_account_id: !FindInMap
                 - EnvironmentConfiguration
                 - !Ref AWS::AccountId
                 - ciStorageAccountId
-              env: !FindInMap
-                - EnvironmentConfiguration
-                - !Ref AWS::AccountId
-                - environment
+              env: !If
+                - UseIndividualCiMitStubs
+                - !Sub ${Environment}
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - environment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -910,10 +934,13 @@ Resources:
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
                       - ciStorageAccountId
-                    env: !FindInMap
-                      - EnvironmentConfiguration
-                      - !Ref AWS::AccountId
-                      - environment
+                    env: !If
+                      - UseIndividualCiMitStubs
+                      - !Sub ${Environment}
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - environment
             - Sid: invokePostCiMitigationFunction
               Effect: Allow
               Action:
@@ -925,10 +952,13 @@ Resources:
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
                       - ciStorageAccountId
-                    env: !FindInMap
-                      - EnvironmentConfiguration
-                      - !Ref AWS::AccountId
-                      - environment
+                    env: !If
+                      - UseIndividualCiMitStubs
+                      - !Sub ${Environment}
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - environment
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1476,10 +1506,13 @@ Resources:
                 - EnvironmentConfiguration
                 - !Ref AWS::AccountId
                 - ciStorageAccountId
-              env: !FindInMap
-                - EnvironmentConfiguration
-                - !Ref AWS::AccountId
-                - environment
+              env: !If
+                - UseIndividualCiMitStubs
+                - !Sub ${Environment}
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - environment
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       VpcConfig:
         SubnetIds:
@@ -1536,10 +1569,13 @@ Resources:
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
                       - ciStorageAccountId
-                    env: !FindInMap
-                      - EnvironmentConfiguration
-                      - !Ref AWS::AccountId
-                      - environment
+                    env: !If
+                      - UseIndividualCiMitStubs
+                      - !Sub ${Environment}
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - environment
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
@@ -1790,10 +1826,13 @@ Resources:
                 - EnvironmentConfiguration
                 - !Ref AWS::AccountId
                 - ciStorageAccountId
-              env: !FindInMap
-                - EnvironmentConfiguration
-                - !Ref AWS::AccountId
-                - environment
+              env: !If
+                - UseIndividualCiMitStubs
+                - !Sub ${Environment}
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - environment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1849,10 +1888,13 @@ Resources:
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
                       - ciStorageAccountId
-                    env: !FindInMap
-                      - EnvironmentConfiguration
-                      - !Ref AWS::AccountId
-                      - environment
+                    env: !If
+                      - UseIndividualCiMitStubs
+                      - !Sub ${Environment}
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - environment
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
@@ -2000,20 +2042,26 @@ Resources:
                 - EnvironmentConfiguration
                 - !Ref AWS::AccountId
                 - ciStorageAccountId
-              env: !FindInMap
-                - EnvironmentConfiguration
-                - !Ref AWS::AccountId
-                - environment
+              env: !If
+                - UseIndividualCiMitStubs
+                - !Sub ${Environment}
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - environment
           CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:postMitigations-${env}"
             - contra_indicator_storage_account_id: !FindInMap
                 - EnvironmentConfiguration
                 - !Ref AWS::AccountId
                 - ciStorageAccountId
-              env: !FindInMap
-                - EnvironmentConfiguration
-                - !Ref AWS::AccountId
-                - environment
+              env: !If
+                - UseIndividualCiMitStubs
+                - !Sub ${Environment}
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - environment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2071,10 +2119,13 @@ Resources:
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
                       - ciStorageAccountId
-                    env: !FindInMap
-                      - EnvironmentConfiguration
-                      - !Ref AWS::AccountId
-                      - environment
+                    env: !If
+                      - UseIndividualCiMitStubs
+                      - !Sub ${Environment}
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - environment
             - Sid: invokePostCiMitigationFunction
               Effect: Allow
               Action:
@@ -2086,10 +2137,13 @@ Resources:
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
                       - ciStorageAccountId
-                    env: !FindInMap
-                      - EnvironmentConfiguration
-                      - !Ref AWS::AccountId
-                      - environment
+                    env: !If
+                      - UseIndividualCiMitStubs
+                      - !Sub ${Environment}
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - environment
             - Sid: asyncCriResponseQueuePermission
               Effect: Allow
               Action:
