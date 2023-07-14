@@ -157,17 +157,12 @@ RESET_IDENTITY:
   name: RESET_IDENTITY
   events:
     next:
-      type: cri
-      criId: dcmaw
-      targetState: CRI_DCMAW
-      checkIfDisabled:
-        dcmaw:
-          type: basic
-          name: dcmaw-cri-disabled
-          targetState: MULTIPLE_DOC_CHECK_PAGE
-          response:
-            type: page
-            pageId: page-multiple-doc-check
+      type: basic
+      name: next
+      targetState: IPV_IDENTITY_START_PAGE
+      response:
+        type: page
+        pageId: page-ipv-identity-document-start
     attempt-recovery:
       type: basic
       name: attempt-recovery
