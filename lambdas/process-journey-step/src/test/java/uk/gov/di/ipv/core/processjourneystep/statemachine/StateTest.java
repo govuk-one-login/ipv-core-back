@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyRespo
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
@@ -52,6 +53,13 @@ class StateTest {
                 currentState.transition("parent-event", JourneyContext.emptyContext());
 
         assertEquals(parentEventTargetState, transitionedState);
+    }
+
+    @Test
+    void transitionShouldReturnThisIfAttemptRecoveryEventReceived() throws Exception {
+        State state = new State();
+
+        assertSame(state, state.transition("attempt-recovery", JourneyContext.emptyContext()));
     }
 
     @Test
