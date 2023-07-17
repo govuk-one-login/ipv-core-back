@@ -27,6 +27,8 @@ public class StateMachineInitializer {
                     if (state.getParent() != null) {
                         state.setParent(states.get(state.getParent().getName()));
                     }
+                    state.getEvents()
+                            .forEach((eventName, event) -> event.initialize(eventName, states));
                 });
 
         return states;

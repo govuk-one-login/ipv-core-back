@@ -6,11 +6,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.State;
-import uk.gov.di.ipv.core.processjourneystep.statemachine.StateMachineResult;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyContext;
-import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyStepResponse;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Data
@@ -19,7 +18,6 @@ public class BasicEvent implements Event {
     @JsonIgnore private ConfigService configService;
     private String name;
     private State targetState;
-    private JourneyStepResponse response;
     private LinkedHashMap<String, Event> checkIfDisabled;
 
     public BasicEvent() {
@@ -30,7 +28,7 @@ public class BasicEvent implements Event {
         this.configService = configService;
     }
 
-    public StateMachineResult resolve(JourneyContext journeyContext) {
+    public State resolve(JourneyContext journeyContext) {
         configService.setFeatureSet(journeyContext.getFeatureSet());
         if (checkIfDisabled != null) {
             Optional<String> firstDisabledCri =
@@ -43,6 +41,16 @@ public class BasicEvent implements Event {
                 return checkIfDisabled.get(disabledCriId).resolve(journeyContext);
             }
         }
-        return new StateMachineResult(targetState, response);
+        return targetState;
+    }
+
+    @Override
+    public void initialize(String name, Map<String, State> states) {
+        if (targetState != null) {
+            this.targetState = states.get(targetState.getName());
+        }
+        if (checkIfDisabled != null) {
+            checkIfDisabled.forEach((eventName, event) -> event.initialize(eventName, states));
+        }
     }
 }
