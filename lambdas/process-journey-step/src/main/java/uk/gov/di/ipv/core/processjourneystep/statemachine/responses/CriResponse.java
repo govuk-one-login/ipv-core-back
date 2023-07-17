@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.Map;
@@ -15,13 +14,12 @@ import java.util.Map;
 @Data
 public class CriResponse implements JourneyStepResponse {
 
-    private static final String CRI_START_JOURNEY = "/journey/cri/start/%s";
+    public static final String CRI_JOURNEY_TEMPLATE = "/journey/cri/build-oauth-request/%s";
 
     private String criId;
 
     public Map<String, Object> value(ConfigService configService) {
-        String ssmCriId = configService.getSsmParameter(ConfigurationVariable.valueOf(criId));
-        return value(String.format(CRI_START_JOURNEY, ssmCriId));
+        return value(String.format(CRI_JOURNEY_TEMPLATE, criId));
     }
 
     public Map<String, Object> value(String id) {

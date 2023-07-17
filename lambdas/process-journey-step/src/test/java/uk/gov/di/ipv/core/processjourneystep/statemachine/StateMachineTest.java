@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.processjourneystep.statemachine;
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.exceptions.UnknownStateException;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyContext;
-import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyResponse;
 
 import java.util.Map;
 
@@ -15,14 +14,12 @@ import static org.mockito.Mockito.when;
 class StateMachineTest {
 
     @Test
-    void transitionShouldReturnStateMachineResultFromAppropriateState() throws Exception {
+    void transitionShouldReturnAppropriateState() throws Exception {
         JourneyContext journeyContext = JourneyContext.emptyContext();
-        StateMachineResult expectedStateMachineResult =
-                new StateMachineResult(new State("END_STATE"), new JourneyResponse());
+        State endState = new State();
 
         State startingState = mock(State.class);
-        when(startingState.transition("event", journeyContext))
-                .thenReturn(expectedStateMachineResult);
+        when(startingState.transition("event", journeyContext)).thenReturn(endState);
 
         StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
         when(mockStateMachineInitializer.initialize())
@@ -30,16 +27,14 @@ class StateMachineTest {
 
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 
-        assertEquals(
-                expectedStateMachineResult,
-                stateMachine.transition("START_STATE", "event", journeyContext));
+        assertEquals(endState, stateMachine.transition("START_STATE", "event", journeyContext));
     }
 
     @Test
     void transitionShouldThrowIfGivenAnUnknownState() throws Exception {
         StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
         when(mockStateMachineInitializer.initialize())
-                .thenReturn(Map.of("START_STATE", new State("START_STATE")));
+                .thenReturn(Map.of("START_STATE", new State()));
 
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 
