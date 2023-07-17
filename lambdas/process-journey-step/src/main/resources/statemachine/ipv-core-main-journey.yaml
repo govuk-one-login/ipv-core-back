@@ -3,7 +3,6 @@ END_JOURNEY:
   name: END_JOURNEY
   events:
     next:
-      type: basic
       name: next
       targetState: END
 
@@ -11,27 +10,21 @@ CRI_STATE:
   name: CRI_STATE
   events:
     error:
-      type: basic
       name: error
       targetState: ERROR
     access-denied:
-      type: basic
       name: access-denied
       targetState: PYI_NO_MATCH
     temporarily-unavailable:
-      type: basic
       name: temporarily-unavailable
       targetState: PYI_NO_MATCH
     end:
-      type: basic
       name: end
       targetState: IPV_SUCCESS_PAGE
     pyi-no-match:
-      type: basic
       name: pyi-no-match
       targetState: PYI_NO_MATCH
     pyi-kbv-fail:
-      type: basic
       name: pyi-kbv-fail
       targetState: PYI_KBV_FAIL
 
@@ -40,7 +33,6 @@ INITIAL_IPV_JOURNEY:
   name: INIT
   events:
     next:
-      type: basic
       name: next
       targetState: CHECK_EXISTING_IDENTITY
 
@@ -51,11 +43,9 @@ F2F_START_PAGE:
   name: F2F_START_PAGE
   events:
     next:
-      type: basic
       name: next
       targetState: CRI_CLAIMED_IDENTITY_J4
     end:
-      type: basic
       name: end
       targetState: PYI_ESCAPE
 
@@ -66,31 +56,24 @@ CHECK_EXISTING_IDENTITY:
   name: CHECK_EXISTING_IDENTITY
   events:
     next:
-      type: basic
       name: next
       targetState: IPV_IDENTITY_START_PAGE
     reset-identity:
-      type: basic
       name: next
       targetState: RESET_IDENTITY
     reuse:
-      type: basic
       name: reuse
       targetState: IPV_IDENTITY_REUSE_PAGE
     pending:
-      type: basic
       name: pending
       targetState: IPV_IDENTITY_PENDING_PAGE
     pyi-no-match:
-      type: basic
       name: pyi-no-match
       targetState: PYI_NO_MATCH
     pyi-kbv-fail:
-      type: basic
       name: pyi-kbv-fail
       targetState: PYI_KBV_FAIL
     error:
-      type: basic
       name: error
       targetState: ERROR
 
@@ -101,7 +84,6 @@ RESET_IDENTITY:
   name: RESET_IDENTITY
   events:
     next:
-      type: basic
       name: next
       targetState: IPV_IDENTITY_START_PAGE
 
@@ -125,21 +107,17 @@ IPV_IDENTITY_START_PAGE:
   name: IPV_IDENTITY_START_PAGE
   events:
     next:
-      type: basic
       name: next
       targetState: CRI_DCMAW
       checkIfDisabled:
         dcmaw:
-          type: basic
           name: dcmaw-cri-disabled
           targetState: MULTIPLE_DOC_CHECK_PAGE
     end:
-      type: basic
       name: end
       targetState: F2F_START_PAGE
       checkIfDisabled:
         f2f:
-          type: basic
           name: f2f-cri-disabled
           targetState: PYI_ANOTHER_WAY
 
@@ -158,19 +136,15 @@ CRI_DCMAW:
   parent: CRI_STATE
   events:
     next:
-      type: basic
       name: dcmaw-success
       targetState: POST_DCMAW_SUCCESS_PAGE
     access-denied:
-      type: basic
       name: access-denied
       targetState: MULTIPLE_DOC_CHECK_PAGE
     temporarily-unavailable:
-      type: basic
       name: temporarily-unavailable
       targetState: MULTIPLE_DOC_CHECK_PAGE
     fail-with-no-ci:
-      type: basic
       name: fail-with-no-ci
       targetState: MULTIPLE_DOC_CHECK_PAGE
 
@@ -181,20 +155,16 @@ MULTIPLE_DOC_CHECK_PAGE:
   name: MULTIPLE_DOC_CHECK_PAGE
   events:
     ukPassport:
-      type: basic
       name: ukPassport
       targetState: CRI_UK_PASSPORT_J2
     drivingLicence:
-      type: basic
       name: drivingLicence
       targetState: CRI_DRIVING_LICENCE_J3
     end:
-      type: basic
       name: claimedIdentity
       targetState: CRI_CLAIMED_IDENTITY_J4
       checkIfDisabled:
         f2f:
-          type: basic
           name: end
           targetState: END
 
@@ -226,11 +196,9 @@ PYI_ESCAPE:
   name: PYI_ESCAPE
   events:
     next:
-      type: basic
       name: next
       targetState: RESET_IDENTITY
     end:
-      type: basic
       name: end
       targetState: END
 
@@ -270,7 +238,6 @@ POST_DCMAW_SUCCESS_PAGE:
   name: POST_DCMAW_SUCCESS_PAGE
   events:
     next:
-      type: basic
       name: address
       targetState: CRI_ADDRESS_J1
 
@@ -282,7 +249,6 @@ CRI_ADDRESS_J1:
   parent: CRI_STATE
   events:
     next:
-      type: basic
       name: fraud
       targetState: CRI_FRAUD_J1
 
@@ -294,7 +260,6 @@ CRI_FRAUD_J1:
   parent: CRI_STATE
   events:
     end:
-      type: basic
       name: end
       targetState: IPV_SUCCESS_PAGE
 
@@ -307,11 +272,9 @@ CRI_UK_PASSPORT_J2:
   parent: CRI_STATE
   events:
     next:
-      type: basic
       name: address
       targetState: CRI_ADDRESS_J2
     access-denied:
-      type: basic
       name: access-denied
       targetState: MULTIPLE_DOC_CHECK_PAGE
 
@@ -323,7 +286,6 @@ CRI_ADDRESS_J2:
   parent: CRI_STATE
   events:
     next:
-      type: basic
       name: fraud
       targetState: CRI_FRAUD_J2
 
@@ -335,7 +297,6 @@ CRI_FRAUD_J2:
   parent: CRI_STATE
   events:
     next:
-      type: basic
       name: next
       targetState: PRE_KBV_TRANSITION_PAGE_J2
 
@@ -346,7 +307,6 @@ PRE_KBV_TRANSITION_PAGE_J2:
   name: PRE_KBV_TRANSITION_PAGE_J2
   events:
     next:
-      type: basic
       name: kbv
       targetState: CRI_KBV_J2
 
@@ -358,11 +318,9 @@ CRI_KBV_J2:
   parent: CRI_STATE
   events:
     end:
-      type: basic
       name: end
       targetState: IPV_SUCCESS_PAGE
     fail-with-no-ci:
-      type: basic
       name: fail-with-no-ci
       targetState: PYI_KBV_THIN_FILE
 
@@ -375,11 +333,9 @@ CRI_DRIVING_LICENCE_J3:
   parent: CRI_STATE
   events:
     next:
-      type: basic
       name: address
       targetState: CRI_ADDRESS_J3
     access-denied:
-      type: basic
       name: access-denied
       targetState: MULTIPLE_DOC_CHECK_PAGE
 
@@ -391,7 +347,6 @@ CRI_ADDRESS_J3:
   parent: CRI_STATE
   events:
     next:
-      type: basic
       name: fraud
       targetState: CRI_FRAUD_J3
 
@@ -403,7 +358,6 @@ CRI_FRAUD_J3:
   parent: CRI_STATE
   events:
     next:
-      type: basic
       name: next
       targetState: PRE_KBV_TRANSITION_PAGE_J3
 
@@ -414,7 +368,6 @@ PRE_KBV_TRANSITION_PAGE_J3:
   name: PRE_KBV_TRANSITION_PAGE_J3
   events:
     next:
-      type: basic
       name: kbv
       targetState: CRI_KBV_J3
 
@@ -426,11 +379,9 @@ CRI_KBV_J3:
   parent: CRI_STATE
   events:
     end:
-      type: basic
       name: end
       targetState: IPV_SUCCESS_PAGE
     fail-with-no-ci:
-      type: basic
       name: fail-with-no-ci
       targetState: PYI_KBV_THIN_FILE
 
@@ -443,7 +394,6 @@ CRI_CLAIMED_IDENTITY_J4:
   parent: CRI_STATE
   events:
     next:
-      type: basic
       name: address
       targetState: CRI_ADDRESS_J4
 
@@ -455,7 +405,6 @@ CRI_ADDRESS_J4:
   parent: CRI_STATE
   events:
     next:
-      type: basic
       name: fraud
       targetState: CRI_FRAUD_J4
 
@@ -467,7 +416,6 @@ CRI_FRAUD_J4:
   parent: CRI_STATE
   events:
     next:
-      type: basic
       name: f2f
       targetState: CRI_F2F_J4
 
@@ -479,7 +427,6 @@ CRI_F2F_J4:
   parent: CRI_STATE
   events:
     next:
-      type: basic
       name: next
       targetState: F2F_HANDOFF_PAGE_J4
 
