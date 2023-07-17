@@ -3,29 +3,22 @@ END_JOURNEY:
   name: END_JOURNEY
   events:
     next:
-      name: next
       targetState: END
 
 CRI_STATE:
   name: CRI_STATE
   events:
     error:
-      name: error
       targetState: ERROR
     access-denied:
-      name: access-denied
       targetState: PYI_NO_MATCH
     temporarily-unavailable:
-      name: temporarily-unavailable
       targetState: PYI_NO_MATCH
     end:
-      name: end
       targetState: IPV_SUCCESS_PAGE
     pyi-no-match:
-      name: pyi-no-match
       targetState: PYI_NO_MATCH
     pyi-kbv-fail:
-      name: pyi-kbv-fail
       targetState: PYI_KBV_FAIL
 
 # Shared states
@@ -33,7 +26,6 @@ INITIAL_IPV_JOURNEY:
   name: INIT
   events:
     next:
-      name: next
       targetState: CHECK_EXISTING_IDENTITY
 
 F2F_START_PAGE:
@@ -43,10 +35,8 @@ F2F_START_PAGE:
   name: F2F_START_PAGE
   events:
     next:
-      name: next
       targetState: CRI_CLAIMED_IDENTITY_J4
     end:
-      name: end
       targetState: PYI_ESCAPE
 
 CHECK_EXISTING_IDENTITY:
@@ -56,25 +46,18 @@ CHECK_EXISTING_IDENTITY:
   name: CHECK_EXISTING_IDENTITY
   events:
     next:
-      name: next
       targetState: IPV_IDENTITY_START_PAGE
     reset-identity:
-      name: next
       targetState: RESET_IDENTITY
     reuse:
-      name: reuse
       targetState: IPV_IDENTITY_REUSE_PAGE
     pending:
-      name: pending
       targetState: IPV_IDENTITY_PENDING_PAGE
     pyi-no-match:
-      name: pyi-no-match
       targetState: PYI_NO_MATCH
     pyi-kbv-fail:
-      name: pyi-kbv-fail
       targetState: PYI_KBV_FAIL
     error:
-      name: error
       targetState: ERROR
 
 RESET_IDENTITY:
@@ -84,7 +67,6 @@ RESET_IDENTITY:
   name: RESET_IDENTITY
   events:
     next:
-      name: next
       targetState: IPV_IDENTITY_START_PAGE
 
 IPV_IDENTITY_REUSE_PAGE:
@@ -107,18 +89,16 @@ IPV_IDENTITY_START_PAGE:
   name: IPV_IDENTITY_START_PAGE
   events:
     next:
-      name: next
       targetState: CRI_DCMAW
       checkIfDisabled:
         dcmaw:
-          name: dcmaw-cri-disabled
+
           targetState: MULTIPLE_DOC_CHECK_PAGE
     end:
-      name: end
       targetState: F2F_START_PAGE
       checkIfDisabled:
         f2f:
-          name: f2f-cri-disabled
+
           targetState: PYI_ANOTHER_WAY
 
 PYI_ANOTHER_WAY:
@@ -136,16 +116,12 @@ CRI_DCMAW:
   parent: CRI_STATE
   events:
     next:
-      name: dcmaw-success
       targetState: POST_DCMAW_SUCCESS_PAGE
     access-denied:
-      name: access-denied
       targetState: MULTIPLE_DOC_CHECK_PAGE
     temporarily-unavailable:
-      name: temporarily-unavailable
       targetState: MULTIPLE_DOC_CHECK_PAGE
     fail-with-no-ci:
-      name: fail-with-no-ci
       targetState: MULTIPLE_DOC_CHECK_PAGE
 
 MULTIPLE_DOC_CHECK_PAGE:
@@ -155,17 +131,14 @@ MULTIPLE_DOC_CHECK_PAGE:
   name: MULTIPLE_DOC_CHECK_PAGE
   events:
     ukPassport:
-      name: ukPassport
       targetState: CRI_UK_PASSPORT_J2
     drivingLicence:
-      name: drivingLicence
       targetState: CRI_DRIVING_LICENCE_J3
     end:
-      name: claimedIdentity
       targetState: CRI_CLAIMED_IDENTITY_J4
       checkIfDisabled:
         f2f:
-          name: end
+
           targetState: END
 
 PYI_NO_MATCH:
@@ -196,10 +169,8 @@ PYI_ESCAPE:
   name: PYI_ESCAPE
   events:
     next:
-      name: next
       targetState: RESET_IDENTITY
     end:
-      name: end
       targetState: END
 
 ERROR:
@@ -238,7 +209,6 @@ POST_DCMAW_SUCCESS_PAGE:
   name: POST_DCMAW_SUCCESS_PAGE
   events:
     next:
-      name: address
       targetState: CRI_ADDRESS_J1
 
 CRI_ADDRESS_J1:
@@ -249,7 +219,6 @@ CRI_ADDRESS_J1:
   parent: CRI_STATE
   events:
     next:
-      name: fraud
       targetState: CRI_FRAUD_J1
 
 CRI_FRAUD_J1:
@@ -260,7 +229,6 @@ CRI_FRAUD_J1:
   parent: CRI_STATE
   events:
     end:
-      name: end
       targetState: IPV_SUCCESS_PAGE
 
 # Passport journey (J2)
@@ -272,10 +240,8 @@ CRI_UK_PASSPORT_J2:
   parent: CRI_STATE
   events:
     next:
-      name: address
       targetState: CRI_ADDRESS_J2
     access-denied:
-      name: access-denied
       targetState: MULTIPLE_DOC_CHECK_PAGE
 
 CRI_ADDRESS_J2:
@@ -286,7 +252,6 @@ CRI_ADDRESS_J2:
   parent: CRI_STATE
   events:
     next:
-      name: fraud
       targetState: CRI_FRAUD_J2
 
 CRI_FRAUD_J2:
@@ -297,7 +262,6 @@ CRI_FRAUD_J2:
   parent: CRI_STATE
   events:
     next:
-      name: next
       targetState: PRE_KBV_TRANSITION_PAGE_J2
 
 PRE_KBV_TRANSITION_PAGE_J2:
@@ -307,7 +271,6 @@ PRE_KBV_TRANSITION_PAGE_J2:
   name: PRE_KBV_TRANSITION_PAGE_J2
   events:
     next:
-      name: kbv
       targetState: CRI_KBV_J2
 
 CRI_KBV_J2:
@@ -318,10 +281,8 @@ CRI_KBV_J2:
   parent: CRI_STATE
   events:
     end:
-      name: end
       targetState: IPV_SUCCESS_PAGE
     fail-with-no-ci:
-      name: fail-with-no-ci
       targetState: PYI_KBV_THIN_FILE
 
 # Driving licence journey (J3)
@@ -333,10 +294,8 @@ CRI_DRIVING_LICENCE_J3:
   parent: CRI_STATE
   events:
     next:
-      name: address
       targetState: CRI_ADDRESS_J3
     access-denied:
-      name: access-denied
       targetState: MULTIPLE_DOC_CHECK_PAGE
 
 CRI_ADDRESS_J3:
@@ -347,7 +306,6 @@ CRI_ADDRESS_J3:
   parent: CRI_STATE
   events:
     next:
-      name: fraud
       targetState: CRI_FRAUD_J3
 
 CRI_FRAUD_J3:
@@ -358,7 +316,6 @@ CRI_FRAUD_J3:
   parent: CRI_STATE
   events:
     next:
-      name: next
       targetState: PRE_KBV_TRANSITION_PAGE_J3
 
 PRE_KBV_TRANSITION_PAGE_J3:
@@ -368,7 +325,6 @@ PRE_KBV_TRANSITION_PAGE_J3:
   name: PRE_KBV_TRANSITION_PAGE_J3
   events:
     next:
-      name: kbv
       targetState: CRI_KBV_J3
 
 CRI_KBV_J3:
@@ -379,10 +335,8 @@ CRI_KBV_J3:
   parent: CRI_STATE
   events:
     end:
-      name: end
       targetState: IPV_SUCCESS_PAGE
     fail-with-no-ci:
-      name: fail-with-no-ci
       targetState: PYI_KBV_THIN_FILE
 
 # F2F journey (J4)
@@ -394,7 +348,6 @@ CRI_CLAIMED_IDENTITY_J4:
   parent: CRI_STATE
   events:
     next:
-      name: address
       targetState: CRI_ADDRESS_J4
 
 CRI_ADDRESS_J4:
@@ -405,7 +358,6 @@ CRI_ADDRESS_J4:
   parent: CRI_STATE
   events:
     next:
-      name: fraud
       targetState: CRI_FRAUD_J4
 
 CRI_FRAUD_J4:
@@ -416,7 +368,6 @@ CRI_FRAUD_J4:
   parent: CRI_STATE
   events:
     next:
-      name: f2f
       targetState: CRI_F2F_J4
 
 CRI_F2F_J4:
@@ -427,7 +378,6 @@ CRI_F2F_J4:
   parent: CRI_STATE
   events:
     next:
-      name: next
       targetState: F2F_HANDOFF_PAGE_J4
 
 F2F_HANDOFF_PAGE_J4:

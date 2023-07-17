@@ -16,7 +16,6 @@ import java.util.Optional;
 public class BasicEvent implements Event {
     private static final Logger LOGGER = LogManager.getLogger();
     @JsonIgnore private ConfigService configService;
-    private String name;
     private State targetState;
     private LinkedHashMap<String, Event> checkIfDisabled;
 
