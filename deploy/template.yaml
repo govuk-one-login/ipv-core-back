@@ -699,10 +699,13 @@ Resources:
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CI_STORAGE_PUT_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
-            - contra_indicator_storage_account_id: !FindInMap
-                - EnvironmentConfiguration
+            - contra_indicator_storage_account_id: !If
+                - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
-                - ciStorageAccountId
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - ciStorageAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
@@ -771,10 +774,13 @@ Resources:
               Resource:
                 - !Sub
                   - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
-                  - contra_indicator_storage_account_id: !FindInMap
-                      - EnvironmentConfiguration
+                  - contra_indicator_storage_account_id: !If
+                      - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
-                      - ciStorageAccountId
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - ciStorageAccountId
                     env: !If
                       - UseIndividualCiMitStubs
                       - !Sub ${Environment}
@@ -843,10 +849,13 @@ Resources:
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CI_STORAGE_PUT_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
-            - contra_indicator_storage_account_id: !FindInMap
-                - EnvironmentConfiguration
+            - contra_indicator_storage_account_id: !If
+                - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
-                - ciStorageAccountId
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - ciStorageAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
@@ -856,10 +865,13 @@ Resources:
                   - environment
           CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:postMitigations-${env}"
-            - contra_indicator_storage_account_id: !FindInMap
-                - EnvironmentConfiguration
+            - contra_indicator_storage_account_id: !If
+                - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
-                - ciStorageAccountId
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - ciStorageAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
@@ -930,10 +942,13 @@ Resources:
               Resource:
                 - !Sub
                   - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
-                  - contra_indicator_storage_account_id: !FindInMap
-                      - EnvironmentConfiguration
+                  - contra_indicator_storage_account_id: !If
+                      - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
-                      - ciStorageAccountId
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - ciStorageAccountId
                     env: !If
                       - UseIndividualCiMitStubs
                       - !Sub ${Environment}
@@ -948,10 +963,13 @@ Resources:
               Resource:
                 - !Sub
                   - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:postMitigations-${env}"
-                  - contra_indicator_storage_account_id: !FindInMap
-                      - EnvironmentConfiguration
+                  - contra_indicator_storage_account_id: !If
+                      - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
-                      - ciStorageAccountId
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - ciStorageAccountId
                     env: !If
                       - UseIndividualCiMitStubs
                       - !Sub ${Environment}
@@ -1502,10 +1520,13 @@ Resources:
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CI_STORAGE_GET_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
-            - contra_indicator_storage_account_id: !FindInMap
-                - EnvironmentConfiguration
+            - contra_indicator_storage_account_id: !If
+                - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
-                - ciStorageAccountId
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - ciStorageAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
@@ -1565,10 +1586,13 @@ Resources:
               Resource:
                 - !Sub
                   - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
-                  - contra_indicator_storage_account_id: !FindInMap
-                      - EnvironmentConfiguration
+                  - contra_indicator_storage_account_id: !If
+                      - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
-                      - ciStorageAccountId
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - ciStorageAccountId
                     env: !If
                       - UseIndividualCiMitStubs
                       - !Sub ${Environment}
@@ -1822,10 +1846,13 @@ Resources:
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CI_STORAGE_GET_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
-            - contra_indicator_storage_account_id: !FindInMap
-                - EnvironmentConfiguration
+            - contra_indicator_storage_account_id: !If
+                - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
-                - ciStorageAccountId
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - ciStorageAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
@@ -1884,10 +1911,13 @@ Resources:
               Resource:
                 - !Sub
                   - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
-                  - contra_indicator_storage_account_id: !FindInMap
-                      - EnvironmentConfiguration
+                  - contra_indicator_storage_account_id: !If
+                      - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
-                      - ciStorageAccountId
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - ciStorageAccountId
                     env: !If
                       - UseIndividualCiMitStubs
                       - !Sub ${Environment}
@@ -2038,10 +2068,13 @@ Resources:
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CI_STORAGE_PUT_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
-            - contra_indicator_storage_account_id: !FindInMap
-                - EnvironmentConfiguration
+            - contra_indicator_storage_account_id: !If
+                - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
-                - ciStorageAccountId
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - ciStorageAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
@@ -2051,10 +2084,13 @@ Resources:
                   - environment
           CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:postMitigations-${env}"
-            - contra_indicator_storage_account_id: !FindInMap
-                - EnvironmentConfiguration
+            - contra_indicator_storage_account_id: !If
+                - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
-                - ciStorageAccountId
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - ciStorageAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
@@ -2115,10 +2151,13 @@ Resources:
               Resource:
                 - !Sub
                   - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
-                  - contra_indicator_storage_account_id: !FindInMap
-                      - EnvironmentConfiguration
+                  - contra_indicator_storage_account_id: !If
+                      - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
-                      - ciStorageAccountId
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - ciStorageAccountId
                     env: !If
                       - UseIndividualCiMitStubs
                       - !Sub ${Environment}
@@ -2133,10 +2172,13 @@ Resources:
               Resource:
                 - !Sub
                   - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:postMitigations-${env}"
-                  - contra_indicator_storage_account_id: !FindInMap
-                      - EnvironmentConfiguration
+                  - contra_indicator_storage_account_id: !If
+                      - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
-                      - ciStorageAccountId
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - ciStorageAccountId
                     env: !If
                       - UseIndividualCiMitStubs
                       - !Sub ${Environment}
