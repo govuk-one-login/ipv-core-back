@@ -342,6 +342,8 @@ CRI_F2F_J4:
   events:
     next:
       targetState: F2F_HANDOFF_PAGE_J4
+    access-denied:
+      targetState: PYI_NO_MATCH
 
 F2F_HANDOFF_PAGE_J4:
   response:
