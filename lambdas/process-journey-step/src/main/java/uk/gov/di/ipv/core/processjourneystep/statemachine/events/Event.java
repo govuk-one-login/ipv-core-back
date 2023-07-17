@@ -7,8 +7,8 @@ import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyConte
 
 import java.util.Map;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({@JsonSubTypes.Type(value = BasicEvent.class, name = "basic")})
+@JsonTypeInfo(use = JsonTypeInfo.Id.DEDUCTION)
+@JsonSubTypes({@JsonSubTypes.Type(value = BasicEvent.class)})
 public interface Event {
     State resolve(JourneyContext journeyContext);
 

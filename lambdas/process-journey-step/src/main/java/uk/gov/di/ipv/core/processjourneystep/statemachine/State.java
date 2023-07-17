@@ -16,6 +16,7 @@ import java.util.Optional;
 @NoArgsConstructor
 @AllArgsConstructor
 public class State {
+    private static final String ATTEMPT_RECOVERY_EVENT = "attempt-recovery";
     private String name;
     private State parent;
     private JourneyStepResponse response;
@@ -27,6 +28,10 @@ public class State {
 
     public State transition(String eventName, JourneyContext journeyContext)
             throws UnknownEventException {
+        if (ATTEMPT_RECOVERY_EVENT.equals(eventName)) {
+            return this;
+        }
+
         var event = getEvent(eventName);
         if (event.isPresent()) {
             return event.get().resolve(journeyContext);
