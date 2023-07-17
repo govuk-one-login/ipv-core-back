@@ -1,12 +1,10 @@
 # parent states
 END_JOURNEY:
-  name: END_JOURNEY
   events:
     next:
       targetState: END
 
 CRI_STATE:
-  name: CRI_STATE
   events:
     error:
       targetState: ERROR
@@ -23,7 +21,6 @@ CRI_STATE:
 
 # Shared states
 INITIAL_IPV_JOURNEY:
-  name: INIT
   events:
     next:
       targetState: CHECK_EXISTING_IDENTITY
@@ -32,7 +29,6 @@ F2F_START_PAGE:
   response:
     type: page
     pageId: page-ipv-identity-postoffice-start
-  name: F2F_START_PAGE
   events:
     next:
       targetState: CRI_CLAIMED_IDENTITY_J4
@@ -43,7 +39,6 @@ CHECK_EXISTING_IDENTITY:
   response:
     type: journey
     journeyStepId: /journey/check-existing-identity
-  name: CHECK_EXISTING_IDENTITY
   events:
     next:
       targetState: IPV_IDENTITY_START_PAGE
@@ -64,7 +59,6 @@ RESET_IDENTITY:
   response:
     type: journey
     journeyStepId: /journey/reset-identity
-  name: RESET_IDENTITY
   events:
     next:
       targetState: IPV_IDENTITY_START_PAGE
@@ -73,20 +67,17 @@ IPV_IDENTITY_REUSE_PAGE:
   response:
     type: page
     pageId: page-ipv-reuse
-  name: IPV_IDENTITY_REUSE_PAGE
   parent: END_JOURNEY
 
 IPV_IDENTITY_PENDING_PAGE:
   response:
     type: page
     pageId: page-ipv-pending
-  name: IPV_IDENTITY_PENDING_PAGE
 
 IPV_IDENTITY_START_PAGE:
   response:
     type: page
     pageId: page-ipv-identity-document-start
-  name: IPV_IDENTITY_START_PAGE
   events:
     next:
       targetState: CRI_DCMAW
@@ -105,14 +96,12 @@ PYI_ANOTHER_WAY:
   response:
     type: page
     pageId: pyi-another-way
-  name: PYI_ANOTHER_WAY
   parent: END_JOURNEY
 
 CRI_DCMAW:
   response:
     type: cri
     criId: dcmaw
-  name: CRI_DCMAW
   parent: CRI_STATE
   events:
     next:
@@ -128,7 +117,6 @@ MULTIPLE_DOC_CHECK_PAGE:
   response:
     type: page
     pageId: page-multiple-doc-check
-  name: MULTIPLE_DOC_CHECK_PAGE
   events:
     ukPassport:
       targetState: CRI_UK_PASSPORT_J2
@@ -145,28 +133,24 @@ PYI_NO_MATCH:
   response:
     type: page
     pageId: pyi-no-match
-  name: PYI_NO_MATCH
   parent: END_JOURNEY
 
 PYI_KBV_FAIL:
   response:
     type: page
     pageId: pyi-kbv-fail
-  name: PYI_KBV_FAIL
   parent: END_JOURNEY
 
 PYI_KBV_THIN_FILE:
   response:
     type: page
     pageId: pyi-kbv-thin-file
-  name: PYI_KBV_THIN_FILE
   parent: END_JOURNEY
 
 PYI_ESCAPE:
   response:
     type: page
     pageId: pyi-escape
-  name: PYI_ESCAPE
   events:
     next:
       targetState: RESET_IDENTITY
@@ -178,35 +162,30 @@ ERROR:
     type: error
     pageId: pyi-technical
     statusCode: 500
-  name: ERROR
   parent: END_JOURNEY
 
 CORE_SESSION_TIMEOUT:
   response:
     type: page
     pageId: pyi-timeout-unrecoverable
-  name: CORE_SESSION_TIMEOUT
   parent: END_JOURNEY
 
 IPV_SUCCESS_PAGE:
   response:
     type: page
     pageId: page-ipv-success
-  name: IPV_SUCCESS_PAGE
   parent: END_JOURNEY
 
 END:
   response:
     type: journey
     journeyStepId: /journey/build-client-oauth-response
-  name: END
 
 # DCMAW journey (J1)
 POST_DCMAW_SUCCESS_PAGE:
   response:
     type: page
     pageId: page-dcmaw-success
-  name: POST_DCMAW_SUCCESS_PAGE
   events:
     next:
       targetState: CRI_ADDRESS_J1
@@ -215,7 +194,6 @@ CRI_ADDRESS_J1:
   response:
     type: cri
     criId: address
-  name: CRI_ADDRESS_J1
   parent: CRI_STATE
   events:
     next:
@@ -225,7 +203,6 @@ CRI_FRAUD_J1:
   response:
     type: cri
     criId: fraud
-  name: CRI_FRAUD_J1
   parent: CRI_STATE
   events:
     end:
@@ -236,7 +213,6 @@ CRI_UK_PASSPORT_J2:
   response:
     type: cri
     criId: ukPassport
-  name: CRI_UK_PASSPORT_J2
   parent: CRI_STATE
   events:
     next:
@@ -248,7 +224,6 @@ CRI_ADDRESS_J2:
   response:
     type: cri
     criId: address
-  name: CRI_ADDRESS_J2
   parent: CRI_STATE
   events:
     next:
@@ -258,7 +233,6 @@ CRI_FRAUD_J2:
   response:
     type: cri
     criId: fraud
-  name: CRI_FRAUD_J2
   parent: CRI_STATE
   events:
     next:
@@ -268,7 +242,6 @@ PRE_KBV_TRANSITION_PAGE_J2:
   response:
     type: page
     pageId: page-pre-kbv-transition
-  name: PRE_KBV_TRANSITION_PAGE_J2
   events:
     next:
       targetState: CRI_KBV_J2
@@ -277,7 +250,6 @@ CRI_KBV_J2:
   response:
     type: cri
     criId: kbv
-  name: CRI_KBV_J2
   parent: CRI_STATE
   events:
     end:
@@ -290,7 +262,6 @@ CRI_DRIVING_LICENCE_J3:
   response:
     type: cri
     criId: drivingLicence
-  name: CRI_DRIVING_LICENCE_J3
   parent: CRI_STATE
   events:
     next:
@@ -302,7 +273,6 @@ CRI_ADDRESS_J3:
   response:
     type: cri
     criId: address
-  name: CRI_ADDRESS_J3
   parent: CRI_STATE
   events:
     next:
@@ -312,7 +282,6 @@ CRI_FRAUD_J3:
   response:
     type: cri
     criId: fraud
-  name: CRI_FRAUD_J3
   parent: CRI_STATE
   events:
     next:
@@ -322,7 +291,6 @@ PRE_KBV_TRANSITION_PAGE_J3:
   response:
     type: page
     pageId: page-pre-kbv-transition
-  name: PRE_KBV_TRANSITION_PAGE_J3
   events:
     next:
       targetState: CRI_KBV_J3
@@ -331,7 +299,6 @@ CRI_KBV_J3:
   response:
     type: cri
     criId: kbv
-  name: CRI_KBV_J3
   parent: CRI_STATE
   events:
     end:
@@ -344,7 +311,6 @@ CRI_CLAIMED_IDENTITY_J4:
   response:
     type: cri
     criId: claimedIdentity
-  name: CRI_CLAIMED_IDENTITY_J4
   parent: CRI_STATE
   events:
     next:
@@ -354,7 +320,6 @@ CRI_ADDRESS_J4:
   response:
     type: cri
     criId: address
-  name: CRI_ADDRESS_J4
   parent: CRI_STATE
   events:
     next:
@@ -364,7 +329,6 @@ CRI_FRAUD_J4:
   response:
     type: cri
     criId: fraud
-  name: CRI_FRAUD_J4
   parent: CRI_STATE
   events:
     next:
@@ -374,7 +338,6 @@ CRI_F2F_J4:
   response:
     type: cri
     criId: f2f
-  name: CRI_F2F_J4
   parent: CRI_STATE
   events:
     next:
@@ -384,4 +347,3 @@ F2F_HANDOFF_PAGE_J4:
   response:
     type: page
     pageId: page-face-to-face-handoff
-  name: F2F_HANDOFF_PAGE_J4
