@@ -24,6 +24,7 @@ public class StateMachineInitializer {
 
         states.forEach(
                 (stateName, state) -> {
+                    state.setName(stateName);
                     if (state.getParent() != null) {
                         state.setParent(states.get(state.getParent().getName()));
                     }
