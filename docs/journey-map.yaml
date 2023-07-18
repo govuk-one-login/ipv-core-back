@@ -1,0 +1,153 @@
+# Journey Engine State Machine
+
+# Basic State
+STATE_NAME_1:
+    events:
+        event-name-1:
+            type: page
+            pageId: page-name
+            targetState: TARGET_STATE_NAME_1
+        event-name-2:
+            type: cri
+            criId: cri-id
+            targetState: TARGET_STATE_NAME_2
+        event-name-3:
+            type: client
+            targetState: TARGET_STATE_NAME_3
+        default: # should we have a default?
+            type: page
+            pageId: hub
+            targetState: TARGET_STATE_NAME_$
+            
+
+# Switch State
+STATE_NAME_2:
+    events:
+        event-name-1:
+            type: switch
+            switch: config.featureflag.bar
+            case:
+                value-1:
+                    type: cri
+                    criId: cri-id
+                    targetState: TARGET_STATE_NAME_1
+                value-2:
+                    type: cri
+                    criId: cri-id
+                    targetState: TARGET_STATE_NAME_2
+
+STATE_NAME_2:
+    events:
+        event-name-1:
+            targetState: ACTION_STATE_NAME_1
+            type: custom
+            handler: handler-name
+
+
+ACTION_STATE_NAME_1:
+    events:
+        event-name-1:
+            type: page
+            pageId: page-name
+            targetState: TARGET_STATE_NAME_1
+        event-name-2:
+            targetState: TARGET_STATE_NAME_2
+            type: cri
+            criId: cri-id
+
+
+STATE_NAME_3:
+    events:
+        event-name-1:
+            type: custom
+            handler: handler-name # should this handler receive the event? YES WHY NOT!
+            case:
+                event-name-1:
+                    targetState: TARGET_STATE_NAME_1
+                    type: page
+                    pageId: page-name
+                event-name-2:
+                    targetState: TARGET_STATE_NAME_2
+                    type: cri
+                    criId: cri-id
+
+
+STATE_NAME_3:
+    events:
+        event-name-1:
+            type: builtin # should these just be named, not requiring a handler name? YES!
+            handler: handler-name
+            case:
+                value-1:
+                    targetState: TARGET_STATE_NAME_1
+                    type: page
+                    pageId: page-name
+                value-2:
+                    targetState: TARGET_STATE_NAME_2
+                    type: cri
+                    criId: cri-id
+
+
+# How to change the event based on some config value of combination of config values.
+# Conditional transitions?
+
+STATE_NAME_4:
+    events:
+        event-name-1:
+            type: cri-enabled
+            foo:
+                condition:
+                    AND: 
+                        - f2f
+                targetState: TARGET_STATE_NAME_1
+                type: page
+                pageId: page-name
+            bar:
+                condition:
+                    NOT:
+                        - driving-licence
+                targetState: TARGET_STATE_NAME_2
+                type: cri
+                criId: cri-id
+                
+STATE_NAME_5:
+    events:
+        event-name-1:
+            type: context | config | env
+            path: f2fEnabled
+            case:
+                true:
+                    targetState: TARGET_STATE_NAME_1
+                    type: page
+                    pageId: page-name
+                false::
+                    targetState: TARGET_STATE_NAME_2
+                    type: cri
+                    criId: cri-id
+
+
+# This state has no events. The handler will receive the event and may use it to inform it's output.
+# Is this just a special case of when custom is nested in an event. YES
+
+STATE_NAME_6:
+    type: custom
+    handler: handler-name
+    case:
+        event-name-1:
+            targetState: TARGET_STATE_NAME_1
+            type: page
+            pageId: page-name
+        event-name-2:
+            targetState: TARGET_STATE_NAME_2
+            type: cri
+            criId: cri-id
+
+
+
+
+
+
+
+
+
+
