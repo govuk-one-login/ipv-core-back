@@ -9,6 +9,8 @@ import uk.gov.di.ipv.core.processjourneystep.statemachine.events.BasicEvent;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyContext;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyResponse;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.states.BasicState;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.states.State;
 
 import java.util.Map;
 
@@ -22,16 +24,19 @@ class StateTest {
 
     @Test
     void transitionShouldReturnAStateWithAResponse() throws Exception {
-        State targetState = new State();
+        BasicState targetState = new BasicState();
         JourneyResponse journeyResponse = new JourneyResponse("stepId");
         targetState.setResponse(journeyResponse);
 
-        State currentState = new State();
+        BasicState currentState = new BasicState();
         BasicEvent currentToTargetEvent = new BasicEvent(mockConfigService);
-        currentToTargetEvent.setTargetState(targetState);
+        currentToTargetEvent.setTargetStateObj(targetState);
         currentState.setEvents(Map.of("next", currentToTargetEvent));
 
-        State transitionedState = currentState.transition("next", JourneyContext.emptyContext());
+        BasicState transitionedState =
+                (BasicState)
+                        currentState.transition(
+                                "next", "startState", JourneyContext.emptyContext());
 
         assertEquals(targetState, transitionedState);
         assertEquals(journeyResponse, transitionedState.getResponse());
@@ -40,26 +45,29 @@ class StateTest {
     @Test
     void transitionShouldUseEventsFromParentState() throws Exception {
         BasicEvent parentEvent = new BasicEvent(mockConfigService);
-        State parentEventTargetState = new State();
-        parentEvent.setTargetState(parentEventTargetState);
+        BasicState parentEventTargetState = new BasicState();
+        parentEvent.setTargetStateObj(parentEventTargetState);
 
-        State parentState = new State();
+        BasicState parentState = new BasicState();
         parentState.setEvents(Map.of("parent-event", parentEvent));
 
-        State currentState = new State();
-        currentState.setParent(parentState);
+        BasicState currentState = new BasicState();
+        currentState.setParentObj(parentState);
 
         State transitionedState =
-                currentState.transition("parent-event", JourneyContext.emptyContext());
+                currentState.transition(
+                        "parent-event", "startState", JourneyContext.emptyContext());
 
         assertEquals(parentEventTargetState, transitionedState);
     }
 
     @Test
     void transitionShouldReturnThisIfAttemptRecoveryEventReceived() throws Exception {
-        State state = new State();
+        State state = new BasicState();
 
-        assertSame(state, state.transition("attempt-recovery", JourneyContext.emptyContext()));
+        assertSame(
+                state,
+                state.transition("attempt-recovery", "startState", JourneyContext.emptyContext()));
     }
 
     @Test
@@ -67,13 +75,16 @@ class StateTest {
         assertThrows(
                 UnknownEventException.class,
                 () ->
-                        new State("CURRENT_STATE")
-                                .transition("unknown-event", JourneyContext.emptyContext()));
+                        new BasicState("CURRENT_STATE")
+                                .transition(
+                                        "unknown-event",
+                                        "startState",
+                                        JourneyContext.emptyContext()));
     }
 
     @Test
     void toStringShouldReturnName() {
-        State state = new State();
+        BasicState state = new BasicState();
         state.setName("Bungle");
 
         assertEquals("Bungle", state.toString());

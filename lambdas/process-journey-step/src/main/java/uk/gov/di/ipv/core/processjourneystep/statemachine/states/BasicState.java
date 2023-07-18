@@ -1,8 +1,10 @@
-package uk.gov.di.ipv.core.processjourneystep.statemachine;
+package uk.gov.di.ipv.core.processjourneystep.statemachine.states;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.events.Event;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyContext;
@@ -15,18 +17,21 @@ import java.util.Optional;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class State {
+public class BasicState implements State {
+    private static final Logger LOGGER = LogManager.getLogger();
     private static final String ATTEMPT_RECOVERY_EVENT = "attempt-recovery";
     private String name;
-    private State parent;
+    private String parent;
+    private BasicState parentObj;
     private JourneyStepResponse response;
     private Map<String, Event> events = new HashMap<>();
 
-    public State(String name) {
+    public BasicState(String name) {
         this.name = name;
     }
 
-    public State transition(String eventName, JourneyContext journeyContext)
+    @Override
+    public State transition(String eventName, String startState, JourneyContext journeyContext)
             throws UnknownEventException {
         if (ATTEMPT_RECOVERY_EVENT.equals(eventName)) {
             return this;
@@ -34,7 +39,9 @@ public class State {
 
         var event = getEvent(eventName);
         if (event.isPresent()) {
-            return event.get().resolve(journeyContext);
+            State resolve = event.get().resolve(journeyContext);
+            LOGGER.info("Resolved state in BasicState: '{}'", resolve);
+            return resolve;
         }
         throw new UnknownEventException(
                 String.format("Unknown event provided to '%s' state: '%s'", name, eventName));
@@ -43,7 +50,7 @@ public class State {
     private Optional<Event> getEvent(String eventName) {
         var event = events.get(eventName);
         if (event == null && parent != null) {
-            return parent.getEvent(eventName);
+            return parentObj.getEvent(eventName);
         }
         return Optional.ofNullable(event);
     }

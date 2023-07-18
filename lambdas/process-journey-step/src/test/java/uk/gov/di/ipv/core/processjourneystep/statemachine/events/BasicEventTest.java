@@ -5,8 +5,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.processjourneystep.statemachine.State;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyContext;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.states.BasicState;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.states.State;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.util.LinkedHashMap;
@@ -21,9 +22,9 @@ class BasicEventTest {
 
     @Test
     void resolveShouldReturnAState() {
-        State targetState = new State("TARGET_STATE");
+        BasicState targetState = new BasicState("TARGET_STATE");
         BasicEvent basicEvent = new BasicEvent(mockConfigService);
-        basicEvent.setTargetState(targetState);
+        basicEvent.setTargetStateObj(targetState);
 
         assertEquals(targetState, basicEvent.resolve(JourneyContext.emptyContext()));
     }
@@ -31,11 +32,12 @@ class BasicEventTest {
     @Test
     void resolveShouldReturnAlternativeStateIfACheckedCriIsDisabled() {
         BasicEvent basicEventWithCheckIfDisabledConfigured = new BasicEvent(mockConfigService);
-        basicEventWithCheckIfDisabledConfigured.setTargetState(new State());
+        basicEventWithCheckIfDisabledConfigured.setTargetStateObj(new BasicState());
 
         BasicEvent alternativeEvent = new BasicEvent(mockConfigService);
-        State alternativeTargetState = new State("THE_TARGET_STATE_FOR_THE_ALTERNATIVE_RESULT");
-        alternativeEvent.setTargetState(alternativeTargetState);
+        BasicState alternativeTargetState =
+                new BasicState("THE_TARGET_STATE_FOR_THE_ALTERNATIVE_RESULT");
+        alternativeEvent.setTargetStateObj(alternativeTargetState);
 
         when(mockConfigService.isEnabled("anEnabledCri")).thenReturn(true);
         when(mockConfigService.isEnabled("aDisabledCri")).thenReturn(false);

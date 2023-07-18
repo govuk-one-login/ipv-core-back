@@ -184,10 +184,11 @@ class ProcessJourneyStepHandlerTest {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
-        ipvSessionItem.setUserState(ProcessJourneyStepStates.CORE_SESSION_TIMEOUT_STATE);
+        ipvSessionItem.setUserState("SUB_JOURNEY_A_AND_F_J2/CRI_FRAUD");
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setJourneyType(IPV_CORE_MAIN_JOURNEY);
 
+        when(mockConfigService.getSsmParameter(BACKEND_SESSION_TIMEOUT)).thenReturn("200");
         when(mockIpvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());

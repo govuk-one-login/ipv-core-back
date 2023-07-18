@@ -5,8 +5,8 @@ import lombok.Data;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.processjourneystep.statemachine.State;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyContext;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.states.State;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -16,7 +16,8 @@ import java.util.Optional;
 public class BasicEvent implements Event {
     private static final Logger LOGGER = LogManager.getLogger();
     @JsonIgnore private ConfigService configService;
-    private State targetState;
+    private String targetState;
+    private State targetStateObj;
     private LinkedHashMap<String, Event> checkIfDisabled;
 
     public BasicEvent() {
@@ -40,13 +41,13 @@ public class BasicEvent implements Event {
                 return checkIfDisabled.get(disabledCriId).resolve(journeyContext);
             }
         }
-        return targetState;
+        return targetStateObj;
     }
 
     @Override
     public void initialize(String name, Map<String, State> states) {
         if (targetState != null) {
-            this.targetState = states.get(targetState.getName());
+            this.targetStateObj = states.get(targetState);
         }
         if (checkIfDisabled != null) {
             checkIfDisabled.forEach((eventName, event) -> event.initialize(eventName, states));

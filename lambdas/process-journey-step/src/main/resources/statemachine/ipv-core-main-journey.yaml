@@ -2,7 +2,7 @@
 END_JOURNEY:
   events:
     next:
-      targetState: END
+       targetState: END
 
 CRI_STATE:
   events:
@@ -216,27 +216,33 @@ CRI_UK_PASSPORT_J2:
   parent: CRI_STATE
   events:
     next:
-      targetState: CRI_ADDRESS_J2
+      targetState: SUB_JOURNEY_A_AND_F_J2
     access-denied:
       targetState: MULTIPLE_DOC_CHECK_PAGE
 
-CRI_ADDRESS_J2:
-  response:
-    type: cri
-    criId: address
-  parent: CRI_STATE
-  events:
-    next:
-      targetState: CRI_FRAUD_J2
-
-CRI_FRAUD_J2:
-  response:
-    type: cri
-    criId: fraud
-  parent: CRI_STATE
-  events:
+SUB_JOURNEY_A_AND_F_J2:
+  subJourney: SUB_JOURNEY_A_AND_F
+  exitEvents:
     next:
       targetState: PRE_KBV_TRANSITION_PAGE_J2
+
+#CRI_ADDRESS_J2:
+#  response:
+#    type: cri
+#    criId: address
+#  parent: CRI_STATE
+#  events:
+#    next:
+#      targetState: CRI_FRAUD_J2
+#
+#CRI_FRAUD_J2:
+#  response:
+#    type: cri
+#    criId: fraud
+#  parent: CRI_STATE
+#  events:
+#    next:
+#      targetState: PRE_KBV_TRANSITION_PAGE_J2
 
 PRE_KBV_TRANSITION_PAGE_J2:
   response:

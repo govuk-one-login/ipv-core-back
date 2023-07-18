@@ -3,6 +3,8 @@ package uk.gov.di.ipv.core.processjourneystep.statemachine;
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.exceptions.UnknownStateException;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyContext;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.states.BasicState;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.states.State;
 
 import java.util.Map;
 
@@ -16,10 +18,10 @@ class StateMachineTest {
     @Test
     void transitionShouldReturnAppropriateState() throws Exception {
         JourneyContext journeyContext = JourneyContext.emptyContext();
-        State endState = new State();
+        State endState = new BasicState();
 
-        State startingState = mock(State.class);
-        when(startingState.transition("event", journeyContext)).thenReturn(endState);
+        State startingState = mock(BasicState.class);
+        when(startingState.transition("event", "startState", journeyContext)).thenReturn(endState);
 
         StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
         when(mockStateMachineInitializer.initialize())
@@ -34,7 +36,7 @@ class StateMachineTest {
     void transitionShouldThrowIfGivenAnUnknownState() throws Exception {
         StateMachineInitializer mockStateMachineInitializer = mock(StateMachineInitializer.class);
         when(mockStateMachineInitializer.initialize())
-                .thenReturn(Map.of("START_STATE", new State()));
+                .thenReturn(Map.of("START_STATE", new BasicState()));
 
         StateMachine stateMachine = new StateMachine(mockStateMachineInitializer);
 

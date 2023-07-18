@@ -1,0 +1,24 @@
+SUB_JOURNEY_A_AND_F:
+  subJourneyStates:
+    START_SUB_JOURNEY:
+      events:
+        next:
+          targetState: CRI_ADDRESS
+    CRI_ADDRESS:
+      response:
+        type: cri
+        criId: address
+      parent: CRI_STATE
+      events:
+        next:
+          targetState: CRI_FRAUD
+    CRI_FRAUD:
+      response:
+        type: cri
+        criId: fraud
+      parent: CRI_STATE
+      events:
+        next:
+          targetState: EXIT_SUB_JOURNEY
+    EXIT_SUB_JOURNEY:
+      exitEvent: next
