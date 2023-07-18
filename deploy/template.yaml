@@ -2,7 +2,6 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 Description: >-
   This creates the necessary serverless components for IPV Core-Back.
-
 Globals:
   Function:
     Timeout: 40
@@ -19,7 +18,7 @@ Globals:
       - UsePermissionsBoundary
       - !Ref PermissionsBoundary
       - !Ref AWS::NoValue
-
+# test
 Parameters:
   Environment:
     Type: String
