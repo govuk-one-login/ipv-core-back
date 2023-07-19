@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.resetidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import software.amazon.lambda.powertools.logging.Logging;
@@ -23,14 +24,17 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.statemachine.JourneyRequestLambda;
+
+import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 
-public class ResetIdentityHandler extends JourneyRequestLambda {
+public class ResetIdentityHandler implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
+    private static final Map<String, Object> JOURNEY_NEXT =
+            new JourneyResponse("/journey/next").toObjectMap();
+    private static final String JOURNEY_ERROR_PATH = "/journey/error";
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
     private final CriResponseService criResponseService;
@@ -73,7 +77,7 @@ public class ResetIdentityHandler extends JourneyRequestLambda {
     @Override
     @Tracing
     @Logging(clearState = true)
-    public JourneyResponse handleRequest(JourneyRequest event, Context context) {
+    public Map<String, Object> handleRequest(JourneyRequest event, Context context) {
         LogHelper.attachComponentIdToLogs();
 
         try {
@@ -95,7 +99,8 @@ public class ResetIdentityHandler extends JourneyRequestLambda {
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("HTTP response exception", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse());
+                            JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
+                    .toObjectMap();
         }
     }
 }

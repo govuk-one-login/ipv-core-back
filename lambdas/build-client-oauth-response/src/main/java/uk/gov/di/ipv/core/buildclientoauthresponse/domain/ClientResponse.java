@@ -8,7 +8,7 @@ import uk.gov.di.ipv.core.library.domain.BaseResponse;
 import java.util.Objects;
 
 @ExcludeFromGeneratedCoverageReport
-public class ClientResponse implements BaseResponse {
+public class ClientResponse extends BaseResponse {
     @JsonProperty private final ClientDetails client;
 
     @JsonCreator

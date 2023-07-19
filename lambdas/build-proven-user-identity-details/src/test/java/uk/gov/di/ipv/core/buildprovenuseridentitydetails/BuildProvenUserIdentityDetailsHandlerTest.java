@@ -6,11 +6,11 @@ import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.ProvenUserIdentityDetails;
 import uk.gov.di.ipv.core.library.domain.Address;
-import uk.gov.di.ipv.core.library.domain.BaseResponse;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -25,12 +25,10 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -75,18 +73,11 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
     @Mock private IpvSessionItem mockIpvSessionItem;
 
-    private BuildProvenUserIdentityDetailsHandler underTest;
+    @InjectMocks private BuildProvenUserIdentityDetailsHandler handler;
     private ClientOAuthSessionItem clientOAuthSessionItem;
 
     @BeforeEach
     void setUp() {
-        underTest =
-                new BuildProvenUserIdentityDetailsHandler(
-                        mockIpvSessionService,
-                        mockUserIdentityService,
-                        mockConfigService,
-                        mockClientOAuthSessionDetailsService);
-
         clientOAuthSessionItem =
                 ClientOAuthSessionItem.builder()
                         .clientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID)
@@ -122,8 +113,10 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
 
         JourneyRequest input = createRequestEvent();
-        var provenUserIdentityDetails =
-                makeRequest(input, context, ProvenUserIdentityDetails.class);
+
+        ProvenUserIdentityDetails provenUserIdentityDetails =
+                toResponseClass(
+                        handler.handleRequest(input, context), ProvenUserIdentityDetails.class);
 
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
         assertEquals("1959-08-23", provenUserIdentityDetails.getDateOfBirth());
@@ -156,8 +149,10 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
 
         JourneyRequest input = createRequestEvent();
-        var provenUserIdentityDetails =
-                makeRequest(input, context, ProvenUserIdentityDetails.class);
+
+        ProvenUserIdentityDetails provenUserIdentityDetails =
+                toResponseClass(
+                        handler.handleRequest(input, context), ProvenUserIdentityDetails.class);
 
         List<Address> addresses = provenUserIdentityDetails.getAddresses();
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
@@ -195,8 +190,10 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
 
         JourneyRequest input = createRequestEvent();
-        var provenUserIdentityDetails =
-                makeRequest(input, context, ProvenUserIdentityDetails.class);
+
+        ProvenUserIdentityDetails provenUserIdentityDetails =
+                toResponseClass(
+                        handler.handleRequest(input, context), ProvenUserIdentityDetails.class);
 
         assertEquals("KENNETH DECERQUEIRA", provenUserIdentityDetails.getName());
         assertEquals("1959-08-23", provenUserIdentityDetails.getDateOfBirth());
@@ -223,7 +220,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
 
         JourneyRequest input = createRequestEvent();
-        var errorResponse = makeRequest(input, context, JourneyErrorResponse.class);
+
+        JourneyErrorResponse errorResponse =
+                toResponseClass(handler.handleRequest(input, context), JourneyErrorResponse.class);
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, errorResponse.getStatusCode());
         assertEquals(
@@ -262,7 +261,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
 
         JourneyRequest input = createRequestEvent();
-        var errorResponse = makeRequest(input, context, JourneyErrorResponse.class);
+        JourneyErrorResponse errorResponse =
+                toResponseClass(handler.handleRequest(input, context), JourneyErrorResponse.class);
 
         assertEquals(500, errorResponse.getStatusCode());
         assertEquals(
@@ -302,7 +302,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
 
         JourneyRequest input = createRequestEvent();
-        var errorResponse = makeRequest(input, context, JourneyErrorResponse.class);
+        JourneyErrorResponse errorResponse =
+                toResponseClass(handler.handleRequest(input, context), JourneyErrorResponse.class);
 
         assertEquals(500, errorResponse.getStatusCode());
         assertEquals(
@@ -318,7 +319,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     void shouldReceive400ResponseCodeIfMissingSessionId() throws Exception {
         JourneyRequest input =
                 JourneyRequest.builder().ipAddress("ip-address").featureSet("12345").build();
-        var errorResponse = makeRequest(input, context, JourneyErrorResponse.class);
+        JourneyErrorResponse errorResponse =
+                toResponseClass(handler.handleRequest(input, context), JourneyErrorResponse.class);
 
         assertEquals(400, errorResponse.getStatusCode());
         assertEquals(ErrorResponse.MISSING_IPV_SESSION_ID.getCode(), errorResponse.getCode());
@@ -340,7 +342,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(KBV_CRI, M1A_VERIFICATION_VC)));
 
         JourneyRequest input = createRequestEvent();
-        var errorResponse = makeRequest(input, context, JourneyErrorResponse.class);
+        JourneyErrorResponse errorResponse =
+                toResponseClass(handler.handleRequest(input, context), JourneyErrorResponse.class);
 
         assertEquals(500, errorResponse.getStatusCode());
         assertEquals(
@@ -376,7 +379,8 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
 
         JourneyRequest input = createRequestEvent();
-        var errorResponse = makeRequest(input, context, JourneyErrorResponse.class);
+        JourneyErrorResponse errorResponse =
+                toResponseClass(handler.handleRequest(input, context), JourneyErrorResponse.class);
 
         assertEquals(500, errorResponse.getStatusCode());
         assertEquals(
@@ -402,17 +406,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
         return vcStoreItem;
     }
 
-    private <T extends BaseResponse> T makeRequest(
-            JourneyRequest request, Context context, Class<T> classType) throws IOException {
-        try (var inputStream =
-                        new ByteArrayInputStream(
-                                objectMapper.writeValueAsString(request).getBytes());
-                var outputStream = new ByteArrayOutputStream()) {
-            underTest.handleRequest(inputStream, outputStream, context);
-            return objectMapper.readValue(outputStream.toString(), classType);
-        }
-    }
-
     private static CredentialIssuerConfig createCredentialIssuerConfig(String componentId) {
         return new CredentialIssuerConfig(
                 URI.create("https://example.com/token"),
@@ -424,5 +417,9 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                 componentId,
                 URI.create("https://example.com/callback"),
                 true);
+    }
+
+    private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
+        return objectMapper.convertValue(handlerOutput, responseClass);
     }
 }

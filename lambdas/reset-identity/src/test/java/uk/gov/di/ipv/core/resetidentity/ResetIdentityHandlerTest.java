@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.resetidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +28,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 
 @ExtendWith(MockitoExtension.class)
 public class ResetIdentityHandlerTest {
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
     private static final String TEST_SESSION_ID = "test-session-id";
     private static final String TEST_USER_ID = "test-user-id";
@@ -79,7 +81,9 @@ public class ResetIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var journeyResponse = resetIdentityHandler.handleRequest(event, context);
+        JourneyResponse journeyResponse =
+                objectMapper.convertValue(
+                        resetIdentityHandler.handleRequest(event, context), JourneyResponse.class);
 
         verify(userIdentityService).deleteVcStoreItems(TEST_USER_ID);
         verify(criResponseService).deleteCriResponseItem(TEST_USER_ID, F2F_CRI);

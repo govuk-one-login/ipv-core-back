@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.buildprovenuseridentitydetails;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -16,7 +17,6 @@ import uk.gov.di.ipv.core.buildprovenuseridentitydetails.domain.ProvenUserIdenti
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.exceptions.ProvenUserIdentityDetailsException;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.Address;
-import uk.gov.di.ipv.core.library.domain.BaseResponse;
 import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -35,13 +35,13 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.statemachine.JourneyRequestLambda;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
@@ -52,7 +52,9 @@ import static uk.gov.di.ipv.core.library.service.UserIdentityService.BIRTH_DATE_
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.NAME_PROPERTY_NAME;
 
-public class BuildProvenUserIdentityDetailsHandler extends JourneyRequestLambda {
+public class BuildProvenUserIdentityDetailsHandler
+        implements RequestHandler<JourneyRequest, Map<String, Object>> {
+    public static final String JOURNEY_ERROR_PATH = "/journey/error";
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final IpvSessionService ipvSessionService;
@@ -84,7 +86,7 @@ public class BuildProvenUserIdentityDetailsHandler extends JourneyRequestLambda 
     @Override
     @Tracing
     @Logging(clearState = true)
-    protected BaseResponse handleRequest(JourneyRequest input, Context context) {
+    public Map<String, Object> handleRequest(JourneyRequest input, Context context) {
         LogHelper.attachComponentIdToLogs();
         ProvenUserIdentityDetails.ProvenUserIdentityDetailsBuilder
                 provenUserIdentityDetailsBuilder = ProvenUserIdentityDetails.builder();
@@ -116,28 +118,32 @@ public class BuildProvenUserIdentityDetailsHandler extends JourneyRequestLambda 
 
             LOGGER.info("Successfully retrieved proven identity response.");
 
-            return provenUserIdentityDetailsBuilder.build();
+            return provenUserIdentityDetailsBuilder.build().toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse());
+                            JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
+                    .toObjectMap();
         } catch (ParseException | JsonProcessingException e) {
             LOGGER.error("Failed to parse credentials");
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS)
+                    .toObjectMap();
         } catch (ProvenUserIdentityDetailsException e) {
             LOGGER.error("Failed generate the proven user identity details");
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS);
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_GENERATE_PROVEN_USER_IDENTITY_DETAILS)
+                    .toObjectMap();
         } catch (NoVcStatusForIssuerException e) {
             LOGGER.error("No VC status found for issuer", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER);
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER)
+                    .toObjectMap();
         }
     }
 

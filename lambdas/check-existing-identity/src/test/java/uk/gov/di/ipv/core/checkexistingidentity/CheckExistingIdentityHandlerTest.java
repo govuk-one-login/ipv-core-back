@@ -35,9 +35,6 @@ import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
@@ -45,6 +42,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -58,7 +56,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
-import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
@@ -83,7 +80,6 @@ class CheckExistingIdentityHandlerTest {
                     M1A_FRAUD_VC,
                     M1A_VERIFICATION_VC,
                     M1B_DCMAW_VC);
-    private static final List<String> CRI_RESPONSE = List.of(M1A_F2F_VC);
     private static CredentialIssuerConfig addressConfig = null;
     private static CredentialIssuerConfig claimedIdentityConfig = null;
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
@@ -91,7 +87,6 @@ class CheckExistingIdentityHandlerTest {
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
-    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
     private static final JourneyResponse JOURNEY_RESET_IDENTITY =
             new JourneyResponse("/journey/reset-identity");
     private static final JourneyResponse JOURNEY_PENDING = new JourneyResponse("/journey/pending");
@@ -195,7 +190,10 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
 
         assertEquals(JOURNEY_REUSE, journeyResponse);
 
@@ -225,7 +223,11 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
         assertEquals(JOURNEY_REUSE, journeyResponse);
 
         verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
@@ -253,7 +255,11 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
         assertEquals(JOURNEY_RESET_IDENTITY, journeyResponse);
 
         ArgumentCaptor<AuditEvent> auditEventArgumentCaptor =
@@ -276,7 +282,11 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
         assertEquals("/journey/pyi-no-match", journeyResponse.getJourney());
 
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
@@ -293,7 +303,11 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var journeyResponse = handleRequest(event, context, JourneyErrorResponse.class);
+        JourneyErrorResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyErrorResponse.class);
+
         assertEquals("/journey/error", journeyResponse.getJourney());
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
         assertEquals(ErrorResponse.UNRECOGNISED_CI_CODE.getCode(), journeyResponse.getCode());
@@ -314,7 +328,11 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
         assertEquals("/journey/next", journeyResponse.getJourney());
         verify(userIdentityService, never()).deleteVcStoreItems(TEST_USER_ID);
 
@@ -325,11 +343,14 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturn400IfSessionIdNotInHeader() throws IOException {
+    void shouldReturn400IfSessionIdNotInHeader() {
         JourneyRequest eventWithoutHeaders = JourneyRequest.builder().build();
 
-        var journeyResponse =
-                handleRequest(eventWithoutHeaders, context, JourneyErrorResponse.class);
+        JourneyErrorResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(eventWithoutHeaders, context),
+                        JourneyErrorResponse.class);
+
         assertEquals("/journey/error", journeyResponse.getJourney());
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, journeyResponse.getStatusCode());
@@ -340,14 +361,18 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturnPendingResponseIfFaceToFaceVerificationIsPending() throws Exception {
+    void shouldReturnPendingResponseIfFaceToFaceVerificationIsPending() {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
         when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(true);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
         assertEquals(JOURNEY_PENDING, journeyResponse);
         verify(userIdentityService, times(0)).deleteVcStoreItems(TEST_USER_ID);
     }
@@ -373,7 +398,11 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var journeyResponse = handleRequest(event, context, JourneyErrorResponse.class);
+        JourneyErrorResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyErrorResponse.class);
+
         assertEquals("/journey/error", journeyResponse.getJourney());
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
@@ -395,7 +424,11 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var journeyResponse = handleRequest(event, context, JourneyErrorResponse.class);
+        JourneyErrorResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyErrorResponse.class);
+
         assertEquals("/journey/error", journeyResponse.getJourney());
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
@@ -421,7 +454,11 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var journeyResponse = handleRequest(event, context, JourneyErrorResponse.class);
+        JourneyErrorResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyErrorResponse.class);
+
         assertEquals("/journey/error", journeyResponse.getJourney());
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
@@ -447,7 +484,11 @@ class CheckExistingIdentityHandlerTest {
                 .when(auditService)
                 .sendAuditEvent((AuditEvent) any());
 
-        var journeyResponse = handleRequest(event, context, JourneyErrorResponse.class);
+        JourneyErrorResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyErrorResponse.class);
+
         assertEquals("/journey/error", journeyResponse.getJourney());
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
@@ -458,14 +499,8 @@ class CheckExistingIdentityHandlerTest {
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
-    private <T extends BaseResponse> T handleRequest(
-            JourneyRequest request, Context context, Class<T> classType) throws IOException {
-        try (var inputStream =
-                        new ByteArrayInputStream(mapper.writeValueAsString(request).getBytes());
-                var outputStream = new ByteArrayOutputStream()) {
-            checkExistingIdentityHandler.handleRequest(inputStream, outputStream, context);
-            return mapper.readValue(outputStream.toString(), classType);
-        }
+    private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
+        return mapper.convertValue(handlerOutput, responseClass);
     }
 
     private VcStoreItem createVcStoreItem(String credentialIssuer, String credential) {

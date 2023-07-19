@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.checkexistingidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
@@ -43,12 +44,12 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.statemachine.JourneyRequestLambda;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -64,20 +65,25 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 
 /** Check Existing Identity response Lambda */
-public class CheckExistingIdentityHandler extends JourneyRequestLambda {
+public class CheckExistingIdentityHandler
+        implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
     private static final String VOT_P2 = "P2";
     private static final int ONLY = 0;
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
-    private static final JourneyResponse JOURNEY_PENDING = new JourneyResponse("/journey/pending");
-    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
-    private static final JourneyResponse JOURNEY_FAIL = new JourneyResponse("/journey/fail");
-
-    private static final JourneyResponse JOURNEY_RESET_IDENTITY =
-            new JourneyResponse("/journey/reset-identity");
+    private static final Map<String, Object> JOURNEY_REUSE =
+            new JourneyResponse("/journey/reuse").toObjectMap();
+    private static final Map<String, Object> JOURNEY_PENDING =
+            new JourneyResponse("/journey/pending").toObjectMap();
+    private static final Map<String, Object> JOURNEY_NEXT =
+            new JourneyResponse("/journey/next").toObjectMap();
+    private static final Map<String, Object> JOURNEY_FAIL =
+            new JourneyResponse("/journey/fail").toObjectMap();
+    private static final Map<String, Object> JOURNEY_RESET_IDENTITY =
+            new JourneyResponse("/journey/reset-identity").toObjectMap();
+    private static final String JOURNEY_ERROR_PATH = "/journey/error";
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -127,7 +133,7 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
     @Override
     @Tracing
     @Logging(clearState = true)
-    public JourneyResponse handleRequest(JourneyRequest event, Context context) {
+    public Map<String, Object> handleRequest(JourneyRequest event, Context context) {
         LogHelper.attachComponentIdToLogs();
 
         try {
@@ -174,7 +180,7 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
                     gpg45ProfileEvaluator.getJourneyResponseForStoredCis(ciItems);
 
             if (contraIndicatorErrorJourneyResponse.isPresent()) {
-                return contraIndicatorErrorJourneyResponse.get();
+                return contraIndicatorErrorJourneyResponse.get().toObjectMap();
             }
 
             Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
@@ -250,37 +256,43 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("Unable to parse existing credentials", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse());
+                            JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
+                    .toObjectMap();
         } catch (ParseException e) {
             LOGGER.error("Unable to parse existing credentials", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS)
+                    .toObjectMap();
         } catch (CiRetrievalException e) {
             LOGGER.error("Error when fetching CIs from storage system", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_GET_STORED_CIS);
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_GET_STORED_CIS)
+                    .toObjectMap();
         } catch (UnknownEvidenceTypeException e) {
             LOGGER.error("Unable to determine type of credential", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE)
+                    .toObjectMap();
         } catch (SqsException e) {
             LOGGER.error("Failed to send audit event to SQS queue", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT)
+                    .toObjectMap();
         } catch (UnrecognisedCiException e) {
             LOGGER.error("Unrecognised CI code received", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.UNRECOGNISED_CI_CODE);
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.UNRECOGNISED_CI_CODE)
+                    .toObjectMap();
         }
     }
 

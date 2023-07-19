@@ -6,7 +6,7 @@ import lombok.Getter;
 import uk.gov.di.ipv.core.library.domain.BaseResponse;
 
 @Getter
-public class CriResponse implements BaseResponse {
+public class CriResponse extends BaseResponse {
     @JsonProperty private final CriDetails cri;
 
     @JsonCreator
