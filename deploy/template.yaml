@@ -18,7 +18,7 @@ Globals:
       - UsePermissionsBoundary
       - !Ref PermissionsBoundary
       - !Ref AWS::NoValue
-# test
+      test
 Parameters:
   Environment:
     Type: String
