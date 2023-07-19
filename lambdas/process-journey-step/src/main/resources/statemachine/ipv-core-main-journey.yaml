@@ -126,7 +126,6 @@ MULTIPLE_DOC_CHECK_PAGE:
       targetState: CRI_CLAIMED_IDENTITY_J4
       checkIfDisabled:
         f2f:
-
           targetState: END
 
 PYI_NO_MATCH:

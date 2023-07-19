@@ -31,49 +31,9 @@ public class StateMachineInitializer {
         Map<String, SubJourneyDefinition> subJourneyDefinitions =
                 yamlOm.readValue(getSubJourneyDefinitionsConfigFile(), new TypeReference<>() {});
 
-        initializeSubJourneyDefinitions(subJourneyDefinitions, journeyStates);
         initializeJourneyStates(journeyStates, subJourneyDefinitions);
 
         return journeyStates;
-    }
-
-    private void initializeSubJourneyDefinitions(
-            Map<String, SubJourneyDefinition> subJourneyDefinitions,
-            Map<String, State> journeyStates) {
-        subJourneyDefinitions.forEach(
-                (subJourneyName, subJourney) ->
-                        subJourney
-                                .getSubJourneyStates()
-                                .forEach(
-                                        (stateName, state) -> {
-                                            if (state instanceof BasicState) {
-                                                BasicState basicState = (BasicState) state;
-                                                linkBasicStateParents(basicState, journeyStates);
-                                                initializeBasicStateEvents(
-                                                        basicState,
-                                                        subJourney.getSubJourneyStates());
-                                            }
-
-                                            if (state instanceof SubJourneyInvokeState) {
-                                                SubJourneyInvokeState subJourneyInvokeState =
-                                                        (SubJourneyInvokeState) state;
-                                                SubJourneyDefinition subJourneyDefinition =
-                                                        subJourneyDefinitions.get(
-                                                                subJourneyInvokeState
-                                                                        .getSubJourney());
-                                                //
-                                                // SubJourneyDefinition subJourneyDefinitionCopy =
-                                                //
-                                                //      deepCopySubJourneyDefinition(
-                                                //
-                                                //              subJourneyDefinition);
-                                                subJourneyInvokeState.setSubJourneyDefinition(
-                                                        subJourneyDefinition);
-                                                initializeExitStateEvents(
-                                                        subJourneyInvokeState,
-                                                        subJourney.getSubJourneyStates());
-                                            }
-                                        }));
     }
 
     private void initializeJourneyStates(
@@ -97,7 +57,7 @@ public class StateMachineInitializer {
                                 deepCopySubJourneyDefinition(subJourneyDefinition);
                         subJourneyInvokeState.setSubJourneyDefinition(
                                 initializeSubJourneyDefinition(
-                                        subJourneyInvokeState, subJourneyDefinitionCopy));
+                                        subJourneyInvokeState, subJourneyDefinitionCopy, journeyStates, subJourneyDefinitions));
                         initializeExitStateEvents(subJourneyInvokeState, journeyStates);
                     }
                 });
@@ -155,7 +115,9 @@ public class StateMachineInitializer {
 
     private SubJourneyDefinition initializeSubJourneyDefinition(
             SubJourneyInvokeState subJourneyInvokeState,
-            SubJourneyDefinition subJourneyDefinition) {
+            SubJourneyDefinition subJourneyDefinition,
+            Map<String, State> journeyStates,
+            Map<String, SubJourneyDefinition> subJourneyDefinitions) {
         subJourneyDefinition
                 .getSubJourneyStates()
                 .forEach(
@@ -164,6 +126,8 @@ public class StateMachineInitializer {
                                     createSubJourneyStateName(
                                             subJourneyInvokeState, subJourneyStateName));
                             if (subJourneyState instanceof BasicState) {
+                                BasicState basicState = (BasicState) subJourneyState;
+                                linkBasicStateParents(basicState, journeyStates);
                                 initializeBasicStateEvents(
                                         (BasicState) subJourneyState,
                                         subJourneyDefinition.getSubJourneyStates());
@@ -171,9 +135,13 @@ public class StateMachineInitializer {
                             if (subJourneyState instanceof SubJourneyInvokeState) {
                                 SubJourneyInvokeState innerSubJourneyInvokeState =
                                         (SubJourneyInvokeState) subJourneyState;
-                                initializeSubJourneyDefinition(
-                                        innerSubJourneyInvokeState,
-                                        innerSubJourneyInvokeState.getSubJourneyDefinition());
+                                SubJourneyDefinition innerSubJourneyDefinition = subJourneyDefinitions.get(innerSubJourneyInvokeState.getSubJourney());
+                                SubJourneyDefinition innerSubJourneyDefinitionCopy =
+                                        deepCopySubJourneyDefinition(innerSubJourneyDefinition);
+
+                                innerSubJourneyInvokeState.setSubJourneyDefinition(
+                                        initializeSubJourneyDefinition(
+                                                innerSubJourneyInvokeState, innerSubJourneyDefinitionCopy, subJourneyDefinition.getSubJourneyStates(), subJourneyDefinitions));
                                 initializeExitStateEvents(
                                         innerSubJourneyInvokeState,
                                         subJourneyDefinition.getSubJourneyStates());
