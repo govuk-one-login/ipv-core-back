@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiStorageService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
@@ -40,6 +41,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.ParseException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -93,6 +95,7 @@ class CheckExistingIdentityHandlerTest {
     private static final JourneyResponse JOURNEY_RESET_IDENTITY =
             new JourneyResponse("/journey/reset-identity");
     private static final JourneyResponse JOURNEY_PENDING = new JourneyResponse("/journey/pending");
+    private static final JourneyResponse JOURNEY_FAIL = new JourneyResponse("/journey/fail");
     private static final ObjectMapper mapper = new ObjectMapper();
 
     static {
@@ -350,6 +353,20 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
+    void shouldReturnFailResponseForFaceToFaceVerification() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI))
+                .thenReturn(createVcStoreItem(F2F_CRI, M1A_F2F_VC));
+        when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(true);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
+        assertEquals(JOURNEY_FAIL, journeyResponse);
+        verify(userIdentityService, times(0)).deleteVcStoreItems(TEST_USER_ID);
+    }
+
+    @Test
     void shouldReturn500IfFailedToParseCredentials() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.buildScore(any())).thenThrow(new ParseException("Whoops", 0));
@@ -449,5 +466,16 @@ class CheckExistingIdentityHandlerTest {
             checkExistingIdentityHandler.handleRequest(inputStream, outputStream, context);
             return mapper.readValue(outputStream.toString(), classType);
         }
+    }
+
+    private VcStoreItem createVcStoreItem(String credentialIssuer, String credential) {
+        Instant dateCreated = Instant.now();
+        VcStoreItem vcStoreItem = new VcStoreItem();
+        vcStoreItem.setUserId("user-id-1");
+        vcStoreItem.setCredentialIssuer(credentialIssuer);
+        vcStoreItem.setCredential(credential);
+        vcStoreItem.setDateCreated(dateCreated);
+        vcStoreItem.setExpirationTime(dateCreated.plusSeconds(1000L));
+        return vcStoreItem;
     }
 }

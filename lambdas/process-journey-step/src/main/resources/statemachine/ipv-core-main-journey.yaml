@@ -52,6 +52,8 @@ CHECK_EXISTING_IDENTITY:
       targetState: PYI_NO_MATCH
     pyi-kbv-fail:
       targetState: PYI_KBV_FAIL
+    fail:
+      targetState: ERROR
     error:
       targetState: ERROR
 

@@ -74,6 +74,8 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
     private static final JourneyResponse JOURNEY_REUSE = new JourneyResponse("/journey/reuse");
     private static final JourneyResponse JOURNEY_PENDING = new JourneyResponse("/journey/pending");
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
+    private static final JourneyResponse JOURNEY_FAIL = new JourneyResponse("/journey/fail");
+
     private static final JourneyResponse JOURNEY_RESET_IDENTITY =
             new JourneyResponse("/journey/reset-identity");
 
@@ -157,10 +159,23 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
                 LOGGER.info(message);
                 return JOURNEY_PENDING;
             }
-
             List<SignedJWT> credentials =
                     gpg45ProfileEvaluator.parseCredentials(
                             userIdentityService.getUserIssuedCredentials(userId));
+
+            Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
+            Optional<Gpg45Profile> matchedProfile =
+                    gpg45ProfileEvaluator.getFirstMatchingProfile(gpg45Scores, ACCEPTED_PROFILES);
+
+            if (userHasFaceToFaceRequest && faceToFaceVc != null && !matchedProfile.isPresent()) {
+                var message =
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "F2F VC unsuccessful.");
+                LOGGER.info(message);
+                return JOURNEY_FAIL;
+            }
 
             List<ContraIndicatorItem> ciItems;
             ciItems =
@@ -174,10 +189,6 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
             if (contraIndicatorErrorJourneyResponse.isPresent()) {
                 return contraIndicatorErrorJourneyResponse.get();
             } else {
-                Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
-                Optional<Gpg45Profile> matchedProfile =
-                        gpg45ProfileEvaluator.getFirstMatchingProfile(
-                                gpg45Scores, ACCEPTED_PROFILES);
                 if (matchedProfile.isPresent()) {
                     auditService.sendAuditEvent(
                             buildProfileMatchedAuditEvent(
