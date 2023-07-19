@@ -102,6 +102,17 @@ Mappings:
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:616199614141:key/a3025aad-6994-4b72-b3b6-5b361a8b7708"
       asyncCriLambdaTimeout: 30
+      DynatraceNonProdTenantUrl: "https://khw46367.live.dynatrace.com/"
+      DynatraceNonProdAWSAccount: 985486846182
+      AdditionalCodeSigningVersionArns: "arn:aws:signer:eu-west-2:985486846182:/signing-profiles/SigningProfile_2LIsnoqFX0BU/IE6arNMuby"
+      CustomKmsKeyArns: "arn:aws:kms:eu-west-2:985486846182:key/4856314e-8cc8-44fc-82b9-582cc06a883c"
+      JavaLayer: "arn:aws:lambda:eu-west-2:985486846182:layer:DTOneAgentJavaLayer:14"
+      NodeLayer: "arn:aws:lambda:eu-west-2:985486846182:layer:DTOneAgentNodeJSLayer:13"
+      PythonLayer: "arn:aws:lambda:eu-west-2:985486846182:layer:DTOneAgentPythonLayer:13"
+      AuthTokenSecretArn: "arn:aws:secretsmanager:eu-west-2:985486846182:secret:AUTH_TOKEN-uI6on7" # pragma: allowlist secret
+      BaseUrlSecretArn: "arn:aws:secretsmanager:eu-west-2:985486846182:secret:BASE_URL-nA86Kg" # pragma: allowlist secret
+      ClusterIdSecretArn: "arn:aws:secretsmanager:eu-west-2:985486846182:secret:CLUSTER_ID-Sa24Vl" # pragma: allowlist secret
+      TenantSecretArn: "arn:aws:secretsmanager:eu-west-2:985486846182:secret:TENANT-CcYEOa" # pragma: allowlist secret
     "457601271792": # Build
       provisionedConcurrency: 1
       ciStorageAccountId: 755415363251 # di-ipv-contra-indicators-build
@@ -113,6 +124,17 @@ Mappings:
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue_build"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:616199614141:key/a3025aad-6994-4b72-b3b6-5b361a8b7708"
       asyncCriLambdaTimeout: 30
+      DynatraceNonProdTenantUrl: "https://khw46367.live.dynatrace.com/"
+      DynatraceNonProdAWSAccount: 985486846182
+      AdditionalCodeSigningVersionArns: "arn:aws:signer:eu-west-2:985486846182:/signing-profiles/SigningProfile_2LIsnoqFX0BU/IE6arNMuby"
+      CustomKmsKeyArns: "arn:aws:kms:eu-west-2:985486846182:key/4856314e-8cc8-44fc-82b9-582cc06a883c"
+      JavaLayer: "arn:aws:lambda:eu-west-2:985486846182:layer:DTOneAgentJavaLayer:14"
+      NodeLayer: "arn:aws:lambda:eu-west-2:985486846182:layer:DTOneAgentNodeJSLayer:13"
+      PythonLayer: "arn:aws:lambda:eu-west-2:985486846182:layer:DTOneAgentPythonLayer:13"
+      AuthTokenSecretArn: "arn:aws:secretsmanager:eu-west-2:985486846182:secret:AUTH_TOKEN-uI6on7" # pragma: allowlist secret
+      BaseUrlSecretArn: "arn:aws:secretsmanager:eu-west-2:985486846182:secret:BASE_URL-nA86Kg" # pragma: allowlist secret
+      ClusterIdSecretArn: "arn:aws:secretsmanager:eu-west-2:985486846182:secret:CLUSTER_ID-Sa24Vl" # pragma: allowlist secret
+      TenantSecretArn: "arn:aws:secretsmanager:eu-west-2:985486846182:secret:TENANT-CcYEOa" # pragma: allowlist secret
     "335257547869": # Staging
       provisionedConcurrency: 1
       ciStorageAccountId: 265689800486 # di-ipv-contra-indicators-staging
@@ -124,6 +146,17 @@ Mappings:
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:869230006441:f2f-cri-api-IPVCoreSQSQueue-IE674r63Z764"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:869230006441:key/09405695-4244-406a-b6bd-17381a49bf27"
       asyncCriLambdaTimeout: 30
+      DynatraceNonProdTenantUrl: ""
+      DynatraceNonProdAWSAccount: ""
+      AdditionalCodeSigningVersionArns: ""
+      CustomKmsKeyArns: ""
+      JavaLayer: ""
+      NodeLayer: ""
+      PythonLayer: ""
+      AuthTokenSecretArn: ""
+      BaseUrlSecretArn: ""
+      ClusterIdSecretArn: ""
+      TenantSecretArn: ""
     "991138514218": # Integration
       provisionedConcurrency: 1
       ciStorageAccountId: 697519714716 # di-ipv-contra-indicators-integration
@@ -135,6 +168,17 @@ Mappings:
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:766319219145:f2f-cri-api-IPVCoreSQSQueue-kuAgEry3qYXT"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:766319219145:key/98b3663f-5f14-495f-9d38-ec7effb69fe5"
       asyncCriLambdaTimeout: 30
+      DynatraceNonProdTenantUrl: ""
+      DynatraceNonProdAWSAccount: ""
+      AdditionalCodeSigningVersionArns: ""
+      CustomKmsKeyArns: ""
+      JavaLayer: ""
+      NodeLayer: ""
+      PythonLayer: ""
+      AuthTokenSecretArn: ""
+      BaseUrlSecretArn: ""
+      ClusterIdSecretArn: ""
+      TenantSecretArn: ""
     "075701497069": # Production
       provisionedConcurrency: 1
       ciStorageAccountId: 442136572379 # di-ipv-contra-indicators-prod
@@ -146,6 +190,17 @@ Mappings:
       asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:377086294028:f2f-cri-api-IPVCoreSQSQueue-CPbnPGKq0SL7"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:377086294028:key/db743f51-fe65-43f8-a44e-4a124f8a3ee6"
       asyncCriLambdaTimeout: 30
+      DynatraceNonProdTenantUrl: ""
+      DynatraceNonProdAWSAccount: ""
+      AdditionalCodeSigningVersionArns: ""
+      CustomKmsKeyArns: ""
+      JavaLayer: ""
+      NodeLayer: ""
+      PythonLayer: ""
+      AuthTokenSecretArn: ""
+      BaseUrlSecretArn: ""
+      ClusterIdSecretArn: ""
+      TenantSecretArn: ""
   SecurityGroups:
     PrefixListIds:
       dynamodb: "pl-b3a742da"
