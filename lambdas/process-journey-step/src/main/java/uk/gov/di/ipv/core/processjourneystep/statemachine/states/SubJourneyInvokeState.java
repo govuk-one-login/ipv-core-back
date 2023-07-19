@@ -44,11 +44,13 @@ public class SubJourneyInvokeState implements State {
         } else {
             String removed = stateNameParts.remove();
             LOGGER.info("removed: '{}'", removed);
-            String currentSubStateName = stateNameParts.remove();
+            String currentSubStateName = stateNameParts.peek();
             LOGGER.info("currentSubState: '{}'", currentSubStateName);
             State currentSubState =
                     subJourneyDefinition.getSubJourneyStates().get(currentSubStateName);
-            nextState = currentSubState.transition(eventName, startState, journeyContext);
+            nextState =
+                    currentSubState.transition(
+                            eventName, String.join("/", stateNameParts), journeyContext);
             LOGGER.info("nextState == '{}'", nextState.getName());
         }
 
@@ -68,5 +70,10 @@ public class SubJourneyInvokeState implements State {
 
         LOGGER.info("returning nextState: '{}'", nextState.getName());
         return nextState;
+    }
+
+    @Override
+    public String toString() {
+        return this.name;
     }
 }

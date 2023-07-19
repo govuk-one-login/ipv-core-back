@@ -1,0 +1,70 @@
+ADDRESS_AND_FRAUD:
+  subJourneyStates:
+    START_SUB_JOURNEY:
+      events:
+        next:
+          targetState: CRI_ADDRESS
+    CRI_ADDRESS:
+      response:
+        type: cri
+        criId: address
+      parent: CRI_STATE
+      events:
+        next:
+          targetState: CRI_FRAUD
+    CRI_FRAUD:
+      response:
+        type: cri
+        criId: fraud
+      parent: CRI_STATE
+      events:
+        next:
+          targetState: EXIT_SUB_JOURNEY
+    EXIT_SUB_JOURNEY:
+      exitEvent: next
+
+A_LONG_NESTED_JOURNEY:
+  subJourneyStates:
+    START_SUB_JOURNEY:
+      events:
+        drivingLicence:
+          targetState: CRI_ADDRESS
+    CRI_ADDRESS:
+      response:
+        type: cri
+        criId: address
+      parent: CRI_STATE
+      events:
+        next:
+          targetState: CRI_FRAUD
+    CRI_FRAUD:
+      response:
+        type: cri
+        criId: fraud
+      parent: CRI_STATE
+      events:
+        next:
+          targetState: NESTED_ADDRESS_AND_FRAUD
+    NESTED_ADDRESS_AND_FRAUD:
+      subJourney: ADDRESS_AND_FRAUD
+      exitEvents:
+        next:
+          targetState: CRI_PASSPORT
+    CRI_PASSPORT:
+      response:
+        type: cri
+        criId: ukPassport
+      parent: CRI_STATE
+      events:
+        next:
+          targetState: CRI_DRIVING_LICENSE
+    CRI_DRIVING_LICENSE:
+      response:
+        type: cri
+        criId: drivingLicence
+      parent: CRI_STATE
+      events:
+        next:
+          targetState: EXIT_SUB_JOURNEY
+    EXIT_SUB_JOURNEY:
+      exitEvent: next

@@ -121,7 +121,7 @@ MULTIPLE_DOC_CHECK_PAGE:
     ukPassport:
       targetState: CRI_UK_PASSPORT_J2
     drivingLicence:
-      targetState: CRI_DRIVING_LICENCE_J3
+      targetState: A_LONG_NESTED_JOURNEY_J3
     end:
       targetState: CRI_CLAIMED_IDENTITY_J4
       checkIfDisabled:
@@ -188,24 +188,12 @@ POST_DCMAW_SUCCESS_PAGE:
     pageId: page-dcmaw-success
   events:
     next:
-      targetState: CRI_ADDRESS_J1
+      targetState: ADDRESS_AND_FRAUD_J1
 
-CRI_ADDRESS_J1:
-  response:
-    type: cri
-    criId: address
-  parent: CRI_STATE
-  events:
+ADDRESS_AND_FRAUD_J1:
+  subJourney: ADDRESS_AND_FRAUD
+  exitEvents:
     next:
-      targetState: CRI_FRAUD_J1
-
-CRI_FRAUD_J1:
-  response:
-    type: cri
-    criId: fraud
-  parent: CRI_STATE
-  events:
-    end:
       targetState: IPV_SUCCESS_PAGE
 
 # Passport journey (J2)
@@ -216,33 +204,15 @@ CRI_UK_PASSPORT_J2:
   parent: CRI_STATE
   events:
     next:
-      targetState: SUB_JOURNEY_A_AND_F_J2
+      targetState: ADDRESS_AND_FRAUD_J2
     access-denied:
       targetState: MULTIPLE_DOC_CHECK_PAGE
 
-SUB_JOURNEY_A_AND_F_J2:
-  subJourney: SUB_JOURNEY_A_AND_F
+ADDRESS_AND_FRAUD_J2:
+  subJourney: ADDRESS_AND_FRAUD
   exitEvents:
     next:
       targetState: PRE_KBV_TRANSITION_PAGE_J2
-
-#CRI_ADDRESS_J2:
-#  response:
-#    type: cri
-#    criId: address
-#  parent: CRI_STATE
-#  events:
-#    next:
-#      targetState: CRI_FRAUD_J2
-#
-#CRI_FRAUD_J2:
-#  response:
-#    type: cri
-#    criId: fraud
-#  parent: CRI_STATE
-#  events:
-#    next:
-#      targetState: PRE_KBV_TRANSITION_PAGE_J2
 
 PRE_KBV_TRANSITION_PAGE_J2:
   response:
@@ -264,6 +234,12 @@ CRI_KBV_J2:
       targetState: PYI_KBV_THIN_FILE
 
 # Driving licence journey (J3)
+A_LONG_NESTED_JOURNEY_J3:
+  subJourney: A_LONG_NESTED_JOURNEY
+  exitEvents:
+    next:
+      targetState: CRI_DRIVING_LICENCE_J3
+
 CRI_DRIVING_LICENCE_J3:
   response:
     type: cri
@@ -271,25 +247,13 @@ CRI_DRIVING_LICENCE_J3:
   parent: CRI_STATE
   events:
     next:
-      targetState: CRI_ADDRESS_J3
+      targetState: ADDRESS_AND_FRAUD_J3
     access-denied:
       targetState: MULTIPLE_DOC_CHECK_PAGE
 
-CRI_ADDRESS_J3:
-  response:
-    type: cri
-    criId: address
-  parent: CRI_STATE
-  events:
-    next:
-      targetState: CRI_FRAUD_J3
-
-CRI_FRAUD_J3:
-  response:
-    type: cri
-    criId: fraud
-  parent: CRI_STATE
-  events:
+ADDRESS_AND_FRAUD_J3:
+  subJourney: ADDRESS_AND_FRAUD
+  exitEvents:
     next:
       targetState: PRE_KBV_TRANSITION_PAGE_J3
 
@@ -320,23 +284,11 @@ CRI_CLAIMED_IDENTITY_J4:
   parent: CRI_STATE
   events:
     next:
-      targetState: CRI_ADDRESS_J4
+      targetState: ADDRESS_AND_FRAUD_J4
 
-CRI_ADDRESS_J4:
-  response:
-    type: cri
-    criId: address
-  parent: CRI_STATE
-  events:
-    next:
-      targetState: CRI_FRAUD_J4
-
-CRI_FRAUD_J4:
-  response:
-    type: cri
-    criId: fraud
-  parent: CRI_STATE
-  events:
+ADDRESS_AND_FRAUD_J4:
+  subJourney: ADDRESS_AND_FRAUD
+  exitEvents:
     next:
       targetState: CRI_F2F_J4
 

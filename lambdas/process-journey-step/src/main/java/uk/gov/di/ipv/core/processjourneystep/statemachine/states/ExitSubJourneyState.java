@@ -22,4 +22,9 @@ public class ExitSubJourneyState implements State {
             throws UnknownEventException {
         return null;
     }
+
+    @Override
+    public String toString() {
+        return this.name;
+    }
 }
