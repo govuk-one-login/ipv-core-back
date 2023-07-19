@@ -115,6 +115,11 @@ public class ValidateOAuthCallbackHandler
 
             if (!StringUtils.isBlank(ipvSessionId)) {
                 ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
+                clientOAuthSessionItem =
+                        clientOAuthSessionDetailsService.getClientOAuthSession(
+                                ipvSessionItem.getClientOAuthSessionId());
+                LogHelper.attachGovukSigninJourneyIdToLogs(
+                        clientOAuthSessionItem.getGovukSigninJourneyId());
             } else if (!StringUtils.isBlank(criOAuthSessionId)) {
                 criOAuthSessionItem =
                         criOAuthSessionService.getCriOauthSessionItem(criOAuthSessionId);
@@ -148,9 +153,6 @@ public class ValidateOAuthCallbackHandler
                         criOAuthSessionService.getCriOauthSessionItem(
                                 ipvSessionItem.getCriOAuthSessionId());
             }
-            clientOAuthSessionItem =
-                    clientOAuthSessionDetailsService.getClientOAuthSession(
-                            ipvSessionItem.getClientOAuthSessionId());
 
             if (callbackRequest.getError() != null) {
                 return sendOauthErrorJourneyResponse(
