@@ -133,10 +133,7 @@ MULTIPLE_DOC_CHECK_PAGE:
     drivingLicence:
       targetState: CRI_DRIVING_LICENCE_J3
     end:
-      targetState: CRI_CLAIMED_IDENTITY_J4
-      checkIfDisabled:
-        f2f:
-          targetState: END
+      targetState: END
 
 MULTIPLE_DOC_F2F_CHECK_PAGE:
   response:
@@ -149,9 +146,6 @@ MULTIPLE_DOC_F2F_CHECK_PAGE:
       targetState: CRI_DRIVING_LICENCE_J3
     end:
       targetState: CRI_CLAIMED_IDENTITY_J4
-      checkIfDisabled:
-        f2f:
-          targetState: END
 
 PYI_NO_MATCH:
   response:
