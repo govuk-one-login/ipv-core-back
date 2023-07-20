@@ -44,9 +44,9 @@ A_LONG_NESTED_JOURNEY:
       parent: CRI_STATE
       events:
         next:
-          targetState: NESTED_ADDRESS_AND_FRAUD
-    NESTED_ADDRESS_AND_FRAUD:
-      subJourney: ADDRESS_AND_FRAUD
+          targetState: NESTED_DOWN_AGAIN
+    NESTED_DOWN_AGAIN:
+      subJourney: DOWN_AGAIN
       exitEvents:
         next:
           targetState: CRI_PASSPORT
@@ -62,6 +62,36 @@ A_LONG_NESTED_JOURNEY:
       response:
         type: cri
         criId: drivingLicence
+      parent: CRI_STATE
+      events:
+        next:
+          targetState: EXIT_SUB_JOURNEY
+    EXIT_SUB_JOURNEY:
+      exitEvent: next
+
+DOWN_AGAIN:
+  subJourneyStates:
+    START_SUB_JOURNEY:
+      events:
+        next:
+          targetState: CRI_ADDRESS
+    CRI_ADDRESS:
+      response:
+        type: cri
+        criId: address
+      parent: CRI_STATE
+      events:
+        next:
+          targetState: ADDRESS_AND_FRAUD
+    ADDRESS_AND_FRAUD:
+      subJourney: ADDRESS_AND_FRAUD
+      exitEvents:
+        next:
+          targetState: CRI_FRAUD
+    CRI_FRAUD:
+      response:
+        type: cri
+        criId: fraud
       parent: CRI_STATE
       events:
         next:
