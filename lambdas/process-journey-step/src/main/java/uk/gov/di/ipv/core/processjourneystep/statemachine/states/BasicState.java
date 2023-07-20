@@ -40,7 +40,7 @@ public class BasicState implements State {
         var event = getEvent(eventName);
         if (event.isPresent()) {
             State resolve = event.get().resolve(journeyContext);
-            LOGGER.info("Resolved state in BasicState: '{}'", resolve);
+            LOGGER.debug("Resolved state in BasicState: '{}'", resolve);
             return resolve;
         }
         throw new UnknownEventException(

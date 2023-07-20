@@ -23,7 +23,7 @@ public class StateMachine {
     public State transition(String startState, String event, JourneyContext journeyContext)
             throws UnknownEventException, UnknownStateException {
         String firstPart = startState.split("/")[0];
-        LOGGER.info("firstPart: '{}'", firstPart);
+        LOGGER.debug("firstPart: '{}'", firstPart);
         var state = states.get(firstPart);
 
         if (state == null) {
@@ -32,9 +32,9 @@ public class StateMachine {
         }
 
         State newState = state.transition(event, startState, journeyContext);
-        LOGGER.info("newState: '{}'", newState);
+        LOGGER.debug("newState: '{}'", newState);
         if (newState instanceof SubJourneyInvokeState) {
-            LOGGER.info("newState instanceof SubJourneyInvokeState");
+            LOGGER.debug("newState instanceof SubJourneyInvokeState");
             return newState.transition(event, startState, journeyContext);
         }
         return newState;
