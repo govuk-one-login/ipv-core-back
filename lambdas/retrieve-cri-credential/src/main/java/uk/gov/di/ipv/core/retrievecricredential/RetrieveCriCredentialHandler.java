@@ -239,7 +239,8 @@ public class RetrieveCriCredentialHandler
                 userId,
                 credentialIssuerId,
                 OBJECT_MAPPER.writeValueAsString(verifiableCredentialResponseDto),
-                criOAuthState);
+                criOAuthState,
+                CriResponseService.STATUS_PENDING);
         // Update session to indicate no VC, but no error
         updateVisitedCredentials(ipvSessionItem, credentialIssuerId, null, false, null);
         // Audit
