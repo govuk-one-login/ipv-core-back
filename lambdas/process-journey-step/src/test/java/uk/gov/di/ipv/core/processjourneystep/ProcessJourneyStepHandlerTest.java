@@ -184,7 +184,7 @@ class ProcessJourneyStepHandlerTest {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setIpvSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setCreationDateTime(Instant.now().toString());
-        ipvSessionItem.setUserState("A_LONG_NESTED_JOURNEY_J3/NESTED_ADDRESS_AND_FRAUD/CRI_FRAUD");
+        ipvSessionItem.setUserState("MULTIPLE_DOC_CHECK_PAGE");
         ipvSessionItem.setClientOAuthSessionId(SecureTokenHelper.generate());
         ipvSessionItem.setJourneyType(IPV_CORE_MAIN_JOURNEY);
 
@@ -193,8 +193,9 @@ class ProcessJourneyStepHandlerTest {
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
 
-        //        getProcessJourneyStepHandler().handleRequest(Map.of(JOURNEY, "drivingLicence",
-        // IPV_SESSION_ID, "1234"), mockContext);
+        getProcessJourneyStepHandler()
+                .handleRequest(
+                        Map.of(JOURNEY, "drivingLicence", IPV_SESSION_ID, "1234"), mockContext);
         getProcessJourneyStepHandler()
                 .handleRequest(Map.of(JOURNEY, "next", IPV_SESSION_ID, "1234"), mockContext);
         getProcessJourneyStepHandler()

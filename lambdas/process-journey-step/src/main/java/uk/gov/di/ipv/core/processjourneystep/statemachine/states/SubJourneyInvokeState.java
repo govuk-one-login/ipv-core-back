@@ -20,7 +20,6 @@ import java.util.Queue;
 public class SubJourneyInvokeState implements State {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String DELIMITER = "/";
-    private static final String START_SUB_JOURNEY = "START_SUB_JOURNEY";
     private String subJourney;
     private SubJourneyDefinition subJourneyDefinition;
     private Map<String, Event> exitEvents;
@@ -37,9 +36,8 @@ public class SubJourneyInvokeState implements State {
         State nextState;
         if (stateNameParts.size() == 1) { // We've not descended into the sub-states yet
             LOGGER.debug("stateNameParts size == 1");
-            BasicState state =
-                    (BasicState) subJourneyDefinition.getSubJourneyStates().get(START_SUB_JOURNEY);
-            nextState = state.transition(eventName, startState, journeyContext);
+            nextState =
+                    subJourneyDefinition.getEntryEvents().get(eventName).resolve(journeyContext);
             LOGGER.debug("nextState == '{}'", nextState.getName());
         } else {
             String removed = stateNameParts.remove();

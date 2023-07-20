@@ -99,6 +99,7 @@ public class StateMachineInitializer {
     private SubJourneyDefinition initializeSubJourneyDefinition(
             SubJourneyInvokeState subJourneyInvokeState,
             SubJourneyDefinition subJourneyDefinition) {
+
         subJourneyDefinition
                 .getSubJourneyStates()
                 .forEach(
@@ -119,6 +120,8 @@ public class StateMachineInitializer {
                                         subJourneyDefinition.getSubJourneyStates());
                             }
                         });
+        initializeEvents(
+                subJourneyDefinition.getEntryEvents(), subJourneyDefinition.getSubJourneyStates());
 
         return subJourneyDefinition;
     }

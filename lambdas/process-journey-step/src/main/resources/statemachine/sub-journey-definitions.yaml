@@ -1,9 +1,8 @@
 ADDRESS_AND_FRAUD:
+  entryEvents:
+    next:
+      targetState: CRI_ADDRESS
   subJourneyStates:
-    START_SUB_JOURNEY:
-      events:
-        next:
-          targetState: CRI_ADDRESS
     CRI_ADDRESS:
       response:
         type: cri
@@ -24,11 +23,10 @@ ADDRESS_AND_FRAUD:
       exitEvent: next
 
 A_LONG_NESTED_JOURNEY:
+  entryEvents:
+    drivingLicence:
+      targetState: CRI_ADDRESS
   subJourneyStates:
-    START_SUB_JOURNEY:
-      events:
-        drivingLicence:
-          targetState: CRI_ADDRESS
     CRI_ADDRESS:
       response:
         type: cri
@@ -70,11 +68,10 @@ A_LONG_NESTED_JOURNEY:
       exitEvent: next
 
 DOWN_AGAIN:
+  entryEvents:
+    next:
+      targetState: CRI_ADDRESS
   subJourneyStates:
-    START_SUB_JOURNEY:
-      events:
-        next:
-          targetState: CRI_ADDRESS
     CRI_ADDRESS:
       response:
         type: cri
