@@ -135,6 +135,16 @@ public class ProcessAsyncCriCredentialHandler
     }
 
     private void processErrorAsyncCriResponse(ErrorAsyncCriResponse errorAsyncCriResponse) {
+        CriResponseItem responseItem =
+                criResponseService.getCriResponseItem(
+                        errorAsyncCriResponse.getUserId(),
+                        errorAsyncCriResponse.getCredentialIssuer());
+
+        if (responseItem != null) {
+            responseItem.setIssuerResponse("{\"status\":\"error\"}");
+            criResponseService.updateCriResponseItem(responseItem);
+        }
+
         LOGGER.error(
                 new StringMapMessage()
                         .with(

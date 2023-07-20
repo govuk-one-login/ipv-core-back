@@ -62,4 +62,8 @@ public class CriResponseService {
     public void deleteCriResponseItem(String userId, String credentialIssuer) {
         dataStore.delete(userId, credentialIssuer);
     }
+
+    public void updateCriResponseItem(CriResponseItem responseItem) {
+        dataStore.update(responseItem);
+    }
 }
