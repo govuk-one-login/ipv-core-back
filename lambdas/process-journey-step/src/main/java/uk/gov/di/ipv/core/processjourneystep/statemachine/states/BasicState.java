@@ -26,10 +26,6 @@ public class BasicState implements State {
     private JourneyStepResponse response;
     private Map<String, Event> events = new HashMap<>();
 
-    public BasicState(String name) {
-        this.name = name;
-    }
-
     @Override
     public State transition(String eventName, String startState, JourneyContext journeyContext)
             throws UnknownEventException {
@@ -39,9 +35,7 @@ public class BasicState implements State {
 
         var event = getEvent(eventName);
         if (event.isPresent()) {
-            State resolve = event.get().resolve(journeyContext);
-            LOGGER.debug("Resolved state in BasicState: '{}'", resolve);
-            return resolve;
+            return event.get().resolve(journeyContext);
         }
         throw new UnknownEventException(
                 String.format("Unknown event provided to '%s' state: '%s'", name, eventName));

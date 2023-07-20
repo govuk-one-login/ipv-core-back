@@ -22,7 +22,7 @@ class BasicEventTest {
 
     @Test
     void resolveShouldReturnAState() {
-        BasicState targetState = new BasicState("TARGET_STATE");
+        BasicState targetState = new BasicState();
         BasicEvent basicEvent = new BasicEvent(mockConfigService);
         basicEvent.setTargetStateObj(targetState);
 
@@ -35,8 +35,7 @@ class BasicEventTest {
         basicEventWithCheckIfDisabledConfigured.setTargetStateObj(new BasicState());
 
         BasicEvent alternativeEvent = new BasicEvent(mockConfigService);
-        BasicState alternativeTargetState =
-                new BasicState("THE_TARGET_STATE_FOR_THE_ALTERNATIVE_RESULT");
+        BasicState alternativeTargetState = new BasicState();
         alternativeEvent.setTargetStateObj(alternativeTargetState);
 
         when(mockConfigService.isEnabled("anEnabledCri")).thenReturn(true);

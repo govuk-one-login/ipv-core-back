@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.SubJourneyDefinition;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.events.Event;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyContext;
@@ -25,41 +26,28 @@ public class SubJourneyInvokeState implements State {
     private Map<String, Event> exitEvents;
     private String name;
 
-    public SubJourneyInvokeState(String name) {
-        this.name = name;
-    }
-
     public State transition(String eventName, String startState, JourneyContext journeyContext)
             throws UnknownEventException {
         Queue<String> stateNameParts = new LinkedList<>(Arrays.asList(startState.split(DELIMITER)));
 
         State nextState;
         if (stateNameParts.size() == 1) { // We've not descended into the sub-states yet
-            LOGGER.debug("stateNameParts size == 1");
             nextState =
                     subJourneyDefinition.getEntryEvents().get(eventName).resolve(journeyContext);
-            LOGGER.debug("nextState == '{}'", nextState.getName());
         } else {
-            String removed = stateNameParts.remove();
-            LOGGER.debug("removed: '{}'", removed);
-            String currentSubStateName = stateNameParts.peek();
-            LOGGER.debug("currentSubState: '{}'", currentSubStateName);
+            stateNameParts.remove();
             State currentSubState =
-                    subJourneyDefinition.getSubJourneyStates().get(currentSubStateName);
+                    subJourneyDefinition.getSubJourneyStates().get(stateNameParts.peek());
             nextState =
                     currentSubState.transition(
                             eventName, String.join("/", stateNameParts), journeyContext);
-            LOGGER.debug("nextState == '{}'", nextState.getName());
         }
 
         if (nextState instanceof SubJourneyInvokeState) {
-            LOGGER.debug("nextState is instance of SubJourneyInvokeState");
-            // recursive stuff. Icky.
             return nextState.transition(
-                    eventName, String.join("/", stateNameParts), journeyContext);
+                    eventName, String.join(DELIMITER, stateNameParts), journeyContext);
         }
 
-        LOGGER.debug("returning nextState: '{}'", nextState.getName());
         return nextState;
     }
 

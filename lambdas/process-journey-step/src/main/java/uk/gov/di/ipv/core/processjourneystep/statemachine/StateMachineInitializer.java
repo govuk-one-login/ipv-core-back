@@ -9,7 +9,6 @@ import uk.gov.di.ipv.core.processjourneystep.statemachine.events.Event;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.events.ExitEvent;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.states.State;
-import uk.gov.di.ipv.core.processjourneystep.statemachine.states.SubJourneyDefinition;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.states.SubJourneyInvokeState;
 
 import java.io.File;
@@ -58,7 +57,6 @@ public class StateMachineInitializer {
             BasicState state, String stateName, Map<String, State> eventTargetsStatesMap) {
         initializeBasicState(state, stateName, eventTargetsStatesMap, null);
     }
-    ;
 
     void initializeBasicState(
             BasicState state,

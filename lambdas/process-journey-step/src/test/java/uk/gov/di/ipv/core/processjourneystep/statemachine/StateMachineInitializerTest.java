@@ -26,30 +26,4 @@ class StateMachineInitializerTest {
     void stateMachineInitializerShouldHandleAllStateFiles(IpvJourneyTypes journeyType) {
         assertDoesNotThrow(() -> new StateMachineInitializer(journeyType).initialize());
     }
-
-    // This is to make sure any yaml files not covered by the journey type / envs above are at least
-    // loaded.
-    //    @Test
-    //    void allStateMachineFilesShouldLoadWithoutError() throws Exception {
-    //        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-    //        URL statemachineDir = classLoader.getResource("statemachine");
-    //
-    //        List<Path> statemachineFilePaths =
-    //                Files.walk(Paths.get(statemachineDir.toURI()))
-    //                        .filter(Files::isRegularFile)
-    //                        .filter(file -> file.getFileName().toString().endsWith(".yaml"))
-    //                        .collect(Collectors.toList());
-    //
-    //        ObjectMapper om = new ObjectMapper(new YAMLFactory());
-    //
-    //        for (Path statemachineFile : statemachineFilePaths) {
-    //            assertDoesNotThrow(
-    //                    () -> {
-    //                        Map<String, State> states =
-    //                                om.readValue(
-    //                                        new File(statemachineFile.toUri()),
-    //                                        new TypeReference<>() {});
-    //                    });
-    //        }
-    //    }
 }

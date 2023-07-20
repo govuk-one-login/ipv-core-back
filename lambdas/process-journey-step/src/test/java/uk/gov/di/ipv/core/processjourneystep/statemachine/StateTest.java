@@ -75,7 +75,7 @@ class StateTest {
         assertThrows(
                 UnknownEventException.class,
                 () ->
-                        new BasicState("CURRENT_STATE")
+                        new BasicState()
                                 .transition(
                                         "unknown-event",
                                         "startState",
