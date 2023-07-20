@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.events.Event;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.events.ExitEvent;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.states.State;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.states.SubJourneyDefinition;
@@ -55,9 +56,18 @@ public class StateMachineInitializer {
 
     void initializeBasicState(
             BasicState state, String stateName, Map<String, State> eventTargetsStatesMap) {
+        initializeBasicState(state, stateName, eventTargetsStatesMap, null);
+    }
+    ;
+
+    void initializeBasicState(
+            BasicState state,
+            String stateName,
+            Map<String, State> eventTargetsStatesMap,
+            Map<String, Event> subJourneyExitEvents) {
         state.setName(stateName);
         linkBasicStateParents(state, journeyStates);
-        initializeBasicStateEvents(state, eventTargetsStatesMap);
+        initializeBasicStateEvents(state, eventTargetsStatesMap, subJourneyExitEvents);
     }
 
     private void linkBasicStateParents(BasicState state, Map<String, State> journeyStates) {
@@ -67,13 +77,24 @@ public class StateMachineInitializer {
     }
 
     private void initializeBasicStateEvents(
-            BasicState state, Map<String, State> eventStatesSource) {
-        initializeEvents(state.getEvents(), eventStatesSource);
+            BasicState state,
+            Map<String, State> eventStatesSource,
+            Map<String, Event> subJourneyExitEvents) {
+        initializeEvents(state.getEvents(), eventStatesSource, subJourneyExitEvents);
     }
 
     private void initializeEvents(
-            Map<String, Event> eventMap, Map<String, State> eventStatesSource) {
-        eventMap.forEach((eventName, event) -> event.initialize(eventName, eventStatesSource));
+            Map<String, Event> eventMap,
+            Map<String, State> eventStatesSource,
+            Map<String, Event> subJourneyExitEvents) {
+        eventMap.forEach(
+                (eventName, event) -> {
+                    if (event instanceof ExitEvent) {
+                        ((ExitEvent) event).setSubJourneyExitEvents(subJourneyExitEvents);
+                    } else {
+                        event.initialize(eventName, eventStatesSource);
+                    }
+                });
     }
 
     void initializeSubJourneyInvokeState(
@@ -111,7 +132,8 @@ public class StateMachineInitializer {
                                 initializeBasicState(
                                         (BasicState) subJourneyState,
                                         name,
-                                        subJourneyDefinition.getSubJourneyStates());
+                                        subJourneyDefinition.getSubJourneyStates(),
+                                        subJourneyInvokeState.getExitEvents());
                             }
                             if (subJourneyState instanceof SubJourneyInvokeState) {
                                 initializeSubJourneyInvokeState(
@@ -121,14 +143,16 @@ public class StateMachineInitializer {
                             }
                         });
         initializeEvents(
-                subJourneyDefinition.getEntryEvents(), subJourneyDefinition.getSubJourneyStates());
+                subJourneyDefinition.getEntryEvents(),
+                subJourneyDefinition.getSubJourneyStates(),
+                null);
 
         return subJourneyDefinition;
     }
 
     private void initializeExitStateEvents(
             SubJourneyInvokeState state, Map<String, State> eventStatesSource) {
-        initializeEvents(state.getExitEvents(), eventStatesSource);
+        initializeEvents(state.getExitEvents(), eventStatesSource, null);
     }
 
     private String createSubJourneyStateName(State state, String subJourneyStateName) {

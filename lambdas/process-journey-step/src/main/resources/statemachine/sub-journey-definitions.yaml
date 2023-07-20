@@ -18,9 +18,7 @@ ADDRESS_AND_FRAUD:
       parent: CRI_STATE
       events:
         next:
-          targetState: EXIT_SUB_JOURNEY
-    EXIT_SUB_JOURNEY:
-      exitEvent: next
+          exitEventToEmit: next
 
 A_LONG_NESTED_JOURNEY:
   entryEvents:
@@ -63,9 +61,7 @@ A_LONG_NESTED_JOURNEY:
       parent: CRI_STATE
       events:
         next:
-          targetState: EXIT_SUB_JOURNEY
-    EXIT_SUB_JOURNEY:
-      exitEvent: next
+          exitEventToEmit: next
 
 DOWN_AGAIN:
   entryEvents:
@@ -92,6 +88,4 @@ DOWN_AGAIN:
       parent: CRI_STATE
       events:
         next:
-          targetState: EXIT_SUB_JOURNEY
-    EXIT_SUB_JOURNEY:
-      exitEvent: next
+          exitEventToEmit: next

@@ -59,13 +59,6 @@ public class SubJourneyInvokeState implements State {
                     eventName, String.join("/", stateNameParts), journeyContext);
         }
 
-        if (nextState instanceof ExitSubJourneyState) {
-            LOGGER.debug("nextState is instance of ExitSubJourneyState");
-            return exitEvents
-                    .get(((ExitSubJourneyState) nextState).getExitEvent())
-                    .resolve(journeyContext);
-        }
-
         LOGGER.debug("returning nextState: '{}'", nextState.getName());
         return nextState;
     }
