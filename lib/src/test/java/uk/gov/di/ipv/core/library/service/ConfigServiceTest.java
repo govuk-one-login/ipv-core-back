@@ -23,6 +23,7 @@ import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundExce
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
@@ -305,6 +306,7 @@ class ConfigServiceTest {
     @Nested
     @DisplayName("credential issuer config items")
     class CredentialIssuerConfigItems {
+
         private void setupTestData(
                 String credentialIssuer,
                 String attributeName,
@@ -429,8 +431,8 @@ class ConfigServiceTest {
         TestConfiguration testConfiguration = TestConfiguration.valueOf(testDataSet);
         testConfiguration.setupMockConfig(ssmProvider);
         assertEquals(
-                testConfiguration.getExpectedValue(featureSet),
-                configService.getFeatureFlag("testFeature"));
+                Boolean.parseBoolean(testConfiguration.getExpectedValue(featureSet)),
+                configService.enabled(TestFeatureFlag.TEST_FEATURE));
     }
 
     @Test
@@ -676,6 +678,20 @@ class ConfigServiceTest {
         assertEquals(
                 testMultipleConfiguration.getExpectedValue(featureSet),
                 configService.getSsmParameters(testMultipleConfiguration.path, false));
+    }
+
+    private enum TestFeatureFlag implements FeatureFlag {
+        TEST_FEATURE("testFeature");
+        private final String name;
+
+        TestFeatureFlag(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return this.name;
+        }
     }
 
     private enum TestMultipleConfiguration {

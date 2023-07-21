@@ -39,6 +39,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.USE_POST_MITIGATIONS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL;
@@ -54,7 +55,6 @@ import static uk.gov.di.ipv.core.processasynccricredential.helpers.AuditCriRespo
 public class ProcessAsyncCriCredentialHandler
         implements RequestHandler<SQSEvent, SQSBatchResponse> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String USE_POST_MITIGATIONS_FEATURE_FLAG = "usePostMitigations";
     private final ConfigService configService;
     private final VerifiableCredentialService verifiableCredentialService;
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
@@ -164,9 +164,7 @@ public class ProcessAsyncCriCredentialHandler
             throws ParseException, SqsException, JsonProcessingException, CiPutException,
                     AsyncVerifiableCredentialException, CiPostMitigationsException {
 
-        final boolean postMitigatingVcs =
-                Boolean.parseBoolean(
-                        configService.getFeatureFlag(USE_POST_MITIGATIONS_FEATURE_FLAG));
+        final boolean postMitigatingVcs = configService.enabled(USE_POST_MITIGATIONS);
 
         validateOAuthState(successAsyncCriResponse);
 

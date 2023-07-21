@@ -63,6 +63,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.USE_POST_MITIGATIONS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
@@ -86,7 +87,6 @@ class RetrieveCriCredentialHandlerTest {
     private static final String passportIssuerId = CREDENTIAL_ISSUER_ID;
     public static final String TEST_ISSUER = "test-issuer";
 
-    private static final String USE_POST_MITIGATIONS_FEATURE_FLAG = "usePostMitigations";
     private static final SignedJWT TEST_SIGNED_ADDRESS_VC;
 
     @Mock private Context context;
@@ -437,7 +437,7 @@ class RetrieveCriCredentialHandlerTest {
         when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
-        when(configService.getFeatureFlag(USE_POST_MITIGATIONS_FEATURE_FLAG)).thenReturn("true");
+        when(configService.enabled(USE_POST_MITIGATIONS)).thenReturn(true);
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         when(criOAuthSessionService.getCriOauthSessionItem(any())).thenReturn(criOAuthSessionItem);
@@ -492,7 +492,7 @@ class RetrieveCriCredentialHandlerTest {
         when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
-        when(configService.getFeatureFlag(USE_POST_MITIGATIONS_FEATURE_FLAG)).thenReturn("true");
+        when(configService.enabled(USE_POST_MITIGATIONS)).thenReturn(true);
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         ipvSessionItem.setJourneyType(IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY);
@@ -554,7 +554,7 @@ class RetrieveCriCredentialHandlerTest {
         when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))
                 .thenReturn(getClientOAuthSessionItem());
-        when(configService.getFeatureFlag(USE_POST_MITIGATIONS_FEATURE_FLAG)).thenReturn("true");
+        when(configService.enabled(USE_POST_MITIGATIONS)).thenReturn(true);
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         when(criOAuthSessionService.getCriOauthSessionItem(any())).thenReturn(criOAuthSessionItem);
