@@ -20,6 +20,7 @@ import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
+import uk.gov.di.ipv.core.library.config.FeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 
@@ -319,5 +320,9 @@ public class ConfigService {
 
     public String getFeatureFlag(String featureFlagName) {
         return getSsmParameter(ConfigurationVariable.FEATURE_FLAGS, featureFlagName);
+    }
+
+    public String getFeatureFlag(FeatureFlag featureFlag) {
+        return getSsmParameter(ConfigurationVariable.FEATURE_FLAGS, featureFlag.getName());
     }
 }
