@@ -159,9 +159,23 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
                 LOGGER.info(message);
                 return JOURNEY_PENDING;
             }
+
             List<SignedJWT> credentials =
                     gpg45ProfileEvaluator.parseCredentials(
                             userIdentityService.getUserIssuedCredentials(userId));
+
+            List<ContraIndicatorItem> ciItems =
+                    ciStorageService.getCIs(
+                            clientOAuthSessionItem.getUserId(),
+                            clientOAuthSessionItem.getGovukSigninJourneyId(),
+                            ipAddress);
+
+            Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
+                    gpg45ProfileEvaluator.getJourneyResponseForStoredCis(ciItems);
+
+            if (contraIndicatorErrorJourneyResponse.isPresent()) {
+                return contraIndicatorErrorJourneyResponse.get();
+            }
 
             Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
             Optional<Gpg45Profile> matchedProfile =
@@ -177,78 +191,62 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
                 return JOURNEY_FAIL;
             }
 
-            List<ContraIndicatorItem> ciItems;
-            ciItems =
-                    ciStorageService.getCIs(
-                            clientOAuthSessionItem.getUserId(),
-                            clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            ipAddress);
-
-            Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
-                    gpg45ProfileEvaluator.getJourneyResponseForStoredCis(ciItems);
-            if (contraIndicatorErrorJourneyResponse.isPresent()) {
-                return contraIndicatorErrorJourneyResponse.get();
-            } else {
-                if (matchedProfile.isPresent()) {
-                    auditService.sendAuditEvent(
-                            buildProfileMatchedAuditEvent(
-                                    ipvSessionItem,
-                                    clientOAuthSessionItem,
-                                    matchedProfile.get(),
-                                    gpg45Scores,
-                                    credentials,
-                                    ipAddress));
-
-                    var message =
-                            new StringMapMessage()
-                                    .with(
-                                            LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                            "Matched profile and within CI threshold so returning reuse journey.")
-                                    .with(
-                                            LOG_PROFILE.getFieldName(),
-                                            matchedProfile.get().getLabel());
-                    LOGGER.info(message);
-
-                    auditService.sendAuditEvent(
-                            new AuditEvent(
-                                    AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
-                                    componentId,
-                                    auditEventUser));
-
-                    ipvSessionItem.setVot(VOT_P2);
-
-                    updateSuccessfulVcStatuses(ipvSessionItem, credentials);
-
-                    return JOURNEY_REUSE;
-                }
-
-                if (!credentials.isEmpty()) {
-                    var message =
-                            new StringMapMessage()
-                                    .with(
-                                            LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                            "Failed to match profile so resetting identity.");
-                    LOGGER.info(message);
-
-                    auditService.sendAuditEvent(
-                            new AuditEvent(
-                                    AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
-                                    componentId,
-                                    auditEventUser));
-
-                    return JOURNEY_RESET_IDENTITY;
-                }
+            if (matchedProfile.isPresent()) {
+                auditService.sendAuditEvent(
+                        buildProfileMatchedAuditEvent(
+                                ipvSessionItem,
+                                clientOAuthSessionItem,
+                                matchedProfile.get(),
+                                gpg45Scores,
+                                credentials,
+                                ipAddress));
 
                 var message =
                         new StringMapMessage()
                                 .with(
                                         LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "New user so returning next.");
+                                        "Matched profile and within CI threshold so returning reuse journey.")
+                                .with(LOG_PROFILE.getFieldName(), matchedProfile.get().getLabel());
                 LOGGER.info(message);
 
-                return JOURNEY_NEXT;
+                auditService.sendAuditEvent(
+                        new AuditEvent(
+                                AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
+                                componentId,
+                                auditEventUser));
+
+                ipvSessionItem.setVot(VOT_P2);
+
+                updateSuccessfulVcStatuses(ipvSessionItem, credentials);
+
+                return JOURNEY_REUSE;
             }
 
+            if (!credentials.isEmpty()) {
+                var message =
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "Failed to match profile so resetting identity.");
+                LOGGER.info(message);
+
+                auditService.sendAuditEvent(
+                        new AuditEvent(
+                                AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
+                                componentId,
+                                auditEventUser));
+
+                return JOURNEY_RESET_IDENTITY;
+            }
+
+            var message =
+                    new StringMapMessage()
+                            .with(
+                                    LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                    "New user so returning next.");
+            LOGGER.info(message);
+
+            return JOURNEY_NEXT;
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("Unable to parse existing credentials", e);
             return new JourneyErrorResponse(
