@@ -204,7 +204,8 @@ public class CiMitService {
 
         SignedJWT contraIndicatorsJwt;
         try {
-            contraIndicatorsJwt = SignedJWT.parse(contraIndicatorsVC);
+            // The JWT is currently a quoted string: This will change
+            contraIndicatorsJwt = SignedJWT.parse(contraIndicatorsVC.replace("\"", ""));
         } catch (ParseException e) {
             LOGGER.error(
                     new StringMapMessage()
@@ -272,8 +273,8 @@ public class CiMitService {
     private ContraIndications mapToContraIndications(
             ContraIndicatorEvidenceDto contraIndicatorEvidenceDto) {
         List<ContraIndicatorDto> contraIndicators =
-                contraIndicatorEvidenceDto.getContraIndicator() != null
-                        ? contraIndicatorEvidenceDto.getContraIndicator()
+                contraIndicatorEvidenceDto.getCi() != null
+                        ? contraIndicatorEvidenceDto.getCi()
                         : Collections.emptyList();
         return ContraIndications.builder()
                 .contraIndicators(
