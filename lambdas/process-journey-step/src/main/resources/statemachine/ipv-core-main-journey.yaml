@@ -85,13 +85,14 @@ IPV_IDENTITY_START_PAGE:
       targetState: CRI_DCMAW
       checkIfDisabled:
         dcmaw:
-
-          targetState: MULTIPLE_DOC_CHECK_PAGE
+          targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+          checkIfDisabled:
+            f2f:
+              targetState: MULTIPLE_DOC_CHECK_PAGE
     end:
       targetState: F2F_START_PAGE
       checkIfDisabled:
         f2f:
-
           targetState: PYI_ANOTHER_WAY
 
 PYI_ANOTHER_WAY:
@@ -109,11 +110,20 @@ CRI_DCMAW:
     next:
       targetState: POST_DCMAW_SUCCESS_PAGE
     access-denied:
-      targetState: MULTIPLE_DOC_CHECK_PAGE
+      targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+      checkIfDisabled:
+        f2f:
+          targetState: MULTIPLE_DOC_CHECK_PAGE
     temporarily-unavailable:
-      targetState: MULTIPLE_DOC_CHECK_PAGE
+      targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+      checkIfDisabled:
+        f2f:
+          targetState: MULTIPLE_DOC_CHECK_PAGE
     fail-with-no-ci:
-      targetState: MULTIPLE_DOC_CHECK_PAGE
+      targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+      checkIfDisabled:
+        f2f:
+          targetState: MULTIPLE_DOC_CHECK_PAGE
 
 MULTIPLE_DOC_CHECK_PAGE:
   response:
@@ -125,11 +135,19 @@ MULTIPLE_DOC_CHECK_PAGE:
     drivingLicence:
       targetState: CRI_DRIVING_LICENCE_J3
     end:
-      targetState: CRI_CLAIMED_IDENTITY_J4
-      checkIfDisabled:
-        f2f:
+      targetState: END
 
-          targetState: END
+MULTIPLE_DOC_F2F_CHECK_PAGE:
+  response:
+    type: page
+    pageId: page-f2f-multiple-doc-check
+  events:
+    ukPassport:
+      targetState: CRI_UK_PASSPORT_J2
+    drivingLicence:
+      targetState: CRI_DRIVING_LICENCE_J3
+    end:
+      targetState: CRI_CLAIMED_IDENTITY_J4
 
 PYI_NO_MATCH:
   response:
@@ -220,7 +238,10 @@ CRI_UK_PASSPORT_J2:
     next:
       targetState: CRI_ADDRESS_J2
     access-denied:
-      targetState: MULTIPLE_DOC_CHECK_PAGE
+      targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+      checkIfDisabled:
+        f2f:
+          targetState: MULTIPLE_DOC_CHECK_PAGE
 
 CRI_ADDRESS_J2:
   response:
@@ -269,7 +290,10 @@ CRI_DRIVING_LICENCE_J3:
     next:
       targetState: CRI_ADDRESS_J3
     access-denied:
-      targetState: MULTIPLE_DOC_CHECK_PAGE
+      targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+      checkIfDisabled:
+        f2f:
+          targetState: MULTIPLE_DOC_CHECK_PAGE
 
 CRI_ADDRESS_J3:
   response:
