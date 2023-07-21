@@ -72,6 +72,14 @@ public class VerifiableCredentialJwtValidator {
         LOGGER.info("Verifiable Credential validated.");
     }
 
+    public void validateSignatureAndClaims(
+            SignedJWT verifiableCredential, ECKey signingKey, String componentId, String userId)
+            throws VerifiableCredentialException {
+        validateSignature(verifiableCredential, signingKey);
+        validateClaimsSet(verifiableCredential, componentId, userId);
+        LOGGER.info("Verifiable Credential validated.");
+    }
+
     private void validateSignature(SignedJWT verifiableCredential, ECKey signingKey) {
         SignedJWT concatSignatureVerifiableCredential;
         try {
