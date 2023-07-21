@@ -221,8 +221,9 @@ public class CiMitService {
         final String cimitSigningKey =
                 configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY);
         try {
-            verifiableCredentialJwtValidator.validate(
+            verifiableCredentialJwtValidator.validateSignatureAndClaims(
                     contraIndicatorsJwt, ECKey.parse(cimitSigningKey), cimitComponentId, userId);
+            LOGGER.info("ContraIndicators Verifiable Credential validated.");
         } catch (ParseException e) {
             LOGGER.error("Error parsing CIMIT signing key: '{}'", e.getMessage());
             throw new CiRetrievalException(

@@ -251,7 +251,7 @@ class CiMitServiceTest {
                         TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
 
         verify(verifiableCredentialJwtValidator)
-                .validate(
+                .validateSignatureAndClaims(
                         any(SignedJWT.class),
                         any(ECKey.class),
                         eq(CIMIT_COMPONENT_ID),
@@ -357,7 +357,7 @@ class CiMitServiceTest {
                                 HTTPResponse.SC_SERVER_ERROR,
                                 ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL))
                 .when(verifiableCredentialJwtValidator)
-                .validate(
+                .validateSignatureAndClaims(
                         any(SignedJWT.class),
                         any(ECKey.class),
                         eq(CIMIT_COMPONENT_ID),
@@ -393,7 +393,7 @@ class CiMitServiceTest {
                         TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
 
         verify(verifiableCredentialJwtValidator)
-                .validate(
+                .validateSignatureAndClaims(
                         any(SignedJWT.class),
                         any(ECKey.class),
                         eq(CIMIT_COMPONENT_ID),
