@@ -35,7 +35,7 @@ import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiStorageService;
+import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -113,7 +113,7 @@ class EvaluateGpg45ScoresHandlerTest {
     @Mock private UserIdentityService userIdentityService;
     @Mock private IpvSessionService ipvSessionService;
     @Mock private Gpg45ProfileEvaluator gpg45ProfileEvaluator;
-    @Mock private CiStorageService ciStorageService;
+    @Mock private CiMitService ciMitService;
     @Mock private ConfigService configService;
     @Mock private AuditService auditService;
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
@@ -436,7 +436,7 @@ class EvaluateGpg45ScoresHandlerTest {
     void shouldReturn500IfFailedToRetrieveCisFromStorageSystem() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(ciStorageService.getCIs(anyString(), anyString(), anyString()))
+        when(ciMitService.getCIs(anyString(), anyString(), anyString()))
                 .thenThrow(CiRetrievalException.class);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);

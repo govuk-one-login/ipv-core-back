@@ -35,7 +35,7 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiStorageService;
+import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
@@ -77,7 +77,7 @@ public class RetrieveCriCredentialHandler
     private final ConfigService configService;
     private final AuditService auditService;
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
-    private final CiStorageService ciStorageService;
+    private final CiMitService ciMitService;
     private final CriOAuthSessionService criOAuthSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
     private final CriResponseService criResponseService;
@@ -90,7 +90,7 @@ public class RetrieveCriCredentialHandler
             ConfigService configService,
             AuditService auditService,
             VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
-            CiStorageService ciStorageService,
+            CiMitService ciMitService,
             CriOAuthSessionService criOAuthSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionService,
             CriResponseService criResponseService) {
@@ -99,7 +99,7 @@ public class RetrieveCriCredentialHandler
         this.configService = configService;
         this.auditService = auditService;
         this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
-        this.ciStorageService = ciStorageService;
+        this.ciMitService = ciMitService;
         this.criOAuthSessionService = criOAuthSessionService;
         this.clientOAuthSessionService = clientOAuthSessionService;
         this.criResponseService = criResponseService;
@@ -112,7 +112,7 @@ public class RetrieveCriCredentialHandler
         this.ipvSessionService = new IpvSessionService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator(configService);
-        this.ciStorageService = new CiStorageService(configService);
+        this.ciMitService = new CiMitService(configService);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.criResponseService = new CriResponseService(configService);
@@ -329,13 +329,13 @@ public class RetrieveCriCredentialHandler
     @Tracing
     private void submitVcToCiStorage(SignedJWT vc, String govukSigninJourneyId, String ipAddress)
             throws CiPutException {
-        ciStorageService.submitVC(vc, govukSigninJourneyId, ipAddress);
+        ciMitService.submitVC(vc, govukSigninJourneyId, ipAddress);
     }
 
     @Tracing
     private void postMitigatingVc(SignedJWT vc, String govukSigninJourneyId, String ipAddress)
             throws CiPostMitigationsException {
-        ciStorageService.submitMitigatingVcList(
+        ciMitService.submitMitigatingVcList(
                 List.of(vc.serialize()), govukSigninJourneyId, ipAddress);
     }
 

@@ -46,7 +46,7 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_IND
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 
 @ExtendWith(MockitoExtension.class)
-class CiStorageServiceTest {
+class CiMitServiceTest {
 
     private static final String THE_ARN_OF_THE_PUT_LAMBDA = "the:arn:of:the:put:lambda";
     private static final String THE_ARN_OF_THE_POST_LAMBDA = "the:arn:of:the:post:lambda";
@@ -61,7 +61,7 @@ class CiStorageServiceTest {
     @Mock AWSLambda lambdaClient;
     @Mock ConfigService configService;
     @Mock VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
-    @InjectMocks CiStorageService ciStorageService;
+    @InjectMocks CiMitService ciMitService;
 
     @Test
     void submitVCInvokesTheLambdaClient() throws Exception {
@@ -70,7 +70,7 @@ class CiStorageServiceTest {
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(new InvokeResult().withStatusCode(200));
 
-        ciStorageService.submitVC(
+        ciMitService.submitVC(
                 SignedJWT.parse(SIGNED_VC_1), GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
         InvokeRequest request = requestCaptor.getValue();
 
@@ -92,7 +92,7 @@ class CiStorageServiceTest {
         assertThrows(
                 CiPutException.class,
                 () ->
-                        ciStorageService.submitVC(
+                        ciMitService.submitVC(
                                 SignedJWT.parse(SIGNED_VC_1),
                                 GOVUK_SIGNIN_JOURNEY_ID,
                                 CLIENT_SOURCE_IP));
@@ -112,7 +112,7 @@ class CiStorageServiceTest {
         assertThrows(
                 CiPutException.class,
                 () ->
-                        ciStorageService.submitVC(
+                        ciMitService.submitVC(
                                 SignedJWT.parse(SIGNED_VC_1),
                                 GOVUK_SIGNIN_JOURNEY_ID,
                                 CLIENT_SOURCE_IP));
@@ -134,7 +134,7 @@ class CiStorageServiceTest {
                                                         .getBytes(StandardCharsets.UTF_8))));
 
         List<ContraIndicatorItem> ciItems =
-                ciStorageService.getCIs(TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
+                ciMitService.getCIs(TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
         InvokeRequest request = requestCaptor.getValue();
 
         assertEquals(THE_ARN_OF_THE_GET_LAMBDA, request.getFunctionName());
@@ -159,9 +159,7 @@ class CiStorageServiceTest {
 
         assertThrows(
                 CiRetrievalException.class,
-                () ->
-                        ciStorageService.getCIs(
-                                TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
+                () -> ciMitService.getCIs(TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
     @Test
@@ -177,9 +175,7 @@ class CiStorageServiceTest {
 
         assertThrows(
                 CiRetrievalException.class,
-                () ->
-                        ciStorageService.getCIs(
-                                TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
+                () -> ciMitService.getCIs(TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
     @Test
@@ -189,7 +185,7 @@ class CiStorageServiceTest {
         when(lambdaClient.invoke(requestCaptor.capture()))
                 .thenReturn(new InvokeResult().withStatusCode(200));
 
-        ciStorageService.submitMitigatingVcList(
+        ciMitService.submitMitigatingVcList(
                 List.of(SIGNED_VC_1), GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
         InvokeRequest request = requestCaptor.getValue();
 
@@ -211,7 +207,7 @@ class CiStorageServiceTest {
         assertThrows(
                 CiPostMitigationsException.class,
                 () ->
-                        ciStorageService.submitMitigatingVcList(
+                        ciMitService.submitMitigatingVcList(
                                 List.of(SIGNED_VC_1), GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
@@ -229,7 +225,7 @@ class CiStorageServiceTest {
         assertThrows(
                 CiPostMitigationsException.class,
                 () ->
-                        ciStorageService.submitMitigatingVcList(
+                        ciMitService.submitMitigatingVcList(
                                 List.of(SIGNED_VC_1), GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
@@ -251,7 +247,7 @@ class CiStorageServiceTest {
                                                         StandardCharsets.UTF_8))));
 
         ContraIndications contraIndications =
-                ciStorageService.getContraIndicatorsVC(
+                ciMitService.getContraIndicatorsVC(
                         TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
 
         verify(verifiableCredentialJwtValidator)
@@ -284,7 +280,7 @@ class CiStorageServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciStorageService.getContraIndicatorsVC(
+                        ciMitService.getContraIndicatorsVC(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
@@ -302,7 +298,7 @@ class CiStorageServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciStorageService.getContraIndicatorsVC(
+                        ciMitService.getContraIndicatorsVC(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
@@ -321,7 +317,7 @@ class CiStorageServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciStorageService.getContraIndicatorsVC(
+                        ciMitService.getContraIndicatorsVC(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
@@ -336,7 +332,7 @@ class CiStorageServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciStorageService.getContraIndicatorsVC(
+                        ciMitService.getContraIndicatorsVC(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
@@ -370,7 +366,7 @@ class CiStorageServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciStorageService.getContraIndicatorsVC(
+                        ciMitService.getContraIndicatorsVC(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
@@ -393,7 +389,7 @@ class CiStorageServiceTest {
                                                         .getBytes(StandardCharsets.UTF_8))));
 
         ContraIndications contraIndications =
-                ciStorageService.getContraIndicatorsVC(
+                ciMitService.getContraIndicatorsVC(
                         TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
 
         verify(verifiableCredentialJwtValidator)
@@ -434,7 +430,7 @@ class CiStorageServiceTest {
         assertThrows(
                 CiRetrievalException.class,
                 () ->
-                        ciStorageService.getContraIndicatorsVC(
+                        ciMitService.getContraIndicatorsVC(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 }

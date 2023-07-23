@@ -60,7 +60,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PAYLOAD;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_STATUS_CODE;
 
-public class CiStorageService {
+public class CiMitService {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson gson = new Gson();
     private static final String FAILED_LAMBDA_MESSAGE = "Lambda execution failed";
@@ -68,13 +68,13 @@ public class CiStorageService {
     private final ConfigService configService;
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
 
-    public CiStorageService(ConfigService configService) {
+    public CiMitService(ConfigService configService) {
         this.lambdaClient = AWSLambdaClientBuilder.defaultClient();
         this.configService = configService;
         this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator(configService);
     }
 
-    public CiStorageService(
+    public CiMitService(
             AWSLambda lambdaClient,
             ConfigService configService,
             VerifiableCredentialJwtValidator verifiableCredentialJwtValidator) {
@@ -97,7 +97,7 @@ public class CiStorageService {
                                                 ipAddress,
                                                 verifiableCredential.serialize())));
 
-        LOGGER.info("Sending VC to CI storage system.");
+        LOGGER.info("Sending VC to CIMIT.");
         InvokeResult result = lambdaClient.invoke(request);
 
         if (lambdaExecutionFailed(result)) {
@@ -121,7 +121,7 @@ public class CiStorageService {
                                                 ipAddress,
                                                 verifiableCredentialList)));
 
-        LOGGER.info("Sending mitigating VCs to CI storage system.");
+        LOGGER.info("Sending mitigating VCs to CIMIT.");
         InvokeResult result = lambdaClient.invoke(request);
 
         if (lambdaExecutionFailed(result)) {
@@ -139,7 +139,7 @@ public class CiStorageService {
                         govukSigninJourneyId,
                         ipAddress,
                         userId,
-                        "Retrieving CI's from CI storage system.");
+                        "Retrieving CIs from CIMIT.");
         String jsonResponse = new String(result.getPayload().array(), StandardCharsets.UTF_8);
         GetCiResponse response = gson.fromJson(jsonResponse, GetCiResponse.class);
         return response.getContraIndicators();
@@ -154,7 +154,7 @@ public class CiStorageService {
                         govukSigninJourneyId,
                         ipAddress,
                         userId,
-                        "Retrieving CI's from CIMIT system.");
+                        "Retrieving CIs from CIMIT system.");
         SignedJWT ciSignedJWT = extractAndValidateContraIndicatorsJwt(result, userId);
         ContraIndicatorEvidenceDto contraIndicatorEvidence =
                 parseContraIndicatorEvidence(ciSignedJWT);
