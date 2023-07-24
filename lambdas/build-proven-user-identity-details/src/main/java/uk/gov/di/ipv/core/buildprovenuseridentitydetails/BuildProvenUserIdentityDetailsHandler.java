@@ -48,13 +48,13 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.BIRTH_DATE_PROPERTY_NAME;
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.service.UserIdentityService.NAME_PROPERTY_NAME;
 
 public class BuildProvenUserIdentityDetailsHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
-    public static final String JOURNEY_ERROR_PATH = "/journey/error";
     private static final Logger LOGGER = LogManager.getLogger();
 
     private final IpvSessionService ipvSessionService;

@@ -63,6 +63,12 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PROFILE;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PENDING_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_RESET_IDENTITY_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_REUSE_PATH;
 
 /** Check Existing Identity response Lambda */
 public class CheckExistingIdentityHandler
@@ -74,16 +80,15 @@ public class CheckExistingIdentityHandler
     private static final Logger LOGGER = LogManager.getLogger();
 
     private static final Map<String, Object> JOURNEY_REUSE =
-            new JourneyResponse("/journey/reuse").toObjectMap();
+            new JourneyResponse(JOURNEY_REUSE_PATH).toObjectMap();
     private static final Map<String, Object> JOURNEY_PENDING =
-            new JourneyResponse("/journey/pending").toObjectMap();
+            new JourneyResponse(JOURNEY_PENDING_PATH).toObjectMap();
     private static final Map<String, Object> JOURNEY_NEXT =
-            new JourneyResponse("/journey/next").toObjectMap();
+            new JourneyResponse(JOURNEY_NEXT_PATH).toObjectMap();
     private static final Map<String, Object> JOURNEY_FAIL =
-            new JourneyResponse("/journey/fail").toObjectMap();
+            new JourneyResponse(JOURNEY_FAIL_PATH).toObjectMap();
     private static final Map<String, Object> JOURNEY_RESET_IDENTITY =
-            new JourneyResponse("/journey/reset-identity").toObjectMap();
-    private static final String JOURNEY_ERROR_PATH = "/journey/error";
+            new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH).toObjectMap();
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;

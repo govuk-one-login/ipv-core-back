@@ -59,6 +59,8 @@ import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_EVALUATE_PATH;
 
 public class RetrieveCriCredentialHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
@@ -69,8 +71,8 @@ public class RetrieveCriCredentialHandler
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Map<String, Object> JOURNEY_EVALUATE =
-            Map.of(JOURNEY, "/journey/evaluate");
-    private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, "/journey/error");
+            Map.of(JOURNEY, JOURNEY_EVALUATE_PATH);
+    private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, JOURNEY_ERROR_PATH);
 
     private final VerifiableCredentialService verifiableCredentialService;
     private final IpvSessionService ipvSessionService;

@@ -63,6 +63,7 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getJourney;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class BuildCriOauthRequestHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
@@ -75,7 +76,6 @@ public class BuildCriOauthRequestHandler
     public static final String DEFAULT_ALLOWED_SHARED_ATTR = "name,birthDate,address";
     public static final String REGEX_COMMA_SEPARATION = "\\s*,\\s*";
     public static final Pattern LAST_SEGMENT_PATTERN = Pattern.compile("/([^/]+)$");
-    public static final String JOURNEY_ERROR_PATH = "/journey/error";
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final CredentialIssuerConfigService credentialIssuerConfigService;

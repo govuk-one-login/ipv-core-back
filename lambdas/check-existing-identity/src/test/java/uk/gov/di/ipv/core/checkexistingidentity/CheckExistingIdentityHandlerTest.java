@@ -56,6 +56,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
@@ -386,7 +387,11 @@ class CheckExistingIdentityHandlerTest {
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        var journeyResponse = handleRequest(event, context, JourneyResponse.class);
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
         assertEquals(JOURNEY_FAIL, journeyResponse);
         verify(userIdentityService, times(0)).deleteVcStoreItems(TEST_USER_ID);
     }

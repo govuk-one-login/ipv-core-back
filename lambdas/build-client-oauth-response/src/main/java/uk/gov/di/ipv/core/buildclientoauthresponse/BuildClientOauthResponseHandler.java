@@ -51,10 +51,10 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getClientOAuthSes
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionIdAllowNull;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 
 public class BuildClientOauthResponseHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
-    public static final String JOURNEY_ERROR_PATH = "/journey/error";
     private static final Logger LOGGER = LogManager.getLogger();
     private final IpvSessionService sessionService;
     private final ConfigService configService;

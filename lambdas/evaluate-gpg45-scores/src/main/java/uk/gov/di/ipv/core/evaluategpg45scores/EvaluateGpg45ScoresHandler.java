@@ -62,17 +62,24 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CO
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_END_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PYI_NO_MATCH_PATH;
 
 /** Evaluate the gathered credentials against a desired GPG45 profile. */
 public class EvaluateGpg45ScoresHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
-    private static final JourneyResponse JOURNEY_END = new JourneyResponse("/journey/end");
-    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
-    private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
-    private static final String JOURNEY_ERROR_PATH = "/journey/error";
-    private static final String JOURNEY_FAIL_WITH_NO_CI = "/journey/fail-with-no-ci";
+    private static final JourneyResponse JOURNEY_END = new JourneyResponse(JOURNEY_END_PATH);
+    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
+    private static final JourneyResponse JOURNEY_PYI_NO_MATCH =
+            new JourneyResponse(JOURNEY_PYI_NO_MATCH_PATH);
+    private static final JourneyResponse JOURNEY_FAIL_WITH_NO_CI =
+            new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH);
+
     private static final String VOT_P2 = "P2";
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int ONLY = 0;
@@ -181,7 +188,7 @@ public class EvaluateGpg45ScoresHandler
             }
 
             if (!checkCorrelation(userId, ipvSessionItem.getCurrentVcStatuses())) {
-                return new JourneyResponse(JOURNEY_PYI_NO_MATCH).toObjectMap();
+                return JOURNEY_PYI_NO_MATCH.toObjectMap();
             }
 
             LOGGER.info(message);
@@ -406,7 +413,7 @@ public class EvaluateGpg45ScoresHandler
         if (lastVisitedCriVcStatus.isPresent()
                 && Boolean.FALSE.equals(lastVisitedCriVcStatus.get().getIsSuccessfulVc())) {
             // Handle scenario where VCs without CIs should be redirected
-            return Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI));
+            return Optional.of(JOURNEY_FAIL_WITH_NO_CI);
         }
         return Optional.empty();
     }

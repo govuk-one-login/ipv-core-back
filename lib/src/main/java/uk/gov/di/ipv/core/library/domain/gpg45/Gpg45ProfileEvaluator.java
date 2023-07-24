@@ -33,14 +33,14 @@ import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CI_SCORE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_NO_OF_CI_ITEMS;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PYI_KBV_FAIL_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PYI_NO_MATCH_PATH;
 
 public class Gpg45ProfileEvaluator {
-    private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
     private static final JourneyResponse JOURNEY_RESPONSE_PYI_NO_MATCH =
-            new JourneyResponse(JOURNEY_PYI_NO_MATCH);
-    private static final String JOURNEY_PYI_KBV_FAIL = "/journey/pyi-kbv-fail";
+            new JourneyResponse(JOURNEY_PYI_NO_MATCH_PATH);
     private static final JourneyResponse JOURNEY_RESPONSE_PYI_KBV_FAIL =
-            new JourneyResponse(JOURNEY_PYI_KBV_FAIL);
+            new JourneyResponse(JOURNEY_PYI_KBV_FAIL_PATH);
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Gson gson = new Gson();
     private static final int NO_SCORE = 0;
