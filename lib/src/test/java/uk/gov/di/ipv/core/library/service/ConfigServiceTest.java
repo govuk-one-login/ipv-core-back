@@ -23,6 +23,7 @@ import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundExce
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorMitigation;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
@@ -34,6 +35,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getAllServeEvents;
@@ -732,5 +734,22 @@ class ConfigServiceTest {
                 return expected;
             }
         }
+    }
+
+    @Test
+    void shouldFetchCiMitConfig() throws JsonProcessingException {
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/cimit/config"))
+                .thenReturn(
+                        "{\"X01\":{\"inter\":\"/journey/j1\",\"intra\":\"/journey/j2\",\"mit\":[\"cri1\"]}}");
+        Map<String, ContraIndicatorMitigation> expectedCiMitConfig =
+                Map.of(
+                        "X01",
+                        ContraIndicatorMitigation.builder()
+                                .interSessionJourney("/journey/j1")
+                                .intraSessionJourney("/journey/j2")
+                                .mitigatingCredentialIssuers(List.of("cri1"))
+                                .build());
+        assertEquals(expectedCiMitConfig, configService.getCiMitConfig());
     }
 }
