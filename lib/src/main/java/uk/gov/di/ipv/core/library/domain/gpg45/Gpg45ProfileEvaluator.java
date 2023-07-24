@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.library.domain.gpg45;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.nimbusds.jose.shaded.json.JSONArray;
@@ -10,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.domain.ContraIndications;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorMitigation;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CheckDetail;
@@ -52,7 +54,8 @@ public class Gpg45ProfileEvaluator {
     }
 
     public Optional<JourneyResponse> getJourneyResponseForStoredContraIndicators(
-            ContraIndications contraIndications) {
+            ContraIndications contraIndications, boolean interSession)
+            throws JsonProcessingException {
         LOGGER.info(
                 new StringMapMessage()
                         .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Retrieved user's CI items.")
@@ -71,10 +74,31 @@ public class Gpg45ProfileEvaluator {
         int ciScoreThreshold =
                 Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
         if (ciScore > ciScoreThreshold) {
-            return Optional.of(
-                    contraIndications.getLatestContraIndicator().get().getCode().equals("TBD")
-                            ? JOURNEY_RESPONSE_PYI_KBV_FAIL
-                            : JOURNEY_RESPONSE_PYI_NO_MATCH);
+            Map<String, ContraIndicatorMitigation> ciMitConfig = configService.getCiMitConfig();
+            if (interSession) {
+                for (String contraIndicatorCode :
+                        contraIndications.getContraIndicators().keySet()) {
+                    if (ciMitConfig.containsKey(contraIndicatorCode)) {
+                        return Optional.of(
+                                new JourneyResponse(
+                                        ciMitConfig
+                                                .get(contraIndicatorCode)
+                                                .getInterSessionJourney()));
+                    }
+                }
+            } else {
+                for (String contraIndicatorCode :
+                        contraIndications.getContraIndicators().keySet()) {
+                    if (ciMitConfig.containsKey(contraIndicatorCode)) {
+                        return Optional.of(
+                                new JourneyResponse(
+                                        ciMitConfig
+                                                .get(contraIndicatorCode)
+                                                .getIntraSessionJourney()));
+                    }
+                }
+            }
+            return Optional.of(JOURNEY_RESPONSE_PYI_NO_MATCH);
         } else {
             return Optional.empty();
         }

@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.checkexistingidentity;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
@@ -177,7 +178,8 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
                                             FeatureFlag.USE_CONTRA_INDICATOR_VC))
                             ? gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
                                     ciMitService.getContraIndicatorsVC(
-                                            userId, govukSigninJourneyId, ipAddress))
+                                            userId, govukSigninJourneyId, ipAddress),
+                                    true)
                             : gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
                                     ciMitService.getCIs(userId, govukSigninJourneyId, ipAddress));
             if (contraIndicatorErrorJourneyResponse.isPresent()) {
@@ -288,6 +290,8 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
                     JOURNEY_ERROR_PATH,
                     HttpStatus.SC_INTERNAL_SERVER_ERROR,
                     ErrorResponse.UNRECOGNISED_CI_CODE);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
         }
     }
 
