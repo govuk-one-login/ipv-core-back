@@ -21,8 +21,10 @@ import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
 import uk.gov.di.ipv.core.library.config.FeatureFlag;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorMitigation;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 
 import java.net.URI;
 import java.nio.file.Path;
@@ -285,6 +287,17 @@ public class ConfigService {
         } catch (JsonProcessingException e) {
             LOGGER.error("Failed to parse contra-indicator scoring config");
             return Collections.emptyMap();
+        }
+    }
+
+    public Map<String, ContraIndicatorMitigation> getCiMitConfig() throws ConfigException {
+        final TypeReference<HashMap<String, ContraIndicatorMitigation>> typeRef =
+                new TypeReference<>() {};
+        final String ciMitConfig = getSsmParameter(ConfigurationVariable.CIMIT_CONFIG);
+        try {
+            return objectMapper.readValue(ciMitConfig, typeRef);
+        } catch (JsonProcessingException e) {
+            throw new ConfigException("Failed to parse CIMIT configuration");
         }
     }
 
