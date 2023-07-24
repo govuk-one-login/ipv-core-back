@@ -15,7 +15,9 @@ dependencies {
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			"software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
 			project(":lib"),
-			project(":libs:vc-helper")
+			project(":libs:vc-helper"),
+			project(":libs:journey-uris")
+
 	implementation project(path: ':libs:verifiable-credentials')
 
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",

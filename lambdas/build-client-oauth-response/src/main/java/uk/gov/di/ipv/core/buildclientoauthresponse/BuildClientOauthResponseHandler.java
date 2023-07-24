@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.buildclientoauthresponse;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
 import com.nimbusds.oauth2.sdk.AuthorizationRequest;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
@@ -21,7 +22,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.BaseResponse;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -34,7 +34,6 @@ import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.statemachine.JourneyRequestLambda;
 
 import java.net.URISyntaxException;
 import java.util.Collections;
@@ -52,8 +51,10 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getClientOAuthSes
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionIdAllowNull;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 
-public class BuildClientOauthResponseHandler extends JourneyRequestLambda {
+public class BuildClientOauthResponseHandler
+        implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private final IpvSessionService sessionService;
     private final ConfigService configService;
@@ -89,7 +90,7 @@ public class BuildClientOauthResponseHandler extends JourneyRequestLambda {
     @Override
     @Tracing
     @Logging(clearState = true)
-    public BaseResponse handleRequest(JourneyRequest input, Context context) {
+    public Map<String, Object> handleRequest(JourneyRequest input, Context context) {
 
         LogHelper.attachComponentIdToLogs();
 
@@ -119,7 +120,8 @@ public class BuildClientOauthResponseHandler extends JourneyRequestLambda {
                                         "No ipvSession for existing ClientOAuthSession.")
                                 .with(LOG_CLIENT_OAUTH_SESSION_ID.getFieldName(), clientSessionId);
                 LOGGER.info(mapMessage);
-                return generateClientOAuthSessionErrorResponse(clientOAuthSessionItem);
+                return generateClientOAuthSessionErrorResponse(clientOAuthSessionItem)
+                        .toObjectMap();
             } else {
                 throw new HttpResponseExceptionWithErrorBody(
                         HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_SESSION_ID);
@@ -152,7 +154,8 @@ public class BuildClientOauthResponseHandler extends JourneyRequestLambda {
                 var validationResult = authRequestValidator.validateRequest(authParameters, params);
                 if (!validationResult.isValid()) {
                     return new JourneyErrorResponse(
-                            null, HttpStatus.SC_BAD_REQUEST, validationResult.getError());
+                                    null, HttpStatus.SC_BAD_REQUEST, validationResult.getError())
+                            .toObjectMap();
                 }
 
                 AuthorizationCode authorizationCode = new AuthorizationCode();
@@ -180,30 +183,34 @@ public class BuildClientOauthResponseHandler extends JourneyRequestLambda {
                                     clientResponse.getClient().getRedirectUrl());
             LOGGER.info(message);
 
-            return clientResponse;
+            return clientResponse.toObjectMap();
         } catch (ParseException e) {
             LOGGER.error("Authentication request could not be parsed", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_BAD_REQUEST,
-                    ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS);
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_BAD_REQUEST,
+                            ErrorResponse.FAILED_TO_PARSE_OAUTH_QUERY_STRING_PARAMETERS)
+                    .toObjectMap();
         } catch (SqsException e) {
             LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT,
-                    e.getMessage());
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT,
+                            e.getMessage())
+                    .toObjectMap();
         } catch (URISyntaxException e) {
             LogHelper.logErrorMessage("Failed to construct redirect uri.", e.getMessage());
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI,
-                    e.getMessage());
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI,
+                            e.getMessage())
+                    .toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse());
+                            JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
+                    .toObjectMap();
         }
     }
 

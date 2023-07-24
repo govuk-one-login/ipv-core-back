@@ -42,6 +42,10 @@ import java.util.Map;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CLIENT_OAUTH_SESSION_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ACCESS_DENIED_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ACCESS_TOKEN_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_TEMPORARILY_UNAVAILABLE_PATH;
 
 public class ValidateOAuthCallbackHandler
         implements RequestHandler<CriCallbackRequest, Map<String, Object>> {
@@ -49,12 +53,12 @@ public class ValidateOAuthCallbackHandler
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String JOURNEY = "journey";
     private static final Map<String, Object> JOURNEY_ACCESS_TOKEN =
-            Map.of(JOURNEY, "/journey/cri/access-token");
+            Map.of(JOURNEY, JOURNEY_ACCESS_TOKEN_PATH);
     private static final Map<String, Object> JOURNEY_ACCESS_DENIED =
-            Map.of(JOURNEY, "/journey/access-denied");
+            Map.of(JOURNEY, JOURNEY_ACCESS_DENIED_PATH);
     private static final Map<String, Object> JOURNEY_TEMPORARILY_UNAVAILABLE =
-            Map.of(JOURNEY, "/journey/temporarily-unavailable");
-    private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, "/journey/error");
+            Map.of(JOURNEY, JOURNEY_TEMPORARILY_UNAVAILABLE_PATH);
+    private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, JOURNEY_ERROR_PATH);
     private static final List<String> ALLOWED_OAUTH_ERROR_CODES =
             Arrays.asList(
                     OAuth2Error.INVALID_REQUEST_CODE,

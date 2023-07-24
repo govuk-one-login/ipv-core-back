@@ -6,8 +6,8 @@ import lombok.EqualsAndHashCode;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
 @ExcludeFromGeneratedCoverageReport
-@EqualsAndHashCode
-public class JourneyResponse implements BaseResponse {
+@EqualsAndHashCode(callSuper = false)
+public class JourneyResponse extends BaseResponse {
     @JsonProperty private final String journey;
 
     @JsonCreator

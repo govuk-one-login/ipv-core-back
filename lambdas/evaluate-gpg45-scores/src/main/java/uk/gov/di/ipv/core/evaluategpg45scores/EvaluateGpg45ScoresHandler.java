@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.evaluategpg45scores;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
@@ -16,7 +17,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.BaseResponse;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
@@ -45,12 +45,12 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.statemachine.JourneyRequestLambda;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
@@ -62,16 +62,24 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CO
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_END_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_FAIL_WITH_NO_CI_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_PYI_NO_MATCH_PATH;
 
 /** Evaluate the gathered credentials against a desired GPG45 profile. */
-public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
+public class EvaluateGpg45ScoresHandler
+        implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
     private static final JourneyResponse JOURNEY_END = new JourneyResponse(JOURNEY_END_PATH);
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
-    private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
-    private static final String JOURNEY_ERROR_PATH = "/journey/error";
-    private static final String JOURNEY_FAIL_WITH_NO_CI = "/journey/fail-with-no-ci";
+    private static final JourneyResponse JOURNEY_PYI_NO_MATCH =
+            new JourneyResponse(JOURNEY_PYI_NO_MATCH_PATH);
+    private static final JourneyResponse JOURNEY_FAIL_WITH_NO_CI =
+            new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI_PATH);
+
     private static final String VOT_P2 = "P2";
     private static final Logger LOGGER = LogManager.getLogger();
     private static final int ONLY = 0;
@@ -121,7 +129,7 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
     @Override
     @Tracing
     @Logging(clearState = true)
-    protected BaseResponse handleRequest(JourneyRequest event, Context context) {
+    public Map<String, Object> handleRequest(JourneyRequest event, Context context) {
         LogHelper.attachComponentIdToLogs();
 
         try {
@@ -168,7 +176,7 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
                                 LOG_ERROR_JOURNEY_RESPONSE.getFieldName(),
                                 contraIndicatorErrorJourneyResponse.get().toString());
                 LOGGER.info(message);
-                return contraIndicatorErrorJourneyResponse.get();
+                return contraIndicatorErrorJourneyResponse.get().toObjectMap();
             }
 
             updateSuccessfulVcStatuses(ipvSessionItem, credentials);
@@ -176,62 +184,70 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
             Optional<JourneyResponse> journeyResponseForFailWithNoCi =
                     getJourneyResponseForFailWithNoCi(ipvSessionItem);
             if (journeyResponseForFailWithNoCi.isPresent()) {
-                return journeyResponseForFailWithNoCi.get();
+                return journeyResponseForFailWithNoCi.get().toObjectMap();
             }
 
             if (!checkCorrelation(userId, ipvSessionItem.getCurrentVcStatuses())) {
-                return new JourneyResponse(JOURNEY_PYI_NO_MATCH);
+                return JOURNEY_PYI_NO_MATCH.toObjectMap();
             }
 
             LOGGER.info(message);
 
-            return journeyResponse;
+            return journeyResponse.toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("Received HTTP response exception", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse());
+                            JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
+                    .toObjectMap();
         } catch (ParseException e) {
             LOGGER.error("Unable to parse GPG45 scores from existing credentials", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS)
+                    .toObjectMap();
         } catch (UnknownEvidenceTypeException e) {
             LOGGER.error("Unable to determine type of credential", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE);
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE)
+                    .toObjectMap();
         } catch (CiRetrievalException e) {
             LOGGER.error("Error when fetching CIs from storage system", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_GET_STORED_CIS);
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_GET_STORED_CIS)
+                    .toObjectMap();
         } catch (SqsException e) {
             LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT);
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT)
+                    .toObjectMap();
         } catch (NoVisitedCriFoundException e) {
             LOGGER.error("No visited CRIs found.", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_FIND_VISITED_CRI);
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_FIND_VISITED_CRI)
+                    .toObjectMap();
         } catch (UnrecognisedCiException e) {
             LOGGER.error("Unrecognised CI code received", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.UNRECOGNISED_CI_CODE);
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.UNRECOGNISED_CI_CODE)
+                    .toObjectMap();
         } catch (NoVcStatusForIssuerException e) {
             LOGGER.error("No VC status found for CRI issuer", e);
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER);
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER)
+                    .toObjectMap();
         }
     }
 
@@ -397,7 +413,7 @@ public class EvaluateGpg45ScoresHandler extends JourneyRequestLambda {
         if (lastVisitedCriVcStatus.isPresent()
                 && Boolean.FALSE.equals(lastVisitedCriVcStatus.get().getIsSuccessfulVc())) {
             // Handle scenario where VCs without CIs should be redirected
-            return Optional.of(new JourneyResponse(JOURNEY_FAIL_WITH_NO_CI));
+            return Optional.of(JOURNEY_FAIL_WITH_NO_CI);
         }
         return Optional.empty();
     }

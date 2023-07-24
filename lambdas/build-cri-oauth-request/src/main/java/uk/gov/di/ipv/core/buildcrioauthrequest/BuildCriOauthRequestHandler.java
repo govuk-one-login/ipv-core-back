@@ -1,6 +1,7 @@
 package uk.gov.di.ipv.core.buildcrioauthrequest;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,7 +27,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerConfigService;
-import uk.gov.di.ipv.core.library.domain.BaseResponse;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -47,7 +47,6 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.statemachine.JourneyRequestLambda;
 
 import java.net.URISyntaxException;
 import java.text.ParseException;
@@ -64,8 +63,10 @@ import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getFeatureSet;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getJourney;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 
-public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
+public class BuildCriOauthRequestHandler
+        implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String DCMAW_CRI_ID = "dcmaw";
     public static final String SHARED_CLAIM_ATTR_NAME = "name";
@@ -124,7 +125,7 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
     @Override
     @Tracing
     @Logging(clearState = true)
-    protected BaseResponse handleRequest(JourneyRequest input, Context context) {
+    public Map<String, Object> handleRequest(JourneyRequest input, Context context) {
         LogHelper.attachComponentIdToLogs();
         try {
             String ipvSessionId = getIpvSessionId(input);
@@ -136,7 +137,8 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
             var errorResponse = validate(journey);
             if (errorResponse.isPresent()) {
                 return new JourneyErrorResponse(
-                        JOURNEY_ERROR_PATH, HttpStatus.SC_BAD_REQUEST, errorResponse.get());
+                                JOURNEY_ERROR_PATH, HttpStatus.SC_BAD_REQUEST, errorResponse.get())
+                        .toObjectMap();
             }
 
             String criId = getCriIdFromJourney(journey);
@@ -144,9 +146,10 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
 
             if (credentialIssuerConfig == null) {
                 return new JourneyErrorResponse(
-                        JOURNEY_ERROR_PATH,
-                        HttpStatus.SC_BAD_REQUEST,
-                        ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID);
+                                JOURNEY_ERROR_PATH,
+                                HttpStatus.SC_BAD_REQUEST,
+                                ErrorResponse.INVALID_CREDENTIAL_ISSUER_ID)
+                        .toObjectMap();
             }
 
             IpvSessionItem ipvSessionItem = ipvSessionService.getIpvSession(ipvSessionId);
@@ -195,36 +198,43 @@ public class BuildCriOauthRequestHandler extends JourneyRequestLambda {
                                     criResponse.getCri().getRedirectUrl());
             LOGGER.info(message);
 
-            return criResponse;
+            return criResponse.toObjectMap();
 
         } catch (HttpResponseExceptionWithErrorBody e) {
             if (ErrorResponse.MISSING_IPV_SESSION_ID.equals(e.getErrorResponse())) {
                 return new JourneyErrorResponse(
-                        JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse());
+                                JOURNEY_ERROR_PATH, e.getResponseCode(), e.getErrorResponse())
+                        .toObjectMap();
             }
             LogHelper.logErrorMessage("Failed to create cri JAR", e.getErrorReason());
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH, HttpStatus.SC_INTERNAL_SERVER_ERROR, e.getErrorResponse());
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            e.getErrorResponse())
+                    .toObjectMap();
         } catch (SqsException e) {
             LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT,
-                    e.getMessage());
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT,
+                            e.getMessage())
+                    .toObjectMap();
         } catch (ParseException | JOSEException e) {
             LogHelper.logErrorMessage("Failed to parse encryption public JWK.", e.getMessage());
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_BAD_REQUEST,
-                    ErrorResponse.FAILED_TO_PARSE_CREDENTIAL_ISSUER_CONFIG);
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_BAD_REQUEST,
+                            ErrorResponse.FAILED_TO_PARSE_CREDENTIAL_ISSUER_CONFIG)
+                    .toObjectMap();
         } catch (URISyntaxException e) {
             LogHelper.logErrorMessage("Failed to construct redirect uri.", e.getMessage());
             return new JourneyErrorResponse(
-                    JOURNEY_ERROR_PATH,
-                    HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                    ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI,
-                    e.getMessage());
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_CONSTRUCT_REDIRECT_URI,
+                            e.getMessage())
+                    .toObjectMap();
         }
     }
 
