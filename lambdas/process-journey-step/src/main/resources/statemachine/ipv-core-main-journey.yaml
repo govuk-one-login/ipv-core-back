@@ -369,7 +369,7 @@ CRI_F2F_J4:
     next:
       targetState: F2F_HANDOFF_PAGE_J4
     access-denied:
-      targetState: PYI_NO_MATCH
+      targetState: PYI_ANOTHER_WAY
 
 F2F_HANDOFF_PAGE_J4:
   response:
