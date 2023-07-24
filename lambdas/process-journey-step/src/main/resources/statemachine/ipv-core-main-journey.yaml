@@ -18,6 +18,8 @@ CRI_STATE:
       targetState: PYI_NO_MATCH
     pyi-kbv-fail:
       targetState: PYI_KBV_FAIL
+    reset-identity:
+      targetState: RESET_IDENTITY
 
 # Shared states
 INITIAL_IPV_JOURNEY:
