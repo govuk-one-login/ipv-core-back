@@ -24,7 +24,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiStorageService;
+import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
@@ -59,7 +59,7 @@ public class ProcessAsyncCriCredentialHandler
     private final VerifiableCredentialService verifiableCredentialService;
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     private final AuditService auditService;
-    private final CiStorageService ciStorageService;
+    private final CiMitService ciMitService;
 
     private final CriResponseService criResponseService;
     private final String componentId;
@@ -69,14 +69,14 @@ public class ProcessAsyncCriCredentialHandler
             VerifiableCredentialService verifiableCredentialService,
             VerifiableCredentialJwtValidator verifiableCredentialJwtValidator,
             AuditService auditService,
-            CiStorageService ciStorageService,
+            CiMitService ciMitService,
             CriResponseService criResponseService) {
         this.configService = configService;
         this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
         this.verifiableCredentialService = verifiableCredentialService;
         this.auditService = auditService;
         this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
-        this.ciStorageService = ciStorageService;
+        this.ciMitService = ciMitService;
         this.criResponseService = criResponseService;
     }
 
@@ -86,7 +86,7 @@ public class ProcessAsyncCriCredentialHandler
         this.verifiableCredentialJwtValidator = new VerifiableCredentialJwtValidator(configService);
         this.verifiableCredentialService = new VerifiableCredentialService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
-        this.ciStorageService = new CiStorageService(configService);
+        this.ciMitService = new CiMitService(configService);
         this.criResponseService = new CriResponseService(configService);
         this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
@@ -263,11 +263,11 @@ public class ProcessAsyncCriCredentialHandler
 
     @Tracing
     private void submitVcToCiStorage(SignedJWT vc) throws CiPutException {
-        ciStorageService.submitVC(vc, null, null);
+        ciMitService.submitVC(vc, null, null);
     }
 
     @Tracing
     private void postMitigatingVc(SignedJWT vc) throws CiPostMitigationsException {
-        ciStorageService.submitMitigatingVcList(List.of(vc.serialize()), null, null);
+        ciMitService.submitMitigatingVcList(List.of(vc.serialize()), null, null);
     }
 }

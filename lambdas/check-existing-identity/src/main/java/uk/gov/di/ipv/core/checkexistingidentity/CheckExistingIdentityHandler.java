@@ -37,7 +37,7 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiStorageService;
+import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
@@ -84,7 +84,7 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
     private final CriResponseService criResponseService;
     private final IpvSessionService ipvSessionService;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
-    private final CiStorageService ciStorageService;
+    private final CiMitService ciMitService;
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final String componentId;
@@ -95,7 +95,7 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
-            CiStorageService ciStorageService,
+            CiMitService ciMitService,
             AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             CriResponseService criResponseService) {
@@ -103,7 +103,7 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
-        this.ciStorageService = ciStorageService;
+        this.ciMitService = ciMitService;
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
@@ -117,7 +117,7 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService);
-        this.ciStorageService = new CiStorageService(configService);
+        this.ciMitService = new CiMitService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
@@ -165,7 +165,7 @@ public class CheckExistingIdentityHandler extends JourneyRequestLambda {
                             userIdentityService.getUserIssuedCredentials(userId));
 
             List<ContraIndicatorItem> ciItems =
-                    ciStorageService.getCIs(
+                    ciMitService.getCIs(
                             clientOAuthSessionItem.getUserId(),
                             clientOAuthSessionItem.getGovukSigninJourneyId(),
                             ipAddress);

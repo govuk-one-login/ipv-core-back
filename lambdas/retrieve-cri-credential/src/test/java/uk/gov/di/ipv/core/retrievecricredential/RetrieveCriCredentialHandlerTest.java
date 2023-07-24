@@ -30,7 +30,7 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiStorageService;
+import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
@@ -96,7 +96,7 @@ class RetrieveCriCredentialHandlerTest {
     @Mock private VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     @Mock private IpvSessionService ipvSessionService;
     @Mock private IpvSessionItem ipvSessionItem;
-    @Mock private CiStorageService ciStorageService;
+    @Mock private CiMitService ciMitService;
     @Mock private CriOAuthSessionService criOAuthSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
 
@@ -374,7 +374,7 @@ class RetrieveCriCredentialHandlerTest {
         assertEquals("0", evidenceItem.get("verificationScore").asText());
         assertEquals("[ \"A02\", \"A03\" ]", evidenceItem.get("ci").toPrettyString());
         verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
-        verify(ciStorageService, never()).submitMitigatingVcList(any(), any(), any());
+        verify(ciMitService, never()).submitMitigatingVcList(any(), any(), any());
     }
 
     @Test
@@ -444,13 +444,13 @@ class RetrieveCriCredentialHandlerTest {
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         doThrow(new CiPutException("Lambda execution failed"))
-                .when(ciStorageService)
+                .when(ciMitService)
                 .submitVC(any(SignedJWT.class), anyString(), anyString());
 
         handler.handleRequest(testInput, context);
 
         verify(verifiableCredentialService, never()).persistUserCredentials(any(), any(), any());
-        verify(ciStorageService, never()).submitMitigatingVcList(any(), any(), any());
+        verify(ciMitService, never()).submitMitigatingVcList(any(), any(), any());
 
         ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(IpvSessionItem.class);
@@ -508,13 +508,13 @@ class RetrieveCriCredentialHandlerTest {
         assertEquals(TEST_SIGNED_ADDRESS_VC, persistedVc);
 
         ArgumentCaptor<SignedJWT> submittedVcCaptor = ArgumentCaptor.forClass(SignedJWT.class);
-        verify(ciStorageService).submitVC(submittedVcCaptor.capture(), anyString(), anyString());
+        verify(ciMitService).submitVC(submittedVcCaptor.capture(), anyString(), anyString());
         var submittedVc = submittedVcCaptor.getValue();
         assertEquals(TEST_SIGNED_ADDRESS_VC, submittedVc);
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<String>> postedVcsCaptor = ArgumentCaptor.forClass(List.class);
-        verify(ciStorageService)
+        verify(ciMitService)
                 .submitMitigatingVcList(postedVcsCaptor.capture(), anyString(), anyString());
         var postedVcs = postedVcsCaptor.getValue();
         assertEquals(1, postedVcs.size());
@@ -561,14 +561,14 @@ class RetrieveCriCredentialHandlerTest {
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
         doThrow(new CiPostMitigationsException("Lambda execution failed"))
-                .when(ciStorageService)
+                .when(ciMitService)
                 .submitMitigatingVcList(anyList(), anyString(), anyString());
 
         handler.handleRequest(testInput, context);
 
         verify(verifiableCredentialService, never()).persistUserCredentials(any(), any(), any());
         ArgumentCaptor<SignedJWT> submittedVcCaptor = ArgumentCaptor.forClass(SignedJWT.class);
-        verify(ciStorageService).submitVC(submittedVcCaptor.capture(), anyString(), anyString());
+        verify(ciMitService).submitVC(submittedVcCaptor.capture(), anyString(), anyString());
         var submittedVc = submittedVcCaptor.getValue();
         assertEquals(TEST_SIGNED_ADDRESS_VC, submittedVc);
 

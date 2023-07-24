@@ -21,7 +21,7 @@ import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiStorageService;
+import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
@@ -90,7 +90,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     @Mock private VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     @Mock private VerifiableCredentialService verifiableCredentialService;
     @Mock private AuditService auditService;
-    @Mock private CiStorageService ciStorageService;
+    @Mock private CiMitService ciMitService;
     @Mock private CriResponseService criResponseService;
 
     @InjectMocks private ProcessAsyncCriCredentialHandler handler;
@@ -226,7 +226,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
 
         doThrow(new CiPutException("Lambda execution failed"))
-                .when(ciStorageService)
+                .when(ciMitService)
                 .submitVC(any(SignedJWT.class), eq(null), eq(null));
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
@@ -256,7 +256,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         when(configService.getFeatureFlag(USE_POST_MITIGATIONS_FEATURE_FLAG)).thenReturn("true");
 
         doThrow(new CiPostMitigationsException("Lambda execution failed"))
-                .when(ciStorageService)
+                .when(ciMitService)
                 .submitMitigatingVcList(anyList(), eq(null), eq(null));
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
@@ -264,7 +264,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         verifyVerifiableCredentialJwtValidator();
         verify(auditService, times(1))
                 .sendAuditEvent(ArgumentCaptor.forClass(AuditEvent.class).capture());
-        verify(ciStorageService, times(1)).submitVC(any(), any(), any());
+        verify(ciMitService, times(1)).submitVC(any(), any(), any());
         verify(verifiableCredentialService, never()).persistUserCredentials(any(), any(), any());
 
         verifyBatchResponseFailures(testEvent, batchResponse);
@@ -324,7 +324,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                 ArgumentCaptor.forClass(SignedJWT.class);
         ArgumentCaptor<String> govukSigninJourneyIdCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> ipAddressCaptor = ArgumentCaptor.forClass(String.class);
-        verify(ciStorageService, times(1))
+        verify(ciMitService, times(1))
                 .submitVC(
                         ciVerifiableCredentialCaptor.capture(),
                         govukSigninJourneyIdCaptor.capture(),
@@ -345,7 +345,7 @@ class ProcessAsyncCriCredentialHandlerTest {
         ArgumentCaptor<List<String>> postedVcsCaptor = ArgumentCaptor.forClass(List.class);
         ArgumentCaptor<String> govukSigninJourneyIdCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> ipAddressCaptor = ArgumentCaptor.forClass(String.class);
-        verify(ciStorageService, times(1))
+        verify(ciMitService, times(1))
                 .submitMitigatingVcList(
                         postedVcsCaptor.capture(),
                         govukSigninJourneyIdCaptor.capture(),
@@ -388,8 +388,8 @@ class ProcessAsyncCriCredentialHandlerTest {
         verify(auditService, never())
                 .sendAuditEvent(ArgumentCaptor.forClass(AuditEvent.class).capture());
         verify(verifiableCredentialService, never()).persistUserCredentials(any(), any(), any());
-        verify(ciStorageService, never()).submitVC(any(), any(), any());
-        verify(ciStorageService, never()).submitMitigatingVcList(any(), any(), any());
+        verify(ciMitService, never()).submitVC(any(), any(), any());
+        verify(ciMitService, never()).submitMitigatingVcList(any(), any(), any());
     }
 
     private static void verifyBatchResponseFailures(

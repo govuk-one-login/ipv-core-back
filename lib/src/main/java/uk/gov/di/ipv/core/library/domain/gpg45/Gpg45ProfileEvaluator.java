@@ -69,8 +69,7 @@ public class Gpg45ProfileEvaluator {
         int ciScore = 0;
         for (String ci : ciSet) {
             if (!contraIndicatorScoresMap.containsKey(ci)) {
-                throw new UnrecognisedCiException(
-                        "Unrecognised CI code received from CI storage system");
+                throw new UnrecognisedCiException("Unrecognised CI code received from CIMIT");
             }
             ContraIndicatorScore scoresConfig = contraIndicatorScoresMap.get(ci);
             ciScore += scoresConfig.getDetectedScore();

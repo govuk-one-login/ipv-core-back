@@ -28,7 +28,7 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiStorageService;
+import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
@@ -133,7 +133,7 @@ class CheckExistingIdentityHandlerTest {
     @Mock private CriResponseService criResponseService;
     @Mock private IpvSessionService ipvSessionService;
     @Mock private Gpg45ProfileEvaluator gpg45ProfileEvaluator;
-    @Mock private CiStorageService ciStorageService;
+    @Mock private CiMitService ciMitService;
     @Mock private ConfigService configService;
     @Mock private AuditService auditService;
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
@@ -416,7 +416,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(false);
-        when(ciStorageService.getCIs(anyString(), anyString(), anyString()))
+        when(ciMitService.getCIs(anyString(), anyString(), anyString()))
                 .thenThrow(CiRetrievalException.class);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
