@@ -7,7 +7,6 @@ import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Objects;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CRI_RESPONSE_TABLE_NAME;
 
@@ -62,9 +61,9 @@ public class CriResponseService {
         dataStore.create(criResponseItem, ConfigurationVariable.CRI_RESPONSE_TTL);
     }
 
-    public boolean userHasFaceToFaceRequest(String userId) {
+    public CriResponseItem userHasFaceToFaceRequest(String userId) {
         CriResponseItem userRequest = dataStore.getItem(userId, "f2f");
-        return !Objects.isNull(userRequest);
+        return userRequest;
     }
 
     public void deleteCriResponseItem(String userId, String credentialIssuer) {

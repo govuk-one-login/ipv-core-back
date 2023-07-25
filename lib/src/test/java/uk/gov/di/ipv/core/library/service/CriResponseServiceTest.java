@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -118,9 +119,10 @@ public class CriResponseServiceTest {
 
         when(mockDataStore.getItem(USER_ID_1, F2F_CRI)).thenReturn(criResponseItem);
 
-        boolean retrievedCredentialItem = criResponseService.userHasFaceToFaceRequest(USER_ID_1);
+        CriResponseItem retrievedCredentialItem =
+                criResponseService.userHasFaceToFaceRequest(USER_ID_1);
 
-        assertTrue(retrievedCredentialItem);
+        assertTrue(!Objects.isNull(retrievedCredentialItem));
     }
 
     private CriResponseItem createCriResponseStoreItem(
@@ -130,6 +132,7 @@ public class CriResponseServiceTest {
         criResponseItem.setCredentialIssuer(credentialIssuer);
         criResponseItem.setIssuerResponse(issuerResponse);
         criResponseItem.setDateCreated(dateCreated);
+        criResponseItem.setStatus(CriResponseService.STATUS_PENDING);
         return criResponseItem;
     }
 }
