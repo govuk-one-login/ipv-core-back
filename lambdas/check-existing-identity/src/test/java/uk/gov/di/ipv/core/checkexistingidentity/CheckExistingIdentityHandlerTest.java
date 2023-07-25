@@ -377,6 +377,25 @@ class CheckExistingIdentityHandlerTest {
     }
 
     @Test
+    void shouldReturFailResponseIfFaceToFaceVerificationIsError() {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
+        CriResponseItem criResponseItem =
+                createCriErrorResponseStoreItem(TEST_USER_ID, F2F_CRI, SIGNED_VC_1, Instant.now());
+        when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        JourneyResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyResponse.class);
+
+        assertEquals(JOURNEY_FAIL, journeyResponse);
+        verify(userIdentityService, times(0)).deleteVcStoreItems(TEST_USER_ID);
+    }
+
+    @Test
     void shouldReturnFailResponseForFaceToFaceVerification() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI))
@@ -527,6 +546,17 @@ class CheckExistingIdentityHandlerTest {
         criResponseItem.setIssuerResponse(issuerResponse);
         criResponseItem.setDateCreated(dateCreated);
         criResponseItem.setStatus(CriResponseService.STATUS_PENDING);
+        return criResponseItem;
+    }
+
+    private CriResponseItem createCriErrorResponseStoreItem(
+            String userId, String credentialIssuer, String issuerResponse, Instant dateCreated) {
+        CriResponseItem criResponseItem = new CriResponseItem();
+        criResponseItem.setUserId(userId);
+        criResponseItem.setCredentialIssuer(credentialIssuer);
+        criResponseItem.setIssuerResponse(issuerResponse);
+        criResponseItem.setDateCreated(dateCreated);
+        criResponseItem.setStatus(CriResponseService.STATUS_ERROR);
         return criResponseItem;
     }
 }

@@ -62,8 +62,7 @@ public class CriResponseService {
     }
 
     public CriResponseItem userHasFaceToFaceRequest(String userId) {
-        CriResponseItem userRequest = dataStore.getItem(userId, "f2f");
-        return userRequest;
+        return dataStore.getItem(userId, "f2f");
     }
 
     public void deleteCriResponseItem(String userId, String credentialIssuer) {
