@@ -1,0 +1,50 @@
+NESTED_JOURNEY_DEFINITION:
+  entryEvents:
+    enterNestedJourneyAtStateOne:
+      targetState: NESTED_STATE_ONE
+    enterNestedJourneyAtStateTwo:
+      targetState: NESTED_STATE_TWO
+  nestedJourneyStates:
+    NESTED_STATE_ONE:
+      response:
+        type: journey
+        journeyStepId: /journey/nestedStateOneJourneyStepId
+      parent: PARENT_STATE
+      events:
+        eventOne:
+          targetState: NESTED_STATE_TWO
+    NESTED_STATE_TWO:
+      response:
+        type: page
+        pageId: page-id-nested-state-two
+      events:
+        eventOne:
+          exitEventToEmit: exitEventFromNestedStateTwo
+        eventTwo:
+          targetState: DOUBLY_NESTED_INVOKE_STATE
+
+    DOUBLY_NESTED_INVOKE_STATE:
+      nestedJourney: DOUBLY_NESTED_DEFINITION
+      exitEvents:
+        exitEventFromDoublyNestedStateTwo:
+          exitEventToEmit: exitEventFromDoublyNestedInvokeState
+
+DOUBLY_NESTED_DEFINITION:
+  entryEvents:
+    eventTwo:
+      targetState: DOUBLY_NESTED_STATE_ONE
+  nestedJourneyStates:
+    DOUBLY_NESTED_STATE_ONE:
+      response:
+        type: journey
+        journeyStepId: /journey/doublyNestedStateOneJourneyStepId
+      events:
+        eventOne:
+          targetState: DOUBLY_NESTED_STATE_TWO
+    DOUBLY_NESTED_STATE_TWO:
+      response:
+        type: page
+        pageId: page-id-doubly-nested-state-two
+      events:
+        eventOne:
+          exitEventToEmit: exitEventFromDoublyNestedStateTwo

@@ -218,23 +218,11 @@ POST_DCMAW_SUCCESS_PAGE:
     pageId: page-dcmaw-success
   events:
     next:
-      targetState: CRI_ADDRESS_J1
+      targetState: ADDRESS_AND_FRAUD_J1
 
-CRI_ADDRESS_J1:
-  response:
-    type: cri
-    criId: address
-  parent: CRI_STATE
-  events:
-    next:
-      targetState: CRI_FRAUD_J1
-
-CRI_FRAUD_J1:
-  response:
-    type: cri
-    criId: fraud
-  parent: CRI_STATE
-  events:
+ADDRESS_AND_FRAUD_J1:
+  nestedJourney: ADDRESS_AND_FRAUD
+  exitEvents:
     end:
       targetState: IPV_SUCCESS_PAGE
     next:
@@ -248,28 +236,16 @@ CRI_UK_PASSPORT_J2:
   parent: CRI_STATE
   events:
     next:
-      targetState: CRI_ADDRESS_J2
+      targetState: ADDRESS_AND_FRAUD_J2
     access-denied:
       targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
       checkIfDisabled:
         f2f:
           targetState: MULTIPLE_DOC_CHECK_PAGE
 
-CRI_ADDRESS_J2:
-  response:
-    type: cri
-    criId: address
-  parent: CRI_STATE
-  events:
-    next:
-      targetState: CRI_FRAUD_J2
-
-CRI_FRAUD_J2:
-  response:
-    type: cri
-    criId: fraud
-  parent: CRI_STATE
-  events:
+ADDRESS_AND_FRAUD_J2:
+  nestedJourney: ADDRESS_AND_FRAUD
+  exitEvents:
     next:
       targetState: PRE_KBV_TRANSITION_PAGE_J2
 
@@ -300,28 +276,16 @@ CRI_DRIVING_LICENCE_J3:
   parent: CRI_STATE
   events:
     next:
-      targetState: CRI_ADDRESS_J3
+      targetState: ADDRESS_AND_FRAUD_J3
     access-denied:
       targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
       checkIfDisabled:
         f2f:
           targetState: MULTIPLE_DOC_CHECK_PAGE
 
-CRI_ADDRESS_J3:
-  response:
-    type: cri
-    criId: address
-  parent: CRI_STATE
-  events:
-    next:
-      targetState: CRI_FRAUD_J3
-
-CRI_FRAUD_J3:
-  response:
-    type: cri
-    criId: fraud
-  parent: CRI_STATE
-  events:
+ADDRESS_AND_FRAUD_J3:
+  nestedJourney: ADDRESS_AND_FRAUD
+  exitEvents:
     next:
       targetState: PRE_KBV_TRANSITION_PAGE_J3
 
@@ -354,23 +318,11 @@ CRI_CLAIMED_IDENTITY_J4:
   parent: CRI_STATE
   events:
     next:
-      targetState: CRI_ADDRESS_J4
+      targetState: ADDRESS_AND_FRAUD_J4
 
-CRI_ADDRESS_J4:
-  response:
-    type: cri
-    criId: address
-  parent: CRI_STATE
-  events:
-    next:
-      targetState: CRI_FRAUD_J4
-
-CRI_FRAUD_J4:
-  response:
-    type: cri
-    criId: fraud
-  parent: CRI_STATE
-  events:
+ADDRESS_AND_FRAUD_J4:
+  nestedJourney: ADDRESS_AND_FRAUD
+  exitEvents:
     next:
       targetState: CRI_F2F_J4
 
@@ -384,6 +336,7 @@ CRI_F2F_J4:
       targetState: F2F_HANDOFF_PAGE_J4
     access-denied:
       targetState: PYI_ANOTHER_WAY
+
 
 F2F_HANDOFF_PAGE_J4:
   response:

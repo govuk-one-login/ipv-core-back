@@ -1,28 +1,26 @@
 package uk.gov.di.ipv.core.processjourneystep.statemachine;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import uk.gov.di.ipv.core.library.domain.IpvJourneyTypes;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.events.BasicEvent;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.events.ExitNestedJourneyEvent;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.states.BasicState;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.states.NestedJourneyDefinition;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.states.NestedJourneyInvokeState;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.states.State;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
-import java.io.File;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
+import java.io.IOException;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(SystemStubsExtension.class)
 class StateMachineInitializerTest {
@@ -36,33 +34,169 @@ class StateMachineInitializerTest {
 
     @ParameterizedTest
     @EnumSource
-    void stateMachineInitializerShouldHandleAllStateFiles(IpvJourneyTypes journeyType) {
+    void stateMachineInitializerShouldHandleAllProductionJourneyMaps(IpvJourneyTypes journeyType) {
         assertDoesNotThrow(() -> new StateMachineInitializer(journeyType).initialize());
     }
 
-    // This is to make sure any yaml files not covered by the journey type / envs above are at least
-    // loaded.
+    @java.lang.SuppressWarnings("java:S5961") // Too many assertions
     @Test
-    void allStateMachineFilesShouldLoadWithoutError() throws Exception {
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        URL statemachineDir = classLoader.getResource("statemachine");
+    void stateMachineInitializerShouldCorrectlyDeserializeJourneyMaps() throws IOException {
+        Map<String, State> journeyMap =
+                new StateMachineInitializer(
+                                IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY,
+                                StateMachineInitializerMode.TEST)
+                        .initialize();
 
-        List<Path> statemachineFilePaths =
-                Files.walk(Paths.get(statemachineDir.toURI()))
-                        .filter(Files::isRegularFile)
-                        .filter(file -> file.getFileName().toString().endsWith(".yaml"))
-                        .collect(Collectors.toList());
+        State parentState = journeyMap.get("PARENT_STATE");
+        BasicState pageState = (BasicState) journeyMap.get("PAGE_STATE");
+        BasicState journeyState = (BasicState) journeyMap.get("JOURNEY_STATE");
+        BasicState criState = (BasicState) journeyMap.get("CRI_STATE");
+        BasicState errorState = (BasicState) journeyMap.get("ERROR_STATE");
+        NestedJourneyInvokeState nestedJourneyInvokeState =
+                (NestedJourneyInvokeState) journeyMap.get("NESTED_JOURNEY_INVOKE_STATE");
 
-        ObjectMapper om = new ObjectMapper(new YAMLFactory());
+        // page state assertions
+        assertEquals("page-id-for-some-page", pageState.getResponse().value().get("page"));
+        assertEquals(parentState, pageState.getParentObj());
+        assertEquals(
+                journeyState,
+                ((BasicEvent) pageState.getEvents().get("eventOne")).getTargetStateObj());
+        assertEquals(
+                criState, ((BasicEvent) pageState.getEvents().get("eventTwo")).getTargetStateObj());
+        assertEquals(
+                errorState,
+                ((BasicEvent)
+                                ((BasicEvent) pageState.getEvents().get("eventTwo"))
+                                        .getCheckIfDisabled()
+                                        .get("aCriId"))
+                        .getTargetStateObj());
 
-        for (Path statemachineFile : statemachineFilePaths) {
-            assertDoesNotThrow(
-                    () -> {
-                        Map<String, State> states =
-                                om.readValue(
-                                        new File(statemachineFile.toUri()),
-                                        new TypeReference<>() {});
-                    });
-        }
+        // journey state assertions
+        assertEquals("/journey/letsgosomewhere", journeyState.getResponse().value().get("journey"));
+        assertEquals(
+                criState,
+                ((BasicEvent) journeyState.getEvents().get("eventOne")).getTargetStateObj());
+
+        // cri state assertions
+        assertEquals(
+                "/journey/cri/build-oauth-request/aCriId",
+                criState.getResponse().value().get("journey"));
+        assertEquals(
+                nestedJourneyInvokeState,
+                ((BasicEvent) criState.getEvents().get("enterNestedJourneyAtStateOne"))
+                        .getTargetStateObj());
+
+        // error state assertions
+        assertEquals(
+                Map.of("statusCode", 500, "type", "error", "page", "page-error"),
+                errorState.getResponse().value());
+        assertEquals(
+                nestedJourneyInvokeState,
+                ((BasicEvent) errorState.getEvents().get("enterNestedJourneyAtStateTwo"))
+                        .getTargetStateObj());
+
+        // nested journey invoke state assertions
+        assertEquals(
+                journeyState,
+                ((BasicEvent)
+                                nestedJourneyInvokeState
+                                        .getExitEvents()
+                                        .get("exitEventFromNestedStateTwo"))
+                        .getTargetStateObj());
+
+        NestedJourneyDefinition nestedJourneyDefinition =
+                nestedJourneyInvokeState.getNestedJourneyDefinition();
+        BasicState nestedStateOne =
+                (BasicState)
+                        nestedJourneyDefinition.getNestedJourneyStates().get("NESTED_STATE_ONE");
+        BasicState nestedStateTwo =
+                (BasicState)
+                        nestedJourneyDefinition.getNestedJourneyStates().get("NESTED_STATE_TWO");
+        NestedJourneyInvokeState doublyNestedInvokeState =
+                (NestedJourneyInvokeState)
+                        nestedJourneyDefinition
+                                .getNestedJourneyStates()
+                                .get("DOUBLY_NESTED_INVOKE_STATE");
+
+        // nested journey definition entry event assertions
+        assertEquals(
+                nestedStateOne,
+                ((BasicEvent)
+                                nestedJourneyDefinition
+                                        .getEntryEvents()
+                                        .get("enterNestedJourneyAtStateOne"))
+                        .getTargetStateObj());
+        assertEquals(
+                nestedStateTwo,
+                ((BasicEvent)
+                                nestedJourneyDefinition
+                                        .getEntryEvents()
+                                        .get("enterNestedJourneyAtStateTwo"))
+                        .getTargetStateObj());
+
+        // nested state one assertions
+        assertEquals(
+                "/journey/nestedStateOneJourneyStepId",
+                nestedStateOne.getResponse().value().get("journey"));
+        assertEquals(parentState, nestedStateOne.getParentObj());
+        assertEquals(
+                nestedStateTwo,
+                ((BasicEvent) nestedStateOne.getEvents().get("eventOne")).getTargetStateObj());
+
+        // nested state two assertions
+        assertEquals("page-id-nested-state-two", nestedStateTwo.getResponse().value().get("page"));
+        assertEquals(
+                "exitEventFromNestedStateTwo",
+                ((ExitNestedJourneyEvent) nestedStateTwo.getEvents().get("eventOne"))
+                        .getExitEventToEmit());
+        assertEquals(
+                doublyNestedInvokeState,
+                ((BasicEvent) nestedStateTwo.getEvents().get("eventTwo")).getTargetStateObj());
+
+        // doubly nested invoke state assertions
+        assertEquals(
+                "exitEventFromDoublyNestedInvokeState",
+                ((ExitNestedJourneyEvent)
+                                doublyNestedInvokeState
+                                        .getExitEvents()
+                                        .get("exitEventFromDoublyNestedStateTwo"))
+                        .getExitEventToEmit());
+
+        NestedJourneyDefinition doublyNestedDefinition =
+                doublyNestedInvokeState.getNestedJourneyDefinition();
+        BasicState doublyNestedStateOne =
+                (BasicState)
+                        doublyNestedDefinition
+                                .getNestedJourneyStates()
+                                .get("DOUBLY_NESTED_STATE_ONE");
+        BasicState doublyNestedStateTwo =
+                (BasicState)
+                        doublyNestedDefinition
+                                .getNestedJourneyStates()
+                                .get("DOUBLY_NESTED_STATE_TWO");
+
+        // doubly nested journey definition entry events assertions
+        assertEquals(
+                doublyNestedStateOne,
+                ((BasicEvent) doublyNestedDefinition.getEntryEvents().get("eventTwo"))
+                        .getTargetStateObj());
+
+        // doubly nested state one assertions
+        assertEquals(
+                "/journey/doublyNestedStateOneJourneyStepId",
+                doublyNestedStateOne.getResponse().value().get("journey"));
+        assertEquals(
+                doublyNestedStateTwo,
+                ((BasicEvent) doublyNestedStateOne.getEvents().get("eventOne"))
+                        .getTargetStateObj());
+
+        // doubly nested state two assertions
+        assertEquals(
+                "page-id-doubly-nested-state-two",
+                doublyNestedStateTwo.getResponse().value().get("page"));
+        assertEquals(
+                "exitEventFromDoublyNestedStateTwo",
+                ((ExitNestedJourneyEvent) doublyNestedStateTwo.getEvents().get("eventOne"))
+                        .getExitEventToEmit());
     }
 }

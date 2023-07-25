@@ -1,0 +1,23 @@
+ADDRESS_AND_FRAUD:
+  entryEvents:
+    next:
+      targetState: CRI_ADDRESS
+  nestedJourneyStates:
+    CRI_ADDRESS:
+      response:
+        type: cri
+        criId: address
+      parent: CRI_STATE
+      events:
+        next:
+          targetState: CRI_FRAUD
+    CRI_FRAUD:
+      response:
+        type: cri
+        criId: fraud
+      parent: CRI_STATE
+      events:
+        end:
+          exitEventToEmit: end
+        next:
+          exitEventToEmit: next
