@@ -159,14 +159,11 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
-            CriResponseItem userHasFaceToFaceRequest =
-                    criResponseService.getFaceToFaceRequest(userId);
+            CriResponseItem faceToFaceRequest = criResponseService.getFaceToFaceRequest(userId);
             VcStoreItem faceToFaceVc = userIdentityService.getVcStoreItem(userId, F2F_CRI);
 
-            if (!Objects.isNull(userHasFaceToFaceRequest)
-                    && userHasFaceToFaceRequest
-                            .getStatus()
-                            .equals(CriResponseService.STATUS_PENDING)
+            if (!Objects.isNull(faceToFaceRequest)
+                    && faceToFaceRequest.getStatus().equals(CriResponseService.STATUS_PENDING)
                     && Objects.isNull(faceToFaceVc)) {
                 var message =
                         new StringMapMessage()
@@ -177,8 +174,8 @@ public class CheckExistingIdentityHandler
                 return JOURNEY_PENDING;
             }
 
-            if (!Objects.isNull(userHasFaceToFaceRequest)
-                    && userHasFaceToFaceRequest.getStatus().equals(CriResponseService.STATUS_ERROR)
+            if (!Objects.isNull(faceToFaceRequest)
+                    && faceToFaceRequest.getStatus().equals(CriResponseService.STATUS_ERROR)
                     && Objects.isNull(faceToFaceVc)) {
                 var message =
                         new StringMapMessage()
@@ -209,7 +206,7 @@ public class CheckExistingIdentityHandler
             Optional<Gpg45Profile> matchedProfile =
                     gpg45ProfileEvaluator.getFirstMatchingProfile(gpg45Scores, ACCEPTED_PROFILES);
 
-            if (!Objects.isNull(userHasFaceToFaceRequest)
+            if (!Objects.isNull(faceToFaceRequest)
                     && faceToFaceVc != null
                     && !matchedProfile.isPresent()) {
                 var message =
