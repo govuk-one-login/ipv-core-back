@@ -686,7 +686,8 @@ class RetrieveCriCredentialHandlerTest {
 
         assertEquals("/journey/error", output.get("journey"));
 
-        verify(criResponseService, times(0)).persistCriResponse(any(), any(), any(), any());
+        verify(criResponseService, times(0))
+                .persistCriResponse(any(), any(), any(), any(), "pending");
 
         verifyPersistedVisitedCredentialIssuerDetails(
                 CREDENTIAL_ISSUER_ID, false, OAuth2Error.SERVER_ERROR_CODE);
@@ -741,12 +742,14 @@ class RetrieveCriCredentialHandlerTest {
         ArgumentCaptor<String> persistedIssuerResponseCaptor =
                 ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> persistedOAuthStateCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> persistedStatusCaptor = ArgumentCaptor.forClass(String.class);
         verify(criResponseService, times(1))
                 .persistCriResponse(
                         persistedUserIdCaptor.capture(),
                         persistedCredentialIssuerIdCaptor.capture(),
                         persistedIssuerResponseCaptor.capture(),
-                        persistedOAuthStateCaptor.capture());
+                        persistedOAuthStateCaptor.capture(),
+                        persistedStatusCaptor.capture());
         assertEquals(expectedUserId, persistedUserIdCaptor.getAllValues().get(0));
         assertEquals(
                 expectedCredentialIssuerId,

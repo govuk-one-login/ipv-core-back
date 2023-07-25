@@ -93,7 +93,11 @@ public class CriResponseServiceTest {
                         testCreatedDate);
 
         criResponseService.persistCriResponse(
-                TEST_USER_ID, TEST_CREDENTIAL_ISSUER, TEST_ISSUER_RESPONSE, TEST_OAUTH_STATE);
+                TEST_USER_ID,
+                TEST_CREDENTIAL_ISSUER,
+                TEST_ISSUER_RESPONSE,
+                TEST_OAUTH_STATE,
+                "pending");
 
         ArgumentCaptor<CriResponseItem> persistedCriResponseItemCaptor =
                 ArgumentCaptor.forClass(CriResponseItem.class);

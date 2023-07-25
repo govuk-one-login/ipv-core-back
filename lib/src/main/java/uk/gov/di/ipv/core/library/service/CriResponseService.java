@@ -42,7 +42,11 @@ public class CriResponseService {
     }
 
     public void persistCriResponse(
-            String userId, String credentialIssuer, String issuerResponse, String oauthState) {
+            String userId,
+            String credentialIssuer,
+            String issuerResponse,
+            String oauthState,
+            String status) {
         CriResponseItem criResponseItem =
                 CriResponseItem.builder()
                         .userId(userId)
@@ -50,6 +54,7 @@ public class CriResponseService {
                         .issuerResponse(issuerResponse)
                         .oauthState(oauthState)
                         .dateCreated(Instant.now())
+                        .status(status)
                         .build();
         dataStore.create(criResponseItem, ConfigurationVariable.CRI_RESPONSE_TTL);
     }
