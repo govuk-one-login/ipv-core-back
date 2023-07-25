@@ -686,8 +686,7 @@ class RetrieveCriCredentialHandlerTest {
 
         assertEquals("/journey/error", output.get("journey"));
 
-        verify(criResponseService, times(0))
-                .persistCriResponse(any(), any(), any(), any(), "pending");
+        verify(criResponseService, times(0)).persistCriResponse(any(), any(), any(), any(), any());
 
         verifyPersistedVisitedCredentialIssuerDetails(
                 CREDENTIAL_ISSUER_ID, false, OAuth2Error.SERVER_ERROR_CODE);

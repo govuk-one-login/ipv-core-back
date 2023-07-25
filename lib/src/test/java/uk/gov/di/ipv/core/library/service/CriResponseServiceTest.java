@@ -97,7 +97,7 @@ public class CriResponseServiceTest {
                 TEST_CREDENTIAL_ISSUER,
                 TEST_ISSUER_RESPONSE,
                 TEST_OAUTH_STATE,
-                "pending");
+                CriResponseService.STATUS_PENDING);
 
         ArgumentCaptor<CriResponseItem> persistedCriResponseItemCaptor =
                 ArgumentCaptor.forClass(CriResponseItem.class);

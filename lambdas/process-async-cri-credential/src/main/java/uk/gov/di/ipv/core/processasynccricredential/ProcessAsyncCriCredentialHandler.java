@@ -141,7 +141,7 @@ public class ProcessAsyncCriCredentialHandler
                         errorAsyncCriResponse.getCredentialIssuer());
 
         if (responseItem != null) {
-            responseItem.setIssuerResponse("{\"status\":\"error\"}");
+            responseItem.setStatus(CriResponseService.STATUS_ERROR);
             criResponseService.updateCriResponseItem(responseItem);
         }
 

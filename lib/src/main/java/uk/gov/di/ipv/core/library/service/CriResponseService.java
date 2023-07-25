@@ -12,6 +12,9 @@ import java.util.Objects;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CRI_RESPONSE_TABLE_NAME;
 
 public class CriResponseService {
+
+    public static final String STATUS_PENDING = "pending";
+    public static final String STATUS_ERROR = "error";
     private final ConfigService configService;
     private final DataStore<CriResponseItem> dataStore;
 
