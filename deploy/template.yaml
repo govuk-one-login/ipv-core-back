@@ -1534,6 +1534,22 @@ Resources:
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
                   - environment
+          CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: !Sub
+            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicatorCredential-${env}"
+            - contra_indicator_storage_account_id: !If
+                - UseIndividualCiMitStubs
+                - !Ref AWS::AccountId
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - ciStorageAccountId
+              env: !If
+                - UseIndividualCiMitStubs
+                - !Sub ${Environment}
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - environment
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       VpcConfig:
         SubnetIds:
@@ -1586,6 +1602,28 @@ Resources:
               Resource:
                 - !Sub
                   - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
+                  - contra_indicator_storage_account_id: !If
+                      - UseIndividualCiMitStubs
+                      - !Ref AWS::AccountId
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - ciStorageAccountId
+                    env: !If
+                      - UseIndividualCiMitStubs
+                      - !Sub ${Environment}
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - environment
+        - Statement:
+            - Sid: invokeGetContraIndicatorCredentialFunction
+              Effect: Allow
+              Action:
+                - 'lambda:InvokeFunction'
+              Resource:
+                - !Sub
+                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicatorCredential-${env}"
                   - contra_indicator_storage_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
@@ -1860,6 +1898,22 @@ Resources:
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
                   - environment
+          CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: !Sub
+            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicatorCredential-${env}"
+            - contra_indicator_storage_account_id: !If
+                - UseIndividualCiMitStubs
+                - !Ref AWS::AccountId
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - ciStorageAccountId
+              env: !If
+                - UseIndividualCiMitStubs
+                - !Sub ${Environment}
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - environment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1911,6 +1965,28 @@ Resources:
               Resource:
                 - !Sub
                   - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
+                  - contra_indicator_storage_account_id: !If
+                      - UseIndividualCiMitStubs
+                      - !Ref AWS::AccountId
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - ciStorageAccountId
+                    env: !If
+                      - UseIndividualCiMitStubs
+                      - !Sub ${Environment}
+                      - !FindInMap
+                        - EnvironmentConfiguration
+                        - !Ref AWS::AccountId
+                        - environment
+        - Statement:
+            - Sid: invokeGetContraIndicatorCredentialFunction
+              Effect: Allow
+              Action:
+                - 'lambda:InvokeFunction'
+              Resource:
+                - !Sub
+                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicatorCredential-${env}"
                   - contra_indicator_storage_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
