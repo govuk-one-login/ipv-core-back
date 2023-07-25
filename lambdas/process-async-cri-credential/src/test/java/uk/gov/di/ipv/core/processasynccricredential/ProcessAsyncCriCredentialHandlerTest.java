@@ -155,8 +155,12 @@ class ProcessAsyncCriCredentialHandlerTest {
     @Test
     void shouldProcessErrorAsyncVerifiableCredentialSuccessfully() throws JsonProcessingException {
         final SQSEvent testEvent = createErrorTestEvent();
+        when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
+                .thenReturn(TEST_CRI_RESPONSE_ITEM);
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
+
+        verify(criResponseService, times(1)).updateCriResponseItem(TEST_CRI_RESPONSE_ITEM);
 
         assertEquals(0, batchResponse.getBatchItemFailures().size());
     }
