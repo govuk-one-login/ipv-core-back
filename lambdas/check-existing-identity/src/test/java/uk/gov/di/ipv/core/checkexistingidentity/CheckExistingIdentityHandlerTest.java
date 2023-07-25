@@ -212,7 +212,7 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturnJourneyReuseResponseIfScoresSatisfyM1BGpg45Profile() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
@@ -243,7 +243,7 @@ class CheckExistingIdentityHandlerTest {
             throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
@@ -272,7 +272,7 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturnPyiNoMatchIfVcsFailCiScoreCheck() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
                 .thenReturn(Optional.of(new JourneyResponse("/journey/pyi-no-match")));
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
@@ -293,7 +293,7 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturnJourneyErrorIfUnrecognisedCiReceived() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
                 .thenThrow(new UnrecognisedCiException("Not recognised"));
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
@@ -318,7 +318,7 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
                 .thenReturn(Collections.emptyList());
-        when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
                 .thenReturn(Optional.empty());
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
@@ -363,7 +363,7 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
         CriResponseItem criResponseItem =
                 createCriResponseStoreItem(TEST_USER_ID, F2F_CRI, SIGNED_VC_1, Instant.now());
-        when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -382,7 +382,7 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
         CriResponseItem criResponseItem =
                 createCriErrorResponseStoreItem(TEST_USER_ID, F2F_CRI, SIGNED_VC_1, Instant.now());
-        when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -402,7 +402,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(createVcStoreItem(F2F_CRI, M1A_F2F_VC));
         CriResponseItem criResponseItem =
                 createCriResponseStoreItem(TEST_USER_ID, F2F_CRI, SIGNED_VC_1, Instant.now());
-        when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -464,7 +464,7 @@ class CheckExistingIdentityHandlerTest {
                 journeyResponse.getMessage());
 
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
-        verify(criResponseService).userHasFaceToFaceRequest(TEST_USER_ID);
+        verify(criResponseService).getFaceToFaceRequest(TEST_USER_ID);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
@@ -472,7 +472,7 @@ class CheckExistingIdentityHandlerTest {
     void shouldReturn500IfFailedToRetrieveCisFromStorageSystem() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(criResponseService.userHasFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(ciMitService.getCIs(anyString(), anyString(), anyString()))
                 .thenThrow(CiRetrievalException.class);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))

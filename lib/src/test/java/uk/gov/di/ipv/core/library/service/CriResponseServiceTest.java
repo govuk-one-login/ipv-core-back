@@ -120,7 +120,7 @@ public class CriResponseServiceTest {
         when(mockDataStore.getItem(USER_ID_1, F2F_CRI)).thenReturn(criResponseItem);
 
         CriResponseItem retrievedCredentialItem =
-                criResponseService.userHasFaceToFaceRequest(USER_ID_1);
+                criResponseService.getFaceToFaceRequest(USER_ID_1);
 
         assertTrue(!Objects.isNull(retrievedCredentialItem));
     }

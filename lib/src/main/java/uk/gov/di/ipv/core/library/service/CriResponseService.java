@@ -61,7 +61,7 @@ public class CriResponseService {
         dataStore.create(criResponseItem, ConfigurationVariable.CRI_RESPONSE_TTL);
     }
 
-    public CriResponseItem userHasFaceToFaceRequest(String userId) {
+    public CriResponseItem getFaceToFaceRequest(String userId) {
         return dataStore.getItem(userId, "f2f");
     }
 

@@ -160,7 +160,7 @@ public class CheckExistingIdentityHandler
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
             CriResponseItem userHasFaceToFaceRequest =
-                    criResponseService.userHasFaceToFaceRequest(userId);
+                    criResponseService.getFaceToFaceRequest(userId);
             VcStoreItem faceToFaceVc = userIdentityService.getVcStoreItem(userId, F2F_CRI);
 
             if (!Objects.isNull(userHasFaceToFaceRequest)
