@@ -1536,10 +1536,13 @@ Resources:
                   - environment
           CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicatorCredential-${env}"
-            - contra_indicator_storage_account_id: !FindInMap
-                - EnvironmentConfiguration
+            - contra_indicator_storage_account_id: !If
+                - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
-                - ciStorageAccountId
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - ciStorageAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
@@ -1897,10 +1900,13 @@ Resources:
                   - environment
           CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicatorCredential-${env}"
-            - contra_indicator_storage_account_id: !FindInMap
-                - EnvironmentConfiguration
+            - contra_indicator_storage_account_id: !If
+                - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
-                - ciStorageAccountId
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - ciStorageAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
