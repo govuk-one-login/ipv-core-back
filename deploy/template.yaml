@@ -1617,7 +1617,7 @@ Resources:
                         - !Ref AWS::AccountId
                         - environment
         - Statement:
-            - Sid: invokeGetCiFunction
+            - Sid: invokeGetContraIndicatorCredentialFunction
               Effect: Allow
               Action:
                 - 'lambda:InvokeFunction'
@@ -1980,7 +1980,7 @@ Resources:
                         - !Ref AWS::AccountId
                         - environment
         - Statement:
-            - Sid: invokeGetCiFunction
+            - Sid: invokeGetContraIndicatorCredentialFunction
               Effect: Allow
               Action:
                 - 'lambda:InvokeFunction'
