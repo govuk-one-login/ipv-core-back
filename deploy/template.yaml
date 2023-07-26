@@ -2198,7 +2198,7 @@ Resources:
             KeyId: !Ref DynamoDBKmsKey
         - DynamoDBCrudPolicy:
             TableName: !Ref UserIssuedCredentialsV2Table
-        - DynamoDBReadPolicy:
+        - DynamoDBCrudPolicy:
             TableName: !Ref CRIResponseTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
