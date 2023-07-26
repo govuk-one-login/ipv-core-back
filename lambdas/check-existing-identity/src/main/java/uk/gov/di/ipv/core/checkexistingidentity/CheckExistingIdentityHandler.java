@@ -35,6 +35,7 @@ import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
+import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
@@ -158,10 +159,12 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
-            boolean userHasFaceToFaceRequest = criResponseService.userHasFaceToFaceRequest(userId);
+            CriResponseItem faceToFaceRequest = criResponseService.getFaceToFaceRequest(userId);
             VcStoreItem faceToFaceVc = userIdentityService.getVcStoreItem(userId, F2F_CRI);
 
-            if (userHasFaceToFaceRequest && Objects.isNull(faceToFaceVc)) {
+            if (!Objects.isNull(faceToFaceRequest)
+                    && faceToFaceRequest.getStatus().equals(CriResponseService.STATUS_PENDING)
+                    && Objects.isNull(faceToFaceVc)) {
                 var message =
                         new StringMapMessage()
                                 .with(
@@ -169,6 +172,17 @@ public class CheckExistingIdentityHandler
                                         "F2F cri pending verification.");
                 LOGGER.info(message);
                 return JOURNEY_PENDING;
+            }
+
+            if (!Objects.isNull(faceToFaceRequest)
+                    && faceToFaceRequest.getStatus().equals(CriResponseService.STATUS_ERROR)
+                    && Objects.isNull(faceToFaceVc)) {
+                var message =
+                        new StringMapMessage()
+                                .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "F2F cri error");
+                LOGGER.info(message);
+                // need to replace with new Error page once we have design from UCD.
+                return JOURNEY_FAIL;
             }
 
             List<SignedJWT> credentials =
@@ -192,7 +206,9 @@ public class CheckExistingIdentityHandler
             Optional<Gpg45Profile> matchedProfile =
                     gpg45ProfileEvaluator.getFirstMatchingProfile(gpg45Scores, ACCEPTED_PROFILES);
 
-            if (userHasFaceToFaceRequest && faceToFaceVc != null && !matchedProfile.isPresent()) {
+            if (!Objects.isNull(faceToFaceRequest)
+                    && faceToFaceVc != null
+                    && !matchedProfile.isPresent()) {
                 var message =
                         new StringMapMessage()
                                 .with(

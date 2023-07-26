@@ -59,7 +59,13 @@ class ProcessAsyncCriCredentialHandlerTest {
     private static final String TEST_OAUTH_STATE_2 = UUID.randomUUID().toString();
     private static final CriResponseItem TEST_CRI_RESPONSE_ITEM =
             new CriResponseItem(
-                    TEST_USER_ID, TEST_CREDENTIAL_ISSUER_ID, null, TEST_OAUTH_STATE, null, 0);
+                    TEST_USER_ID,
+                    TEST_CREDENTIAL_ISSUER_ID,
+                    null,
+                    TEST_OAUTH_STATE,
+                    null,
+                    CriResponseService.STATUS_PENDING,
+                    0);
 
     private static final String TEST_ASYNC_ERROR = "access_denied";
     private static final String TEST_ASYNC_ERROR_DESCRIPTION =
@@ -149,8 +155,12 @@ class ProcessAsyncCriCredentialHandlerTest {
     @Test
     void shouldProcessErrorAsyncVerifiableCredentialSuccessfully() throws JsonProcessingException {
         final SQSEvent testEvent = createErrorTestEvent();
+        when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
+                .thenReturn(TEST_CRI_RESPONSE_ITEM);
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
+
+        verify(criResponseService, times(1)).updateCriResponseItem(TEST_CRI_RESPONSE_ITEM);
 
         assertEquals(0, batchResponse.getBatchItemFailures().size());
     }

@@ -23,6 +23,7 @@ public class CriResponseItem implements DynamodbItem {
     private String issuerResponse;
     private String oauthState;
     private Instant dateCreated;
+    private String status;
     private long ttl;
 
     @DynamoDbPartitionKey
