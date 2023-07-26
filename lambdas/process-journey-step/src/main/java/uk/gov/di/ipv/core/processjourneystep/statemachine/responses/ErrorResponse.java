@@ -3,7 +3,6 @@ package uk.gov.di.ipv.core.processjourneystep.statemachine.responses;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.util.Map;
 
@@ -16,11 +15,7 @@ public class ErrorResponse implements JourneyStepResponse {
     private String pageId;
     private String statusCode;
 
-    public Map<String, Object> value(ConfigService configService) {
-        return value(pageId);
-    }
-
-    public Map<String, Object> value(String id) {
-        return Map.of("type", ERROR, "page", id, "statusCode", Integer.parseInt(statusCode));
+    public Map<String, Object> value() {
+        return Map.of("type", ERROR, "page", pageId, "statusCode", Integer.parseInt(statusCode));
     }
 }

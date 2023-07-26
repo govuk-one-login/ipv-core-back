@@ -119,7 +119,7 @@ public class ProcessJourneyStepHandler
         String currentUserState = ipvSessionItem.getUserState();
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(currentUserState, ipvSessionItem);
-            return new PageResponse(PYIC_TIMEOUT_UNRECOVERABLE_ID).value(configService);
+            return new PageResponse(PYIC_TIMEOUT_UNRECOVERABLE_ID).value();
         }
 
         try {
@@ -147,7 +147,7 @@ public class ProcessJourneyStepHandler
 
             ipvSessionService.updateIpvSession(ipvSessionItem);
 
-            return newState.getResponse().value(configService);
+            return newState.getResponse().value();
         } catch (UnknownStateException e) {
             LOGGER.error(
                     new StringMapMessage()
