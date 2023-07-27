@@ -53,7 +53,7 @@ CHECK_EXISTING_IDENTITY:
     pyi-kbv-fail:
       targetState: PYI_KBV_FAIL
     fail:
-      targetState: ERROR
+      targetState: PYI_F2F_TECHNICAL
     error:
       targetState: ERROR
 
@@ -166,6 +166,16 @@ PYI_KBV_THIN_FILE:
     type: page
     pageId: pyi-kbv-thin-file
   parent: END_JOURNEY
+
+PYI_F2F_TECHNICAL:
+  response:
+    type: page
+    pageId: pyi-f2f-technical
+  events:
+    next:
+      targetState: RESET_IDENTITY
+    end:
+      targetState: END
 
 PYI_ESCAPE:
   response:
