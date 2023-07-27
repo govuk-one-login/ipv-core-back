@@ -213,7 +213,7 @@ public class CheckExistingIdentityHandler
                         new StringMapMessage()
                                 .with(
                                         LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "F2F VC unsuccessful.");
+                                        "F2F return - failed to match a profile.");
                 LOGGER.info(message);
                 return JOURNEY_FAIL;
             }
