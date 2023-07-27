@@ -4,6 +4,8 @@ import com.amazonaws.services.lambda.AWSLambda;
 import com.amazonaws.services.lambda.model.AWSLambdaException;
 import com.amazonaws.services.lambda.model.InvokeRequest;
 import com.amazonaws.services.lambda.model.InvokeResult;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
@@ -18,6 +20,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndications;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.dto.ContraIndicatorCredentialDto;
 import uk.gov.di.ipv.core.library.exceptions.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
@@ -55,7 +58,9 @@ class CiMitServiceTest {
     private static final String GOVUK_SIGNIN_JOURNEY_ID = "a-journey-id";
     private static final String TEST_USER_ID = "a-user-id";
     private static final String CLIENT_SOURCE_IP = "a-client-source-ip";
-    public static final String CIMIT_COMPONENT_ID = "https://identity.staging.account.gov.uk";
+    private static final String CIMIT_COMPONENT_ID = "https://identity.staging.account.gov.uk";
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
     @Captor ArgumentCaptor<InvokeRequest> requestCaptor;
 
     @Mock AWSLambda lambdaClient;
@@ -230,7 +235,7 @@ class CiMitServiceTest {
     }
 
     @Test
-    void getContraIndicatorsVC() throws CiRetrievalException {
+    void getContraIndicatorsVC() throws CiRetrievalException, JsonProcessingException {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
@@ -241,10 +246,7 @@ class CiMitServiceTest {
                 .thenReturn(
                         new InvokeResult()
                                 .withStatusCode(200)
-                                .withPayload(
-                                        ByteBuffer.wrap(
-                                                SIGNED_CONTRA_INDICATOR_VC.getBytes(
-                                                        StandardCharsets.UTF_8))));
+                                .withPayload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC)));
 
         ContraIndications contraIndications =
                 ciMitService.getContraIndicatorsVC(
@@ -303,16 +305,14 @@ class CiMitServiceTest {
     }
 
     @Test
-    void getContraIndicatorVCThrowsErrorForInvalidJWT() {
+    void getContraIndicatorVCThrowsErrorForInvalidJWT() throws JsonProcessingException {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
         when(lambdaClient.invoke(any()))
                 .thenReturn(
                         new InvokeResult()
                                 .withStatusCode(200)
-                                .withPayload(
-                                        ByteBuffer.wrap(
-                                                "NOT_A_JWT".getBytes(StandardCharsets.UTF_8))));
+                                .withPayload(makeCiMitVCPayload("NOT_A_JWT")));
 
         assertThrows(
                 CiRetrievalException.class,
@@ -337,7 +337,7 @@ class CiMitServiceTest {
     }
 
     @Test
-    void getContraIndicatorsVCThrowsExceptionIfVCValidationFails() {
+    void getContraIndicatorsVCThrowsExceptionIfVCValidationFails() throws JsonProcessingException {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
@@ -348,10 +348,7 @@ class CiMitServiceTest {
                 .thenReturn(
                         new InvokeResult()
                                 .withStatusCode(200)
-                                .withPayload(
-                                        ByteBuffer.wrap(
-                                                SIGNED_CONTRA_INDICATOR_VC.getBytes(
-                                                        StandardCharsets.UTF_8))));
+                                .withPayload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC)));
         doThrow(
                         new VerifiableCredentialException(
                                 HTTPResponse.SC_SERVER_ERROR,
@@ -372,7 +369,7 @@ class CiMitServiceTest {
 
     @Test
     void getContraIndicatorCredentialsReturnEmptyCIIfInvalidEvidenceWithNoCI()
-            throws CiRetrievalException {
+            throws CiRetrievalException, JsonProcessingException {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
@@ -384,9 +381,8 @@ class CiMitServiceTest {
                         new InvokeResult()
                                 .withStatusCode(200)
                                 .withPayload(
-                                        ByteBuffer.wrap(
-                                                SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE
-                                                        .getBytes(StandardCharsets.UTF_8))));
+                                        makeCiMitVCPayload(
+                                                SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE)));
 
         ContraIndications contraIndications =
                 ciMitService.getContraIndicatorsVC(
@@ -411,7 +407,7 @@ class CiMitServiceTest {
     }
 
     @Test
-    void getContraIndicatorCredentialsThrowsErrorIfNoEvidence() {
+    void getContraIndicatorCredentialsThrowsErrorIfNoEvidence() throws JsonProcessingException {
         when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
                 .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
         when(lambdaClient.invoke(any()))
@@ -419,9 +415,8 @@ class CiMitServiceTest {
                         new InvokeResult()
                                 .withStatusCode(200)
                                 .withPayload(
-                                        ByteBuffer.wrap(
-                                                SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE.getBytes(
-                                                        StandardCharsets.UTF_8))));
+                                        makeCiMitVCPayload(
+                                                SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE)));
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
                 .thenReturn("https://identity.staging.account.gov.uk");
         when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
@@ -432,5 +427,13 @@ class CiMitServiceTest {
                 () ->
                         ciMitService.getContraIndicatorsVC(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
+    }
+
+    private ByteBuffer makeCiMitVCPayload(String signedJwt) throws JsonProcessingException {
+        ContraIndicatorCredentialDto contraIndicatorCredentialDto =
+                ContraIndicatorCredentialDto.builder().vc(signedJwt).build();
+        return ByteBuffer.wrap(
+                MAPPER.writerFor(ContraIndicatorCredentialDto.class)
+                        .writeValueAsBytes(contraIndicatorCredentialDto));
     }
 }

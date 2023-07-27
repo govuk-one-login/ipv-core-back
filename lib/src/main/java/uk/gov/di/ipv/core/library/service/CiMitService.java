@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.domain.MitigatingCredential;
 import uk.gov.di.ipv.core.library.domain.Mitigation;
 import uk.gov.di.ipv.core.library.domain.PostCiMitigationRequest;
 import uk.gov.di.ipv.core.library.domain.PutCiRequest;
+import uk.gov.di.ipv.core.library.dto.ContraIndicatorCredentialDto;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorDto;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorEvidenceDto;
 import uk.gov.di.ipv.core.library.dto.MitigationCredentialDto;
@@ -155,7 +156,12 @@ public class CiMitService {
                         ipAddress,
                         userId,
                         "Retrieving CIs from CIMIT system.");
-        SignedJWT ciSignedJWT = extractAndValidateContraIndicatorsJwt(result, userId);
+        ContraIndicatorCredentialDto contraIndicatorCredential =
+                gson.fromJson(
+                        new String(result.getPayload().array(), StandardCharsets.UTF_8),
+                        ContraIndicatorCredentialDto.class);
+        SignedJWT ciSignedJWT =
+                extractAndValidateContraIndicatorsJwt(contraIndicatorCredential.getVc(), userId);
         ContraIndicatorEvidenceDto contraIndicatorEvidence =
                 parseContraIndicatorEvidence(ciSignedJWT);
 
@@ -198,14 +204,10 @@ public class CiMitService {
     }
 
     private SignedJWT extractAndValidateContraIndicatorsJwt(
-            InvokeResult contraIndicatorsResult, String userId) throws CiRetrievalException {
-        final String contraIndicatorsVC =
-                new String(contraIndicatorsResult.getPayload().array(), StandardCharsets.UTF_8);
-
+            String contraIndicatorsVC, String userId) throws CiRetrievalException {
         SignedJWT contraIndicatorsJwt;
         try {
-            // The JWT is currently a quoted string: This will change
-            contraIndicatorsJwt = SignedJWT.parse(contraIndicatorsVC.replace("\"", ""));
+            contraIndicatorsJwt = SignedJWT.parse(contraIndicatorsVC);
         } catch (ParseException e) {
             LOGGER.error(
                     new StringMapMessage()
