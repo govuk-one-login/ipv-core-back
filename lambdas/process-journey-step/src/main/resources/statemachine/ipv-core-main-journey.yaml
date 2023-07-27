@@ -227,6 +227,8 @@ CRI_FRAUD_J1:
   events:
     end:
       targetState: IPV_SUCCESS_PAGE
+    next:
+      targetState: PYI_NO_MATCH
 
 # Passport journey (J2)
 CRI_UK_PASSPORT_J2:
@@ -331,6 +333,8 @@ CRI_KBV_J3:
       targetState: IPV_SUCCESS_PAGE
     fail-with-no-ci:
       targetState: PYI_KBV_THIN_FILE
+    next:
+      targetState: PYI_NO_MATCH
 
 # F2F journey (J4)
 CRI_CLAIMED_IDENTITY_J4:
