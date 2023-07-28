@@ -163,43 +163,20 @@ public class CheckExistingIdentityHandler
             CriResponseItem faceToFaceRequest = criResponseService.getFaceToFaceRequest(userId);
             VcStoreItem faceToFaceVc = userIdentityService.getVcStoreItem(userId, F2F_CRI);
 
-            if (!Objects.isNull(faceToFaceRequest)
-                    && faceToFaceRequest.getStatus().equals(CriResponseService.STATUS_PENDING)
-                    && Objects.isNull(faceToFaceVc)) {
-                var message =
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "F2F cri pending verification.");
-                LOGGER.info(message);
-                return JOURNEY_PENDING;
-            }
-
-            if (!Objects.isNull(faceToFaceRequest)
-                    && faceToFaceRequest.getStatus().equals(CriResponseService.STATUS_ERROR)
-                    && Objects.isNull(faceToFaceVc)) {
-                var message =
-                        new StringMapMessage()
-                                .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "F2F cri error");
-                LOGGER.info(message);
-                // need to replace with new Error page once we have design from UCD.
-                return JOURNEY_FAIL;
+            Optional<Map<String, Object>> f2fResponse =
+                    getFaceToFaceResponse(faceToFaceRequest, faceToFaceVc);
+            if (f2fResponse.isPresent()) {
+                return f2fResponse.get();
             }
 
             List<SignedJWT> credentials =
                     gpg45ProfileEvaluator.parseCredentials(
                             userIdentityService.getUserIssuedCredentials(userId));
 
-            final Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
-                    configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)
-                            ? gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
-                                    ciMitService.getContraIndicatorsVC(
-                                            userId, govukSigninJourneyId, ipAddress),
-                                    true)
-                            : gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
-                                    ciMitService.getCIs(userId, govukSigninJourneyId, ipAddress));
-            if (contraIndicatorErrorJourneyResponse.isPresent()) {
-                return contraIndicatorErrorJourneyResponse.get().toObjectMap();
+            final Optional<JourneyResponse> contraIndicatorJourneyResponse =
+                    getContraIndicatorJourneyResponse(ipAddress, userId, govukSigninJourneyId);
+            if (contraIndicatorJourneyResponse.isPresent()) {
+                return contraIndicatorJourneyResponse.get().toObjectMap();
             }
 
             Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
@@ -322,6 +299,42 @@ public class CheckExistingIdentityHandler
                             ErrorResponse.FAILED_TO_PARSE_CONFIG)
                     .toObjectMap();
         }
+    }
+
+    private Optional<Map<String, Object>> getFaceToFaceResponse(
+            CriResponseItem faceToFaceRequest, VcStoreItem faceToFaceVc) {
+        if (Objects.isNull(faceToFaceVc) && !Objects.isNull(faceToFaceRequest)) {
+            final String requestStatus = faceToFaceRequest.getStatus();
+            if (requestStatus.equals(CriResponseService.STATUS_PENDING)) {
+                LOGGER.info(
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "F2F cri pending verification."));
+
+                return Optional.of(JOURNEY_PENDING);
+            }
+            if (requestStatus.equals(CriResponseService.STATUS_ERROR)) {
+                LOGGER.info(
+                        new StringMapMessage()
+                                .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "F2F cri error"));
+                // need to replace with new Error page once we have design from UCD.
+                return Optional.of(JOURNEY_FAIL);
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Tracing
+    private Optional<JourneyResponse> getContraIndicatorJourneyResponse(
+            String ipAddress, String userId, String govukSigninJourneyId)
+            throws ConfigException, CiRetrievalException, UnrecognisedCiException {
+        return configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)
+                ? gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
+                        ciMitService.getContraIndicatorsVC(userId, govukSigninJourneyId, ipAddress),
+                        true)
+                : gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
+                        ciMitService.getCIs(userId, govukSigninJourneyId, ipAddress));
     }
 
     @Tracing
