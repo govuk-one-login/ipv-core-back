@@ -438,7 +438,8 @@ class Gpg45ProfileEvaluatorTest {
         }
 
         @Test
-        void shouldNotReturnJourneyIfNoContraIndicators() throws ConfigException {
+        void shouldNotReturnJourneyIfNoContraIndicators()
+                throws ConfigException, UnrecognisedCiException {
             final ContraIndications contraIndications = makeContraIndications();
             setupMockContraIndicatorScoringConfig();
             final Optional<JourneyResponse> journeyResponse =
@@ -447,7 +448,8 @@ class Gpg45ProfileEvaluatorTest {
         }
 
         @Test
-        void shouldNotReturnJourneyIfContraIndicatorsDoNotBreachThreshold() throws ConfigException {
+        void shouldNotReturnJourneyIfContraIndicatorsDoNotBreachThreshold()
+                throws ConfigException, UnrecognisedCiException {
             final ContraIndications contraIndications = makeContraIndications(CI2);
             setupMockContraIndicatorScoringConfig();
             final Optional<JourneyResponse> journeyResponse =
@@ -458,7 +460,7 @@ class Gpg45ProfileEvaluatorTest {
         @Test
         void
                 shouldReturnPyiNoMatchJourneyIfContraIndicatorsBreachThresholdAndNoConfigForLatestContraIndicator()
-                        throws ConfigException {
+                        throws ConfigException, UnrecognisedCiException {
             final ContraIndications contraIndications = makeContraIndications(CI3, CI1);
             setupMockContraIndicatorScoringConfig();
             setupMockContraIndicatorTreatmentConfig();
@@ -470,7 +472,7 @@ class Gpg45ProfileEvaluatorTest {
         @Test
         void
                 shouldReturnCustomSeparateSessionJourneyIfContraIndicatorsBreachThresholdAndConfigForLatestContraIndicator()
-                        throws ConfigException {
+                        throws ConfigException, UnrecognisedCiException {
             final ContraIndications contraIndications = makeContraIndications(CI1, CI3);
             setupMockContraIndicatorScoringConfig();
             setupMockContraIndicatorTreatmentConfig();
@@ -482,7 +484,7 @@ class Gpg45ProfileEvaluatorTest {
         @Test
         void
                 shouldReturnCustomSameSessionJourneyIfContraIndicatorsBreachThresholdAndConfigForLatestContraIndicator()
-                        throws ConfigException {
+                        throws ConfigException, UnrecognisedCiException {
             final ContraIndications contraIndications = makeContraIndications(CI1, CI3);
             setupMockContraIndicatorScoringConfig();
             setupMockContraIndicatorTreatmentConfig();

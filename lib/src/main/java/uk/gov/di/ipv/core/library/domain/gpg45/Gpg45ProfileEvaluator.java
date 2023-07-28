@@ -54,7 +54,8 @@ public class Gpg45ProfileEvaluator {
     }
 
     public Optional<JourneyResponse> getJourneyResponseForStoredContraIndicators(
-            ContraIndications contraIndications, boolean separateSession) throws ConfigException {
+            ContraIndications contraIndications, boolean separateSession)
+            throws ConfigException, UnrecognisedCiException {
         LOGGER.info(
                 new StringMapMessage()
                         .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Retrieved user's CI items.")
