@@ -318,7 +318,6 @@ public class CheckExistingIdentityHandler
                 LOGGER.info(
                         new StringMapMessage()
                                 .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "F2F cri error"));
-                // need to replace with new Error page once we have design from UCD.
                 return Optional.of(JOURNEY_FAIL);
             }
         }

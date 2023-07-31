@@ -55,8 +55,6 @@ class ContraIndicationsTest {
                 TEST_CI2, BASE_TIME.minusSeconds(2), List.of(Mitigation.builder().build()));
         assertEquals(
                 7, contraIndications.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, false));
-        //        contraIndications =
-        // ContraIndications.builder().contraIndicators(Map.of()).build();
     }
 
     @Test
@@ -67,8 +65,6 @@ class ContraIndicationsTest {
                 TEST_CI2, BASE_TIME.minusSeconds(2), List.of(Mitigation.builder().build()));
         assertEquals(
                 1, contraIndications.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, true));
-        //        contraIndications =
-        // ContraIndications.builder().contraIndicators(Map.of()).build();
     }
 
     @Test
@@ -80,8 +76,6 @@ class ContraIndicationsTest {
         addContraIndicators(TEST_CI3, BASE_TIME.minusSeconds(4), null);
         assertEquals(
                 6, contraIndications.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, true));
-        //        contraIndications =
-        // ContraIndications.builder().contraIndicators(Map.of()).build();
     }
 
     @Test
