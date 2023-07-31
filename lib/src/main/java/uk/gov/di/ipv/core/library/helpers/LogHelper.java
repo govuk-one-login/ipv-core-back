@@ -103,23 +103,30 @@ public class LogHelper {
     }
 
     public static void logErrorMessage(String message, String errorDescription) {
-        logErrMessage(message, null, errorDescription);
+        logErrMessage(message, null, errorDescription, null);
     }
 
     public static void logErrorMessage(String message, int errorCode, String errorDescription) {
-        logErrMessage(message, Integer.toString(errorCode), errorDescription);
+        logErrMessage(message, Integer.toString(errorCode), errorDescription, null);
     }
 
     public static void logOauthError(String message, String errorCode, String errorDescription) {
-        logErrMessage(message, errorCode, errorDescription);
+        logErrMessage(message, errorCode, errorDescription, null);
     }
 
-    private static void logErrMessage(String message, String errorCode, String errorDescription) {
+    public static void logCriOauthError(
+            String message, String errorCode, String errorDescription, String criId) {
+        logErrMessage(message, errorCode, errorDescription, criId);
+    }
+
+    private static void logErrMessage(
+            String message, String errorCode, String errorDescription, String criId) {
         var mapMessage =
                 new StringMapMessage()
                         .with(LogField.LOG_MESSAGE_DESCRIPTION.getFieldName(), message)
                         .with(LogField.LOG_ERROR_DESCRIPTION.getFieldName(), errorDescription);
         if (errorCode != null) mapMessage.with(LogField.LOG_ERROR_CODE.getFieldName(), errorCode);
+        if (criId != null) mapMessage.with(LogField.LOG_CRI_ID.getFieldName(), errorCode);
         LOGGER.error(mapMessage);
     }
 
