@@ -291,11 +291,11 @@ public class ConfigService {
     }
 
     public Map<String, ContraIndicatorMitigation> getCiMitConfig() throws ConfigException {
-        final TypeReference<HashMap<String, ContraIndicatorMitigation>> typeRef =
-                new TypeReference<>() {};
         final String ciMitConfig = getSsmParameter(ConfigurationVariable.CIMIT_CONFIG);
         try {
-            return objectMapper.readValue(ciMitConfig, typeRef);
+            return objectMapper.readValue(
+                    ciMitConfig,
+                    new TypeReference<HashMap<String, ContraIndicatorMitigation>>() {});
         } catch (JsonProcessingException e) {
             throw new ConfigException("Failed to parse CIMIT configuration");
         }

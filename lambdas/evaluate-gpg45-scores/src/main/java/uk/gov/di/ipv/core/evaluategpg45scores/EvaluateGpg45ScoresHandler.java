@@ -152,13 +152,7 @@ public class EvaluateGpg45ScoresHandler
                             userIdentityService.getUserIssuedCredentials(userId));
 
             final Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
-                    configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)
-                            ? gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
-                                    ciMitService.getContraIndicatorsVC(
-                                            userId, govukSigninJourneyId, ipAddress),
-                                    false)
-                            : gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
-                                    ciMitService.getCIs(userId, govukSigninJourneyId, ipAddress));
+                    getContraIndicatorJourneyResponse(ipAddress, userId, govukSigninJourneyId);
 
             JourneyResponse journeyResponse;
             var message = new StringMapMessage();
@@ -257,6 +251,17 @@ public class EvaluateGpg45ScoresHandler
                             ErrorResponse.FAILED_TO_PARSE_CONFIG)
                     .toObjectMap();
         }
+    }
+
+    private Optional<JourneyResponse> getContraIndicatorJourneyResponse(
+            String ipAddress, String userId, String govukSigninJourneyId)
+            throws ConfigException, UnrecognisedCiException, CiRetrievalException {
+        return configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)
+                ? gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
+                        ciMitService.getContraIndicatorsVC(userId, govukSigninJourneyId, ipAddress),
+                        false)
+                : gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
+                        ciMitService.getCIs(userId, govukSigninJourneyId, ipAddress));
     }
 
     private boolean checkCorrelation(String userId, List<VcStatusDto> currentVcStatuses)
