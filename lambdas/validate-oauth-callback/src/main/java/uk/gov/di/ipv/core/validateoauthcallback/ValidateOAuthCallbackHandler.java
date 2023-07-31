@@ -224,6 +224,7 @@ public class ValidateOAuthCallbackHandler
             throws SqsException {
         String error = callbackRequest.getError();
         String errorDescription = callbackRequest.getErrorDescription();
+        String criId = callbackRequest.getCredentialIssuerId();
 
         AuditExtensionErrorParams extensions =
                 new AuditExtensionErrorParams.Builder()
@@ -239,9 +240,7 @@ public class ValidateOAuthCallbackHandler
 
         if (ipvSessionItem.getCriOAuthSessionId() == null
                 || criOAuthSessionItem == null
-                || !criOAuthSessionItem
-                        .getCriId()
-                        .equals(callbackRequest.getCredentialIssuerId())) {
+                || !criOAuthSessionItem.getCriId().equals(criId)) {
             var message =
                     new StringMapMessage()
                             .with(
@@ -256,11 +255,10 @@ public class ValidateOAuthCallbackHandler
         }
 
         ipvSessionItem.addVisitedCredentialIssuerDetails(
-                new VisitedCredentialIssuerDetailsDto(
-                        callbackRequest.getCredentialIssuerId(), null, false, error));
+                new VisitedCredentialIssuerDetailsDto(criId, null, false, error));
         ipvSessionService.updateIpvSession(ipvSessionItem);
 
-        LogHelper.logOauthError("OAuth error received from CRI", error, errorDescription);
+        LogHelper.logCriOauthError("OAuth error received from CRI", error, errorDescription, criId);
 
         if (OAuth2Error.ACCESS_DENIED_CODE.equals(error)) {
             return JOURNEY_ACCESS_DENIED;
