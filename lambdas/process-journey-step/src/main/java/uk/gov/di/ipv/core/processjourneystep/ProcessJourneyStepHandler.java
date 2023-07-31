@@ -21,7 +21,6 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.processjourneystep.exceptions.JourneyEngineException;
-import uk.gov.di.ipv.core.processjourneystep.statemachine.State;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.StateMachine;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.StateMachineInitializer;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.exceptions.StateMachineNotFoundException;
@@ -29,6 +28,7 @@ import uk.gov.di.ipv.core.processjourneystep.statemachine.exceptions.UnknownEven
 import uk.gov.di.ipv.core.processjourneystep.statemachine.exceptions.UnknownStateException;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyContext;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.PageResponse;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.states.BasicState;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -134,11 +134,12 @@ public class ProcessJourneyStepHandler
                     "Found state machine for journey type: {}",
                     ipvSessionItem.getJourneyType().getValue());
 
-            State newState =
-                    stateMachine.transition(
-                            ipvSessionItem.getUserState(),
-                            journeyStep,
-                            JourneyContext.withFeatureSet(configService.getFeatureSet()));
+            BasicState newState =
+                    (BasicState)
+                            stateMachine.transition(
+                                    ipvSessionItem.getUserState(),
+                                    journeyStep,
+                                    JourneyContext.withFeatureSet(configService.getFeatureSet()));
 
             updateUserState(
                     ipvSessionItem.getUserState(), newState.getName(), journeyStep, ipvSessionItem);

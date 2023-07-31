@@ -1,0 +1,52 @@
+# This file is for simple config to easily test the state machine initializer
+PARENT_STATE:
+  events:
+    parentEvent:
+      targetState: CRI_STATE
+
+PAGE_STATE:
+  response:
+    type: page
+    pageId: page-id-for-some-page
+  parent: PARENT_STATE
+  events:
+    eventOne:
+      targetState: JOURNEY_STATE
+    eventTwo:
+      targetState: CRI_STATE
+      checkIfDisabled:
+        aCriId:
+          targetState: ERROR_STATE
+
+JOURNEY_STATE:
+  response:
+    type: journey
+    journeyStepId: /journey/letsgosomewhere
+  events:
+    eventOne:
+      targetState: CRI_STATE
+
+CRI_STATE:
+  response:
+    type: cri
+    criId: aCriId
+  events:
+    enterNestedJourneyAtStateOne:
+      targetState: NESTED_JOURNEY_INVOKE_STATE
+
+ERROR_STATE:
+  response:
+    type: error
+    pageId: page-error
+    statusCode: 500
+  events:
+    enterNestedJourneyAtStateTwo:
+      targetState: NESTED_JOURNEY_INVOKE_STATE
+
+NESTED_JOURNEY_INVOKE_STATE:
+  nestedJourney: NESTED_JOURNEY_DEFINITION
+  exitEvents:
+    exitEventFromNestedStateTwo:
+      targetState: JOURNEY_STATE
+    exitEventFromDoublyNestedInvokeState:
+      targetState: ERROR_STATE

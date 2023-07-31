@@ -5,11 +5,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.service.ConfigService;
-import uk.gov.di.ipv.core.processjourneystep.statemachine.State;
 import uk.gov.di.ipv.core.processjourneystep.statemachine.responses.JourneyContext;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.states.BasicState;
+import uk.gov.di.ipv.core.processjourneystep.statemachine.states.State;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
@@ -20,22 +22,22 @@ class BasicEventTest {
     @Mock private ConfigService mockConfigService;
 
     @Test
-    void resolveShouldReturnAState() {
-        State targetState = new State("TARGET_STATE");
+    void resolveShouldReturnAState() throws Exception {
+        BasicState targetState = new BasicState();
         BasicEvent basicEvent = new BasicEvent(mockConfigService);
-        basicEvent.setTargetState(targetState);
+        basicEvent.setTargetStateObj(targetState);
 
         assertEquals(targetState, basicEvent.resolve(JourneyContext.emptyContext()));
     }
 
     @Test
-    void resolveShouldReturnAlternativeStateIfACheckedCriIsDisabled() {
+    void resolveShouldReturnAlternativeStateIfACheckedCriIsDisabled() throws Exception {
         BasicEvent basicEventWithCheckIfDisabledConfigured = new BasicEvent(mockConfigService);
-        basicEventWithCheckIfDisabledConfigured.setTargetState(new State());
+        basicEventWithCheckIfDisabledConfigured.setTargetStateObj(new BasicState());
 
         BasicEvent alternativeEvent = new BasicEvent(mockConfigService);
-        State alternativeTargetState = new State("THE_TARGET_STATE_FOR_THE_ALTERNATIVE_RESULT");
-        alternativeEvent.setTargetState(alternativeTargetState);
+        BasicState alternativeTargetState = new BasicState();
+        alternativeEvent.setTargetStateObj(alternativeTargetState);
 
         when(mockConfigService.isEnabled("anEnabledCri")).thenReturn(true);
         when(mockConfigService.isEnabled("aDisabledCri")).thenReturn(false);
@@ -48,5 +50,30 @@ class BasicEventTest {
                 basicEventWithCheckIfDisabledConfigured.resolve(JourneyContext.emptyContext());
 
         assertEquals(alternativeTargetState, resolve);
+    }
+
+    @Test
+    void initializeShouldSetAttributes() {
+        BasicEvent basicEvent = new BasicEvent(mockConfigService);
+        BasicState targetStateObj = new BasicState();
+        basicEvent.setTargetState("TARGET_STATE");
+
+        BasicEvent checkIfDisabledEvent = new BasicEvent(mockConfigService);
+        checkIfDisabledEvent.setTargetState("CHECK_STATE");
+        BasicState checkStateObj = new BasicState();
+
+        basicEvent.setCheckIfDisabled(new LinkedHashMap<>(Map.of("aCriId", checkIfDisabledEvent)));
+
+        basicEvent.initialize(
+                "eventName",
+                Map.of(
+                        "TARGET_STATE", targetStateObj,
+                        "CHECK_STATE", checkStateObj));
+
+        assertEquals("eventName", basicEvent.getName());
+        assertEquals(targetStateObj, basicEvent.getTargetStateObj());
+        assertEquals(
+                checkStateObj,
+                ((BasicEvent) basicEvent.getCheckIfDisabled().get("aCriId")).getTargetStateObj());
     }
 }
