@@ -142,7 +142,10 @@ public class ProcessJourneyEventHandler
                                     JourneyContext.withFeatureSet(configService.getFeatureSet()));
 
             updateUserState(
-                    ipvSessionItem.getUserState(), newState.getName(), journeyEvent, ipvSessionItem);
+                    ipvSessionItem.getUserState(),
+                    newState.getName(),
+                    journeyEvent,
+                    ipvSessionItem);
 
             clearOauthSessionIfExists(ipvSessionItem);
 
