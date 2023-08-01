@@ -3,6 +3,7 @@
 ## Developer Deployment
 
 You can deploy yourself a stack into the development account using the following steps!
+Alternatively you can use the [Developer Environment Deployment Tool](https://github.com/alphagov/di-ipv-core-common-infra/tree/main/utils/dev-deploy).
 
 ### SAM Config
 

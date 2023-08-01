@@ -1317,7 +1317,7 @@ Resources:
   JourneyEngineStepFunction:
     Type: AWS::Serverless::StateMachine
     Properties:
-      DefinitionUri: journey_engine.asl.json
+      DefinitionUri: journeyEngineStepFunction.asl.json
       DefinitionSubstitutions:
         IPVProcessJourneyStepFunctionArn: !GetAtt IPVProcessJourneyStepFunction.Arn
         CheckExistingIdentityFunctionArn: !GetAtt CheckExistingIdentityFunction.Arn
