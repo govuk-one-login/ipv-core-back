@@ -47,7 +47,7 @@ public class StepFunctionHelpers {
         return featureSet;
     }
 
-    public static String getJourneyStep(Map<String, String> input)
+    public static String getJourneyEvent(Map<String, String> input)
             throws HttpResponseExceptionWithErrorBody {
         String[] parts =
                 Optional.ofNullable(input.get(JOURNEY))
@@ -55,7 +55,7 @@ public class StepFunctionHelpers {
                                 () ->
                                         new HttpResponseExceptionWithErrorBody(
                                                 HttpStatus.SC_BAD_REQUEST,
-                                                ErrorResponse.MISSING_JOURNEY_STEP))
+                                                ErrorResponse.MISSING_JOURNEY_EVENT))
                         .split("/");
         return parts[parts.length - 1];
     }

@@ -38,12 +38,12 @@ import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.BACKEND_SESSION_TIMEOUT;
 import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_MAIN_JOURNEY;
-import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_STEP;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_EVENT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_JOURNEY_TYPE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_USER_STATE;
 
-public class ProcessJourneyStepHandler
+public class ProcessJourneyEventHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String PYIC_TIMEOUT_UNRECOVERABLE_ID = "pyi-timeout-unrecoverable";
@@ -54,7 +54,7 @@ public class ProcessJourneyStepHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
     private final Map<IpvJourneyTypes, StateMachine> stateMachines;
 
-    public ProcessJourneyStepHandler(
+    public ProcessJourneyEventHandler(
             IpvSessionService ipvSessionService,
             ConfigService configService,
             ClientOAuthSessionDetailsService clientOAuthSessionService,
@@ -67,7 +67,7 @@ public class ProcessJourneyStepHandler
     }
 
     @ExcludeFromGeneratedCoverageReport
-    public ProcessJourneyStepHandler() throws IOException {
+    public ProcessJourneyEventHandler() throws IOException {
         this.configService = new ConfigService();
         this.ipvSessionService = new IpvSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
@@ -82,7 +82,7 @@ public class ProcessJourneyStepHandler
 
         try {
             String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);
-            String journeyStep = StepFunctionHelpers.getJourneyStep(input);
+            String journeyEvent = StepFunctionHelpers.getJourneyEvent(input);
             String featureSet = StepFunctionHelpers.getFeatureSet(input);
             configService.setFeatureSet(featureSet);
 
@@ -102,7 +102,7 @@ public class ProcessJourneyStepHandler
                         clientOAuthSessionItem.getGovukSigninJourneyId());
             }
 
-            return executeJourneyEvent(journeyStep, ipvSessionItem);
+            return executeJourneyEvent(journeyEvent, ipvSessionItem);
 
         } catch (HttpResponseExceptionWithErrorBody e) {
             return StepFunctionHelpers.generateErrorOutputMap(
@@ -115,7 +115,7 @@ public class ProcessJourneyStepHandler
 
     @Tracing
     private Map<String, Object> executeJourneyEvent(
-            String journeyStep, IpvSessionItem ipvSessionItem) throws JourneyEngineException {
+            String journeyEvent, IpvSessionItem ipvSessionItem) throws JourneyEngineException {
         String currentUserState = ipvSessionItem.getUserState();
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(currentUserState, ipvSessionItem);
@@ -138,11 +138,11 @@ public class ProcessJourneyStepHandler
                     (BasicState)
                             stateMachine.transition(
                                     ipvSessionItem.getUserState(),
-                                    journeyStep,
+                                    journeyEvent,
                                     JourneyContext.withFeatureSet(configService.getFeatureSet()));
 
             updateUserState(
-                    ipvSessionItem.getUserState(), newState.getName(), journeyStep, ipvSessionItem);
+                    ipvSessionItem.getUserState(), newState.getName(), journeyEvent, ipvSessionItem);
 
             clearOauthSessionIfExists(ipvSessionItem);
 
@@ -160,14 +160,14 @@ public class ProcessJourneyStepHandler
             LOGGER.error(
                     new StringMapMessage()
                             .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), e.getMessage())
-                            .with(LOG_JOURNEY_STEP.getFieldName(), journeyStep));
+                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent));
             throw new JourneyEngineException(
                     "Invalid journey event provided, failed to execute journey engine step.");
         } catch (StateMachineNotFoundException e) {
             LOGGER.error(
                     new StringMapMessage()
                             .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), e.getMessage())
-                            .with(LOG_JOURNEY_STEP.getFieldName(), journeyStep)
+                            .with(LOG_JOURNEY_EVENT.getFieldName(), journeyEvent)
                             .with(
                                     LOG_JOURNEY_TYPE.getFieldName(),
                                     ipvSessionItem.getJourneyType()));
@@ -178,12 +178,12 @@ public class ProcessJourneyStepHandler
 
     @Tracing
     private void updateUserState(
-            String oldState, String newState, String journeyStep, IpvSessionItem ipvSessionItem) {
+            String oldState, String newState, String journeyEvent, IpvSessionItem ipvSessionItem) {
         ipvSessionItem.setUserState(newState);
         var message =
                 new StringMapMessage()
                         .with("journeyEngine", "State transition")
-                        .with("event", journeyStep)
+                        .with("event", journeyEvent)
                         .with("from", oldState)
                         .with("to", newState);
         LOGGER.info(message);

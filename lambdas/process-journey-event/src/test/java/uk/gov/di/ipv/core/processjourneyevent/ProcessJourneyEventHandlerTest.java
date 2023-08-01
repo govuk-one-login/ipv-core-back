@@ -39,7 +39,7 @@ import static uk.gov.di.ipv.core.library.domain.IpvJourneyTypes.IPV_CORE_MAIN_JO
 
 @ExtendWith(MockitoExtension.class)
 @ExtendWith(SystemStubsExtension.class)
-class ProcessJourneyStepHandlerTest {
+class ProcessJourneyEventHandlerTest {
     private static final String CODE = "code";
     private static final String IPV_SESSION_ID = "ipvSessionId";
     private static final String JOURNEY = "journey";
@@ -66,8 +66,8 @@ class ProcessJourneyStepHandlerTest {
                 getProcessJourneyStepHandler().handleRequest(input, mockContext);
 
         assertEquals(HttpStatus.SC_BAD_REQUEST, output.get(STATUS_CODE));
-        assertEquals(ErrorResponse.MISSING_JOURNEY_STEP.getCode(), output.get(CODE));
-        assertEquals(ErrorResponse.MISSING_JOURNEY_STEP.getMessage(), output.get(MESSAGE));
+        assertEquals(ErrorResponse.MISSING_JOURNEY_EVENT.getCode(), output.get(CODE));
+        assertEquals(ErrorResponse.MISSING_JOURNEY_EVENT.getMessage(), output.get(MESSAGE));
     }
 
     @Test
@@ -132,14 +132,14 @@ class ProcessJourneyStepHandlerTest {
 
         mockIpvSessionItemAndTimeout(ProcessJourneyStepStates.IPV_IDENTITY_START_PAGE_STATE);
 
-        ProcessJourneyStepHandler processJourneyStepHandler =
-                new ProcessJourneyStepHandler(
+        ProcessJourneyEventHandler processJourneyEventHandler =
+                new ProcessJourneyEventHandler(
                         mockIpvSessionService,
                         mockConfigService,
                         mockClientOAuthSessionService,
                         List.of());
 
-        Map<String, Object> output = processJourneyStepHandler.handleRequest(input, mockContext);
+        Map<String, Object> output = processJourneyEventHandler.handleRequest(input, mockContext);
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, output.get(STATUS_CODE));
         assertEquals(ErrorResponse.FAILED_JOURNEY_ENGINE_STEP.getCode(), output.get(CODE));
@@ -245,8 +245,8 @@ class ProcessJourneyStepHandlerTest {
                 .build();
     }
 
-    private ProcessJourneyStepHandler getProcessJourneyStepHandler() throws IOException {
-        return new ProcessJourneyStepHandler(
+    private ProcessJourneyEventHandler getProcessJourneyStepHandler() throws IOException {
+        return new ProcessJourneyEventHandler(
                 mockIpvSessionService,
                 mockConfigService,
                 mockClientOAuthSessionService,
