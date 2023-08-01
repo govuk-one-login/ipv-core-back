@@ -1422,11 +1422,11 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "process-journey-step-${Environment}"
+      FunctionName: !Sub "process-journey-event-${Environment}"
       Handler: uk.gov.di.ipv.core.processjourneystep.ProcessJourneyStepHandler::handleRequest
       Runtime: java11
       PackageType: Zip
-      CodeUri: ../lambdas/process-journey-step
+      CodeUri: ../lambdas/process-journey-event
       Architectures:
         - arm64
       MemorySize: 2048
@@ -1482,7 +1482,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/process-journey-step-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/process-journey-event-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVProcessJourneyStepFunctionLogGroupSubscriptionFilter:

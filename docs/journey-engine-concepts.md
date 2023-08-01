@@ -38,8 +38,8 @@ A Journey Step is the transition from one Journey State to the next, triggered b
 
 ### Step Response
 
-A Step Response is the output from transitioning to a new state. It is defined on each state in the journey map, and will be the output of the process-journey-step lambda after the state transition. This can either be used by the state machine internally, or returned to IPV Core Front as a Journey Response (see below).
-The process-journey-step lambda output (a Step Response), will be checked by the Journey Engine Step Function. The step function may use it to invoke another lambda, or may decide to return it to core front.
+A Step Response is the output from transitioning to a new state. It is defined on each state in the journey map, and will be the output of the process-journey-event lambda after the state transition. This can either be used by the state machine internally, or returned to IPV Core Front as a Journey Response (see below).
+The process-journey-event lambda output (a Step Response), will be checked by the Journey Engine Step Function. The step function may use it to invoke another lambda, or may decide to return it to core front.
 There are currently 4 types:
 
 * Page step response. This will be returned by the step function to core front as a Page Journey Response.
