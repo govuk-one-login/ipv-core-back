@@ -43,6 +43,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.USE_POST_MITIGATIONS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
@@ -72,7 +73,6 @@ class ProcessAsyncCriCredentialHandlerTest {
             "Additional information on the error";
     private static final CredentialIssuerConfig TEST_CREDENTIAL_ISSUER_CONFIG;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private static final String USE_POST_MITIGATIONS_FEATURE_FLAG = "usePostMitigations";
 
     static {
         try {
@@ -139,7 +139,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
         when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
-        when(configService.getFeatureFlag(USE_POST_MITIGATIONS_FEATURE_FLAG)).thenReturn("true");
+        when(configService.enabled(USE_POST_MITIGATIONS)).thenReturn(true);
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
 
@@ -263,7 +263,7 @@ class ProcessAsyncCriCredentialHandlerTest {
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
         when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
-        when(configService.getFeatureFlag(USE_POST_MITIGATIONS_FEATURE_FLAG)).thenReturn("true");
+        when(configService.enabled(USE_POST_MITIGATIONS)).thenReturn(true);
 
         doThrow(new CiPostMitigationsException("Lambda execution failed"))
                 .when(ciMitService)

@@ -23,8 +23,11 @@ import software.amazon.awssdk.services.secretsmanager.model.ResourceNotFoundExce
 import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.FeatureFlag;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorMitigation;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
@@ -34,6 +37,7 @@ import java.net.URI;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.getAllServeEvents;
@@ -305,6 +309,7 @@ class ConfigServiceTest {
     @Nested
     @DisplayName("credential issuer config items")
     class CredentialIssuerConfigItems {
+
         private void setupTestData(
                 String credentialIssuer,
                 String attributeName,
@@ -429,8 +434,8 @@ class ConfigServiceTest {
         TestConfiguration testConfiguration = TestConfiguration.valueOf(testDataSet);
         testConfiguration.setupMockConfig(ssmProvider);
         assertEquals(
-                testConfiguration.getExpectedValue(featureSet),
-                configService.getFeatureFlag("testFeature"));
+                Boolean.parseBoolean(testConfiguration.getExpectedValue(featureSet)),
+                configService.enabled(TestFeatureFlag.TEST_FEATURE));
     }
 
     @Test
@@ -678,6 +683,20 @@ class ConfigServiceTest {
                 configService.getSsmParameters(testMultipleConfiguration.path, false));
     }
 
+    private enum TestFeatureFlag implements FeatureFlag {
+        TEST_FEATURE("testFeature");
+        private final String name;
+
+        TestFeatureFlag(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String getName() {
+            return this.name;
+        }
+    }
+
     private enum TestMultipleConfiguration {
         CREDENTIAL_ISSUERS(
                 "credentialIssuers",
@@ -732,5 +751,34 @@ class ConfigServiceTest {
                 return expected;
             }
         }
+    }
+
+    @Test
+    void shouldFetchCiMitConfig() throws ConfigException {
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/cimit/config"))
+                .thenReturn(
+                        "{\""
+                                + "X01\":{"
+                                + "\"sameSessionStep\":\"/journey/j1\","
+                                + "\"separateSessionStep\":\"/journey/j2\","
+                                + "\"mitigatingCredentialIssuers\":[\"cri1\"]"
+                                + "}}");
+        Map<String, ContraIndicatorMitigation> expectedCiMitConfig =
+                Map.of(
+                        "X01",
+                        ContraIndicatorMitigation.builder()
+                                .sameSessionStep("/journey/j1")
+                                .separateSessionStep("/journey/j2")
+                                .mitigatingCredentialIssuers(List.of("cri1"))
+                                .build());
+        assertEquals(expectedCiMitConfig, configService.getCiMitConfig());
+    }
+
+    @Test
+    void shouldThrowErrorOnInvalidCiMitConfig() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/cimit/config")).thenReturn("}");
+        assertThrows(ConfigException.class, () -> configService.getCiMitConfig());
     }
 }

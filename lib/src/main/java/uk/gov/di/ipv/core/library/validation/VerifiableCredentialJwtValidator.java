@@ -66,10 +66,16 @@ public class VerifiableCredentialJwtValidator {
     public void validate(
             SignedJWT verifiableCredential, ECKey signingKey, String componentId, String userId)
             throws VerifiableCredentialException {
-        validateSignature(verifiableCredential, signingKey);
-        validateClaimsSet(verifiableCredential, componentId, userId);
+        validateSignatureAndClaims(verifiableCredential, signingKey, componentId, userId);
         validateCiCodes(verifiableCredential);
         LOGGER.info("Verifiable Credential validated.");
+    }
+
+    public void validateSignatureAndClaims(
+            SignedJWT verifiableCredential, ECKey signingKey, String componentId, String userId)
+            throws VerifiableCredentialException {
+        validateSignature(verifiableCredential, signingKey);
+        validateClaimsSet(verifiableCredential, componentId, userId);
     }
 
     private void validateSignature(SignedJWT verifiableCredential, ECKey signingKey) {

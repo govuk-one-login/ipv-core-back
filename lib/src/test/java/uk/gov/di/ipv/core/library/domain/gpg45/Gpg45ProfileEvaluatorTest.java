@@ -2,20 +2,27 @@ package uk.gov.di.ipv.core.library.domain.gpg45;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.domain.ContraIndications;
+import uk.gov.di.ipv.core.library.domain.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorMitigation;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
+import java.time.Instant;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -37,6 +44,15 @@ class Gpg45ProfileEvaluatorTest {
     private static final String JOURNEY_PYI_KBV_FAIL = "/journey/pyi-kbv-fail";
     private static final JourneyResponse JOURNEY_RESPONSE_PYI_KBV_FAIL =
             new JourneyResponse(JOURNEY_PYI_KBV_FAIL);
+
+    private static final String JOURNEY_PYI_CI3_FAIL_SEPARATE_SESSION =
+            "/journey/pyi-ci3-fail-separate-session";
+    private static final JourneyResponse JOURNEY_RESPONSE_PYI_CI3_FAIL_SEPARATE_SESSION =
+            new JourneyResponse(JOURNEY_PYI_CI3_FAIL_SEPARATE_SESSION);
+    private static final String JOURNEY_PYI_CI3_FAIL_SAME_SESSION =
+            "/journey/pyi-ci3-fail-same-session";
+    private static final JourneyResponse JOURNEY_RESPONSE_PYI_CI3_FAIL_SAME_SESSION =
+            new JourneyResponse(JOURNEY_PYI_CI3_FAIL_SAME_SESSION);
     @Mock ConfigService mockConfigService;
     @InjectMocks Gpg45ProfileEvaluator evaluator;
 
@@ -57,6 +73,26 @@ class Gpg45ProfileEvaluatorTest {
 
     private final String M1A_F2F_VC_VERIFICATION_SCORE_ZERO =
             "eyJhbGciOiJFUzI1NiJ9.eyJ2YyI6eyJ0eXBlIjpbIlZlcmlmaWFibGVDcmVkZW50aWFsIiwiSWRlbnRpdHlDaGVja0NyZWRlbnRpYWwiXSwiY3JlZGVudGlhbFN1YmplY3QiOnsibmFtZSI6W3sibmFtZVBhcnRzIjpbeyJ0eXBlIjoiR2l2ZW5OYW1lIiwidmFsdWUiOiJNYXJ5In0seyJ0eXBlIjoiRmFtaWx5TmFtZSIsInZhbHVlIjoiV2F0c29uIn1dfV0sImJpcnRoRGF0ZSI6W3sidmFsdWUiOiIxOTMyLTAyLTI1In1dLCJwYXNzcG9ydCI6W3siZXhwaXJ5RGF0ZSI6IjIwMzAtMDEtMDEiLCJkb2N1bWVudE51bWJlciI6IjgyNDE1OTEyMSJ9XX0sImV2aWRlbmNlIjpbeyJ0eXBlIjoiSWRlbnRpdHlDaGVjayIsInN0cmVuZ3RoU2NvcmUiOjQsInZhbGlkaXR5U2NvcmUiOjAsInZlcmlmaWNhdGlvblNjb3JlIjozLCJjaSI6WyJEMTQiXSwiZmFpbGVkQ2hlY2tEZXRhaWxzIjpbeyJjaGVja01ldGhvZCI6InZjcnlwdCIsImlkZW50aXR5Q2hlY2tQb2xpY3kiOiJwdWJsaXNoZWQifSx7ImNoZWNrTWV0aG9kIjoiYnZyIiwiYmlvbWV0cmljVmVyaWZpY2F0aW9uUHJvY2Vzc0xldmVsIjozfV19XX0sImlzcyI6Imh0dHBzOi8vZGV2ZWxvcG1lbnQtZGktaXB2LWNyaS11ay1wYXNzcG9ydC1zdHViLmxvbmRvbi5jbG91ZGFwcHMuZGlnaXRhbCIsInN1YiI6InVybjp1dWlkOmFmMTBlYzk0LWQxMWMtNDU5Zi04NzgyLWUyZTAzNzNiODEwMSIsIm5iZiI6MTY4NTQ1MzY5M30.XLGc1AIvEJdpo7ArSRTWaDfWbWRC1Q2VgXXQQ4_fPX9_d0OdUFMmyAfPIEcvmBmwi8Z7ixZ4GO7UrOa_tl4sQQ";
+
+    private static final String CI1 = "X98";
+    private static final String CI2 = "X99";
+    private static final String CI3 = "X97";
+    private static final Map<String, ContraIndicatorScore> TEST_CI_SCORES =
+            Map.of(
+                    CI1,
+                    new ContraIndicatorScore(CI1, 1, -1, null, Collections.emptyList()),
+                    CI2,
+                    new ContraIndicatorScore(CI2, 3, -2, null, Collections.emptyList()),
+                    CI3,
+                    new ContraIndicatorScore(CI3, 4, -3, null, Collections.emptyList()));
+
+    private static final Map<String, ContraIndicatorMitigation> TEST_CI_MITIGATION_CONFIG =
+            Map.of(
+                    CI3,
+                    ContraIndicatorMitigation.builder()
+                            .sameSessionStep(JOURNEY_PYI_CI3_FAIL_SAME_SESSION)
+                            .separateSessionStep(JOURNEY_PYI_CI3_FAIL_SEPARATE_SESSION)
+                            .build());
 
     @Test
     void getFirstMatchingProfileShouldReturnSatisfiedProfile() {
@@ -92,15 +128,10 @@ class Gpg45ProfileEvaluatorTest {
                         "Y03#hash",
                         "issuer",
                         "2022-09-21T07:57:14.332Z",
-                        "Y03",
+                        CI2,
                         "123456789",
                         null);
-
-        Map<String, ContraIndicatorScore> ciScoresMap = new HashMap<>();
-        ciScoresMap.put(
-                "Y03", new ContraIndicatorScore("Y03", 2, -2, null, Collections.emptyList()));
-        when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
+        setupMockContraIndicatorScoringConfig();
 
         assertTrue(
                 evaluator.getJourneyResponseForStoredCis(List.of(contraIndicatorItem)).isEmpty());
@@ -116,7 +147,7 @@ class Gpg45ProfileEvaluatorTest {
                         "X98#hash",
                         "otherIssuer",
                         "2022-09-21T08:00:00.000Z",
-                        "X98",
+                        CI1,
                         "123456789",
                         null);
         ContraIndicatorItem kbvCiItem =
@@ -125,17 +156,11 @@ class Gpg45ProfileEvaluatorTest {
                         "X99#hash",
                         "kbvIssuer",
                         "2022-09-21T08:01:00.000Z",
-                        "X99",
+                        CI2,
                         "123456789",
                         null);
 
-        Map<String, ContraIndicatorScore> ciScoresMap = new HashMap<>();
-        ciScoresMap.put(
-                "X98", new ContraIndicatorScore("X98", 1, -1, null, Collections.emptyList()));
-        ciScoresMap.put(
-                "X99", new ContraIndicatorScore("X99", 3, -2, null, Collections.emptyList()));
-        when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
+        setupMockContraIndicatorScoringConfig();
         when(mockConfigService.getComponentId("kbv")).thenReturn("kbvIssuer");
 
         assertEquals(
@@ -153,7 +178,7 @@ class Gpg45ProfileEvaluatorTest {
                         "X98#hash",
                         "otherIssuer",
                         "2022-09-21T08:01:00.000Z",
-                        "X98",
+                        CI1,
                         "123456789",
                         null);
         ContraIndicatorItem kbvCiItem =
@@ -162,17 +187,11 @@ class Gpg45ProfileEvaluatorTest {
                         "X99#hash",
                         "kbvIssuer",
                         "2022-09-21T08:00:00.000Z",
-                        "X99",
+                        CI2,
                         "123456789",
                         null);
 
-        Map<String, ContraIndicatorScore> ciScoresMap = new HashMap<>();
-        ciScoresMap.put(
-                "X98", new ContraIndicatorScore("X98", 1, -1, null, Collections.emptyList()));
-        ciScoresMap.put(
-                "X99", new ContraIndicatorScore("X99", 3, -2, null, Collections.emptyList()));
-        when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(ciScoresMap);
-        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
+        setupMockContraIndicatorScoringConfig();
 
         assertEquals(
                 Optional.of(JOURNEY_RESPONSE_PYI_NO_MATCH),
@@ -191,8 +210,7 @@ class Gpg45ProfileEvaluatorTest {
                         "123456789",
                         null);
 
-        when(mockConfigService.getContraIndicatorScoresMap())
-                .thenReturn(Map.of("NO", new ContraIndicatorScore()));
+        when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(TEST_CI_SCORES);
 
         assertThrows(
                 UnrecognisedCiException.class,
@@ -390,5 +408,89 @@ class Gpg45ProfileEvaluatorTest {
                         parsedCredentials, CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD);
 
         assertTrue(result.isEmpty());
+    }
+
+    private void setupMockContraIndicatorScoringConfig() {
+        when(mockConfigService.getContraIndicatorScoresMap()).thenReturn(TEST_CI_SCORES);
+        when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
+    }
+
+    private void setupMockContraIndicatorTreatmentConfig() throws ConfigException {
+        when(mockConfigService.getCiMitConfig()).thenReturn(TEST_CI_MITIGATION_CONFIG);
+    }
+
+    @Nested
+    @DisplayName("getJourneyResponseForStoredContraIndicators tests")
+    class ContraIndicatorJourneySelectionTests {
+        private ContraIndications makeContraIndications(String... contraIndicatorCodes) {
+            return ContraIndications.builder()
+                    .contraIndicators(
+                            Arrays.asList(contraIndicatorCodes).stream()
+                                    .collect(
+                                            Collectors.toMap(
+                                                    code -> code,
+                                                    code ->
+                                                            ContraIndicator.builder()
+                                                                    .code(code)
+                                                                    .issuanceDate(Instant.now())
+                                                                    .build())))
+                    .build();
+        }
+
+        @Test
+        void shouldNotReturnJourneyIfNoContraIndicators()
+                throws ConfigException, UnrecognisedCiException {
+            final ContraIndications contraIndications = makeContraIndications();
+            setupMockContraIndicatorScoringConfig();
+            final Optional<JourneyResponse> journeyResponse =
+                    evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, false);
+            assertTrue(journeyResponse.isEmpty());
+        }
+
+        @Test
+        void shouldNotReturnJourneyIfContraIndicatorsDoNotBreachThreshold()
+                throws ConfigException, UnrecognisedCiException {
+            final ContraIndications contraIndications = makeContraIndications(CI2);
+            setupMockContraIndicatorScoringConfig();
+            final Optional<JourneyResponse> journeyResponse =
+                    evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, false);
+            assertTrue(journeyResponse.isEmpty());
+        }
+
+        @Test
+        void
+                shouldReturnPyiNoMatchJourneyIfContraIndicatorsBreachThresholdAndNoConfigForLatestContraIndicator()
+                        throws ConfigException, UnrecognisedCiException {
+            final ContraIndications contraIndications = makeContraIndications(CI3, CI1);
+            setupMockContraIndicatorScoringConfig();
+            setupMockContraIndicatorTreatmentConfig();
+            final Optional<JourneyResponse> journeyResponse =
+                    evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, false);
+            assertEquals(JOURNEY_RESPONSE_PYI_NO_MATCH, journeyResponse.get());
+        }
+
+        @Test
+        void
+                shouldReturnCustomSeparateSessionJourneyIfContraIndicatorsBreachThresholdAndConfigForLatestContraIndicator()
+                        throws ConfigException, UnrecognisedCiException {
+            final ContraIndications contraIndications = makeContraIndications(CI1, CI3);
+            setupMockContraIndicatorScoringConfig();
+            setupMockContraIndicatorTreatmentConfig();
+            final Optional<JourneyResponse> journeyResponse =
+                    evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, true);
+            assertEquals(JOURNEY_RESPONSE_PYI_CI3_FAIL_SEPARATE_SESSION, journeyResponse.get());
+        }
+
+        @Test
+        void
+                shouldReturnCustomSameSessionJourneyIfContraIndicatorsBreachThresholdAndConfigForLatestContraIndicator()
+                        throws ConfigException, UnrecognisedCiException {
+            final ContraIndications contraIndications = makeContraIndications(CI1, CI3);
+            setupMockContraIndicatorScoringConfig();
+            setupMockContraIndicatorTreatmentConfig();
+            final Optional<JourneyResponse> journeyResponse =
+                    evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, false);
+            assertEquals(JOURNEY_RESPONSE_PYI_CI3_FAIL_SAME_SESSION, journeyResponse.get());
+        }
     }
 }

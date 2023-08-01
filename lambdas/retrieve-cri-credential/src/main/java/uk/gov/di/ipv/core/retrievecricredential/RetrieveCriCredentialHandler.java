@@ -53,6 +53,7 @@ import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.USE_POST_MITIGATIONS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE;
@@ -67,8 +68,6 @@ public class RetrieveCriCredentialHandler
     private static final String EVIDENCE = "evidence";
     private static final String JOURNEY = "journey";
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String USE_POST_MITIGATIONS_FEATURE_FLAG = "usePostMitigations";
-
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final Map<String, Object> JOURNEY_EVALUATE =
             Map.of(JOURNEY, JOURNEY_EVALUATE_PATH);
@@ -262,9 +261,7 @@ public class RetrieveCriCredentialHandler
             IpvSessionItem ipvSessionItem)
             throws ParseException, SqsException, JsonProcessingException, CiPutException,
                     CiPostMitigationsException {
-        final boolean postMitigatingVcs =
-                Boolean.parseBoolean(
-                        configService.getFeatureFlag(USE_POST_MITIGATIONS_FEATURE_FLAG));
+        final boolean postMitigatingVcs = configService.enabled(USE_POST_MITIGATIONS);
         final AuditEventUser auditEventUser =
                 new AuditEventUser(
                         userId,

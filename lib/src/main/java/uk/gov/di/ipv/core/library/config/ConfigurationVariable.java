@@ -21,7 +21,8 @@ public enum ConfigurationVariable {
     CRI_RESPONSE_TTL("self/criResponseTtl"),
     JOURNEY_TYPE("self/journey/type"),
     CIMIT_SIGNING_KEY("cimit/signingKey"),
-    CIMIT_COMPONENT_ID("cimit/componentId");
+    CIMIT_COMPONENT_ID("cimit/componentId"),
+    CIMIT_CONFIG("cimit/config");
 
     private final String path;
 
