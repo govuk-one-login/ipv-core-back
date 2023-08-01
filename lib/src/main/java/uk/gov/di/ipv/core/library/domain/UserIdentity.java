@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -55,7 +56,7 @@ public class UserIdentity {
             @JsonProperty(value = "sub", required = true) String sub,
             @JsonProperty(value = "vot", required = true) String vot,
             @JsonProperty(value = "vtm", required = true) String vtm) {
-        this.vcs = vcs;
+        this.vcs = new ArrayList<>(vcs);
         this.identityClaim = identityClaim;
         this.addressClaim = addressClaim;
         this.passportClaim = passportClaim;

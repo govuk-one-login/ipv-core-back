@@ -429,6 +429,106 @@ class CiMitServiceTest {
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
+    @Test
+    void getContraIndicatorsVcAsJwtStringValidJWT()
+            throws CiRetrievalException, JsonProcessingException {
+        when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
+                .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
+        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
+                .thenReturn(CIMIT_COMPONENT_ID);
+        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
+                .thenReturn(EC_PUBLIC_JWK);
+        when(lambdaClient.invoke(requestCaptor.capture()))
+                .thenReturn(
+                        new InvokeResult()
+                                .withStatusCode(200)
+                                .withPayload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC)));
+
+        String jwtString =
+                ciMitService.getContraIndicatorsVcAsJwtString(
+                        TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
+
+        verify(verifiableCredentialJwtValidator)
+                .validateSignatureAndClaims(
+                        any(SignedJWT.class),
+                        any(ECKey.class),
+                        eq(CIMIT_COMPONENT_ID),
+                        eq(TEST_USER_ID));
+
+        InvokeRequest request = requestCaptor.getValue();
+        assertEquals(THE_ARN_OF_CIMIT_GET_CI_LAMBDA, request.getFunctionName());
+        assertEquals(
+                String.format(
+                        "{\"govuk_signin_journey_id\":\"%s\",\"ip_address\":\"%s\",\"user_id\":\"%s\"}",
+                        GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, TEST_USER_ID),
+                new String(request.getPayload().array(), StandardCharsets.UTF_8));
+
+        assertEquals(SIGNED_CONTRA_INDICATOR_VC, jwtString);
+    }
+
+    @Test
+    void getContraIndicatorsVcAsJwtStringInvalidJWT() throws JsonProcessingException {
+        when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
+                .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
+        when(lambdaClient.invoke(any()))
+                .thenReturn(
+                        new InvokeResult()
+                                .withStatusCode(200)
+                                .withPayload(makeCiMitVCPayload("NOT_A_JWT")));
+
+        assertThrows(
+                CiRetrievalException.class,
+                () ->
+                        ciMitService.getContraIndicatorsVcAsJwtString(
+                                TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
+    }
+
+    @Test
+    void getContraIndicatorsVcAsJwtStringAWSLambdaClientInvocationFailed() {
+        when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
+                .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
+        doThrow(new AWSLambdaException("AWSLambda client invocation failed"))
+                .when(lambdaClient)
+                .invoke(any());
+
+        assertThrows(
+                CiRetrievalException.class,
+                () ->
+                        ciMitService.getContraIndicatorsVC(
+                                TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
+    }
+
+    @Test
+    void getContraIndicatorsVcAsJwtStringVcValidationFails() throws JsonProcessingException {
+        when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
+                .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
+        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
+                .thenReturn(CIMIT_COMPONENT_ID);
+        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
+                .thenReturn(EC_PUBLIC_JWK);
+        when(lambdaClient.invoke(requestCaptor.capture()))
+                .thenReturn(
+                        new InvokeResult()
+                                .withStatusCode(200)
+                                .withPayload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC)));
+        doThrow(
+                        new VerifiableCredentialException(
+                                HTTPResponse.SC_SERVER_ERROR,
+                                ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL))
+                .when(verifiableCredentialJwtValidator)
+                .validateSignatureAndClaims(
+                        any(SignedJWT.class),
+                        any(ECKey.class),
+                        eq(CIMIT_COMPONENT_ID),
+                        eq(TEST_USER_ID));
+
+        assertThrows(
+                CiRetrievalException.class,
+                () ->
+                        ciMitService.getContraIndicatorsVcAsJwtString(
+                                TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
+    }
+
     private ByteBuffer makeCiMitVCPayload(String signedJwt) throws JsonProcessingException {
         ContraIndicatorCredentialDto contraIndicatorCredentialDto =
                 ContraIndicatorCredentialDto.builder().vc(signedJwt).build();

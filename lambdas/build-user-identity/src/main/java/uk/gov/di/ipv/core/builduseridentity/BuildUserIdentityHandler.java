@@ -21,8 +21,10 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionsUserIdentity;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
+import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -31,6 +33,7 @@ import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -52,6 +55,7 @@ public class BuildUserIdentityHandler
     private final ConfigService configService;
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
+    private final CiMitService ciMitService;
     private final String componentId;
 
     public BuildUserIdentityHandler(
@@ -59,12 +63,14 @@ public class BuildUserIdentityHandler
             IpvSessionService ipvSessionService,
             ConfigService configService,
             AuditService auditService,
-            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService) {
+            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
+            CiMitService ciMitService) {
         this.userIdentityService = userIdentityService;
         this.ipvSessionService = ipvSessionService;
         this.configService = configService;
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
+        this.ciMitService = ciMitService;
         this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
@@ -75,6 +81,7 @@ public class BuildUserIdentityHandler
         this.ipvSessionService = new IpvSessionService(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
+        this.ciMitService = new CiMitService(configService);
         this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
@@ -85,6 +92,7 @@ public class BuildUserIdentityHandler
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
         try {
+            String ipAddress = RequestHelper.getIpAddress(input);
             String featureSet = RequestHelper.getFeatureSet(input);
             configService.setFeatureSet(featureSet);
             AccessToken accessToken =
@@ -138,6 +146,15 @@ public class BuildUserIdentityHandler
                             ipvSessionItem.getVot(),
                             ipvSessionItem.getCurrentVcStatuses());
 
+            if (configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)) {
+                String signedCiMitJwt =
+                        ciMitService.getContraIndicatorsVcAsJwtString(
+                                userId,
+                                clientOAuthSessionItem.getGovukSigninJourneyId(),
+                                ipAddress);
+                userIdentity.getVcs().add(signedCiMitJwt);
+            }
+
             AuditExtensionsUserIdentity extensions =
                     new AuditExtensionsUserIdentity(ipvSessionItem.getVot());
 
@@ -173,6 +190,12 @@ public class BuildUserIdentityHandler
                     "Failed to generate the user identity output.", e.getErrorReason());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getResponseCode(), e.getErrorBody());
+        } catch (CiRetrievalException e) {
+            LogHelper.logErrorMessage(
+                    "Error when fetching CIs from storage system.", e.getMessage());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),
+                    OAuth2Error.SERVER_ERROR.toJSONObject());
         }
     }
 
