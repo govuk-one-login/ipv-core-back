@@ -149,6 +149,16 @@ public class CiMitService {
     public ContraIndications getContraIndicatorsVC(
             String userId, String govukSigninJourneyId, String ipAddress)
             throws CiRetrievalException {
+        SignedJWT ciSignedJWT = getContraIndicatorsVCJwt(userId, govukSigninJourneyId, ipAddress);
+        ContraIndicatorEvidenceDto contraIndicatorEvidence =
+                parseContraIndicatorEvidence(ciSignedJWT);
+
+        return mapToContraIndications(contraIndicatorEvidence);
+    }
+
+    public SignedJWT getContraIndicatorsVCJwt(
+            String userId, String govukSigninJourneyId, String ipAddress)
+            throws CiRetrievalException {
         InvokeResult result =
                 invokeClientToGetCIResult(
                         CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN,
@@ -160,12 +170,7 @@ public class CiMitService {
                 gson.fromJson(
                         new String(result.getPayload().array(), StandardCharsets.UTF_8),
                         ContraIndicatorCredentialDto.class);
-        SignedJWT ciSignedJWT =
-                extractAndValidateContraIndicatorsJwt(contraIndicatorCredential.getVc(), userId);
-        ContraIndicatorEvidenceDto contraIndicatorEvidence =
-                parseContraIndicatorEvidence(ciSignedJWT);
-
-        return mapToContraIndications(contraIndicatorEvidence);
+        return extractAndValidateContraIndicatorsJwt(contraIndicatorCredential.getVc(), userId);
     }
 
     private InvokeResult invokeClientToGetCIResult(
