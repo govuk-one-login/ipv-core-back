@@ -38,26 +38,26 @@ class StepFunctionHelpersTest {
     }
 
     @Test
-    void getJourneyStepShouldReturnJourneyStep() throws Exception {
+    void getJourneyEventShouldReturnJourneyEvent() throws Exception {
         Map<String, String> input = Map.of("journey", "/journey/next");
 
-        assertEquals("next", StepFunctionHelpers.getJourneyStep(input));
+        assertEquals("next", StepFunctionHelpers.getJourneyEvent(input));
     }
 
     @Test
-    void getJourneyStepShouldThrowIfJourneyMissing() {
+    void getJourneyEventShouldThrowIfJourneyMissing() {
         Map<String, String> input = Map.of();
 
         var exception =
                 assertThrows(
                         HttpResponseExceptionWithErrorBody.class,
-                        () -> StepFunctionHelpers.getJourneyStep(input));
-        assertEquals(ErrorResponse.MISSING_JOURNEY_STEP, exception.getErrorResponse());
+                        () -> StepFunctionHelpers.getJourneyEvent(input));
+        assertEquals(ErrorResponse.MISSING_JOURNEY_EVENT, exception.getErrorResponse());
         assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
     }
 
     @Test
-    void getIpAddressShouldReturnIpAddress() throws Exception {
+    void getIpAddressShouldReturnIpAddress() {
         Map<String, String> input = Map.of("ipAddress", "something");
 
         assertEquals("something", StepFunctionHelpers.getIpAddress(input));
@@ -90,7 +90,7 @@ class StepFunctionHelpersTest {
     }
 
     @Test
-    void getFeatureSetShouldReturnFeatureSet() throws Exception {
+    void getFeatureSetShouldReturnFeatureSet() {
         Map<String, String> input = Map.of("featureSet", "test-feature-set");
 
         assertEquals("test-feature-set", StepFunctionHelpers.getFeatureSet(input));

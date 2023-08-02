@@ -47,7 +47,7 @@ public class LogHelper {
         LOG_MITIGATION_JOURNEY_RESPONSE("mitigationJourneyResponse"),
         LOG_MISSING_HEADER_FIELD("missingHeaderField"),
         LOG_USER_STATE("userState"),
-        LOG_JOURNEY_STEP("journeyStep"),
+        LOG_JOURNEY_EVENT("journeyEvent"),
         LOG_ERROR("error"),
         LOG_PAYLOAD("payload"),
         LOG_STATUS_CODE("statusCode"),
