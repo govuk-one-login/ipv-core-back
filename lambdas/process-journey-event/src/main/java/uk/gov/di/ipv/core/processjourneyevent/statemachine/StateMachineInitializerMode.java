@@ -1,7 +1,7 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine;
 
 public enum StateMachineInitializerMode {
-    STANDARD(""),
+    STANDARD("journey-maps/"),
     TEST("test/");
 
     private final String pathPart;
