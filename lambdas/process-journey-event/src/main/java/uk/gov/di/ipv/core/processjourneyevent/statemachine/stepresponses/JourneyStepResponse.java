@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.processjourneyevent.statemachine.responses;
+package uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;

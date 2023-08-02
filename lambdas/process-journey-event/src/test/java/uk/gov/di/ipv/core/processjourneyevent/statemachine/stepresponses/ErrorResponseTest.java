@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.processjourneyevent.statemachine.responses;
+package uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses;
 
 import org.junit.jupiter.api.Test;
 

@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.BasicEvent;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.responses.JourneyContext;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 
 import java.util.Map;
 

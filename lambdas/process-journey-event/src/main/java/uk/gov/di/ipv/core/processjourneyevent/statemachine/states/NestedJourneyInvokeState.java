@@ -8,7 +8,7 @@ import org.apache.logging.log4j.Logger;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.events.Event;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.responses.JourneyContext;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 
 import java.util.Arrays;
 import java.util.LinkedList;

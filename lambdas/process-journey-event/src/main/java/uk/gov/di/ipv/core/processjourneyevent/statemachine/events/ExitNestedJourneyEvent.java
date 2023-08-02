@@ -2,7 +2,7 @@ package uk.gov.di.ipv.core.processjourneyevent.statemachine.events;
 
 import lombok.Data;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEventException;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.responses.JourneyContext;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 
 import java.util.Map;
