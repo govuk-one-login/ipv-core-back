@@ -1222,7 +1222,7 @@ Resources:
     Properties:
       DefinitionUri: criReturnStepFunction.asl.json
       DefinitionSubstitutions:
-        IPVProcessJourneyEventFunctionArn: !GetAtt IPVProcessJourneyEventFunction.Arn
+        IPVProcessJourneyStepFunctionArn: !GetAtt IPVProcessJourneyStepFunction.Arn
         RetrieveCriCredentialFunctionArn: !GetAtt RetrieveCriCredentialFunction.Arn
         RetrieveCriOauthAccessTokenFunctionArn: !GetAtt RetrieveCriOauthAccessTokenFunction.Arn
         ValidateOAuthCallbackFunctionArn: !GetAtt ValidateOAuthCallbackFunction.Arn
@@ -1243,7 +1243,7 @@ Resources:
         Level: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, criReturnStepFunctionLogLevel ]
       Policies:
         - LambdaInvokePolicy:
-            FunctionName: !Ref IPVProcessJourneyEventFunction
+            FunctionName: !Ref IPVProcessJourneyStepFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref RetrieveCriCredentialFunction
         - LambdaInvokePolicy:
@@ -1319,7 +1319,7 @@ Resources:
     Properties:
       DefinitionUri: journeyEngineStepFunction.asl.json
       DefinitionSubstitutions:
-        IPVProcessJourneyEventFunctionArn: !GetAtt IPVProcessJourneyEventFunction.Arn
+        IPVProcessJourneyStepFunctionArn: !GetAtt IPVProcessJourneyStepFunction.Arn
         CheckExistingIdentityFunctionArn: !GetAtt CheckExistingIdentityFunction.Arn
         ResetIdentityFunctionArn: !GetAtt ResetIdentityFunction.Arn
         EvaluateGpg45ScoresFunctionArn: !GetAtt EvaluateGpg45ScoresFunction.Arn
@@ -1341,7 +1341,7 @@ Resources:
         Level: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, journeyEngineStepFunctionLogLevel ]
       Policies:
         - LambdaInvokePolicy:
-            FunctionName: !Ref IPVProcessJourneyEventFunction
+            FunctionName: !Ref IPVProcessJourneyStepFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CheckExistingIdentityFunction
         - LambdaInvokePolicy:
@@ -1414,15 +1414,15 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref JourneyEngineStepFunctionLogGroup
 
-  IPVProcessJourneyEventFunction:
+  IPVProcessJourneyStepFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - "IPVProcessJourneyEventFunctionLogGroup"
+      - "IPVProcessJourneyStepFunctionLogGroup"
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "process-journey-event-${Environment}"
+      FunctionName: !Sub "process-journey-step-${Environment}"
       Handler: uk.gov.di.ipv.core.processjourneyevent.ProcessJourneyEventHandler::handleRequest
       Runtime: java11
       PackageType: Zip
@@ -1478,20 +1478,20 @@ Resources:
           - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
           - !Ref AWS::NoValue
 
-  IPVProcessJourneyEventFunctionLogGroup:
+  IPVProcessJourneyStepFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/process-journey-event-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/process-journey-step-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
-  IPVProcessJourneyEventFunctionLogGroupSubscriptionFilter:
+  IPVProcessJourneyStepFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
-      LogGroupName: !Ref IPVProcessJourneyEventFunctionLogGroup
+      LogGroupName: !Ref IPVProcessJourneyStepFunctionLogGroup
 
   EvaluateGpg45ScoresFunction:
     Type: AWS::Serverless::Function

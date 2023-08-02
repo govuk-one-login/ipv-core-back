@@ -3,7 +3,7 @@
   "States": {
     "ProcessJourneyStep": {
       "Type": "Task",
-      "Resource": "${IPVProcessJourneyEventFunctionArn}",
+      "Resource": "${IPVProcessJourneyStepFunctionArn}",
       "Parameters": {
         "journey.$": "$.journey",
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
