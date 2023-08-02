@@ -352,6 +352,7 @@ class BuildUserIdentityHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockConfigService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(true);
+        when(mockConfigService.enabled(BUNDLE_CIMIT_VC)).thenReturn(true);
         when(mockCiMitService.getContraIndicatorsVCJwt(any(), any(), any()))
                 .thenThrow(
                         new CiRetrievalException("Error when fetching CIs from storage system."));
