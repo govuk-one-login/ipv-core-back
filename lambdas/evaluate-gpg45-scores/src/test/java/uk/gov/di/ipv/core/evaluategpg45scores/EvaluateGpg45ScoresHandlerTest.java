@@ -8,6 +8,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -28,6 +30,7 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -51,11 +54,13 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.USE_CONTRA_INDICATOR_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
@@ -157,14 +162,16 @@ class EvaluateGpg45ScoresHandlerTest {
                         .build();
     }
 
-    @Test
-    void shouldReturnJourneySessionEndIfScoresSatisfyM1AGpg45Profile() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldReturnJourneySessionEndIfScoresSatisfyM1AGpg45Profile(boolean useContraIndicatorVC)
+            throws Exception {
         when(configService.getCredentialIssuerActiveConnectionConfig(any()))
                 .thenReturn(addressConfig);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
-                .thenReturn(Optional.empty());
+        when(configService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(useContraIndicatorVC);
+        mockCiJourneyResponse(useContraIndicatorVC, Optional.empty());
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -211,13 +218,15 @@ class EvaluateGpg45ScoresHandlerTest {
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
-    @Test
-    void shouldReturnJourneySessionEndIfScoresSatisfyM1BGpg45Profile() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldReturnJourneySessionEndIfScoresSatisfyM1BGpg45Profile(boolean useContraIndicatorVC)
+            throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
-                .thenReturn(Optional.empty());
+        when(configService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(useContraIndicatorVC);
+        mockCiJourneyResponse(useContraIndicatorVC, Optional.empty());
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -239,12 +248,14 @@ class EvaluateGpg45ScoresHandlerTest {
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
-    @Test
-    void shouldReturnJourneyNextIfScoresDoNotSatisfyM1AGpg45Profile() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldReturnJourneyNextIfScoresDoNotSatisfyM1AGpg45Profile(boolean useContraIndicatorVC)
+            throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
-                .thenReturn(Optional.empty());
+        when(configService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(useContraIndicatorVC);
+        mockCiJourneyResponse(useContraIndicatorVC, Optional.empty());
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.empty());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -323,12 +334,15 @@ class EvaluateGpg45ScoresHandlerTest {
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
-    @Test
-    void shouldReturnJourneyNoMatchJourneyResponseIfCiAreFoundOnVcs() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldReturnJourneyNoMatchJourneyResponseIfCiAreFoundOnVcs(boolean useContraIndicatorVC)
+            throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
-                .thenReturn(Optional.of(new JourneyResponse(JOURNEY_PYI_NO_MATCH)));
+        when(configService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(useContraIndicatorVC);
+        mockCiJourneyResponse(
+                useContraIndicatorVC, Optional.of(new JourneyResponse(JOURNEY_PYI_NO_MATCH)));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -340,12 +354,15 @@ class EvaluateGpg45ScoresHandlerTest {
         assertEquals(JOURNEY_PYI_NO_MATCH, response.getJourney());
     }
 
-    @Test
-    void shouldReturnJourneyErrorResponseIfUnrecognisedCiReceived() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldReturnJourneyErrorResponseIfUnrecognisedCiReceived(boolean useContraIndicatorVC)
+            throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
-                .thenThrow(new UnrecognisedCiException("Unrecognised CI"));
+        when(configService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(useContraIndicatorVC);
+        mockCiJourneyResponseException(
+                useContraIndicatorVC, new UnrecognisedCiException("Unrecognised CI"));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -382,8 +399,10 @@ class EvaluateGpg45ScoresHandlerTest {
                 response.getMessage());
     }
 
-    @Test
-    void shouldReturnFailWithNoCiJourneyResponseIfLastVcStatusesUnsuccessful() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldReturnFailWithNoCiJourneyResponseIfLastVcStatusesUnsuccessful(
+            boolean useContraIndicatorVC) throws Exception {
         IpvSessionItem testIpvSessionItem = new IpvSessionItem();
         testIpvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         testIpvSessionItem.setIpvSessionId(TEST_SESSION_ID);
@@ -409,8 +428,8 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(addressConfig);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(testIpvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
-                .thenReturn(Optional.empty());
+        when(configService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(useContraIndicatorVC);
+        mockCiJourneyResponse(useContraIndicatorVC, Optional.empty());
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -435,8 +454,10 @@ class EvaluateGpg45ScoresHandlerTest {
         assertEquals(JOURNEY_FAIL_WITH_NO_CI, response.getJourney());
     }
 
-    @Test
-    void shouldReturn500IfNoVisitedCredentialIssuersFound() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldReturn500IfNoVisitedCredentialIssuersFound(boolean useContraIndicatorVC)
+            throws Exception {
         IpvSessionItem testIpvSessionItem = new IpvSessionItem();
         testIpvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
         testIpvSessionItem.setIpvSessionId(TEST_SESSION_ID);
@@ -446,8 +467,8 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(addressConfig);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(testIpvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
-                .thenReturn(Optional.empty());
+        when(configService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(useContraIndicatorVC);
+        mockCiJourneyResponse(useContraIndicatorVC, Optional.empty());
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -482,8 +503,9 @@ class EvaluateGpg45ScoresHandlerTest {
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
-    @Test
-    void shouldSendAuditEventWhenProfileMatched() throws Exception {
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void shouldSendAuditEventWhenProfileMatched(boolean useContraIndicatorVC) throws Exception {
         List<SignedJWT> parsedM1ACreds =
                 List.of(
                         SignedJWT.parse(M1A_PASSPORT_VC),
@@ -494,8 +516,8 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(addressConfig);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedM1ACreds);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
-                .thenReturn(Optional.empty());
+        when(configService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(useContraIndicatorVC);
+        mockCiJourneyResponse(useContraIndicatorVC, Optional.empty());
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
         when(gpg45ProfileEvaluator.buildScore(any()))
@@ -570,5 +592,29 @@ class EvaluateGpg45ScoresHandlerTest {
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
         return mapper.convertValue(handlerOutput, responseClass);
+    }
+
+    private void mockCiJourneyResponse(
+            boolean useContraIndicatorVC, Optional<JourneyResponse> mockResponse)
+            throws UnrecognisedCiException, ConfigException {
+        if (useContraIndicatorVC) {
+            when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
+                            any(), anyBoolean()))
+                    .thenReturn(mockResponse);
+        } else {
+            when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
+                    .thenReturn(mockResponse);
+        }
+    }
+
+    private void mockCiJourneyResponseException(boolean useContraIndicatorVC, Exception exception)
+            throws UnrecognisedCiException, ConfigException {
+        if (useContraIndicatorVC) {
+            when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
+                            any(), anyBoolean()))
+                    .thenThrow(exception);
+        } else {
+            when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any())).thenThrow(exception);
+        }
     }
 }

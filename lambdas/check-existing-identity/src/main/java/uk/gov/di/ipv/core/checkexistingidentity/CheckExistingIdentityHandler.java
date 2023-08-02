@@ -17,7 +17,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.AuditExtensionGpg45ProfileMatched;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
+import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -29,6 +29,7 @@ import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeExce
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
@@ -162,44 +163,20 @@ public class CheckExistingIdentityHandler
             CriResponseItem faceToFaceRequest = criResponseService.getFaceToFaceRequest(userId);
             VcStoreItem faceToFaceVc = userIdentityService.getVcStoreItem(userId, F2F_CRI);
 
-            if (!Objects.isNull(faceToFaceRequest)
-                    && faceToFaceRequest.getStatus().equals(CriResponseService.STATUS_PENDING)
-                    && Objects.isNull(faceToFaceVc)) {
-                var message =
-                        new StringMapMessage()
-                                .with(
-                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "F2F cri pending verification.");
-                LOGGER.info(message);
-                return JOURNEY_PENDING;
-            }
-
-            if (!Objects.isNull(faceToFaceRequest)
-                    && faceToFaceRequest.getStatus().equals(CriResponseService.STATUS_ERROR)
-                    && Objects.isNull(faceToFaceVc)) {
-                var message =
-                        new StringMapMessage()
-                                .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "F2F cri error");
-                LOGGER.info(message);
-                // need to replace with new Error page once we have design from UCD.
-                return JOURNEY_FAIL;
+            Optional<Map<String, Object>> f2fResponse =
+                    getFaceToFaceResponse(faceToFaceRequest, faceToFaceVc);
+            if (f2fResponse.isPresent()) {
+                return f2fResponse.get();
             }
 
             List<SignedJWT> credentials =
                     gpg45ProfileEvaluator.parseCredentials(
                             userIdentityService.getUserIssuedCredentials(userId));
 
-            List<ContraIndicatorItem> ciItems =
-                    ciMitService.getCIs(
-                            clientOAuthSessionItem.getUserId(),
-                            clientOAuthSessionItem.getGovukSigninJourneyId(),
-                            ipAddress);
-
-            Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
-                    gpg45ProfileEvaluator.getJourneyResponseForStoredCis(ciItems);
-
-            if (contraIndicatorErrorJourneyResponse.isPresent()) {
-                return contraIndicatorErrorJourneyResponse.get().toObjectMap();
+            final Optional<JourneyResponse> contraIndicatorJourneyResponse =
+                    getContraIndicatorJourneyResponse(ipAddress, userId, govukSigninJourneyId);
+            if (contraIndicatorJourneyResponse.isPresent()) {
+                return contraIndicatorJourneyResponse.get().toObjectMap();
             }
 
             Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
@@ -314,7 +291,49 @@ public class CheckExistingIdentityHandler
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             ErrorResponse.UNRECOGNISED_CI_CODE)
                     .toObjectMap();
+        } catch (ConfigException e) {
+            LOGGER.error("Configuration error", e);
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.FAILED_TO_PARSE_CONFIG)
+                    .toObjectMap();
         }
+    }
+
+    private Optional<Map<String, Object>> getFaceToFaceResponse(
+            CriResponseItem faceToFaceRequest, VcStoreItem faceToFaceVc) {
+        if (Objects.isNull(faceToFaceVc) && !Objects.isNull(faceToFaceRequest)) {
+            final String requestStatus = faceToFaceRequest.getStatus();
+            if (requestStatus.equals(CriResponseService.STATUS_PENDING)) {
+                LOGGER.info(
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "F2F cri pending verification."));
+
+                return Optional.of(JOURNEY_PENDING);
+            }
+            if (requestStatus.equals(CriResponseService.STATUS_ERROR)) {
+                LOGGER.info(
+                        new StringMapMessage()
+                                .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "F2F cri error"));
+                return Optional.of(JOURNEY_FAIL);
+            }
+        }
+        return Optional.empty();
+    }
+
+    @Tracing
+    private Optional<JourneyResponse> getContraIndicatorJourneyResponse(
+            String ipAddress, String userId, String govukSigninJourneyId)
+            throws ConfigException, CiRetrievalException, UnrecognisedCiException {
+        return configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)
+                ? gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
+                        ciMitService.getContraIndicatorsVC(userId, govukSigninJourneyId, ipAddress),
+                        true)
+                : gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
+                        ciMitService.getCIs(userId, govukSigninJourneyId, ipAddress));
     }
 
     @Tracing

@@ -20,8 +20,11 @@ import software.amazon.lambda.powertools.parameters.SSMProvider;
 import software.amazon.lambda.powertools.parameters.SecretsProvider;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
+import uk.gov.di.ipv.core.library.config.FeatureFlag;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorMitigation;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 
 import java.net.URI;
 import java.nio.file.Path;
@@ -287,6 +290,17 @@ public class ConfigService {
         }
     }
 
+    public Map<String, ContraIndicatorMitigation> getCiMitConfig() throws ConfigException {
+        final String ciMitConfig = getSsmParameter(ConfigurationVariable.CIMIT_CONFIG);
+        try {
+            return objectMapper.readValue(
+                    ciMitConfig,
+                    new TypeReference<HashMap<String, ContraIndicatorMitigation>>() {});
+        } catch (JsonProcessingException e) {
+            throw new ConfigException("Failed to parse CIMIT configuration");
+        }
+    }
+
     private String getSecretValue(String secretId) {
         try {
             return secretsProvider.get(secretId);
@@ -317,7 +331,8 @@ public class ConfigService {
         return null;
     }
 
-    public String getFeatureFlag(String featureFlagName) {
-        return getSsmParameter(ConfigurationVariable.FEATURE_FLAGS, featureFlagName);
+    public boolean enabled(FeatureFlag featureFlag) {
+        return Boolean.parseBoolean(
+                getSsmParameter(ConfigurationVariable.FEATURE_FLAGS, featureFlag.getName()));
     }
 }

@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.domain.MitigatingCredential;
 import uk.gov.di.ipv.core.library.domain.Mitigation;
 import uk.gov.di.ipv.core.library.domain.PostCiMitigationRequest;
 import uk.gov.di.ipv.core.library.domain.PutCiRequest;
+import uk.gov.di.ipv.core.library.dto.ContraIndicatorCredentialDto;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorDto;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorEvidenceDto;
 import uk.gov.di.ipv.core.library.dto.MitigationCredentialDto;
@@ -155,7 +156,12 @@ public class CiMitService {
                         ipAddress,
                         userId,
                         "Retrieving CIs from CIMIT system.");
-        SignedJWT ciSignedJWT = extractAndValidateContraIndicatorsJwt(result, userId);
+        ContraIndicatorCredentialDto contraIndicatorCredential =
+                gson.fromJson(
+                        new String(result.getPayload().array(), StandardCharsets.UTF_8),
+                        ContraIndicatorCredentialDto.class);
+        SignedJWT ciSignedJWT =
+                extractAndValidateContraIndicatorsJwt(contraIndicatorCredential.getVc(), userId);
         ContraIndicatorEvidenceDto contraIndicatorEvidence =
                 parseContraIndicatorEvidence(ciSignedJWT);
 
@@ -198,10 +204,7 @@ public class CiMitService {
     }
 
     private SignedJWT extractAndValidateContraIndicatorsJwt(
-            InvokeResult contraIndicatorsResult, String userId) throws CiRetrievalException {
-        final String contraIndicatorsVC =
-                new String(contraIndicatorsResult.getPayload().array(), StandardCharsets.UTF_8);
-
+            String contraIndicatorsVC, String userId) throws CiRetrievalException {
         SignedJWT contraIndicatorsJwt;
         try {
             contraIndicatorsJwt = SignedJWT.parse(contraIndicatorsVC);
@@ -220,8 +223,9 @@ public class CiMitService {
         final String cimitSigningKey =
                 configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY);
         try {
-            verifiableCredentialJwtValidator.validate(
+            verifiableCredentialJwtValidator.validateSignatureAndClaims(
                     contraIndicatorsJwt, ECKey.parse(cimitSigningKey), cimitComponentId, userId);
+            LOGGER.info("ContraIndicators Verifiable Credential validated.");
         } catch (ParseException e) {
             LOGGER.error("Error parsing CIMIT signing key: '{}'", e.getMessage());
             throw new CiRetrievalException(
@@ -272,8 +276,8 @@ public class CiMitService {
     private ContraIndications mapToContraIndications(
             ContraIndicatorEvidenceDto contraIndicatorEvidenceDto) {
         List<ContraIndicatorDto> contraIndicators =
-                contraIndicatorEvidenceDto.getContraIndicator() != null
-                        ? contraIndicatorEvidenceDto.getContraIndicator()
+                contraIndicatorEvidenceDto.getCi() != null
+                        ? contraIndicatorEvidenceDto.getCi()
                         : Collections.emptyList();
         return ContraIndications.builder()
                 .contraIndicators(

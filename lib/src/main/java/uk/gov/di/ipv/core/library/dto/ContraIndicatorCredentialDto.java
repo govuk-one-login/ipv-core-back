@@ -1,18 +1,16 @@
 package uk.gov.di.ipv.core.library.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
-import java.util.List;
-
 @ExcludeFromGeneratedCoverageReport
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ContraIndicatorEvidenceDto {
-    private String type;
-    private List<ContraIndicatorDto> ci;
-    private List<String> txn;
+public class ContraIndicatorCredentialDto {
+    private String vc;
 }
