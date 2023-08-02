@@ -6,6 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import com.nimbusds.oauth2.sdk.token.BearerAccessToken;
@@ -39,6 +40,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
 
+import java.text.ParseException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
@@ -201,7 +203,7 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequest()
             throws JsonProcessingException, SqsException, HttpResponseExceptionWithErrorBody,
-                    CiRetrievalException {
+                    CiRetrievalException, ParseException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
         Map<String, String> headers =
@@ -219,8 +221,8 @@ class BuildUserIdentityHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockConfigService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(true);
-        when(mockCiMitService.getContraIndicatorsVcAsJwtString(any(), any(), any()))
-                .thenReturn(SIGNED_CONTRA_INDICATOR_VC);
+        when(mockCiMitService.getContraIndicatorsVCJwt(any(), any(), any()))
+                .thenReturn(SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC));
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
         UserIdentity responseBody =
@@ -241,7 +243,7 @@ class BuildUserIdentityHandlerTest {
         assertEquals(
                 AuditEventTypes.IPV_IDENTITY_ISSUED, auditEventCaptor.getValue().getEventName());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockCiMitService, times(1)).getContraIndicatorsVcAsJwtString(any(), any(), any());
+        verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
     }
 
     @Test
@@ -301,7 +303,7 @@ class BuildUserIdentityHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockConfigService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(true);
-        when(mockCiMitService.getContraIndicatorsVcAsJwtString(any(), any(), any()))
+        when(mockCiMitService.getContraIndicatorsVCJwt(any(), any(), any()))
                 .thenThrow(
                         new CiRetrievalException("Error when fetching CIs from storage system."));
 
@@ -312,7 +314,7 @@ class BuildUserIdentityHandlerTest {
         assertEquals("server_error", responseBody.get("error"));
         assertEquals("Unexpected server error", responseBody.get("error_description"));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockCiMitService, times(1)).getContraIndicatorsVcAsJwtString(any(), any(), any());
+        verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
     }
 
     @Test

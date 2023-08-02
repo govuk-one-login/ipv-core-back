@@ -149,21 +149,14 @@ public class CiMitService {
     public ContraIndications getContraIndicatorsVC(
             String userId, String govukSigninJourneyId, String ipAddress)
             throws CiRetrievalException {
-        SignedJWT ciSignedJWT = getContraIndicatorsJWT(userId, govukSigninJourneyId, ipAddress);
+        SignedJWT ciSignedJWT = getContraIndicatorsVCJwt(userId, govukSigninJourneyId, ipAddress);
         ContraIndicatorEvidenceDto contraIndicatorEvidence =
                 parseContraIndicatorEvidence(ciSignedJWT);
 
         return mapToContraIndications(contraIndicatorEvidence);
     }
 
-    public String getContraIndicatorsVcAsJwtString(
-            String userId, String govukSigninJourneyId, String ipAddress)
-            throws CiRetrievalException {
-        SignedJWT ciSignedJWT = getContraIndicatorsJWT(userId, govukSigninJourneyId, ipAddress);
-        return ciSignedJWT.serialize();
-    }
-
-    private SignedJWT getContraIndicatorsJWT(
+    public SignedJWT getContraIndicatorsVCJwt(
             String userId, String govukSigninJourneyId, String ipAddress)
             throws CiRetrievalException {
         InvokeResult result =

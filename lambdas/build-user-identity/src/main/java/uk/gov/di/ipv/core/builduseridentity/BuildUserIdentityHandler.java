@@ -4,6 +4,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
+import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.OAuth2Error;
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
@@ -92,7 +93,6 @@ public class BuildUserIdentityHandler
             APIGatewayProxyRequestEvent input, Context context) {
         LogHelper.attachComponentIdToLogs();
         try {
-            String ipAddress = RequestHelper.getIpAddress(input);
             String featureSet = RequestHelper.getFeatureSet(input);
             configService.setFeatureSet(featureSet);
             AccessToken accessToken =
@@ -147,12 +147,10 @@ public class BuildUserIdentityHandler
                             ipvSessionItem.getCurrentVcStatuses());
 
             if (configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)) {
-                String signedCiMitJwt =
-                        ciMitService.getContraIndicatorsVcAsJwtString(
-                                userId,
-                                clientOAuthSessionItem.getGovukSigninJourneyId(),
-                                ipAddress);
-                userIdentity.getVcs().add(signedCiMitJwt);
+                SignedJWT signedCiMitJwt =
+                        ciMitService.getContraIndicatorsVCJwt(
+                                userId, clientOAuthSessionItem.getGovukSigninJourneyId(), null);
+                userIdentity.getVcs().add(signedCiMitJwt.serialize());
             }
 
             AuditExtensionsUserIdentity extensions =
