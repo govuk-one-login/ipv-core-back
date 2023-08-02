@@ -181,7 +181,7 @@ public class StateMachineInitializer {
                 Objects.requireNonNull(
                                 classLoader.getResource(
                                         String.format(
-                                                "statemachine/%s%s.yaml",
+                                                "statemachine/journey-maps/%s%s.yaml",
                                                 mode.getPathPart(), filename)))
                         .getFile());
     }
