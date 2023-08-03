@@ -6,9 +6,9 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class CriResponseTest {
+public class CriStepResponseTest {
 
-    public static final CriResponse CRI_RESPONSE = new CriResponse("aCriId");
+    public static final CriStepResponse CRI_RESPONSE = new CriStepResponse("aCriId");
 
     @Test
     void valueReturnsCorrectJourneyResponse() {
