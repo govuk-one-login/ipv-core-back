@@ -155,7 +155,7 @@ public class EvaluateGpg45ScoresHandler
                     getContraIndicatorJourneyResponse(ipAddress, userId, govukSigninJourneyId);
 
             JourneyResponse journeyResponse;
-            var message = new StringMapMessage();
+            StringMapMessage message = new StringMapMessage();
 
             if (contraIndicatorErrorJourneyResponse.isEmpty()) {
                 journeyResponse =
