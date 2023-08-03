@@ -6,9 +6,9 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ErrorResponseTest {
+public class ErrorStepResponseTest {
 
-    public static final ErrorResponse ERROR_RESPONSE = new ErrorResponse("aPageId", "500");
+    public static final ErrorStepResponse ERROR_RESPONSE = new ErrorStepResponse("aPageId", "500");
 
     @Test
     void valueReturnsCorrectResponse() {

@@ -28,7 +28,7 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownEve
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.exceptions.UnknownStateException;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.JourneyContext;
-import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageResponse;
+import uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses.PageStepResponse;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -119,7 +119,7 @@ public class ProcessJourneyEventHandler
         String currentUserState = ipvSessionItem.getUserState();
         if (sessionIsNewlyExpired(ipvSessionItem)) {
             updateUserSessionForTimeout(currentUserState, ipvSessionItem);
-            return new PageResponse(PYIC_TIMEOUT_UNRECOVERABLE_ID).value();
+            return new PageStepResponse(PYIC_TIMEOUT_UNRECOVERABLE_ID).value();
         }
 
         try {

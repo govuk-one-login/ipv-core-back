@@ -8,9 +8,9 @@ import java.util.Map;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
     @JsonSubTypes.Type(value = JourneyResponse.class, name = "journey"),
-    @JsonSubTypes.Type(value = PageResponse.class, name = "page"),
-    @JsonSubTypes.Type(value = ErrorResponse.class, name = "error"),
-    @JsonSubTypes.Type(value = CriResponse.class, name = "cri")
+    @JsonSubTypes.Type(value = PageStepResponse.class, name = "page"),
+    @JsonSubTypes.Type(value = ErrorStepResponse.class, name = "error"),
+    @JsonSubTypes.Type(value = CriStepResponse.class, name = "cri")
 })
 public interface JourneyStepResponse {
     Map<String, Object> value();
