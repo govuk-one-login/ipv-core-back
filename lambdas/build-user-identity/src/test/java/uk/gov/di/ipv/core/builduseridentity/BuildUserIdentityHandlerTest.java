@@ -250,7 +250,7 @@ class BuildUserIdentityHandlerTest {
 
     @Test
     void
-            shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequestWhenBundleCimitVCFeatureFlagIsNotEnable()
+            shouldReturnCredentialsWithoutCiMitVCOnSuccessfulUserInfoRequestWhenBundleCimitVCFeatureFlagIsNotEnabled()
                     throws JsonProcessingException, SqsException,
                             HttpResponseExceptionWithErrorBody, CiRetrievalException,
                             ParseException {
