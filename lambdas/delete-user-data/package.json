@@ -39,6 +39,6 @@
     ]
   },
   "dependencies": {
-    "@aws-lambda-powertools/logger": "1.9.0"
+    "@aws-lambda-powertools/logger": "1.12.1"
   }
 }
