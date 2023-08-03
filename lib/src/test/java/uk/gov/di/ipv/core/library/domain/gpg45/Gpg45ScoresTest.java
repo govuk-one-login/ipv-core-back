@@ -7,6 +7,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile.H2D;
+import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile.M1A;
+import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile.M1B;
 import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores.EV_32;
 import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores.EV_33;
 
@@ -75,5 +77,21 @@ class Gpg45ScoresTest {
         Gpg45Scores score2 = new Gpg45Scores(EV_33, EV_32, 0, 1, 3);
 
         assertEquals(0, score1.compareTo(score2));
+    }
+
+    @Test
+    void shouldFindMinimumRequiredScoresToMeetOneOfProfilesGivenFraudScoreOf1() {
+        Gpg45Scores scores = new Gpg45Scores(0, 0, 0, 1, 2);
+        assertEquals(
+                new Gpg45Scores(4, 2, 0, 0, 0),
+                scores.minimumRequiredToMeetProfileGivenCurrentFraudScore(List.of(M1A, M1B)));
+    }
+
+    @Test
+    void shouldFindMinimumRequiredScoresToMeetOneOfProfilesGivenFraudScoreOf2() {
+        Gpg45Scores scores = new Gpg45Scores(0, 0, 0, 2, 2);
+        assertEquals(
+                new Gpg45Scores(3, 2, 1, 0, 0),
+                scores.minimumRequiredToMeetProfileGivenCurrentFraudScore(List.of(M1A, M1B)));
     }
 }

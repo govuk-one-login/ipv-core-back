@@ -2,6 +2,7 @@ package uk.gov.di.ipv.core.library.domain.gpg45;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -142,6 +143,30 @@ public class Gpg45Scores implements Comparable<Gpg45Scores> {
         return evidenceDiff;
     }
 
+    public Gpg45Scores minimumRequiredToMeetProfileGivenCurrentFraudScore(
+            List<Gpg45Profile> profiles) {
+        List<Gpg45Scores> compatibleScores = new ArrayList<>();
+        for (Gpg45Profile profile : profiles) {
+            Gpg45Scores diff = this.difference(profile.getScores());
+            if (diff.getFraud() <= 0) {
+                compatibleScores.add(diff.zeroNegativeValues());
+            }
+        }
+        return compatibleScores.size() > 1
+                ? Collections.min(compatibleScores)
+                : compatibleScores.get(0);
+    }
+
+    public Gpg45Scores zeroNegativeValues() {
+        return new Gpg45Scores(
+                this.evidences.stream()
+                        .map(Gpg45Scores.Evidence::zeroNegativeValues)
+                        .collect(Collectors.toList()),
+                Math.max(0, activity),
+                Math.max(0, fraud),
+                Math.max(0, verification));
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(evidences, activity, fraud, verification);
@@ -253,6 +278,10 @@ public class Gpg45Scores implements Comparable<Gpg45Scores> {
 
         public int getStrength() {
             return strength;
+        }
+
+        public Evidence zeroNegativeValues() {
+            return new Evidence(Math.max(0, strength), Math.max(0, validity));
         }
 
         @Override
