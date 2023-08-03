@@ -146,7 +146,8 @@ public class BuildUserIdentityHandler
                             ipvSessionItem.getVot(),
                             ipvSessionItem.getCurrentVcStatuses());
 
-            if (configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)) {
+            if (configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)
+                    && configService.enabled(CoreFeatureFlag.BUNDLE_CIMIT_VC)) {
                 SignedJWT signedCiMitJwt =
                         ciMitService.getContraIndicatorsVCJwt(
                                 userId, clientOAuthSessionItem.getGovukSigninJourneyId(), null);

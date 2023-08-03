@@ -53,6 +53,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.BUNDLE_CIMIT_VC;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.USE_CONTRA_INDICATOR_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DRIVING_PERMIT_JSON_1;
@@ -221,13 +222,14 @@ class BuildUserIdentityHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockConfigService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(true);
+        when(mockConfigService.enabled(BUNDLE_CIMIT_VC)).thenReturn(true);
         when(mockCiMitService.getContraIndicatorsVCJwt(any(), any(), any()))
                 .thenReturn(SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC));
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
         UserIdentity responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-
+        assertEquals(4, userIdentity.getVcs().size());
         assertEquals(userIdentity.getVcs().get(0), responseBody.getVcs().get(0));
         assertEquals(userIdentity.getVcs().get(1), responseBody.getVcs().get(1));
         assertEquals(userIdentity.getVcs().get(2), responseBody.getVcs().get(2));
@@ -244,6 +246,53 @@ class BuildUserIdentityHandlerTest {
                 AuditEventTypes.IPV_IDENTITY_ISSUED, auditEventCaptor.getValue().getEventName());
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
+    }
+
+    @Test
+    void
+            shouldReturnCredentialsWithoutCiMitVCOnSuccessfulUserInfoRequestWhenBundleCimitVCFeatureFlagIsNotEnabled()
+                    throws JsonProcessingException, SqsException,
+                            HttpResponseExceptionWithErrorBody, CiRetrievalException,
+                            ParseException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
+        Map<String, String> headers =
+                Map.of(
+                        "Authorization",
+                        accessToken.toAuthorizationHeader(),
+                        "ip-address",
+                        TEST_IP_ADDRESS);
+        event.setHeaders(headers);
+
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
+        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+                .thenReturn(userIdentity);
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(mockConfigService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(true);
+        when(mockConfigService.enabled(BUNDLE_CIMIT_VC)).thenReturn(false);
+
+        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+        UserIdentity responseBody =
+                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(3, userIdentity.getVcs().size());
+        assertEquals(userIdentity.getVcs().get(0), responseBody.getVcs().get(0));
+        assertEquals(userIdentity.getVcs().get(1), responseBody.getVcs().get(1));
+        assertEquals(userIdentity.getVcs().get(2), responseBody.getVcs().get(2));
+        assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
+        assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
+        assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
+
+        verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
+
+        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
+        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
+        assertEquals(
+                AuditEventTypes.IPV_IDENTITY_ISSUED, auditEventCaptor.getValue().getEventName());
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+        verify(mockCiMitService, times(0)).getContraIndicatorsVCJwt(any(), any(), any());
     }
 
     @Test
@@ -303,6 +352,7 @@ class BuildUserIdentityHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(mockConfigService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(true);
+        when(mockConfigService.enabled(BUNDLE_CIMIT_VC)).thenReturn(true);
         when(mockCiMitService.getContraIndicatorsVCJwt(any(), any(), any()))
                 .thenThrow(
                         new CiRetrievalException("Error when fetching CIs from storage system."));

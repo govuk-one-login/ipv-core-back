@@ -3,7 +3,8 @@ package uk.gov.di.ipv.core.library.config;
 public enum CoreFeatureFlag implements FeatureFlag {
     USE_CONTRA_INDICATOR_VC("useContraIndicatorVC"),
     USE_POST_MITIGATIONS("usePostMitigations"),
-    MITIGATION_ENABLED("mitigationEnabled");
+    MITIGATION_ENABLED("mitigationEnabled"),
+    BUNDLE_CIMIT_VC("bundleCimitVC");
 
     private final String name;
 
