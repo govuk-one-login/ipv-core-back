@@ -229,7 +229,7 @@ class BuildUserIdentityHandlerTest {
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
         UserIdentity responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-        assertEquals(userIdentity.getVcs().size(), 4);
+        assertEquals(4, userIdentity.getVcs().size());
         assertEquals(userIdentity.getVcs().get(0), responseBody.getVcs().get(0));
         assertEquals(userIdentity.getVcs().get(1), responseBody.getVcs().get(1));
         assertEquals(userIdentity.getVcs().get(2), responseBody.getVcs().get(2));
@@ -277,7 +277,7 @@ class BuildUserIdentityHandlerTest {
         UserIdentity responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
-        assertEquals(userIdentity.getVcs().size(), 3);
+        assertEquals(3, userIdentity.getVcs().size());
         assertEquals(userIdentity.getVcs().get(0), responseBody.getVcs().get(0));
         assertEquals(userIdentity.getVcs().get(1), responseBody.getVcs().get(1));
         assertEquals(userIdentity.getVcs().get(2), responseBody.getVcs().get(2));
