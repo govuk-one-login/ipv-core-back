@@ -27,7 +27,9 @@ class AuditExtensionGpg45ProfileMatchedTest {
         clockMock = mockStatic(Clock.class);
         Clock spyClock = spy(Clock.class);
         clockMock.when(Clock::systemUTC).thenReturn(spyClock);
-        when(spyClock.instant()).thenReturn(Instant.ofEpochSecond(1666170506));
+        Instant instantValue = Instant.ofEpochSecond(1666170506);
+        when(spyClock.instant()).thenReturn(instantValue);
+        when(spyClock.instant().now()).thenReturn(instantValue);
     }
 
     @AfterAll

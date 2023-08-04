@@ -29,14 +29,15 @@ dependencies {
 			"org.junit.jupiter:junit-jupiter:5.9.3",
 			"org.mockito:mockito-junit-jupiter:5.4.0",
 			"uk.org.webcompere:system-stubs-jupiter:2.0.2"
+	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
 	compileOnly "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
 	annotationProcessor "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
 }
 
 java {
-	sourceCompatibility = JavaVersion.VERSION_11
-	targetCompatibility = JavaVersion.VERSION_11
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
 	withSourcesJar()
 }
 
