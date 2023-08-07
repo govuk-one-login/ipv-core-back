@@ -37,6 +37,17 @@
       "ResultPath": "$.lambdaResult",
       "Next": "RouteJourneyResponse"
     },
+    "CiScoring": {
+      "Type": "Task",
+      "Resource": "${CiScoringFunctionArn}",
+      "Parameters": {
+        "ipvSessionId.$": "$.ipvSessionId",
+        "ipAddress.$": "$.ipAddress",
+        "featureSet.$": "$.featureSet"
+      },
+      "ResultPath": "$.lambdaResult",
+      "Next": "EvaluateGpg45Scores"
+    },
     "EvaluateGpg45Scores": {
       "Type": "Task",
       "Resource": "${EvaluateGpg45ScoresFunctionArn}",
@@ -77,7 +88,7 @@
         {
           "Variable": "$.lambdaResult.journey",
           "StringEquals": "/journey/evaluate",
-          "Next": "EvaluateGpg45Scores"
+          "Next": "CiScoring"
         }
       ],
       "Default": "ReturnToFrontend"

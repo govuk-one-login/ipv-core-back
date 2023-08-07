@@ -1265,6 +1265,7 @@ Resources:
         RetrieveCriOauthAccessTokenFunctionArn: !GetAtt RetrieveCriOauthAccessTokenFunction.Arn
         ValidateOAuthCallbackFunctionArn: !GetAtt ValidateOAuthCallbackFunction.Arn
         EvaluateGpg45ScoresFunctionArn: !GetAtt EvaluateGpg45ScoresFunction.Arn
+        CiScoringFunctionArn: !GetAtt CiScoringFunction.Arn
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1290,6 +1291,8 @@ Resources:
             FunctionName: !Ref ValidateOAuthCallbackFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref EvaluateGpg45ScoresFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref CiScoringFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow
