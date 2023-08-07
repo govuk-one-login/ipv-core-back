@@ -39,7 +39,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
         with:
-          gradle-version: 7.3
+          gradle-version: 8.2.1
 
       - name: Set up SAM cli
         uses: aws-actions/setup-sam@v2
