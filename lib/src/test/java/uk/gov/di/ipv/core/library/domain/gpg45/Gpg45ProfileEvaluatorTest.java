@@ -6,6 +6,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -15,6 +17,7 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorMitigation;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.Mitigation;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
@@ -33,6 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MITIGATION_ENABLED;
 
 @ExtendWith(MockitoExtension.class)
 class Gpg45ProfileEvaluatorTest {
@@ -419,49 +423,87 @@ class Gpg45ProfileEvaluatorTest {
         when(mockConfigService.getCiMitConfig()).thenReturn(TEST_CI_MITIGATION_CONFIG);
     }
 
+    private void setupMockMitigationEnabledFeatureFlag(boolean mitigationEnabled) {
+        when(mockConfigService.enabled(MITIGATION_ENABLED)).thenReturn(mitigationEnabled);
+    }
+
     @Nested
     @DisplayName("getJourneyResponseForStoredContraIndicators tests")
     class ContraIndicatorJourneySelectionTests {
-        private ContraIndications makeContraIndications(String... contraIndicatorCodes) {
+        class TestContraIndicator {
+            private String code;
+            private List<String> mitigations;
+
+            TestContraIndicator(String code, List<String> mitigations) {
+                this.code = code;
+                this.mitigations = mitigations;
+            }
+
+            TestContraIndicator(String code) {
+                this(code, List.of());
+            }
+        }
+
+        private ContraIndications buildTestContraIndications(
+                TestContraIndicator... testContraIndicators) {
             return ContraIndications.builder()
                     .contraIndicators(
-                            Arrays.asList(contraIndicatorCodes).stream()
+                            Arrays.stream(testContraIndicators)
                                     .collect(
                                             Collectors.toMap(
-                                                    code -> code,
-                                                    code ->
-                                                            ContraIndicator.builder()
-                                                                    .code(code)
-                                                                    .issuanceDate(Instant.now())
-                                                                    .build())))
+                                                    testContraIndicator -> testContraIndicator.code,
+                                                    this::buildTestContraIndicator)))
                     .build();
         }
 
-        @Test
-        void shouldNotReturnJourneyIfNoContraIndicators()
+        private ContraIndicator buildTestContraIndicator(TestContraIndicator testContraIndicator) {
+            return ContraIndicator.builder()
+                    .code(testContraIndicator.code)
+                    .issuanceDate(Instant.now())
+                    .mitigations(buildTestMitigations(testContraIndicator.mitigations))
+                    .build();
+        }
+
+        private List<Mitigation> buildTestMitigations(List<String> mitigations) {
+            return mitigations.stream()
+                    .map(mitigation -> Mitigation.builder().code(mitigation).build())
+                    .collect(Collectors.toList());
+        }
+
+        @ParameterizedTest
+        @ValueSource(booleans = {false, true})
+        void shouldNotReturnJourneyIfNoContraIndicators(boolean mitigationEnabled)
                 throws ConfigException, UnrecognisedCiException {
-            final ContraIndications contraIndications = makeContraIndications();
+            final ContraIndications contraIndications = buildTestContraIndications();
+            setupMockMitigationEnabledFeatureFlag(mitigationEnabled);
             setupMockContraIndicatorScoringConfig();
             final Optional<JourneyResponse> journeyResponse =
                     evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, false);
             assertTrue(journeyResponse.isEmpty());
         }
 
-        @Test
-        void shouldNotReturnJourneyIfContraIndicatorsDoNotBreachThreshold()
+        @ParameterizedTest
+        @ValueSource(booleans = {false, true})
+        void shouldNotReturnJourneyIfContraIndicatorsDoNotBreachThreshold(boolean mitigationEnabled)
                 throws ConfigException, UnrecognisedCiException {
-            final ContraIndications contraIndications = makeContraIndications(CI2);
+            final ContraIndications contraIndications =
+                    buildTestContraIndications(new TestContraIndicator(CI2));
+            setupMockMitigationEnabledFeatureFlag(mitigationEnabled);
             setupMockContraIndicatorScoringConfig();
             final Optional<JourneyResponse> journeyResponse =
                     evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, false);
             assertTrue(journeyResponse.isEmpty());
         }
 
-        @Test
+        @ParameterizedTest
+        @ValueSource(booleans = {false, true})
         void
-                shouldReturnPyiNoMatchJourneyIfContraIndicatorsBreachThresholdAndNoConfigForLatestContraIndicator()
-                        throws ConfigException, UnrecognisedCiException {
-            final ContraIndications contraIndications = makeContraIndications(CI3, CI1);
+                shouldReturnPyiNoMatchJourneyIfContraIndicatorsBreachThresholdAndNoConfigForLatestContraIndicator(
+                        boolean mitigationEnabled) throws ConfigException, UnrecognisedCiException {
+            final ContraIndications contraIndications =
+                    buildTestContraIndications(
+                            new TestContraIndicator(CI3), new TestContraIndicator(CI1));
+            setupMockMitigationEnabledFeatureFlag(mitigationEnabled);
             setupMockContraIndicatorScoringConfig();
             setupMockContraIndicatorTreatmentConfig();
             final Optional<JourneyResponse> journeyResponse =
@@ -469,11 +511,15 @@ class Gpg45ProfileEvaluatorTest {
             assertEquals(JOURNEY_RESPONSE_PYI_NO_MATCH, journeyResponse.get());
         }
 
-        @Test
+        @ParameterizedTest
+        @ValueSource(booleans = {false, true})
         void
-                shouldReturnCustomSeparateSessionJourneyIfContraIndicatorsBreachThresholdAndConfigForLatestContraIndicator()
-                        throws ConfigException, UnrecognisedCiException {
-            final ContraIndications contraIndications = makeContraIndications(CI1, CI3);
+                shouldReturnCustomSeparateSessionJourneyIfContraIndicatorsBreachThresholdAndConfigForLatestContraIndicator(
+                        boolean mitigationEnabled) throws ConfigException, UnrecognisedCiException {
+            final ContraIndications contraIndications =
+                    buildTestContraIndications(
+                            new TestContraIndicator(CI1), new TestContraIndicator(CI3));
+            setupMockMitigationEnabledFeatureFlag(mitigationEnabled);
             setupMockContraIndicatorScoringConfig();
             setupMockContraIndicatorTreatmentConfig();
             final Optional<JourneyResponse> journeyResponse =
@@ -481,16 +527,34 @@ class Gpg45ProfileEvaluatorTest {
             assertEquals(JOURNEY_RESPONSE_PYI_CI3_FAIL_SEPARATE_SESSION, journeyResponse.get());
         }
 
-        @Test
+        @ParameterizedTest
+        @ValueSource(booleans = {false, true})
         void
-                shouldReturnCustomSameSessionJourneyIfContraIndicatorsBreachThresholdAndConfigForLatestContraIndicator()
-                        throws ConfigException, UnrecognisedCiException {
-            final ContraIndications contraIndications = makeContraIndications(CI1, CI3);
+                shouldReturnCustomSameSessionJourneyIfContraIndicatorsBreachThresholdAndConfigForLatestContraIndicator(
+                        boolean mitigationEnabled) throws ConfigException, UnrecognisedCiException {
+            final ContraIndications contraIndications =
+                    buildTestContraIndications(
+                            new TestContraIndicator(CI1), new TestContraIndicator(CI3));
+            setupMockMitigationEnabledFeatureFlag(mitigationEnabled);
             setupMockContraIndicatorScoringConfig();
             setupMockContraIndicatorTreatmentConfig();
             final Optional<JourneyResponse> journeyResponse =
                     evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, false);
             assertEquals(JOURNEY_RESPONSE_PYI_CI3_FAIL_SAME_SESSION, journeyResponse.get());
+        }
+
+        @Test
+        void shouldNotReturnJourneyIfMitigationEnabledAndSufficientMitigation()
+                throws ConfigException, UnrecognisedCiException {
+            final ContraIndications contraIndications =
+                    buildTestContraIndications(
+                            new TestContraIndicator(CI1),
+                            new TestContraIndicator(CI3, List.of("mitigated")));
+            setupMockMitigationEnabledFeatureFlag(true);
+            setupMockContraIndicatorScoringConfig();
+            final Optional<JourneyResponse> journeyResponse =
+                    evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, false);
+            assertTrue(journeyResponse.isEmpty());
         }
     }
 }
