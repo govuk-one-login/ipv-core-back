@@ -18,6 +18,7 @@ import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponseDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -36,6 +37,8 @@ public class AuthorizationRequestHelper {
 
     private static final String SHARED_CLAIMS = "shared_claims";
 
+    private static final String EVIDENCE_REQUESTED = "evidence_requested";
+
     private AuthorizationRequestHelper() {}
 
     public static SignedJWT createSignedJWT(
@@ -45,7 +48,8 @@ public class AuthorizationRequestHelper {
             ConfigService configService,
             String oauthState,
             String userId,
-            String govukSigninJourneyId)
+            String govukSigninJourneyId,
+            EvidenceRequest evidence)
             throws HttpResponseExceptionWithErrorBody {
         Instant now = Instant.now();
 
@@ -88,6 +92,10 @@ public class AuthorizationRequestHelper {
                                 sharedClaims.getAddress());
                 claimsSetBuilder.claim(SHARED_CLAIMS, response);
             }
+        }
+
+        if (Objects.nonNull(evidence)) {
+            claimsSetBuilder.claim(EVIDENCE_REQUESTED, evidence);
         }
 
         SignedJWT signedJWT = new SignedJWT(header, claimsSetBuilder.build());

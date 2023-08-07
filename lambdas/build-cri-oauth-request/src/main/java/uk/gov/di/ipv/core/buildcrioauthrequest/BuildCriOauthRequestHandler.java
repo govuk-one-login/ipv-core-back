@@ -27,11 +27,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerConfigService;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
-import uk.gov.di.ipv.core.library.domain.JourneyRequest;
-import uk.gov.di.ipv.core.library.domain.SharedClaims;
-import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
+import uk.gov.di.ipv.core.library.domain.*;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -273,6 +269,7 @@ public class BuildCriOauthRequestHandler
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException {
         SharedClaimsResponse sharedClaimsResponse =
                 getSharedAttributes(ipvSessionItem, userId, currentVcStatuses, criId);
+        EvidenceRequest evidence = new EvidenceRequest(4);
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
                         sharedClaimsResponse,
@@ -281,7 +278,8 @@ public class BuildCriOauthRequestHandler
                         credentialIssuerConfigService,
                         oauthState,
                         userId,
-                        govukSigninJourneyId);
+                        govukSigninJourneyId,
+                        evidence);
 
         RSAEncrypter rsaEncrypter = new RSAEncrypter(credentialIssuerConfig.getEncryptionKey());
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);
