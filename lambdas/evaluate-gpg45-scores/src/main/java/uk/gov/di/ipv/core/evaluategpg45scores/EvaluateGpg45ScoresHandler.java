@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
@@ -53,6 +54,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
@@ -323,6 +325,16 @@ public class EvaluateGpg45ScoresHandler
                     .with("journeyResponse", JOURNEY_END);
             return JOURNEY_END;
         } else {
+            List<RequiredGpg45ScoresDto> requiredGpg45Scores =
+                    ACCEPTED_PROFILES.stream()
+                            .map(
+                                    profile ->
+                                            new RequiredGpg45ScoresDto(
+                                                    profile,
+                                                    gpg45Scores.calculateRequiredScores(profile)))
+                            .collect(Collectors.toList());
+            ipvSessionItem.setRequiredGpg45Scores(requiredGpg45Scores);
+            ipvSessionService.updateIpvSession(ipvSessionItem);
 
             message.with("lambdaResult", "No GPG45 profiles have been met")
                     .with("journeyResponse", JOURNEY_NEXT);
