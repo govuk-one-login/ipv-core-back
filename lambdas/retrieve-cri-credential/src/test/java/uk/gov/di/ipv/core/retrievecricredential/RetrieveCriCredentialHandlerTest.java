@@ -202,7 +202,7 @@ class RetrieveCriCredentialHandlerTest {
         verify(verifiableCredentialJwtValidator)
                 .validate(any(SignedJWT.class), eq(testPassportIssuer), eq(TEST_USER_ID));
 
-        assertEquals("/journey/evaluate", output.get("journey"));
+        assertEquals("/journey/ci-scoring", output.get("journey"));
         verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
     }
 
@@ -632,7 +632,7 @@ class RetrieveCriCredentialHandlerTest {
                         testCriNotRequiringApiKey,
                         null,
                         CREDENTIAL_ISSUER_ID);
-        assertEquals("/journey/evaluate", output.get("journey"));
+        assertEquals("/journey/ci-scoring", output.get("journey"));
     }
 
     @Test
@@ -658,7 +658,7 @@ class RetrieveCriCredentialHandlerTest {
 
         Map<String, Object> output = handler.handleRequest(testInput, context);
 
-        assertEquals("/journey/evaluate", output.get("journey"));
+        assertEquals("/journey/ci-scoring", output.get("journey"));
         verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
 
         verifyPersistedCriResponse(

@@ -46,7 +46,7 @@
         "featureSet.$": "$.featureSet"
       },
       "ResultPath": "$.lambdaResult",
-      "Next": "EvaluateGpg45Scores"
+      "Next": "RouteJourneyResponse"
     },
     "EvaluateGpg45Scores": {
       "Type": "Task",
@@ -87,8 +87,13 @@
         },
         {
           "Variable": "$.lambdaResult.journey",
-          "StringEquals": "/journey/evaluate",
+          "StringEquals": "/journey/ci-scoring",
           "Next": "CiScoring"
+        },
+        {
+          "Variable": "$.lambdaResult.journey",
+          "StringEquals": "/journey/evaluate",
+          "Next": "EvaluateGpg45Scores"
         }
       ],
       "Default": "ReturnToFrontend"
