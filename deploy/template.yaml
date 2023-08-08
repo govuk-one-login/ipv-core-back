@@ -43,7 +43,7 @@ Parameters:
     Description: >
       The ARN of the postMitigation lambda to use, if none provided use Mappings value
     Default: "none"
-  GetContraIndicatorOverrideArn:
+  GetContraIndicatorsOverrideArn:
     Type: String
     Description: >
       The ARN of the getContraCredential lambda to use, if none provided use Mappings value
@@ -84,6 +84,11 @@ Conditions:
     Fn::Not:
       - Fn::Equals:
           - !Ref PostMitigationsOverrideArn
+          - "none"
+  UseGetContraIndicatorsOverride:
+    Fn::Not:
+      - Fn::Equals:
+          - !Ref GetContraIndicatorsOverrideArn
           - "none"
   UseGetContraIndicatorCredentialOverride:
     Fn::Not:
@@ -130,6 +135,7 @@ Mappings:
       asyncCriLambdaTimeout: 30
       putContraIndicatorsLambdaArn: "arn:aws:lambda:eu-west-2:158853307826:function:putContraIndicators-dev"
       postMitigationsLambdaArn: "arn:aws:lambda:eu-west-2:158853307826:function:postMitigations-dev"
+      getContraIndicatorsLambdaArn: "arn:aws:lambda:eu-west-2:158853307826:function:getContraIndicators-dev"
       getContraIndicatorCredentialLambdaArn: "arn:aws:lambda:eu-west-2:158853307826:function:getContraIndicatorCredential-dev"
     "457601271792": # Build
       provisionedConcurrency: 1
@@ -144,6 +150,7 @@ Mappings:
       asyncCriLambdaTimeout: 30
       putContraIndicatorsLambdaArn: "arn:aws:lambda:eu-west-2:755415363251:function:putContraIndicators-build"
       postMitigationsLambdaArn: "arn:aws:lambda:eu-west-2:755415363251:function:postMitigations-build"
+      getContraIndicatorsLambdaArn: "arn:aws:lambda:eu-west-2:755415363251:function:getContraIndicators-build"
       getContraIndicatorCredentialLambdaArn: "arn:aws:lambda:eu-west-2:755415363251:function:getContraIndicatorCredential-build"
     "335257547869": # Staging
       provisionedConcurrency: 1
@@ -158,6 +165,7 @@ Mappings:
       asyncCriLambdaTimeout: 30
       putContraIndicatorsLambdaArn: "arn:aws:lambda:eu-west-2:265689800486:function:putContraIndicators-staging"
       postMitigationsLambdaArn: "arn:aws:lambda:eu-west-2:265689800486:function:postMitigations-staging"
+      getContraIndicatorsLambdaArn: "arn:aws:lambda:eu-west-2:265689800486:function:getContraIndicators-staging"
       getContraIndicatorCredentialLambdaArn: "arn:aws:lambda:eu-west-2:265689800486:function:getContraIndicatorCredential-staging"
     "991138514218": # Integration
       provisionedConcurrency: 1
@@ -172,6 +180,7 @@ Mappings:
       asyncCriLambdaTimeout: 30
       putContraIndicatorsLambdaArn: "arn:aws:lambda:eu-west-2:697519714716:function:putContraIndicators-integration"
       postMitigationsLambdaArn: "arn:aws:lambda:eu-west-2:697519714716:function:postMitigations-integration"
+      getContraIndicatorsLambdaArn: "arn:aws:lambda:eu-west-2:697519714716:function:getContraIndicators-integration"
       getContraIndicatorCredentialLambdaArn: "arn:aws:lambda:eu-west-2:697519714716:function:getContraIndicatorCredential-integration"
     "075701497069": # Production
       provisionedConcurrency: 1
@@ -186,6 +195,7 @@ Mappings:
       asyncCriLambdaTimeout: 30
       putContraIndicatorsLambdaArn: "arn:aws:lambda:eu-west-2:442136572379:function:putContraIndicators-prod"
       postMitigationsLambdaArn: "arn:aws:lambda:eu-west-2:442136572379:function:postMitigations-prod"
+      getContraIndicatorsLambdaArn: "arn:aws:lambda:eu-west-2:442136572379:function:getContraIndicators-prod"
       getContraIndicatorCredentialLambdaArn: "arn:aws:lambda:eu-west-2:442136572379:function:getContraIndicatorCredential-prod"
   SecurityGroups:
     PrefixListIds:
@@ -1455,12 +1465,12 @@ Resources:
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CI_STORAGE_GET_LAMBDA_ARN: !If
-            - UseGetContraIndicatorOverride
-            - !Ref GetContraIndicatorOverrideArn
+            - UseGetContraIndicatorsOverride
+            - !Ref GetContraIndicatorsOverrideArn
             - !FindInMap
               - EnvironmentConfiguration
               - !Ref AWS::AccountId
-              - getContraIndicatorLambdaArn
+              - getContraIndicatorsLambdaArn
           CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: !If
             - UseGetContraIndicatorCredentialOverride
             - !Ref GetContraIndicatorCredentialOverrideArn
@@ -1508,12 +1518,12 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !If
-                  - UseGetContraIndicatorOverride
-                  - !Ref GetContraIndicatorOverrideArn
+                  - UseGetContraIndicatorsOverride
+                  - !Ref GetContraIndicatorsOverrideArn
                   - !FindInMap
                     - EnvironmentConfiguration
                     - !Ref AWS::AccountId
-                    - getContraIndicatorLambdaArn
+                    - getContraIndicatorsLambdaArn
         - Statement:
             - Sid: invokeGetContraIndicatorCredentialFunction
               Effect: Allow
@@ -1751,12 +1761,12 @@ Resources:
           CRI_RESPONSE_TABLE_NAME: !Ref CRIResponseTable
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CI_STORAGE_GET_LAMBDA_ARN: !If
-            - UseGetContraIndicatorOverride
-            - !Ref GetContraIndicatorOverrideArn
+            - UseGetContraIndicatorsOverride
+            - !Ref GetContraIndicatorsOverrideArn
             - !FindInMap
               - EnvironmentConfiguration
               - !Ref AWS::AccountId
-              - getContraIndicatorLambdaArn
+              - getContraIndicatorsLambdaArn
           CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: !If
             - UseGetContraIndicatorCredentialOverride
             - !Ref GetContraIndicatorCredentialOverrideArn
@@ -1804,12 +1814,12 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !If
-                  - UseGetContraIndicatorOverride
-                  - !Ref GetContraIndicatorOverrideArn
+                  - UseGetContraIndicatorsOverride
+                  - !Ref GetContraIndicatorsOverrideArn
                   - !FindInMap
                     - EnvironmentConfiguration
                     - !Ref AWS::AccountId
-                    - getContraIndicatorLambdaArn
+                    - getContraIndicatorsLambdaArn
         - Statement:
             - Sid: invokeGetContraIndicatorCredentialFunction
               Effect: Allow
