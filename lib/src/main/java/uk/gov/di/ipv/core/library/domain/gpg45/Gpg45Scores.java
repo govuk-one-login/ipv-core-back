@@ -16,6 +16,7 @@ import java.util.stream.Stream;
  */
 public class Gpg45Scores implements Comparable<Gpg45Scores> {
 
+    public static final Evidence EV_00 = new Gpg45Scores.Evidence(0, 0);
     public static final Evidence EV_11 = new Gpg45Scores.Evidence(1, 1);
     public static final Evidence EV_22 = new Gpg45Scores.Evidence(2, 2);
     public static final Evidence EV_32 = new Gpg45Scores.Evidence(3, 2);
@@ -140,6 +141,31 @@ public class Gpg45Scores implements Comparable<Gpg45Scores> {
                             targetEvidence.getValidity() - sourceEvidence.getValidity()));
         }
         return evidenceDiff;
+    }
+
+    public Gpg45Scores calculateRequiredScores(Gpg45Profile target) {
+        Gpg45Scores targetScores = target.getScores();
+        Gpg45Scores diff = difference(targetScores);
+        return new Gpg45Scores(
+                calculateRequiredEvidences(diff.getEvidences(), targetScores.getEvidences()),
+                diff.getActivity() > 0 ? targetScores.getActivity() : 0,
+                diff.getFraud() > 0 ? targetScores.getFraud() : 0,
+                diff.getVerification() > 0 ? targetScores.getVerification() : 0);
+    }
+
+    private List<Gpg45Scores.Evidence> calculateRequiredEvidences(
+            List<Gpg45Scores.Evidence> diffEvidences, List<Gpg45Scores.Evidence> targetEvidences) {
+        var requiredEvidences = new ArrayList<Evidence>();
+        var maxEvidence = Math.max(diffEvidences.size(), targetEvidences.size());
+        for (int i = 0; i < maxEvidence; i++) {
+            var diff = diffEvidences.get(i);
+            if (diff.getStrength() > 0 || diff.getValidity() > 0) {
+                requiredEvidences.add(targetEvidences.get(i));
+            } else {
+                requiredEvidences.add(EV_00);
+            }
+        }
+        return requiredEvidences;
     }
 
     @Override
