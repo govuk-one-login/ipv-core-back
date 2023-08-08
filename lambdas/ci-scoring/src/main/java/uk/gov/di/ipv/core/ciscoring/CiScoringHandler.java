@@ -141,6 +141,5 @@ public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<Stri
                         false)
                 : gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
                         ciMitService.getCIs(userId, govukSigninJourneyId, ipAddress));
-        return Collections.emptyMap();
     }
 }
