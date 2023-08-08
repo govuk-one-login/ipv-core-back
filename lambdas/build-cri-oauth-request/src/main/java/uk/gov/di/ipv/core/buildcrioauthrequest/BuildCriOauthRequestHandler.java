@@ -26,6 +26,7 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerConfigService;
 import uk.gov.di.ipv.core.library.domain.*;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -269,7 +270,11 @@ public class BuildCriOauthRequestHandler
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException {
         SharedClaimsResponse sharedClaimsResponse =
                 getSharedAttributes(ipvSessionItem, userId, currentVcStatuses, criId);
-        EvidenceRequest evidence = new EvidenceRequest(4);
+        EvidenceRequest evidence = null;
+        if (credentialIssuerConfigService.enabled(CoreFeatureFlag.EVIDENCE_REQUEST_ENABLED)) {
+            // Temp hard coded until we have logic to store it in session.
+            evidence = new EvidenceRequest(4);
+        }
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
                         sharedClaimsResponse,
