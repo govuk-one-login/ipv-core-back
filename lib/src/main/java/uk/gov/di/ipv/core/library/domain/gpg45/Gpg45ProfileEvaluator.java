@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MITIGATION_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.KBV_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
@@ -64,7 +65,8 @@ public class Gpg45ProfileEvaluator {
                                 contraIndications.getContraIndicators().size()));
         final int ciScore =
                 contraIndications.getContraIndicatorScore(
-                        configService.getContraIndicatorScoresMap(), false);
+                        configService.getContraIndicatorScoresMap(),
+                        configService.enabled(MITIGATION_ENABLED));
         LOGGER.info(
                 new StringMapMessage()
                         .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Calculated user's CI score.")

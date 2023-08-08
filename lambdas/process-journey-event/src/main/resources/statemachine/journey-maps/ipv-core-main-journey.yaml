@@ -56,6 +56,8 @@ CHECK_EXISTING_IDENTITY:
       targetState: PYI_F2F_TECHNICAL
     error:
       targetState: ERROR
+    mitigation01:
+      targetState: MITIGATION_01
 
 RESET_IDENTITY:
   response:
@@ -342,3 +344,38 @@ F2F_HANDOFF_PAGE_J4:
   response:
     type: page
     pageId: page-face-to-face-handoff
+
+# Mitigation journey (01)
+MITIGATION_01:
+  response:
+    type: journey
+    journeyStepId: /journey/reset-identity
+  events:
+    next:
+      targetState: MITIGATION_01_IDENTITY_START_PAGE
+
+MITIGATION_01_IDENTITY_START_PAGE:
+  response:
+    type: page
+    pageId: page-ipv-identity-document-start
+  events:
+    next:
+      targetState: MITIGATION_01_CRI_DCMAW
+    end:
+      targetState: PYI_ANOTHER_WAY
+
+MITIGATION_01_CRI_DCMAW:
+  response:
+    type: cri
+    criId: dcmaw
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: POST_DCMAW_SUCCESS_PAGE
+    access-denied:
+      targetState: PYI_ANOTHER_WAY
+    temporarily-unavailable:
+      targetState: PYI_ANOTHER_WAY
+    fail-with-no-ci:
+      targetState: PYI_ANOTHER_WAY
+
