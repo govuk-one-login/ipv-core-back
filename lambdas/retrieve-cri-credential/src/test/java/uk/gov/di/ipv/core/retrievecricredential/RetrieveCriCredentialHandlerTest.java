@@ -70,6 +70,8 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PU
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATORS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_CI_SCORING_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 
 @ExtendWith(MockitoExtension.class)
 class RetrieveCriCredentialHandlerTest {
@@ -202,7 +204,7 @@ class RetrieveCriCredentialHandlerTest {
         verify(verifiableCredentialJwtValidator)
                 .validate(any(SignedJWT.class), eq(testPassportIssuer), eq(TEST_USER_ID));
 
-        assertEquals("/journey/evaluate", output.get("journey"));
+        assertEquals(JOURNEY_CI_SCORING_PATH, output.get("journey"));
         verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
     }
 
@@ -275,7 +277,7 @@ class RetrieveCriCredentialHandlerTest {
 
         Map<String, Object> output = handler.handleRequest(testInput, context);
 
-        assertEquals("/journey/error", output.get("journey"));
+        assertEquals(JOURNEY_ERROR_PATH, output.get("journey"));
     }
 
     @Test
@@ -301,7 +303,7 @@ class RetrieveCriCredentialHandlerTest {
 
         Map<String, Object> output = handler.handleRequest(testInput, context);
 
-        assertEquals("/journey/error", output.get("journey"));
+        assertEquals(JOURNEY_ERROR_PATH, output.get("journey"));
     }
 
     @Test
@@ -331,7 +333,7 @@ class RetrieveCriCredentialHandlerTest {
 
         Map<String, Object> output = handler.handleRequest(testInput, context);
 
-        assertEquals("/journey/error", output.get("journey"));
+        assertEquals(JOURNEY_ERROR_PATH, output.get("journey"));
     }
 
     @Test
@@ -632,7 +634,7 @@ class RetrieveCriCredentialHandlerTest {
                         testCriNotRequiringApiKey,
                         null,
                         CREDENTIAL_ISSUER_ID);
-        assertEquals("/journey/evaluate", output.get("journey"));
+        assertEquals(JOURNEY_CI_SCORING_PATH, output.get("journey"));
     }
 
     @Test
@@ -658,7 +660,7 @@ class RetrieveCriCredentialHandlerTest {
 
         Map<String, Object> output = handler.handleRequest(testInput, context);
 
-        assertEquals("/journey/evaluate", output.get("journey"));
+        assertEquals(JOURNEY_CI_SCORING_PATH, output.get("journey"));
         verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
 
         verifyPersistedCriResponse(
@@ -684,7 +686,7 @@ class RetrieveCriCredentialHandlerTest {
 
         Map<String, Object> output = handler.handleRequest(testInput, context);
 
-        assertEquals("/journey/error", output.get("journey"));
+        assertEquals(JOURNEY_ERROR_PATH, output.get("journey"));
 
         verify(criResponseService, times(0)).persistCriResponse(any(), any(), any(), any(), any());
 

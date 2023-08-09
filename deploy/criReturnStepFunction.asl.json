@@ -37,6 +37,17 @@
       "ResultPath": "$.lambdaResult",
       "Next": "RouteJourneyResponse"
     },
+    "CiScoring": {
+      "Type": "Task",
+      "Resource": "${CiScoringFunctionArn}",
+      "Parameters": {
+        "ipvSessionId.$": "$.ipvSessionId",
+        "ipAddress.$": "$.ipAddress",
+        "featureSet.$": "$.featureSet"
+      },
+      "ResultPath": "$.lambdaResult",
+      "Next": "RouteJourneyResponse"
+    },
     "EvaluateGpg45Scores": {
       "Type": "Task",
       "Resource": "${EvaluateGpg45ScoresFunctionArn}",
@@ -73,6 +84,11 @@
           "Variable": "$.lambdaResult.journey",
           "StringEquals": "/journey/cri/access-token",
           "Next": "RetrieveCriOauthAccessToken"
+        },
+        {
+          "Variable": "$.lambdaResult.journey",
+          "StringEquals": "/journey/ci-scoring",
+          "Next": "CiScoring"
         },
         {
           "Variable": "$.lambdaResult.journey",

@@ -1265,6 +1265,7 @@ Resources:
         RetrieveCriOauthAccessTokenFunctionArn: !GetAtt RetrieveCriOauthAccessTokenFunction.Arn
         ValidateOAuthCallbackFunctionArn: !GetAtt ValidateOAuthCallbackFunction.Arn
         EvaluateGpg45ScoresFunctionArn: !GetAtt EvaluateGpg45ScoresFunction.Arn
+        CiScoringFunctionArn: !GetAtt CiScoringFunction.Arn
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1290,6 +1291,8 @@ Resources:
             FunctionName: !Ref ValidateOAuthCallbackFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref EvaluateGpg45ScoresFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref CiScoringFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow
@@ -2377,6 +2380,40 @@ Resources:
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub reset-identity-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+          CI_STORAGE_GET_LAMBDA_ARN: !Sub
+            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
+            - contra_indicator_storage_account_id: !If
+                - UseIndividualCiMitStubs
+                - !Ref AWS::AccountId
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - ciStorageAccountId
+              env: !If
+                - UseIndividualCiMitStubs
+                - !Sub ${Environment}
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - environment
+          CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: !Sub
+            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicatorCredential-${env}"
+            - contra_indicator_storage_account_id: !If
+                - UseIndividualCiMitStubs
+                - !Ref AWS::AccountId
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - ciStorageAccountId
+              env: !If
+                - UseIndividualCiMitStubs
+                - !Sub ${Environment}
+                - !FindInMap
+                  - EnvironmentConfiguration
+                  - !Ref AWS::AccountId
+                  - environment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2385,18 +2422,70 @@ Resources:
           - !GetAtt LambdaSecurityGroup.GroupId
       Policies:
         - VPCAccessPolicy: { }
+        - KMSDecryptPolicy:
+            KeyId: !Ref DynamoDBKmsKey
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/*
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-scoring-config-*
         - Statement:
-            - Sid: EnforceStayinSpecificVpc
-              Effect: Allow
-              Action:
-                - 'lambda:CreateFunction'
-                - 'lambda:UpdateFunctionConfiguration'
-              Resource:
-                - "*"
-              Condition:
-                StringEquals:
-                  "lambda:VpcIds":
-                    - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+          - Sid: EnforceStayinSpecificVpc
+            Effect: Allow
+            Action:
+              - 'lambda:CreateFunction'
+              - 'lambda:UpdateFunctionConfiguration'
+            Resource:
+              - "*"
+            Condition:
+              StringEquals:
+                "lambda:VpcIds":
+                  - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+          - Sid: invokeGetCiFunction
+            Effect: Allow
+            Action:
+              - 'lambda:InvokeFunction'
+            Resource:
+              - !Sub
+                - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
+                - contra_indicator_storage_account_id: !If
+                    - UseIndividualCiMitStubs
+                    - !Ref AWS::AccountId
+                    - !FindInMap
+                      - EnvironmentConfiguration
+                      - !Ref AWS::AccountId
+                      - ciStorageAccountId
+                  env: !If
+                    - UseIndividualCiMitStubs
+                    - !Sub ${Environment}
+                    - !FindInMap
+                      - EnvironmentConfiguration
+                      - !Ref AWS::AccountId
+                      - environment
+          - Sid: invokeGetContraIndicatorCredentialFunction
+            Effect: Allow
+            Action:
+              - 'lambda:InvokeFunction'
+            Resource:
+              - !Sub
+                - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicatorCredential-${env}"
+                - contra_indicator_storage_account_id: !If
+                    - UseIndividualCiMitStubs
+                    - !Ref AWS::AccountId
+                    - !FindInMap
+                      - EnvironmentConfiguration
+                      - !Ref AWS::AccountId
+                      - ciStorageAccountId
+                  env: !If
+                    - UseIndividualCiMitStubs
+                    - !Sub ${Environment}
+                    - !FindInMap
+                      - EnvironmentConfiguration
+                      - !Ref AWS::AccountId
+                      - environment
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If

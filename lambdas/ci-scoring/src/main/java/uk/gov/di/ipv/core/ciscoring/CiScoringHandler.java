@@ -34,11 +34,12 @@ import java.util.Optional;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_EVALUATE_PATH;
 
 public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
+    private static final JourneyResponse JOURNEY_EVALUATE =
+            new JourneyResponse(JOURNEY_EVALUATE_PATH);
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CiMitService ciMitService;
     private final ConfigService configService;
@@ -102,7 +103,7 @@ public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<Stri
                 return contraIndicatorErrorJourneyResponse.get().toObjectMap();
             }
 
-            return JOURNEY_NEXT.toObjectMap();
+            return JOURNEY_EVALUATE.toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("Received HTTP response exception", e);
             return new JourneyErrorResponse(
