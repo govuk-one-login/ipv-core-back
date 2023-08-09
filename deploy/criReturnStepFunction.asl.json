@@ -46,7 +46,7 @@
         "featureSet.$": "$.featureSet"
       },
       "ResultPath": "$.lambdaResult",
-      "Next": "RouteJourneyResponse"
+      "Next": "ScoringResponse"
     },
     "EvaluateGpg45Scores": {
       "Type": "Task",
@@ -93,6 +93,24 @@
         {
           "Variable": "$.lambdaResult.journey",
           "StringEquals": "/journey/evaluate",
+          "Next": "EvaluateGpg45Scores"
+        }
+      ],
+      "Default": "ReturnToFrontend"
+    },
+    "ScoringResponse": {
+      "Type": "Choice",
+      "Choices": [
+        {
+          "Not": {
+            "Variable": "$.lambdaResult.journey",
+            "IsPresent": true
+          },
+          "Next": "ReturnToFrontend"
+        },
+        {
+          "Variable": "$.lambdaResult.journey",
+          "StringEquals": "/journey/next",
           "Next": "EvaluateGpg45Scores"
         }
       ],
