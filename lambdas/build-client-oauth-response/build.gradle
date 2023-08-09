@@ -21,7 +21,7 @@ dependencies {
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
 
-	testImplementation "org.junit.jupiter:junit-jupiter:5.9.3",
+	testImplementation "org.junit.jupiter:junit-jupiter:5.10.0",
 			"org.mockito:mockito-junit-jupiter:5.4.0"
 }
 
