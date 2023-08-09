@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.Gpg45ScoresDto;
 import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
@@ -331,7 +332,9 @@ public class EvaluateGpg45ScoresHandler
                                     profile ->
                                             new RequiredGpg45ScoresDto(
                                                     profile,
-                                                    gpg45Scores.calculateRequiredScores(profile)))
+                                                    Gpg45ScoresDto.fromGpg45Scores(
+                                                            gpg45Scores.calculateRequiredScores(
+                                                                    profile))))
                             .collect(Collectors.toList());
             ipvSessionItem.setRequiredGpg45Scores(requiredGpg45Scores);
             ipvSessionService.updateIpvSession(ipvSessionItem);
