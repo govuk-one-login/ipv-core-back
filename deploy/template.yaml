@@ -1394,6 +1394,8 @@ Resources:
             FunctionName: !Ref BuildCriOauthRequestFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref BuildClientOauthResponseFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref CiScoringFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow
