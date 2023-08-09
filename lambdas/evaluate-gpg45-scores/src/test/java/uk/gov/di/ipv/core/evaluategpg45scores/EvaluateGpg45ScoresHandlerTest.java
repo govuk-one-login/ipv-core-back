@@ -27,6 +27,9 @@ import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.EvidenceDto;
+import uk.gov.di.ipv.core.library.dto.Gpg45ScoresDto;
+import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
@@ -258,6 +261,8 @@ class EvaluateGpg45ScoresHandlerTest {
         mockCiJourneyResponse(useContraIndicatorVC, Optional.empty());
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.empty());
+        when(gpg45ProfileEvaluator.buildScore(any()))
+                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
@@ -273,6 +278,40 @@ class EvaluateGpg45ScoresHandlerTest {
         assertEquals(JOURNEY_NEXT.getJourney(), response.getJourney());
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+    }
+
+    @Test
+    void shouldStoreRequiredScoresInSessionIfGpg45ProfileNotMatched() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(configService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(true);
+        mockCiJourneyResponse(true, Optional.empty());
+        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
+                .thenReturn(Optional.empty());
+        when(gpg45ProfileEvaluator.buildScore(any()))
+                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_00, 0, 2, 0));
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+                .thenReturn(true);
+        when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
+                .thenReturn(true);
+
+        evaluateGpg45ScoresHandler.handleRequest(request, context);
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+        IpvSessionItem updatedSessionItem = ipvSessionItemArgumentCaptor.getValue();
+        assertEquals(
+                List.of(
+                        new RequiredGpg45ScoresDto(
+                                Gpg45Profile.M1A,
+                                new Gpg45ScoresDto(List.of(new EvidenceDto(4, 2)), 0, 0, 2)),
+                        new RequiredGpg45ScoresDto(
+                                Gpg45Profile.M1B,
+                                new Gpg45ScoresDto(List.of(new EvidenceDto(3, 2)), 1, 0, 2))),
+                updatedSessionItem.getRequiredGpg45Scores());
     }
 
     @Test
@@ -384,6 +423,8 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
                 .thenThrow(new NoVcStatusForIssuerException("Bad"));
+        when(gpg45ProfileEvaluator.buildScore(any()))
+                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
 
         JourneyErrorResponse response =
                 toResponseClass(
@@ -431,6 +472,8 @@ class EvaluateGpg45ScoresHandlerTest {
         when(configService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(useContraIndicatorVC);
         mockCiJourneyResponse(useContraIndicatorVC, Optional.empty());
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
+        when(gpg45ProfileEvaluator.buildScore(any()))
+                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(configService.getCredentialIssuerActiveConnectionConfig(any()))
@@ -470,6 +513,8 @@ class EvaluateGpg45ScoresHandlerTest {
         when(configService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(useContraIndicatorVC);
         mockCiJourneyResponse(useContraIndicatorVC, Optional.empty());
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
+        when(gpg45ProfileEvaluator.buildScore(any()))
+                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -555,6 +600,8 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
                 .thenReturn(false);
+        when(gpg45ProfileEvaluator.buildScore(any()))
+                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
 
         JourneyResponse response =
                 toResponseClass(
@@ -578,6 +625,8 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(false);
+        when(gpg45ProfileEvaluator.buildScore(any()))
+                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
 
         JourneyResponse response =
                 toResponseClass(
