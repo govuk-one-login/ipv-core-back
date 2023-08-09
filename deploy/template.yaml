@@ -1366,6 +1366,7 @@ Resources:
         EvaluateGpg45ScoresFunctionArn: !GetAtt EvaluateGpg45ScoresFunction.Arn
         BuildCriOauthRequestFunctionArn: !GetAtt BuildCriOauthRequestFunction.Arn
         BuildClientOauthResponseFunctionArn: !GetAtt BuildClientOauthResponseFunction.Arn
+        CiScoringFunctionArn: !GetAtt CiScoringFunction.Arn
       Events:
         IPVCorePrivateAPI:
           Type: Api
