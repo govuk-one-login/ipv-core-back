@@ -56,7 +56,7 @@ class Gpg45ScoresTest {
     @Test
     void getEvidenceShouldReturnEvidenceWithZeroScoresWhenNoEvidences() {
         Gpg45Scores gpg45Scores = new Gpg45Scores(List.of(), 0, 1, 3);
-        assertEquals(new Gpg45Scores.Evidence(0, 0), gpg45Scores.getEvidence(1));
+        assertEquals(new Gpg45Scores.Evidence(0, 0), gpg45Scores.getEvidence(0));
     }
 
     @Test
@@ -76,6 +76,9 @@ class Gpg45ScoresTest {
         assertEquals(
                 new Gpg45Scores(List.of(EV_33, EV_00), 3, 0, 3),
                 new Gpg45Scores(List.of(EV_00, EV_43), 0, 2, 0).calculateRequiredScores(V2A));
+        assertEquals(
+                new Gpg45Scores(EV_42, 0, 0, 2),
+                new Gpg45Scores(List.of(), 0, 1, 0).calculateRequiredScores(M1A));
     }
 
     @Test

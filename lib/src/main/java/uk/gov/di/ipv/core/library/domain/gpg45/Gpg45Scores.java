@@ -90,7 +90,7 @@ public class Gpg45Scores implements Comparable<Gpg45Scores> {
     }
 
     public Evidence getEvidence(int index) {
-        if (evidences.size() < index) {
+        if ((evidences.size() - 1) < index) {
             return new Gpg45Scores.Evidence(0, 0);
         }
 
