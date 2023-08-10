@@ -39,7 +39,6 @@ import uk.gov.di.ipv.core.library.helpers.RequestHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
-import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
@@ -95,7 +94,6 @@ public class EvaluateGpg45ScoresHandler
             UserIdentityService userIdentityService,
             IpvSessionService ipvSessionService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator,
-            CiMitService ciMitService,
             ConfigService configService,
             AuditService auditService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService) {
