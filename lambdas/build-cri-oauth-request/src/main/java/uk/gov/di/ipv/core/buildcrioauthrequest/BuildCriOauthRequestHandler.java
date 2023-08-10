@@ -275,6 +275,7 @@ public class BuildCriOauthRequestHandler
                 && criId.equals(F2F_CRI)) {
             List<RequiredGpg45ScoresDto> requiredGpg45Scores =
                     ipvSessionItem.getRequiredGpg45Scores();
+            int strengthScore = 0;
             for (RequiredGpg45ScoresDto gpg45Score : requiredGpg45Scores) {
                 Gpg45ScoresDto requiredScores = gpg45Score.getRequiredScores();
                 if (requiredScores.getFraud() > 0) {
@@ -282,8 +283,12 @@ public class BuildCriOauthRequestHandler
                 }
                 List<EvidenceDto> evidences = requiredScores.getEvidences();
                 if (evidences.size() > 0) {
-                    evidenceRequest = new EvidenceRequest(evidences.get(0).getStrength());
+                    strengthScore = evidences.get(0).getStrength();
                 }
+            }
+
+            if (strengthScore != 0) {
+                evidenceRequest = new EvidenceRequest(strengthScore);
             }
         }
         SignedJWT signedJWT =
