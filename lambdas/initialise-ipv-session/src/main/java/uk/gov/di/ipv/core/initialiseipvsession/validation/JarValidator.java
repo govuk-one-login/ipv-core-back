@@ -153,6 +153,10 @@ public class JarValidator {
         String criAudience = configService.getSsmParameter(COMPONENT_ID);
         String clientIssuer = configService.getSsmParameter(CLIENT_ISSUER, clientId);
 
+        LOGGER.error("criAudience: " + criAudience);
+        LOGGER.error("clientIssuer: " + clientIssuer);
+        LOGGER.error("clientId: " + clientId);
+        LOGGER.error("SignedJWT: " + signedJWT);
         DefaultJWTClaimsVerifier<?> verifier =
                 new DefaultJWTClaimsVerifier<>(
                         criAudience,
