@@ -1099,11 +1099,11 @@ class BuildCriOauthRequestHandlerTest {
                                         new Gpg45ScoresDto(
                                                 List.of(new EvidenceDto(4, 2)), 0, 0, 2)),
                                 new RequiredGpg45ScoresDto(
-                                        Gpg45Profile.M1A,
+                                        Gpg45Profile.M1B,
                                         new Gpg45ScoresDto(
                                                 List.of(new EvidenceDto(2, 2)), 0, 1, 2)),
                                 new RequiredGpg45ScoresDto(
-                                        Gpg45Profile.M1B,
+                                        Gpg45Profile.M1C,
                                         new Gpg45ScoresDto(
                                                 List.of(new EvidenceDto(3, 2)), 1, 0, 2))));
         when(configService.enabled(EVIDENCE_REQUEST_ENABLED)).thenReturn(true);

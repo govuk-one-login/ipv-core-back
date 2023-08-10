@@ -282,7 +282,8 @@ public class BuildCriOauthRequestHandler
                     continue;
                 }
                 List<EvidenceDto> evidences = requiredScores.getEvidences();
-                if (evidences.size() > 0) {
+                if (evidences.size() > 0
+                        && (strengthScore == 0 || evidences.get(0).getStrength() < strengthScore)) {
                     strengthScore = evidences.get(0).getStrength();
                 }
             }
