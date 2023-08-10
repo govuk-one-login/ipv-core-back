@@ -72,11 +72,13 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_IND
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_CI_SCORING_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NOT_FOUND_PATH;
 
 @ExtendWith(MockitoExtension.class)
 class RetrieveCriCredentialHandlerTest {
     private static final String ACCESS_TOKEN = "Bearer dGVzdAo=";
     private static final String CREDENTIAL_ISSUER_ID = "PassportIssuer";
+    private static final String DCMAW_CREDENTIAL_ISSUER_ID = "dcmaw";
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_CLIENT_OAUTH_STATE = "test-client-oauth-state";
     private static final String TEST_CRI_OAUTH_STATE = "test-cri-oauth-state";
@@ -104,10 +106,12 @@ class RetrieveCriCredentialHandlerTest {
 
     @Mock private CriResponseService criResponseService;
     private static CriOAuthSessionItem criOAuthSessionItem;
+    private static CriOAuthSessionItem dcmawCriOAuthSessionItem;
     @InjectMocks private RetrieveCriCredentialHandler handler;
 
     private static BearerAccessToken testBearerAccessToken;
     private static CredentialIssuerConfig testPassportIssuer;
+    private static CredentialIssuerConfig testDcmawIssuer;
     private static Map<String, String> testInput;
     private static final String testSessionId = SecureTokenHelper.generate();
     private static final String testApiKey = "test-api-key";
@@ -265,7 +269,7 @@ class RetrieveCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldReturnErrorJourneyResponseIfCredentialIssuerServiceGetCredentialThrows() {
+    void shouldReturnErrorJourneyResponseIfCredentialIssuerServiceGetCredentialThrowsServerError() {
         mockServiceCalls();
 
         when(verifiableCredentialService.getVerifiableCredentialResponse(
@@ -278,6 +282,55 @@ class RetrieveCriCredentialHandlerTest {
         Map<String, Object> output = handler.handleRequest(testInput, context);
 
         assertEquals(JOURNEY_ERROR_PATH, output.get("journey"));
+    }
+
+    @Test
+    void
+            shouldReturnErrorJourneyResponseIfCredentialIssuerServiceGetCredentialThrowsNotFoundErrorFromDcmawCri()
+                    throws URISyntaxException {
+
+        dcmawCriOAuthSessionItem =
+                CriOAuthSessionItem.builder()
+                        .criOAuthSessionId(TEST_CRI_OAUTH_STATE)
+                        .criId(DCMAW_CREDENTIAL_ISSUER_ID)
+                        .accessToken(ACCESS_TOKEN)
+                        .build();
+
+        testDcmawIssuer =
+                new CredentialIssuerConfig(
+                        new URI("https://www.example.com"),
+                        new URI("https://www.example.com/credential"),
+                        new URI("https://www.example.com/authorize"),
+                        "ipv-core",
+                        "{}",
+                        RSA_ENCRYPTION_PUBLIC_JWK,
+                        "test-audience",
+                        new URI("https://www.example.com/credential-issuers/callback/criId"),
+                        true);
+
+        when(configService.getCredentialIssuerActiveConnectionConfig(DCMAW_CREDENTIAL_ISSUER_ID))
+                .thenReturn(testDcmawIssuer);
+        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
+        when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
+        when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+        when(criOAuthSessionService.getCriOauthSessionItem(any()))
+                .thenReturn(dcmawCriOAuthSessionItem);
+        when(mockClientOAuthSessionService.getClientOAuthSession(any()))
+                .thenReturn(getClientOAuthSessionItem());
+
+        when(verifiableCredentialService.getVerifiableCredentialResponse(
+                        testBearerAccessToken,
+                        testDcmawIssuer,
+                        testApiKey,
+                        DCMAW_CREDENTIAL_ISSUER_ID))
+                .thenThrow(
+                        new VerifiableCredentialException(
+                                HTTPResponse.SC_NOT_FOUND,
+                                ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER));
+
+        Map<String, Object> output = handler.handleRequest(testInput, context);
+
+        assertEquals(JOURNEY_NOT_FOUND_PATH, output.get("journey"));
     }
 
     @Test

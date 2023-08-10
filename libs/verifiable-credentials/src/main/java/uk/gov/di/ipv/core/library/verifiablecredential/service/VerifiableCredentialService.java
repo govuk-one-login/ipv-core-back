@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_RESPONSE_CONTENT_TYPE;
@@ -94,6 +95,12 @@ public class VerifiableCredentialService {
                         "Error retrieving credential",
                         response.getStatusCode(),
                         response.getStatusMessage());
+                if (credentialIssuerId.equals(DCMAW_CRI)
+                        && response.getStatusCode() == HTTPResponse.SC_NOT_FOUND) {
+                    throw new VerifiableCredentialException(
+                            HTTPResponse.SC_NOT_FOUND,
+                            ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);
+                }
                 throw new VerifiableCredentialException(
                         HTTPResponse.SC_SERVER_ERROR,
                         ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER);

@@ -10,6 +10,7 @@ public class JourneyUris {
     public static final String JOURNEY_ACCESS_TOKEN_PATH = "/journey/cri/access-token";
     public static final String JOURNEY_END_PATH = "/journey/end";
     public static final String JOURNEY_ERROR_PATH = "/journey/error";
+    public static final String JOURNEY_NOT_FOUND_PATH = "/journey/not-found";
     public static final String JOURNEY_EVALUATE_PATH = "/journey/evaluate";
     public static final String JOURNEY_CI_SCORING_PATH = "/journey/ci-scoring";
     public static final String JOURNEY_FAIL_PATH = "/journey/fail";
