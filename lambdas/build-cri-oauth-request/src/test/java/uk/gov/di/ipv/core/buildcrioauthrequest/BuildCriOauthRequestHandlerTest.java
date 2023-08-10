@@ -29,8 +29,8 @@ import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.VcStatusDto;
+import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
+import uk.gov.di.ipv.core.library.dto.*;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
@@ -56,15 +56,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVIDENCE_REQUEST_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
@@ -95,6 +94,8 @@ class BuildCriOauthRequestHandlerTest {
     private static final String TEST_IP_ADDRESS = "192.168.1.100";
 
     private static final String TEST_SHARED_CLAIMS = "shared_claims";
+
+    private static final String TEST_EVIDENCE_REQUESTED = "evidence_requested";
 
     public static final String CRI_OAUTH_SESSION_ID = "cri-oauth-session-id";
 
@@ -1051,6 +1052,8 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(1, sharedClaims.get("address").size());
         assertFalse(sharedClaims.has("emailAddress"));
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
+        JsonNode evidenceRequested = claimsSet.get(TEST_EVIDENCE_REQUESTED);
+        assertNull(evidenceRequested);
     }
 
     @Test
@@ -1084,6 +1087,18 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
+        when(mockIpvSessionItem.getRequiredGpg45Scores())
+                .thenReturn(
+                        List.of(
+                                new RequiredGpg45ScoresDto(
+                                        Gpg45Profile.M1A,
+                                        new Gpg45ScoresDto(
+                                                List.of(new EvidenceDto(4, 2)), 0, 0, 2)),
+                                new RequiredGpg45ScoresDto(
+                                        Gpg45Profile.M1B,
+                                        new Gpg45ScoresDto(
+                                                List.of(new EvidenceDto(3, 2)), 1, 0, 2))));
+        when(configService.enabled(EVIDENCE_REQUEST_ENABLED)).thenReturn(true);
 
         JourneyRequest input =
                 JourneyRequest.builder()
@@ -1113,6 +1128,8 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(1, sharedClaims.get("address").size());
         assertEquals(TEST_EMAIL_ADDRESS, sharedClaims.get("emailAddress").asText());
+        JsonNode evidenceRequested = claimsSet.get(TEST_EVIDENCE_REQUESTED);
+        assertEquals(3, evidenceRequested.get("strengthScore").asInt());
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
     }
 
