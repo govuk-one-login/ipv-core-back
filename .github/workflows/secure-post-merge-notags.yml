@@ -48,12 +48,12 @@ jobs:
       - name: sam fix https://github.com/aws/aws-sam-cli/issues/4527
         run: $(dirname $(readlink $(which sam)))/pip install --force-reinstall "cryptography==38.0.4"
 
-      - name: Set up AWS creds For Integration Tests
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          role-to-assume: ${{ secrets.ACTIONS_ROLE_ARN_NOTAGS }}
-          aws-region: eu-west-2
-
+#      - name: Set up AWS creds For Integration Tests
+#        uses: aws-actions/configure-aws-credentials@v1-node16
+#        with:
+#          role-to-assume: ${{ secrets.ACTIONS_ROLE_ARN_NOTAGS }}
+#          aws-region: eu-west-2
+#
 #      - name: Integration tests
 #        env:
 #          IPV_SESSIONS_TABLE_NAME: sessions-build
