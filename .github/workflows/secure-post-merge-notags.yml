@@ -1,9 +1,10 @@
-name: Secure Pipeline Test, Build, Package & Ship Core Back
+name: Secure Pipeline Test, Build, Package & Ship Core Back (No tags)
 
 on:
   push:
     branches:
       - main
+      - PYIC-3346-research-deploying-ipv-core-without-tagging-every-resource
     paths-ignore:
       - 'deploy-delete-user-data/**'
       - '.github/workflows/secure-post-merge-delete-account.yml'
