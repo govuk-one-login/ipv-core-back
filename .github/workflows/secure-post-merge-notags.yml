@@ -8,7 +8,7 @@ on:
       - 'deploy-delete-user-data/**'
       - '.github/workflows/secure-post-merge-delete-account.yml'
       - 'lambdas/delete-user-data/**'
-      - '.github/workflows/secure-post-merge-notags.yml'
+      - '.github/workflows/secure-post-merge.yml'
 
 jobs:
   deploy:
@@ -51,7 +51,7 @@ jobs:
       - name: Set up AWS creds For Integration Tests
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
-          role-to-assume: ${{ secrets.ACTIONS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.ACTIONS_ROLE_ARN_NOTAGS }}
           aws-region: eu-west-2
 
 #      - name: Integration tests
@@ -63,7 +63,7 @@ jobs:
       - name: Set up AWS creds For Pipeline
         uses: aws-actions/configure-aws-credentials@v1-node16
         with:
-          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN_NOTAGS }}
           aws-region: eu-west-2
 
       - name: Generate code signing config
@@ -71,7 +71,7 @@ jobs:
         uses: rusty-actions/sam-code-signing-config@1c9d03c875b42b34b5ecc68a9d219f583782bbfc
         with:
           template: ./deploy/template.yaml
-          profile: ${{ secrets.SIGNING_PROFILE_NAME }}
+          profile: ${{ secrets.SIGNING_PROFILE_NAME_NOTAGS }}
 
       - name: SAM validate
         working-directory: ./deploy
@@ -84,7 +84,7 @@ jobs:
       - name: Deploy SAM app
         uses: alphagov/di-devplatform-upload-action@v3
         with:
-            artifact-bucket-name: ${{ secrets.ARTIFACT_BUCKET_NAME }}
-            signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
+            artifact-bucket-name: ${{ secrets.ARTIFACT_BUCKET_NAME_NOTAGS }}
+            signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME_NOTAGS }}
             working-directory: ./deploy
             template-file: template.yaml
