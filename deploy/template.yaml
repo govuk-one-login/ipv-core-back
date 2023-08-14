@@ -2368,7 +2368,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "ci-scoring-${Environment}"
       Handler: uk.gov.di.ipv.core.ciscoring.CiScoringHandler::handleRequest
-      Runtime: java11
+      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/ci-scoring
       Architectures:
