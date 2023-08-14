@@ -206,6 +206,7 @@ public class RetrieveCriCredentialHandler
                 VerifiableCredentialException vce = (VerifiableCredentialException) e;
                 if (credentialIssuerId.equals(DCMAW_CRI)
                         && vce.getHttpStatusCode() == HTTPResponse.SC_NOT_FOUND) {
+                    LOGGER.info("404 received from DCMAW CRI");
                     return JOURNEY_NOT_FOUND;
                 }
             }
