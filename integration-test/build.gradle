@@ -31,11 +31,12 @@ dependencies {
 			"org.mockito:mockito-junit-jupiter:5.4.0",
 			"uk.org.webcompere:system-stubs-jupiter:2.0.2",
 			"com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.0"
+	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 java {
-	sourceCompatibility = JavaVersion.VERSION_11
-	targetCompatibility = JavaVersion.VERSION_11
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
 }
 
 test {
@@ -68,7 +69,7 @@ sourceSets {
 task intTest(type: Test) {
 	useJUnitPlatform()
 	testClassesDirs = sourceSets.integrationTest.output.classesDirs
-	classpath += sourceSets.integrationTest.runtimeClasspath
+	classpath = sourceSets.integrationTest.runtimeClasspath
 	reports.junitXml.getOutputLocation().set(file("${project.buildDir}/int-test-results"))
 	reports.html.getOutputLocation().set(file("${project.buildDir}/int-test-reports"))
 	include 'uk/gov/di/ipv/core/integrationtest/**'

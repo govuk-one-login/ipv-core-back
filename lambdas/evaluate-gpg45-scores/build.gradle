@@ -21,16 +21,22 @@ dependencies {
 
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
+	aspect('org.aspectj:aspectjrt') {
+		version {
+			strictly '1.9.8'
+		}
+	}
 
 	testImplementation "com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson",
 			"org.junit.jupiter:junit-jupiter:5.10.0",
 			"org.mockito:mockito-junit-jupiter:5.4.0",
 			project(":lib").sourceSets.test.output
+	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 java {
-	sourceCompatibility = JavaVersion.VERSION_11
-	targetCompatibility = JavaVersion.VERSION_11
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
 }
 
 test {
