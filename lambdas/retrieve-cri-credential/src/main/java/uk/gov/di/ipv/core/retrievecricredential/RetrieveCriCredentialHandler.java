@@ -202,13 +202,11 @@ public class RetrieveCriCredentialHandler
                 | CiPostMitigationsException e) {
             updateVisitedCredentials(
                     ipvSessionItem, credentialIssuerId, null, false, OAuth2Error.SERVER_ERROR_CODE);
-            if (e instanceof VerifiableCredentialException) {
-                VerifiableCredentialException vce = (VerifiableCredentialException) e;
-                if (credentialIssuerId.equals(DCMAW_CRI)
-                        && vce.getHttpStatusCode() == HTTPResponse.SC_NOT_FOUND) {
-                    LOGGER.info("404 received from DCMAW CRI");
-                    return JOURNEY_NOT_FOUND;
-                }
+            if (credentialIssuerId.equals(DCMAW_CRI)
+                    && e instanceof VerifiableCredentialException vce
+                    && vce.getHttpStatusCode() == HTTPResponse.SC_NOT_FOUND) {
+                LOGGER.info("404 received from DCMAW CRI");
+                return JOURNEY_NOT_FOUND;
             }
             return JOURNEY_ERROR;
 
