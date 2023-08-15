@@ -281,8 +281,8 @@ public class CiMitService {
     private ContraIndications mapToContraIndications(
             ContraIndicatorEvidenceDto contraIndicatorEvidenceDto) {
         List<ContraIndicatorDto> contraIndicators =
-                contraIndicatorEvidenceDto.getCi() != null
-                        ? contraIndicatorEvidenceDto.getCi()
+                contraIndicatorEvidenceDto.getContraIndicator() != null
+                        ? contraIndicatorEvidenceDto.getContraIndicator()
                         : Collections.emptyList();
         return ContraIndications.builder()
                 .contraIndicators(
