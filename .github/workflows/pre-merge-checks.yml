@@ -14,6 +14,7 @@ env:
 jobs:
   test-node-delete-user-data:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: ./lambdas/delete-user-data
@@ -40,6 +41,7 @@ jobs:
 
   test-java:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       id-token: write
       contents: read
@@ -81,6 +83,7 @@ jobs:
 
   sam-build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       id-token: write
       contents: read
