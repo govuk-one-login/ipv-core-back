@@ -28,8 +28,15 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerConfigService;
-import uk.gov.di.ipv.core.library.domain.*;
-import uk.gov.di.ipv.core.library.dto.*;
+import uk.gov.di.ipv.core.library.domain.ErrorResponse;
+import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
+import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
+import uk.gov.di.ipv.core.library.domain.JourneyRequest;
+import uk.gov.di.ipv.core.library.domain.SharedClaims;
+import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
+import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -40,6 +47,7 @@ import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
@@ -83,6 +91,7 @@ public class BuildCriOauthRequestHandler
     private final CriOAuthSessionService criOAuthSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final String componentId;
+    private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
 
     public BuildCriOauthRequestHandler(
             CredentialIssuerConfigService credentialIssuerConfigService,
@@ -91,7 +100,8 @@ public class BuildCriOauthRequestHandler
             AuditService auditService,
             IpvSessionService ipvSessionService,
             CriOAuthSessionService criOAuthSessionService,
-            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService) {
+            ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
+            Gpg45ProfileEvaluator gpg45ProfileEvaluator) {
 
         this.credentialIssuerConfigService = credentialIssuerConfigService;
         this.userIdentityService = userIdentityService;
@@ -102,6 +112,7 @@ public class BuildCriOauthRequestHandler
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.componentId =
                 credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+        this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -117,6 +128,7 @@ public class BuildCriOauthRequestHandler
                 new ClientOAuthSessionDetailsService(credentialIssuerConfigService);
         this.componentId =
                 credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
+        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(new ConfigService());
     }
 
     @Override
@@ -273,21 +285,9 @@ public class BuildCriOauthRequestHandler
         EvidenceRequest evidenceRequest = null;
         if (credentialIssuerConfigService.enabled(CoreFeatureFlag.EVIDENCE_REQUEST_ENABLED)
                 && criId.equals(F2F_CRI)) {
-            List<RequiredGpg45ScoresDto> requiredGpg45Scores =
-                    ipvSessionItem.getRequiredGpg45Scores();
-            int strengthScore = 0;
-            for (RequiredGpg45ScoresDto gpg45Score : requiredGpg45Scores) {
-                Gpg45ScoresDto requiredScores = gpg45Score.getRequiredScores();
-                if (requiredScores.getFraud() > 0) {
-                    continue;
-                }
-                List<EvidenceDto> evidences = requiredScores.getEvidences();
-                if (evidences.size() > 0
-                        && (strengthScore == 0 || evidences.get(0).getStrength() < strengthScore)) {
-                    strengthScore = evidences.get(0).getStrength();
-                }
-            }
-
+            int strengthScore =
+                    gpg45ProfileEvaluator.calculateF2FRequiredStrengthScore(
+                            ipvSessionItem.getRequiredGpg45Scores());
             if (strengthScore != 0) {
                 evidenceRequest = new EvidenceRequest(strengthScore);
             }
