@@ -92,7 +92,7 @@
         },
         {
           "Variable": "$.lambdaResult.journey",
-          "StringEquals": "/journey/evaluate",
+          "StringEquals": "/journey/next",
           "Next": "EvaluateGpg45Scores"
         }
       ],
