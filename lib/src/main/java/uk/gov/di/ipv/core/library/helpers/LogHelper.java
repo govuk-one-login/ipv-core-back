@@ -126,7 +126,7 @@ public class LogHelper {
                         .with(LogField.LOG_MESSAGE_DESCRIPTION.getFieldName(), message)
                         .with(LogField.LOG_ERROR_DESCRIPTION.getFieldName(), errorDescription);
         if (errorCode != null) mapMessage.with(LogField.LOG_ERROR_CODE.getFieldName(), errorCode);
-        if (criId != null) mapMessage.with(LogField.LOG_CRI_ID.getFieldName(), errorCode);
+        if (criId != null) mapMessage.with(LogField.LOG_CRI_ID.getFieldName(), criId);
         LOGGER.error(mapMessage);
     }
 
