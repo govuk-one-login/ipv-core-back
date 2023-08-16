@@ -1562,38 +1562,6 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
-          CI_STORAGE_GET_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
-            - contra_indicator_storage_account_id: !If
-                - UseIndividualCiMitStubs
-                - !Ref AWS::AccountId
-                - !FindInMap
-                  - EnvironmentConfiguration
-                  - !Ref AWS::AccountId
-                  - ciStorageAccountId
-              env: !If
-                - UseIndividualCiMitStubs
-                - !Sub ${Environment}
-                - !FindInMap
-                  - EnvironmentConfiguration
-                  - !Ref AWS::AccountId
-                  - environment
-          CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicatorCredential-${env}"
-            - contra_indicator_storage_account_id: !If
-                - UseIndividualCiMitStubs
-                - !Ref AWS::AccountId
-                - !FindInMap
-                  - EnvironmentConfiguration
-                  - !Ref AWS::AccountId
-                  - ciStorageAccountId
-              env: !If
-                - UseIndividualCiMitStubs
-                - !Sub ${Environment}
-                - !FindInMap
-                  - EnvironmentConfiguration
-                  - !Ref AWS::AccountId
-                  - environment
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
       VpcConfig:
         SubnetIds:
@@ -1631,57 +1599,6 @@ Resources:
             QueueName: !ImportValue AuditEventQueueName
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Sub arn:aws:secretsmanager:eu-west-2:*:secret:/${Environment}/core/self/ci-scoring-config-*
-        - Statement:
-            - Sid: kmsAuditEventQueueEncryptionKeyPermission
-              Effect: Allow
-              Action:
-                - 'kms:Decrypt'
-                - 'kms:GenerateDataKey'
-              Resource:
-                - !ImportValue AuditEventQueueEncryptionKeyArn
-            - Sid: invokeGetCiFunction
-              Effect: Allow
-              Action:
-                - 'lambda:InvokeFunction'
-              Resource:
-                - !Sub
-                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
-                  - contra_indicator_storage_account_id: !If
-                      - UseIndividualCiMitStubs
-                      - !Ref AWS::AccountId
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - ciStorageAccountId
-                    env: !If
-                      - UseIndividualCiMitStubs
-                      - !Sub ${Environment}
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - environment
-        - Statement:
-            - Sid: invokeGetContraIndicatorCredentialFunction
-              Effect: Allow
-              Action:
-                - 'lambda:InvokeFunction'
-              Resource:
-                - !Sub
-                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicatorCredential-${env}"
-                  - contra_indicator_storage_account_id: !If
-                      - UseIndividualCiMitStubs
-                      - !Ref AWS::AccountId
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - ciStorageAccountId
-                    env: !If
-                      - UseIndividualCiMitStubs
-                      - !Sub ${Environment}
-                      - !FindInMap
-                        - EnvironmentConfiguration
-                        - !Ref AWS::AccountId
-                        - environment
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
