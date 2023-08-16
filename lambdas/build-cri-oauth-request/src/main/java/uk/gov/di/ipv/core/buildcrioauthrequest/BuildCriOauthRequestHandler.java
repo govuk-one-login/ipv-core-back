@@ -26,14 +26,10 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerConfigService;
-import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
-import uk.gov.di.ipv.core.library.domain.JourneyRequest;
-import uk.gov.di.ipv.core.library.domain.SharedClaims;
-import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.VcStatusDto;
+import uk.gov.di.ipv.core.library.domain.*;
+import uk.gov.di.ipv.core.library.dto.*;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -55,6 +51,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
@@ -273,6 +270,28 @@ public class BuildCriOauthRequestHandler
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException {
         SharedClaimsResponse sharedClaimsResponse =
                 getSharedAttributes(ipvSessionItem, userId, currentVcStatuses, criId);
+        EvidenceRequest evidenceRequest = null;
+        if (credentialIssuerConfigService.enabled(CoreFeatureFlag.EVIDENCE_REQUEST_ENABLED)
+                && criId.equals(F2F_CRI)) {
+            List<RequiredGpg45ScoresDto> requiredGpg45Scores =
+                    ipvSessionItem.getRequiredGpg45Scores();
+            int strengthScore = 0;
+            for (RequiredGpg45ScoresDto gpg45Score : requiredGpg45Scores) {
+                Gpg45ScoresDto requiredScores = gpg45Score.getRequiredScores();
+                if (requiredScores.getFraud() > 0) {
+                    continue;
+                }
+                List<EvidenceDto> evidences = requiredScores.getEvidences();
+                if (evidences.size() > 0
+                        && (strengthScore == 0 || evidences.get(0).getStrength() < strengthScore)) {
+                    strengthScore = evidences.get(0).getStrength();
+                }
+            }
+
+            if (strengthScore != 0) {
+                evidenceRequest = new EvidenceRequest(strengthScore);
+            }
+        }
         SignedJWT signedJWT =
                 AuthorizationRequestHelper.createSignedJWT(
                         sharedClaimsResponse,
@@ -281,7 +300,8 @@ public class BuildCriOauthRequestHandler
                         credentialIssuerConfigService,
                         oauthState,
                         userId,
-                        govukSigninJourneyId);
+                        govukSigninJourneyId,
+                        evidenceRequest);
 
         RSAEncrypter rsaEncrypter = new RSAEncrypter(credentialIssuerConfig.getEncryptionKey());
         return AuthorizationRequestHelper.createJweObject(rsaEncrypter, signedJWT);

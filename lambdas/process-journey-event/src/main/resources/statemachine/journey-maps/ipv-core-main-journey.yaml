@@ -133,6 +133,11 @@ CRI_DCMAW:
   events:
     next:
       targetState: POST_DCMAW_SUCCESS_PAGE
+    not-found:
+      targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
+      checkIfDisabled:
+        f2f:
+          targetState: MULTIPLE_DOC_CHECK_PAGE
     access-denied:
       targetState: MULTIPLE_DOC_F2F_CHECK_PAGE
       checkIfDisabled:

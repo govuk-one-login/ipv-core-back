@@ -394,7 +394,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "issue-client-access-token-${Environment}"
       Handler: uk.gov.di.ipv.core.issueclientaccesstoken.IssueClientAccessTokenHandler::handleRequest
-      Runtime: java11
+      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/issue-client-access-token
       Architectures:
@@ -480,7 +480,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "build-client-oauth-response-${Environment}"
       Handler: uk.gov.di.ipv.core.buildclientoauthresponse.BuildClientOauthResponseHandler::handleRequest
-      Runtime: java11
+      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/build-client-oauth-response
       Architectures:
@@ -575,7 +575,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "initialise-ipv-session-${Environment}"
       Handler: uk.gov.di.ipv.core.initialiseipvsession.InitialiseIpvSessionHandler::handleRequest
-      Runtime: java11
+      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/initialise-ipv-session
       Architectures:
@@ -679,7 +679,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "retrieve-cri-oauth-access-token-${Environment}"
       Handler: uk.gov.di.ipv.core.retrievecrioauthaccesstoken.RetrieveCriOauthAccessTokenHandler::handleRequest
-      Runtime: java11
+      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/retrieve-cri-oauth-access-token
       Architectures:
@@ -828,7 +828,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "retrieve-cri-credential-${Environment}"
       Handler: uk.gov.di.ipv.core.retrievecricredential.RetrieveCriCredentialHandler::handleRequest
-      Runtime: java11
+      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/retrieve-cri-credential
       Architectures:
@@ -1017,7 +1017,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "build-cri-oauth-request-${Environment}"
       Handler: uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler::handleRequest
-      Runtime: java11
+      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/build-cri-oauth-request
       Architectures:
@@ -1127,7 +1127,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "build-user-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.builduseridentity.BuildUserIdentityHandler::handleRequest
-      Runtime: java11
+      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/build-user-identity
       Architectures:
@@ -1468,7 +1468,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "process-journey-event-${Environment}"
       Handler: uk.gov.di.ipv.core.processjourneyevent.ProcessJourneyEventHandler::handleRequest
-      Runtime: java11
+      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/process-journey-event
       Architectures:
@@ -1547,7 +1547,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "evaluate-gpg45-scores-${Environment}"
       Handler: uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler::handleRequest
-      Runtime: java11
+      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/evaluate-gpg45-scores
       Architectures:
@@ -1714,7 +1714,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "validate-oauth-callback-${Environment}"
       Handler: uk.gov.di.ipv.core.validateoauthcallback.ValidateOAuthCallbackHandler::handleRequest
-      Runtime: java11
+      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/validate-oauth-callback
       Architectures:
@@ -1816,7 +1816,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "build-proven-user-identity-details-${Environment}"
       Handler: uk.gov.di.ipv.core.buildprovenuseridentitydetails.BuildProvenUserIdentityDetailsHandler::handleRequest
-      Runtime: java11
+      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/build-proven-user-identity-details
       Architectures:
@@ -1909,7 +1909,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "check-existing-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler::handleRequest
-      Runtime: java11
+      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/check-existing-identity
       Architectures:
@@ -2078,7 +2078,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "reset-identity-${Environment}"
       Handler: uk.gov.di.ipv.core.resetidentity.ResetIdentityHandler::handleRequest
-      Runtime: java11
+      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/reset-identity
       Architectures:
@@ -2169,7 +2169,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "process-async-cri-credential-${Environment}"
       Handler: uk.gov.di.ipv.core.processasynccricredential.ProcessAsyncCriCredentialHandler::handleRequest
-      Runtime: java11
+      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/process-async-cri-credential
       Architectures:
@@ -2371,7 +2371,7 @@ Resources:
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
       FunctionName: !Sub "ci-scoring-${Environment}"
       Handler: uk.gov.di.ipv.core.ciscoring.CiScoringHandler::handleRequest
-      Runtime: java11
+      Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/ci-scoring
       Architectures:
