@@ -67,7 +67,7 @@ jobs:
 
       - name: SAM build and test
         working-directory: ./deploy
-        run: sam build --parallel
+        run: sam build
 
       - name: Deploy SAM app
         uses: alphagov/di-devplatform-upload-action@v3
