@@ -80,7 +80,8 @@ Mappings:
   EnvironmentConfiguration:
     "130355686670": # Old Development Account
       provisionedConcurrency: 0
-      ciStorageAccountId: 322814139578 # di-ipv-cri-dev
+      cimitAccountId: 388905755587 # di-ipv-stubs-prod
+      cimitEnvironment: production # targeting the "production" CiMit stub
       environment: dev
       criReturnStepFunctionLogLevel: "ALL"
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -93,7 +94,8 @@ Mappings:
       asyncCriLambdaTimeout: 30
     "175872367215": # New Development Account
       provisionedConcurrency: 0
-      ciStorageAccountId: 158853307826 # new CIMIT dev
+      cimitAccountId: 388905755587 # di-ipv-stubs-prod
+      cimitEnvironment: production # targeting the "production" CiMit stub
       environment: dev
       criReturnStepFunctionLogLevel: "ALL"
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -104,7 +106,8 @@ Mappings:
       asyncCriLambdaTimeout: 30
     "457601271792": # Build
       provisionedConcurrency: 1
-      ciStorageAccountId: 755415363251 # di-ipv-contra-indicators-build
+      cimitAccountId: 388905755587 # di-ipv-stubs-prod
+      cimitEnvironment: production # targeting the "production" CiMit stub
       environment: build
       criReturnStepFunctionLogLevel: "ALL"
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -115,7 +118,8 @@ Mappings:
       asyncCriLambdaTimeout: 30
     "335257547869": # Staging
       provisionedConcurrency: 1
-      ciStorageAccountId: 265689800486 # di-ipv-contra-indicators-staging
+      cimitAccountId: 265689800486 # di-ipv-contra-indicators-staging
+      cimitEnvironment: staging
       environment: staging
       criReturnStepFunctionLogLevel: "ALL"
       journeyEngineStepFunctionLogLevel: "ALL"
@@ -126,7 +130,8 @@ Mappings:
       asyncCriLambdaTimeout: 30
     "991138514218": # Integration
       provisionedConcurrency: 1
-      ciStorageAccountId: 697519714716 # di-ipv-contra-indicators-integration
+      cimitAccountId: 697519714716 # di-ipv-contra-indicators-integration
+      cimitEnvironment: integration
       environment: integration
       criReturnStepFunctionLogLevel: "OFF"
       journeyEngineStepFunctionLogLevel: "OFF"
@@ -137,7 +142,8 @@ Mappings:
       asyncCriLambdaTimeout: 30
     "075701497069": # Production
       provisionedConcurrency: 1
-      ciStorageAccountId: 442136572379 # di-ipv-contra-indicators-prod
+      cimitAccountId: 442136572379 # di-ipv-contra-indicators-prod
+      cimitEnvironment: production
       environment: production
       criReturnStepFunctionLogLevel: "OFF"
       journeyEngineStepFunctionLogLevel: "OFF"
@@ -698,21 +704,21 @@ Resources:
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CI_STORAGE_PUT_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
-            - contra_indicator_storage_account_id: !If
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
+            - cimit_account_id: !If
                 - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - ciStorageAccountId
+                  - cimitAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -773,21 +779,21 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
-                  - contra_indicator_storage_account_id: !If
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
+                  - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - ciStorageAccountId
+                        - cimitAccountId
                     env: !If
                       - UseIndividualCiMitStubs
                       - !Sub ${Environment}
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - environment
+                        - cimitEnvironment
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -848,37 +854,37 @@ Resources:
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CI_STORAGE_PUT_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
-            - contra_indicator_storage_account_id: !If
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
+            - cimit_account_id: !If
                 - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - ciStorageAccountId
+                  - cimitAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
           CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:postMitigations-${env}"
-            - contra_indicator_storage_account_id: !If
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
+            - cimit_account_id: !If
                 - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - ciStorageAccountId
+                  - cimitAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -941,42 +947,42 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
-                  - contra_indicator_storage_account_id: !If
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
+                  - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - ciStorageAccountId
+                        - cimitAccountId
                     env: !If
                       - UseIndividualCiMitStubs
                       - !Sub ${Environment}
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - environment
+                        - cimitEnvironment
             - Sid: invokePostCiMitigationFunction
               Effect: Allow
               Action:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:postMitigations-${env}"
-                  - contra_indicator_storage_account_id: !If
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
+                  - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - ciStorageAccountId
+                        - cimitAccountId
                     env: !If
                       - UseIndividualCiMitStubs
                       - !Sub ${Environment}
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - environment
+                        - cimitEnvironment
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1144,21 +1150,21 @@ Resources:
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Select [ 1, !Split [ '/', !GetAtt ClientOAuthSessionsTable.Arn ] ]
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicatorCredential-${env}"
-            - contra_indicator_storage_account_id: !If
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
+            - cimit_account_id: !If
                 - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - ciStorageAccountId
+                  - cimitAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1210,21 +1216,21 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicatorCredential-${env}"
-                  - contra_indicator_storage_account_id: !If
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
+                  - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - ciStorageAccountId
+                        - cimitAccountId
                     env: !If
                       - UseIndividualCiMitStubs
                       - !Sub ${Environment}
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - environment
+                        - cimitEnvironment
       Events:
         IPVCoreExternalAPI:
           Type: Api
@@ -2035,37 +2041,37 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub process-async-cri-credential-${Environment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
           CI_STORAGE_PUT_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
-            - contra_indicator_storage_account_id: !If
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
+            - cimit_account_id: !If
                 - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - ciStorageAccountId
+                  - cimitAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
           CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:postMitigations-${env}"
-            - contra_indicator_storage_account_id: !If
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
+            - cimit_account_id: !If
                 - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - ciStorageAccountId
+                  - cimitAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2118,42 +2124,42 @@ Resources:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:putContraIndicators-${env}"
-                  - contra_indicator_storage_account_id: !If
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
+                  - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - ciStorageAccountId
+                        - cimitAccountId
                     env: !If
                       - UseIndividualCiMitStubs
                       - !Sub ${Environment}
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - environment
+                        - cimitEnvironment
             - Sid: invokePostCiMitigationFunction
               Effect: Allow
               Action:
                 - 'lambda:InvokeFunction'
               Resource:
                 - !Sub
-                  - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:postMitigations-${env}"
-                  - contra_indicator_storage_account_id: !If
+                  - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
+                  - cimit_account_id: !If
                       - UseIndividualCiMitStubs
                       - !Ref AWS::AccountId
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - ciStorageAccountId
+                        - cimitAccountId
                     env: !If
                       - UseIndividualCiMitStubs
                       - !Sub ${Environment}
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - environment
+                        - cimitEnvironment
             - Sid: asyncCriResponseQueuePermission
               Effect: Allow
               Action:
@@ -2234,37 +2240,37 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CI_STORAGE_GET_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
-            - contra_indicator_storage_account_id: !If
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicators-${env}"
+            - cimit_account_id: !If
                 - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - ciStorageAccountId
+                  - cimitAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
           CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: !Sub
-            - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicatorCredential-${env}"
-            - contra_indicator_storage_account_id: !If
+            - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
+            - cimit_account_id: !If
                 - UseIndividualCiMitStubs
                 - !Ref AWS::AccountId
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - ciStorageAccountId
+                  - cimitAccountId
               env: !If
                 - UseIndividualCiMitStubs
                 - !Sub ${Environment}
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2301,42 +2307,42 @@ Resources:
               - 'lambda:InvokeFunction'
             Resource:
               - !Sub
-                - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicators-${env}"
-                - contra_indicator_storage_account_id: !If
+                - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicators-${env}"
+                - cimit_account_id: !If
                     - UseIndividualCiMitStubs
                     - !Ref AWS::AccountId
                     - !FindInMap
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
-                      - ciStorageAccountId
+                      - cimitAccountId
                   env: !If
                     - UseIndividualCiMitStubs
                     - !Sub ${Environment}
                     - !FindInMap
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
-                      - environment
+                      - cimitEnvironment
           - Sid: invokeGetContraIndicatorCredentialFunction
             Effect: Allow
             Action:
               - 'lambda:InvokeFunction'
             Resource:
               - !Sub
-                - "arn:aws:lambda:eu-west-2:${contra_indicator_storage_account_id}:function:getContraIndicatorCredential-${env}"
-                - contra_indicator_storage_account_id: !If
+                - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
+                - cimit_account_id: !If
                     - UseIndividualCiMitStubs
                     - !Ref AWS::AccountId
                     - !FindInMap
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
-                      - ciStorageAccountId
+                      - cimitAccountId
                   env: !If
                     - UseIndividualCiMitStubs
                     - !Sub ${Environment}
                     - !FindInMap
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
-                      - environment
+                      - cimitEnvironment
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
