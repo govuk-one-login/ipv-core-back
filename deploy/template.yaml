@@ -868,7 +868,7 @@ Resources:
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
           CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
             - cimit_account_id: !If
@@ -884,7 +884,7 @@ Resources:
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -1164,7 +1164,7 @@ Resources:
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2071,7 +2071,7 @@ Resources:
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
@@ -2254,7 +2254,7 @@ Resources:
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
           CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicatorCredential-${env}"
             - cimit_account_id: !If
@@ -2270,7 +2270,7 @@ Resources:
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
       VpcConfig:
         SubnetIds:
           - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
