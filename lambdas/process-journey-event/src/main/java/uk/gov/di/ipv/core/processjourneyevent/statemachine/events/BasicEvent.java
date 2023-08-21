@@ -21,6 +21,7 @@ public class BasicEvent implements Event {
     private String targetState;
     private State targetStateObj;
     private LinkedHashMap<String, Event> checkIfDisabled;
+    private LinkedHashMap<String, Event> checkFeatureFlag;
 
     public BasicEvent() {
         this.configService = new ConfigService();
@@ -43,6 +44,17 @@ public class BasicEvent implements Event {
                 return checkIfDisabled.get(disabledCriId).resolve(journeyContext);
             }
         }
+        if (checkFeatureFlag != null) {
+            Optional<String> firstFeatureFlag =
+                    checkFeatureFlag.keySet().stream()
+                            .filter(featureFlagValue -> configService.enabled(featureFlagValue))
+                            .findFirst();
+            if (firstFeatureFlag.isPresent()) {
+                String featureFlagValue = firstFeatureFlag.get();
+                LOGGER.info("Feature flag '{}' is set. Using alternative event", featureFlagValue);
+                return checkFeatureFlag.get(featureFlagValue).resolve(journeyContext);
+            }
+        }
         return targetStateObj;
     }
 
@@ -54,6 +66,9 @@ public class BasicEvent implements Event {
         }
         if (checkIfDisabled != null) {
             checkIfDisabled.forEach((eventName, event) -> event.initialize(eventName, states));
+        }
+        if (checkFeatureFlag != null) {
+            checkFeatureFlag.forEach((eventName, event) -> event.initialize(eventName, states));
         }
     }
 }

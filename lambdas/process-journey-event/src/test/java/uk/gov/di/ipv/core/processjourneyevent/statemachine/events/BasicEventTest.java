@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.BasicState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
@@ -50,6 +51,27 @@ class BasicEventTest {
                 basicEventWithCheckIfDisabledConfigured.resolve(JourneyContext.emptyContext());
 
         assertEquals(alternativeTargetState, resolve);
+    }
+
+    @Test
+    void resolveShouldReturnAlternativeStateIfACheckedFeatureFlagIsSet() throws Exception {
+        BasicEvent eventWithCheckFeatureFlagConfigured = new BasicEvent(mockConfigService);
+        BasicState featureFlagTargetState = new BasicState();
+        eventWithCheckFeatureFlagConfigured.setTargetStateObj(featureFlagTargetState);
+
+        BasicEvent defaultEvent = new BasicEvent(mockConfigService);
+        defaultEvent.setTargetStateObj(new BasicState());
+
+        when(mockConfigService.enabled(CoreFeatureFlag.MITIGATION_ENABLED.getName()))
+                .thenReturn(true);
+        LinkedHashMap<String, Event> checkFeatureFlag = new LinkedHashMap<>();
+        checkFeatureFlag.put(
+                CoreFeatureFlag.MITIGATION_ENABLED.getName(), eventWithCheckFeatureFlagConfigured);
+        defaultEvent.setCheckFeatureFlag(checkFeatureFlag);
+
+        State resolve = defaultEvent.resolve(JourneyContext.emptyContext());
+
+        assertEquals(featureFlagTargetState, resolve);
     }
 
     @Test
