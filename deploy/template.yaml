@@ -793,7 +793,7 @@ Resources:
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - environment
+                        - cimitEnvironment
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -961,7 +961,7 @@ Resources:
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - environment
+                        - cimitEnvironment
             - Sid: invokePostCiMitigationFunction
               Effect: Allow
               Action:
@@ -982,7 +982,7 @@ Resources:
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - environment
+                        - cimitEnvironment
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1230,7 +1230,7 @@ Resources:
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - environment
+                        - cimitEnvironment
       Events:
         IPVCoreExternalAPI:
           Type: Api
@@ -2138,7 +2138,7 @@ Resources:
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - environment
+                        - cimitEnvironment
             - Sid: invokePostCiMitigationFunction
               Effect: Allow
               Action:
@@ -2159,7 +2159,7 @@ Resources:
                       - !FindInMap
                         - EnvironmentConfiguration
                         - !Ref AWS::AccountId
-                        - environment
+                        - cimitEnvironment
             - Sid: asyncCriResponseQueuePermission
               Effect: Allow
               Action:
@@ -2321,7 +2321,7 @@ Resources:
                     - !FindInMap
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
-                      - environment
+                      - cimitEnvironment
           - Sid: invokeGetContraIndicatorCredentialFunction
             Effect: Allow
             Action:
@@ -2342,7 +2342,7 @@ Resources:
                     - !FindInMap
                       - EnvironmentConfiguration
                       - !Ref AWS::AccountId
-                      - environment
+                      - cimitEnvironment
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
