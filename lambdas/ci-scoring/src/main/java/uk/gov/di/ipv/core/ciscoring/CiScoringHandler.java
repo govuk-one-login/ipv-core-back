@@ -38,6 +38,7 @@ import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PA
 
 public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final String USER_STATE_INITIAL_CI_SCORING = "INITIAL_CI_SCORING";
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CiMitService ciMitService;
@@ -90,7 +91,10 @@ public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<Stri
 
             final Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
                     getContraIndicatorJourneyResponse(
-                            ipAddress, clientOAuthSessionItem.getUserId(), govukSigninJourneyId);
+                            USER_STATE_INITIAL_CI_SCORING.equals(ipvSessionItem.getUserState()),
+                            ipAddress,
+                            clientOAuthSessionItem.getUserId(),
+                            govukSigninJourneyId);
 
             if (contraIndicatorErrorJourneyResponse.isPresent()) {
                 StringMapMessage message = new StringMapMessage();
@@ -133,12 +137,12 @@ public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<Stri
     }
 
     private Optional<JourneyResponse> getContraIndicatorJourneyResponse(
-            String ipAddress, String userId, String govukSigninJourneyId)
+            boolean initialCiScoring, String ipAddress, String userId, String govukSigninJourneyId)
             throws ConfigException, UnrecognisedCiException, CiRetrievalException {
         return configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)
                 ? gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
                         ciMitService.getContraIndicatorsVC(userId, govukSigninJourneyId, ipAddress),
-                        false)
+                        initialCiScoring)
                 : gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
                         ciMitService.getCIs(userId, govukSigninJourneyId, ipAddress));
     }

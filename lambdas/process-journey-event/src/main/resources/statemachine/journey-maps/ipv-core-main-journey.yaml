@@ -23,7 +23,7 @@ CRI_STATE:
 INITIAL_IPV_JOURNEY:
   events:
     next:
-      targetState: CI_SCORING
+      targetState: INITIAL_CI_SCORING
 
 F2F_START_PAGE:
   response:
@@ -35,7 +35,7 @@ F2F_START_PAGE:
     end:
       targetState: PYI_ESCAPE
 
-CI_SCORING:
+INITIAL_CI_SCORING:
   response:
     type: journey
     journeyStepId: /journey/ci-scoring
