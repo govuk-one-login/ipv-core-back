@@ -335,4 +335,9 @@ public class ConfigService {
         return Boolean.parseBoolean(
                 getSsmParameter(ConfigurationVariable.FEATURE_FLAGS, featureFlag.getName()));
     }
+
+    public boolean enabled(String featureFlagValue) {
+        return Boolean.parseBoolean(
+                getSsmParameter(ConfigurationVariable.FEATURE_FLAGS, featureFlagValue));
+    }
 }

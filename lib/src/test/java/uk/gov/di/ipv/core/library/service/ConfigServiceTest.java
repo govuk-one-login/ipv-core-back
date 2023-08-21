@@ -45,6 +45,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.ok;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -780,5 +781,19 @@ class ConfigServiceTest {
         environmentVariables.set("ENVIRONMENT", "test");
         when(ssmProvider.get("/test/core/cimit/config")).thenReturn("}");
         assertThrows(ConfigException.class, () -> configService.getCiMitConfig());
+    }
+
+    @Test
+    void enabledShowReturnTrueIfFeatureFlagEnabledGivenName() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/featureFlags/testFlagName")).thenReturn("true");
+        assertTrue(configService.enabled("testFlagName"));
+    }
+
+    @Test
+    void enabledShowReturnFalseIfFeatureFlagNotEnabledGivenName() {
+        environmentVariables.set("ENVIRONMENT", "test");
+        when(ssmProvider.get("/test/core/featureFlags/testFlagName")).thenReturn("false");
+        assertFalse(configService.enabled("testFlagName"));
     }
 }
