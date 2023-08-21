@@ -2055,7 +2055,7 @@ Resources:
                 - !FindInMap
                   - EnvironmentConfiguration
                   - !Ref AWS::AccountId
-                  - environment
+                  - cimitEnvironment
           CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:postMitigations-${env}"
             - cimit_account_id: !If
