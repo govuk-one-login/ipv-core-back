@@ -194,7 +194,11 @@ public class BuildUserIdentityHandler
                     "Error when fetching CIs from storage system.", e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),
-                    OAuth2Error.SERVER_ERROR.toJSONObject());
+                    OAuth2Error.SERVER_ERROR
+                            .appendDescription(
+                                    " - Error when fetching CIs from storage system. "
+                                            + e.getMessage())
+                            .toJSONObject());
         }
     }
 
