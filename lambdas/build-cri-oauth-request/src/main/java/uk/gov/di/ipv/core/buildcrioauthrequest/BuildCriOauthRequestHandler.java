@@ -26,7 +26,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.credentialissuer.CredentialIssuerConfigService;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
@@ -283,8 +282,7 @@ public class BuildCriOauthRequestHandler
         SharedClaimsResponse sharedClaimsResponse =
                 getSharedAttributes(ipvSessionItem, userId, currentVcStatuses, criId);
         EvidenceRequest evidenceRequest = null;
-        if (credentialIssuerConfigService.enabled(CoreFeatureFlag.EVIDENCE_REQUEST_ENABLED)
-                && criId.equals(F2F_CRI)) {
+        if (criId.equals(F2F_CRI)) {
             int strengthScore =
                     gpg45ProfileEvaluator.calculateF2FRequiredStrengthScore(
                             ipvSessionItem.getRequiredGpg45Scores());
