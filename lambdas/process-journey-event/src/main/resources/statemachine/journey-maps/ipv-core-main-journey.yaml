@@ -228,6 +228,16 @@ PYI_CRI_ESCAPE:
     end:
       targetState: END
 
+PYI_CRI_ESCAPE_NO_F2F:
+  response:
+    type: page
+    pageId: pyi-cri-escape-no-f2f
+  events:
+    next:
+      targetState: CRI_DCMAW_J5
+    end:
+      targetState: END
+
 ERROR:
   response:
     type: error
@@ -311,6 +321,9 @@ CRI_KBV_J2:
       checkFeatureFlag:
         criEscapeFlag:
           targetState: PYI_CRI_ESCAPE
+          checkIfDisabled:
+            f2f:
+              targetState: PYI_CRI_ESCAPE_NO_F2F
 
 # Driving licence journey (J3)
 CRI_DRIVING_LICENCE_J3:
@@ -354,6 +367,9 @@ CRI_KBV_J3:
       checkFeatureFlag:
         criEscapeFlag:
           targetState: PYI_CRI_ESCAPE
+          checkIfDisabled:
+            f2f:
+              targetState: PYI_CRI_ESCAPE_NO_F2F
     next:
       targetState: PYI_NO_MATCH
 
