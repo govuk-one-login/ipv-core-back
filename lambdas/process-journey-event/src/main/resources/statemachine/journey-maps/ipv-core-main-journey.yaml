@@ -216,6 +216,18 @@ PYI_ESCAPE:
     end:
       targetState: END
 
+PYI_CRI_ESCAPE:
+  response:
+    type: page
+    pageId: pyi-cri-escape
+  events:
+    dcmaw:
+      targetState: CRI_DCMAW_J5
+    f2f:
+      targetState: CRI_F2F_J5
+    end:
+      targetState: END
+
 ERROR:
   response:
     type: error
@@ -296,6 +308,9 @@ CRI_KBV_J2:
       targetState: IPV_SUCCESS_PAGE
     fail-with-no-ci:
       targetState: PYI_KBV_THIN_FILE
+      checkFeatureFlag:
+        criEscapeFlag:
+          targetState: PYI_CRI_ESCAPE
 
 # Driving licence journey (J3)
 CRI_DRIVING_LICENCE_J3:
@@ -336,6 +351,9 @@ CRI_KBV_J3:
       targetState: IPV_SUCCESS_PAGE
     fail-with-no-ci:
       targetState: PYI_KBV_THIN_FILE
+      checkFeatureFlag:
+        criEscapeFlag:
+          targetState: PYI_CRI_ESCAPE
     next:
       targetState: PYI_NO_MATCH
 
@@ -366,8 +384,45 @@ CRI_F2F_J4:
     access-denied:
       targetState: PYI_ANOTHER_WAY
 
-
 F2F_HANDOFF_PAGE_J4:
+  response:
+    type: page
+    pageId: page-face-to-face-handoff
+
+# CRI escape journey (J5)
+CRI_DCMAW_J5:
+  response:
+    type: cri
+    criId: dcmaw
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: POST_DCMAW_SUCCESS_PAGE_J5
+    not-found:
+      targetState: PYI_ANOTHER_WAY
+    fail-with-no-ci:
+      targetState: PYI_ANOTHER_WAY
+
+POST_DCMAW_SUCCESS_PAGE_J5:
+  response:
+    type: page
+    pageId: page-dcmaw-success
+  events:
+    next:
+      targetState: IPV_SUCCESS_PAGE
+
+CRI_F2F_J5:
+  response:
+    type: cri
+    criId: f2f
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: F2F_HANDOFF_PAGE_J5
+    access-denied:
+      targetState: PYI_ANOTHER_WAY
+
+F2F_HANDOFF_PAGE_J5:
   response:
     type: page
     pageId: page-face-to-face-handoff
