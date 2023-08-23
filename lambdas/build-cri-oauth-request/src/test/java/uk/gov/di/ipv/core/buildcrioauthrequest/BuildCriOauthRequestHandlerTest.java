@@ -64,7 +64,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.EVIDENCE_REQUEST_ENABLED;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
@@ -1090,7 +1089,6 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(configService.enabled(EVIDENCE_REQUEST_ENABLED)).thenReturn(true);
         when(mockGpg45ProfileEvaluator.calculateF2FRequiredStrengthScore(any())).thenReturn(3);
 
         JourneyRequest input =
