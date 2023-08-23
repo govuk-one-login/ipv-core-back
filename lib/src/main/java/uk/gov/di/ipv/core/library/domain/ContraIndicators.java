@@ -4,6 +4,7 @@ import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 
 import java.util.Comparator;
@@ -11,22 +12,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Getter
 @Builder(toBuilder = true)
 @ToString
-public class ContraIndications {
-    private final Map<String, ContraIndicator> contraIndicators;
+public class ContraIndicators {
+    private final Map<String, ContraIndicator> contraIndicatorsMap;
 
     private void validateContraIndicators(
             final Map<String, ContraIndicatorScore> contraIndicatorScores)
             throws UnrecognisedCiException {
         final Set<String> knownContraIndicators = contraIndicatorScores.keySet();
         final List<String> unknownContraIndicators =
-                contraIndicators.keySet().stream()
+                contraIndicatorsMap.keySet().stream()
                         .filter(ci -> !knownContraIndicators.contains(ci))
-                        .collect(Collectors.toList());
+                        .toList();
         if (!unknownContraIndicators.isEmpty()) {
             throw new UnrecognisedCiException("Unrecognised CI code received from CIMIT");
         }
@@ -34,7 +34,7 @@ public class ContraIndications {
 
     private Integer calculateDetectedScore(
             final Map<String, ContraIndicatorScore> contraIndicatorScores) {
-        return contraIndicators.keySet().stream()
+        return contraIndicatorsMap.keySet().stream()
                 .map(
                         contraIndicatorCode ->
                                 contraIndicatorScores.get(contraIndicatorCode).getDetectedScore())
@@ -43,10 +43,10 @@ public class ContraIndications {
 
     private Integer calculateCheckedScore(
             final Map<String, ContraIndicatorScore> contraIndicatorScores) {
-        return contraIndicators.values().stream()
+        return contraIndicatorsMap.values().stream()
                 .filter(
                         contraIndicator ->
-                                !CollectionUtils.isEmpty(contraIndicator.getMitigations()))
+                                !CollectionUtils.isEmpty(contraIndicator.getMitigation()))
                 .map(
                         contraIndicator ->
                                 contraIndicatorScores
@@ -65,7 +65,7 @@ public class ContraIndications {
     }
 
     public Optional<ContraIndicator> getLatestContraIndicator() {
-        return contraIndicators.values().stream()
+        return contraIndicatorsMap.values().stream()
                 .max(Comparator.comparing(ContraIndicator::getIssuanceDate));
     }
 }

@@ -8,10 +8,10 @@ import com.nimbusds.jwt.SignedJWT;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
-import uk.gov.di.ipv.core.library.domain.ContraIndications;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorMitigation;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
+import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CheckDetail;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
@@ -58,16 +58,16 @@ public class Gpg45ProfileEvaluator {
     }
 
     public Optional<JourneyResponse> getJourneyResponseForStoredContraIndicators(
-            ContraIndications contraIndications, boolean separateSession)
+            ContraIndicators contraIndicators, boolean separateSession)
             throws ConfigException, UnrecognisedCiException {
         LOGGER.info(
                 new StringMapMessage()
                         .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Retrieved user's CI items.")
                         .with(
                                 LOG_NO_OF_CI_ITEMS.getFieldName(),
-                                contraIndications.getContraIndicators().size()));
+                                contraIndicators.getContraIndicatorsMap().size()));
         final int ciScore =
-                contraIndications.getContraIndicatorScore(
+                contraIndicators.getContraIndicatorScore(
                         configService.getContraIndicatorScoresMap(),
                         configService.enabled(MITIGATION_ENABLED));
         LOGGER.info(
@@ -80,7 +80,7 @@ public class Gpg45ProfileEvaluator {
         }
 
         final String latestContraIndicatorCode =
-                contraIndications.getLatestContraIndicator().get().getCode();
+                contraIndicators.getLatestContraIndicator().get().getCode();
         Map<String, ContraIndicatorMitigation> ciMitConfig = configService.getCiMitConfig();
         if (ciMitConfig.containsKey(latestContraIndicatorCode)) {
             final ContraIndicatorMitigation contraIndicatorMitigation =

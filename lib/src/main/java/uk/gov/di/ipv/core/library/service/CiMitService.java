@@ -17,21 +17,16 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
-import uk.gov.di.ipv.core.library.domain.ContraIndications;
-import uk.gov.di.ipv.core.library.domain.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
+import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.GetCiRequest;
 import uk.gov.di.ipv.core.library.domain.GetCiResponse;
-import uk.gov.di.ipv.core.library.domain.MitigatingCredential;
-import uk.gov.di.ipv.core.library.domain.Mitigation;
 import uk.gov.di.ipv.core.library.domain.PostCiMitigationRequest;
 import uk.gov.di.ipv.core.library.domain.PutCiRequest;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
+import uk.gov.di.ipv.core.library.domain.cimitvc.EvidenceItem;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorCredentialDto;
-import uk.gov.di.ipv.core.library.dto.ContraIndicatorDto;
-import uk.gov.di.ipv.core.library.dto.ContraIndicatorEvidenceDto;
-import uk.gov.di.ipv.core.library.dto.MitigationCredentialDto;
-import uk.gov.di.ipv.core.library.dto.MitigationDto;
 import uk.gov.di.ipv.core.library.exceptions.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
@@ -41,7 +36,6 @@ import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
-import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -146,14 +140,13 @@ public class CiMitService {
         return response.getContraIndicators();
     }
 
-    public ContraIndications getContraIndicatorsVC(
+    public ContraIndicators getContraIndicatorsVC(
             String userId, String govukSigninJourneyId, String ipAddress)
             throws CiRetrievalException {
         SignedJWT ciSignedJWT = getContraIndicatorsVCJwt(userId, govukSigninJourneyId, ipAddress);
-        ContraIndicatorEvidenceDto contraIndicatorEvidence =
-                parseContraIndicatorEvidence(ciSignedJWT);
+        EvidenceItem contraIndicatorEvidence = parseContraIndicatorEvidence(ciSignedJWT);
 
-        return mapToContraIndications(contraIndicatorEvidence);
+        return mapToContraIndicators(contraIndicatorEvidence);
     }
 
     public SignedJWT getContraIndicatorsVCJwt(
@@ -243,7 +236,7 @@ public class CiMitService {
         return contraIndicatorsJwt;
     }
 
-    private ContraIndicatorEvidenceDto parseContraIndicatorEvidence(SignedJWT signedJWT)
+    private EvidenceItem parseContraIndicatorEvidence(SignedJWT signedJWT)
             throws CiRetrievalException {
         JSONObject vcClaim;
         try {
@@ -271,68 +264,25 @@ public class CiMitService {
             throw new CiRetrievalException(message);
         }
 
-        List<ContraIndicatorEvidenceDto> contraIndicatorEvidenceDtos =
+        List<EvidenceItem> evidenceItems =
                 gson.fromJson(
                         evidenceArray.toJSONString(),
-                        new TypeToken<List<ContraIndicatorEvidenceDto>>() {}.getType());
-        return contraIndicatorEvidenceDtos.get(0);
+                        new TypeToken<List<EvidenceItem>>() {}.getType());
+
+        return evidenceItems.get(0);
     }
 
-    private ContraIndications mapToContraIndications(
-            ContraIndicatorEvidenceDto contraIndicatorEvidenceDto) {
-        List<ContraIndicatorDto> contraIndicators =
-                contraIndicatorEvidenceDto.getContraIndicator() != null
-                        ? contraIndicatorEvidenceDto.getContraIndicator()
+    private ContraIndicators mapToContraIndicators(EvidenceItem evidenceItem) {
+        List<ContraIndicator> contraIndicators =
+                evidenceItem.getContraIndicator() != null
+                        ? evidenceItem.getContraIndicator()
                         : Collections.emptyList();
-        return ContraIndications.builder()
-                .contraIndicators(
+        return ContraIndicators.builder()
+                .contraIndicatorsMap(
                         contraIndicators.stream()
-                                .map(this::mapToContraIndicator)
                                 .collect(
                                         Collectors.toMap(
                                                 ContraIndicator::getCode, Function.identity())))
-                .build();
-    }
-
-    private ContraIndicator mapToContraIndicator(ContraIndicatorDto contraIndicatorDto) {
-        return ContraIndicator.builder()
-                .code(contraIndicatorDto.getCode())
-                .transactionIds(contraIndicatorDto.getTxn())
-                .documentId(contraIndicatorDto.getDocument())
-                .issuanceDate(Instant.parse(contraIndicatorDto.getIssuanceDate()))
-                .mitigations(mapToMitigations(contraIndicatorDto.getMitigation()))
-                .incompleteMitigations(
-                        mapToMitigations(contraIndicatorDto.getIncompleteMitigation()))
-                .build();
-    }
-
-    private List<Mitigation> mapToMitigations(List<MitigationDto> mitigationDtos) {
-        return mitigationDtos != null
-                ? mitigationDtos.stream()
-                        .map(
-                                mitigationDto ->
-                                        Mitigation.builder()
-                                                .code(mitigationDto.getCode())
-                                                .mitigatingCredentials(
-                                                        mitigationDto
-                                                                .getMitigatingCredential()
-                                                                .stream()
-                                                                .map(
-                                                                        this
-                                                                                ::mapToMitigatingCredential)
-                                                                .collect(Collectors.toList()))
-                                                .build())
-                        .collect(Collectors.toList())
-                : Collections.emptyList();
-    }
-
-    private MitigatingCredential mapToMitigatingCredential(
-            MitigationCredentialDto mitigationCredentialDto) {
-        return MitigatingCredential.builder()
-                .issuer(mitigationCredentialDto.getIssuer())
-                .id(mitigationCredentialDto.getId())
-                .validFrom(Instant.parse(mitigationCredentialDto.getValidFrom()))
-                .transactionId(mitigationCredentialDto.getTxn())
                 .build();
     }
 

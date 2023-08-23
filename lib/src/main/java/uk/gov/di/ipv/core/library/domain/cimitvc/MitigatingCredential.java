@@ -1,11 +1,9 @@
-package uk.gov.di.ipv.core.library.domain;
+package uk.gov.di.ipv.core.library.domain.cimitvc;
 
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-
-import java.time.Instant;
 
 @Getter
 @Builder
@@ -13,7 +11,7 @@ import java.time.Instant;
 @ToString
 public class MitigatingCredential {
     private final String issuer;
-    private final Instant validFrom;
-    private final String transactionId;
+    private final String validFrom;
+    private final String txn;
     private final String id;
 }
