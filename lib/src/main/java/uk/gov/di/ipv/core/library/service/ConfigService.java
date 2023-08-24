@@ -37,6 +37,7 @@ import java.util.Optional;
 
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.BEARER_TOKEN_TTL;
+import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CONFIG_SERVICE_CACHE_DURATION_MINUTES;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.ENVIRONMENT;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.IS_LOCAL;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.SIGNING_KEY_ID_PARAM;
@@ -95,14 +96,22 @@ public class ConfigService {
                                     SsmClient.builder()
                                             .httpClient(UrlConnectionHttpClient.create())
                                             .build())
-                            .defaultMaxAge(3, MINUTES);
+                            .defaultMaxAge(
+                                    Integer.parseInt(
+                                            getEnvironmentVariable(
+                                                    CONFIG_SERVICE_CACHE_DURATION_MINUTES)),
+                                    MINUTES);
 
             this.secretsProvider =
                     ParamManager.getSecretsProvider(
                                     SecretsManagerClient.builder()
                                             .httpClient(UrlConnectionHttpClient.create())
                                             .build())
-                            .defaultMaxAge(3, MINUTES);
+                            .defaultMaxAge(
+                                    Integer.parseInt(
+                                            getEnvironmentVariable(
+                                                    CONFIG_SERVICE_CACHE_DURATION_MINUTES)),
+                                    MINUTES);
         }
         setFeatureSet(featureSet);
     }
