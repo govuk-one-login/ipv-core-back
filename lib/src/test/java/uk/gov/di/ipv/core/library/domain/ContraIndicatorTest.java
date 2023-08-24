@@ -1,6 +1,8 @@
 package uk.gov.di.ipv.core.library.domain;
 
 import org.junit.jupiter.api.Test;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
+import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -11,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ContraIndicatorTest {
 
-    private static final Instant CURRENT_TIME = Instant.now();
+    private static final String CURRENT_TIME = Instant.now().toString();
 
     private static final String CODE = "CODE1";
     private static final String DOCUMENT_ID = "DOCID-123";
@@ -28,19 +30,19 @@ class ContraIndicatorTest {
             ContraIndicator.builder()
                     .code(CODE)
                     .issuanceDate(CURRENT_TIME)
-                    .documentId(DOCUMENT_ID)
-                    .transactionIds(TRANSACTIONS)
-                    .mitigations(MITIGATIONS)
-                    .incompleteMitigations(Collections.emptyList())
+                    .document(DOCUMENT_ID)
+                    .txn(TRANSACTIONS)
+                    .mitigation(MITIGATIONS)
+                    .incompleteMitigation(Collections.emptyList())
                     .build();
 
     @Test
     void checkGetterMethods() {
         assertEquals(CODE, CI.getCode());
         assertEquals(CURRENT_TIME, CI.getIssuanceDate());
-        assertEquals(DOCUMENT_ID, CI.getDocumentId());
-        assertEquals(TRANSACTIONS, CI.getTransactionIds());
-        assertEquals(MITIGATIONS, CI.getMitigations());
-        assertTrue(CI.getIncompleteMitigations().isEmpty());
+        assertEquals(DOCUMENT_ID, CI.getDocument());
+        assertEquals(TRANSACTIONS, CI.getTxn());
+        assertEquals(MITIGATIONS, CI.getMitigation());
+        assertTrue(CI.getIncompleteMitigation().isEmpty());
     }
 }

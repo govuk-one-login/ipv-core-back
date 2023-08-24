@@ -11,13 +11,13 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import uk.gov.di.ipv.core.library.domain.ContraIndications;
-import uk.gov.di.ipv.core.library.domain.ContraIndicator;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorMitigation;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
+import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.domain.Mitigation;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
+import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.dto.EvidenceDto;
 import uk.gov.di.ipv.core.library.dto.Gpg45ScoresDto;
@@ -503,10 +503,10 @@ class Gpg45ProfileEvaluatorTest {
             }
         }
 
-        private ContraIndications buildTestContraIndications(
+        private ContraIndicators buildTestContraIndications(
                 TestContraIndicator... testContraIndicators) {
-            return ContraIndications.builder()
-                    .contraIndicators(
+            return ContraIndicators.builder()
+                    .contraIndicatorsMap(
                             Arrays.stream(testContraIndicators)
                                     .collect(
                                             Collectors.toMap(
@@ -518,8 +518,8 @@ class Gpg45ProfileEvaluatorTest {
         private ContraIndicator buildTestContraIndicator(TestContraIndicator testContraIndicator) {
             return ContraIndicator.builder()
                     .code(testContraIndicator.code)
-                    .issuanceDate(Instant.now())
-                    .mitigations(buildTestMitigations(testContraIndicator.mitigations))
+                    .issuanceDate(Instant.now().toString())
+                    .mitigation(buildTestMitigations(testContraIndicator.mitigations))
                     .build();
         }
 
@@ -533,7 +533,7 @@ class Gpg45ProfileEvaluatorTest {
         @ValueSource(booleans = {false, true})
         void shouldNotReturnJourneyIfNoContraIndicators(boolean mitigationEnabled)
                 throws ConfigException, UnrecognisedCiException {
-            final ContraIndications contraIndications = buildTestContraIndications();
+            final ContraIndicators contraIndications = buildTestContraIndications();
             setupMockMitigationEnabledFeatureFlag(mitigationEnabled);
             setupMockContraIndicatorScoringConfig();
             final Optional<JourneyResponse> journeyResponse =
@@ -545,7 +545,7 @@ class Gpg45ProfileEvaluatorTest {
         @ValueSource(booleans = {false, true})
         void shouldNotReturnJourneyIfContraIndicatorsDoNotBreachThreshold(boolean mitigationEnabled)
                 throws ConfigException, UnrecognisedCiException {
-            final ContraIndications contraIndications =
+            final ContraIndicators contraIndications =
                     buildTestContraIndications(new TestContraIndicator(CI2));
             setupMockMitigationEnabledFeatureFlag(mitigationEnabled);
             setupMockContraIndicatorScoringConfig();
@@ -559,7 +559,7 @@ class Gpg45ProfileEvaluatorTest {
         void
                 shouldReturnPyiNoMatchJourneyIfContraIndicatorsBreachThresholdAndNoConfigForLatestContraIndicator(
                         boolean mitigationEnabled) throws ConfigException, UnrecognisedCiException {
-            final ContraIndications contraIndications =
+            final ContraIndicators contraIndications =
                     buildTestContraIndications(
                             new TestContraIndicator(CI3), new TestContraIndicator(CI1));
             setupMockMitigationEnabledFeatureFlag(mitigationEnabled);
@@ -575,7 +575,7 @@ class Gpg45ProfileEvaluatorTest {
         void
                 shouldReturnCustomSeparateSessionJourneyIfContraIndicatorsBreachThresholdAndConfigForLatestContraIndicator(
                         boolean mitigationEnabled) throws ConfigException, UnrecognisedCiException {
-            final ContraIndications contraIndications =
+            final ContraIndicators contraIndications =
                     buildTestContraIndications(
                             new TestContraIndicator(CI1), new TestContraIndicator(CI3));
             setupMockMitigationEnabledFeatureFlag(mitigationEnabled);
@@ -591,7 +591,7 @@ class Gpg45ProfileEvaluatorTest {
         void
                 shouldReturnCustomSameSessionJourneyIfContraIndicatorsBreachThresholdAndConfigForLatestContraIndicator(
                         boolean mitigationEnabled) throws ConfigException, UnrecognisedCiException {
-            final ContraIndications contraIndications =
+            final ContraIndicators contraIndications =
                     buildTestContraIndications(
                             new TestContraIndicator(CI1), new TestContraIndicator(CI3));
             setupMockMitigationEnabledFeatureFlag(mitigationEnabled);
@@ -605,7 +605,7 @@ class Gpg45ProfileEvaluatorTest {
         @Test
         void shouldNotReturnJourneyIfMitigationEnabledAndSufficientMitigation()
                 throws ConfigException, UnrecognisedCiException {
-            final ContraIndications contraIndications =
+            final ContraIndicators contraIndications =
                     buildTestContraIndications(
                             new TestContraIndicator(CI1),
                             new TestContraIndicator(CI3, List.of("mitigated")));

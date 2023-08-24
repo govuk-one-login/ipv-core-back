@@ -17,8 +17,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.ContraIndications;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
+import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorCredentialDto;
 import uk.gov.di.ipv.core.library.exceptions.CiPostMitigationsException;
@@ -248,7 +248,7 @@ class CiMitServiceTest {
                                 .withStatusCode(200)
                                 .withPayload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC)));
 
-        ContraIndications contraIndications =
+        ContraIndicators contraIndications =
                 ciMitService.getContraIndicatorsVC(
                         TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
 
@@ -268,7 +268,7 @@ class CiMitServiceTest {
                 new String(request.getPayload().array(), StandardCharsets.UTF_8));
 
         assertEquals(
-                "ContraIndications(contraIndicators={D01=ContraIndicator(code=D01, issuanceDate=2022-09-20T15:54:50Z, documentId=passport/GBR/824159121, transactionIds=[abcdef], mitigations=[Mitigation(code=M01, mitigatingCredentials=[MitigatingCredential(issuer=https://credential-issuer.example/, validFrom=2022-09-21T15:54:50Z, transactionId=ghij, id=urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6)])], incompleteMitigations=[Mitigation(code=M02, mitigatingCredentials=[MitigatingCredential(issuer=https://another-credential-issuer.example/, validFrom=2022-09-22T15:54:50Z, transactionId=cdeef, id=urn:uuid:f5c9ff40-1dcd-4a8b-bf92-9456047c132f)])])})",
+                "ContraIndicators(contraIndicatorsMap={D01=ContraIndicator(code=D01, issuanceDate=2022-09-20T15:54:50.000Z, document=passport/GBR/824159121, txn=[abcdef], mitigation=[Mitigation(code=M01, mitigatingCredential=[MitigatingCredential(issuer=https://credential-issuer.example/, validFrom=2022-09-21T15:54:50.000Z, txn=ghij, id=urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6)])], incompleteMitigation=[Mitigation(code=M02, mitigatingCredential=[MitigatingCredential(issuer=https://another-credential-issuer.example/, validFrom=2022-09-22T15:54:50.000Z, txn=cdeef, id=urn:uuid:f5c9ff40-1dcd-4a8b-bf92-9456047c132f)])])})",
                 contraIndications.toString());
     }
 
@@ -384,7 +384,7 @@ class CiMitServiceTest {
                                         makeCiMitVCPayload(
                                                 SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE)));
 
-        ContraIndications contraIndications =
+        ContraIndicators contraIndicators =
                 ciMitService.getContraIndicatorsVC(
                         TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
 
@@ -403,7 +403,7 @@ class CiMitServiceTest {
                         GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, TEST_USER_ID),
                 new String(request.getPayload().array(), StandardCharsets.UTF_8));
 
-        assertEquals("ContraIndications(contraIndicators={})", contraIndications.toString());
+        assertEquals("ContraIndicators(contraIndicatorsMap={})", contraIndicators.toString());
     }
 
     @Test

@@ -2,6 +2,8 @@ package uk.gov.di.ipv.core.library.domain;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
+import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 
 import java.time.Instant;
@@ -13,8 +15,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ContraIndicationsTest {
-    private ContraIndications contraIndications;
+class ContraIndicatorsTest {
+    private ContraIndicators contraIndicators;
     private static final String TEST_CI1 = "CI1";
     private static final String TEST_CI2 = "CI2";
     private static final String TEST_CI3 = "CI3";
@@ -32,19 +34,19 @@ class ContraIndicationsTest {
 
     @BeforeEach
     void setup() {
-        contraIndications = ContraIndications.builder().contraIndicators(Map.of()).build();
+        contraIndicators = ContraIndicators.builder().contraIndicatorsMap(Map.of()).build();
     }
 
     @Test
     void shouldReturnEmptyOptionalWhenNoContraIndicatorExistInContraIndications() {
-        assertFalse(contraIndications.getLatestContraIndicator().isPresent());
+        assertFalse(contraIndicators.getLatestContraIndicator().isPresent());
     }
 
     @Test
     void shouldReturnZeroScoreWhenNoContraIndicatorExistInContraIndications()
             throws UnrecognisedCiException {
         assertEquals(
-                0, contraIndications.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, false));
+                0, contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, false));
     }
 
     @Test
@@ -54,7 +56,7 @@ class ContraIndicationsTest {
         addContraIndicators(
                 TEST_CI2, BASE_TIME.minusSeconds(2), List.of(Mitigation.builder().build()));
         assertEquals(
-                7, contraIndications.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, false));
+                7, contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, false));
     }
 
     @Test
@@ -63,8 +65,7 @@ class ContraIndicationsTest {
                 TEST_CI1, BASE_TIME.minusSeconds(1), List.of(Mitigation.builder().build()));
         addContraIndicators(
                 TEST_CI2, BASE_TIME.minusSeconds(2), List.of(Mitigation.builder().build()));
-        assertEquals(
-                1, contraIndications.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, true));
+        assertEquals(1, contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, true));
     }
 
     @Test
@@ -74,8 +75,7 @@ class ContraIndicationsTest {
                 TEST_CI1, BASE_TIME.minusSeconds(1), List.of(Mitigation.builder().build()));
         addContraIndicators(TEST_CI2, BASE_TIME.minusSeconds(2), Collections.emptyList());
         addContraIndicators(TEST_CI3, BASE_TIME.minusSeconds(4), null);
-        assertEquals(
-                6, contraIndications.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, true));
+        assertEquals(6, contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, true));
     }
 
     @Test
@@ -84,7 +84,7 @@ class ContraIndicationsTest {
         addContraIndicators(TEST_CI2, BASE_TIME.minusSeconds(2), Collections.emptyList());
         addContraIndicators(TEST_CI3, BASE_TIME.plusSeconds(3), null);
         Optional<ContraIndicator> latestContraIndicator =
-                contraIndications.getLatestContraIndicator();
+                contraIndicators.getLatestContraIndicator();
         assertTrue(latestContraIndicator.isPresent());
         assertEquals(TEST_CI3, latestContraIndicator.get().getCode());
     }
@@ -95,20 +95,20 @@ class ContraIndicationsTest {
         addContraIndicators(TEST_CI2, BASE_TIME, null);
         addContraIndicators(TEST_CI3, BASE_TIME.minusSeconds(3), null);
         Optional<ContraIndicator> latestContraIndicator =
-                contraIndications.getLatestContraIndicator();
+                contraIndicators.getLatestContraIndicator();
         assertTrue(latestContraIndicator.isPresent());
         assertEquals(TEST_CI2, latestContraIndicator.get().getCode());
     }
 
     @Test
-    void shouldRaiseExceptionIfScoringUnrecognisedContraIndicator() throws UnrecognisedCiException {
+    void shouldRaiseExceptionIfScoringUnrecognisedContraIndicator() {
         addContraIndicators(
                 TEST_CI1, BASE_TIME.minusSeconds(1), List.of(Mitigation.builder().build()));
         addContraIndicators(
                 TEST_CI4_UNKNOWN, BASE_TIME.minusSeconds(2), List.of(Mitigation.builder().build()));
         assertThrows(
                 UnrecognisedCiException.class,
-                () -> contraIndications.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, true));
+                () -> contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, true));
     }
 
     private void addContraIndicators(
@@ -116,13 +116,13 @@ class ContraIndicationsTest {
         ContraIndicator contraIndicator =
                 ContraIndicator.builder()
                         .code(code)
-                        .issuanceDate(issuanceDate)
-                        .mitigations(mitigations)
+                        .issuanceDate(issuanceDate.toString())
+                        .mitigation(mitigations)
                         .build();
         Map<String, ContraIndicator> updatedContraIndicators =
-                new HashMap<>(contraIndications.getContraIndicators());
+                new HashMap<>(contraIndicators.getContraIndicatorsMap());
         updatedContraIndicators.put(code, contraIndicator);
-        contraIndications =
-                contraIndications.toBuilder().contraIndicators(updatedContraIndicators).build();
+        contraIndicators =
+                contraIndicators.toBuilder().contraIndicatorsMap(updatedContraIndicators).build();
     }
 }

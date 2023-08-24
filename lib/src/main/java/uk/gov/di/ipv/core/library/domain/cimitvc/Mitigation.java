@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.domain;
+package uk.gov.di.ipv.core.library.domain.cimitvc;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -13,5 +13,5 @@ import java.util.List;
 @ToString
 public class Mitigation {
     private final String code;
-    private final List<MitigatingCredential> mitigatingCredentials;
+    private final List<MitigatingCredential> mitigatingCredential;
 }
