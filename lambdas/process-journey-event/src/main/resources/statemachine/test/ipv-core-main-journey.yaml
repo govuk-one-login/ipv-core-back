@@ -25,6 +25,9 @@ JOURNEY_STATE:
   events:
     eventOne:
       targetState: CRI_STATE
+      checkFeatureFlag:
+        aFeatureFlagName:
+          targetState: ERROR_STATE
 
 CRI_STATE:
   response:

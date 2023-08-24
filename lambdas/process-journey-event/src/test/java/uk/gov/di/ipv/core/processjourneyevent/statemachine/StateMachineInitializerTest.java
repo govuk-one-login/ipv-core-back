@@ -76,6 +76,13 @@ class StateMachineInitializerTest {
         assertEquals(
                 criState,
                 ((BasicEvent) journeyState.getEvents().get("eventOne")).getTargetStateObj());
+        assertEquals(
+                errorState,
+                ((BasicEvent)
+                                ((BasicEvent) journeyState.getEvents().get("eventOne"))
+                                        .getCheckFeatureFlag()
+                                        .get("aFeatureFlagName"))
+                        .getTargetStateObj());
 
         // cri state assertions
         assertEquals(
