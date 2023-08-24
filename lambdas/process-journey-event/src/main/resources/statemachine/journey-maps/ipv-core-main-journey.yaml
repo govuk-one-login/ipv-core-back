@@ -55,7 +55,7 @@ INITIAL_CI_SCORING:
     error:
       targetState: ERROR
     mitigation01:
-      targetState: MITIGATION_01
+      targetState: MITIGATION_01_IDENTITY_START_PAGE
 
 CHECK_EXISTING_IDENTITY:
   response:
@@ -444,13 +444,6 @@ F2F_HANDOFF_PAGE_J5:
     pageId: page-face-to-face-handoff
 
 # Mitigation journey (01)
-MITIGATION_01:
-  response:
-    type: journey
-    journeyStepId: /journey/reset-identity
-  events:
-    next:
-      targetState: MITIGATION_01_IDENTITY_START_PAGE
 
 MITIGATION_01_IDENTITY_START_PAGE:
   response:
@@ -476,4 +469,3 @@ MITIGATION_01_CRI_DCMAW:
       targetState: PYI_ANOTHER_WAY
     fail-with-no-ci:
       targetState: PYI_ANOTHER_WAY
-

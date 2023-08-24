@@ -50,6 +50,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 
 import java.net.URISyntaxException;
 import java.text.ParseException;
@@ -58,6 +59,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
@@ -169,7 +171,8 @@ public class BuildCriOauthRequestHandler
 
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
-            List<VcStatusDto> currentVcStatuses = ipvSessionItem.getCurrentVcStatuses();
+            List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
+            List<VcStatusDto> currentVcStatuses = generateVcSuccessStatuses(credentials);
 
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
@@ -449,5 +452,24 @@ public class BuildCriOauthRequestHandler
                                             "CRI issuer '%s' not found in current VC statuses: '%s'",
                                             credentialIss, stringJoiner));
                         });
+    }
+
+    @Tracing
+    private List<VcStatusDto> generateVcSuccessStatuses(List<String> credentials)
+            throws ParseException {
+        List<VcStatusDto> vcStatuses = new ArrayList<>();
+        for (String credential : credentials) {
+            SignedJWT signedJWT = SignedJWT.parse(credential);
+            List<CredentialIssuerConfig> excludedCriConfigs =
+                    List.of(
+                            credentialIssuerConfigService.getCredentialIssuerActiveConnectionConfig(
+                                    ADDRESS_CRI),
+                            credentialIssuerConfigService.getCredentialIssuerActiveConnectionConfig(
+                                    CLAIMED_IDENTITY_CRI));
+            boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, excludedCriConfigs);
+
+            vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
+        }
+        return vcStatuses;
     }
 }
