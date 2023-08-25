@@ -190,11 +190,13 @@ public class BuildUserIdentityHandler
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     e.getResponseCode(), e.getErrorBody());
         } catch (CiRetrievalException e) {
-            LogHelper.logErrorMessage(
-                    "Error when fetching CIs from storage system.", e.getMessage());
+            var errorHeader = "Error when fetching CIs from storage system.";
+            LogHelper.logErrorMessage(errorHeader, e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),
-                    OAuth2Error.SERVER_ERROR.toJSONObject());
+                    OAuth2Error.SERVER_ERROR
+                            .appendDescription(" - " + errorHeader + " " + e.getMessage())
+                            .toJSONObject());
         }
     }
 

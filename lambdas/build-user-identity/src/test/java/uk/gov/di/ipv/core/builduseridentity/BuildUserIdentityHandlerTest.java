@@ -354,15 +354,16 @@ class BuildUserIdentityHandlerTest {
         when(mockConfigService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(true);
         when(mockConfigService.enabled(BUNDLE_CIMIT_VC)).thenReturn(true);
         when(mockCiMitService.getContraIndicatorsVCJwt(any(), any(), any()))
-                .thenThrow(
-                        new CiRetrievalException("Error when fetching CIs from storage system."));
+                .thenThrow(new CiRetrievalException("Lambda execution failed"));
 
         APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
         responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(500, response.getStatusCode());
         assertEquals("server_error", responseBody.get("error"));
-        assertEquals("Unexpected server error", responseBody.get("error_description"));
+        assertEquals(
+                "Unexpected server error - Error when fetching CIs from storage system. Lambda execution failed",
+                responseBody.get("error_description"));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
         verify(mockCiMitService, times(1)).getContraIndicatorsVCJwt(any(), any(), any());
     }
