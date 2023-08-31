@@ -492,21 +492,7 @@ MITIGATION_02:
     next:
       targetState: MITIGATION_02_CRI_DCMAW
     end:
-      targetState: MITIGATION_02_CRI_F2F
-
-MITIGATION_02_CRI_F2F:
-  response:
-    type: cri
-    criId: f2f
-  parent: CRI_STATE
-  events:
-    next:
-      targetState: F2F_HANDOFF_PAGE_J5
-    access-denied:
       targetState: PYI_ANOTHER_WAY
-    temporarily-unavailable:
-      targetState: PYI_ANOTHER_WAY
-
 
 MITIGATION_02_CRI_DCMAW:
   response:
