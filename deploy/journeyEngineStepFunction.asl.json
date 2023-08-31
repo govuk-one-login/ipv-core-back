@@ -32,11 +32,6 @@
         },
         {
           "Variable": "$.journey",
-          "StringMatches": "/journey/evaluate-gpg45-scores",
-          "Next": "EvaluateGpg45ScoresFunction"
-        },
-        {
-          "Variable": "$.journey",
           "StringMatches": "/journey/cri/build-oauth-request/*",
           "Next": "BuildCriOauthRequestLambda"
         },
@@ -68,18 +63,6 @@
     "ResetIdentityLambda": {
       "Type": "Task",
       "Resource": "${ResetIdentityFunctionArn}",
-      "Parameters": {
-        "journey.$": "$.journey",
-        "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
-        "ipAddress.$": "$$.Execution.Input.ipAddress",
-        "clientOAuthSessionId.$": "$$.Execution.Input.clientOAuthSessionId",
-        "featureSet.$": "$$.Execution.Input.featureSet"
-      },
-      "Next": "ProcessNextJourney"
-    },
-    "EvaluateGpg45ScoresFunction": {
-      "Type": "Task",
-      "Resource": "${EvaluateGpg45ScoresFunctionArn}",
       "Parameters": {
         "journey.$": "$.journey",
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
