@@ -10,7 +10,8 @@ import java.util.Map;
     @JsonSubTypes.Type(value = JourneyResponse.class, name = "journey"),
     @JsonSubTypes.Type(value = PageStepResponse.class, name = "page"),
     @JsonSubTypes.Type(value = ErrorStepResponse.class, name = "error"),
-    @JsonSubTypes.Type(value = CriStepResponse.class, name = "cri")
+    @JsonSubTypes.Type(value = CriStepResponse.class, name = "cri"),
+    @JsonSubTypes.Type(value = ProcessStepResponse.class, name = "process")
 })
 public interface JourneyStepResponse {
     Map<String, Object> value();
