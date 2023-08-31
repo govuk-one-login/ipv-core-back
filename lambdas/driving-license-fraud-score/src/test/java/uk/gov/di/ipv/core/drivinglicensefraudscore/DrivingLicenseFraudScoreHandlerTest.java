@@ -32,7 +32,8 @@ class DrivingLicenseFraudScoreHandlerTest {
 
     @Test
     void handlerShouldReturnEmptyMap() {
-        Map<String, Object> journeyResponse = drivingLicenseFraudScoreHandler.handleRequest(event, context);
+        Map<String, Object> journeyResponse =
+                drivingLicenseFraudScoreHandler.handleRequest(event, context);
         assertEquals(Collections.emptyMap(), journeyResponse);
     }
 }
