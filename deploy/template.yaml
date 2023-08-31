@@ -1367,7 +1367,6 @@ Resources:
         IPVProcessJourneyEventFunctionArn: !GetAtt IPVProcessJourneyEventFunction.Arn
         CheckExistingIdentityFunctionArn: !GetAtt CheckExistingIdentityFunction.Arn
         ResetIdentityFunctionArn: !GetAtt ResetIdentityFunction.Arn
-        EvaluateGpg45ScoresFunctionArn: !GetAtt EvaluateGpg45ScoresFunction.Arn
         BuildCriOauthRequestFunctionArn: !GetAtt BuildCriOauthRequestFunction.Arn
         BuildClientOauthResponseFunctionArn: !GetAtt BuildClientOauthResponseFunction.Arn
         CiScoringFunctionArn: !GetAtt CiScoringFunction.Arn
@@ -1392,8 +1391,6 @@ Resources:
             FunctionName: !Ref CheckExistingIdentityFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref ResetIdentityFunction
-        - LambdaInvokePolicy:
-            FunctionName: !Ref EvaluateGpg45ScoresFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref BuildCriOauthRequestFunction
         - LambdaInvokePolicy:
