@@ -2375,7 +2375,7 @@ Resources:
       Handler: uk.gov.di.ipv.core.drivinglicensefraudscore.DrivingLicenseFraudScoreHandler::handleRequest
       Runtime: java17
       PackageType: Zip
-      CodeUri: ../lambdas/ci-scoring
+      CodeUri: ../lambdas/driving-license-fraud-score
       Architectures:
         - arm64
       MemorySize: 2048
@@ -2384,7 +2384,7 @@ Resources:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub ci-scoring-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub driving-license-fraud-score-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
       VpcConfig:
         SubnetIds:
@@ -2425,7 +2425,7 @@ Resources:
     Type: AWS::Logs::LogGroup
     Properties:
       RetentionInDays: 14
-      LogGroupName: !Sub "/aws/lambda/ci-scoring-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/driving-license-fraud-score-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   DrivingLicenseFraudScoreFunctionLogGroupSubscriptionFilter:
