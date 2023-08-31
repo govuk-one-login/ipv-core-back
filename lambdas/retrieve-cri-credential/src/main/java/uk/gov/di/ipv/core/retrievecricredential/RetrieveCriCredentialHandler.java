@@ -26,7 +26,6 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -51,7 +50,6 @@ import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCrede
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -303,7 +301,6 @@ public class RetrieveCriCredentialHandler
             }
 
             verifiableCredentialService.persistUserCredentials(vc, credentialIssuerId, userId);
-            updateSuccessfulVcStatuses(ipvSessionItem, vc);
 
             issuer = vc.getJWTClaimsSet().getIssuer();
         }
@@ -364,37 +361,4 @@ public class RetrieveCriCredentialHandler
                 new VisitedCredentialIssuerDetailsDto(criId, issuer, returnedWithVc, oauthError));
         ipvSessionService.updateIpvSession(ipvSessionItem);
     }
-
-    @Tracing
-    List<VcStatusDto> getVcStatuses(IpvSessionItem ipvSessionItem) {
-        List<VcStatusDto> currentVcStatusDtos = ipvSessionItem.getCurrentVcStatuses();
-
-        if (currentVcStatusDtos == null) {
-            currentVcStatusDtos = new ArrayList<>();
-        }
-        return currentVcStatusDtos;
-    }
-
-    @Tracing
-    private void updateSuccessfulVcStatuses(
-            IpvSessionItem ipvSessionItem, SignedJWT credential) throws ParseException {
-        List<VcStatusDto> currentVcStatuses = getVcStatuses(ipvSessionItem);
-        currentVcStatuses.add(generateVcSuccessStatus(credential));
-        ipvSessionItem.setCurrentVcStatuses(currentVcStatuses);
-        // update the session happens in updateVisitedCredentials
-//        ipvSessionService.updateIpvSession(ipvSessionItem);
-    }
-
-    @Tracing
-    private VcStatusDto generateVcSuccessStatus(SignedJWT credential)
-            throws ParseException {
-        List<CredentialIssuerConfig> ignoredCriConfigurations =
-                List.of(
-                        configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI),
-                        configService.getCredentialIssuerActiveConnectionConfig(
-                                CLAIMED_IDENTITY_CRI));
-            return new VcStatusDto(credential.getJWTClaimsSet().getIssuer(),
-                    VcHelper.isSuccessfulVcIgnoringCi(credential, ignoredCriConfigurations));
-    }
-
 }
