@@ -86,8 +86,6 @@ public class RetrieveCriCredentialHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
     private final CriResponseService criResponseService;
 
-    private String componentId;
-
     public RetrieveCriCredentialHandler(
             VerifiableCredentialService verifiableCredentialService,
             IpvSessionService ipvSessionService,
@@ -126,7 +124,7 @@ public class RetrieveCriCredentialHandler
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(Map<String, String> input, Context context) {
-        LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs(configService);
 
         String ipAddress = StepFunctionHelpers.getIpAddress(input);
         String featureSet = StepFunctionHelpers.getFeatureSet(input);
@@ -157,8 +155,6 @@ public class RetrieveCriCredentialHandler
 
             LogHelper.attachGovukSigninJourneyIdToLogs(
                     clientOAuthSessionItem.getGovukSigninJourneyId());
-
-            this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
 
             CredentialIssuerConfig credentialIssuerConfig =
                     configService.getCredentialIssuerActiveConnectionConfig(credentialIssuerId);
@@ -322,7 +318,7 @@ public class RetrieveCriCredentialHandler
         AuditEvent auditEvent =
                 new AuditEvent(
                         AuditEventTypes.IPV_VC_RECEIVED,
-                        componentId,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         getAuditExtensions(verifiableCredential, isSuccessful));
         auditService.sendAuditEvent(auditEvent);

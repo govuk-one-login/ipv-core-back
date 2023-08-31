@@ -78,7 +78,7 @@ public class ProcessJourneyEventHandler
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(Map<String, String> input, Context context) {
-        LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs(configService);
 
         try {
             String ipvSessionId = StepFunctionHelpers.getIpvSessionId(input);

@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.exceptions.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.exceptions.CiPutException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.CiMitService;
@@ -62,7 +63,6 @@ public class ProcessAsyncCriCredentialHandler
     private final CiMitService ciMitService;
 
     private final CriResponseService criResponseService;
-    private final String componentId;
 
     public ProcessAsyncCriCredentialHandler(
             ConfigService configService,
@@ -75,7 +75,6 @@ public class ProcessAsyncCriCredentialHandler
         this.verifiableCredentialJwtValidator = verifiableCredentialJwtValidator;
         this.verifiableCredentialService = verifiableCredentialService;
         this.auditService = auditService;
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
         this.ciMitService = ciMitService;
         this.criResponseService = criResponseService;
     }
@@ -88,13 +87,13 @@ public class ProcessAsyncCriCredentialHandler
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.ciMitService = new CiMitService(configService);
         this.criResponseService = new CriResponseService(configService);
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @Override
     @Tracing
     @Logging(clearState = true)
     public SQSBatchResponse handleRequest(SQSEvent event, Context context) {
+        LogHelper.attachComponentIdToLogs(configService);
         List<SQSBatchResponse.BatchItemFailure> failedRecords = new ArrayList<>();
 
         for (SQSMessage message : event.getRecords()) {
@@ -250,7 +249,7 @@ public class ProcessAsyncCriCredentialHandler
         AuditEvent auditEvent =
                 new AuditEvent(
                         AuditEventTypes.IPV_F2F_CRI_VC_RECEIVED,
-                        componentId,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         getExtensionsForAudit(verifiableCredential, isSuccessful));
         auditService.sendAuditEvent(auditEvent);
@@ -262,7 +261,7 @@ public class ProcessAsyncCriCredentialHandler
         AuditEvent auditEvent =
                 new AuditEvent(
                         AuditEventTypes.IPV_F2F_CRI_VC_CONSUMED,
-                        componentId,
+                        configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                         auditEventUser,
                         null,
                         getVcNamePartsForAudit(verifiableCredential));

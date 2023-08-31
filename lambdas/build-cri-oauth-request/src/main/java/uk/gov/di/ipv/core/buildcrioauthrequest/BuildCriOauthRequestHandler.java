@@ -89,7 +89,6 @@ public class BuildCriOauthRequestHandler
     private final IpvSessionService ipvSessionService;
     private final CriOAuthSessionService criOAuthSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
-    private final String componentId;
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
 
     public BuildCriOauthRequestHandler(
@@ -109,8 +108,6 @@ public class BuildCriOauthRequestHandler
         this.ipvSessionService = ipvSessionService;
         this.criOAuthSessionService = criOAuthSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
-        this.componentId =
-                credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
     }
 
@@ -118,15 +115,13 @@ public class BuildCriOauthRequestHandler
     public BuildCriOauthRequestHandler() {
         this.credentialIssuerConfigService = new CredentialIssuerConfigService();
         this.userIdentityService = new UserIdentityService(credentialIssuerConfigService);
-        this.signer = new KmsEs256Signer(credentialIssuerConfigService.getSigningKeyId());
+        this.signer = new KmsEs256Signer();
         this.auditService =
                 new AuditService(AuditService.getDefaultSqsClient(), credentialIssuerConfigService);
         this.ipvSessionService = new IpvSessionService(credentialIssuerConfigService);
         this.criOAuthSessionService = new CriOAuthSessionService(credentialIssuerConfigService);
         this.clientOAuthSessionDetailsService =
                 new ClientOAuthSessionDetailsService(credentialIssuerConfigService);
-        this.componentId =
-                credentialIssuerConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(new ConfigService());
     }
 
@@ -134,7 +129,10 @@ public class BuildCriOauthRequestHandler
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(JourneyRequest input, Context context) {
-        LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs(credentialIssuerConfigService);
+        if (signer instanceof KmsEs256Signer kmsEs256Signer) {
+            kmsEs256Signer.setKeyId(credentialIssuerConfigService.getSigningKeyId());
+        }
         try {
             String ipvSessionId = getIpvSessionId(input);
             String ipAddress = getIpAddress(input);
@@ -194,7 +192,10 @@ public class BuildCriOauthRequestHandler
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
             auditService.sendAuditEvent(
                     new AuditEvent(
-                            AuditEventTypes.IPV_REDIRECT_TO_CRI, componentId, auditEventUser));
+                            AuditEventTypes.IPV_REDIRECT_TO_CRI,
+                            credentialIssuerConfigService.getSsmParameter(
+                                    ConfigurationVariable.COMPONENT_ID),
+                            auditEventUser));
 
             var message =
                     new StringMapMessage()

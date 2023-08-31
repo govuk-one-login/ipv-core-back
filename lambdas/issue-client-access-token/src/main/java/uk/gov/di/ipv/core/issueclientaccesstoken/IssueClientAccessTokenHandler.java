@@ -82,7 +82,7 @@ public class IssueClientAccessTokenHandler
     @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs(configService);
         try {
             String featureSet = RequestHelper.getFeatureSet(input);
             configService.setFeatureSet(featureSet);
