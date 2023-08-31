@@ -52,6 +52,7 @@ class StateMachineInitializerTest {
         BasicState journeyState = (BasicState) journeyMap.get("JOURNEY_STATE");
         BasicState criState = (BasicState) journeyMap.get("CRI_STATE");
         BasicState errorState = (BasicState) journeyMap.get("ERROR_STATE");
+        BasicState processState = (BasicState) journeyMap.get("PROCESS_STATE");
         NestedJourneyInvokeState nestedJourneyInvokeState =
                 (NestedJourneyInvokeState) journeyMap.get("NESTED_JOURNEY_INVOKE_STATE");
 
@@ -101,6 +102,20 @@ class StateMachineInitializerTest {
                 nestedJourneyInvokeState,
                 ((BasicEvent) errorState.getEvents().get("enterNestedJourneyAtStateTwo"))
                         .getTargetStateObj());
+
+        // process state assertions
+        assertEquals(
+                Map.of(
+                        "process",
+                        "a-lambda-to-invoke",
+                        "lambdaInput",
+                        Map.of("input1", "the-first-input", "input2", 2)),
+                processState.getResponse().value());
+        assertEquals(
+                criState, ((BasicEvent) processState.getEvents().get("met")).getTargetStateObj());
+        assertEquals(
+                errorState,
+                ((BasicEvent) processState.getEvents().get("unmet")).getTargetStateObj());
 
         // nested journey invoke state assertions
         assertEquals(

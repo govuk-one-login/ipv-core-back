@@ -1,17 +1,19 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine.stepresponses;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Map;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({
-    @JsonSubTypes.Type(value = JourneyResponse.class, name = "journey"),
-    @JsonSubTypes.Type(value = PageStepResponse.class, name = "page"),
-    @JsonSubTypes.Type(value = ErrorStepResponse.class, name = "error"),
-    @JsonSubTypes.Type(value = CriStepResponse.class, name = "cri")
-})
-public interface JourneyStepResponse {
-    Map<String, Object> value();
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class JourneyStepResponse implements StepResponse {
+
+    private String journeyStepId;
+
+    public Map<String, Object> value() {
+        return Map.of("journey", journeyStepId);
+    }
 }
