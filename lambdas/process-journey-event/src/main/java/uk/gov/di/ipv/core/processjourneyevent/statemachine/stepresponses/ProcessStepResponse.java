@@ -9,7 +9,7 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProcessStepResponse implements JourneyStepResponse {
+public class ProcessStepResponse implements StepResponse {
     public static final String PROCESS = "process";
     public static final String LAMBDA_INPUT = "lambdaInput";
     private String lambda;
