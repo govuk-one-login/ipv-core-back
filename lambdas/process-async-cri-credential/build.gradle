@@ -30,7 +30,7 @@ dependencies {
 	compileOnly "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
 	annotationProcessor "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
 
-	testImplementation "com.github.tomakehurst:wiremock-jre8:2.35.0",
+	testImplementation "com.github.tomakehurst:wiremock-jre8:3.0.0",
 			"org.junit.jupiter:junit-jupiter:5.10.0",
 			"org.mockito:mockito-junit-jupiter:5.4.0",
 			project(":lib").sourceSets.test.output
