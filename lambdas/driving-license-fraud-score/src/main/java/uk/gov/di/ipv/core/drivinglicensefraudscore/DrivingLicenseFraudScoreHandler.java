@@ -9,7 +9,8 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import java.util.Collections;
 import java.util.Map;
 
-public class DrivingLicenseFraudScoreHandler implements RequestHandler<JourneyRequest, Map<String, Object>> {
+public class DrivingLicenseFraudScoreHandler
+        implements RequestHandler<JourneyRequest, Map<String, Object>> {
     @Override
     @Tracing
     @Logging(clearState = true)

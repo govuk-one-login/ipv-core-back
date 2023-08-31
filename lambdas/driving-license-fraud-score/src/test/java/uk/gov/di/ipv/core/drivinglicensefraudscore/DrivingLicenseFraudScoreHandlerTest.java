@@ -28,11 +28,11 @@ class DrivingLicenseFraudScoreHandlerTest {
                     .featureSet(TEST_FEATURE_SET)
                     .build();
     @Mock private Context context;
-    @InjectMocks private CiScoringHandler ciScoringHandler;
+    @InjectMocks private DrivingLicenseFraudScoreHandler drivingLicenseFraudScoreHandler;
 
     @Test
     void handlerShouldReturnEmptyMap() {
-        Map<String, Object> journeyResponse = ciScoringHandler.handleRequest(event, context);
+        Map<String, Object> journeyResponse = drivingLicenseFraudScoreHandler.handleRequest(event, context);
         assertEquals(Collections.emptyMap(), journeyResponse);
     }
 }
