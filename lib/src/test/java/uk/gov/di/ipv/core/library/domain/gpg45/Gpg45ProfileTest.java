@@ -1,11 +1,20 @@
 package uk.gov.di.ipv.core.library.domain.gpg45;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.aggregator.ArgumentsAccessor;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores.Evidence;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -28,19 +37,99 @@ class Gpg45ProfileTest {
         }
     }
 
-    @Test
-    void shouldMatchHigher() {
-        assertTrue(Gpg45Profile.L1A.isSatisfiedBy(new Gpg45Scores(EV_22, 0, 1, 2)));
-        assertTrue(Gpg45Profile.L1A.isSatisfiedBy(new Gpg45Scores(EV_32, 1, 1, 1)));
-        assertTrue(Gpg45Profile.L1A.isSatisfiedBy(new Gpg45Scores(EV_33, 0, 1, 1)));
-        assertTrue(Gpg45Profile.L1A.isSatisfiedBy(new Gpg45Scores(EV_22, 1, 1, 1)));
-        assertTrue(Gpg45Profile.L1A.isSatisfiedBy(new Gpg45Scores(EV_22, 1, 2, 1)));
-        assertTrue(Gpg45Profile.L1A.isSatisfiedBy(new Gpg45Scores(EV_44, 4, 4, 4)));
-        assertTrue(Gpg45Profile.L1A.isSatisfiedBy(new Gpg45Scores(EV_22, EV_11, 0, 1, 2)));
+    // H2C needs evidence scores of 33 and 22
+    private static Stream<Arguments> ShouldMatchDoubleEvidenceScoresTestCases() {
+        return Stream.of(
+            Arguments.of(3, 3, 2, 2), // Exact match
+            Arguments.of(2, 2, 3, 3), // Exact match reversed
+            Arguments.of(4, 2, 3, 3), // Stronger evidence has weaker validity
+            Arguments.of(2, 4, 3, 3), // Weaker evidence has stronger validity 
+            Arguments.of(4, 4, 4, 4) // Higher strength and validity still matches
+        );
+    }
+    @ParameterizedTest
+    @MethodSource("ShouldMatchDoubleEvidenceScoresTestCases")
+    void shouldMatchDoubleEvidenceScores(int evidence1Strength, int evidence1Validity, int evidence2Strength, int evidence2Validity) {
+        var evidence1 = new Evidence(evidence1Strength, evidence1Validity);
+        var evidence2 = new Evidence(evidence2Strength, evidence2Validity);
+        var scoresToTest = new Gpg45Scores(evidence1, evidence2, 1, 1, 3);
+        
+        assertTrue(Gpg45Profile.H2C.isSatisfiedBy(scoresToTest));
+    }
+
+    // V3A needs evidence scores of 33, 22, and 22
+    private static Stream<Arguments> ShouldMatchTripleEvidenceScoresTestCases() {
+        return Stream.of(
+                Arguments.of(3, 3, 2, 2, 2, 2), // Exact match
+                Arguments.of(2, 2, 2, 2, 3, 3), // Exact match reversed
+                Arguments.of(4, 2, 3, 3, 2, 2), // Stronger evidence has weaker validity
+                Arguments.of(2, 4, 3, 3, 2, 2), // Weaker evidence has stronger validity
+                Arguments.of(4, 4, 4, 4, 4, 4) // Higher strength and validity still matches
+        );
+    }
+    @ParameterizedTest
+    @MethodSource("ShouldMatchTripleEvidenceScoresTestCases")
+    void shouldMatchTripleEvidenceScores(
+            int evidence1Strength,
+            int evidence1Validity,
+            int evidence2Strength,
+            int evidence2Validity,
+            int evidence3Strength,
+            int evidence3Validity) {
+        var evidence1 = new Evidence(evidence1Strength, evidence1Validity);
+        var evidence2 = new Evidence(evidence2Strength, evidence2Validity);
+        var evidence3 = new Evidence(evidence3Strength, evidence3Validity);
+        var scoresToTest = new Gpg45Scores(evidence1, evidence2, evidence3, 3, 3, 3);
+
+        assertTrue(Gpg45Profile.V3A.isSatisfiedBy(scoresToTest));
+    }
+
+    // L1C requires evidence with strength and validity scores of 1
+    @ParameterizedTest
+    @CsvSource({
+        "2,1",
+        "3,1",
+        "4,1",
+        "1,2",
+        "1,3",
+        "1,4",
+        "2,2",
+        "3,3",
+        "4,4"})
+    void shouldMatchHigherSingleEvidenceScore(ArgumentsAccessor argumentsAccessor) {
+        var strength = argumentsAccessor.getInteger(0);
+        var validity = argumentsAccessor.getInteger(1);
+        var evidence = new Gpg45Scores.Evidence(strength, validity);
+        var scoresToTest = new Gpg45Scores(evidence, 3, 2, 2);
+        
+        // L1C requires evidence with strength and validity scores of 1
+        assertTrue(Gpg45Profile.L1C.isSatisfiedBy(scoresToTest));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { 1, 2, 3, 4 })
+    void shouldMatchHigherActivityScore(int activityScore) {
+        // L1A requires activity score of 0
+        assertTrue(Gpg45Profile.L1A.isSatisfiedBy(new Gpg45Scores(EV_22, activityScore, 1, 1)));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { 2, 3, 4 })
+    void shouldMatchHigherFraudScore(int fraudScore) {
+        // L1A requires fraud score of 1
+        assertTrue(Gpg45Profile.L1A.isSatisfiedBy(new Gpg45Scores(EV_22, 0, fraudScore, 1)));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = { 2, 3, 4 })
+    void shouldMatchHigherVerificationScore(int verificationScore) {
+        // L1A requires verification score of 1
+        assertTrue(Gpg45Profile.L1A.isSatisfiedBy(new Gpg45Scores(EV_22, 0, 1, verificationScore)));
     }
 
     @Test
     void shouldMatchExtraEvidence() {
+        // L1A requires only one piece of evidence
         Gpg45Scores target = new Gpg45Scores(EV_22, EV_11, 0, 1, 1);
         assertTrue(Gpg45Profile.L1A.isSatisfiedBy(target));
     }
