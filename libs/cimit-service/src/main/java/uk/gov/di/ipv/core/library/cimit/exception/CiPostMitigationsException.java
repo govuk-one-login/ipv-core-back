@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.exceptions;
+package uk.gov.di.ipv.core.library.cimit.exception;
 
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 

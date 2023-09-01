@@ -1,0 +1,68 @@
+package uk.gov.di.ipv.core.library.cimit.domain;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
+import uk.gov.di.ipv.core.library.domain.Address;
+import uk.gov.di.ipv.core.library.domain.BirthDate;
+import uk.gov.di.ipv.core.library.domain.Name;
+import uk.gov.di.ipv.core.library.domain.NameParts;
+import uk.gov.di.ipv.core.library.domain.SharedClaims;
+import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
+import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class SharedClaimsResponseTest {
+
+    private static final String TEST_EMAIL_ADDRESS = "test@test.com";
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Test
+    void shouldCreateSharedAttributesResponseFromListOfSharedAttributes() throws Exception {
+
+        Set<Name> nameSet = new HashSet<>();
+        nameSet.add(new Name(List.of(new NameParts("Paul", "GivenName"))));
+
+        Set<Address> addressSet = new HashSet<>();
+        addressSet.add(objectMapper.readValue(TestFixtures.ADDRESS_JSON_1, Address.class));
+
+        Set<BirthDate> birthDaySet = new HashSet<>();
+        birthDaySet.add(new BirthDate("2020-02-03"));
+
+        SharedClaims sharedClaims1 =
+                new SharedClaims.Builder()
+                        .setName(nameSet)
+                        .setAddress(addressSet)
+                        .setBirthDate(birthDaySet)
+                        .build();
+
+        Set<Name> nameSet2 = new HashSet<>();
+        nameSet2.add(new Name(List.of(new NameParts("Tony", "GivenName"))));
+
+        Set<Address> addressSet2 = new HashSet<>();
+        addressSet2.add(objectMapper.readValue(TestFixtures.ADDRESS_JSON_2, Address.class));
+
+        Set<BirthDate> birthDaySet2 = new HashSet<>();
+        birthDaySet2.add(new BirthDate("2021-02-03"));
+        SharedClaims sharedClaims2 =
+                new SharedClaims.Builder()
+                        .setName(nameSet2)
+                        .setAddress(addressSet2)
+                        .setBirthDate(birthDaySet2)
+                        .build();
+
+        Set<SharedClaims> sharedAttributes = Set.of(sharedClaims1, sharedClaims2);
+
+        SharedClaimsResponse sharedClaimsResponse =
+                SharedClaimsResponse.from(sharedAttributes, TEST_EMAIL_ADDRESS);
+
+        assertEquals(2, sharedClaimsResponse.getName().size());
+        assertEquals(2, sharedClaimsResponse.getAddress().size());
+        assertEquals(2, sharedClaimsResponse.getBirthDate().size());
+        assertEquals(TEST_EMAIL_ADDRESS, sharedClaimsResponse.getEmailAddress());
+    }
+}
