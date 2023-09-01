@@ -1804,6 +1804,13 @@ Resources:
               Ref: IPVCorePrivateAPI
             Path: /journey/build-proven-user-identity-details
             Method: GET
+        IPVCorePrivateAPINewPath:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: IPVCorePrivateAPI
+            Path: /user/build-proven-user-identity-details
+            Method: GET
       AutoPublishAlias: live
       ProvisionedConcurrencyConfig:
         !If
