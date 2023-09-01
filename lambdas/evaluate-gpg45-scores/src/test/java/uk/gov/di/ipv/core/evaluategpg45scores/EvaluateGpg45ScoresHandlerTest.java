@@ -47,6 +47,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -55,8 +56,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
@@ -171,7 +170,6 @@ class EvaluateGpg45ScoresHandlerTest {
 
     @Test
     void shouldReturnJourneySessionEndIfScoresSatisfyM1AGpg45Profile() throws Exception {
-        mockCredentialIssuerConfig();
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
@@ -182,6 +180,7 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
+        mockUserIdentityServiceGetNonEvidenceCredentialIssuers();
 
         JourneyResponse response =
                 toResponseClass(
@@ -220,10 +219,19 @@ class EvaluateGpg45ScoresHandlerTest {
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
+    private void mockUserIdentityServiceGetNonEvidenceCredentialIssuers() {
+        when(userIdentityService.getNonEvidenceCredentialIssuers())
+                .thenReturn(
+                        Set.of(
+                                addressConfig.getComponentId(),
+                                claimedIdentityConfig.getComponentId()));
+    }
+
     @Test
     void shouldReturnJourneySessionEndIfScoresSatisfyM1BGpg45Profile() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        mockUserIdentityServiceGetNonEvidenceCredentialIssuers();
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
@@ -233,7 +241,6 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
-        mockCredentialIssuerConfig();
 
         JourneyResponse response =
                 toResponseClass(
@@ -408,22 +415,11 @@ class EvaluateGpg45ScoresHandlerTest {
                                 true,
                                 null)));
 
-        mockCredentialIssuerConfig();
-        // This causes the address vc (which has no evidence) to be treated as an unsuccessful vc
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                new URI("http://example.com/token"),
-                                new URI("http://example.com/credential"),
-                                new URI("http://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-encryption-jwk",
-                                "http://example.com",
-                                new URI("http://example.com/redirect"),
-                                true));
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(testIpvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        // don't treat the address cri as a non-evidence cri so last vc deemed unsuccessful
+        when(userIdentityService.getNonEvidenceCredentialIssuers())
+                .thenReturn(Set.of(claimedIdentityConfig.getComponentId()));
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
@@ -445,9 +441,9 @@ class EvaluateGpg45ScoresHandlerTest {
         testIpvSessionItem.setIpvSessionId(TEST_SESSION_ID);
         testIpvSessionItem.setVisitedCredentialIssuerDetails(List.of());
 
-        mockCredentialIssuerConfig();
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(testIpvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        mockUserIdentityServiceGetNonEvidenceCredentialIssuers();
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
@@ -472,7 +468,6 @@ class EvaluateGpg45ScoresHandlerTest {
                         SignedJWT.parse(M1A_ADDRESS_VC),
                         SignedJWT.parse(M1A_FRAUD_VC),
                         SignedJWT.parse(M1A_VERIFICATION_VC));
-        mockCredentialIssuerConfig();
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedM1ACreds);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
@@ -553,12 +548,5 @@ class EvaluateGpg45ScoresHandlerTest {
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
         return mapper.convertValue(handlerOutput, responseClass);
-    }
-
-    private void mockCredentialIssuerConfig() {
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
-                .thenReturn(addressConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(claimedIdentityConfig);
     }
 }

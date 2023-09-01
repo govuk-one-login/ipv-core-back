@@ -66,7 +66,6 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.JWT_TTL_SECONDS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
@@ -275,8 +274,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(claimedIdentityCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         mockVcHelper
                 .when(() -> VcHelper.isSuccessfulVcIgnoringCi(any(), any()))
@@ -350,8 +347,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(claimedIdentityCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         mockVcHelper
                 .when(() -> VcHelper.isSuccessfulVcIgnoringCi(any(), any()))
@@ -425,8 +420,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(claimedIdentityCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         mockVcHelper
                 .when(() -> VcHelper.isSuccessfulVcIgnoringCi(any(), any()))
@@ -499,8 +492,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(claimedIdentityCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         mockVcHelper
                 .when(() -> VcHelper.isSuccessfulVcIgnoringCi(any(), any()))
@@ -628,8 +619,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(claimedIdentityCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         mockVcHelper
                 .when(() -> VcHelper.isSuccessfulVcIgnoringCi(any(), any()))
@@ -687,8 +676,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(claimedIdentityCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         mockVcHelper
                 .when(() -> VcHelper.isSuccessfulVcIgnoringCi(any(), any()))
@@ -744,8 +731,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(claimedIdentityCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         mockVcHelper
                 .when(() -> VcHelper.isSuccessfulVcIgnoringCi(any(), any()))
@@ -820,8 +805,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(claimedIdentityCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         mockVcHelper
                 .when(() -> VcHelper.isSuccessfulVcIgnoringCi(any(), any()))
@@ -881,8 +864,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(claimedIdentityCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         mockVcHelper
                 .when(() -> VcHelper.isSuccessfulVcIgnoringCi(any(), any()))
@@ -942,8 +923,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(claimedIdentityCredentialIssuerConfig);
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getEmailAddress()).thenReturn(null);
         mockVcHelper
@@ -1005,8 +984,6 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(claimedIdentityCredentialIssuerConfig);
         when(configService.getAllowedSharedAttributes(F2F_CRI))
                 .thenReturn("name,birthDate,address,emailAddress");
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);

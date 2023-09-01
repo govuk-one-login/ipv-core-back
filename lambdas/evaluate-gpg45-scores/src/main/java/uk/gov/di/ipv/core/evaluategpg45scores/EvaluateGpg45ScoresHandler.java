@@ -52,8 +52,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
@@ -318,13 +316,7 @@ public class EvaluateGpg45ScoresHandler
             throws ParseException {
         List<VcStatusDto> vcStatuses = new ArrayList<>();
         Set<String> excludedCredentialIssuers =
-                Set.of(
-                        configService
-                                .getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI)
-                                .getComponentId(),
-                        configService
-                                .getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI)
-                                .getComponentId());
+                userIdentityService.getNonEvidenceCredentialIssuers();
 
         for (SignedJWT signedJWT : credentials) {
             boolean isSuccessful =

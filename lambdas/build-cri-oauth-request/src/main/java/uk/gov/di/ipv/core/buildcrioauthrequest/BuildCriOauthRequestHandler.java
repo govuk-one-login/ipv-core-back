@@ -59,7 +59,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
@@ -326,11 +325,7 @@ public class BuildCriOauthRequestHandler
                         ADDRESS_CRI);
 
         Set<String> excludedCredentialIssuers =
-                Set.of(
-                        addressCriConfig.getComponentId(),
-                        credentialIssuerConfigService
-                                .getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI)
-                                .getComponentId());
+                userIdentityService.getNonEvidenceCredentialIssuers();
 
         List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 

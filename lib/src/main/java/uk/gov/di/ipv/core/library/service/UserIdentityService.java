@@ -32,12 +32,14 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.USER_ISSUED_CREDENTIALS_TABLE_NAME;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
@@ -55,6 +57,9 @@ public class UserIdentityService {
             List.of(DCMAW_CRI, DRIVING_LICENCE_CRI);
     public static final List<String> EVIDENCE_CRI_TYPES =
             List.of(PASSPORT_CRI, DCMAW_CRI, DRIVING_LICENCE_CRI, F2F_CRI);
+
+    public static final Set<String> NON_EVIDENCE_CRI_TYPES =
+            Set.of(ADDRESS_CRI, CLAIMED_IDENTITY_CRI);
 
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String PASSPORT_PROPERTY_NAME = "passport";
@@ -377,6 +382,20 @@ public class UserIdentityService {
         }
         LOGGER.warn("Failed to find Driving Permit CRI credential");
         return Optional.empty();
+    }
+
+    public Set<String> getNonEvidenceCredentialIssuers() {
+        return UserIdentityService.getNonEvidenceCredentialIssuers(configService);
+    }
+
+    public static Set<String> getNonEvidenceCredentialIssuers(ConfigService configService) {
+        return NON_EVIDENCE_CRI_TYPES.stream()
+                .map(
+                        credentialIssuer ->
+                                configService
+                                        .getCredentialIssuerActiveConnectionConfig(credentialIssuer)
+                                        .getComponentId())
+                .collect(Collectors.toSet());
     }
 
     public boolean isVcSuccessful(List<VcStatusDto> currentVcStatuses, String criIss)

@@ -46,7 +46,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -238,13 +237,7 @@ public class BuildProvenUserIdentityDetailsHandler
         List<VcStatusDto> vcStatuses = new ArrayList<>();
 
         Set<String> excludedCredentialIssuers =
-                Set.of(
-                        configService
-                                .getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI)
-                                .getComponentId(),
-                        configService
-                                .getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI)
-                                .getComponentId());
+                userIdentityService.getNonEvidenceCredentialIssuers();
 
         for (VcStoreItem item : credentials) {
             SignedJWT signedJWT = SignedJWT.parse(item.getCredential());

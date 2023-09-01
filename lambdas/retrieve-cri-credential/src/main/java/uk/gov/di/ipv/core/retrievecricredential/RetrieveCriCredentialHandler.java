@@ -41,6 +41,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
@@ -55,8 +56,6 @@ import java.util.Map;
 import java.util.Set;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.USE_POST_MITIGATIONS;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -282,13 +281,7 @@ public class RetrieveCriCredentialHandler
                         ipAddress);
 
         final Set<String> excludedCredentialIssuers =
-                Set.of(
-                        configService
-                                .getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI)
-                                .getComponentId(),
-                        configService
-                                .getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI)
-                                .getComponentId());
+                UserIdentityService.getNonEvidenceCredentialIssuers(configService);
         final String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
         String issuer = null;

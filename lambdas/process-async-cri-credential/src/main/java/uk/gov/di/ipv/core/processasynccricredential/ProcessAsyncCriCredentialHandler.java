@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
+import uk.gov.di.ipv.core.library.service.UserIdentityService;
 import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
@@ -41,8 +42,6 @@ import java.util.List;
 import java.util.Set;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.USE_POST_MITIGATIONS;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
@@ -178,13 +177,7 @@ public class ProcessAsyncCriCredentialHandler
                         successAsyncCriResponse.getCredentialIssuer());
 
         final Set<String> excludedCredentialIssuers =
-                Set.of(
-                        configService
-                                .getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI)
-                                .getComponentId(),
-                        configService
-                                .getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI)
-                                .getComponentId());
+                UserIdentityService.getNonEvidenceCredentialIssuers(configService);
 
         for (SignedJWT verifiableCredential : verifiableCredentials) {
             verifiableCredentialJwtValidator.validate(
