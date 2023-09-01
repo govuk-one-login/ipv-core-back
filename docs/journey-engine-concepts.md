@@ -46,6 +46,7 @@ There are currently 4 types:
 * Error step response. This is effectively a page response but includes a status code. This will be returned to core front as an Error Journey Response
 * Journey step response. This will be used by the step function to invoke another lambda.
 * Cri step response. This is a special type of journey step response. It exists to allow the CRI ID to be easily passed to the build-cri-oauth-request lambda.
+* Process step response. This is configured with a lambda and some input data. It will cause the lambda to be invoked and passed the data. The lambda should return an event.
 
 ### Journey Response
 

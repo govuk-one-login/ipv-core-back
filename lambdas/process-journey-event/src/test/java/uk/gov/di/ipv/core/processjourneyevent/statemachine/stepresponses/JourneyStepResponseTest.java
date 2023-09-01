@@ -6,9 +6,10 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class JourneyResponseTest {
+public class JourneyStepResponseTest {
 
-    public static final JourneyResponse JOURNEY_RESPONSE = new JourneyResponse("aJourneyStepId");
+    public static final JourneyStepResponse JOURNEY_RESPONSE =
+            new JourneyStepResponse("aJourneyStepId");
 
     @Test
     void valueReturnsCorrectJourneyResponse() {

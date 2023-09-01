@@ -11,7 +11,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class CriStepResponse implements JourneyStepResponse {
+public class CriStepResponse implements StepResponse {
 
     public static final String CRI_JOURNEY_TEMPLATE = "/journey/cri/build-oauth-request/%s";
 
