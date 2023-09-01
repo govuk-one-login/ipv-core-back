@@ -25,7 +25,6 @@ import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
@@ -49,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
@@ -310,14 +310,17 @@ public class CheckExistingIdentityHandler
     private List<VcStatusDto> generateVcSuccessStatuses(List<SignedJWT> credentials)
             throws ParseException {
         List<VcStatusDto> vcStatuses = new ArrayList<>();
+        Set<String> excludedCredentialIssuers =
+                Set.of(
+                        configService
+                                .getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI)
+                                .getComponentId(),
+                        configService
+                                .getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI)
+                                .getComponentId());
         for (SignedJWT signedJWT : credentials) {
-
-            List<CredentialIssuerConfig> excludedCriConfigs =
-                    List.of(
-                            configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI),
-                            configService.getCredentialIssuerActiveConnectionConfig(
-                                    CLAIMED_IDENTITY_CRI));
-            boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, excludedCriConfigs);
+            boolean isSuccessful =
+                    VcHelper.isSuccessfulVcIgnoringCi(signedJWT, excludedCredentialIssuers);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
         }

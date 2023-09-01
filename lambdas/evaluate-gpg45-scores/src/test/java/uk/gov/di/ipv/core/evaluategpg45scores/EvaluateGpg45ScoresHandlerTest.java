@@ -55,6 +55,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
@@ -76,6 +78,7 @@ class EvaluateGpg45ScoresHandlerTest {
                     M1B_DCMAW_VC);
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
     public static CredentialIssuerConfig addressConfig = null;
+    public static CredentialIssuerConfig claimedIdentityConfig = null;
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
@@ -98,6 +101,17 @@ class EvaluateGpg45ScoresHandlerTest {
                             "test-jwk",
                             "test-encryption-jwk",
                             "https://review-a.integration.account.gov.uk",
+                            new URI("http://example.com/redirect"),
+                            true);
+            claimedIdentityConfig =
+                    new CredentialIssuerConfig(
+                            new URI("http://example.com/token"),
+                            new URI("http://example.com/credential"),
+                            new URI("http://example.com/authorize"),
+                            "ipv-core",
+                            "test-jwk",
+                            "test-encryption-jwk",
+                            "https://review-c.integration.account.gov.uk",
                             new URI("http://example.com/redirect"),
                             true);
         } catch (URISyntaxException e) {
@@ -157,8 +171,7 @@ class EvaluateGpg45ScoresHandlerTest {
 
     @Test
     void shouldReturnJourneySessionEndIfScoresSatisfyM1AGpg45Profile() throws Exception {
-        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
-                .thenReturn(addressConfig);
+        mockCredentialIssuerConfig();
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
@@ -220,8 +233,7 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
-        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
-                .thenReturn(addressConfig);
+        mockCredentialIssuerConfig();
 
         JourneyResponse response =
                 toResponseClass(
@@ -396,16 +408,9 @@ class EvaluateGpg45ScoresHandlerTest {
                                 true,
                                 null)));
 
-        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
-                .thenReturn(addressConfig);
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(testIpvSessionItem);
-        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(gpg45ProfileEvaluator.buildScore(any()))
-                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
+        mockCredentialIssuerConfig();
+        // This causes the address vc (which has no evidence) to be treated as an unsuccessful vc
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(
                         new CredentialIssuerConfig(
                                 new URI("http://example.com/token"),
@@ -417,6 +422,13 @@ class EvaluateGpg45ScoresHandlerTest {
                                 "http://example.com",
                                 new URI("http://example.com/redirect"),
                                 true));
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(testIpvSessionItem);
+        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
+        when(gpg45ProfileEvaluator.buildScore(any()))
+                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
 
         JourneyResponse response =
                 toResponseClass(
@@ -433,8 +445,7 @@ class EvaluateGpg45ScoresHandlerTest {
         testIpvSessionItem.setIpvSessionId(TEST_SESSION_ID);
         testIpvSessionItem.setVisitedCredentialIssuerDetails(List.of());
 
-        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
-                .thenReturn(addressConfig);
+        mockCredentialIssuerConfig();
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(testIpvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
@@ -461,8 +472,7 @@ class EvaluateGpg45ScoresHandlerTest {
                         SignedJWT.parse(M1A_ADDRESS_VC),
                         SignedJWT.parse(M1A_FRAUD_VC),
                         SignedJWT.parse(M1A_VERIFICATION_VC));
-        when(configService.getCredentialIssuerActiveConnectionConfig(any()))
-                .thenReturn(addressConfig);
+        mockCredentialIssuerConfig();
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedM1ACreds);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
@@ -543,5 +553,12 @@ class EvaluateGpg45ScoresHandlerTest {
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
         return mapper.convertValue(handlerOutput, responseClass);
+    }
+
+    private void mockCredentialIssuerConfig() {
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(addressConfig);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(claimedIdentityConfig);
     }
 }

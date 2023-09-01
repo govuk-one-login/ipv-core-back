@@ -25,7 +25,6 @@ import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.Gpg45ScoresDto;
 import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
@@ -50,6 +49,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
@@ -317,15 +317,18 @@ public class EvaluateGpg45ScoresHandler
     private List<VcStatusDto> generateVcSuccessStatuses(List<SignedJWT> credentials)
             throws ParseException {
         List<VcStatusDto> vcStatuses = new ArrayList<>();
-        List<CredentialIssuerConfig> ignoredCriConfigurations =
-                List.of(
-                        configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI),
-                        configService.getCredentialIssuerActiveConnectionConfig(
-                                CLAIMED_IDENTITY_CRI));
+        Set<String> excludedCredentialIssuers =
+                Set.of(
+                        configService
+                                .getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI)
+                                .getComponentId(),
+                        configService
+                                .getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI)
+                                .getComponentId());
 
         for (SignedJWT signedJWT : credentials) {
             boolean isSuccessful =
-                    VcHelper.isSuccessfulVcIgnoringCi(signedJWT, ignoredCriConfigurations);
+                    VcHelper.isSuccessfulVcIgnoringCi(signedJWT, excludedCredentialIssuers);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
         }

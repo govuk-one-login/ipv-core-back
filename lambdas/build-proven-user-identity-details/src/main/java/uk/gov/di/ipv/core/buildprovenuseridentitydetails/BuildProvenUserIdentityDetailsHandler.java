@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
@@ -236,14 +237,19 @@ public class BuildProvenUserIdentityDetailsHandler
             throws ParseException {
         List<VcStatusDto> vcStatuses = new ArrayList<>();
 
+        Set<String> excludedCredentialIssuers =
+                Set.of(
+                        configService
+                                .getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI)
+                                .getComponentId(),
+                        configService
+                                .getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI)
+                                .getComponentId());
+
         for (VcStoreItem item : credentials) {
             SignedJWT signedJWT = SignedJWT.parse(item.getCredential());
-            List<CredentialIssuerConfig> excludedCriConfig =
-                    List.of(
-                            configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI),
-                            configService.getCredentialIssuerActiveConnectionConfig(
-                                    CLAIMED_IDENTITY_CRI));
-            boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, excludedCriConfig);
+            boolean isSuccessful =
+                    VcHelper.isSuccessfulVcIgnoringCi(signedJWT, excludedCredentialIssuers);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
         }

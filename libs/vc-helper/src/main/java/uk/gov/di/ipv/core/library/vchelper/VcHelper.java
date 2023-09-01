@@ -14,10 +14,10 @@ import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45EvidenceValidator
 import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45F2fValidator;
 import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45FraudValidator;
 import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45VerificationValidator;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 
 import java.text.ParseException;
 import java.util.List;
+import java.util.Set;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
@@ -28,35 +28,31 @@ public class VcHelper {
 
     private VcHelper() {}
 
-    public static boolean isSuccessfulVc(
-            SignedJWT vc, List<CredentialIssuerConfig> excludedCriConfig) throws ParseException {
+    public static boolean isSuccessfulVc(SignedJWT vc, Set<String> excludedCredentialIssuers)
+            throws ParseException {
         boolean shouldCheckContraIndicators = true;
-        return isSuccessfulVc(vc, excludedCriConfig, shouldCheckContraIndicators);
+        return isSuccessfulVc(vc, excludedCredentialIssuers, shouldCheckContraIndicators);
     }
 
     public static boolean isSuccessfulVcIgnoringCi(
-            SignedJWT vc, List<CredentialIssuerConfig> excludedCriConfig) throws ParseException {
+            SignedJWT vc, Set<String> excludedCredentialIssuers) throws ParseException {
         boolean shouldCheckContraIndicators = false;
-        return isSuccessfulVc(vc, excludedCriConfig, shouldCheckContraIndicators);
+        return isSuccessfulVc(vc, excludedCredentialIssuers, shouldCheckContraIndicators);
     }
 
     private static boolean isSuccessfulVc(
             SignedJWT vc,
-            List<CredentialIssuerConfig> excludedCriConfig,
+            Set<String> excludedCredentialIssuers,
             boolean shouldCheckContraIndicators)
             throws ParseException {
         JSONObject vcClaim = (JSONObject) vc.getJWTClaimsSet().getClaim(VC_CLAIM);
         JSONArray evidenceArray = (JSONArray) vcClaim.get(VC_EVIDENCE);
         if (evidenceArray == null) {
-            String vcIss = vc.getJWTClaimsSet().getIssuer();
-            boolean excludeConfig =
-                    excludedCriConfig.stream()
-                            .map(CredentialIssuerConfig::getComponentId)
-                            .anyMatch(vcIss::equals);
-            if (excludeConfig) {
+            String vcIssuer = vc.getJWTClaimsSet().getIssuer();
+            if (excludedCredentialIssuers.contains(vcIssuer)) {
                 return true;
             }
-            LOGGER.warn("Unexpected missing evidence on VC from issuer: {}", vcIss);
+            LOGGER.warn("Unexpected missing evidence on VC from issuer: {}", vcIssuer);
             return false;
         }
 

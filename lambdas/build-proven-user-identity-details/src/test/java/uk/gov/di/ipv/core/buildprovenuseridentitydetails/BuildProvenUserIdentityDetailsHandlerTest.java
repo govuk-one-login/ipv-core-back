@@ -340,6 +340,10 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(ADDRESS_CRI, M1A_ADDRESS_VC),
                                 createVcStoreItem(FRAUD_CRI, M1A_FRAUD_VC),
                                 createVcStoreItem(KBV_CRI, M1A_VERIFICATION_VC)));
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(ISSUER_CONFIG_ADDRESS);
 
         JourneyRequest input = createRequestEvent();
         JourneyErrorResponse errorResponse =

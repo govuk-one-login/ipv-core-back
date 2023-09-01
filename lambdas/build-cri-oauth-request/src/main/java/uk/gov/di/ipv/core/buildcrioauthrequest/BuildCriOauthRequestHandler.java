@@ -325,11 +325,12 @@ public class BuildCriOauthRequestHandler
                 credentialIssuerConfigService.getCredentialIssuerActiveConnectionConfig(
                         ADDRESS_CRI);
 
-        List<CredentialIssuerConfig> excludedCriConfig =
-                List.of(
-                        addressCriConfig,
-                        credentialIssuerConfigService.getCredentialIssuerActiveConnectionConfig(
-                                CLAIMED_IDENTITY_CRI));
+        Set<String> excludedCredentialIssuers =
+                Set.of(
+                        addressCriConfig.getComponentId(),
+                        credentialIssuerConfigService
+                                .getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI)
+                                .getComponentId());
 
         List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
@@ -341,7 +342,7 @@ public class BuildCriOauthRequestHandler
                 SignedJWT signedJWT = SignedJWT.parse(credential);
                 String credentialIss = signedJWT.getJWTClaimsSet().getIssuer();
 
-                if (VcHelper.isSuccessfulVcIgnoringCi(signedJWT, excludedCriConfig)) {
+                if (VcHelper.isSuccessfulVcIgnoringCi(signedJWT, excludedCredentialIssuers)) {
                     JsonNode credentialSubject =
                             mapper.readTree(signedJWT.getPayload().toString())
                                     .path(VC_CLAIM)

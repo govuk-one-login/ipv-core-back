@@ -38,6 +38,7 @@ import uk.gov.di.ipv.core.processasynccricredential.exceptions.AsyncVerifiableCr
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.USE_POST_MITIGATIONS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
@@ -176,11 +177,14 @@ public class ProcessAsyncCriCredentialHandler
                 configService.getCredentialIssuerActiveConnectionConfig(
                         successAsyncCriResponse.getCredentialIssuer());
 
-        final List<CredentialIssuerConfig> excludedCriConfigs =
-                List.of(
-                        configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI),
-                        configService.getCredentialIssuerActiveConnectionConfig(
-                                CLAIMED_IDENTITY_CRI));
+        final Set<String> excludedCredentialIssuers =
+                Set.of(
+                        configService
+                                .getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI)
+                                .getComponentId(),
+                        configService
+                                .getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI)
+                                .getComponentId());
 
         for (SignedJWT verifiableCredential : verifiableCredentials) {
             verifiableCredentialJwtValidator.validate(
@@ -189,7 +193,7 @@ public class ProcessAsyncCriCredentialHandler
                     successAsyncCriResponse.getUserId());
 
             boolean isSuccessful =
-                    VcHelper.isSuccessfulVc(verifiableCredential, excludedCriConfigs);
+                    VcHelper.isSuccessfulVc(verifiableCredential, excludedCredentialIssuers);
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(successAsyncCriResponse.getUserId(), null, null, null);
