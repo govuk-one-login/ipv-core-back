@@ -324,6 +324,8 @@ CRI_KBV_J2:
           checkIfDisabled:
             f2f:
               targetState: PYI_CRI_ESCAPE_NO_F2F
+    mitigation02:
+      targetState: MITIGATION_02
 
 # Driving licence journey (J3)
 CRI_DRIVING_LICENCE_J3:
@@ -372,6 +374,8 @@ CRI_KBV_J3:
               targetState: PYI_CRI_ESCAPE_NO_F2F
     next:
       targetState: PYI_NO_MATCH
+    mitigation02:
+      targetState: MITIGATION_02
 
 # F2F journey (J4)
 CRI_CLAIMED_IDENTITY_J4:
@@ -477,3 +481,52 @@ MITIGATION_01_CRI_DCMAW:
     fail-with-no-ci:
       targetState: PYI_ANOTHER_WAY
 
+# Mitigation journey (02)
+MITIGATION_02:
+  response:
+    type: page
+    pageId: page-ipv-identity-document-start
+  events:
+    next:
+      targetState: MITIGATION_02_CRI_DCMAW
+    end:
+      targetState: MITIGATION_02_CRI_F2F
+
+MITIGATION_02_CRI_F2F:
+  response:
+    type: cri
+    criId: f2f
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: F2F_HANDOFF_PAGE_J5
+    access-denied:
+      targetState: PYI_ANOTHER_WAY
+    temporarily-unavailable:
+      targetState: PYI_ANOTHER_WAY
+
+
+MITIGATION_02_CRI_DCMAW:
+  response:
+    type: cri
+    criId: dcmaw
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: MITIGATION_02_POST_DCMAW_SUCCESS_PAGE
+    access-denied:
+      targetState: PYI_ANOTHER_WAY
+    temporarily-unavailable:
+      targetState: PYI_ANOTHER_WAY
+    fail-with-no-ci:
+      targetState: PYI_ANOTHER_WAY
+
+MITIGATION_02_POST_DCMAW_SUCCESS_PAGE:
+  response:
+    type: page
+    pageId: page-dcmaw-success
+  events:
+    end:
+      targetState: IPV_SUCCESS_PAGE
+    next:
+      targetState: PYI_NO_MATCH
