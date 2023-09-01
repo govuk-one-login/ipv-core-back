@@ -348,7 +348,7 @@ ADDRESS_AND_FRAUD_J3:
 
 CHECK_FRAUD_SCORE_J3:
   response:
-    type: processing
+    type: process
     lambda: check-gpg45-score
     lambdaInput:
       scoreType: fraud
