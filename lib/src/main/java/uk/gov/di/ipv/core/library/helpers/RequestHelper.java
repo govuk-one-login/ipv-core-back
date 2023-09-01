@@ -8,11 +8,11 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
+import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 
@@ -33,7 +33,7 @@ public class RequestHelper {
                 headers.entrySet().stream()
                         .filter(e -> headerKey.equalsIgnoreCase(e.getKey()))
                         .map(Map.Entry::getValue)
-                        .collect(Collectors.toList());
+                        .toList();
         if (values.size() == 1) {
             var value = values.get(0);
             if (StringUtils.isNotBlank(value)) {
@@ -109,6 +109,14 @@ public class RequestHelper {
 
     public static String getJourney(JourneyRequest request) {
         return request.getJourney();
+    }
+
+    public static String getScoreType(ProcessRequest request) {
+        return request.getScoreType();
+    }
+
+    public static Integer getScoreThreshold(ProcessRequest request) {
+        return request.getScoreThreshold();
     }
 
     private static String getIpvSessionId(Map<String, String> headers, boolean allowNull)
