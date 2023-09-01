@@ -141,10 +141,7 @@ public class BuildUserIdentityHandler
 
             UserIdentity userIdentity =
                     userIdentityService.generateUserIdentity(
-                            userId,
-                            userId,
-                            ipvSessionItem.getVot(),
-                            ipvSessionItem.getCurrentVcStatuses());
+                            userId, userId, ipvSessionItem.getVot());
 
             if (configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)
                     && configService.enabled(CoreFeatureFlag.BUNDLE_CIMIT_VC)) {

@@ -19,7 +19,6 @@ include "lib",
 		"integration-test",
 		"libs:credential-issuer-config-service",
 		"libs:kms-es256-signer",
-		"libs:vc-helper",
 		"libs:verifiable-credentials",
 		"libs:journey-uris",
 		"libs:cimit-service"
