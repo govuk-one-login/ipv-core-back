@@ -485,26 +485,10 @@ MITIGATION_01_CRI_DCMAW:
 MITIGATION_02:
   response:
     type: page
-    pageId: page-ipv-identity-document-start
+    pageId: pyi-suggest-other-options-no-f2f
   events:
     next:
       targetState: MITIGATION_02_CRI_DCMAW
-    end:
-      targetState: MITIGATION_02_CRI_F2F
-
-MITIGATION_02_CRI_F2F:
-  response:
-    type: cri
-    criId: f2f
-  parent: CRI_STATE
-  events:
-    next:
-      targetState: F2F_HANDOFF_PAGE_J5
-    access-denied:
-      targetState: PYI_ANOTHER_WAY
-    temporarily-unavailable:
-      targetState: PYI_ANOTHER_WAY
-
 
 MITIGATION_02_CRI_DCMAW:
   response:
@@ -514,6 +498,8 @@ MITIGATION_02_CRI_DCMAW:
   events:
     next:
       targetState: MITIGATION_02_POST_DCMAW_SUCCESS_PAGE
+    not-found:
+      targetState: PYI_NO_MATCH
     access-denied:
       targetState: PYI_ANOTHER_WAY
     temporarily-unavailable:
