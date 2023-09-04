@@ -1,5 +1,10 @@
 package uk.gov.di.ipv.core.library.domain.gpg45;
 
+import java.util.List;
+
+import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores.Evidence;
+import uk.gov.di.ipv.core.library.helpers.ListHelper;
+
 /** Enumeration of all GPG 45 profiles along with their reference Gpg45Scores value. */
 public enum Gpg45Profile {
     L1A("L1A", new Gpg45Scores(Gpg45Scores.EV_22, 0, 1, 1)),
@@ -63,28 +68,44 @@ public enum Gpg45Profile {
      * Checks if that the provided {@code Gpg45Scores} satisfy the {@code Gpg45Scores} for this
      * profile.
      *
-     * @param target The {@code Gpg45Scores} to compare.
+     * @param achievedScores The {@code Gpg45Scores} to compare.
      * @return {@code true} if the elements in the provided {@code Gpg45Scores} are all equal or
      *     greater than the profile's `{@code Gpg45Scores}.
      */
-    public boolean isSatisfiedBy(Gpg45Scores target) {
-        return satisfactoryEvidence(target)
-                && (scores.getActivity() <= target.getActivity())
-                && (scores.getFraud() <= target.getFraud())
-                && (scores.getVerification() <= target.getVerification());
+    public boolean isSatisfiedBy(Gpg45Scores achievedScores) {
+        return evidenceIsSatisfactory(achievedScores)
+                && (scores.getActivity() <= achievedScores.getActivity())
+                && (scores.getFraud() <= achievedScores.getFraud())
+                && (scores.getVerification() <= achievedScores.getVerification());
     }
 
-    private boolean satisfactoryEvidence(Gpg45Scores target) {
-        if (scores.getEvidences().size() > target.getEvidences().size()) {
+    private boolean evidenceIsSatisfactory(Gpg45Scores achievedScores) {
+        var requiredEvidences = scores.getEvidences();
+        var achievedEvidences = achievedScores.getEvidences();
+
+        if (requiredEvidences.size() > achievedEvidences.size()) {
             return false;
         }
 
-        for (int i = 0; i < scores.getEvidences().size(); i++) {
-            var sourceEvidence = scores.getEvidence(i);
-            var targetEvidence = target.getEvidence(i);
+        // No profile needs more than 3 pieces of evidence so calling getPermutations should be safe.
+        var achievedEvidencePermutations = ListHelper.getPermutations(achievedEvidences);
 
-            if ((targetEvidence.getStrength() < sourceEvidence.getStrength())
-                    || (targetEvidence.getValidity() < sourceEvidence.getValidity())) {
+        for (List<Evidence> achievedEvidencePermutation : achievedEvidencePermutations) {
+            if (evidencePermutationIsSatisfactory(requiredEvidences, achievedEvidencePermutation)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean evidencePermutationIsSatisfactory(List<Evidence> requiredEvidences, List<Evidence> achievedEvidences) {
+        for (int i = 0; i < requiredEvidences.size(); i++) {
+            var requiredEvidence = requiredEvidences.get(i);
+            var achievedEvidence = achievedEvidences.get(i);
+
+            if ((achievedEvidence.getStrength() < requiredEvidence.getStrength())
+                    || (achievedEvidence.getValidity() < requiredEvidence.getValidity())) {
                 return false;
             }
         }
