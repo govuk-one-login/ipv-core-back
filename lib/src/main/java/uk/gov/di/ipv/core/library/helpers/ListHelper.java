@@ -14,20 +14,17 @@ public class ListHelper {
     public static <T> List<List<T>> getPermutations(List<T> original) {
         var size = original.size();
 
-        var clone = new ArrayList<T>(original);
+        var clone = new ArrayList<>(original);
         var permutations = new ArrayList<List<T>>();
 
         int[] indexes = new int[size];
-        for (int i = 0; i < size; i++) {
-            indexes[i] = 0;
-        }
 
         permutations.add(clone);
 
         int i = 0;
         while (i < size) {
             if (indexes[i] < i) {
-                clone = new ArrayList<T>(clone);
+                clone = new ArrayList<>(clone);
                 swap(clone, i % 2 == 0 ? 0 : indexes[i], i);
                 permutations.add(clone);
                 indexes[i]++;
