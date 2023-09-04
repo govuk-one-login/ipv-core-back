@@ -9,14 +9,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jwt.SignedJWT;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.cimit.dto.ContraIndicatorCredentialDto;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
@@ -352,7 +350,7 @@ class CiMitServiceTest {
                         new InvokeResult()
                                 .withStatusCode(200)
                                 .withPayload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC)));
-        Mockito.doThrow(
+        doThrow(
                         new VerifiableCredentialException(
                                 HTTPResponse.SC_SERVER_ERROR,
                                 ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL))
@@ -465,7 +463,7 @@ class CiMitServiceTest {
                         GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, TEST_USER_ID),
                 new String(request.getPayload().array(), StandardCharsets.UTF_8));
 
-        Assertions.assertEquals(SIGNED_CONTRA_INDICATOR_VC, contraIndicatorsVCJwt.serialize());
+        assertEquals(SIGNED_CONTRA_INDICATOR_VC, contraIndicatorsVCJwt.serialize());
     }
 
     @Test
