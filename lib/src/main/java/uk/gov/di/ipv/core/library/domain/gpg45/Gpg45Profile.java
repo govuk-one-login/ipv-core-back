@@ -1,9 +1,9 @@
 package uk.gov.di.ipv.core.library.domain.gpg45;
 
-import java.util.List;
-
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores.Evidence;
 import uk.gov.di.ipv.core.library.helpers.ListHelper;
+
+import java.util.List;
 
 /** Enumeration of all GPG 45 profiles along with their reference Gpg45Scores value. */
 public enum Gpg45Profile {
@@ -87,7 +87,8 @@ public enum Gpg45Profile {
             return false;
         }
 
-        // No profile needs more than 3 pieces of evidence so calling getPermutations should be safe.
+        // No profile needs more than 3 pieces of evidence so calling getPermutations should be
+        // safe.
         var achievedEvidencePermutations = ListHelper.getPermutations(achievedEvidences);
 
         for (List<Evidence> achievedEvidencePermutation : achievedEvidencePermutations) {
@@ -99,7 +100,8 @@ public enum Gpg45Profile {
         return false;
     }
 
-    private boolean evidencePermutationIsSatisfactory(List<Evidence> requiredEvidences, List<Evidence> achievedEvidences) {
+    private boolean evidencePermutationIsSatisfactory(
+            List<Evidence> requiredEvidences, List<Evidence> achievedEvidences) {
         for (int i = 0; i < requiredEvidences.size(); i++) {
             var requiredEvidence = requiredEvidences.get(i);
             var achievedEvidence = achievedEvidences.get(i);

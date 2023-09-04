@@ -23,17 +23,16 @@ public class ListHelper {
         }
 
         permutations.add(clone);
-        
+
         int i = 0;
         while (i < size) {
             if (indexes[i] < i) {
                 clone = new ArrayList<T>(clone);
-                swap(clone, i % 2 == 0 ? 0: indexes[i], i);
+                swap(clone, i % 2 == 0 ? 0 : indexes[i], i);
                 permutations.add(clone);
                 indexes[i]++;
                 i = 0;
-            }
-            else {
+            } else {
                 indexes[i] = 0;
                 i++;
             }
