@@ -13,6 +13,7 @@ import org.apache.http.HttpStatus;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.cimit.domain.GetCiRequest;
 import uk.gov.di.ipv.core.library.cimit.domain.GetCiResponse;
 import uk.gov.di.ipv.core.library.cimit.domain.PostCiMitigationRequest;
@@ -63,6 +64,7 @@ public class CiMitService {
     private final ConfigService configService;
     private final VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
 
+    @ExcludeFromGeneratedCoverageReport
     public CiMitService(ConfigService configService) {
         this.lambdaClient = AWSLambdaClientBuilder.defaultClient();
         this.configService = configService;
