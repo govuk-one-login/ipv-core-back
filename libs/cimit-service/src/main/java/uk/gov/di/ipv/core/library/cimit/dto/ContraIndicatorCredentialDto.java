@@ -1,17 +1,16 @@
-package uk.gov.di.ipv.core.library.dto;
+package uk.gov.di.ipv.core.library.cimit.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 
-import java.util.List;
-
 @ExcludeFromGeneratedCoverageReport
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MitigationDto {
-    private String code;
-    private List<MitigationCredentialDto> mitigatingCredential;
+public class ContraIndicatorCredentialDto {
+    private String vc;
 }

@@ -16,7 +16,8 @@ dependencies {
 			"software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
 			project(":lib"),
 			project(":libs:vc-helper"),
-			project(":libs:journey-uris")
+			project(":libs:journey-uris"),
+			project(":libs:cimit-service")
 
 	implementation project(path: ':libs:verifiable-credentials')
 

@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.domain;
+package uk.gov.di.ipv.core.library.cimit.domain;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
