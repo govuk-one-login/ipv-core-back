@@ -325,7 +325,7 @@ CRI_KBV_J2:
             f2f:
               targetState: PYI_CRI_ESCAPE_NO_F2F
     mitigation02:
-      targetState: MITIGATION_02
+      targetState: MITIGATION_02_OPTIONS
 
 # Driving licence journey (J3)
 CRI_DRIVING_LICENCE_J3:
@@ -375,7 +375,7 @@ CRI_KBV_J3:
     next:
       targetState: PYI_NO_MATCH
     mitigation02:
-      targetState: MITIGATION_02
+      targetState: MITIGATION_02_OPTIONS
 
 # F2F journey (J4)
 CRI_CLAIMED_IDENTITY_J4:
@@ -484,7 +484,17 @@ MITIGATION_01_CRI_DCMAW:
       targetState: PYI_ANOTHER_WAY
 
 # Mitigation journey (02)
-MITIGATION_02:
+MITIGATION_02_OPTIONS:
+  response:
+    type: page
+    pageId: pyi-suggest-other-options-no-f2f
+  events:
+    next:
+      targetState: MITIGATION_02_CRI_ELIGIBILITY
+    end:
+      targetState: PYI_ANOTHER_WAY
+
+MITIGATION_02_CRI_ELIGIBILITY:
   response:
     type: page
     pageId: page-ipv-identity-document-start
@@ -502,6 +512,8 @@ MITIGATION_02_CRI_DCMAW:
   events:
     next:
       targetState: MITIGATION_02_POST_DCMAW_SUCCESS_PAGE
+    not-found:
+      targetState: PYI_NO_MATCH
     access-denied:
       targetState: PYI_ANOTHER_WAY
     temporarily-unavailable:
