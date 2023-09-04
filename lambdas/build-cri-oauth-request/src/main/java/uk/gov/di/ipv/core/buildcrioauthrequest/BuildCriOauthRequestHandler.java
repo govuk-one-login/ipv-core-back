@@ -35,9 +35,7 @@ import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -50,6 +48,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
+import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 
 import java.net.URISyntaxException;
 import java.text.ParseException;
@@ -58,6 +57,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
@@ -169,8 +169,6 @@ public class BuildCriOauthRequestHandler
 
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
-            List<VcStatusDto> currentVcStatuses = ipvSessionItem.getCurrentVcStatuses();
-
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
             String oauthState = SecureTokenHelper.generate();
@@ -181,12 +179,11 @@ public class BuildCriOauthRequestHandler
                             userId,
                             oauthState,
                             govukSigninJourneyId,
-                            currentVcStatuses,
                             criId);
 
             CriResponse criResponse = getCriResponse(credentialIssuerConfig, jweObject, criId);
 
-            persistOauthState(ipvSessionItem, criId, oauthState);
+            persistOauthState(ipvSessionItem, oauthState);
 
             persistCriOauthState(oauthState, criId, clientOAuthSessionId);
 
@@ -276,11 +273,10 @@ public class BuildCriOauthRequestHandler
             String userId,
             String oauthState,
             String govukSigninJourneyId,
-            List<VcStatusDto> currentVcStatuses,
             String criId)
             throws HttpResponseExceptionWithErrorBody, ParseException, JOSEException {
         SharedClaimsResponse sharedClaimsResponse =
-                getSharedAttributes(ipvSessionItem, userId, currentVcStatuses, criId);
+                getSharedAttributesForUser(ipvSessionItem, userId, criId);
         EvidenceRequest evidenceRequest = null;
         if (criId.equals(F2F_CRI)) {
             int strengthScore =
@@ -320,15 +316,17 @@ public class BuildCriOauthRequestHandler
     }
 
     @Tracing
-    private SharedClaimsResponse getSharedAttributes(
-            IpvSessionItem ipvSessionItem,
-            String userId,
-            List<VcStatusDto> currentVcStatuses,
-            String criId)
+    private SharedClaimsResponse getSharedAttributesForUser(
+            IpvSessionItem ipvSessionItem, String userId, String criId)
             throws HttpResponseExceptionWithErrorBody {
         CredentialIssuerConfig addressCriConfig =
                 credentialIssuerConfigService.getCredentialIssuerActiveConnectionConfig(
                         ADDRESS_CRI);
+        List<CredentialIssuerConfig> excludedCriConfig =
+                List.of(
+                        addressCriConfig,
+                        credentialIssuerConfigService.getCredentialIssuerActiveConnectionConfig(
+                                CLAIMED_IDENTITY_CRI));
 
         List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
@@ -340,16 +338,7 @@ public class BuildCriOauthRequestHandler
                 SignedJWT signedJWT = SignedJWT.parse(credential);
                 String credentialIss = signedJWT.getJWTClaimsSet().getIssuer();
 
-                if (currentVcStatuses == null) {
-                    throw new NoVcStatusForIssuerException(
-                            String.format(
-                                    "User has credential from issuer '%s' but currentVcStatuses is null",
-                                    credentialIss));
-                }
-
-                if (getVcStatus(currentVcStatuses, credentialIss)
-                        .getIsSuccessfulVc()
-                        .equals(Boolean.TRUE)) {
+                if (VcHelper.isSuccessfulVcIgnoringCi(signedJWT, excludedCriConfig)) {
                     JsonNode credentialSubject =
                             mapper.readTree(signedJWT.getPayload().toString())
                                     .path(VC_CLAIM)
@@ -380,10 +369,6 @@ public class BuildCriOauthRequestHandler
                 LogHelper.logErrorMessage("Failed to parse issued credentials.", e.getMessage());
                 throw new HttpResponseExceptionWithErrorBody(
                         500, ErrorResponse.FAILED_TO_PARSE_ISSUED_CREDENTIALS);
-            } catch (NoVcStatusForIssuerException e) {
-                LogHelper.logErrorMessage("Error getting VC status", e.getMessage());
-                throw new HttpResponseExceptionWithErrorBody(
-                        500, ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER);
             }
         }
         return SharedClaimsResponse.from(
@@ -422,7 +407,7 @@ public class BuildCriOauthRequestHandler
     }
 
     @Tracing
-    private void persistOauthState(IpvSessionItem ipvSessionItem, String criId, String oauthState) {
+    private void persistOauthState(IpvSessionItem ipvSessionItem, String oauthState) {
         ipvSessionItem.setCriOAuthSessionId(oauthState);
         ipvSessionService.updateIpvSession(ipvSessionItem);
     }
@@ -431,23 +416,5 @@ public class BuildCriOauthRequestHandler
     private void persistCriOauthState(
             String oauthState, String criId, String clientOAuthSessionId) {
         criOAuthSessionService.persistCriOAuthSession(oauthState, criId, clientOAuthSessionId);
-    }
-
-    @Tracing
-    private VcStatusDto getVcStatus(List<VcStatusDto> currentVcStatuses, String credentialIss)
-            throws NoVcStatusForIssuerException {
-        return currentVcStatuses.stream()
-                .filter(vcStatusDto -> vcStatusDto.getCriIss().equals(credentialIss))
-                .findFirst()
-                .orElseThrow(
-                        () -> {
-                            StringJoiner stringJoiner = new StringJoiner(", ");
-                            currentVcStatuses.forEach(
-                                    (vcStatusDto -> stringJoiner.add(vcStatusDto.getCriIss())));
-                            return new NoVcStatusForIssuerException(
-                                    String.format(
-                                            "CRI issuer '%s' not found in current VC statuses: '%s'",
-                                            credentialIss, stringJoiner));
-                        });
     }
 }
