@@ -30,7 +30,6 @@ import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.NoVisitedCriFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -161,7 +160,7 @@ public class EvaluateGpg45ScoresHandler
                 return journeyResponseForFailWithNoCi.get().toObjectMap();
             }
 
-            if (!checkCorrelation(userId, ipvSessionItem.getCurrentVcStatuses())) {
+            if (!checkCorrelation(userId)) {
                 return JOURNEY_PYI_NO_MATCH.toObjectMap();
             }
 
@@ -201,20 +200,12 @@ public class EvaluateGpg45ScoresHandler
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             ErrorResponse.FAILED_TO_FIND_VISITED_CRI)
                     .toObjectMap();
-        } catch (NoVcStatusForIssuerException e) {
-            LOGGER.error("No VC status found for CRI issuer", e);
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER)
-                    .toObjectMap();
         }
     }
 
-    private boolean checkCorrelation(String userId, List<VcStatusDto> currentVcStatuses)
-            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
-        if (!userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(
-                userId, currentVcStatuses)) {
+    private boolean checkCorrelation(String userId)
+            throws HttpResponseExceptionWithErrorBody, ParseException {
+        if (!userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(userId)) {
             var message = new StringMapMessage();
             message.with(
                             LOG_ERROR_CODE.getFieldName(),
@@ -227,8 +218,7 @@ public class EvaluateGpg45ScoresHandler
             return false;
         }
 
-        if (!userIdentityService.checkBirthDateCorrelationInCredentials(
-                userId, currentVcStatuses)) {
+        if (!userIdentityService.checkBirthDateCorrelationInCredentials(userId)) {
             var message = new StringMapMessage();
             message.with(
                             LOG_ERROR_CODE.getFieldName(),

@@ -155,10 +155,6 @@ public class UserIdentityService {
                 Optional<JsonNode> drivingPermitClaim =
                         generateDrivingPermitClaim(successfulVCStoreItems);
                 drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
-            } catch (NoVcStatusForIssuerException e) {
-                throw new HttpResponseExceptionWithErrorBody(
-                        HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                        ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER);
             } catch (ParseException e) {
                 throw new HttpResponseExceptionWithErrorBody(
                         HttpStatus.SC_INTERNAL_SERVER_ERROR,
@@ -252,7 +248,7 @@ public class UserIdentityService {
     }
 
     private Optional<IdentityClaim> generateIdentityClaim(List<VcStoreItem> successfulVCStoreItems)
-            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
+            throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : successfulVCStoreItems) {
             if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())) {
                 return Optional.of(
@@ -300,9 +296,8 @@ public class UserIdentityService {
     }
 
     private Optional<JsonNode> generatePassportClaim(List<VcStoreItem> successfulVCStoreItems)
-            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
+            throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : successfulVCStoreItems) {
-            String componentId = configService.getComponentId(item.getCredentialIssuer());
             if (PASSPORT_CRI_TYPES.contains(item.getCredentialIssuer())) {
                 JsonNode passportNode;
                 try {
@@ -344,7 +339,7 @@ public class UserIdentityService {
     }
 
     private Optional<JsonNode> generateDrivingPermitClaim(List<VcStoreItem> successfulVCStoreItems)
-            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
+            throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : successfulVCStoreItems) {
             if (DRIVING_PERMIT_CRI_TYPES.contains(item.getCredentialIssuer())) {
                 JsonNode drivingPermitNode;
@@ -420,49 +415,36 @@ public class UserIdentityService {
                 .getIsSuccessfulVc();
     }
 
-    private List<IdentityClaim> getIdentityClaims(
-            List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
-            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
+    private List<IdentityClaim> getIdentityClaims(List<VcStoreItem> successfulVcStoreItems)
+            throws HttpResponseExceptionWithErrorBody {
         List<IdentityClaim> identityClaims = new ArrayList<>();
-        for (VcStoreItem item : vcStoreItems) {
-            String componentId = configService.getComponentId(item.getCredentialIssuer());
-
-            if (isVcSuccessful(currentVcStatuses, componentId)) {
-                identityClaims.add(
-                        getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), true));
-            }
+        for (VcStoreItem item : successfulVcStoreItems) {
+            identityClaims.add(
+                    getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), true));
         }
         return identityClaims;
     }
 
-    public boolean checkBirthDateCorrelationInCredentials(
-            String userId, List<VcStatusDto> currentVcStatuses)
-            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
-        if (currentVcStatuses != null) {
-            List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
-            List<IdentityClaim> identityClaims = getIdentityClaims(vcStoreItems, currentVcStatuses);
-            return identityClaims.stream()
-                            .map(IdentityClaim::getBirthDate)
-                            .flatMap(List::stream)
-                            .map(BirthDate::getValue)
-                            .distinct()
-                            .count()
-                    <= 1;
-        }
-        return true;
+    public boolean checkBirthDateCorrelationInCredentials(String userId)
+            throws HttpResponseExceptionWithErrorBody, ParseException {
+        List<VcStoreItem> successfulVCStoreItems =
+                getSuccessfulVCStoreItems(getVcStoreItems(userId));
+        List<IdentityClaim> identityClaims = getIdentityClaims(successfulVCStoreItems);
+        return identityClaims.stream()
+                        .map(IdentityClaim::getBirthDate)
+                        .flatMap(List::stream)
+                        .map(BirthDate::getValue)
+                        .distinct()
+                        .count()
+                <= 1;
     }
 
-    public boolean checkNameAndFamilyNameCorrelationInCredentials(
-            String userId, List<VcStatusDto> currentVcStatuses)
-            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
-        if (currentVcStatuses != null) {
-            List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
-
-            List<IdentityClaim> identityClaims = getIdentityClaims(vcStoreItems, currentVcStatuses);
-
-            return checkNamesForCorrelation(getFullNamesFromCredentials(identityClaims));
-        }
-        return true;
+    public boolean checkNameAndFamilyNameCorrelationInCredentials(String userId)
+            throws HttpResponseExceptionWithErrorBody, ParseException {
+        List<VcStoreItem> successfulVCStoreItems =
+                getSuccessfulVCStoreItems(getVcStoreItems(userId));
+        List<IdentityClaim> identityClaims = getIdentityClaims(successfulVCStoreItems);
+        return checkNamesForCorrelation(getFullNamesFromCredentials(identityClaims));
     }
 
     public boolean checkNamesForCorrelation(List<String> userFullNames) {
