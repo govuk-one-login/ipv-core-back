@@ -25,7 +25,6 @@ import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -40,7 +39,6 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -48,7 +46,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -204,8 +201,6 @@ public class CheckExistingIdentityHandler
 
                 ipvSessionItem.setVot(VOT_P2);
 
-                updateSuccessfulVcStatuses(ipvSessionItem, credentials);
-
                 return JOURNEY_REUSE;
             }
 
@@ -284,39 +279,6 @@ public class CheckExistingIdentityHandler
             }
         }
         return Optional.empty();
-    }
-
-    @Tracing
-    private void updateSuccessfulVcStatuses(
-            IpvSessionItem ipvSessionItem, List<SignedJWT> credentials) throws ParseException {
-
-        // get list of success vc's
-        List<VcStatusDto> currentVcStatusDtos = ipvSessionItem.getCurrentVcStatuses();
-
-        if (currentVcStatusDtos == null) {
-            currentVcStatusDtos = new ArrayList<>();
-        }
-
-        if (currentVcStatusDtos.size() != credentials.size()) {
-            List<VcStatusDto> updatedStatuses = generateVcSuccessStatuses(credentials);
-            ipvSessionItem.setCurrentVcStatuses(updatedStatuses);
-            ipvSessionService.updateIpvSession(ipvSessionItem);
-        }
-    }
-
-    @Tracing
-    private List<VcStatusDto> generateVcSuccessStatuses(List<SignedJWT> credentials)
-            throws ParseException {
-        List<VcStatusDto> vcStatuses = new ArrayList<>();
-        Set<String> excludedCredentialIssuers =
-                userIdentityService.getNonEvidenceCredentialIssuers();
-        for (SignedJWT signedJWT : credentials) {
-            boolean isSuccessful =
-                    VcHelper.isSuccessfulVcIgnoringCi(signedJWT, excludedCredentialIssuers);
-
-            vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
-        }
-        return vcStatuses;
     }
 
     private AuditEvent buildProfileMatchedAuditEvent(
