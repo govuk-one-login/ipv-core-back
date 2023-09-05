@@ -6,11 +6,12 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import software.amazon.lambda.powertools.logging.LoggingUtils;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 @ExcludeFromGeneratedCoverageReport
 public class LogHelper {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String CORE_COMPONENT_ID = "core";
     public static final String GOVUK_SIGNIN_JOURNEY_ID_DEFAULT_VALUE = "unknown";
 
     public enum LogField {
@@ -69,8 +70,10 @@ public class LogHelper {
         throw new IllegalStateException("Utility class");
     }
 
-    public static void attachComponentIdToLogs() {
-        attachFieldToLogs(LogField.LOG_COMPONENT_ID, CORE_COMPONENT_ID);
+    public static void attachComponentIdToLogs(ConfigService configService) {
+        attachFieldToLogs(
+                LogField.LOG_COMPONENT_ID,
+                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID));
     }
 
     public static void attachClientIdToLogs(String clientId) {

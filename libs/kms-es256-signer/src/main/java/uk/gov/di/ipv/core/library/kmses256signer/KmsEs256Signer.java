@@ -28,17 +28,19 @@ public class KmsEs256Signer implements JWSSigner {
 
     private static final Base64.Encoder b64UrlEncoder = Base64.getUrlEncoder();
     private final JCAContext jcaContext = new JCAContext();
-    private final String keyId;
+    private String keyId;
 
     @ExcludeFromGeneratedCoverageReport
-    public KmsEs256Signer(String keyId) {
-        this.keyId = keyId;
+    public KmsEs256Signer() {
         this.kmsClient = AWSKMSClientBuilder.defaultClient();
     }
 
-    public KmsEs256Signer(String keyId, AWSKMS kmsClient) {
-        this.keyId = keyId;
+    public KmsEs256Signer(AWSKMS kmsClient) {
         this.kmsClient = kmsClient;
+    }
+
+    public void setKeyId(String keyId) {
+        this.keyId = keyId;
     }
 
     @Override

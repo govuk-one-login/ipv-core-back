@@ -57,7 +57,6 @@ public class BuildUserIdentityHandler
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CiMitService ciMitService;
-    private final String componentId;
 
     public BuildUserIdentityHandler(
             UserIdentityService userIdentityService,
@@ -72,7 +71,6 @@ public class BuildUserIdentityHandler
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.ciMitService = ciMitService;
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -83,7 +81,6 @@ public class BuildUserIdentityHandler
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.ciMitService = new CiMitService(configService);
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @Override
@@ -91,7 +88,7 @@ public class BuildUserIdentityHandler
     @Logging(clearState = true)
     public APIGatewayProxyResponseEvent handleRequest(
             APIGatewayProxyRequestEvent input, Context context) {
-        LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs(configService);
         try {
             String featureSet = RequestHelper.getFeatureSet(input);
             configService.setFeatureSet(featureSet);
@@ -160,7 +157,7 @@ public class BuildUserIdentityHandler
             auditService.sendAuditEvent(
                     new AuditEvent(
                             AuditEventTypes.IPV_IDENTITY_ISSUED,
-                            componentId,
+                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser,
                             extensions));
 

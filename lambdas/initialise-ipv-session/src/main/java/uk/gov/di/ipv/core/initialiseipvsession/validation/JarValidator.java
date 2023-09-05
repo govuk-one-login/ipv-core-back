@@ -50,8 +50,9 @@ public class JarValidator {
         this.configService = configService;
     }
 
-    public SignedJWT decryptJWE(JWEObject jweObject) throws JarValidationException {
+    public SignedJWT decryptJWE(JWEObject jweObject, String keyId) throws JarValidationException {
         try {
+            kmsRsaDecrypter.setKeyId(keyId);
             jweObject.decrypt(kmsRsaDecrypter);
 
             return jweObject.getPayload().toSignedJWT();

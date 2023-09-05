@@ -66,7 +66,7 @@ public class ResetIdentityHandler implements RequestHandler<JourneyRequest, Map<
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(JourneyRequest event, Context context) {
-        LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs(configService);
 
         try {
             String ipvSessionId = getIpvSessionId(event);
