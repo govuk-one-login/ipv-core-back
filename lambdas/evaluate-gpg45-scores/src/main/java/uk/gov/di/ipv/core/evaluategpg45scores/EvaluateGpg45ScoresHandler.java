@@ -27,7 +27,6 @@ import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.dto.Gpg45ScoresDto;
 import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
-import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVisitedCriFoundException;
@@ -41,14 +40,12 @@ import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
 import uk.gov.di.ipv.core.library.service.UserIdentityService;
-import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -152,10 +149,8 @@ public class EvaluateGpg45ScoresHandler
                             credentials,
                             ipAddress);
 
-            updateSuccessfulVcStatuses(ipvSessionItem, credentials);
-
             Optional<JourneyResponse> journeyResponseForFailWithNoCi =
-                    getJourneyResponseForFailWithNoCi(ipvSessionItem);
+                    getJourneyResponseForFailWithNoCi(ipvSessionItem, userId);
             if (journeyResponseForFailWithNoCi.isPresent()) {
                 return journeyResponseForFailWithNoCi.get().toObjectMap();
             }
@@ -280,44 +275,6 @@ public class EvaluateGpg45ScoresHandler
     }
 
     @Tracing
-    List<VcStatusDto> getVcStatuses(IpvSessionItem ipvSessionItem) {
-        List<VcStatusDto> currentVcStatusDtos = ipvSessionItem.getCurrentVcStatuses();
-
-        if (currentVcStatusDtos == null) {
-            currentVcStatusDtos = new ArrayList<>();
-        }
-        return currentVcStatusDtos;
-    }
-
-    @Tracing
-    private void updateSuccessfulVcStatuses(
-            IpvSessionItem ipvSessionItem, List<SignedJWT> credentials) throws ParseException {
-        List<VcStatusDto> currentVcStatusDtos = getVcStatuses(ipvSessionItem);
-
-        if (currentVcStatusDtos.size() != credentials.size()) {
-            List<VcStatusDto> updatedStatuses = generateVcSuccessStatuses(credentials);
-            ipvSessionItem.setCurrentVcStatuses(updatedStatuses);
-            ipvSessionService.updateIpvSession(ipvSessionItem);
-        }
-    }
-
-    @Tracing
-    private List<VcStatusDto> generateVcSuccessStatuses(List<SignedJWT> credentials)
-            throws ParseException {
-        List<VcStatusDto> vcStatuses = new ArrayList<>();
-        Set<String> excludedCredentialIssuers =
-                userIdentityService.getNonEvidenceCredentialIssuers();
-
-        for (SignedJWT signedJWT : credentials) {
-            boolean isSuccessful =
-                    VcHelper.isSuccessfulVcIgnoringCi(signedJWT, excludedCredentialIssuers);
-
-            vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
-        }
-        return vcStatuses;
-    }
-
-    @Tracing
     private AuditEvent buildProfileMatchedAuditEvent(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
@@ -358,19 +315,18 @@ public class EvaluateGpg45ScoresHandler
 
     @Tracing
     private Optional<JourneyResponse> getJourneyResponseForFailWithNoCi(
-            IpvSessionItem ipvSessionItem) throws NoVisitedCriFoundException {
+            IpvSessionItem ipvSessionItem, String userId)
+            throws NoVisitedCriFoundException, ParseException {
         VisitedCredentialIssuerDetailsDto lastVisitedCri =
                 ipvSessionItem.getVisitedCredentialIssuerDetails().stream()
                         .reduce((first, second) -> second)
                         .orElseThrow(NoVisitedCriFoundException::new);
 
-        Optional<VcStatusDto> lastVisitedCriVcStatus =
-                getVcStatuses(ipvSessionItem).stream()
-                        .filter(status -> status.getCriIss().equals(lastVisitedCri.getCriIssuer()))
-                        .findFirst();
+        Optional<Boolean> lastVisitedCriVcStatus =
+                userIdentityService.getVCSuccessStatus(userId, lastVisitedCri.getCriIssuer());
 
         if (lastVisitedCriVcStatus.isPresent()
-                && Boolean.FALSE.equals(lastVisitedCriVcStatus.get().getIsSuccessfulVc())) {
+                && Boolean.FALSE.equals(lastVisitedCriVcStatus.get())) {
             // Handle scenario where VCs without CIs should be redirected
             return Optional.of(JOURNEY_FAIL_WITH_NO_CI);
         }

@@ -28,9 +28,7 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.EvidenceDto;
 import uk.gov.di.ipv.core.library.dto.Gpg45ScoresDto;
 import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
-import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
-import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -47,10 +45,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
@@ -179,7 +175,6 @@ class EvaluateGpg45ScoresHandlerTest {
         when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
                 .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any())).thenReturn(true);
-        mockUserIdentityServiceGetNonEvidenceCredentialIssuers();
 
         JourneyResponse response =
                 toResponseClass(
@@ -189,48 +184,13 @@ class EvaluateGpg45ScoresHandlerTest {
         assertEquals(JOURNEY_END.getJourney(), response.getJourney());
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
 
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
-        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
-        IpvSessionItem updatedSessionItem = ipvSessionItemArgumentCaptor.getValue();
-
-        List<VcStatusDto> currentVcStatuses = updatedSessionItem.getCurrentVcStatuses();
-        assertEquals(5, currentVcStatuses.size());
-
-        assertTrue(currentVcStatuses.get(0).getIsSuccessfulVc());
-        assertEquals(
-                "https://review-p.integration.account.gov.uk",
-                currentVcStatuses.get(0).getCriIss());
-        assertTrue(currentVcStatuses.get(1).getIsSuccessfulVc());
-        assertEquals(
-                "https://review-a.integration.account.gov.uk",
-                currentVcStatuses.get(1).getCriIss());
-        assertTrue(currentVcStatuses.get(2).getIsSuccessfulVc());
-        assertEquals(
-                "https://review-f.integration.account.gov.uk",
-                currentVcStatuses.get(2).getCriIss());
-        assertTrue(currentVcStatuses.get(3).getIsSuccessfulVc());
-        assertEquals(
-                "https://review-k.integration.account.gov.uk",
-                currentVcStatuses.get(3).getCriIss());
-        assertTrue(currentVcStatuses.get(4).getIsSuccessfulVc());
-        assertEquals("test-dcmaw-iss", currentVcStatuses.get(4).getCriIss());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    private void mockUserIdentityServiceGetNonEvidenceCredentialIssuers() {
-        when(userIdentityService.getNonEvidenceCredentialIssuers())
-                .thenReturn(
-                        Set.of(
-                                addressConfig.getComponentId(),
-                                claimedIdentityConfig.getComponentId()));
     }
 
     @Test
     void shouldReturnJourneySessionEndIfScoresSatisfyM1BGpg45Profile() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        mockUserIdentityServiceGetNonEvidenceCredentialIssuers();
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
@@ -365,30 +325,6 @@ class EvaluateGpg45ScoresHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyErrorResponseIfNoVcStatusFoundForIssuer() throws Exception {
-        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
-                .thenThrow(new NoVcStatusForIssuerException("Bad"));
-        when(gpg45ProfileEvaluator.buildScore(any()))
-                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
-
-        JourneyErrorResponse response =
-                toResponseClass(
-                        evaluateGpg45ScoresHandler.handleRequest(request, context),
-                        JourneyErrorResponse.class);
-
-        assertEquals(JOURNEY_ERROR, response.getJourney());
-        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals(
-                ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER.getCode(), response.getCode());
-        assertEquals(
-                ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER.getMessage(),
-                response.getMessage());
-    }
-
-    @Test
     void shouldReturnFailWithNoCiJourneyResponseIfLastVcStatusesUnsuccessful() throws Exception {
         IpvSessionItem testIpvSessionItem = new IpvSessionItem();
         testIpvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
@@ -413,9 +349,9 @@ class EvaluateGpg45ScoresHandlerTest {
 
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(testIpvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        // don't treat the address cri as a non-evidence cri so last vc deemed unsuccessful
-        when(userIdentityService.getNonEvidenceCredentialIssuers())
-                .thenReturn(Set.of(claimedIdentityConfig.getComponentId()));
+        when(userIdentityService.getVCSuccessStatus(
+                        TEST_USER_ID, "https://review-a.integration.account.gov.uk"))
+                .thenReturn(Optional.of(false));
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
@@ -439,7 +375,6 @@ class EvaluateGpg45ScoresHandlerTest {
 
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(testIpvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        mockUserIdentityServiceGetNonEvidenceCredentialIssuers();
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
