@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.service;
+package uk.gov.di.ipv.core.library.cimit;
 
 import com.amazonaws.services.lambda.AWSLambda;
 import com.amazonaws.services.lambda.model.AWSLambdaException;
@@ -16,15 +16,16 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.cimit.dto.ContraIndicatorCredentialDto;
+import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
+import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
+import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
-import uk.gov.di.ipv.core.library.dto.ContraIndicatorCredentialDto;
-import uk.gov.di.ipv.core.library.exceptions.CiPostMitigationsException;
-import uk.gov.di.ipv.core.library.exceptions.CiPutException;
-import uk.gov.di.ipv.core.library.exceptions.CiRetrievalException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 
 import java.nio.ByteBuffer;
@@ -43,6 +44,7 @@ import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_G
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_PUT_LAMBDA_ARN;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_NO_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_INVALID_EVIDENCE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATOR_VC_NO_EVIDENCE;
@@ -479,6 +481,49 @@ class CiMitServiceTest {
                 CiRetrievalException.class,
                 () ->
                         ciMitService.getContraIndicatorsVCJwt(
+                                TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
+    }
+
+    @Test
+    void getContraIndicatorsVCJwtThrowsErrorWhenInvalidCimitKey() throws JsonProcessingException {
+        when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
+                .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
+        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
+                .thenReturn(CIMIT_COMPONENT_ID);
+        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
+                .thenReturn("INVALID_CIMIT_KEY");
+        when(lambdaClient.invoke(any()))
+                .thenReturn(
+                        new InvokeResult()
+                                .withStatusCode(200)
+                                .withPayload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_VC)));
+
+        assertThrows(
+                CiRetrievalException.class,
+                () ->
+                        ciMitService.getContraIndicatorsVCJwt(
+                                TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
+    }
+
+    @Test
+    void getContraIndicatorsVCJwtThrowsErrorWhenNoVcBlock()
+            throws CiRetrievalException, JsonProcessingException {
+        when(configService.getEnvironmentVariable(CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN))
+                .thenReturn(THE_ARN_OF_CIMIT_GET_CI_LAMBDA);
+        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_COMPONENT_ID))
+                .thenReturn(CIMIT_COMPONENT_ID);
+        when(configService.getSsmParameter(ConfigurationVariable.CIMIT_SIGNING_KEY))
+                .thenReturn(EC_PUBLIC_JWK);
+        when(lambdaClient.invoke(requestCaptor.capture()))
+                .thenReturn(
+                        new InvokeResult()
+                                .withStatusCode(200)
+                                .withPayload(makeCiMitVCPayload(SIGNED_CONTRA_INDICATOR_NO_VC)));
+
+        assertThrows(
+                CiRetrievalException.class,
+                () ->
+                        ciMitService.getContraIndicatorsVC(
                                 TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 

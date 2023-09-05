@@ -43,6 +43,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_R
 public class RetrieveCriOauthAccessTokenHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
+    private final KmsEs256Signer signer;
     private final AuthCodeToAccessTokenService authCodeToAccessTokenService;
     private final ConfigService configService;
     private final AuditService auditService;
@@ -51,12 +52,14 @@ public class RetrieveCriOauthAccessTokenHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
 
     public RetrieveCriOauthAccessTokenHandler(
+            KmsEs256Signer signer,
             AuthCodeToAccessTokenService authCodeToAccessTokenService,
             ConfigService configService,
             IpvSessionService ipvSessionService,
             AuditService auditService,
             CriOAuthSessionService criOAuthSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionService) {
+        this.signer = signer;
         this.authCodeToAccessTokenService = authCodeToAccessTokenService;
         this.configService = configService;
         this.auditService = auditService;
@@ -68,9 +71,8 @@ public class RetrieveCriOauthAccessTokenHandler
     @ExcludeFromGeneratedCoverageReport
     public RetrieveCriOauthAccessTokenHandler() {
         this.configService = new ConfigService();
-        this.authCodeToAccessTokenService =
-                new AuthCodeToAccessTokenService(
-                        configService, new KmsEs256Signer(configService.getSigningKeyId()));
+        this.signer = new KmsEs256Signer();
+        this.authCodeToAccessTokenService = new AuthCodeToAccessTokenService(configService, signer);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.ipvSessionService = new IpvSessionService(configService);
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
@@ -82,7 +84,7 @@ public class RetrieveCriOauthAccessTokenHandler
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(Map<String, String> input, Context context)
             throws JourneyError {
-        LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs(configService);
         IpvSessionItem ipvSessionItem = null;
         String credentialIssuerId = null;
 
@@ -117,6 +119,7 @@ public class RetrieveCriOauthAccessTokenHandler
                             ? configService.getCriPrivateApiKey(credentialIssuerId)
                             : null;
 
+            signer.setKeyId(configService.getSigningKeyId());
             BearerAccessToken accessToken =
                     authCodeToAccessTokenService.exchangeCodeForToken(
                             authorizationCode, credentialIssuerConfig, apiKey, credentialIssuerId);

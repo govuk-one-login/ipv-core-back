@@ -1,6 +1,7 @@
-package uk.gov.di.ipv.core.library.domain;
+package uk.gov.di.ipv.core.library.cimit.domain;
 
 import lombok.Data;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 
 import java.util.List;
 
