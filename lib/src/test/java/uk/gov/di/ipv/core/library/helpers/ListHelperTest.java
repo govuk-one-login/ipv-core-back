@@ -1,13 +1,16 @@
 package uk.gov.di.ipv.core.library.helpers;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsIterableContainingInAnyOrder.containsInAnyOrder;
 
 class ListHelperTest {
 
@@ -32,25 +35,11 @@ class ListHelperTest {
 
         var result = ListHelper.getPermutations(listToPermute);
 
-        assertTrue(
-                listsOfListsAreEquivalent(result, expectedResults),
-                "Result does not match expected result");
-    }
-
-    private <T> boolean listsOfListsAreEquivalent(List<List<T>> a, List<List<T>> b) {
-        if (a.size() != b.size()) {
-            return false;
-        }
-
-        return a.stream()
-                .allMatch(al -> b.stream().anyMatch(bl -> listsContainSameElements(al, bl)));
-    }
-
-    private static <T> boolean listsContainSameElements(List<T> a, List<T> b) {
-        if (a.size() != b.size()) {
-            return false;
-        }
-
-        return b.equals(a);
+        assertThat(
+                result,
+                containsInAnyOrder(
+                        expectedResults.stream()
+                                .map(Matchers::equalTo)
+                                .collect(Collectors.toList())));
     }
 }
