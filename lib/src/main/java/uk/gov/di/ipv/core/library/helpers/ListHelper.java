@@ -1,10 +1,13 @@
 package uk.gov.di.ipv.core.library.helpers;
 
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class ListHelper {
 
+    @ExcludeFromGeneratedCoverageReport
     private ListHelper() {
         throw new IllegalStateException("Utility class");
     }
