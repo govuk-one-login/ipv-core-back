@@ -101,7 +101,7 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
                         new StringMapMessage()
                                 .with(
                                         LOG_MESSAGE_DESCRIPTION.getFieldName(),
-                                        "Retrieved user's CI items.")
+                                        "Score threshold not met")
                                 .with(LOG_SCORE_TYPE.getFieldName(), scoreType));
                 return new JourneyResponse(JOURNEY_UNMET_PATH).toObjectMap();
             }

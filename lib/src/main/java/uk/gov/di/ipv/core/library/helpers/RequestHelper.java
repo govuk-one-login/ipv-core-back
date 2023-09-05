@@ -112,11 +112,23 @@ public class RequestHelper {
     }
 
     public static String getScoreType(ProcessRequest request) {
-        return request.getScoreType();
+        String scoreType = request.getScoreType();
+        if (scoreType == null) {
+            LOGGER.error("Missing score type in request");
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_SCORE_TYPE);
+        }
+        return scoreType;
     }
 
     public static Integer getScoreThreshold(ProcessRequest request) {
-        return request.getScoreThreshold();
+        String scoreThreshold = request.getScoreType();
+        if (scoreThreshold == null) {
+            LOGGER.error("Missing score threshold in request");
+            throw new HttpResponseExceptionWithErrorBody(
+                    HttpStatus.SC_BAD_REQUEST, ErrorResponse.MISSING_SCORE_THRESHOLD);
+        }
+        return scoreThreshold;
     }
 
     private static String getIpvSessionId(Map<String, String> headers, boolean allowNull)
