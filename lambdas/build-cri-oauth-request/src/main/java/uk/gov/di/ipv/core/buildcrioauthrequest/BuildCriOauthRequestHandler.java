@@ -35,9 +35,7 @@ import uk.gov.di.ipv.core.library.domain.SharedClaims;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -415,23 +413,5 @@ public class BuildCriOauthRequestHandler
     private void persistCriOauthState(
             String oauthState, String criId, String clientOAuthSessionId) {
         criOAuthSessionService.persistCriOAuthSession(oauthState, criId, clientOAuthSessionId);
-    }
-
-    @Tracing
-    private VcStatusDto getVcStatus(List<VcStatusDto> currentVcStatuses, String credentialIss)
-            throws NoVcStatusForIssuerException {
-        return currentVcStatuses.stream()
-                .filter(vcStatusDto -> vcStatusDto.getCriIss().equals(credentialIss))
-                .findFirst()
-                .orElseThrow(
-                        () -> {
-                            StringJoiner stringJoiner = new StringJoiner(", ");
-                            currentVcStatuses.forEach(
-                                    (vcStatusDto -> stringJoiner.add(vcStatusDto.getCriIss())));
-                            return new NoVcStatusForIssuerException(
-                                    String.format(
-                                            "CRI issuer '%s' not found in current VC statuses: '%s'",
-                                            credentialIss, stringJoiner));
-                        });
     }
 }
