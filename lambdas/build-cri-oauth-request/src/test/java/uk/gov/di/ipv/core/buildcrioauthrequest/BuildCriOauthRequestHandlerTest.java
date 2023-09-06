@@ -1151,4 +1151,5 @@ class BuildCriOauthRequestHandlerTest {
         final var response = underTest.handleRequest(event, context);
         return getJsonResponse(objectMapper.convertValue(response, new TypeReference<>() {}));
     }
+
 }
