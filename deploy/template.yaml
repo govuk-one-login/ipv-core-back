@@ -2350,8 +2350,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/check-gpg45-score
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
