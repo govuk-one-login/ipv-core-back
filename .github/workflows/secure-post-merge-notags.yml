@@ -59,13 +59,13 @@ jobs:
         continue-on-error: true
         env:
           S3_BUCKET: ${{ secrets.ARTIFACT_BUCKET_NAME_NOTAGS }}
-          SIGNING_KEY: ${{ secrets.SIGNING_PROFILE_NAME_NOTAGS }}
+          SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID_NOTAGS }}
         run: |
           aws s3 cp s3://$S3_BUCKET/envpackage.zip ./
           ls -la
           unzip ./envpackage.zip
           md5sum ./samdir.zip | cut -c -32 > zipsum.txt
-          aws kms verify --key-id SIGNING_KEY --signature ZipSignature --message fileb://zipsum.txt --signing-algorithm RSASSA_PSS_SHA_256
+          aws kms verify --key-id $SIGNING_KEY_ID --signature ZipSignature --message fileb://zipsum.txt --signing-algorithm RSASSA_PSS_SHA_256
           unzip ./samdir.zip
 
       - name: Generate code signing config
