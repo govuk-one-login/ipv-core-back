@@ -9,20 +9,26 @@ import java.util.Optional;
 import java.util.Set;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonPropertyOrder({"name", "birthDate", "address"})
+@JsonPropertyOrder({"name", "birthDate", "address", "socialSecurityRecord"})
 @JsonDeserialize(using = SharedClaimsDeserializer.class)
 @EqualsAndHashCode
 public class SharedClaims {
     private Set<Name> name;
     private Set<BirthDate> birthDate;
     private Set<Address> address;
+    private Set<SocialSecurityRecord> socialSecurityRecord;
 
     private SharedClaims() {}
 
-    public SharedClaims(Set<Name> name, Set<BirthDate> birthDate, Set<Address> address) {
+    public SharedClaims(
+            Set<Name> name,
+            Set<BirthDate> birthDate,
+            Set<Address> address,
+            Set<SocialSecurityRecord> socialSecurityRecord) {
         this.name = name;
         this.birthDate = birthDate;
         this.address = address;
+        this.socialSecurityRecord = socialSecurityRecord;
     }
 
     public static SharedClaims empty() {
@@ -41,6 +47,10 @@ public class SharedClaims {
         return Optional.ofNullable(address);
     }
 
+    public Optional<Set<SocialSecurityRecord>> getSocialSecurityRecord() {
+        return Optional.ofNullable(socialSecurityRecord);
+    }
+
     public void setName(Set<Name> name) {
         this.name = name;
     }
@@ -53,11 +63,16 @@ public class SharedClaims {
         this.address = address;
     }
 
+    public void setSocialSecurityRecord(Set<SocialSecurityRecord> socialSecurityRecord) {
+        this.socialSecurityRecord = socialSecurityRecord;
+    }
+
     public static class Builder {
 
         private Set<Name> name;
         private Set<BirthDate> birthDate;
         private Set<Address> address;
+        private Set<SocialSecurityRecord> socialSecurityRecord;
 
         public Builder setBirthDate(Set<BirthDate> birthDate) {
             this.birthDate = birthDate;
@@ -74,8 +89,13 @@ public class SharedClaims {
             return this;
         }
 
+        public Builder setSocialSecurityRecord(Set<SocialSecurityRecord> socialSecurityRecord) {
+            this.socialSecurityRecord = socialSecurityRecord;
+            return this;
+        }
+
         public SharedClaims build() {
-            return new SharedClaims(name, birthDate, address);
+            return new SharedClaims(name, birthDate, address, socialSecurityRecord);
         }
     }
 }
