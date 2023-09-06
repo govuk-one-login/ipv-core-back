@@ -11,6 +11,7 @@ env:
 jobs:
   RunCheckov:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v3
         with:
@@ -26,6 +27,7 @@ jobs:
 
   RunSamValidate:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       id-token: write
       contents: read

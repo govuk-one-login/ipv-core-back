@@ -56,12 +56,14 @@ import java.util.Map;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.USE_POST_MITIGATIONS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ID;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_LAMBDA_RESULT;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_CI_SCORING_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NOT_FOUND_PATH;
 
 public class RetrieveCriCredentialHandler
         implements RequestHandler<Map<String, String>, Map<String, Object>> {
@@ -72,7 +74,8 @@ public class RetrieveCriCredentialHandler
     private static final Map<String, Object> JOURNEY_CI_SCORING =
             Map.of(JOURNEY, JOURNEY_CI_SCORING_PATH);
     private static final Map<String, Object> JOURNEY_ERROR = Map.of(JOURNEY, JOURNEY_ERROR_PATH);
-
+    private static final Map<String, Object> JOURNEY_NOT_FOUND =
+            Map.of(JOURNEY, JOURNEY_NOT_FOUND_PATH);
     private final VerifiableCredentialService verifiableCredentialService;
     private final IpvSessionService ipvSessionService;
     private final ConfigService configService;
@@ -199,7 +202,15 @@ public class RetrieveCriCredentialHandler
                 | CiPostMitigationsException e) {
             updateVisitedCredentials(
                     ipvSessionItem, credentialIssuerId, null, false, OAuth2Error.SERVER_ERROR_CODE);
+            if (credentialIssuerId.equals(DCMAW_CRI)
+                    && e instanceof VerifiableCredentialException vce
+                    && vce.getHttpStatusCode() == HTTPResponse.SC_NOT_FOUND) {
+                LogHelper.logErrorMessage(
+                        "404 received from DCMAW CRI", vce.getErrorResponse().getMessage());
+                return JOURNEY_NOT_FOUND;
+            }
             return JOURNEY_ERROR;
+
         } catch (ParseException | JsonProcessingException | SqsException e) {
             LogHelper.logErrorMessage("Failed to send audit event to SQS queue.", e.getMessage());
             updateVisitedCredentials(

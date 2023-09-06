@@ -79,6 +79,12 @@ class Gpg45ScoresTest {
         assertEquals(
                 new Gpg45Scores(EV_42, 0, 0, 2),
                 new Gpg45Scores(List.of(), 0, 1, 0).calculateRequiredScores(M1A));
+        assertEquals(
+                new Gpg45Scores(EV_42, 0, 0, 2),
+                new Gpg45Scores(List.of(), 1, 2, 0).calculateRequiredScores(M1A));
+        assertEquals(
+                new Gpg45Scores(EV_32, 0, 0, 2),
+                new Gpg45Scores(List.of(), 1, 2, 0).calculateRequiredScores(M1B));
     }
 
     @Test

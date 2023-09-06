@@ -13,6 +13,6 @@ import java.util.List;
 @AllArgsConstructor
 public class ContraIndicatorEvidenceDto {
     private String type;
-    private List<ContraIndicatorDto> ci;
+    private List<ContraIndicatorDto> contraIndicator;
     private List<String> txn;
 }

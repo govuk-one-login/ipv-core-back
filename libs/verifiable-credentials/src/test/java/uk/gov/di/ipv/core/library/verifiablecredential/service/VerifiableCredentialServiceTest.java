@@ -72,6 +72,7 @@ class VerifiableCredentialServiceTest {
     private VerifiableCredentialService verifiableCredentialService;
     private final String testApiKey = "test-api-key";
     private final String cri = "ukPassport";
+    private final String dcmaw_cri = "dcmaw";
 
     @BeforeEach
     void setUp() {
@@ -477,6 +478,36 @@ class VerifiableCredentialServiceTest {
                                         accessToken, credentialIssuerConfig, testApiKey, cri));
 
         assertEquals(HTTPResponse.SC_SERVER_ERROR, thrown.getHttpStatusCode());
+        assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
+    }
+
+    @Test
+    void getVerifiableCredentialThrowsIf404NotFoundFromDcmawCri(WireMockRuntimeInfo wmRuntimeInfo) {
+
+        stubFor(
+                post("/credentials/issue")
+                        .willReturn(
+                                aResponse()
+                                        .withStatus(404)
+                                        .withHeader("Content-Type", "text/plain")
+                                        .withBody("Something bad happened...")));
+
+        CredentialIssuerConfig credentialIssuerConfig =
+                getStubCredentialIssuerConfig(wmRuntimeInfo);
+
+        BearerAccessToken accessToken = new BearerAccessToken();
+
+        VerifiableCredentialException thrown =
+                assertThrows(
+                        VerifiableCredentialException.class,
+                        () ->
+                                verifiableCredentialService.getVerifiableCredentialResponse(
+                                        accessToken,
+                                        credentialIssuerConfig,
+                                        testApiKey,
+                                        dcmaw_cri));
+
+        assertEquals(HTTPResponse.SC_NOT_FOUND, thrown.getHttpStatusCode());
         assertEquals(ErrorResponse.FAILED_TO_GET_CREDENTIAL_FROM_ISSUER, thrown.getErrorResponse());
     }
 

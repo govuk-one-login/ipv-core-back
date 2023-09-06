@@ -29,11 +29,8 @@ import uk.gov.di.ipv.core.library.domain.Address;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
+import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.EvidenceDto;
-import uk.gov.di.ipv.core.library.dto.Gpg45ScoresDto;
-import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -118,6 +115,7 @@ class BuildCriOauthRequestHandlerTest {
     @Mock private IpvSessionItem mockIpvSessionItem;
     @Mock private CriOAuthSessionService mockCriOAuthSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionDetailsService;
+    @Mock private Gpg45ProfileEvaluator mockGpg45ProfileEvaluator;
 
     private CredentialIssuerConfig credentialIssuerConfig;
     private CredentialIssuerConfig addressCredentialIssuerConfig;
@@ -142,7 +140,8 @@ class BuildCriOauthRequestHandlerTest {
                         mockAuditService,
                         mockIpvSessionService,
                         mockCriOAuthSessionService,
-                        mockClientOAuthSessionDetailsService);
+                        mockClientOAuthSessionDetailsService,
+                        mockGpg45ProfileEvaluator);
         credentialIssuerConfig =
                 new CredentialIssuerConfig(
                         new URI(CRI_TOKEN_URL),
@@ -1091,22 +1090,8 @@ class BuildCriOauthRequestHandlerTest {
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockIpvSessionItem.getRequiredGpg45Scores())
-                .thenReturn(
-                        List.of(
-                                new RequiredGpg45ScoresDto(
-                                        Gpg45Profile.M1A,
-                                        new Gpg45ScoresDto(
-                                                List.of(new EvidenceDto(4, 2)), 0, 0, 2)),
-                                new RequiredGpg45ScoresDto(
-                                        Gpg45Profile.M1B,
-                                        new Gpg45ScoresDto(
-                                                List.of(new EvidenceDto(2, 2)), 0, 1, 2)),
-                                new RequiredGpg45ScoresDto(
-                                        Gpg45Profile.M1C,
-                                        new Gpg45ScoresDto(
-                                                List.of(new EvidenceDto(3, 2)), 1, 0, 2))));
         when(configService.enabled(EVIDENCE_REQUEST_ENABLED)).thenReturn(true);
+        when(mockGpg45ProfileEvaluator.calculateF2FRequiredStrengthScore(any())).thenReturn(3);
 
         JourneyRequest input =
                 JourneyRequest.builder()

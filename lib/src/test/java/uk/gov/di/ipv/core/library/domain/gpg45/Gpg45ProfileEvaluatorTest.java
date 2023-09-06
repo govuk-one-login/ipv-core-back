@@ -19,6 +19,9 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.Mitigation;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
+import uk.gov.di.ipv.core.library.dto.EvidenceDto;
+import uk.gov.di.ipv.core.library.dto.Gpg45ScoresDto;
+import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.service.ConfigService;
@@ -412,6 +415,62 @@ class Gpg45ProfileEvaluatorTest {
                         parsedCredentials, CredentialEvidenceItem.EvidenceType.IDENTITY_FRAUD);
 
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void calculateF2FRequiredStrengthScoreShouldReturn3ForUserWithActivityScore1FraudScore2() {
+        List<RequiredGpg45ScoresDto> requiredScores =
+                List.of(
+                        // User who has Fraud VC with activity score 1, fraud score 2
+                        new RequiredGpg45ScoresDto(
+                                Gpg45Profile.M1A,
+                                new Gpg45ScoresDto(List.of(new EvidenceDto(4, 2)), 0, 0, 2)),
+                        new RequiredGpg45ScoresDto(
+                                Gpg45Profile.M1B,
+                                new Gpg45ScoresDto(List.of(new EvidenceDto(3, 2)), 0, 0, 2)));
+        assertEquals(3, evaluator.calculateF2FRequiredStrengthScore(requiredScores));
+    }
+
+    @Test
+    void calculateF2FRequiredStrengthScoreShouldReturn4ForUserWithActivityScore0FraudScore2() {
+        List<RequiredGpg45ScoresDto> requiredScores =
+                List.of(
+                        // User who has Fraud VC with activity score 0, fraud score 2 (thin file)
+                        new RequiredGpg45ScoresDto(
+                                Gpg45Profile.M1A,
+                                new Gpg45ScoresDto(List.of(new EvidenceDto(4, 2)), 0, 0, 2)),
+                        new RequiredGpg45ScoresDto(
+                                Gpg45Profile.M1B,
+                                new Gpg45ScoresDto(List.of(new EvidenceDto(3, 2)), 1, 0, 2)));
+        assertEquals(4, evaluator.calculateF2FRequiredStrengthScore(requiredScores));
+    }
+
+    @Test
+    void calculateF2FRequiredStrengthScoreShouldReturn4ForUserWithActivityScore1FraudScore1() {
+        List<RequiredGpg45ScoresDto> requiredScores =
+                List.of(
+                        // User who has Fraud VC with activity score 1, fraud score 1 (thin file)
+                        new RequiredGpg45ScoresDto(
+                                Gpg45Profile.M1A,
+                                new Gpg45ScoresDto(List.of(new EvidenceDto(4, 2)), 0, 0, 2)),
+                        new RequiredGpg45ScoresDto(
+                                Gpg45Profile.M1B,
+                                new Gpg45ScoresDto(List.of(new EvidenceDto(3, 2)), 0, 2, 2)));
+        assertEquals(4, evaluator.calculateF2FRequiredStrengthScore(requiredScores));
+    }
+
+    @Test
+    void calculateF2FRequiredStrengthScoreShouldReturn4ForUserWithActivityScore0FraudScore1() {
+        List<RequiredGpg45ScoresDto> requiredScores =
+                List.of(
+                        // User who has Fraud VC with activity score 0, fraud score 1 (thin file)
+                        new RequiredGpg45ScoresDto(
+                                Gpg45Profile.M1A,
+                                new Gpg45ScoresDto(List.of(new EvidenceDto(4, 2)), 0, 0, 2)),
+                        new RequiredGpg45ScoresDto(
+                                Gpg45Profile.M1B,
+                                new Gpg45ScoresDto(List.of(new EvidenceDto(3, 2)), 1, 2, 2)));
+        assertEquals(4, evaluator.calculateF2FRequiredStrengthScore(requiredScores));
     }
 
     private void setupMockContraIndicatorScoringConfig() {
