@@ -111,7 +111,8 @@ public class RequestHelper {
         return request.getJourney();
     }
 
-    public static String getScoreType(ProcessRequest request) {
+    public static String getScoreType(ProcessRequest request)
+            throws HttpResponseExceptionWithErrorBody {
         String scoreType = request.getScoreType();
         if (scoreType == null) {
             LOGGER.error("Missing score type in request");
@@ -121,8 +122,9 @@ public class RequestHelper {
         return scoreType;
     }
 
-    public static Integer getScoreThreshold(ProcessRequest request) {
-        String scoreThreshold = request.getScoreType();
+    public static Integer getScoreThreshold(ProcessRequest request)
+            throws HttpResponseExceptionWithErrorBody {
+        Integer scoreThreshold = request.getScoreThreshold();
         if (scoreThreshold == null) {
             LOGGER.error("Missing score threshold in request");
             throw new HttpResponseExceptionWithErrorBody(
