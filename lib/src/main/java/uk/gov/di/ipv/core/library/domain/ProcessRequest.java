@@ -2,8 +2,10 @@ package uk.gov.di.ipv.core.library.domain;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Data
 public class ProcessRequest extends JourneyRequest {
