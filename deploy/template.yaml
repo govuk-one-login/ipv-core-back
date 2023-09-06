@@ -399,7 +399,7 @@ Resources:
       CodeUri: ../lambdas/issue-client-access-token
       Architectures:
         - arm64
-      MemorySize: 2048
+      MemorySize: 1024
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
