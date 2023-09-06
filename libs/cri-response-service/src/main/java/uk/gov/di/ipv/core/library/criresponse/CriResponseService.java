@@ -1,9 +1,10 @@
-package uk.gov.di.ipv.core.library.service;
+package uk.gov.di.ipv.core.library.criresponse;
 
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
+import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.time.Instant;
 import java.util.List;
