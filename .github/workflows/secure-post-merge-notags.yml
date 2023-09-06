@@ -61,7 +61,7 @@ jobs:
           S3_BUCKET: ${{ secrets.ARTIFACT_BUCKET_NAME_NOTAGS }}
           SIGNING_KEY: ${{ secrets.SIGNING_PROFILE_NAME_NOTAGS }}
         run: |
-          aws s3 cp $S3_BUCKET/envpackage.zip ./envpackage.zip
+          aws s3 cp s3://$S3_BUCKET/envpackage.zip ./
           zip -x ./envpackage.zip
           samMD5=$(md5sum ./samdir.zip)
           aws kms verify --key-id SIGNING_KEY --signature ZipSignature --message samMD5 --signing-algorithm RSASSA_PSS_SHA_256
@@ -96,7 +96,8 @@ jobs:
           S3_BUCKET: ${{ secrets.ARTIFACT_BUCKET_NAME_NOTAGS }}
           SIGNING_KEY: ${{ secrets.SIGNING_PROFILE_NAME_NOTAGS }}
         run: |
-          zip -r ./samdir.zip ./.sam-aws
+          ls -la
+          zip -r ./samdir.zip ./.aws-sam
           samMD5=$(md5sum ./samdir.zip)
           aws kms sign --key-id $ZIP_SIGNING_KEY --message $(samMD5) --signing-algorithm RSASSA_PSS_SHA_256 --message-type RAW --output text --query Signature | base64 --decode > ZipSignature
           zip -r ./envpackage.zip ./samdir.zip ./ZipSignature
