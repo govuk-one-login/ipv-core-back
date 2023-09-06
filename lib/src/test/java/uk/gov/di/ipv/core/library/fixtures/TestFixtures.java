@@ -141,9 +141,7 @@ public interface TestFixtures {
                                     "validFrom", "2019-07-24"),
                             Map.of(
                                     "buildingNumber", "123",
-                                    "postalCode", "M34 1AA")),
-                    "socialSecurityRecord",
-                    List.of(Map.of("personalNumber", "AA000003D")));
+                                    "postalCode", "M34 1AA")));
 
     Map<String, Object> CREDENTIAL_ATTRIBUTES_2 =
             Map.of(

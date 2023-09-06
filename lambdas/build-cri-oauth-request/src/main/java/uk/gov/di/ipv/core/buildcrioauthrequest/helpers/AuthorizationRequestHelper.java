@@ -89,8 +89,7 @@ public class AuthorizationRequestHelper {
                         new SharedClaimsResponseDto(
                                 sharedClaims.getName(),
                                 sharedClaims.getBirthDate(),
-                                sharedClaims.getAddress(),
-                                sharedClaims.getSocialSecurityRecord());
+                                sharedClaims.getAddress());
                 claimsSetBuilder.claim(SHARED_CLAIMS, response);
             }
         }

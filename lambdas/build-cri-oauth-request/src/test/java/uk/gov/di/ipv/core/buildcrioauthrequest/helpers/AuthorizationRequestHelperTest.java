@@ -20,7 +20,6 @@ import uk.gov.di.ipv.core.library.domain.BirthDate;
 import uk.gov.di.ipv.core.library.domain.Name;
 import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
-import uk.gov.di.ipv.core.library.domain.SocialSecurityRecord;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -77,8 +76,7 @@ class AuthorizationRequestHelperTest {
                     Set.of(new Name(List.of(new NameParts("Dan", "first_name")))),
                     Set.of(new BirthDate("2011-01-01")),
                     Set.of(new Address()),
-                    TEST_EMAIL_ADDRESS,
-                    Set.of(new SocialSecurityRecord()));
+                    TEST_EMAIL_ADDRESS);
 
     private ECDSASigner signer;
 

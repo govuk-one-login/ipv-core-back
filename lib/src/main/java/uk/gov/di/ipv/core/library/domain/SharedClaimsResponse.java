@@ -9,7 +9,7 @@ import org.apache.logging.log4j.message.StringMapMessage;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-@JsonPropertyOrder({"name", "birthDate", "address", "emailAddress", "socialSecurityRecord"})
+@JsonPropertyOrder({"name", "birthDate", "address", "emailAddress"})
 public class SharedClaimsResponse {
 
     private static final Logger LOGGER = LogManager.getLogger();
@@ -18,19 +18,13 @@ public class SharedClaimsResponse {
     private final Set<BirthDate> birthDate;
     private final Set<Address> address;
     private final String emailAddress;
-    private final Set<SocialSecurityRecord> socialSecurityRecord;
 
     public SharedClaimsResponse(
-            Set<Name> name,
-            Set<BirthDate> birthDate,
-            Set<Address> address,
-            String emailAddress,
-            Set<SocialSecurityRecord> socialSecurityRecord) {
+            Set<Name> name, Set<BirthDate> birthDate, Set<Address> address, String emailAddress) {
         this.name = name;
         this.birthDate = birthDate;
         this.address = address;
         this.emailAddress = emailAddress;
-        this.socialSecurityRecord = socialSecurityRecord;
     }
 
     public Set<Name> getName() {
@@ -50,25 +44,17 @@ public class SharedClaimsResponse {
         return emailAddress;
     }
 
-    public Set<SocialSecurityRecord> getSocialSecurityRecord() {
-        return socialSecurityRecord;
-    }
-
     public static SharedClaimsResponse from(
             Set<SharedClaims> sharedAttributes, String emailAddress) {
         Set<Name> nameSet = new LinkedHashSet<>();
         Set<BirthDate> birthDateSet = new LinkedHashSet<>();
         Set<Address> addressSet = new LinkedHashSet<>();
-        Set<SocialSecurityRecord> socialSecurityRecordSet = new LinkedHashSet<>();
 
         sharedAttributes.forEach(
                 sharedAttribute -> {
                     sharedAttribute.getName().ifPresent(nameSet::addAll);
                     sharedAttribute.getBirthDate().ifPresent(birthDateSet::addAll);
                     sharedAttribute.getAddress().ifPresent(addressSet::addAll);
-                    sharedAttribute
-                            .getSocialSecurityRecord()
-                            .ifPresent(socialSecurityRecordSet::addAll);
                 });
 
         var message =
@@ -76,11 +62,9 @@ public class SharedClaimsResponse {
                         .with("sharedClaims", "built")
                         .with("names", nameSet.size())
                         .with("birthDates", birthDateSet.size())
-                        .with("addresses", addressSet.size())
-                        .with("socialSecurityRecords", socialSecurityRecordSet.size());
+                        .with("addresses", addressSet.size());
         LOGGER.info(message);
 
-        return new SharedClaimsResponse(
-                nameSet, birthDateSet, addressSet, emailAddress, socialSecurityRecordSet);
+        return new SharedClaimsResponse(nameSet, birthDateSet, addressSet, emailAddress);
     }
 }
