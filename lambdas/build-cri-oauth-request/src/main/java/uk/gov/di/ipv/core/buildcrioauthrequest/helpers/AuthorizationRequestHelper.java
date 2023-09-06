@@ -19,6 +19,7 @@ import com.nimbusds.oauth2.sdk.id.ClientID;
 import com.nimbusds.oauth2.sdk.id.State;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.EvidenceRequest;
+import uk.gov.di.ipv.core.library.domain.NinoSharedClaimsResponseDto;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponse;
 import uk.gov.di.ipv.core.library.domain.SharedClaimsResponseDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
@@ -84,13 +85,20 @@ public class AuthorizationRequestHelper {
         if (Objects.nonNull(sharedClaims)) {
             if (sharedClaims.getEmailAddress() != null) {
                 claimsSetBuilder.claim(SHARED_CLAIMS, sharedClaims);
+            } else if (!sharedClaims.getSocialSecurityRecord().isEmpty()) {
+                NinoSharedClaimsResponseDto response =
+                        new NinoSharedClaimsResponseDto(
+                                sharedClaims.getName(),
+                                sharedClaims.getBirthDate(),
+                                sharedClaims.getAddress(),
+                                sharedClaims.getSocialSecurityRecord());
+                claimsSetBuilder.claim(SHARED_CLAIMS, response);
             } else {
                 SharedClaimsResponseDto response =
                         new SharedClaimsResponseDto(
                                 sharedClaims.getName(),
                                 sharedClaims.getBirthDate(),
-                                sharedClaims.getAddress(),
-                                sharedClaims.getSocialSecurityRecord());
+                                sharedClaims.getAddress());
                 claimsSetBuilder.claim(SHARED_CLAIMS, response);
             }
         }
