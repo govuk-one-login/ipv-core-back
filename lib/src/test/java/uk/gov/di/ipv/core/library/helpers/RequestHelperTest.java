@@ -5,6 +5,7 @@ import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
+import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 
 import java.util.HashMap;
@@ -189,7 +190,7 @@ class RequestHelperTest {
     }
 
     @Test
-    void getFeatureSetShouldReturnFeatureSetId() throws HttpResponseExceptionWithErrorBody {
+    void getFeatureSetShouldReturnFeatureSetId() {
         var event = new APIGatewayProxyRequestEvent();
         event.setHeaders(Map.of(FEATURE_SET_HEADER, "test-feature-set"));
 
@@ -207,5 +208,49 @@ class RequestHelperTest {
                         .featureSet(TEST_FEATURE_SET)
                         .build();
         assertEquals("test-feature-set", RequestHelper.getFeatureSet(event));
+    }
+
+    @Test
+    void getScoreTypeShouldReturnScoreType() throws HttpResponseExceptionWithErrorBody {
+        ProcessRequest processRequest =
+                ProcessRequest.processRequestBuilder().scoreType("fraud").build();
+        assertEquals("fraud", RequestHelper.getScoreType(processRequest));
+    }
+
+    @Test
+    void getScoreTypeShouldThrowIfScoreTypeIsNull() {
+        ProcessRequest processRequest = new ProcessRequest();
+
+        var exception =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> RequestHelper.getScoreType(processRequest));
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
+        assertEquals(
+                ErrorResponse.MISSING_SCORE_TYPE.getMessage(),
+                exception.getErrorResponse().getMessage());
+    }
+
+    @Test
+    void getScoreThresholdShouldReturnScoreThreshold() throws HttpResponseExceptionWithErrorBody {
+        ProcessRequest processRequest =
+                ProcessRequest.processRequestBuilder().scoreThreshold(2).build();
+        assertEquals(2, RequestHelper.getScoreThreshold(processRequest));
+    }
+
+    @Test
+    void getScoreThresholdShouldThrowIfScoreThresholdIsNull() {
+        ProcessRequest processRequest = new ProcessRequest();
+
+        var exception =
+                assertThrows(
+                        HttpResponseExceptionWithErrorBody.class,
+                        () -> RequestHelper.getScoreThreshold(processRequest));
+
+        assertEquals(HttpStatus.SC_BAD_REQUEST, exception.getResponseCode());
+        assertEquals(
+                ErrorResponse.MISSING_SCORE_THRESHOLD.getMessage(),
+                exception.getErrorResponse().getMessage());
     }
 }
