@@ -94,12 +94,12 @@ jobs:
         working-directory: ./deploy
         env:
           S3_BUCKET: ${{ secrets.ARTIFACT_BUCKET_NAME_NOTAGS }}
-          SIGNING_KEY: ${{ secrets.SIGNING_PROFILE_NAME_NOTAGS }}
+          SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID_NOTAGS }}
         run: |
           ls -la
           zip -r ./samdir.zip ./.aws-sam
           samMD5=$(md5sum ./samdir.zip)
-          aws kms sign --key-id $ZIP_SIGNING_KEY --message $(samMD5) --signing-algorithm RSASSA_PSS_SHA_256 --message-type RAW --output text --query Signature | base64 --decode > ZipSignature
+          aws kms sign --key-id $SIGNING_KEY_ID --message $(samMD5) --signing-algorithm RSASSA_PSS_SHA_256 --message-type RAW --output text --query Signature | base64 --decode > ZipSignature
           zip -r ./envpackage.zip ./samdir.zip ./ZipSignature
           aws s3 cp envpackage.zip "s3://$S3_BUCKET/envpackage.zip" --metadata "repository=$GITHUB_REPOSITORY,commitsha=$GITHUB_SHA"
           echo "environment zip file uploaded"
