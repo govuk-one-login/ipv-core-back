@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.criresponse;
+package uk.gov.di.ipv.core.library.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -8,7 +8,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
-import uk.gov.di.ipv.core.library.service.ConfigService;
 
 import java.time.Instant;
 import java.util.List;
@@ -33,9 +32,7 @@ public class CriResponseServiceTest {
     private CriResponseService criResponseService;
 
     private static final String USER_ID_1 = "user-id-1";
-    private static final String userId = "userId";
-    private static final String testCredentialIssuer = F2F_CRI;
-
+    private static final String USER_ID = "userId";
     private static final String TEST_USER_ID = UUID.randomUUID().toString();
     private static final String TEST_CREDENTIAL_ISSUER = F2F_CRI;
     private static final String TEST_ISSUER_RESPONSE =
@@ -72,16 +69,16 @@ public class CriResponseServiceTest {
         List<CriResponseItem> criResponseItem =
                 List.of(
                         createCriResponseStoreItem(
-                                USER_ID_1, testCredentialIssuer, SIGNED_VC_1, Instant.now()));
+                                USER_ID_1, TEST_CREDENTIAL_ISSUER, SIGNED_VC_1, Instant.now()));
 
-        when(mockDataStore.getItems(userId)).thenReturn(criResponseItem);
+        when(mockDataStore.getItems(USER_ID)).thenReturn(criResponseItem);
 
-        var criResponseItems = criResponseService.getCriResponseItems(userId);
+        var criResponseItems = criResponseService.getCriResponseItems(USER_ID);
 
         assertTrue(
                 criResponseItems.stream()
                         .map(CriResponseItem::getCredentialIssuer)
-                        .anyMatch(item -> testCredentialIssuer.equals(item)));
+                        .anyMatch(item -> TEST_CREDENTIAL_ISSUER.equals(item)));
     }
 
     @Test
@@ -124,6 +121,30 @@ public class CriResponseServiceTest {
                 criResponseService.getFaceToFaceRequest(USER_ID_1);
 
         assertTrue(!Objects.isNull(retrievedCredentialItem));
+    }
+
+    @Test
+    void shouldDeleteExistingWhenUserHasDeleteRequest() {
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(
+                        USER_ID_1, TEST_CREDENTIAL_ISSUER, SIGNED_VC_1, Instant.now());
+
+        when(mockDataStore.delete(USER_ID_1, TEST_CREDENTIAL_ISSUER)).thenReturn(criResponseItem);
+
+        criResponseService.deleteCriResponseItem(USER_ID_1, TEST_CREDENTIAL_ISSUER);
+
+        verify(mockDataStore, times(1)).delete(USER_ID_1, TEST_CREDENTIAL_ISSUER);
+    }
+
+    @Test
+    void shouldUpdateExistingWhenUserHasUpdateRequest() {
+        CriResponseItem criResponseItem =
+                createCriResponseStoreItem(
+                        USER_ID_1, TEST_CREDENTIAL_ISSUER, SIGNED_VC_1, Instant.now());
+        when(mockDataStore.update(criResponseItem)).thenReturn(criResponseItem);
+
+        criResponseService.updateCriResponseItem(criResponseItem);
+        verify(mockDataStore, times(1)).update(criResponseItem);
     }
 
     private CriResponseItem createCriResponseStoreItem(
