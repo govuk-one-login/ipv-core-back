@@ -64,8 +64,8 @@ jobs:
           aws s3 cp s3://$S3_BUCKET/envpackage.zip ./
           ls -la
           unzip ./envpackage.zip
-          samMD5=$(md5sum ./samdir.zip)
-          aws kms verify --key-id SIGNING_KEY --signature ZipSignature --message $samMD5 --signing-algorithm RSASSA_PSS_SHA_256
+          md5sum ./samdir.zip | cut -c -32 > zipsum.txt
+          aws kms verify --key-id SIGNING_KEY --signature ZipSignature --message fileb://zipsum.txt --signing-algorithm RSASSA_PSS_SHA_256
           unzip ./samdir.zip
 
       - name: Generate code signing config
@@ -99,8 +99,8 @@ jobs:
         run: |
           ls -la
           zip -r ./samdir.zip ./.aws-sam
-          samMD5=$(md5sum ./samdir.zip)
-          aws kms sign --key-id $SIGNING_KEY_ID --message $samMD5 --signing-algorithm RSASSA_PSS_SHA_256 --message-type RAW --output text --query Signature | base64 --decode > ZipSignature
+          md5sum ./samdir.zip | cut -c -32 > zipsum.txt
+          aws kms sign --key-id $SIGNING_KEY_ID --message fileb://zipsum.txt --signing-algorithm RSASSA_PSS_SHA_256 --message-type RAW --output text --query Signature | base64 --decode > ZipSignature
           zip -r ./envpackage.zip ./samdir.zip ./ZipSignature
           aws s3 cp envpackage.zip "s3://$S3_BUCKET/envpackage.zip" --metadata "repository=$GITHUB_REPOSITORY,commitsha=$GITHUB_SHA"
           echo "environment zip file uploaded"
