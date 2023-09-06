@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.domain.ProcessRequest;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
+import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownScoreTypeException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -86,11 +87,8 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
             Integer scoreThreshold = RequestHelper.getScoreThreshold(event);
             configService.setFeatureSet(featureSet);
 
-            List<SignedJWT> credentials = getParsedCredentials(ipvSessionId);
-            Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
-            int fraudScore = gpg45Scores.getFraud();
-
-            if (fraudScore >= scoreThreshold) {
+            int scoreToCompare = getScore(ipvSessionId, scoreType);
+            if (scoreToCompare >= scoreThreshold) {
                 LOGGER.info(
                         new StringMapMessage()
                                 .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Score threshold met")
@@ -124,6 +122,13 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             ErrorResponse.FAILED_TO_DETERMINE_CREDENTIAL_TYPE)
                     .toObjectMap();
+        } catch (UnknownScoreTypeException e) {
+            LOGGER.error("Unable to process score type", e);
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.UNKNOWN_SCORE_TYPE)
+                    .toObjectMap();
         }
     }
 
@@ -139,5 +144,17 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
 
         return gpg45ProfileEvaluator.parseCredentials(
                 userIdentityService.getUserIssuedCredentials(userId));
+    }
+
+    private int getScore(String ipvSessionId, String scoreType)
+            throws ParseException, UnknownEvidenceTypeException, UnknownScoreTypeException {
+        List<SignedJWT> credentials = getParsedCredentials(ipvSessionId);
+        Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
+        return switch (scoreType) {
+            case "fraud" -> gpg45Scores.getFraud();
+            case "activity" -> gpg45Scores.getActivity();
+            case "verification" -> gpg45Scores.getVerification();
+            default -> throw new UnknownScoreTypeException("Invalid score type: " + scoreType);
+        };
     }
 }

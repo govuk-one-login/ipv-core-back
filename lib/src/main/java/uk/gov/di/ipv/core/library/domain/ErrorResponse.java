@@ -67,7 +67,9 @@ public enum ErrorResponse {
     NO_VC_STATUS_FOR_CREDENTIAL_ISSUER(1055, "No VC status found for issuer"),
     FAILED_TO_PARSE_CONFIG(1056, "Failed to parse configuration"),
     MISSING_SCORE_TYPE(1057, "Missing score tpye in request"),
-    MISSING_SCORE_THRESHOLD(1058, "Missing score tpye in request");
+    MISSING_SCORE_THRESHOLD(1058, "Missing score tpye in request"),
+    UNKNOWN_SCORE_TYPE(1059, "Unknown score tpye in request"),
+    ;
 
     @JsonProperty("code")
     private final int code;
