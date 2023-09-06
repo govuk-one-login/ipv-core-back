@@ -85,28 +85,4 @@ class Gpg45ScoresTest {
                 new Gpg45Scores(EV_32, 0, 0, 2),
                 new Gpg45Scores(EV_22, 1, 2, 0).calculateRequiredScores(M1B));
     }
-
-    @Test
-    void compareToShouldReturnNegativeIfOtherHasALowerScore() {
-        Gpg45Scores score1 = new Gpg45Scores(EV_33, 0, 1, 3);
-        Gpg45Scores score2 = new Gpg45Scores(EV_33, 0, 1, 1);
-
-        assertTrue(score1.compareTo(score2) < 0);
-    }
-
-    @Test
-    void compareToShouldReturnPositiveIfOtherHasAHigherScore() {
-        Gpg45Scores score1 = new Gpg45Scores(EV_33, 0, 1, 1);
-        Gpg45Scores score2 = new Gpg45Scores(EV_33, 0, 1, 3);
-
-        assertTrue(score1.compareTo(score2) > 0);
-    }
-
-    @Test
-    void compareToShouldReturnZeroIfOtherHasSameScore() {
-        Gpg45Scores score1 = new Gpg45Scores(EV_33, 0, 1, 3);
-        Gpg45Scores score2 = new Gpg45Scores(EV_33, 0, 1, 3);
-
-        assertEquals(0, score1.compareTo(score2));
-    }
 }

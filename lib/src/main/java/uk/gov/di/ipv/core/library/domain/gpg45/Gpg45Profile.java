@@ -60,10 +60,6 @@ public enum Gpg45Profile {
         return String.format("%1$s%2$s", label, scores.toString());
     }
 
-    public Gpg45Scores difference(Gpg45Scores target) {
-        return scores.difference(target);
-    }
-
     /**
      * Checks if that the provided {@code Gpg45Scores} satisfy the {@code Gpg45Scores} for this
      * profile.

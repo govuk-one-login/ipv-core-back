@@ -14,7 +14,7 @@ import java.util.stream.Stream;
  *
  * <p>Objects if this class are immutable.
  */
-public class Gpg45Scores implements Comparable<Gpg45Scores> {
+public class Gpg45Scores {
 
     public static final Evidence EV_00 = new Gpg45Scores.Evidence(0, 0);
     public static final Evidence EV_11 = new Gpg45Scores.Evidence(1, 1);
@@ -109,7 +109,7 @@ public class Gpg45Scores implements Comparable<Gpg45Scores> {
                 && evidences.equals(that.evidences);
     }
 
-    public Gpg45Scores difference(Gpg45Scores other) {
+    private Gpg45Scores difference(Gpg45Scores other) {
         return new Gpg45Scores(
                 diffEvidence(other),
                 other.getActivity() - activity,
@@ -175,58 +175,6 @@ public class Gpg45Scores implements Comparable<Gpg45Scores> {
     @Override
     public int hashCode() {
         return Objects.hash(evidences, activity, fraud, verification);
-    }
-
-    /**
-     * Compares the score to another. A negative value indicates that there is some negative value
-     * in the {@code difference} between this score and the other. A positive value indicates that
-     * there is some positive value in the {@code difference}. A value of zero indicates that there
-     * is no difference.
-     *
-     * @param other
-     * @return integer
-     */
-    @Override
-    public int compareTo(Gpg45Scores other) {
-        var diff = difference(other);
-        int negativeCount = 0;
-        int positiveCount = 0;
-        for (Evidence e : diff.getEvidences()) {
-            if (e.getStrength() < 0) {
-                negativeCount += e.getStrength();
-            } else {
-                positiveCount += e.getStrength();
-            }
-            if (e.getValidity() < 0) {
-                negativeCount += e.getValidity();
-            } else {
-                positiveCount += e.getValidity();
-            }
-        }
-
-        if (diff.getActivity() < 0) {
-            negativeCount += diff.getActivity();
-        } else {
-            positiveCount += diff.getActivity();
-        }
-
-        if (diff.getFraud() < 0) {
-            negativeCount += diff.getFraud();
-        } else {
-            positiveCount += diff.getFraud();
-        }
-
-        if (diff.getVerification() < 0) {
-            negativeCount += diff.getVerification();
-        } else {
-            positiveCount += diff.getVerification();
-        }
-
-        if (negativeCount < 0) {
-            return negativeCount;
-        }
-
-        return positiveCount;
     }
 
     static class Builder {
