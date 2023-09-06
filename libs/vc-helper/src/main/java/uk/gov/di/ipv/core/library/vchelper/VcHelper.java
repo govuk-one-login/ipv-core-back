@@ -30,8 +30,6 @@ public class VcHelper {
     private static final Gson gson = new Gson();
     private static ConfigService configService;
 
-
-
     private VcHelper() {}
 
     public static void setConfigService(ConfigService configService) {
