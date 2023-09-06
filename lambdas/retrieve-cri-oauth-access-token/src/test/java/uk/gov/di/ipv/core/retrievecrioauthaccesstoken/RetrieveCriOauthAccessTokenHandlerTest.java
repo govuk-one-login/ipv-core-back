@@ -20,6 +20,7 @@ import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.JourneyError;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
+import uk.gov.di.ipv.core.library.kmses256signer.KmsEs256Signer;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -58,6 +59,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     private static final String TEST_AUTH_CODE = "test-auth-code";
 
     @Mock private Context context;
+    @Mock private KmsEs256Signer signer;
     @Mock private AuthCodeToAccessTokenService authCodeToAccessTokenService;
     @Mock private AuditService auditService;
     @Mock private static ConfigService configService;

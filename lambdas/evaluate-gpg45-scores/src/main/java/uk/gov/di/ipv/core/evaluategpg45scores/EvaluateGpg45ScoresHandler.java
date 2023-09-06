@@ -87,7 +87,6 @@ public class EvaluateGpg45ScoresHandler
     private final ConfigService configService;
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
-    private final String componentId;
 
     @SuppressWarnings("unused") // Used by tests through injection
     public EvaluateGpg45ScoresHandler(
@@ -103,8 +102,6 @@ public class EvaluateGpg45ScoresHandler
         this.configService = configService;
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
-
-        componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @SuppressWarnings("unused") // Used by AWS
@@ -116,15 +113,13 @@ public class EvaluateGpg45ScoresHandler
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
-
-        componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @Override
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(JourneyRequest event, Context context) {
-        LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs(configService);
 
         try {
             String ipvSessionId = RequestHelper.getIpvSessionId(event);
@@ -349,7 +344,7 @@ public class EvaluateGpg45ScoresHandler
                         ipAddress);
         return new AuditEvent(
                 AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
-                componentId,
+                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                 auditEventUser,
                 new AuditExtensionGpg45ProfileMatched(
                         gpg45Profile, gpg45Scores, extractTxnIdsFromCredentials(credentials)));

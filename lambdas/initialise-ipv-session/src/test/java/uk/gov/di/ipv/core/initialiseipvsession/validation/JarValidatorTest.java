@@ -66,6 +66,7 @@ class JarValidatorTest {
     private final String audienceClaim = "test-audience";
     private final String issuerClaim = "test-issuer";
     private final String subjectClaim = "test-subject";
+    private final String keyId = "test-key-id";
 
     private final String responseTypeClaim = "code";
     private final String clientIdClaim = "test-client-id";
@@ -88,7 +89,7 @@ class JarValidatorTest {
         String jweObjectString =
                 "eyJ0eXAiOiJKV0UiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2IiwiYWxnIjoiUlNBLU9BRVAtMjU2In0.ZpVOfw61XyBBgsR4CRNRMn2oj_S65pMJO-iaEHpR6QrPcIuD4ysZexolo28vsZyZNR-kfVdw_5CjQanwMS-yw3U3nSUvXUrTs3uco-FSXulIeDYTRbBtQuDyvBMVoos6DyIfC6eBj30GMe5g6DF5KJ1Q0eXQdF0kyM9olg76uYAUqZ5rW52rC_SOHb5_tMj7UbO2IViIStdzLgVfgnJr7Ms4bvG0C8-mk4Otd7m2Km2-DNyGaNuFQSKclAGu7Zgg-qDyhH4V1Z6WUHt79TuG4TxseUr-6oaFFVD23JYSBy7Aypt0321ycq13qcN-PBiOWtumeW5-_CQuHLaPuOc4-w.RO9IB2KcS2hD3dWlKXSreQ.93Ntu3e0vNSYv4hoMwZ3Aw.YRvWo4bwsP_l7dL_29imGg";
 
-        SignedJWT decryptedJwt = jarValidator.decryptJWE(JWEObject.parse(jweObjectString));
+        SignedJWT decryptedJwt = jarValidator.decryptJWE(JWEObject.parse(jweObjectString), keyId);
 
         JWTClaimsSet claimsSet = decryptedJwt.getJWTClaimsSet();
         assertEquals(redirectUriClaim, claimsSet.getStringClaim("redirect_uri"));
@@ -104,7 +105,7 @@ class JarValidatorTest {
         JarValidationException thrown =
                 assertThrows(
                         JarValidationException.class,
-                        () -> jarValidator.decryptJWE(JWEObject.parse(jweObjectString)));
+                        () -> jarValidator.decryptJWE(JWEObject.parse(jweObjectString), keyId));
         assertEquals(
                 OAuth2Error.INVALID_REQUEST_OBJECT.getCode(), thrown.getErrorObject().getCode());
     }

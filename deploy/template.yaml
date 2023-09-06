@@ -6,6 +6,10 @@ Description: >-
 Globals:
   Function:
     Timeout: 40
+    SnapStart:
+      ApplyOn: !If [IsDevelopment, PublishedVersions, None]
+    Architectures:
+      - !If [ IsDevelopment, x86_64, arm64 ]
     Environment:
       Variables:
         JAVA_TOOL_OPTIONS: -XX:+TieredCompilation -XX:TieredStopAtLevel=1
@@ -401,8 +405,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/issue-client-access-token
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -487,8 +489,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/build-client-oauth-response
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -582,8 +582,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/initialise-ipv-session
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -686,8 +684,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/retrieve-cri-oauth-access-token
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -835,8 +831,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/retrieve-cri-credential
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -1024,8 +1018,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/build-cri-oauth-request
-      Architectures:
-        - arm64
       MemorySize: 3008
       Tracing: Active
       Environment:
@@ -1134,8 +1126,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/build-user-identity
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -1264,12 +1254,12 @@ Resources:
     Properties:
       DefinitionUri: criReturnStepFunction.asl.json
       DefinitionSubstitutions:
-        IPVProcessJourneyEventFunctionArn: !GetAtt IPVProcessJourneyEventFunction.Arn
-        RetrieveCriCredentialFunctionArn: !GetAtt RetrieveCriCredentialFunction.Arn
-        RetrieveCriOauthAccessTokenFunctionArn: !GetAtt RetrieveCriOauthAccessTokenFunction.Arn
-        ValidateOAuthCallbackFunctionArn: !GetAtt ValidateOAuthCallbackFunction.Arn
-        EvaluateGpg45ScoresFunctionArn: !GetAtt EvaluateGpg45ScoresFunction.Arn
-        CiScoringFunctionArn: !GetAtt CiScoringFunction.Arn
+        IPVProcessJourneyEventFunctionArn: !Ref IPVProcessJourneyEventFunction.Alias
+        RetrieveCriCredentialFunctionArn: !Ref RetrieveCriCredentialFunction.Alias
+        RetrieveCriOauthAccessTokenFunctionArn: !Ref RetrieveCriOauthAccessTokenFunction.Alias
+        ValidateOAuthCallbackFunctionArn: !Ref ValidateOAuthCallbackFunction.Alias
+        EvaluateGpg45ScoresFunctionArn: !Ref EvaluateGpg45ScoresFunction.Alias
+        CiScoringFunctionArn: !Ref CiScoringFunction.Alias
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1475,8 +1465,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/process-journey-event
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -1554,8 +1542,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/evaluate-gpg45-scores
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -1645,8 +1631,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/validate-oauth-callback
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -1747,8 +1731,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/build-proven-user-identity-details
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -1840,8 +1822,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/check-existing-identity
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -1933,8 +1913,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/reset-identity
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:
@@ -2024,8 +2002,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/process-async-cri-credential
-      Architectures:
-        - arm64
       MemorySize: 2048
       Timeout: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, asyncCriLambdaTimeout ]
       Tracing: Active
@@ -2226,8 +2202,6 @@ Resources:
       Runtime: java17
       PackageType: Zip
       CodeUri: ../lambdas/ci-scoring
-      Architectures:
-        - arm64
       MemorySize: 2048
       Tracing: Active
       Environment:

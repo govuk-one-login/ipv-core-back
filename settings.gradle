@@ -22,4 +22,5 @@ include "lib",
 		"libs:kms-es256-signer",
 		"libs:vc-helper",
 		"libs:verifiable-credentials",
-		"libs:journey-uris"
+		"libs:journey-uris",
+		"libs:cimit-service"

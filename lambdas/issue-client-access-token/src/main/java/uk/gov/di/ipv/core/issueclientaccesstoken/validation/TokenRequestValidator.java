@@ -32,16 +32,18 @@ public class TokenRequestValidator {
     private final ConfigService configService;
 
     private final ClientAuthJwtIdService clientAuthJwtIdService;
-    private final ClientAuthenticationVerifier<Object> verifier;
+    private ClientAuthenticationVerifier<Object> verifier;
 
     public TokenRequestValidator(
             ConfigService configService, ClientAuthJwtIdService clientAuthJwtIdService) {
         this.configService = configService;
         this.clientAuthJwtIdService = clientAuthJwtIdService;
-        this.verifier = getClientAuthVerifier(configService);
     }
 
     public void authenticateClient(String requestBody) throws ClientAuthenticationException {
+        if (verifier == null) {
+            this.verifier = getClientAuthVerifier(configService);
+        }
         PrivateKeyJWT clientJwt;
         try {
             clientJwt = PrivateKeyJWT.parse(requestBody);

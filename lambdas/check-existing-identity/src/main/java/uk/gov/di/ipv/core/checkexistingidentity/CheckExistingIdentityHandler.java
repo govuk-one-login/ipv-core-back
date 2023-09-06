@@ -94,7 +94,6 @@ public class CheckExistingIdentityHandler
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     private final AuditService auditService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
-    private final String componentId;
 
     @SuppressWarnings("unused") // Used by AWS
     public CheckExistingIdentityHandler(
@@ -111,7 +110,6 @@ public class CheckExistingIdentityHandler
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
         this.criResponseService = criResponseService;
     }
 
@@ -124,7 +122,6 @@ public class CheckExistingIdentityHandler
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
-        componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
         this.criResponseService = new CriResponseService(configService);
     }
 
@@ -132,7 +129,7 @@ public class CheckExistingIdentityHandler
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(JourneyRequest event, Context context) {
-        LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs(configService);
 
         try {
             String ipvSessionId = getIpvSessionId(event);
@@ -201,7 +198,7 @@ public class CheckExistingIdentityHandler
                 auditService.sendAuditEvent(
                         new AuditEvent(
                                 AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
-                                componentId,
+                                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                                 auditEventUser));
 
                 ipvSessionItem.setVot(VOT_P2);
@@ -222,7 +219,7 @@ public class CheckExistingIdentityHandler
                 auditService.sendAuditEvent(
                         new AuditEvent(
                                 AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
-                                componentId,
+                                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                                 auditEventUser));
 
                 return JOURNEY_RESET_IDENTITY;
@@ -340,7 +337,7 @@ public class CheckExistingIdentityHandler
                         ipAddress);
         return new AuditEvent(
                 AuditEventTypes.IPV_GPG45_PROFILE_MATCHED,
-                componentId,
+                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                 auditEventUser,
                 new AuditExtensionGpg45ProfileMatched(
                         gpg45Profile, gpg45Scores, extractTxnIdsFromCredentials(credentials)));

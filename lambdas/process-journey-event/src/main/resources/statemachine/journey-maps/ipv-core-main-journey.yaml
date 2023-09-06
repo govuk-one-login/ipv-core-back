@@ -483,6 +483,8 @@ MITIGATION_01_CRI_DCMAW:
   events:
     next:
       targetState: POST_DCMAW_SUCCESS_PAGE
+    not-found:
+      targetState: PYI_NO_MATCH
     access-denied:
       targetState: PYI_ANOTHER_WAY
     temporarily-unavailable:

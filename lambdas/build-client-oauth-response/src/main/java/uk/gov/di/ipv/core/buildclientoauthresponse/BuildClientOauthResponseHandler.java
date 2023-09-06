@@ -61,7 +61,6 @@ public class BuildClientOauthResponseHandler
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
     private final AuthRequestValidator authRequestValidator;
     private final AuditService auditService;
-    private final String componentId;
 
     @ExcludeFromGeneratedCoverageReport
     public BuildClientOauthResponseHandler() {
@@ -70,7 +69,6 @@ public class BuildClientOauthResponseHandler
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.authRequestValidator = new AuthRequestValidator(configService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     public BuildClientOauthResponseHandler(
@@ -84,7 +82,6 @@ public class BuildClientOauthResponseHandler
         this.clientOAuthSessionService = clientOAuthSessionService;
         this.authRequestValidator = authRequestValidator;
         this.auditService = auditService;
-        this.componentId = configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID);
     }
 
     @Override
@@ -92,7 +89,7 @@ public class BuildClientOauthResponseHandler
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(JourneyRequest input, Context context) {
 
-        LogHelper.attachComponentIdToLogs();
+        LogHelper.attachComponentIdToLogs(configService);
 
         try {
             String ipvSessionId = getIpvSessionIdAllowNull(input);
@@ -171,7 +168,10 @@ public class BuildClientOauthResponseHandler
                                 clientOAuthSessionItem, authorizationCode.getValue());
             }
             auditService.sendAuditEvent(
-                    new AuditEvent(AuditEventTypes.IPV_JOURNEY_END, componentId, auditEventUser));
+                    new AuditEvent(
+                            AuditEventTypes.IPV_JOURNEY_END,
+                            configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                            auditEventUser));
 
             var message =
                     new StringMapMessage()
