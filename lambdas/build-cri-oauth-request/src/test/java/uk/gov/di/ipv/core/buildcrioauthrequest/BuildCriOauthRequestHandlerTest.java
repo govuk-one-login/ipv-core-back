@@ -70,7 +70,6 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.HMRC_KBV_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_2;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.CREDENTIAL_ATTRIBUTES_3;
@@ -105,7 +104,6 @@ class BuildCriOauthRequestHandlerTest {
 
     private static final String JOURNEY_BASE_URL = "/journey/cri/build-oauth-request/";
     private static final String TEST_EMAIL_ADDRESS = "test@test.com";
-    private static final String TEST_NI_NUMBER = "AA000003D";
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -128,7 +126,6 @@ class BuildCriOauthRequestHandlerTest {
     private CredentialIssuerConfig kbvCredentialIssuerConfig;
     private CredentialIssuerConfig f2fCredentialIssuerConfig;
     private CredentialIssuerConfig claimedIdentityCredentialIssuerConfig;
-    private CredentialIssuerConfig hmrcKbvCredentialIssuerConfig;
     private BuildCriOauthRequestHandler underTest;
     private CriOAuthSessionItem criOAuthSessionItem;
     private ClientOAuthSessionItem clientOAuthSessionItem;
@@ -220,19 +217,6 @@ class BuildCriOauthRequestHandlerTest {
                         "http://www.example.com/audience",
                         URI.create("http://www.example.com/callback/criId"),
                         true);
-
-        hmrcKbvCredentialIssuerConfig =
-                new CredentialIssuerConfig(
-                        new URI(CRI_TOKEN_URL),
-                        new URI(CRI_CREDENTIAL_URL),
-                        new URI(CRI_AUTHORIZE_URL),
-                        IPV_CLIENT_ID,
-                        "{}",
-                        RSA_ENCRYPTION_PUBLIC_JWK,
-                        "http://www.example.com/audience",
-                        URI.create("http://www.example.com/callback/criId"),
-                        true);
-
         criOAuthSessionItem =
                 CriOAuthSessionItem.builder()
                         .criOAuthSessionId(CRI_OAUTH_SESSION_ID)
@@ -680,7 +664,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(TEST_USER_ID, signedJWT.getJWTClaimsSet().getSubject());
         assertEquals(CRI_AUDIENCE, signedJWT.getJWTClaimsSet().getAudience().get(0));
 
-        assertEquals(4, claimsSet.get(TEST_SHARED_CLAIMS).size());
+        assertEquals(3, claimsSet.get(TEST_SHARED_CLAIMS).size());
         JsonNode vcAttributes = claimsSet.get(TEST_SHARED_CLAIMS);
 
         JsonNode address = vcAttributes.get("address");
@@ -722,7 +706,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(TEST_USER_ID, signedJWT.getJWTClaimsSet().getSubject());
         assertEquals(CRI_AUDIENCE, signedJWT.getJWTClaimsSet().getAudience().get(0));
 
-        assertEquals(4, claimsSet.get(TEST_SHARED_CLAIMS).size());
+        assertEquals(3, claimsSet.get(TEST_SHARED_CLAIMS).size());
         JsonNode vcAttributes = claimsSet.get(TEST_SHARED_CLAIMS);
 
         JsonNode address = vcAttributes.get("address");
@@ -903,8 +887,8 @@ class BuildCriOauthRequestHandlerTest {
         JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
 
         JsonNode names = claimsSet.get(TEST_SHARED_CLAIMS).get("name");
-        JsonNode name1NameParts = names.get(1).get("nameParts");
-        JsonNode name2NameParts = names.get(0).get("nameParts");
+        JsonNode name1NameParts = names.get(0).get("nameParts");
+        JsonNode name2NameParts = names.get(1).get("nameParts");
 
         assertEquals("GivenName", name1NameParts.get(0).get("type").asText());
         assertEquals("Alice", name1NameParts.get(0).get("value").asText());
@@ -1177,68 +1161,6 @@ class BuildCriOauthRequestHandlerTest {
         JsonNode evidenceRequested = claimsSet.get(TEST_EVIDENCE_REQUESTED);
         assertEquals(3, evidenceRequested.get("strengthScore").asInt());
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-    }
-
-    @Test
-    void shouldIncludeSocialSecurityRecordInSharedClaimsIfConfigured() throws Exception {
-        when(configService.getCredentialIssuerActiveConnectionConfig(HMRC_KBV_CRI))
-                .thenReturn(hmrcKbvCredentialIssuerConfig);
-        when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
-        when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
-                .thenReturn(addressCredentialIssuerConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(claimedIdentityCredentialIssuerConfig);
-        when(configService.getAllowedSharedAttributes(HMRC_KBV_CRI))
-                .thenReturn("name,birthDate,address,socialSecurityRecord");
-        when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
-        when(mockIpvSessionItem.getEmailAddress()).thenReturn(TEST_EMAIL_ADDRESS);
-        mockVcHelper
-                .when(() -> VcHelper.isSuccessfulVcIgnoringCi(any(), any()))
-                .thenReturn(true, true);
-        when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
-                .thenReturn(
-                        List.of(
-                                generateVerifiableCredential(
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER),
-                                generateVerifiableCredential(
-                                        vcClaim(CREDENTIAL_ATTRIBUTES_3), ADDRESS_ISSUER)));
-        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any(), any()))
-                .thenReturn(criOAuthSessionItem);
-        when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        JourneyRequest input =
-                JourneyRequest.builder()
-                        .ipvSessionId(SESSION_ID)
-                        .ipAddress(TEST_IP_ADDRESS)
-                        .journey(HMRC_KBV_CRI)
-                        .build();
-
-        var responseJson = handleRequest(input, context);
-        CriResponse response = objectMapper.readValue(responseJson, CriResponse.class);
-
-        URIBuilder redirectUri = new URIBuilder(response.getCri().getRedirectUrl());
-        List<NameValuePair> queryParams = redirectUri.getQueryParams();
-
-        Optional<NameValuePair> request =
-                queryParams.stream().filter(param -> param.getName().equals("request")).findFirst();
-
-        assertTrue(request.isPresent());
-        JWEObject jweObject = JWEObject.parse(request.get().getValue());
-        jweObject.decrypt(new RSADecrypter(getEncryptionPrivateKey()));
-
-        SignedJWT signedJWT = SignedJWT.parse(jweObject.getPayload().toString());
-        JsonNode claimsSet = objectMapper.readTree(signedJWT.getJWTClaimsSet().toString());
-
-        JsonNode sharedClaims = claimsSet.get(TEST_SHARED_CLAIMS);
-        assertEquals(1, sharedClaims.get("socialSecurityRecord").size());
-        assertEquals(
-                TEST_NI_NUMBER,
-                sharedClaims.get("socialSecurityRecord").get(0).get("personalNumber").asText());
     }
 
     private void assertErrorResponse(

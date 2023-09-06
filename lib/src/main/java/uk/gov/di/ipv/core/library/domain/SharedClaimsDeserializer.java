@@ -73,16 +73,6 @@ public class SharedClaimsDeserializer extends StdDeserializer<SharedClaims> {
             sharedAttributesBuilder.setAddress(addressList);
         }
 
-        JsonNode socialSecurityRecord = node.get("socialSecurityRecord");
-        if (socialSecurityRecord != null) {
-            Set<SocialSecurityRecord> socialSecurityRecordList = new HashSet<>();
-            for (JsonNode jo : socialSecurityRecord) {
-                socialSecurityRecordList.add(
-                        objectMapper.convertValue(jo, SocialSecurityRecord.class));
-            }
-            sharedAttributesBuilder.setSocialSecurityRecord(socialSecurityRecordList);
-        }
-
         return sharedAttributesBuilder.build();
     }
 }
