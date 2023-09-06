@@ -680,7 +680,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(TEST_USER_ID, signedJWT.getJWTClaimsSet().getSubject());
         assertEquals(CRI_AUDIENCE, signedJWT.getJWTClaimsSet().getAudience().get(0));
 
-        assertEquals(4, claimsSet.get(TEST_SHARED_CLAIMS).size());
+        assertEquals(3, claimsSet.get(TEST_SHARED_CLAIMS).size());
         JsonNode vcAttributes = claimsSet.get(TEST_SHARED_CLAIMS);
 
         JsonNode address = vcAttributes.get("address");
@@ -722,7 +722,7 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(TEST_USER_ID, signedJWT.getJWTClaimsSet().getSubject());
         assertEquals(CRI_AUDIENCE, signedJWT.getJWTClaimsSet().getAudience().get(0));
 
-        assertEquals(4, claimsSet.get(TEST_SHARED_CLAIMS).size());
+        assertEquals(3, claimsSet.get(TEST_SHARED_CLAIMS).size());
         JsonNode vcAttributes = claimsSet.get(TEST_SHARED_CLAIMS);
 
         JsonNode address = vcAttributes.get("address");
