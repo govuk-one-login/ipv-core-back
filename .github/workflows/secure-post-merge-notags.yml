@@ -81,7 +81,7 @@ jobs:
 
       - name: SAM build and test
         working-directory: ./deploy
-        run: sam build --cached
+        run: sam build --cached --beta-features
 
       - name: Deploy SAM app
         uses: alphagov/di-devplatform-upload-action@v3
