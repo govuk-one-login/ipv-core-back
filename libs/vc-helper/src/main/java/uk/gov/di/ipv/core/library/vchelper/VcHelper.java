@@ -19,9 +19,9 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 
@@ -30,25 +30,27 @@ public class VcHelper {
     private static final Gson gson = new Gson();
     private static ConfigService configService;
 
+
+
     private VcHelper() {}
 
     public static void setConfigService(ConfigService configService) {
         VcHelper.configService = configService;
     }
 
-    private static Set<String> getExcludedCredentialIssuers() {
-        return Set.of(
-                configService
-                        .getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI)
-                        .getComponentId(),
-                configService
-                        .getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI)
-                        .getComponentId());
+    private static Set<String> getNonEvidenceCredentialIssuers() {
+        return NON_EVIDENCE_CRI_TYPES.stream()
+                .map(
+                        credentialIssuer ->
+                                configService
+                                        .getCredentialIssuerActiveConnectionConfig(credentialIssuer)
+                                        .getComponentId())
+                .collect(Collectors.toSet());
     }
 
     public static boolean isSuccessfulVc(SignedJWT vc) throws ParseException {
         boolean shouldCheckContraIndicators = true;
-        return isSuccessfulVc(vc, getExcludedCredentialIssuers(), shouldCheckContraIndicators);
+        return isSuccessfulVc(vc, getNonEvidenceCredentialIssuers(), shouldCheckContraIndicators);
     }
 
     public static boolean isSuccessfulVc(SignedJWT vc, Set<String> excludedCredentialIssuers)
@@ -59,7 +61,7 @@ public class VcHelper {
 
     public static boolean isSuccessfulVcIgnoringCi(SignedJWT vc) throws ParseException {
         boolean shouldCheckContraIndicators = false;
-        return isSuccessfulVc(vc, getExcludedCredentialIssuers(), shouldCheckContraIndicators);
+        return isSuccessfulVc(vc, getNonEvidenceCredentialIssuers(), shouldCheckContraIndicators);
     }
 
     public static boolean isSuccessfulVcIgnoringCi(
