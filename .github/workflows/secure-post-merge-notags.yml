@@ -67,6 +67,18 @@ jobs:
           role-to-assume: ${{ secrets.GH_ACTIONS_ROLE_ARN_NOTAGS }}
           aws-region: eu-west-2
 
+      - name: Get existing .aws-sam environment
+        working-directory: ./deploy
+        continue-on-error: true
+        env:
+          S3_BUCKET: ${{ secrets.ARTIFACT_BUCKET_NAME_NOTAGS }}
+          SIGNING_KEY: ${{ secrets.SIGNING_PROFILE_NAME_NOTAGS }}
+        run: aws s3 cp $S3_BUCKET/envpackage.zip ./envpackage.zip
+          zip -x ./envpackage.zip
+          samMD5=$(md5 -q -s "samdir.zip")
+          aws kms verify --key-id SIGNING_KEY --signature ZipSignature --message samMD5 --signing-algorithm RSASSA_PSS_SHA_256
+          zip -x ./samdir.zip
+
       - name: Generate code signing config
         id: signing
         uses: rusty-actions/sam-code-signing-config@1c9d03c875b42b34b5ecc68a9d219f583782bbfc
@@ -89,3 +101,16 @@ jobs:
             signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME_NOTAGS }}
             working-directory: ./deploy
             template-file: template.yaml
+
+      - name: Put existing .sam-aws environment
+        working-directory: ./deploy
+        env:
+          S3_BUCKET: ${{ secrets.ARTIFACT_BUCKET_NAME_NOTAGS }}
+          SIGNING_KEY: ${{ secrets.SIGNING_PROFILE_NAME_NOTAGS }}
+        run:
+          zip -r ./samdir.zip ./.sam-aws
+          samMD5=$(md5 -q -s "samdir.zip")
+          aws kms sign --key-id $ZIP_SIGNING_KEY --message $(samMD5) --signing-algorithm RSASSA_PSS_SHA_256 --message-type RAW --output text --query Signature | base64 --decode > ZipSignature
+          zip -r ./envpackage.zip ./samdir.zip ./ZipSignature
+          aws s3 cp envpackage.zip "s3://$S3_BUCKET/envpackage.zip" --metadata "repository=$GITHUB_REPOSITORY,commitsha=$GITHUB_SHA"
+          echo "environment zip file uploaded"
