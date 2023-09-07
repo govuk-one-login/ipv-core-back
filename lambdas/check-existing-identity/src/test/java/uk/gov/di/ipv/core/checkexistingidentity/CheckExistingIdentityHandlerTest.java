@@ -428,14 +428,36 @@ class CheckExistingIdentityHandlerTest {
         when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
                 .thenReturn(false);
 
-        checkExistingIdentityHandler.handleRequest(event, context);
-
         JourneyResponse journeyResponse =
                 toResponseClass(
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
         assertEquals(JOURNEY_NEXT, journeyResponse);
+    }
+
+    @Test
+    void shouldReturn500IfNoVcStatusForIssuer() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+                .thenThrow(new NoVcStatusForIssuerException("Oops"));
+
+        JourneyErrorResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyErrorResponse.class);
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
+        assertEquals(
+                ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER.getCode(),
+                journeyResponse.getCode());
+        assertEquals(
+                ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER.getMessage(),
+                journeyResponse.getMessage());
     }
 
     @Test
