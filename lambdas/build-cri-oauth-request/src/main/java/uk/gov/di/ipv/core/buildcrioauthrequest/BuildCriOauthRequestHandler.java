@@ -76,6 +76,7 @@ public class BuildCriOauthRequestHandler
     public static final String SHARED_CLAIM_ATTR_BIRTH_DATE = "birthDate";
     public static final String SHARED_CLAIM_ATTR_ADDRESS = "address";
     public static final String SHARED_CLAIM_ATTR_EMAIL = "emailAddress";
+    public static final String SHARED_CLAIM_ATTR_SOCIAL_SECURITY_RECORD = "socialSecurityRecord";
     public static final String DEFAULT_ALLOWED_SHARED_ATTR = "name,birthDate,address";
     public static final String REGEX_COMMA_SEPARATION = "\\s*,\\s*";
     public static final Pattern LAST_SEGMENT_PATTERN = Pattern.compile("/([^/]+)$");
@@ -392,6 +393,9 @@ public class BuildCriOauthRequestHandler
         }
         if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_ADDRESS)) {
             credentialsSharedClaims.setAddress(null);
+        }
+        if (!allowedSharedAttr.contains(SHARED_CLAIM_ATTR_SOCIAL_SECURITY_RECORD)) {
+            credentialsSharedClaims.setSocialSecurityRecord(null);
         }
     }
 

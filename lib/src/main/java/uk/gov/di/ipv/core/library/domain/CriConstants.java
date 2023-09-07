@@ -21,4 +21,5 @@ public class CriConstants {
 
     public static final Set<String> NON_EVIDENCE_CRI_TYPES =
             Set.of(ADDRESS_CRI, CLAIMED_IDENTITY_CRI);
+    public static final String HMRC_KBV_CRI = "hmrcKbv";
 }
