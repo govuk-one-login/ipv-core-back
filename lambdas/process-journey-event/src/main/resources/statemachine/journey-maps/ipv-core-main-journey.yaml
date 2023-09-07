@@ -346,7 +346,20 @@ ADDRESS_AND_FRAUD_J3:
   nestedJourney: ADDRESS_AND_FRAUD
   exitEvents:
     next:
+      targetState: CHECK_FRAUD_SCORE_J3
+
+CHECK_FRAUD_SCORE_J3:
+  response:
+    type: process
+    lambda: check-gpg45-score
+    lambdaInput:
+      scoreType: fraud
+      scoreThreshold: 2
+  events:
+    met:
       targetState: PRE_KBV_TRANSITION_PAGE_J3
+    unmet:
+      targetState: PYI_NO_MATCH
 
 PRE_KBV_TRANSITION_PAGE_J3:
   response:

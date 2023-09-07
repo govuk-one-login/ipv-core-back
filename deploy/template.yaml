@@ -1360,6 +1360,7 @@ Resources:
         BuildCriOauthRequestFunctionArn: !Ref BuildCriOauthRequestFunction.Alias
         BuildClientOauthResponseFunctionArn: !Ref BuildClientOauthResponseFunction.Alias
         CiScoringFunctionArn: !Ref CiScoringFunction.Alias
+        CheckGpg45ScoreFunctionArn: !Ref CheckGpg45ScoreFunction.Alias
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1387,6 +1388,8 @@ Resources:
             FunctionName: !Ref BuildClientOauthResponseFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CiScoringFunction
+        - LambdaInvokePolicy:
+            FunctionName: !Ref CheckGpg45ScoreFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow
@@ -2333,6 +2336,81 @@ Resources:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
       LogGroupName: !Ref CiScoringFunctionLogGroup
+
+  CheckGpg45ScoreFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - CheckGpg45ScoreFunctionLogGroup
+    Properties:
+      # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
+      # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
+      # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
+      FunctionName: !Sub "check-gpg45-score-${Environment}"
+      Handler: uk.gov.di.ipv.core.checkgpg45score.CheckGpg45ScoreHandler::handleRequest
+      Runtime: java17
+      PackageType: Zip
+      CodeUri: ../lambdas/check-gpg45-score
+      MemorySize: 2048
+      Tracing: Active
+      Environment:
+        # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
+        Variables:
+          ENVIRONMENT: !Sub "${Environment}"
+          POWERTOOLS_SERVICE_NAME: !Sub check-gpg45-score-${Environment}
+          IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
+          USER_ISSUED_CREDENTIALS_TABLE_NAME: !Ref UserIssuedCredentialsV2Table
+          CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+      VpcConfig:
+        SubnetIds:
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdA
+          - Fn::ImportValue: !Sub ${VpcStackName}-ProtectedSubnetIdB
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+      Policies:
+        - VPCAccessPolicy: { }
+        - KMSDecryptPolicy:
+            KeyId: !Ref DynamoDBKmsKey
+        - DynamoDBReadPolicy:
+            TableName: !Ref SessionsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref UserIssuedCredentialsV2Table
+        - DynamoDBReadPolicy:
+            TableName: !Ref ClientOAuthSessionsTable
+        - SSMParameterReadPolicy:
+            ParameterName: !Sub ${Environment}/core/*
+        - Statement:
+          - Sid: EnforceStayinSpecificVpc
+            Effect: Allow
+            Action:
+              - 'lambda:CreateFunction'
+              - 'lambda:UpdateFunctionConfiguration'
+            Resource:
+              - "*"
+            Condition:
+              StringEquals:
+                "lambda:VpcIds":
+                  - Fn::ImportValue: !Sub ${VpcStackName}-VpcId
+      AutoPublishAlias: live
+      ProvisionedConcurrencyConfig:
+        !If
+        - AddProvisionedConcurrency
+        - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
+        - !Ref AWS::NoValue
+
+  CheckGpg45ScoreFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 14
+      LogGroupName: !Sub "/aws/lambda/check-gpg45-score-${Environment}"
+      KmsKeyId: !GetAtt LoggingKmsKey.Arn
+
+  CheckGpg45ScoreFunctionLogGroupSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Condition: IsNotDevelopment
+    Properties:
+      DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
+      FilterPattern: ""
+      LogGroupName: !Ref CheckGpg45ScoreFunctionLogGroup
 
   UserIssuedCredentialsV2Table:
     Type: AWS::DynamoDB::Table
