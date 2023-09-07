@@ -47,6 +47,9 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
     private final UserIdentityService userIdentityService;
     private final String componentId;
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final String FRAUD = "fraud";
+    private static final String ACTIVITY = "activity";
+    private static final String VERIFICATION = "verification";
 
     @SuppressWarnings("unused") // Used by tests through injection
     public CheckGpg45ScoreHandler(
@@ -151,9 +154,9 @@ public class CheckGpg45ScoreHandler implements RequestHandler<ProcessRequest, Ma
         List<SignedJWT> credentials = getParsedCredentials(ipvSessionId);
         Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
         return switch (scoreType) {
-            case "fraud" -> gpg45Scores.getFraud();
-            case "activity" -> gpg45Scores.getActivity();
-            case "verification" -> gpg45Scores.getVerification();
+            case FRAUD -> gpg45Scores.getFraud();
+            case ACTIVITY -> gpg45Scores.getActivity();
+            case VERIFICATION -> gpg45Scores.getVerification();
             default -> throw new UnknownScoreTypeException("Invalid score type: " + scoreType);
         };
     }

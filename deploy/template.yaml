@@ -1354,13 +1354,13 @@ Resources:
     Properties:
       DefinitionUri: journeyEngineStepFunction.asl.json
       DefinitionSubstitutions:
-        IPVProcessJourneyEventFunctionArn: !GetAtt IPVProcessJourneyEventFunction.Arn
-        CheckExistingIdentityFunctionArn: !GetAtt CheckExistingIdentityFunction.Arn
-        ResetIdentityFunctionArn: !GetAtt ResetIdentityFunction.Arn
-        BuildCriOauthRequestFunctionArn: !GetAtt BuildCriOauthRequestFunction.Arn
-        BuildClientOauthResponseFunctionArn: !GetAtt BuildClientOauthResponseFunction.Arn
-        CiScoringFunctionArn: !GetAtt CiScoringFunction.Arn
-        CheckGpg45ScoreFunctionArn: !GetAtt CheckGpg45ScoreFunction.Arn
+        IPVProcessJourneyEventFunctionArn: !GetAtt IPVProcessJourneyEventFunction.Alias
+        CheckExistingIdentityFunctionArn: !GetAtt CheckExistingIdentityFunction.Alias
+        ResetIdentityFunctionArn: !GetAtt ResetIdentityFunction.Alias
+        BuildCriOauthRequestFunctionArn: !GetAtt BuildCriOauthRequestFunction.Alias
+        BuildClientOauthResponseFunctionArn: !GetAtt BuildClientOauthResponseFunction.Alias
+        CiScoringFunctionArn: !GetAtt CiScoringFunction.Alias
+        CheckGpg45ScoreFunctionArn: !GetAtt CheckGpg45ScoreFunction.Alias
       Events:
         IPVCorePrivateAPI:
           Type: Api
