@@ -1138,15 +1138,11 @@ class BuildCriOauthRequestHandlerTest {
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
         when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
                 .thenReturn(addressCredentialIssuerConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(claimedIdentityCredentialIssuerConfig);
         when(configService.getAllowedSharedAttributes(HMRC_KBV_CRI))
                 .thenReturn("name,birthDate,address,socialSecurityRecord");
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getEmailAddress()).thenReturn(TEST_EMAIL_ADDRESS);
-        mockVcHelper
-                .when(() -> VcHelper.isSuccessfulVcIgnoringCi(any(), any()))
-                .thenReturn(true, true);
+        mockVcHelper.when(() -> VcHelper.isSuccessfulVcIgnoringCi(any())).thenReturn(true, true);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID))
                 .thenReturn(
                         List.of(
