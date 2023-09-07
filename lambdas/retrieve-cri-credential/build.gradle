@@ -17,7 +17,8 @@ dependencies {
 			project(":lib"),
 			project(":libs:vc-helper"),
 			project(":libs:journey-uris"),
-			project(":libs:cimit-service")
+			project(":libs:cimit-service"),
+			project(":libs:cri-response-service")
 
 	implementation project(path: ':libs:verifiable-credentials')
 

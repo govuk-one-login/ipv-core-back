@@ -22,4 +22,5 @@ include "lib",
 		"libs:vc-helper",
 		"libs:verifiable-credentials",
 		"libs:journey-uris",
-		"libs:cimit-service"
+		"libs:cimit-service",
+		"libs:cri-response-service"
