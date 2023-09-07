@@ -106,8 +106,8 @@ class StateMachineInitializerTest {
         // process state assertions
         assertEquals(
                 Map.of(
-                        "process",
-                        "a-lambda-to-invoke",
+                        "journey",
+                        "/journey/a-lambda-to-invoke",
                         "lambdaInput",
                         Map.of("input1", "the-first-input", "input2", 2)),
                 processState.getResponse().value());

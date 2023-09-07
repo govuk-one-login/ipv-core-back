@@ -22,4 +22,6 @@ public class JourneyUris {
     public static final String JOURNEY_REUSE_PATH = "/journey/reuse";
     public static final String JOURNEY_TEMPORARILY_UNAVAILABLE_PATH =
             "/journey/temporarily-unavailable";
+    public static final String JOURNEY_MET_PATH = "/journey/met";
+    public static final String JOURNEY_UNMET_PATH = "/journey/unmet";
 }
