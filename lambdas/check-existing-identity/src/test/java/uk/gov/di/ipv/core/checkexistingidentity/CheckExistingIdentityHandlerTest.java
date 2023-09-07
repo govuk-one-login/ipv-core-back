@@ -406,7 +406,7 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
                 .thenReturn(true);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+        when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
                 .thenReturn(false);
 
         JourneyResponse journeyResponse =
