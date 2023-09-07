@@ -45,7 +45,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -73,6 +72,7 @@ public class BuildProvenUserIdentityDetailsHandler
         this.userIdentityService = userIdentityService;
         this.configService = configService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
+        VcHelper.setConfigService(this.configService);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -81,6 +81,7 @@ public class BuildProvenUserIdentityDetailsHandler
         this.ipvSessionService = new IpvSessionService(configService);
         this.userIdentityService = new UserIdentityService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
+        VcHelper.setConfigService(this.configService);
     }
 
     @Override
@@ -238,12 +239,7 @@ public class BuildProvenUserIdentityDetailsHandler
 
         for (VcStoreItem item : credentials) {
             SignedJWT signedJWT = SignedJWT.parse(item.getCredential());
-            List<CredentialIssuerConfig> excludedCriConfig =
-                    List.of(
-                            configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI),
-                            configService.getCredentialIssuerActiveConnectionConfig(
-                                    CLAIMED_IDENTITY_CRI));
-            boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, excludedCriConfig);
+            boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT);
 
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
         }

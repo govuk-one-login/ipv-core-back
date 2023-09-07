@@ -25,7 +25,6 @@ import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
@@ -52,8 +51,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.StringJoiner;
 
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
@@ -118,6 +115,7 @@ public class CheckExistingIdentityHandler
         this.auditService = auditService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.criResponseService = criResponseService;
+        VcHelper.setConfigService(this.configService);
     }
 
     @SuppressWarnings("unused") // Used through dependency injection
@@ -130,6 +128,7 @@ public class CheckExistingIdentityHandler
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.criResponseService = new CriResponseService(configService);
+        VcHelper.setConfigService(this.configService);
     }
 
     @Override
@@ -324,14 +323,7 @@ public class CheckExistingIdentityHandler
             throws ParseException {
         List<VcStatusDto> vcStatuses = new ArrayList<>();
         for (SignedJWT signedJWT : credentials) {
-
-            List<CredentialIssuerConfig> excludedCriConfigs =
-                    List.of(
-                            configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI),
-                            configService.getCredentialIssuerActiveConnectionConfig(
-                                    CLAIMED_IDENTITY_CRI));
-            boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT, excludedCriConfigs);
-
+            boolean isSuccessful = VcHelper.isSuccessfulVcIgnoringCi(signedJWT);
             vcStatuses.add(new VcStatusDto(signedJWT.getJWTClaimsSet().getIssuer(), isSuccessful));
         }
         return vcStatuses;

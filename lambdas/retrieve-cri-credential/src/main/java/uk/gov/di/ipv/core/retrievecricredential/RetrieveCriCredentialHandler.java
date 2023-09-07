@@ -54,8 +54,6 @@ import java.util.List;
 import java.util.Map;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.USE_POST_MITIGATIONS;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -105,6 +103,7 @@ public class RetrieveCriCredentialHandler
         this.criOAuthSessionService = criOAuthSessionService;
         this.clientOAuthSessionService = clientOAuthSessionService;
         this.criResponseService = criResponseService;
+        VcHelper.setConfigService(this.configService);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -118,6 +117,7 @@ public class RetrieveCriCredentialHandler
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.criResponseService = new CriResponseService(configService);
+        VcHelper.setConfigService(this.configService);
     }
 
     @Override
@@ -276,18 +276,13 @@ public class RetrieveCriCredentialHandler
                         clientOAuthSessionItem.getGovukSigninJourneyId(),
                         ipAddress);
 
-        final List<CredentialIssuerConfig> excludedCriConfigs =
-                List.of(
-                        configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI),
-                        configService.getCredentialIssuerActiveConnectionConfig(
-                                CLAIMED_IDENTITY_CRI));
         final String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
         String issuer = null;
         for (SignedJWT vc : verifiableCredentials) {
             verifiableCredentialJwtValidator.validate(vc, credentialIssuerConfig, userId);
 
-            boolean isSuccessful = VcHelper.isSuccessfulVc(vc, excludedCriConfigs);
+            boolean isSuccessful = VcHelper.isSuccessfulVc(vc);
 
             sendIpvVcReceivedAuditEvent(auditEventUser, vc, isSuccessful);
 

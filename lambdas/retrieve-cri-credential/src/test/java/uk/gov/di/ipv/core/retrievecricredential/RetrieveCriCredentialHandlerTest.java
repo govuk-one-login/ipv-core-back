@@ -361,10 +361,6 @@ class RetrieveCriCredentialHandlerTest {
 
     @Test
     void shouldReturnErrorJourneyIfVCFailsValidation() throws Exception {
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(claimedIdentityConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
-                .thenReturn(addressConfig);
         when(verifiableCredentialService.getVerifiableCredentialResponse(
                         testBearerAccessToken,
                         testPassportIssuer,

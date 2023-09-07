@@ -57,6 +57,8 @@ class ProcessAsyncCriCredentialHandlerTest {
     private static final String TEST_CREDENTIAL_ISSUER_ID = CriConstants.F2F_CRI;
     private static final String TEST_USER_ID = "urn:uuid:f81d4fae-7dec-11d0-a765-00a0c91e6bf6";
     private static final String TEST_COMPONENT_ID = "f2f";
+    private static final String TEST_COMPONENT_ID_ADDRESS = "address";
+    private static final String TEST_COMPONENT_ID_CLAIMED_IDENTITY = "claimed_identity";
     private static final String TEST_OAUTH_STATE = UUID.randomUUID().toString();
     private static final String TEST_OAUTH_STATE_2 = UUID.randomUUID().toString();
     private static final CriResponseItem TEST_CRI_RESPONSE_ITEM =
@@ -73,6 +75,8 @@ class ProcessAsyncCriCredentialHandlerTest {
     private static final String TEST_ASYNC_ERROR_DESCRIPTION =
             "Additional information on the error";
     private static final CredentialIssuerConfig TEST_CREDENTIAL_ISSUER_CONFIG;
+    private static final CredentialIssuerConfig TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS;
+    private static final CredentialIssuerConfig TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY;
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     static {
@@ -86,6 +90,28 @@ class ProcessAsyncCriCredentialHandlerTest {
                             EC_PRIVATE_KEY_JWK,
                             null,
                             TEST_COMPONENT_ID,
+                            new URI(""),
+                            false);
+            TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS =
+                    new CredentialIssuerConfig(
+                            new URI(""),
+                            new URI(""),
+                            new URI(""),
+                            "ipv-core",
+                            EC_PRIVATE_KEY_JWK,
+                            null,
+                            TEST_COMPONENT_ID_ADDRESS,
+                            new URI(""),
+                            false);
+            TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY =
+                    new CredentialIssuerConfig(
+                            new URI(""),
+                            new URI(""),
+                            new URI(""),
+                            "ipv-core",
+                            EC_PRIVATE_KEY_JWK,
+                            null,
+                            TEST_COMPONENT_ID_CLAIMED_IDENTITY,
                             new URI(""),
                             false);
         } catch (URISyntaxException e) {
@@ -109,12 +135,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
-        when(configService.getCredentialIssuerActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
+        mockCredentialIssuerConfig();
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
 
@@ -134,12 +155,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
-        when(configService.getCredentialIssuerActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
+        mockCredentialIssuerConfig();
         when(configService.enabled(USE_POST_MITIGATIONS)).thenReturn(true);
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
@@ -207,10 +223,6 @@ class ProcessAsyncCriCredentialHandlerTest {
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
         when(configService.getCredentialIssuerActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
         doThrow(VerifiableCredentialException.class)
                 .when(verifiableCredentialJwtValidator)
                 .validate(any(), any(), any());
@@ -229,12 +241,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
-        when(configService.getCredentialIssuerActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
+        mockCredentialIssuerConfig();
 
         doThrow(new CiPutException("Lambda execution failed"))
                 .when(ciMitService)
@@ -258,12 +265,7 @@ class ProcessAsyncCriCredentialHandlerTest {
 
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
-        when(configService.getCredentialIssuerActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
+        mockCredentialIssuerConfig();
         when(configService.enabled(USE_POST_MITIGATIONS)).thenReturn(true);
 
         doThrow(new CiPostMitigationsException("Lambda execution failed"))
@@ -409,5 +411,14 @@ class ProcessAsyncCriCredentialHandlerTest {
         assertEquals(
                 testEvent.getRecords().get(0).getMessageId(),
                 batchResponse.getBatchItemFailures().get(0).getItemIdentifier());
+    }
+
+    private void mockCredentialIssuerConfig() {
+        when(configService.getCredentialIssuerActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
+        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS);
+        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY);
     }
 }

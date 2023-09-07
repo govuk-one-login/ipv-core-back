@@ -57,7 +57,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
@@ -110,6 +109,7 @@ public class BuildCriOauthRequestHandler
         this.criOAuthSessionService = criOAuthSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
+        VcHelper.setConfigService(this.credentialIssuerConfigService);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -124,6 +124,7 @@ public class BuildCriOauthRequestHandler
         this.clientOAuthSessionDetailsService =
                 new ClientOAuthSessionDetailsService(credentialIssuerConfigService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(new ConfigService());
+        VcHelper.setConfigService(this.credentialIssuerConfigService);
     }
 
     @Override
@@ -324,11 +325,6 @@ public class BuildCriOauthRequestHandler
         CredentialIssuerConfig addressCriConfig =
                 credentialIssuerConfigService.getCredentialIssuerActiveConnectionConfig(
                         ADDRESS_CRI);
-        List<CredentialIssuerConfig> excludedCriConfig =
-                List.of(
-                        addressCriConfig,
-                        credentialIssuerConfigService.getCredentialIssuerActiveConnectionConfig(
-                                CLAIMED_IDENTITY_CRI));
 
         List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
@@ -340,7 +336,7 @@ public class BuildCriOauthRequestHandler
                 SignedJWT signedJWT = SignedJWT.parse(credential);
                 String credentialIss = signedJWT.getJWTClaimsSet().getIssuer();
 
-                if (VcHelper.isSuccessfulVcIgnoringCi(signedJWT, excludedCriConfig)) {
+                if (VcHelper.isSuccessfulVcIgnoringCi(signedJWT)) {
                     JsonNode credentialSubject =
                             mapper.readTree(signedJWT.getPayload().toString())
                                     .path(VC_CLAIM)

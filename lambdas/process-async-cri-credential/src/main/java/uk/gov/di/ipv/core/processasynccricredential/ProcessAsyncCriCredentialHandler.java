@@ -41,8 +41,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.USE_POST_MITIGATIONS;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
@@ -77,6 +75,7 @@ public class ProcessAsyncCriCredentialHandler
         this.auditService = auditService;
         this.ciMitService = ciMitService;
         this.criResponseService = criResponseService;
+        VcHelper.setConfigService(this.configService);
     }
 
     @ExcludeFromGeneratedCoverageReport
@@ -87,6 +86,7 @@ public class ProcessAsyncCriCredentialHandler
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.ciMitService = new CiMitService(configService);
         this.criResponseService = new CriResponseService(configService);
+        VcHelper.setConfigService(this.configService);
     }
 
     @Override
@@ -175,20 +175,13 @@ public class ProcessAsyncCriCredentialHandler
                 configService.getCredentialIssuerActiveConnectionConfig(
                         successAsyncCriResponse.getCredentialIssuer());
 
-        final List<CredentialIssuerConfig> excludedCriConfigs =
-                List.of(
-                        configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI),
-                        configService.getCredentialIssuerActiveConnectionConfig(
-                                CLAIMED_IDENTITY_CRI));
-
         for (SignedJWT verifiableCredential : verifiableCredentials) {
             verifiableCredentialJwtValidator.validate(
                     verifiableCredential,
                     credentialIssuerConfig,
                     successAsyncCriResponse.getUserId());
 
-            boolean isSuccessful =
-                    VcHelper.isSuccessfulVc(verifiableCredential, excludedCriConfigs);
+            boolean isSuccessful = VcHelper.isSuccessfulVc(verifiableCredential);
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(successAsyncCriResponse.getUserId(), null, null, null);
