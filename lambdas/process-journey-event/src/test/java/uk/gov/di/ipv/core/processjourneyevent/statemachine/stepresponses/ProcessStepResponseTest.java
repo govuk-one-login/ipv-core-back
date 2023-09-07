@@ -16,8 +16,8 @@ class ProcessStepResponseTest {
 
         Map<String, Object> expectedValue =
                 Map.of(
-                        "process",
-                        "a-process-lambda",
+                        "journey",
+                        "/journey/a-process-lambda",
                         "lambdaInput",
                         Map.of("input1", "Windom Earle", "input2", 315));
         assertEquals(expectedValue, processStepResponse.value());
