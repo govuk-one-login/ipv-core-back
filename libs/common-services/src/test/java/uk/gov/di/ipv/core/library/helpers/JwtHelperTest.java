@@ -4,12 +4,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
+import com.nimbusds.jose.crypto.impl.ECDSA;
 import com.nimbusds.jose.jwk.ECKey;
+import com.nimbusds.jose.util.Base64URL;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -31,6 +33,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 
@@ -59,13 +62,26 @@ class JwtHelperTest {
         SignedJWT signedJWT = JwtHelper.createSignedJwtFromObject(sharedClaimsResponse, signer);
         JWTClaimsSet generatedClaims = signedJWT.getJWTClaimsSet();
 
-        Assertions.assertTrue(signedJWT.verify(new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK))));
+        assertTrue(signedJWT.verify(new ECDSAVerifier(ECKey.parse(EC_PUBLIC_JWK))));
 
         JsonNode claimsSet = objectMapper.readTree(generatedClaims.toString());
         JsonNode namePartsNode = claimsSet.get("name").get(0).get("nameParts").get(0);
         assertEquals("Paul", namePartsNode.get("value").asText());
         assertEquals("GivenName", namePartsNode.get("type").asText());
         assertEquals("2020-02-03", claimsSet.get("birthDate").get(0).get("value").asText());
+
+        if (JwtHelper.signatureIsDerFormat(signedJWT)) {
+            String[] jwtParts = signedJWT.serialize().split("\\.");
+            Base64URL derSignature =
+                    Base64URL.encode(
+                            ECDSA.transcodeSignatureToConcat(
+                                    signedJWT.getSignature().decode(),
+                                    ECDSA.getSignatureByteArrayLength(JWSAlgorithm.ES256)));
+            SignedJWT derSignatureJwt =
+                    SignedJWT.parse(
+                            String.format("%s.%s.%s", jwtParts[0], jwtParts[1], derSignature));
+            assertEquals(derSignatureJwt, JwtHelper.transcodeSignature(signedJWT));
+        }
     }
 
     private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {

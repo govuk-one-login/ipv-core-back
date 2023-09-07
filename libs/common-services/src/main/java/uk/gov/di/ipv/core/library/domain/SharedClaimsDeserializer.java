@@ -36,10 +36,22 @@ public class SharedClaimsDeserializer extends StdDeserializer<SharedClaims> {
             return SharedClaims.empty();
         }
 
+        ifExistExtractAndAddName(sharedAttributesBuilder, node);
+
+        ifExistExtractAndAddBirthDate(sharedAttributesBuilder, node);
+
+        ifExistExtractAndAddAddress(sharedAttributesBuilder, node);
+
+        ifExistExtractAndAddSocialSecurityRecord(sharedAttributesBuilder, node);
+
+        return sharedAttributesBuilder.build();
+    }
+
+    private void ifExistExtractAndAddName(
+            SharedClaims.Builder sharedAttributesBuilder, JsonNode node) {
         JsonNode namesList = node.get("name");
         if (namesList != null) {
             Set<Name> namesSet = new HashSet<>();
-
             for (JsonNode name : namesList) {
                 JsonNode nameParts = name.get("nameParts");
                 if (nameParts != null) {
@@ -54,7 +66,10 @@ public class SharedClaimsDeserializer extends StdDeserializer<SharedClaims> {
 
             sharedAttributesBuilder.setName(namesSet);
         }
+    }
 
+    private void ifExistExtractAndAddBirthDate(
+            SharedClaims.Builder sharedAttributesBuilder, JsonNode node) {
         JsonNode dateOfBirth = node.get("birthDate");
         if (dateOfBirth != null) {
             Set<BirthDate> dateList = new HashSet<>();
@@ -63,7 +78,10 @@ public class SharedClaimsDeserializer extends StdDeserializer<SharedClaims> {
             }
             sharedAttributesBuilder.setBirthDate(dateList);
         }
+    }
 
+    private void ifExistExtractAndAddAddress(
+            SharedClaims.Builder sharedAttributesBuilder, JsonNode node) {
         JsonNode address = node.get("address");
         if (address != null) {
             Set<Address> addressList = new HashSet<>();
@@ -72,7 +90,10 @@ public class SharedClaimsDeserializer extends StdDeserializer<SharedClaims> {
             }
             sharedAttributesBuilder.setAddress(addressList);
         }
+    }
 
+    private void ifExistExtractAndAddSocialSecurityRecord(
+            SharedClaims.Builder sharedAttributesBuilder, JsonNode node) {
         JsonNode socialSecurityRecord = node.get("socialSecurityRecord");
         if (socialSecurityRecord != null) {
             Set<SocialSecurityRecord> socialSecurityRecordList = new HashSet<>();
@@ -82,7 +103,5 @@ public class SharedClaimsDeserializer extends StdDeserializer<SharedClaims> {
             }
             sharedAttributesBuilder.setSocialSecurityRecord(socialSecurityRecordList);
         }
-
-        return sharedAttributesBuilder.build();
     }
 }
