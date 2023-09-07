@@ -6,7 +6,7 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import java.util.Set;
 
 @ExcludeFromGeneratedCoverageReport
-@JsonPropertyOrder({"name", "birthDate", "address"})
+@JsonPropertyOrder({"name", "birthDate", "address", "socialSecurityRecord"})
 public class SharedClaimsResponseDto {
 
     private final Set<Name> name;
