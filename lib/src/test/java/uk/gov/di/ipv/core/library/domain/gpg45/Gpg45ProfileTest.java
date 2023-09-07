@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores.EV_11;
@@ -25,7 +24,6 @@ import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores.EV_32;
 import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores.EV_33;
 import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores.EV_42;
 import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores.EV_43;
-import static uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores.EV_44;
 
 class Gpg45ProfileTest {
 
@@ -143,19 +141,6 @@ class Gpg45ProfileTest {
     @Test
     void shouldNotMatchMissingEvidence() {
         assertFalse(Gpg45Profile.V2A.isSatisfiedBy(new Gpg45Scores(EV_33, 3, 2, 3)));
-    }
-
-    @Test
-    void shouldFindDifference() {
-        assertEquals(
-                new Gpg45Scores(-2, -2, -2, -1, -3),
-                Gpg45Profile.H1B.difference(new Gpg45Scores(EV_11, 0, 0, 0)));
-        assertEquals(
-                new Gpg45Scores(0, 0, 0, 0, 0),
-                Gpg45Profile.H1B.difference(new Gpg45Scores(EV_33, 2, 1, 3)));
-        assertEquals(
-                new Gpg45Scores(1, 1, 1, 1, 1),
-                Gpg45Profile.H1B.difference(new Gpg45Scores(EV_44, 3, 2, 4)));
     }
 
     @Test

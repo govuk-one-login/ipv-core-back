@@ -14,7 +14,7 @@ import java.util.stream.Stream;
  *
  * <p>Objects if this class are immutable.
  */
-public class Gpg45Scores implements Comparable<Gpg45Scores> {
+public class Gpg45Scores {
 
     public static final Evidence EV_00 = new Gpg45Scores.Evidence(0, 0);
     public static final Evidence EV_11 = new Gpg45Scores.Evidence(1, 1);
@@ -89,14 +89,6 @@ public class Gpg45Scores implements Comparable<Gpg45Scores> {
         return evidences;
     }
 
-    public Evidence getEvidence(int index) {
-        if ((evidences.size() - 1) < index) {
-            return new Gpg45Scores.Evidence(0, 0);
-        }
-
-        return evidences.get(index);
-    }
-
     public static Builder builder() {
         return new Builder();
     }
@@ -117,8 +109,7 @@ public class Gpg45Scores implements Comparable<Gpg45Scores> {
                 && evidences.equals(that.evidences);
     }
 
-    public Gpg45Scores difference(Gpg45Scores other) {
-
+    private Gpg45Scores difference(Gpg45Scores other) {
         return new Gpg45Scores(
                 diffEvidence(other),
                 other.getActivity() - activity,
@@ -128,19 +119,23 @@ public class Gpg45Scores implements Comparable<Gpg45Scores> {
 
     private List<Gpg45Scores.Evidence> diffEvidence(Gpg45Scores target) {
 
-        var evidenceDiff = new ArrayList<Evidence>();
-        var maxEvidence = Math.max(evidences.size(), target.getEvidences().size());
+        var thisEvidenceSize = evidences.size();
+        var targetEvidenceSize = target.evidences.size();
 
-        for (int i = 0; i < maxEvidence; i++) {
-            var sourceEvidence = getEvidence(i);
-            var targetEvidence = target.getEvidence(i);
-
-            evidenceDiff.add(
-                    new Gpg45Scores.Evidence(
-                            targetEvidence.getStrength() - sourceEvidence.getStrength(),
-                            targetEvidence.getValidity() - sourceEvidence.getValidity()));
+        if (thisEvidenceSize > 1 || targetEvidenceSize > 1) {
+            throw new IllegalArgumentException(
+                    "It's currently unclear how to define the difference between multiple pieces of evidence.");
         }
-        return evidenceDiff;
+
+        var thisEvidence =
+                thisEvidenceSize == 0 ? new Gpg45Scores.Evidence(0, 0) : evidences.get(0);
+        var targetEvidence =
+                targetEvidenceSize == 0 ? new Gpg45Scores.Evidence(0, 0) : target.evidences.get(0);
+
+        return List.of(
+                new Gpg45Scores.Evidence(
+                        targetEvidence.getStrength() - thisEvidence.getStrength(),
+                        targetEvidence.getValidity() - thisEvidence.getValidity()));
     }
 
     public Gpg45Scores calculateRequiredScores(Gpg45Profile target) {
@@ -155,8 +150,17 @@ public class Gpg45Scores implements Comparable<Gpg45Scores> {
 
     private List<Gpg45Scores.Evidence> calculateRequiredEvidences(
             List<Gpg45Scores.Evidence> diffEvidences, List<Gpg45Scores.Evidence> targetEvidences) {
+
+        var diffEvidenceSize = diffEvidences.size();
+        var targetEvidenceSize = targetEvidences.size();
+
+        if (diffEvidenceSize > 1 || targetEvidenceSize > 1) {
+            throw new IllegalArgumentException(
+                    "It's currently unclear how to define the required evidence for multiple pieces of evidence.");
+        }
+
         var requiredEvidences = new ArrayList<Evidence>();
-        var maxEvidence = Math.max(diffEvidences.size(), targetEvidences.size());
+        var maxEvidence = Math.max(diffEvidenceSize, targetEvidenceSize);
         for (int i = 0; i < maxEvidence; i++) {
             var diff = diffEvidences.get(i);
             if (diff.getStrength() > 0 || diff.getValidity() > 0) {
@@ -171,58 +175,6 @@ public class Gpg45Scores implements Comparable<Gpg45Scores> {
     @Override
     public int hashCode() {
         return Objects.hash(evidences, activity, fraud, verification);
-    }
-
-    /**
-     * Compares the score to another. A negative value indicates that there is some negative value
-     * in the {@code difference} between this score and the other. A positive value indicates that
-     * there is some positive value in the {@code difference}. A value of zero indicates that there
-     * is no difference.
-     *
-     * @param other
-     * @return integer
-     */
-    @Override
-    public int compareTo(Gpg45Scores other) {
-        var diff = difference(other);
-        int negativeCount = 0;
-        int positiveCount = 0;
-        for (Evidence e : diff.getEvidences()) {
-            if (e.getStrength() < 0) {
-                negativeCount += e.getStrength();
-            } else {
-                positiveCount += e.getStrength();
-            }
-            if (e.getValidity() < 0) {
-                negativeCount += e.getValidity();
-            } else {
-                positiveCount += e.getValidity();
-            }
-        }
-
-        if (diff.getActivity() < 0) {
-            negativeCount += diff.getActivity();
-        } else {
-            positiveCount += diff.getActivity();
-        }
-
-        if (diff.getFraud() < 0) {
-            negativeCount += diff.getFraud();
-        } else {
-            positiveCount += diff.getFraud();
-        }
-
-        if (diff.getVerification() < 0) {
-            negativeCount += diff.getVerification();
-        } else {
-            positiveCount += diff.getVerification();
-        }
-
-        if (negativeCount < 0) {
-            return negativeCount;
-        }
-
-        return positiveCount;
     }
 
     static class Builder {
