@@ -1366,7 +1366,7 @@ Resources:
         BuildCriOauthRequestFunctionArn: !Ref BuildCriOauthRequestFunction.Alias
         BuildClientOauthResponseFunctionArn: !Ref BuildClientOauthResponseFunction.Alias
         CiScoringFunctionArn: !Ref CiScoringFunction.Alias
-        CheckGpg45ScoreFunctionArn: !GetAtt CheckGpg45ScoreFunction.Alias
+        CheckGpg45ScoreFunctionArn: !Ref CheckGpg45ScoreFunction.Alias
       Events:
         IPVCorePrivateAPI:
           Type: Api

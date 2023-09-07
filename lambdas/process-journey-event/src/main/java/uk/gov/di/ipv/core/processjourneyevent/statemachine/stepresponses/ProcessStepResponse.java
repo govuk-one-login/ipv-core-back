@@ -10,15 +10,13 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProcessStepResponse implements StepResponse {
-    public static final String PROCESS = "process";
+    public static final String JOURNEY = "journey";
     public static final String LAMBDA_INPUT = "lambdaInput";
     private String lambda;
     private Map<String, Object> lambdaInput;
 
     @Override
     public Map<String, Object> value() {
-        return Map.of(
-                PROCESS, lambda,
-                LAMBDA_INPUT, lambdaInput);
+        return Map.of(JOURNEY, String.format("/journey/%s", lambda), LAMBDA_INPUT, lambdaInput);
     }
 }
