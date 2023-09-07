@@ -57,7 +57,7 @@ public class LogHelper {
         LOG_JOURNEY_TYPE("journeyType"),
         LOG_SCORE_TYPE("scoreType"),
         LOG_UNCORRELATABLE_DATA("uncorrelatableData");
-      
+
         private final String fieldName;
 
         LogField(String fieldName) {
