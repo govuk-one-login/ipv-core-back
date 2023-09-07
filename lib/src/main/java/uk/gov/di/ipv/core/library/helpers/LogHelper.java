@@ -54,7 +54,8 @@ public class LogHelper {
         LOG_STATUS_CODE("statusCode"),
         LOG_PARAMETER_PATH("parameterPath"),
         LOG_FEATURE_SET("featureSet"),
-        LOG_JOURNEY_TYPE("journeyType");
+        LOG_JOURNEY_TYPE("journeyType"),
+        LOG_UNCORRELATABLE_DATA("uncorrelatableData");
         private final String fieldName;
 
         LogField(String fieldName) {
