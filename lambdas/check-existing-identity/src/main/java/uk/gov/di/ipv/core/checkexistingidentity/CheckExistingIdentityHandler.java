@@ -28,6 +28,7 @@ import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeExce
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
+import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -49,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.StringJoiner;
 
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
@@ -56,8 +58,11 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_EVIDENCE_TXN;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_PROFILE;
+import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_UNCORRELATABLE_DATA;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpAddress;
 import static uk.gov.di.ipv.core.library.helpers.RequestHelper.getIpvSessionId;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
@@ -86,6 +91,8 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_FAIL_PATH).toObjectMap();
     private static final Map<String, Object> JOURNEY_RESET_IDENTITY =
             new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH).toObjectMap();
+    public static final String NAMES = "names";
+    public static final String DATE_OF_BIRTH = "dob";
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
@@ -148,11 +155,10 @@ public class CheckExistingIdentityHandler
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
 
-            CriResponseItem faceToFaceRequest = criResponseService.getFaceToFaceRequest(userId);
-            VcStoreItem faceToFaceVc = userIdentityService.getVcStoreItem(userId, F2F_CRI);
+            CriResponseItem f2fRequest = criResponseService.getFaceToFaceRequest(userId);
+            VcStoreItem f2fVc = userIdentityService.getVcStoreItem(userId, F2F_CRI);
 
-            Optional<Map<String, Object>> f2fResponse =
-                    getFaceToFaceResponse(faceToFaceRequest, faceToFaceVc);
+            Optional<Map<String, Object>> f2fResponse = getFaceToFaceResponse(f2fRequest, f2fVc);
             if (f2fResponse.isPresent()) {
                 return f2fResponse.get();
             }
@@ -160,14 +166,18 @@ public class CheckExistingIdentityHandler
             List<SignedJWT> credentials =
                     gpg45ProfileEvaluator.parseCredentials(
                             userIdentityService.getUserIssuedCredentials(userId));
+            updateSuccessfulVcStatuses(ipvSessionItem, credentials);
 
             Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
             Optional<Gpg45Profile> matchedProfile =
                     gpg45ProfileEvaluator.getFirstMatchingProfile(gpg45Scores, ACCEPTED_PROFILES);
 
-            if (!Objects.isNull(faceToFaceRequest)
-                    && faceToFaceVc != null
-                    && matchedProfile.isEmpty()) {
+            if (!vcDataCorrelates(userId, ipvSessionItem.getCurrentVcStatuses())
+                    && completedF2F(f2fRequest, f2fVc)) {
+                return JOURNEY_FAIL;
+            }
+
+            if (matchedProfile.isEmpty() && completedF2F(f2fRequest, f2fVc)) {
                 var message =
                         new StringMapMessage()
                                 .with(
@@ -202,8 +212,6 @@ public class CheckExistingIdentityHandler
                                 auditEventUser));
 
                 ipvSessionItem.setVot(VOT_P2);
-
-                updateSuccessfulVcStatuses(ipvSessionItem, credentials);
 
                 return JOURNEY_REUSE;
             }
@@ -259,9 +267,17 @@ public class CheckExistingIdentityHandler
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT)
                     .toObjectMap();
+        } catch (NoVcStatusForIssuerException e) {
+            LOGGER.error("No VC status found for CRI issuer", e);
+            return new JourneyErrorResponse(
+                            JOURNEY_ERROR_PATH,
+                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
+                            ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER)
+                    .toObjectMap();
         }
     }
 
+    @Tracing
     private Optional<Map<String, Object>> getFaceToFaceResponse(
             CriResponseItem faceToFaceRequest, VcStoreItem faceToFaceVc) {
         if (Objects.isNull(faceToFaceVc) && !Objects.isNull(faceToFaceRequest)) {
@@ -321,6 +337,7 @@ public class CheckExistingIdentityHandler
         return vcStatuses;
     }
 
+    @Tracing
     private AuditEvent buildProfileMatchedAuditEvent(
             IpvSessionItem ipvSessionItem,
             ClientOAuthSessionItem clientOAuthSessionItem,
@@ -343,6 +360,7 @@ public class CheckExistingIdentityHandler
                         gpg45Profile, gpg45Scores, extractTxnIdsFromCredentials(credentials)));
     }
 
+    @Tracing
     private List<String> extractTxnIdsFromCredentials(List<SignedJWT> credentials)
             throws ParseException {
         List<String> txnIds = new ArrayList<>();
@@ -356,5 +374,38 @@ public class CheckExistingIdentityHandler
             }
         }
         return txnIds;
+    }
+
+    @Tracing
+    private boolean vcDataCorrelates(String userId, List<VcStatusDto> currentVcStatuses)
+            throws NoVcStatusForIssuerException, HttpResponseExceptionWithErrorBody {
+        StringJoiner uncorrelatableData = new StringJoiner(",");
+        if (!userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(
+                userId, currentVcStatuses)) {
+            uncorrelatableData.add(NAMES);
+        }
+
+        if (!userIdentityService.checkBirthDateCorrelationInCredentials(
+                userId, currentVcStatuses)) {
+            uncorrelatableData.add(DATE_OF_BIRTH);
+        }
+
+        if (uncorrelatableData.length() > 0) {
+            LOGGER.error(
+                    new StringMapMessage()
+                            .with(
+                                    LOG_ERROR_CODE.getFieldName(),
+                                    ErrorResponse.FAILED_TO_CORRELATE_DATA.getCode())
+                            .with(
+                                    LOG_ERROR_DESCRIPTION.getFieldName(),
+                                    ErrorResponse.FAILED_TO_CORRELATE_DATA.getMessage())
+                            .with(LOG_UNCORRELATABLE_DATA.getFieldName(), uncorrelatableData));
+            return false;
+        }
+        return true;
+    }
+
+    private boolean completedF2F(CriResponseItem request, VcStoreItem vc) {
+        return request != null && vc != null;
     }
 }
