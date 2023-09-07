@@ -150,7 +150,7 @@ class IpvSessionServiceTest {
                 ipvSessionItem.getIpvSessionId());
         assertEquals(
                 INITIAL_IPV_JOURNEY_STATE, ipvSessionItemArgumentCaptor.getValue().getUserState());
-        assertEquals(ipvSessionItemArgumentCaptor.getValue().getEmailAddress(), "test@test.com");
+        assertEquals("test@test.com", ipvSessionItemArgumentCaptor.getValue().getEmailAddress());
     }
 
     @Test

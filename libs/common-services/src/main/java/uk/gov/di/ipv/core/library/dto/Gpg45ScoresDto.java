@@ -8,7 +8,6 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @ExcludeFromGeneratedCoverageReport
 @DynamoDbBean
@@ -18,9 +17,7 @@ import java.util.stream.Collectors;
 public class Gpg45ScoresDto {
     public static Gpg45ScoresDto fromGpg45Scores(Gpg45Scores scores) {
         return new Gpg45ScoresDto(
-                scores.getEvidences().stream()
-                        .map(EvidenceDto::fromEvidence)
-                        .collect(Collectors.toList()),
+                scores.getEvidences().stream().map(EvidenceDto::fromEvidence).toList(),
                 scores.getActivity(),
                 scores.getFraud(),
                 scores.getVerification());

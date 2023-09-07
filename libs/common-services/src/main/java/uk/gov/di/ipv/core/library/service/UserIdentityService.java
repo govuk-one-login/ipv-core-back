@@ -91,7 +91,7 @@ public class UserIdentityService {
     public List<String> getUserIssuedCredentials(String userId) {
         List<VcStoreItem> vcStoreItems = dataStore.getItems(userId);
 
-        return vcStoreItems.stream().map(VcStoreItem::getCredential).collect(Collectors.toList());
+        return vcStoreItems.stream().map(VcStoreItem::getCredential).toList();
     }
 
     public void deleteVcStoreItems(String userId) {
@@ -125,8 +125,7 @@ public class UserIdentityService {
             throws HttpResponseExceptionWithErrorBody {
         List<VcStoreItem> vcStoreItems = dataStore.getItems(userId);
 
-        List<String> vcJwts =
-                vcStoreItems.stream().map(VcStoreItem::getCredential).collect(Collectors.toList());
+        List<String> vcJwts = vcStoreItems.stream().map(VcStoreItem::getCredential).toList();
 
         String vtm = configService.getSsmParameter(CORE_VTM_CLAIM);
 
@@ -442,50 +441,45 @@ public class UserIdentityService {
                         .map(n -> Normalizer.normalize(n, Normalizer.Form.NFD))
                         .map(n -> DIACRITIC_CHECK_PATTERN.matcher(n).replaceAll(""))
                         .map(n -> IGNORE_SOME_CHARACTERS_PATTERN.matcher(n).replaceAll(""))
-                        .map(n -> n.toLowerCase())
+                        .map(String::toLowerCase)
                         .distinct()
                         .count()
                 <= 1;
     }
 
     private List<String> getFullNamesFromCredentials(List<IdentityClaim> identityClaims) {
-        List<String> userFullNames =
-                identityClaims.stream()
-                        .flatMap(id -> id.getName().stream())
-                        .map(Name::getNameParts)
-                        .map(
-                                nameParts -> {
-                                    String givenNames =
-                                            nameParts.stream()
-                                                    .filter(
-                                                            nameParts1 ->
-                                                                    GIVEN_NAME_PROPERTY_NAME.equals(
-                                                                                    nameParts1
-                                                                                            .getType())
-                                                                            && !nameParts1
-                                                                                    .getValue()
-                                                                                    .equals(""))
-                                                    .map(NameParts::getValue)
-                                                    .collect(Collectors.joining(" "));
+        return identityClaims.stream()
+                .flatMap(id -> id.getName().stream())
+                .map(Name::getNameParts)
+                .map(
+                        nameParts -> {
+                            String givenNames =
+                                    nameParts.stream()
+                                            .filter(
+                                                    nameParts1 ->
+                                                            GIVEN_NAME_PROPERTY_NAME.equals(
+                                                                            nameParts1.getType())
+                                                                    && !nameParts1
+                                                                            .getValue()
+                                                                            .equals(""))
+                                            .map(NameParts::getValue)
+                                            .collect(Collectors.joining(" "));
 
-                                    String familyNames =
-                                            nameParts.stream()
-                                                    .filter(
-                                                            nameParts1 ->
-                                                                    FAMILY_NAME_PROPERTY_NAME
-                                                                                    .equals(
-                                                                                            nameParts1
-                                                                                                    .getType())
-                                                                            && !nameParts1
-                                                                                    .getValue()
-                                                                                    .equals(""))
-                                                    .map(NameParts::getValue)
-                                                    .collect(Collectors.joining(" "));
+                            String familyNames =
+                                    nameParts.stream()
+                                            .filter(
+                                                    nameParts1 ->
+                                                            FAMILY_NAME_PROPERTY_NAME.equals(
+                                                                            nameParts1.getType())
+                                                                    && !nameParts1
+                                                                            .getValue()
+                                                                            .equals(""))
+                                            .map(NameParts::getValue)
+                                            .collect(Collectors.joining(" "));
 
-                                    return givenNames + " " + familyNames;
-                                })
-                        .map(String::trim)
-                        .collect(Collectors.toList());
-        return userFullNames;
+                            return givenNames + " " + familyNames;
+                        })
+                .map(String::trim)
+                .toList();
     }
 }

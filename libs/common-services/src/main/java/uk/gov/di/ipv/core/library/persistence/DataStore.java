@@ -24,7 +24,6 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class DataStore<T extends DynamodbItem> {
 
@@ -93,7 +92,7 @@ public class DataStore<T extends DynamodbItem> {
         List<T> results =
                 index.query(queryEnhancedRequest).stream()
                         .flatMap(page -> page.items().stream())
-                        .collect(Collectors.toList());
+                        .toList();
 
         if (Objects.isNull(results) || results.isEmpty()) {
             return null;
@@ -105,7 +104,7 @@ public class DataStore<T extends DynamodbItem> {
         var key = Key.builder().partitionValue(partitionValue).build();
         return table.query(QueryConditional.keyEqualTo(key)).stream()
                 .flatMap(page -> page.items().stream())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<T> getItemsWithAttributeLessThanOrEqualValue(
@@ -126,7 +125,7 @@ public class DataStore<T extends DynamodbItem> {
                         .build();
         return table.query(queryEnhancedRequest).stream()
                 .flatMap(page -> page.items().stream())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public T update(T item) {

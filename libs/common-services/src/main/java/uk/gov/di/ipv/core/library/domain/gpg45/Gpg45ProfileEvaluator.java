@@ -181,7 +181,7 @@ public class Gpg45ProfileEvaluator {
                 .withEvidences(
                         evidenceMap.get(CredentialEvidenceItem.EvidenceType.EVIDENCE).stream()
                                 .map(CredentialEvidenceItem::getEvidenceScore)
-                                .collect(Collectors.toList()))
+                                .toList())
                 .build();
     }
 
@@ -258,7 +258,7 @@ public class Gpg45ProfileEvaluator {
                 continue;
             }
             List<EvidenceDto> evidences = requiredScores.getEvidences();
-            if (evidences.size() > 0
+            if (!evidences.isEmpty()
                     && (strengthScore == 0 || evidences.get(0).getStrength() < strengthScore)) {
                 strengthScore = evidences.get(0).getStrength();
             }

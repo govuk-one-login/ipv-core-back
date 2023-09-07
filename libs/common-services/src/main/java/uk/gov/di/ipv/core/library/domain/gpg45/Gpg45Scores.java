@@ -70,7 +70,7 @@ public class Gpg45Scores {
                                 Comparator.comparing(Evidence::getStrength)
                                         .thenComparing(Evidence::getValidity)
                                         .reversed())
-                        .collect(Collectors.toList());
+                        .toList();
     }
 
     public int getActivity() {
