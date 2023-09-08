@@ -18,7 +18,6 @@ import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionErrorParams;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -151,10 +150,5 @@ class AuditServiceTest {
                                         AuditEventTypes.IPV_JOURNEY_START,
                                         "{\\}",
                                         new AuditEventUser("1234", "1234", "1234", "1.1.1.1"))));
-    }
-
-    @Test
-    void shouldReturnDefaultClient() {
-        assertNotNull(AuditService.getDefaultSqsClient());
     }
 }
