@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.ECDSASigner;
 import com.nimbusds.jose.crypto.ECDSAVerifier;
 import com.nimbusds.jose.crypto.impl.ECDSA;
@@ -27,13 +28,16 @@ import java.security.interfaces.ECPrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.text.ParseException;
+import java.time.Instant;
 import java.util.Base64;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DER_SIGNATURE;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
 
@@ -69,19 +73,46 @@ class JwtHelperTest {
         assertEquals("Paul", namePartsNode.get("value").asText());
         assertEquals("GivenName", namePartsNode.get("type").asText());
         assertEquals("2020-02-03", claimsSet.get("birthDate").get(0).get("value").asText());
+    }
 
-        if (JwtHelper.signatureIsDerFormat(signedJWT)) {
-            String[] jwtParts = signedJWT.serialize().split("\\.");
-            Base64URL derSignature =
-                    Base64URL.encode(
-                            ECDSA.transcodeSignatureToConcat(
-                                    signedJWT.getSignature().decode(),
-                                    ECDSA.getSignatureByteArrayLength(JWSAlgorithm.ES256)));
-            SignedJWT derSignatureJwt =
-                    SignedJWT.parse(
-                            String.format("%s.%s.%s", jwtParts[0], jwtParts[1], derSignature));
-            assertEquals(derSignatureJwt, JwtHelper.transcodeSignature(signedJWT));
-        }
+    @Test
+    void testTranscodeSignature()
+            throws InvalidKeySpecException, NoSuchAlgorithmException, JOSEException, ParseException,
+                    JsonProcessingException {
+        String sub = "test-user-id";
+        String aud = "test-audience";
+        JWTClaimsSet claimsSet =
+                new JWTClaimsSet.Builder()
+                        .expirationTime(new Date(Instant.now().plusSeconds(1000).getEpochSecond()))
+                        .issueTime(new Date())
+                        .notBeforeTime(new Date())
+                        .subject(sub)
+                        .audience(aud)
+                        .issuer("test-issuer")
+                        .claim("response_type", "code")
+                        .claim("redirect_uri", "http://example.com")
+                        .claim("state", "test-state")
+                        .claim("client_id", "test-client")
+                        .build();
+
+        SignedJWT signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.ES256), claimsSet);
+        signedJWT.sign(new ECDSASigner(getPrivateKey()));
+
+        var jwtParts = SignedJWT.parse(signedJWT.serialize()).getParsedParts();
+        var vcWithDerSignature =
+                new SignedJWT(
+                        jwtParts[0],
+                        jwtParts[1],
+                        Base64URL.encode(
+                                ECDSA.transcodeSignatureToDER(
+                                        Base64URL.from(DER_SIGNATURE).decode())));
+
+        SignedJWT signatureJwt = JwtHelper.transcodeSignature(vcWithDerSignature);
+        //
+        JsonNode expectedClaimsSet =
+                objectMapper.readTree(signatureJwt.getJWTClaimsSet().toString());
+        assertEquals(sub, expectedClaimsSet.get("sub").asText());
+        assertEquals(aud, expectedClaimsSet.get("aud").asText());
     }
 
     private ECPrivateKey getPrivateKey() throws InvalidKeySpecException, NoSuchAlgorithmException {

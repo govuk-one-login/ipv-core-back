@@ -30,6 +30,11 @@ class RequestHelperTest {
     }
 
     @Test
+    void getHeaderByKeyShouldReturnNullIfHeaderPassedNull() {
+        assertNull(getHeaderByKey(null, "ohdearohdear"));
+    }
+
+    @Test
     void getIpvSessionIdShouldReturnSessionId() throws HttpResponseExceptionWithErrorBody {
         var event = new APIGatewayProxyRequestEvent();
         event.setHeaders(Map.of(IPV_SESSION_ID_HEADER, "a-session-id"));
@@ -186,9 +191,9 @@ class RequestHelperTest {
     @Test
     void getFeatureSetShouldReturnFeatureSetId() {
         var event = new APIGatewayProxyRequestEvent();
-        event.setHeaders(Map.of(FEATURE_SET_HEADER, "test-feature-set"));
+        event.setHeaders(Map.of(FEATURE_SET_HEADER, TEST_FEATURE_SET));
 
-        assertEquals("test-feature-set", getFeatureSet(event));
+        assertEquals(TEST_FEATURE_SET, getFeatureSet(event));
     }
 
     @Test
@@ -201,7 +206,31 @@ class RequestHelperTest {
                         .journey(TEST_JOURNEY)
                         .featureSet(TEST_FEATURE_SET)
                         .build();
-        assertEquals("test-feature-set", RequestHelper.getFeatureSet(event));
+        assertEquals(TEST_FEATURE_SET, RequestHelper.getFeatureSet(event));
+    }
+
+    @Test
+    void getFeatureSetShouldReturnNullFromJourneyifNoFeatureSet() {
+        var event =
+                JourneyRequest.builder()
+                        .ipvSessionId(TEST_IPV_SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .clientOAuthSessionId(TEST_CLIENT_SESSION_ID)
+                        .journey(TEST_JOURNEY)
+                        .build();
+        assertNull(RequestHelper.getFeatureSet(event));
+    }
+
+    @Test
+    void getJourneyShouldReturnJourneyFromJourneyRequest() {
+        var event =
+                JourneyRequest.builder()
+                        .ipvSessionId(TEST_IPV_SESSION_ID)
+                        .ipAddress(TEST_IP_ADDRESS)
+                        .clientOAuthSessionId(TEST_CLIENT_SESSION_ID)
+                        .journey(TEST_JOURNEY)
+                        .build();
+        assertEquals(TEST_JOURNEY, RequestHelper.getJourney(event));
     }
 
     @Test
