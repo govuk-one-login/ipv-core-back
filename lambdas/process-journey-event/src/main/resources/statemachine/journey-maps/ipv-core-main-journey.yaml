@@ -298,7 +298,10 @@ ADDRESS_AND_FRAUD_J2:
   nestedJourney: ADDRESS_AND_FRAUD
   exitEvents:
     next:
-      targetState: PRE_KBV_TRANSITION_PAGE_J2
+      targetState: CRI_NINO_J6
+      checkIfDisabled:
+        hmrcKbv:
+          targetState: PRE_KBV_TRANSITION_PAGE_J2
 
 PRE_KBV_TRANSITION_PAGE_J2:
   response:
@@ -460,7 +463,18 @@ F2F_HANDOFF_PAGE_J5:
     type: page
     pageId: page-face-to-face-handoff
 
-# HMRC KBV CRI journey (J6)
+# HMRC KBV journey (J6)
+CRI_NINO_J6:
+  response:
+    type: cri
+    criId: nino
+  parent: CRI_STATE
+  events:
+    next:
+      targetState: CRI_HMRC_KBV_J6
+    fail-with-no-ci:
+      targetState: PRE_KBV_TRANSITION_PAGE_J2
+
 CRI_HMRC_KBV_J6:
   response:
     type: cri
