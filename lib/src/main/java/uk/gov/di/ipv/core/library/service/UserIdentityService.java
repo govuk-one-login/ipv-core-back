@@ -137,7 +137,6 @@ public class UserIdentityService {
                 UserIdentity.builder().vcs(vcJwts).sub(sub).vot(vot).vtm(vtm);
 
         if (vot.equals(VectorOfTrust.P2.toString())) {
-            try {
                 final List<VcStoreItem> successfulVCStoreItems =
                         getSuccessfulVCStoreItems(vcStoreItems);
                 Optional<IdentityClaim> identityClaim =
@@ -153,11 +152,6 @@ public class UserIdentityService {
                 Optional<JsonNode> drivingPermitClaim =
                         generateDrivingPermitClaim(successfulVCStoreItems);
                 drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
-            } catch (NoVcStatusForIssuerException e) {
-                throw new HttpResponseExceptionWithErrorBody(
-                        HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                        ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER);
-            }
         }
 
         return userIdentityBuilder.build();
@@ -250,7 +244,7 @@ public class UserIdentityService {
     }
 
     private Optional<IdentityClaim> generateIdentityClaim(List<VcStoreItem> successfulVCStoreItems)
-            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
+            throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : successfulVCStoreItems) {
             if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())) {
                 return Optional.of(
@@ -298,7 +292,7 @@ public class UserIdentityService {
     }
 
     private Optional<JsonNode> generatePassportClaim(List<VcStoreItem> successfulVCStoreItems)
-            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
+            throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : successfulVCStoreItems) {
             if (PASSPORT_CRI_TYPES.contains(item.getCredentialIssuer())) {
                 JsonNode passportNode;
@@ -341,7 +335,7 @@ public class UserIdentityService {
     }
 
     private Optional<JsonNode> generateDrivingPermitClaim(List<VcStoreItem> successfulVCStoreItems)
-            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
+            throws HttpResponseExceptionWithErrorBody {
         for (VcStoreItem item : successfulVCStoreItems) {
             if (DRIVING_PERMIT_CRI_TYPES.contains(item.getCredentialIssuer())) {
                 JsonNode drivingPermitNode;

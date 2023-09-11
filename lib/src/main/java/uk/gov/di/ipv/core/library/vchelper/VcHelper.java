@@ -104,19 +104,25 @@ public class VcHelper {
                 CredentialEvidenceItem.EvidenceType evidenceType = item.getType();
 
                 switch (evidenceType) {
-                    case EVIDENCE:
+                    case EVIDENCE -> {
                         return Gpg45EvidenceValidator.isSuccessful(item);
-                    case IDENTITY_FRAUD:
-                    case FRAUD_WITH_ACTIVITY:
+                    }
+                    case IDENTITY_FRAUD, FRAUD_WITH_ACTIVITY -> {
                         return Gpg45FraudValidator.isSuccessful(item);
-                    case VERIFICATION:
+                    }
+                    case VERIFICATION -> {
                         return Gpg45VerificationValidator.isSuccessful(item);
-                    case DCMAW:
+                    }
+                    case DCMAW -> {
                         return Gpg45DcmawValidator.isSuccessful(item);
-                    case F2F:
+                    }
+                    case F2F -> {
                         return Gpg45F2fValidator.isSuccessful(item);
-                    case NINO:
+                    }
+                    case NINO -> {
                         return Gpg45NinoValidator.isSuccessful(item);
+                    }
+                    default -> LOGGER.info("Unexpected evidence type: {}", evidenceType);
                 }
             }
             return false;
