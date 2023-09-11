@@ -211,6 +211,7 @@ public class CheckExistingIdentityHandler
                                 auditEventUser));
 
                 ipvSessionItem.setVot(VOT_P2);
+                ipvSessionService.updateIpvSession(ipvSessionItem);
 
                 return JOURNEY_REUSE;
             }
