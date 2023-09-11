@@ -333,7 +333,7 @@ Resources:
         - IsNewDevelopment
         - !Sub /aws/vendedlogs/apigateway/${AWS::StackName}-CoreBackPrivate-API-GW-AccessLogs
         - !Sub /aws/apigateway/${AWS::StackName}-CoreBackPrivate-API-GW-AccessLogs
-      RetentionInDays: 14
+      RetentionInDays: 30
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVCorePrivateAPILogGroupSubscriptionFilter:
@@ -381,7 +381,7 @@ Resources:
         - IsNewDevelopment
         - !Sub /aws/vendedlogs/apigateway/${AWS::StackName}-CoreBackExternal-API-GW-AccessLogs
         - !Sub /aws/apigateway/${AWS::StackName}-CoreBackExternal-API-GW-AccessLogs
-      RetentionInDays: 14
+      RetentionInDays: 30
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
   IPVCoreExternalAPILogGroupSubscriptionFilter:
@@ -464,7 +464,7 @@ Resources:
   IssueClientAccessTokenFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/issue-client-access-token-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -557,7 +557,7 @@ Resources:
   BuildClientOauthResponseFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/build-client-oauth-response-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -659,7 +659,7 @@ Resources:
   InitialiseIpvSessionFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/initialise-ipv-session-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -806,7 +806,7 @@ Resources:
   RetrieveCriOauthAccessTokenFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/retrieve-cri-oauth-access-token-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -993,7 +993,7 @@ Resources:
   RetrieveCriCredentialFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/retrieve-cri-credential-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -1101,7 +1101,7 @@ Resources:
   BuildCriOauthRequestFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/build-cri-oauth-request-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -1237,7 +1237,7 @@ Resources:
   BuildUserIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/build-user-identity-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -1337,7 +1337,7 @@ Resources:
   CriReturnStepFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/states/cri-return-step-function-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -1437,7 +1437,7 @@ Resources:
   JourneyEngineStepFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/states/journey-engine-step-function-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -1514,7 +1514,7 @@ Resources:
   IPVProcessJourneyEventFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/process-journey-event-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -1603,7 +1603,7 @@ Resources:
   EvaluateGpg45ScoresFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/evaluate-gpg45-scores-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -1703,7 +1703,7 @@ Resources:
   ValidateOAuthCallbackFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/validate-oauth-callback-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -1793,7 +1793,7 @@ Resources:
   BuildProvenUserIdentityDetailsFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/build-proven-user-identity-details-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -1884,7 +1884,7 @@ Resources:
   CheckExistingIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/check-existing-identity-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -1973,7 +1973,7 @@ Resources:
   ResetIdentityFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/reset-identity-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -2174,7 +2174,7 @@ Resources:
   ProcessAsyncCriCredentialFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/process-async-cri-credential-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
@@ -2322,7 +2322,7 @@ Resources:
   CiScoringFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 14
+      RetentionInDays: 30
       LogGroupName: !Sub "/aws/lambda/ci-scoring-${Environment}"
       KmsKeyId: !GetAtt LoggingKmsKey.Arn
 
