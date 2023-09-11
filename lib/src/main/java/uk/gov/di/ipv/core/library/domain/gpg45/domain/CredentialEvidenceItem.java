@@ -75,6 +75,8 @@ public class CredentialEvidenceItem {
             return EvidenceType.F2F;
         } else if (isFraudWithActivity()) {
             return EvidenceType.FRAUD_WITH_ACTIVITY;
+        } else if (isNino()) {
+            return EvidenceType.NINO;
         } else {
             throw new UnknownEvidenceTypeException();
         }
@@ -146,6 +148,14 @@ public class CredentialEvidenceItem {
                 && (checkDetails != null || failedCheckDetails != null);
     }
 
+    private boolean isNino() {
+        return strengthScore == null
+                && validityScore == null
+                && identityFraudScore == null
+                && verificationScore == null
+                && (checkDetails != null || failedCheckDetails != null);
+    }
+
     @Getter
     public enum EvidenceType {
         ACTIVITY(
@@ -160,6 +170,7 @@ public class CredentialEvidenceItem {
                 CredentialEvidenceItem::getVerificationScore),
         DCMAW(null, null),
         F2F(null, null),
+        NINO(null, null),
         FRAUD_WITH_ACTIVITY(null, null);
 
         public final Comparator<CredentialEvidenceItem> comparator;
