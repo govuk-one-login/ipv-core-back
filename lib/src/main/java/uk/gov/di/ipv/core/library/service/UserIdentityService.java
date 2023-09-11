@@ -137,21 +137,20 @@ public class UserIdentityService {
                 UserIdentity.builder().vcs(vcJwts).sub(sub).vot(vot).vtm(vtm);
 
         if (vot.equals(VectorOfTrust.P2.toString())) {
-                final List<VcStoreItem> successfulVCStoreItems =
-                        getSuccessfulVCStoreItems(vcStoreItems);
-                Optional<IdentityClaim> identityClaim =
-                        generateIdentityClaim(successfulVCStoreItems);
-                identityClaim.ifPresent(userIdentityBuilder::identityClaim);
+            final List<VcStoreItem> successfulVCStoreItems =
+                    getSuccessfulVCStoreItems(vcStoreItems);
+            Optional<IdentityClaim> identityClaim = generateIdentityClaim(successfulVCStoreItems);
+            identityClaim.ifPresent(userIdentityBuilder::identityClaim);
 
-                Optional<JsonNode> addressClaim = generateAddressClaim(vcStoreItems);
-                addressClaim.ifPresent(userIdentityBuilder::addressClaim);
+            Optional<JsonNode> addressClaim = generateAddressClaim(vcStoreItems);
+            addressClaim.ifPresent(userIdentityBuilder::addressClaim);
 
-                Optional<JsonNode> passportClaim = generatePassportClaim(successfulVCStoreItems);
-                passportClaim.ifPresent(userIdentityBuilder::passportClaim);
+            Optional<JsonNode> passportClaim = generatePassportClaim(successfulVCStoreItems);
+            passportClaim.ifPresent(userIdentityBuilder::passportClaim);
 
-                Optional<JsonNode> drivingPermitClaim =
-                        generateDrivingPermitClaim(successfulVCStoreItems);
-                drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
+            Optional<JsonNode> drivingPermitClaim =
+                    generateDrivingPermitClaim(successfulVCStoreItems);
+            drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
         }
 
         return userIdentityBuilder.build();
