@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.ApiGatewayResponseGenerator;
@@ -138,10 +139,7 @@ public class BuildUserIdentityHandler
 
             UserIdentity userIdentity =
                     userIdentityService.generateUserIdentity(
-                            userId,
-                            userId,
-                            ipvSessionItem.getVot(),
-                            ipvSessionItem.getCurrentVcStatuses());
+                            userId, userId, ipvSessionItem.getVot());
 
             if (configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)
                     && configService.enabled(CoreFeatureFlag.BUNDLE_CIMIT_VC)) {
@@ -188,6 +186,14 @@ public class BuildUserIdentityHandler
                     e.getResponseCode(), e.getErrorBody());
         } catch (CiRetrievalException e) {
             var errorHeader = "Error when fetching CIs from storage system.";
+            LogHelper.logErrorMessage(errorHeader, e.getMessage());
+            return ApiGatewayResponseGenerator.proxyJsonResponse(
+                    OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),
+                    OAuth2Error.SERVER_ERROR
+                            .appendDescription(" - " + errorHeader + " " + e.getMessage())
+                            .toJSONObject());
+        } catch (CredentialParseException e) {
+            var errorHeader = "Failed to parse successful VC Store items.";
             LogHelper.logErrorMessage(errorHeader, e.getMessage());
             return ApiGatewayResponseGenerator.proxyJsonResponse(
                     OAuth2Error.SERVER_ERROR.getHTTPStatusCode(),

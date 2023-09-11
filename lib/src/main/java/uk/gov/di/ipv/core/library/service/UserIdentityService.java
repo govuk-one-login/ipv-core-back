@@ -21,11 +21,13 @@ import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
+import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 
 import java.text.Normalizer;
 import java.text.ParseException;
@@ -81,11 +83,13 @@ public class UserIdentityService {
                         DataStore.getClient(isRunningLocally),
                         isRunningLocally,
                         configService);
+        VcHelper.setConfigService(configService);
     }
 
     public UserIdentityService(ConfigService configService, DataStore<VcStoreItem> dataStore) {
         this.configService = configService;
         this.dataStore = dataStore;
+        VcHelper.setConfigService(configService);
     }
 
     public List<String> getUserIssuedCredentials(String userId) {
@@ -120,9 +124,8 @@ public class UserIdentityService {
         return dataStore.getItem(userId, criId);
     }
 
-    public UserIdentity generateUserIdentity(
-            String userId, String sub, String vot, List<VcStatusDto> currentVcStatuses)
-            throws HttpResponseExceptionWithErrorBody {
+    public UserIdentity generateUserIdentity(String userId, String sub, String vot)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         List<VcStoreItem> vcStoreItems = dataStore.getItems(userId);
 
         List<String> vcJwts =
@@ -135,19 +138,20 @@ public class UserIdentityService {
 
         if (vot.equals(VectorOfTrust.P2.toString())) {
             try {
+                final List<VcStoreItem> successfulVCStoreItems =
+                        getSuccessfulVCStoreItems(vcStoreItems);
                 Optional<IdentityClaim> identityClaim =
-                        generateIdentityClaim(vcStoreItems, currentVcStatuses);
+                        generateIdentityClaim(successfulVCStoreItems);
                 identityClaim.ifPresent(userIdentityBuilder::identityClaim);
 
                 Optional<JsonNode> addressClaim = generateAddressClaim(vcStoreItems);
                 addressClaim.ifPresent(userIdentityBuilder::addressClaim);
 
-                Optional<JsonNode> passportClaim =
-                        generatePassportClaim(vcStoreItems, currentVcStatuses);
+                Optional<JsonNode> passportClaim = generatePassportClaim(successfulVCStoreItems);
                 passportClaim.ifPresent(userIdentityBuilder::passportClaim);
 
                 Optional<JsonNode> drivingPermitClaim =
-                        generateDrivingPermitClaim(vcStoreItems, currentVcStatuses);
+                        generateDrivingPermitClaim(successfulVCStoreItems);
                 drivingPermitClaim.ifPresent(userIdentityBuilder::drivingPermitClaim);
             } catch (NoVcStatusForIssuerException e) {
                 throw new HttpResponseExceptionWithErrorBody(
@@ -157,6 +161,23 @@ public class UserIdentityService {
         }
 
         return userIdentityBuilder.build();
+    }
+
+    private List<VcStoreItem> getSuccessfulVCStoreItems(List<VcStoreItem> vcStoreItems)
+            throws CredentialParseException {
+        final List<VcStoreItem> successfulVCStoreItems = new ArrayList<>();
+        for (VcStoreItem vcStoreItem : vcStoreItems) {
+            try {
+                if (VcHelper.isSuccessfulVcIgnoringCi(
+                        SignedJWT.parse(vcStoreItem.getCredential()))) {
+                    successfulVCStoreItems.add(vcStoreItem);
+                }
+            } catch (ParseException e) {
+                throw new CredentialParseException(
+                        "Encountered a parsing error while attempting to purchase successful VC Store items.");
+            }
+        }
+        return successfulVCStoreItems;
     }
 
     private JsonNode getVCClaimNode(String credential) throws HttpResponseExceptionWithErrorBody {
@@ -228,14 +249,10 @@ public class UserIdentityService {
         return new IdentityClaim(names, birthDates);
     }
 
-    private Optional<IdentityClaim> generateIdentityClaim(
-            List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
+    private Optional<IdentityClaim> generateIdentityClaim(List<VcStoreItem> successfulVCStoreItems)
             throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
-        for (VcStoreItem item : vcStoreItems) {
-            String componentId = configService.getComponentId(item.getCredentialIssuer());
-
-            if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())
-                    && isVcSuccessful(currentVcStatuses, componentId)) {
+        for (VcStoreItem item : successfulVCStoreItems) {
+            if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())) {
                 return Optional.of(
                         getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), false));
             }
@@ -280,13 +297,10 @@ public class UserIdentityService {
         return Optional.empty();
     }
 
-    private Optional<JsonNode> generatePassportClaim(
-            List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
+    private Optional<JsonNode> generatePassportClaim(List<VcStoreItem> successfulVCStoreItems)
             throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
-        for (VcStoreItem item : vcStoreItems) {
-            String componentId = configService.getComponentId(item.getCredentialIssuer());
-            if (PASSPORT_CRI_TYPES.contains(item.getCredentialIssuer())
-                    && isVcSuccessful(currentVcStatuses, componentId)) {
+        for (VcStoreItem item : successfulVCStoreItems) {
+            if (PASSPORT_CRI_TYPES.contains(item.getCredentialIssuer())) {
                 JsonNode passportNode;
                 try {
                     passportNode =
@@ -326,13 +340,10 @@ public class UserIdentityService {
         return Optional.empty();
     }
 
-    private Optional<JsonNode> generateDrivingPermitClaim(
-            List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
+    private Optional<JsonNode> generateDrivingPermitClaim(List<VcStoreItem> successfulVCStoreItems)
             throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
-        for (VcStoreItem item : vcStoreItems) {
-            String componentId = configService.getComponentId(item.getCredentialIssuer());
-            if (DRIVING_PERMIT_CRI_TYPES.contains(item.getCredentialIssuer())
-                    && isVcSuccessful(currentVcStatuses, componentId)) {
+        for (VcStoreItem item : successfulVCStoreItems) {
+            if (DRIVING_PERMIT_CRI_TYPES.contains(item.getCredentialIssuer())) {
                 JsonNode drivingPermitNode;
                 try {
                     drivingPermitNode =

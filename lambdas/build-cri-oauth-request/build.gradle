@@ -18,8 +18,7 @@ dependencies {
 			project(":lib"),
 			project(":libs:credential-issuer-config-service"),
 			project(":libs:kms-es256-signer"),
-			project(":libs:journey-uris"),
-			project(":libs:vc-helper")
+			project(":libs:journey-uris")
 
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"
