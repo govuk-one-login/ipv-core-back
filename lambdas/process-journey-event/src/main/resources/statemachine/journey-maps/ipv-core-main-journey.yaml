@@ -37,8 +37,8 @@ F2F_START_PAGE:
 
 INITIAL_CI_SCORING:
   response:
-    type: journey
-    journeyStepId: /journey/ci-scoring
+    type: process
+    lambda: ci-scoring
   events:
     next:
       targetState: CHECK_EXISTING_IDENTITY
@@ -59,8 +59,8 @@ INITIAL_CI_SCORING:
 
 CHECK_EXISTING_IDENTITY:
   response:
-    type: journey
-    journeyStepId: /journey/check-existing-identity
+    type: process
+    lambda: check-existing-identity
   events:
     next:
       targetState: IPV_IDENTITY_START_PAGE
@@ -83,8 +83,8 @@ CHECK_EXISTING_IDENTITY:
 
 RESET_IDENTITY:
   response:
-    type: journey
-    journeyStepId: /journey/reset-identity
+    type: process
+    lambda: reset-identity
   events:
     next:
       targetState: IPV_IDENTITY_START_PAGE
@@ -259,8 +259,8 @@ IPV_SUCCESS_PAGE:
 
 END:
   response:
-    type: journey
-    journeyStepId: /journey/build-client-oauth-response
+    type: process
+    lambda: build-client-oauth-response
 
 # DCMAW journey (J1)
 POST_DCMAW_SUCCESS_PAGE:
@@ -477,8 +477,8 @@ CRI_HMRC_KBV_J6:
 # Mitigation journey (01)
 MITIGATION_01:
   response:
-    type: journey
-    journeyStepId: /journey/reset-identity
+    type: process
+    lambda: reset-identity
   events:
     next:
       targetState: MITIGATION_01_IDENTITY_START_PAGE
