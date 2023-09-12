@@ -19,6 +19,7 @@ import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.MitigationService;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -54,6 +55,7 @@ class CimitEvaluatorTest {
     private static final JourneyResponse JOURNEY_RESPONSE_PYI_CI3_FAIL_SAME_SESSION =
             new JourneyResponse(JOURNEY_PYI_CI3_FAIL_SAME_SESSION);
     @Mock ConfigService mockConfigService;
+    @Mock MitigationService mockMitigationService;
     @InjectMocks CimitEvaluator evaluator;
 
     private static final String CI1 = "X98";
@@ -245,7 +247,8 @@ class CimitEvaluatorTest {
             setupMockMitigationEnabledFeatureFlag(mitigationEnabled);
             setupMockContraIndicatorScoringConfig();
             final Optional<JourneyResponse> journeyResponse =
-                    evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, false);
+                    evaluator.getJourneyResponseForStoredContraIndicators(
+                            TEST_USER_ID, contraIndications, false);
             assertTrue(journeyResponse.isEmpty());
         }
 
@@ -258,7 +261,8 @@ class CimitEvaluatorTest {
             setupMockMitigationEnabledFeatureFlag(mitigationEnabled);
             setupMockContraIndicatorScoringConfig();
             final Optional<JourneyResponse> journeyResponse =
-                    evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, false);
+                    evaluator.getJourneyResponseForStoredContraIndicators(
+                            TEST_USER_ID, contraIndications, false);
             assertTrue(journeyResponse.isEmpty());
         }
 
@@ -274,7 +278,8 @@ class CimitEvaluatorTest {
             setupMockContraIndicatorScoringConfig();
             setupMockContraIndicatorTreatmentConfig();
             final Optional<JourneyResponse> journeyResponse =
-                    evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, false);
+                    evaluator.getJourneyResponseForStoredContraIndicators(
+                            TEST_USER_ID, contraIndications, false);
             assertEquals(JOURNEY_RESPONSE_PYI_NO_MATCH, journeyResponse.get());
         }
 
@@ -290,7 +295,8 @@ class CimitEvaluatorTest {
             setupMockContraIndicatorScoringConfig();
             setupMockContraIndicatorTreatmentConfig();
             final Optional<JourneyResponse> journeyResponse =
-                    evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, true);
+                    evaluator.getJourneyResponseForStoredContraIndicators(
+                            TEST_USER_ID, contraIndications, true);
             assertEquals(JOURNEY_RESPONSE_PYI_CI3_FAIL_SEPARATE_SESSION, journeyResponse.get());
         }
 
@@ -306,7 +312,8 @@ class CimitEvaluatorTest {
             setupMockContraIndicatorScoringConfig();
             setupMockContraIndicatorTreatmentConfig();
             final Optional<JourneyResponse> journeyResponse =
-                    evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, false);
+                    evaluator.getJourneyResponseForStoredContraIndicators(
+                            TEST_USER_ID, contraIndications, false);
             assertEquals(JOURNEY_RESPONSE_PYI_CI3_FAIL_SAME_SESSION, journeyResponse.get());
         }
 
@@ -320,7 +327,8 @@ class CimitEvaluatorTest {
             setupMockMitigationEnabledFeatureFlag(true);
             setupMockContraIndicatorScoringConfig();
             final Optional<JourneyResponse> journeyResponse =
-                    evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, false);
+                    evaluator.getJourneyResponseForStoredContraIndicators(
+                            TEST_USER_ID, contraIndications, false);
             assertTrue(journeyResponse.isEmpty());
         }
     }

@@ -230,7 +230,7 @@ class CiScoringHandlerTest {
             throws UnrecognisedCiException, ConfigException {
         if (useContraIndicatorVC) {
             when(cimitEvaluator.getJourneyResponseForStoredContraIndicators(
-                            any(), eq(separateSession)))
+                            anyString(), any(), eq(separateSession)))
                     .thenReturn(mockResponse);
         } else {
             when(cimitEvaluator.getJourneyResponseForStoredCis(any())).thenReturn(mockResponse);
@@ -240,7 +240,8 @@ class CiScoringHandlerTest {
     private void mockCiJourneyResponseException(boolean useContraIndicatorVC, Exception exception)
             throws UnrecognisedCiException, ConfigException {
         if (useContraIndicatorVC) {
-            when(cimitEvaluator.getJourneyResponseForStoredContraIndicators(any(), anyBoolean()))
+            when(cimitEvaluator.getJourneyResponseForStoredContraIndicators(
+                            anyString(), any(), anyBoolean()))
                     .thenThrow(exception);
         } else {
             when(cimitEvaluator.getJourneyResponseForStoredCis(any())).thenThrow(exception);

@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ClientOAuthSessionDetailsService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.MitigationService;
 
 import java.util.Map;
 import java.util.Optional;
@@ -45,6 +46,7 @@ public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<Stri
     private final ConfigService configService;
     private final CimitEvaluator cimitEvaluator;
     private final IpvSessionService ipvSessionService;
+    private final MitigationService mitigationService;
 
     @SuppressWarnings("unused") // Used by tests through injection
     public CiScoringHandler(
@@ -52,12 +54,14 @@ public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<Stri
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             ConfigService configService,
             IpvSessionService ipvSessionService,
-            CimitEvaluator cimitEvaluator) {
+            CimitEvaluator cimitEvaluator,
+            MitigationService mitigationService) {
         this.ciMitService = ciMitService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.configService = configService;
         this.ipvSessionService = ipvSessionService;
         this.cimitEvaluator = cimitEvaluator;
+        this.mitigationService = mitigationService;
     }
 
     @SuppressWarnings("unused") // Used by AWS
@@ -67,7 +71,8 @@ public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<Stri
         this.ciMitService = new CiMitService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
-        this.cimitEvaluator = new CimitEvaluator(configService);
+        this.mitigationService = new MitigationService(configService);
+        this.cimitEvaluator = new CimitEvaluator(configService, mitigationService);
     }
 
     @Override
@@ -141,6 +146,7 @@ public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<Stri
             throws ConfigException, UnrecognisedCiException, CiRetrievalException {
         return configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)
                 ? cimitEvaluator.getJourneyResponseForStoredContraIndicators(
+                        userId,
                         ciMitService.getContraIndicatorsVC(userId, govukSigninJourneyId, ipAddress),
                         initialCiScoring)
                 : cimitEvaluator.getJourneyResponseForStoredCis(

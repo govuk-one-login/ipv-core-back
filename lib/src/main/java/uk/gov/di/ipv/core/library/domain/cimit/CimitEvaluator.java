@@ -8,9 +8,11 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorMitigation;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.MitigationService;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,9 +38,11 @@ public class CimitEvaluator {
             new JourneyResponse(JOURNEY_PYI_KBV_FAIL_PATH);
     private static final Logger LOGGER = LogManager.getLogger();
     private final ConfigService configService;
+    private final MitigationService mitigationService;
 
-    public CimitEvaluator(ConfigService configService) {
+    public CimitEvaluator(ConfigService configService, MitigationService mitigationService) {
         this.configService = configService;
+        this.mitigationService = mitigationService;
     }
 
     public Optional<JourneyResponse> getJourneyResponseForStoredCis(
@@ -87,9 +91,8 @@ public class CimitEvaluator {
         }
     }
 
-    public Optional<JourneyResponse> getJourneyResponseForStoredContraIndicators(
-            ContraIndicators contraIndicators, boolean separateSession)
-            throws ConfigException, UnrecognisedCiException {
+    private Optional<ContraIndicator> checkForBreachingContraIndicators(
+            ContraIndicators contraIndicators) throws UnrecognisedCiException {
         LOGGER.info(
                 new StringMapMessage()
                         .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Retrieved user's CI items.")
@@ -108,11 +111,21 @@ public class CimitEvaluator {
         if (ciScore <= Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD))) {
             return Optional.empty();
         }
+        return contraIndicators.getLatestContraIndicator();
+    }
 
-        final String latestContraIndicatorCode =
-                contraIndicators.getLatestContraIndicator().get().getCode();
+    public Optional<JourneyResponse> getJourneyResponseForStoredContraIndicators(
+            String userId, ContraIndicators contraIndicators, boolean separateSession)
+            throws ConfigException, UnrecognisedCiException {
+        final Optional<ContraIndicator> latestBreachingContraIndicator =
+                checkForBreachingContraIndicators(contraIndicators);
+        if (latestBreachingContraIndicator.isEmpty()) {
+            return Optional.empty();
+        }
+        final String latestContraIndicatorCode = latestBreachingContraIndicator.get().getCode();
         Map<String, ContraIndicatorMitigation> ciMitConfig = configService.getCiMitConfig();
         if (ciMitConfig.containsKey(latestContraIndicatorCode)) {
+            mitigationService.addInFlightMitigation(userId, latestContraIndicatorCode);
             final ContraIndicatorMitigation contraIndicatorMitigation =
                     ciMitConfig.get(latestContraIndicatorCode);
             return Optional.of(

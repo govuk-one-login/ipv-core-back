@@ -2231,6 +2231,7 @@ Resources:
           POWERTOOLS_SERVICE_NAME: !Sub ci-scoring-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+          MITIGATIONS_TABLE_NAME: !Ref MitigationsTable
           CI_STORAGE_GET_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:getContraIndicators-${env}"
             - cimit_account_id: !If
@@ -2277,6 +2278,8 @@ Resources:
             TableName: !Ref SessionsTable
         - DynamoDBReadPolicy:
             TableName: !Ref ClientOAuthSessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MitigationsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
