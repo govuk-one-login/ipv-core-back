@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Getter
 @Builder(toBuilder = true)
@@ -42,26 +43,35 @@ public class ContraIndicators {
     }
 
     private Integer calculateCheckedScore(
-            final Map<String, ContraIndicatorScore> contraIndicatorScores) {
-        return contraIndicatorsMap.values().stream()
-                .filter(
-                        contraIndicator ->
-                                !CollectionUtils.isEmpty(contraIndicator.getMitigation()))
+            final Map<String, ContraIndicatorScore> contraIndicatorScores,
+            final Set<String> potentiallyMitigatedContraIndicators) {
+        final Set<String> potentiallyAndActuallyMitigatedContraIndicators =
+                contraIndicatorsMap.values().stream()
+                        .filter(
+                                contraIndicator ->
+                                        !CollectionUtils.isEmpty(contraIndicator.getMitigation()))
+                        .map(ContraIndicator::getCode)
+                        .collect(Collectors.toSet());
+        potentiallyAndActuallyMitigatedContraIndicators.addAll(
+                potentiallyMitigatedContraIndicators);
+
+        return potentiallyAndActuallyMitigatedContraIndicators.stream()
                 .map(
                         contraIndicator ->
-                                contraIndicatorScores
-                                        .get(contraIndicator.getCode())
-                                        .getCheckedScore())
+                                contraIndicatorScores.get(contraIndicator).getCheckedScore())
                 .reduce(0, Integer::sum);
     }
 
     public Integer getContraIndicatorScore(
             final Map<String, ContraIndicatorScore> contraIndicatorScores,
-            final boolean includeMitigation)
+            final boolean includeMitigation,
+            final Set<String> inflightMitigations)
             throws UnrecognisedCiException {
         validateContraIndicators(contraIndicatorScores);
         return calculateDetectedScore(contraIndicatorScores)
-                + (includeMitigation ? calculateCheckedScore(contraIndicatorScores) : 0);
+                + (includeMitigation
+                        ? calculateCheckedScore(contraIndicatorScores, inflightMitigations)
+                        : 0);
     }
 
     public Optional<ContraIndicator> getLatestContraIndicator() {

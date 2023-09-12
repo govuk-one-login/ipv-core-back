@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
+import uk.gov.di.ipv.core.library.persistence.item.MitigationItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.MitigationService;
 
@@ -92,17 +93,22 @@ public class CimitEvaluator {
     }
 
     private Optional<ContraIndicator> checkForBreachingContraIndicators(
-            ContraIndicators contraIndicators) throws UnrecognisedCiException {
+            String userId, ContraIndicators contraIndicators) throws UnrecognisedCiException {
         LOGGER.info(
                 new StringMapMessage()
                         .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Retrieved user's CI items.")
                         .with(
                                 LOG_NO_OF_CI_ITEMS.getFieldName(),
                                 contraIndicators.getContraIndicatorsMap().size()));
+        final Set<String> inflightMitigations =
+                mitigationService.getInFlightMitigations(userId).stream()
+                        .map(MitigationItem::getContraIndicatorCode)
+                        .collect(Collectors.toSet());
         final int ciScore =
                 contraIndicators.getContraIndicatorScore(
                         configService.getContraIndicatorScoresMap(),
-                        configService.enabled(MITIGATION_ENABLED));
+                        configService.enabled(MITIGATION_ENABLED),
+                        inflightMitigations);
         LOGGER.info(
                 new StringMapMessage()
                         .with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Calculated user's CI score.")
@@ -118,7 +124,7 @@ public class CimitEvaluator {
             String userId, ContraIndicators contraIndicators, boolean separateSession)
             throws ConfigException, UnrecognisedCiException {
         final Optional<ContraIndicator> latestBreachingContraIndicator =
-                checkForBreachingContraIndicators(contraIndicators);
+                checkForBreachingContraIndicators(userId, contraIndicators);
         if (latestBreachingContraIndicator.isEmpty()) {
             return Optional.empty();
         }
