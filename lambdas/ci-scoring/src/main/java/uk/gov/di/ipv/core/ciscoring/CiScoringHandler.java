@@ -16,7 +16,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.domain.cimit.CimitEvaluator;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
@@ -43,7 +43,7 @@ public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<Stri
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CiMitService ciMitService;
     private final ConfigService configService;
-    private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
+    private final CimitEvaluator cimitEvaluator;
     private final IpvSessionService ipvSessionService;
 
     @SuppressWarnings("unused") // Used by tests through injection
@@ -51,13 +51,13 @@ public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<Stri
             CiMitService ciMitService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             ConfigService configService,
-            Gpg45ProfileEvaluator gpg45ProfileEvaluator,
-            IpvSessionService ipvSessionService) {
+            IpvSessionService ipvSessionService,
+            CimitEvaluator cimitEvaluator) {
         this.ciMitService = ciMitService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.configService = configService;
-        this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
         this.ipvSessionService = ipvSessionService;
+        this.cimitEvaluator = cimitEvaluator;
     }
 
     @SuppressWarnings("unused") // Used by AWS
@@ -66,8 +66,8 @@ public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<Stri
         this.configService = new ConfigService();
         this.ciMitService = new CiMitService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
-        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService);
         this.ipvSessionService = new IpvSessionService(configService);
+        this.cimitEvaluator = new CimitEvaluator(configService);
     }
 
     @Override
@@ -140,10 +140,10 @@ public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<Stri
             boolean initialCiScoring, String ipAddress, String userId, String govukSigninJourneyId)
             throws ConfigException, UnrecognisedCiException, CiRetrievalException {
         return configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)
-                ? gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
+                ? cimitEvaluator.getJourneyResponseForStoredContraIndicators(
                         ciMitService.getContraIndicatorsVC(userId, govukSigninJourneyId, ipAddress),
                         initialCiScoring)
-                : gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
+                : cimitEvaluator.getJourneyResponseForStoredCis(
                         ciMitService.getCIs(userId, govukSigninJourneyId, ipAddress));
     }
 }

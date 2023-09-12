@@ -18,7 +18,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.domain.cimit.CimitEvaluator;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
@@ -60,7 +60,7 @@ class CiScoringHandlerTest {
     @Mock private ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     @Mock private ConfigService configService;
     @Mock private Context context;
-    @Mock private Gpg45ProfileEvaluator gpg45ProfileEvaluator;
+    @Mock private CimitEvaluator cimitEvaluator;
     @Mock private IpvSessionService ipvSessionService;
     @InjectMocks private CiScoringHandler ciScoringHandler;
 
@@ -229,23 +229,21 @@ class CiScoringHandlerTest {
             boolean separateSession)
             throws UnrecognisedCiException, ConfigException {
         if (useContraIndicatorVC) {
-            when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
+            when(cimitEvaluator.getJourneyResponseForStoredContraIndicators(
                             any(), eq(separateSession)))
                     .thenReturn(mockResponse);
         } else {
-            when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
-                    .thenReturn(mockResponse);
+            when(cimitEvaluator.getJourneyResponseForStoredCis(any())).thenReturn(mockResponse);
         }
     }
 
     private void mockCiJourneyResponseException(boolean useContraIndicatorVC, Exception exception)
             throws UnrecognisedCiException, ConfigException {
         if (useContraIndicatorVC) {
-            when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
-                            any(), anyBoolean()))
+            when(cimitEvaluator.getJourneyResponseForStoredContraIndicators(any(), anyBoolean()))
                     .thenThrow(exception);
         } else {
-            when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any())).thenThrow(exception);
+            when(cimitEvaluator.getJourneyResponseForStoredCis(any())).thenThrow(exception);
         }
     }
 }
