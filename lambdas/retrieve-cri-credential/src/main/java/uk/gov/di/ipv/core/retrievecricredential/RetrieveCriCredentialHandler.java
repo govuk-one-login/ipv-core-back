@@ -157,7 +157,7 @@ public class RetrieveCriCredentialHandler
                     clientOAuthSessionItem.getGovukSigninJourneyId());
 
             CredentialIssuerConfig credentialIssuerConfig =
-                    configService.getCredentialIssuerActiveConnectionConfig(credentialIssuerId);
+                    configService.getCriConfig(criOAuthSessionItem);
 
             String apiKey =
                     credentialIssuerConfig.getRequiresApiKey()
