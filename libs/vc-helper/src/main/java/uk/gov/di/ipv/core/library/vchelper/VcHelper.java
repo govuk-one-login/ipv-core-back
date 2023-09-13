@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45DcmawValidator;
 import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45EvidenceValidator;
 import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45F2fValidator;
 import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45FraudValidator;
+import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45NinoValidator;
 import uk.gov.di.ipv.core.library.domain.gpg45.validation.Gpg45VerificationValidator;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 
@@ -114,6 +115,8 @@ public class VcHelper {
                         return Gpg45DcmawValidator.isSuccessful(item);
                     case F2F:
                         return Gpg45F2fValidator.isSuccessful(item);
+                    case NINO:
+                        return Gpg45NinoValidator.isSuccessful(item);
                 }
             }
             return false;

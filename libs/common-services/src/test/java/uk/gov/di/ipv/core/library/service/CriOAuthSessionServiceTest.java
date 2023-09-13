@@ -60,13 +60,15 @@ class CriOAuthSessionServiceTest {
                         .criId("testAddress")
                         .accessToken("testAccessToken")
                         .authorizationCode("testAuthorizationCode")
+                        .connection("main")
                         .build();
 
         CriOAuthSessionItem result =
                 criOauthSessionService.persistCriOAuthSession(
                         criOAuthSessionItem.getCriOAuthSessionId(),
                         criOAuthSessionItem.getCriId(),
-                        criOAuthSessionItem.getClientOAuthSessionId());
+                        criOAuthSessionItem.getClientOAuthSessionId(),
+                        criOAuthSessionItem.getConnection());
 
         ArgumentCaptor<CriOAuthSessionItem> criOAuthSessionItemArgumentCaptor =
                 ArgumentCaptor.forClass(CriOAuthSessionItem.class);

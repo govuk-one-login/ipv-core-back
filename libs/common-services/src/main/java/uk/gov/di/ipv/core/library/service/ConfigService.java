@@ -25,6 +25,8 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorMitigation;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
+import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 
 import java.net.URI;
 import java.nio.file.Path;
@@ -240,13 +242,28 @@ public class ConfigService {
 
     public CredentialIssuerConfig getCredentialIssuerActiveConnectionConfig(
             String credentialIssuerId) {
-        String activeConnection = getActiveConnection(credentialIssuerId);
+        return getCriConfigForConnection(
+                getActiveConnection(credentialIssuerId), credentialIssuerId);
+    }
+
+    public CredentialIssuerConfig getCriConfig(CriOAuthSessionItem criOAuthSessionItem) {
+        return getCriConfigForConnection(
+                criOAuthSessionItem.getConnection(), criOAuthSessionItem.getCriId());
+    }
+
+    public CredentialIssuerConfig getCriConfigForConnection(String connection, String criId) {
         final String pathTemplate =
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/connections/%s";
-        Map<String, String> result =
-                getSsmParameters(pathTemplate, false, credentialIssuerId, activeConnection);
+        Map<String, String> result = getSsmParameters(pathTemplate, false, criId, connection);
 
-        return new ObjectMapper().convertValue(result, CredentialIssuerConfig.class);
+        if (result == null || result.isEmpty()) {
+            throw new NoConfigForConnectionException(
+                    String.format(
+                            "No config found for connection: '%s' and criId: '%s'",
+                            connection, criId));
+        }
+
+        return objectMapper.convertValue(result, CredentialIssuerConfig.class);
     }
 
     public String getActiveConnection(String credentialIssuerId) {
