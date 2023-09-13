@@ -256,7 +256,7 @@ public class ConfigService {
                 ConfigurationVariable.CREDENTIAL_ISSUERS.getPath() + "/%s/connections/%s";
         Map<String, String> result = getSsmParameters(pathTemplate, false, criId, connection);
 
-        if (result.isEmpty()) {
+        if (result == null || result.isEmpty()) {
             throw new NoConfigForConnectionException(
                     String.format(
                             "No config found for connection: '%s' and criId: '%s'",

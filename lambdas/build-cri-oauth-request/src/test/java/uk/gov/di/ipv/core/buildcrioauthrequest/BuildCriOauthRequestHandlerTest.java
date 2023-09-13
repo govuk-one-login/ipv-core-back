@@ -61,6 +61,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -109,6 +110,7 @@ class BuildCriOauthRequestHandlerTest {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
+    public static final String MAIN_CONNECTION = "main";
 
     @Mock private Context context;
     @Mock private CredentialIssuerConfigService configService;
@@ -285,7 +287,8 @@ class BuildCriOauthRequestHandlerTest {
     @Test
     void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithoutResponseTypeParam()
             throws Exception {
-        when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
+        when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
+        when(configService.getCriConfigForConnection(MAIN_CONNECTION, CRI_ID))
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
@@ -300,8 +303,6 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER)));
-        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any(), any()))
-                .thenReturn(criOAuthSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -348,7 +349,8 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(
                 AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any(), any());
+        verify(mockCriOAuthSessionService, times(1))
+                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
@@ -356,7 +358,8 @@ class BuildCriOauthRequestHandlerTest {
     void
             shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithoutResponseTypeParamForAllVCsAreNotSuccess()
                     throws Exception {
-        when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
+        when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
+        when(configService.getCriConfigForConnection(MAIN_CONNECTION, CRI_ID))
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
@@ -371,8 +374,7 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER)));
-        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any(), any()))
-                .thenReturn(criOAuthSessionItem);
+
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -419,7 +421,8 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(
                 AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any(), any());
+        verify(mockCriOAuthSessionService, times(1))
+                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
@@ -427,7 +430,8 @@ class BuildCriOauthRequestHandlerTest {
     void
             shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithFullUrlJourneyAndWithoutResponseTypeParam()
                     throws Exception {
-        when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
+        when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
+        when(configService.getCriConfigForConnection(MAIN_CONNECTION, CRI_ID))
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
@@ -442,8 +446,6 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER)));
-        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any(), any()))
-                .thenReturn(criOAuthSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -490,7 +492,8 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(
                 AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any(), any());
+        verify(mockCriOAuthSessionService, times(1))
+                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
@@ -498,7 +501,8 @@ class BuildCriOauthRequestHandlerTest {
     void
             shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithoutBaseJourneyUrlAndResponseTypeParam()
                     throws Exception {
-        when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
+        when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
+        when(configService.getCriConfigForConnection(MAIN_CONNECTION, CRI_ID))
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
@@ -513,8 +517,6 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER)));
-        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any(), any()))
-                .thenReturn(criOAuthSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -561,14 +563,16 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(
                 AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any(), any());
+        verify(mockCriOAuthSessionService, times(1))
+                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
     void shouldReceive200ResponseCodeAndReturnCredentialIssuerResponseWithResponseTypeParam()
             throws Exception {
-        when(configService.getCredentialIssuerActiveConnectionConfig(DCMAW_CRI))
+        when(configService.getActiveConnection(DCMAW_CRI)).thenReturn(MAIN_CONNECTION);
+        when(configService.getCriConfigForConnection(MAIN_CONNECTION, DCMAW_CRI))
                 .thenReturn(dcmawCredentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
@@ -583,8 +587,6 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER)));
-        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any(), any()))
-                .thenReturn(criOAuthSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -632,7 +634,8 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(
                 AuditEventTypes.IPV_REDIRECT_TO_CRI, auditEventCaptor.getValue().getEventName());
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any(), any());
+        verify(mockCriOAuthSessionService, times(1))
+                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
@@ -717,7 +720,8 @@ class BuildCriOauthRequestHandlerTest {
 
     @Test
     void shouldDeduplicateSharedClaims() throws Exception {
-        when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
+        when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
+        when(configService.getCriConfigForConnection(MAIN_CONNECTION, CRI_ID))
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
@@ -732,8 +736,6 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER)));
-        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any(), any()))
-                .thenReturn(criOAuthSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -766,13 +768,15 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(2, sharedClaims.get("address").size());
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any(), any());
+        verify(mockCriOAuthSessionService, times(1))
+                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
     void shouldNotDeduplicateSharedClaimsIfFullNameDifferent() throws Exception {
-        when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
+        when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
+        when(configService.getCriConfigForConnection(MAIN_CONNECTION, CRI_ID))
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
@@ -787,8 +791,6 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_3), IPV_ISSUER)));
-        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any(), any()))
-                .thenReturn(criOAuthSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -819,13 +821,15 @@ class BuildCriOauthRequestHandlerTest {
         JsonNode sharedClaims = claimsSet.get(TEST_SHARED_CLAIMS);
         assertEquals(2, sharedClaims.get("name").size());
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any(), any());
+        verify(mockCriOAuthSessionService, times(1))
+                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
     void shouldDeduplicateNamesThatAppearInDifferentVCs() throws Exception {
-        when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
+        when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
+        when(configService.getCriConfigForConnection(MAIN_CONNECTION, CRI_ID))
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
@@ -840,8 +844,6 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_3), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_4), IPV_ISSUER)));
-        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any(), any()))
-                .thenReturn(criOAuthSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -891,13 +893,15 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals("FamilyName", name2NameParts.get(2).get("type").asText());
         assertEquals("Doe", name2NameParts.get(2).get("value").asText());
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any(), any());
+        verify(mockCriOAuthSessionService, times(1))
+                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
     void shouldRemoveExtraAddressClaimsAndOnlyUseValuesFromTheAddressVC() throws Exception {
-        when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
+        when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
+        when(configService.getCriConfigForConnection(MAIN_CONNECTION, CRI_ID))
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
@@ -914,8 +918,6 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_3), ADDRESS_ISSUER)));
-        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any(), any()))
-                .thenReturn(criOAuthSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -948,13 +950,15 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(1, sharedClaims.get("address").size());
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any(), any());
+        verify(mockCriOAuthSessionService, times(1))
+                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
     void shouldNotIncludeFailedVcsInTheSharedClaims() throws Exception {
-        when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
+        when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
+        when(configService.getCriConfigForConnection(MAIN_CONNECTION, CRI_ID))
                 .thenReturn(credentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
@@ -969,8 +973,6 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_1), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2), ADDRESS_ISSUER)));
-        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any(), any()))
-                .thenReturn(criOAuthSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1003,14 +1005,16 @@ class BuildCriOauthRequestHandlerTest {
         assertEquals(2, sharedClaims.get("birthDate").size());
         assertEquals(2, sharedClaims.get("address").size());
         verify(mockIpvSessionService, times(1)).updateIpvSession(any());
-        verify(mockCriOAuthSessionService, times(1)).persistCriOAuthSession(any(), any(), any());
+        verify(mockCriOAuthSessionService, times(1))
+                .persistCriOAuthSession(any(), any(), any(), eq(MAIN_CONNECTION));
         verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
     @Test
     void shouldOnlyAllowCRIConfiguredSharedClaimAttr() throws Exception {
-        when(configService.getCredentialIssuerActiveConnectionConfig(CRI_ID))
-                .thenReturn(kbvCredentialIssuerConfig);
+        when(configService.getActiveConnection(CRI_ID)).thenReturn(MAIN_CONNECTION);
+        when(configService.getCriConfigForConnection(MAIN_CONNECTION, CRI_ID))
+                .thenReturn(credentialIssuerConfig);
         when(configService.getAllowedSharedAttributes(CRI_ID))
                 .thenReturn("name,birthDate,address,emailAddress");
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
@@ -1029,8 +1033,6 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_3), ADDRESS_ISSUER)));
-        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any(), any()))
-                .thenReturn(criOAuthSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1070,7 +1072,8 @@ class BuildCriOauthRequestHandlerTest {
 
     @Test
     void shouldOnlyEmailForF2FAndAllowCRIConfiguredSharedClaimAttr() throws Exception {
-        when(configService.getCredentialIssuerActiveConnectionConfig(F2F_CRI))
+        when(configService.getActiveConnection(F2F_CRI)).thenReturn(MAIN_CONNECTION);
+        when(configService.getCriConfigForConnection(MAIN_CONNECTION, F2F_CRI))
                 .thenReturn(f2fCredentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
@@ -1090,8 +1093,6 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_3), ADDRESS_ISSUER)));
-        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any(), any()))
-                .thenReturn(criOAuthSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -1132,7 +1133,8 @@ class BuildCriOauthRequestHandlerTest {
 
     @Test
     void shouldIncludeSocialSecurityRecordInSharedClaimsIfConfigured() throws Exception {
-        when(configService.getCredentialIssuerActiveConnectionConfig(HMRC_KBV_CRI))
+        when(configService.getActiveConnection(HMRC_KBV_CRI)).thenReturn(MAIN_CONNECTION);
+        when(configService.getCriConfigForConnection(MAIN_CONNECTION, HMRC_KBV_CRI))
                 .thenReturn(hmrcKbvCredentialIssuerConfig);
         when(configService.getSsmParameter(JWT_TTL_SECONDS)).thenReturn("900");
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(IPV_ISSUER);
@@ -1152,8 +1154,6 @@ class BuildCriOauthRequestHandlerTest {
                                         vcClaim(CREDENTIAL_ATTRIBUTES_2), IPV_ISSUER),
                                 generateVerifiableCredential(
                                         vcClaim(CREDENTIAL_ATTRIBUTES_3), ADDRESS_ISSUER)));
-        when(mockCriOAuthSessionService.persistCriOAuthSession(any(), any(), any()))
-                .thenReturn(criOAuthSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);

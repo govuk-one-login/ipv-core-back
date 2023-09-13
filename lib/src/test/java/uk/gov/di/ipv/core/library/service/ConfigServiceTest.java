@@ -28,6 +28,8 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorMitigation;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.NoConfigForConnectionException;
+import uk.gov.di.ipv.core.library.persistence.item.CriOAuthSessionItem;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
@@ -187,6 +189,36 @@ class ConfigServiceTest {
                     configService.getCredentialIssuerActiveConnectionConfig("passportCri");
 
             checkCredentialIssuerConfig(expectedBaseCredentialIssuerConfig, result);
+        }
+
+        @Test
+        void getCriConfigShouldGetConfigForCriOauthSessionItem() {
+            environmentVariables.set("ENVIRONMENT", "test");
+
+            when(ssmProvider.getMultiple(
+                            "/test/core/credentialIssuers/passportCri/connections/stub"))
+                    .thenReturn(baseCredentialIssuerConfig);
+
+            CredentialIssuerConfig result =
+                    configService.getCriConfig(
+                            CriOAuthSessionItem.builder()
+                                    .criId("passportCri")
+                                    .connection("stub")
+                                    .build());
+
+            checkCredentialIssuerConfig(expectedBaseCredentialIssuerConfig, result);
+        }
+
+        @Test
+        void getCriConfigForConnectionShouldThrowIfNoCriConfigFound() {
+            environmentVariables.set("ENVIRONMENT", "test");
+            when(ssmProvider.getMultiple(
+                            "/test/core/credentialIssuers/passportCri/connections/stub"))
+                    .thenReturn(Map.of());
+
+            assertThrows(
+                    NoConfigForConnectionException.class,
+                    () -> configService.getCriConfigForConnection("stub", "passportCri"));
         }
 
         @Test
