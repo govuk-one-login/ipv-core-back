@@ -39,11 +39,7 @@ public class VcHelper {
 
     private static Set<String> getNonEvidenceCredentialIssuers() {
         return NON_EVIDENCE_CRI_TYPES.stream()
-                .map(
-                        credentialIssuer ->
-                                configService
-                                        .getCredentialIssuerActiveConnectionConfig(credentialIssuer)
-                                        .getComponentId())
+                .map(credentialIssuer -> configService.getComponentId(credentialIssuer))
                 .collect(Collectors.toSet());
     }
 
