@@ -167,7 +167,7 @@ public class UserIdentityService {
                 }
             } catch (ParseException e) {
                 throw new CredentialParseException(
-                        "Encountered a parsing error while attempting to purchase successful VC Store items.");
+                        "Encountered a parsing error while attempting to parse successful VC Store items.");
             }
         }
         return successfulVCStoreItems;

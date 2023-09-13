@@ -767,7 +767,7 @@ class UserIdentityServiceTest {
                                 userIdentityService.generateUserIdentity(
                                         USER_ID_1, "test-sub", "P2"));
         assertEquals(
-                "Encountered a parsing error while attempting to purchase successful VC Store items.",
+                "Encountered a parsing error while attempting to parse successful VC Store items.",
                 thrownException.getMessage());
     }
 
