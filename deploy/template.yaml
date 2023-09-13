@@ -86,7 +86,7 @@ Conditions:
 # mapping up to date with each developer environment.
 Mappings:
   EnvironmentConfiguration:
-    "130355686670": # Old Development Account
+    "130355686670": # core dev01
       provisionedConcurrency: 0
       cimitAccountId: 388905755587 # di-ipv-stubs-prod
       cimitEnvironment: production # targeting the "production" CiMit stub
@@ -95,12 +95,12 @@ Mappings:
       journeyEngineStepFunctionLogLevel: "ALL"
       pgw500ErrorLimit: 2
       egw500ErrorLimit: 2
-      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueueOldDev"
+      asyncCriResponseQueueArn: "arn:aws:sqs:eu-west-2:616199614141:stubQueue_F2FQueue"
       asyncCriResponseQueueKmsKeyArn: "arn:aws:kms:eu-west-2:616199614141:key/a3025aad-6994-4b72-b3b6-5b361a8b7708"
       # Should be at most 1/6 of the source queue visibility timeout.
       # See https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html#events-sqs-queueconfig
       asyncCriLambdaTimeout: 30
-    "175872367215": # New Development Account
+    "175872367215": # Core dev02
       provisionedConcurrency: 0
       cimitAccountId: 388905755587 # di-ipv-stubs-prod
       cimitEnvironment: production # targeting the "production" CiMit stub
