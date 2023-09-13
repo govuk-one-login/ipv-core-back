@@ -58,7 +58,8 @@ public class LogHelper {
         LOG_SCORE_TYPE("scoreType"),
         LOG_UNCORRELATABLE_DATA("uncorrelatableData"),
         LOG_IS_VC_SUCCESSFUL("isVCSuccessful"),
-        LOG_CRI_RES_RETRIEVED_TYPE("criResourceRetrievedType");
+        LOG_CRI_RES_RETRIEVED_TYPE("criResourceRetrievedType"),
+        LOG_CONNECTION("connection");
 
         private final String fieldName;
 
