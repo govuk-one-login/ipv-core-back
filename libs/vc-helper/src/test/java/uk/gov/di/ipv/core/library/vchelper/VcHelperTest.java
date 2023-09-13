@@ -168,9 +168,8 @@ class VcHelperTest {
 
     private void mockCredentialIssuerConfig() {
         VcHelper.setConfigService(configService);
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
-                .thenReturn(addressConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(claimedIdentityConfig);
+        when(configService.getComponentId(ADDRESS_CRI)).thenReturn(addressConfig.getComponentId());
+        when(configService.getComponentId(CLAIMED_IDENTITY_CRI))
+                .thenReturn(claimedIdentityConfig.getComponentId());
     }
 }

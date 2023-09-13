@@ -410,18 +410,8 @@ class EvaluateGpg45ScoresHandlerTest {
 
         mockCredentialIssuerConfig();
         // This causes the address vc (which has no evidence) to be treated as an unsuccessful vc
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
-                .thenReturn(
-                        new CredentialIssuerConfig(
-                                new URI("http://example.com/token"),
-                                new URI("http://example.com/credential"),
-                                new URI("http://example.com/authorize"),
-                                "ipv-core",
-                                "test-jwk",
-                                "test-encryption-jwk",
-                                "http://example.com",
-                                new URI("http://example.com/redirect"),
-                                true));
+        when(configService.getComponentId(ADDRESS_CRI))
+                .thenReturn("https://a-component-id-that-doesn't-match-the-address-vc");
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(testIpvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
@@ -445,7 +435,6 @@ class EvaluateGpg45ScoresHandlerTest {
         testIpvSessionItem.setIpvSessionId(TEST_SESSION_ID);
         testIpvSessionItem.setVisitedCredentialIssuerDetails(List.of());
 
-        mockCredentialIssuerConfig();
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(testIpvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
@@ -556,9 +545,8 @@ class EvaluateGpg45ScoresHandlerTest {
     }
 
     private void mockCredentialIssuerConfig() {
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
-                .thenReturn(addressConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(claimedIdentityConfig);
+        when(configService.getComponentId(ADDRESS_CRI)).thenReturn(addressConfig.getComponentId());
+        when(configService.getComponentId(CLAIMED_IDENTITY_CRI))
+                .thenReturn(claimedIdentityConfig.getComponentId());
     }
 }

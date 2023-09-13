@@ -179,10 +179,6 @@ class CheckExistingIdentityHandlerTest {
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
-        when(configService.getCredentialIssuerActiveConnectionConfig("address"))
-                .thenReturn(addressConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig("claimedIdentity"))
-                .thenReturn(claimedIdentityConfig);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -246,10 +242,6 @@ class CheckExistingIdentityHandlerTest {
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(configService.getCredentialIssuerActiveConnectionConfig("address"))
-                .thenReturn(addressConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig("claimedIdentity"))
-                .thenReturn(claimedIdentityConfig);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -519,10 +511,6 @@ class CheckExistingIdentityHandlerTest {
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
-        when(configService.getCredentialIssuerActiveConnectionConfig("address"))
-                .thenReturn(addressConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig("claimedIdentity"))
-                .thenReturn(claimedIdentityConfig);
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);

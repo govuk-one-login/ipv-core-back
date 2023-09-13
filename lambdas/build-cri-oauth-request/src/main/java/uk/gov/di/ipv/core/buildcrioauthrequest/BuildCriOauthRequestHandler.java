@@ -317,8 +317,6 @@ public class BuildCriOauthRequestHandler
     private SharedClaimsResponse getSharedAttributesForUser(
             IpvSessionItem ipvSessionItem, String userId, String criId)
             throws HttpResponseExceptionWithErrorBody {
-        CredentialIssuerConfig addressCriConfig =
-                criConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI);
 
         List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
@@ -343,7 +341,7 @@ public class BuildCriOauthRequestHandler
 
                     SharedClaims credentialsSharedClaims =
                             mapper.readValue(credentialSubject.toString(), SharedClaims.class);
-                    if (credentialIss.equals(addressCriConfig.getComponentId())) {
+                    if (credentialIss.equals(criConfigService.getComponentId(ADDRESS_CRI))) {
                         hasAddressVc = true;
                         sharedClaimsSet.forEach(sharedClaims -> sharedClaims.setAddress(null));
                     } else if (hasAddressVc) {
