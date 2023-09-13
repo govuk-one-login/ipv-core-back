@@ -218,11 +218,13 @@ public class ConfigService {
         return Arrays.asList(redirectUrlStrings.split(CLIENT_REDIRECT_URL_SEPARATOR));
     }
 
-    public String getCriPrivateApiKey(String criId) {
+    public String getCriPrivateApiKey(CriOAuthSessionItem criOAuthSessionItem) {
         String secretId =
                 String.format(
-                        "%s/credential-issuers/%s/api-key",
-                        getEnvironmentVariable(ENVIRONMENT), criId);
+                        "%s/credential-issuers/%s/connections/%s/api-key",
+                        getEnvironmentVariable(ENVIRONMENT),
+                        criOAuthSessionItem.getCriId(),
+                        criOAuthSessionItem.getConnection());
         try {
             String secretValue = getSecretValue(secretId);
 
@@ -235,7 +237,7 @@ public class ConfigService {
         } catch (JsonProcessingException e) {
             LOGGER.error(
                     "Failed to parse the api key secret from secrets manager for client: {}",
-                    criId);
+                    criOAuthSessionItem.getCriId());
             return null;
         }
     }

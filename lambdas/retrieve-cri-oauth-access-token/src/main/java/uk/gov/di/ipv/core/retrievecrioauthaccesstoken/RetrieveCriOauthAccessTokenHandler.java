@@ -116,7 +116,7 @@ public class RetrieveCriOauthAccessTokenHandler
 
             String apiKey =
                     credentialIssuerConfig.getRequiresApiKey()
-                            ? configService.getCriPrivateApiKey(credentialIssuerId)
+                            ? configService.getCriPrivateApiKey(criOAuthSessionItem)
                             : null;
 
             signer.setKeyId(configService.getSigningKeyId());

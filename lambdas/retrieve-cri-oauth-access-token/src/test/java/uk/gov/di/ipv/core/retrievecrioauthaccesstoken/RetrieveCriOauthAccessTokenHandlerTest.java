@@ -180,7 +180,7 @@ class RetrieveCriOauthAccessTokenHandlerTest {
     private void mockServiceCallsAndSessionItem() {
         when(configService.getCriConfig(criOAuthSessionItem)).thenReturn(passportIssuer);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
-        when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
+        when(configService.getCriPrivateApiKey(criOAuthSessionItem)).thenReturn(testApiKey);
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(criOAuthSessionService.getCriOauthSessionItem(any())).thenReturn(criOAuthSessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))

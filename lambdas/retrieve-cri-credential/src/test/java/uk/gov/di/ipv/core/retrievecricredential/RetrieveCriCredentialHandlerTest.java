@@ -293,7 +293,8 @@ class RetrieveCriCredentialHandlerTest {
 
         when(configService.getCriConfig(dcmawCriOAuthSessionItem)).thenReturn(testDcmawIssuer);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
-        when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
+        when(configService.getCriPrivateApiKey(any(CriOAuthSessionItem.class)))
+                .thenReturn(testApiKey);
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
         when(criOAuthSessionService.getCriOauthSessionItem(any()))
                 .thenReturn(dcmawCriOAuthSessionItem);
@@ -689,7 +690,8 @@ class RetrieveCriCredentialHandlerTest {
     private void mockServiceCalls(IpvSessionItem testIpvSessionItem) {
         when(configService.getCriConfig(criOAuthSessionItem)).thenReturn(testPassportIssuer);
         when(configService.getSsmParameter(COMPONENT_ID)).thenReturn(testComponentId);
-        when(configService.getCriPrivateApiKey(anyString())).thenReturn(testApiKey);
+        when(configService.getCriPrivateApiKey(any(CriOAuthSessionItem.class)))
+                .thenReturn(testApiKey);
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(testIpvSessionItem);
         when(criOAuthSessionService.getCriOauthSessionItem(any())).thenReturn(criOAuthSessionItem);
         when(mockClientOAuthSessionService.getClientOAuthSession(any()))

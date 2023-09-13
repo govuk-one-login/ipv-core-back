@@ -161,7 +161,7 @@ public class RetrieveCriCredentialHandler
 
             String apiKey =
                     credentialIssuerConfig.getRequiresApiKey()
-                            ? configService.getCriPrivateApiKey(credentialIssuerId)
+                            ? configService.getCriPrivateApiKey(criOAuthSessionItem)
                             : null;
 
             VerifiableCredentialResponse verifiableCredentialResponse =
