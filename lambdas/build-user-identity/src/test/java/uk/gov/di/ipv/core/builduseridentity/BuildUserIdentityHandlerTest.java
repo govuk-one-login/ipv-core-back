@@ -28,6 +28,7 @@ import uk.gov.di.ipv.core.library.domain.NameParts;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
@@ -137,7 +138,7 @@ class BuildUserIdentityHandlerTest {
 
     @Test
     void shouldReturn200OnSuccessfulUserIdentityRequest()
-            throws HttpResponseExceptionWithErrorBody {
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
         Map<String, String> headers =
@@ -150,7 +151,7 @@ class BuildUserIdentityHandlerTest {
 
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+        when(mockUserIdentityService.generateUserIdentity(any(), any(), any()))
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -163,7 +164,8 @@ class BuildUserIdentityHandlerTest {
 
     @Test
     void shouldReturnCredentialsOnSuccessfulUserInfoRequest()
-            throws JsonProcessingException, SqsException, HttpResponseExceptionWithErrorBody {
+            throws JsonProcessingException, SqsException, HttpResponseExceptionWithErrorBody,
+                    CredentialParseException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
         Map<String, String> headers =
@@ -176,7 +178,7 @@ class BuildUserIdentityHandlerTest {
 
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+        when(mockUserIdentityService.generateUserIdentity(any(), any(), any()))
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -204,7 +206,7 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequest()
             throws JsonProcessingException, SqsException, HttpResponseExceptionWithErrorBody,
-                    CiRetrievalException, ParseException {
+                    CiRetrievalException, ParseException, CredentialParseException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
         Map<String, String> headers =
@@ -217,7 +219,7 @@ class BuildUserIdentityHandlerTest {
 
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+        when(mockUserIdentityService.generateUserIdentity(any(), any(), any()))
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -253,7 +255,7 @@ class BuildUserIdentityHandlerTest {
             shouldReturnCredentialsWithoutCiMitVCOnSuccessfulUserInfoRequestWhenBundleCimitVCFeatureFlagIsNotEnabled()
                     throws JsonProcessingException, SqsException,
                             HttpResponseExceptionWithErrorBody, CiRetrievalException,
-                            ParseException {
+                            CredentialParseException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
         Map<String, String> headers =
@@ -266,7 +268,7 @@ class BuildUserIdentityHandlerTest {
 
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+        when(mockUserIdentityService.generateUserIdentity(any(), any(), any()))
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -297,7 +299,8 @@ class BuildUserIdentityHandlerTest {
 
     @Test
     void shouldReturnErrorResponseWhenUserIdentityGenerationFails()
-            throws JsonProcessingException, HttpResponseExceptionWithErrorBody {
+            throws JsonProcessingException, HttpResponseExceptionWithErrorBody,
+                    CredentialParseException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
         Map<String, String> headers =
@@ -310,7 +313,7 @@ class BuildUserIdentityHandlerTest {
 
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+        when(mockUserIdentityService.generateUserIdentity(any(), any(), any()))
                 .thenThrow(
                         new HttpResponseExceptionWithErrorBody(
                                 500, ErrorResponse.FAILED_TO_GENERATE_IDENTIY_CLAIM));
@@ -334,7 +337,7 @@ class BuildUserIdentityHandlerTest {
     @Test
     void shouldReturnErrorResponseOnCIRetrievalException()
             throws JsonProcessingException, HttpResponseExceptionWithErrorBody,
-                    CiRetrievalException {
+                    CiRetrievalException, CredentialParseException {
         APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
         AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
         Map<String, String> headers =
@@ -347,7 +350,7 @@ class BuildUserIdentityHandlerTest {
 
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockUserIdentityService.generateUserIdentity(any(), any(), any(), any()))
+        when(mockUserIdentityService.generateUserIdentity(any(), any(), any()))
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -515,5 +518,40 @@ class BuildUserIdentityHandlerTest {
                         .getDescription(),
                 responseBody.get("error_description"));
         verify(mockClientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
+    }
+
+    @Test
+    void shouldReturnErrorResponseOnCredentialParseException()
+            throws JsonProcessingException, HttpResponseExceptionWithErrorBody,
+                    CredentialParseException {
+        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
+        AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
+        Map<String, String> headers =
+                Map.of(
+                        "Authorization",
+                        accessToken.toAuthorizationHeader(),
+                        "ip-address",
+                        TEST_IP_ADDRESS);
+        event.setHeaders(headers);
+
+        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
+                .thenReturn(Optional.ofNullable(ipvSessionItem));
+        when(mockUserIdentityService.generateUserIdentity(any(), any(), any()))
+                .thenThrow(
+                        new CredentialParseException(
+                                "Encountered a parsing error while attempting to purchase successful VC Store items."));
+        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+
+        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+        responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
+
+        assertEquals(500, response.getStatusCode());
+        assertEquals("server_error", responseBody.get("error"));
+        assertEquals(
+                "Unexpected server error - Failed to parse successful VC Store items. Encountered a parsing error while attempting to purchase successful VC Store items.",
+                responseBody.get("error_description"));
+        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+        verify(mockUserIdentityService, times(1)).generateUserIdentity(any(), any(), any());
     }
 }

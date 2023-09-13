@@ -16,7 +16,6 @@ dependencies {
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			"software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
 			project(":libs:common-services"),
-			project(":libs:vc-helper"),
 			project(":libs:cimit-service"),
 			project(":libs:cri-response-service"),
 			project(":libs:audit-service")
