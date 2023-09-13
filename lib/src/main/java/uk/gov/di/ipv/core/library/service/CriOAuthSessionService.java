@@ -42,13 +42,14 @@ public class CriOAuthSessionService {
     }
 
     public CriOAuthSessionItem persistCriOAuthSession(
-            String state, String criId, String clientOAuthSessionId) {
+            String state, String criId, String clientOAuthSessionId, String connection) {
 
         CriOAuthSessionItem criOAuthSessionItem =
                 CriOAuthSessionItem.builder()
                         .criOAuthSessionId(state)
                         .criId(criId)
                         .clientOAuthSessionId(clientOAuthSessionId)
+                        .connection(connection)
                         .build();
 
         dataStore.create(criOAuthSessionItem, BACKEND_SESSION_TTL);

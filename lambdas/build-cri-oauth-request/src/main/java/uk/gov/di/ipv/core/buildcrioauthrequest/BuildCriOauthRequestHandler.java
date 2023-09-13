@@ -82,7 +82,7 @@ public class BuildCriOauthRequestHandler
     public static final Pattern LAST_SEGMENT_PATTERN = Pattern.compile("/([^/]+)$");
 
     private final ObjectMapper mapper = new ObjectMapper();
-    private final CredentialIssuerConfigService credentialIssuerConfigService;
+    private final CredentialIssuerConfigService criConfigService;
     private final UserIdentityService userIdentityService;
     private final JWSSigner signer;
     private final AuditService auditService;
@@ -92,7 +92,7 @@ public class BuildCriOauthRequestHandler
     private final Gpg45ProfileEvaluator gpg45ProfileEvaluator;
 
     public BuildCriOauthRequestHandler(
-            CredentialIssuerConfigService credentialIssuerConfigService,
+            CredentialIssuerConfigService criConfigService,
             UserIdentityService userIdentityService,
             JWSSigner signer,
             AuditService auditService,
@@ -101,7 +101,7 @@ public class BuildCriOauthRequestHandler
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             Gpg45ProfileEvaluator gpg45ProfileEvaluator) {
 
-        this.credentialIssuerConfigService = credentialIssuerConfigService;
+        this.criConfigService = criConfigService;
         this.userIdentityService = userIdentityService;
         this.signer = signer;
         this.auditService = auditService;
@@ -109,37 +109,36 @@ public class BuildCriOauthRequestHandler
         this.criOAuthSessionService = criOAuthSessionService;
         this.clientOAuthSessionDetailsService = clientOAuthSessionDetailsService;
         this.gpg45ProfileEvaluator = gpg45ProfileEvaluator;
-        VcHelper.setConfigService(this.credentialIssuerConfigService);
+        VcHelper.setConfigService(this.criConfigService);
     }
 
     @ExcludeFromGeneratedCoverageReport
     public BuildCriOauthRequestHandler() {
-        this.credentialIssuerConfigService = new CredentialIssuerConfigService();
-        this.userIdentityService = new UserIdentityService(credentialIssuerConfigService);
+        this.criConfigService = new CredentialIssuerConfigService();
+        this.userIdentityService = new UserIdentityService(criConfigService);
         this.signer = new KmsEs256Signer();
-        this.auditService =
-                new AuditService(AuditService.getDefaultSqsClient(), credentialIssuerConfigService);
-        this.ipvSessionService = new IpvSessionService(credentialIssuerConfigService);
-        this.criOAuthSessionService = new CriOAuthSessionService(credentialIssuerConfigService);
+        this.auditService = new AuditService(AuditService.getDefaultSqsClient(), criConfigService);
+        this.ipvSessionService = new IpvSessionService(criConfigService);
+        this.criOAuthSessionService = new CriOAuthSessionService(criConfigService);
         this.clientOAuthSessionDetailsService =
-                new ClientOAuthSessionDetailsService(credentialIssuerConfigService);
+                new ClientOAuthSessionDetailsService(criConfigService);
         this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(new ConfigService());
-        VcHelper.setConfigService(this.credentialIssuerConfigService);
+        VcHelper.setConfigService(this.criConfigService);
     }
 
     @Override
     @Tracing
     @Logging(clearState = true)
     public Map<String, Object> handleRequest(JourneyRequest input, Context context) {
-        LogHelper.attachComponentIdToLogs(credentialIssuerConfigService);
+        LogHelper.attachComponentIdToLogs(criConfigService);
         if (signer instanceof KmsEs256Signer kmsEs256Signer) {
-            kmsEs256Signer.setKeyId(credentialIssuerConfigService.getSigningKeyId());
+            kmsEs256Signer.setKeyId(criConfigService.getSigningKeyId());
         }
         try {
             String ipvSessionId = getIpvSessionId(input);
             String ipAddress = getIpAddress(input);
             String featureSet = getFeatureSet(input);
-            credentialIssuerConfigService.setFeatureSet(featureSet);
+            criConfigService.setFeatureSet(featureSet);
             String journey = getJourney(input);
 
             var errorResponse = validate(journey);
@@ -150,9 +149,11 @@ public class BuildCriOauthRequestHandler
             }
 
             String criId = getCriIdFromJourney(journey);
-            CredentialIssuerConfig credentialIssuerConfig = getCredentialIssuerConfig(criId);
+            String connection = criConfigService.getActiveConnection(criId);
+            CredentialIssuerConfig criConfig =
+                    criConfigService.getCriConfigForConnection(connection, criId);
 
-            if (credentialIssuerConfig == null) {
+            if (criConfig == null) {
                 return new JourneyErrorResponse(
                                 JOURNEY_ERROR_PATH,
                                 HttpStatus.SC_BAD_REQUEST,
@@ -175,25 +176,24 @@ public class BuildCriOauthRequestHandler
             JWEObject jweObject =
                     signEncryptJar(
                             ipvSessionItem,
-                            credentialIssuerConfig,
+                            criConfig,
                             userId,
                             oauthState,
                             govukSigninJourneyId,
                             criId);
 
-            CriResponse criResponse = getCriResponse(credentialIssuerConfig, jweObject, criId);
+            CriResponse criResponse = getCriResponse(criConfig, jweObject, criId);
 
             persistOauthState(ipvSessionItem, oauthState);
 
-            persistCriOauthState(oauthState, criId, clientOAuthSessionId);
+            persistCriOauthState(oauthState, criId, clientOAuthSessionId, connection);
 
             AuditEventUser auditEventUser =
                     new AuditEventUser(userId, ipvSessionId, govukSigninJourneyId, ipAddress);
             auditService.sendAuditEvent(
                     new AuditEvent(
                             AuditEventTypes.IPV_REDIRECT_TO_CRI,
-                            credentialIssuerConfigService.getSsmParameter(
-                                    ConfigurationVariable.COMPONENT_ID),
+                            criConfigService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
                             auditEventUser));
 
             var message =
@@ -294,7 +294,7 @@ public class BuildCriOauthRequestHandler
                         sharedClaimsResponse,
                         signer,
                         credentialIssuerConfig,
-                        credentialIssuerConfigService,
+                        criConfigService,
                         oauthState,
                         userId,
                         govukSigninJourneyId,
@@ -314,17 +314,11 @@ public class BuildCriOauthRequestHandler
     }
 
     @Tracing
-    private CredentialIssuerConfig getCredentialIssuerConfig(String criId) {
-        return credentialIssuerConfigService.getCredentialIssuerActiveConnectionConfig(criId);
-    }
-
-    @Tracing
     private SharedClaimsResponse getSharedAttributesForUser(
             IpvSessionItem ipvSessionItem, String userId, String criId)
             throws HttpResponseExceptionWithErrorBody {
         CredentialIssuerConfig addressCriConfig =
-                credentialIssuerConfigService.getCredentialIssuerActiveConnectionConfig(
-                        ADDRESS_CRI);
+                criConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI);
 
         List<String> credentials = userIdentityService.getUserIssuedCredentials(userId);
 
@@ -400,8 +394,7 @@ public class BuildCriOauthRequestHandler
     }
 
     private List<String> getAllowedSharedClaimAttrs(String criId) {
-        String allowedSharedAttributes =
-                credentialIssuerConfigService.getAllowedSharedAttributes(criId);
+        String allowedSharedAttributes = criConfigService.getAllowedSharedAttributes(criId);
         return allowedSharedAttributes == null
                 ? Arrays.asList(DEFAULT_ALLOWED_SHARED_ATTR.split(REGEX_COMMA_SEPARATION))
                 : Arrays.asList(allowedSharedAttributes.split(REGEX_COMMA_SEPARATION));
@@ -415,7 +408,8 @@ public class BuildCriOauthRequestHandler
 
     @Tracing
     private void persistCriOauthState(
-            String oauthState, String criId, String clientOAuthSessionId) {
-        criOAuthSessionService.persistCriOAuthSession(oauthState, criId, clientOAuthSessionId);
+            String oauthState, String criId, String clientOAuthSessionId, String connection) {
+        criOAuthSessionService.persistCriOAuthSession(
+                oauthState, criId, clientOAuthSessionId, connection);
     }
 }
