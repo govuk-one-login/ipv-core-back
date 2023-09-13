@@ -31,7 +31,6 @@ import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.NoVisitedCriFoundException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
@@ -198,13 +197,6 @@ public class EvaluateGpg45ScoresHandler
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             ErrorResponse.FAILED_TO_FIND_VISITED_CRI)
                     .toObjectMap();
-        } catch (NoVcStatusForIssuerException e) {
-            LOGGER.error("No VC status found for CRI issuer", e);
-            return new JourneyErrorResponse(
-                            JOURNEY_ERROR_PATH,
-                            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER)
-                    .toObjectMap();
         } catch (CredentialParseException e) {
             LOGGER.error("Failed to parse successful VC Store items.", e);
             return new JourneyErrorResponse(
@@ -216,8 +208,7 @@ public class EvaluateGpg45ScoresHandler
     }
 
     private boolean checkCorrelation(String userId)
-            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException,
-                    CredentialParseException {
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         if (!userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(userId)) {
             var message = new StringMapMessage();
             message.with(
