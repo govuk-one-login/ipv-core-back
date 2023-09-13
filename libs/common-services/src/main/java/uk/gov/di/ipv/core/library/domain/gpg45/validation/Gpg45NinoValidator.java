@@ -1,9 +1,11 @@
 package uk.gov.di.ipv.core.library.domain.gpg45.validation;
 
+import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.domain.gpg45.domain.CredentialEvidenceItem;
 
 public class Gpg45NinoValidator {
 
+    @ExcludeFromGeneratedCoverageReport
     private Gpg45NinoValidator() {
         throw new IllegalStateException("Utility class");
     }
