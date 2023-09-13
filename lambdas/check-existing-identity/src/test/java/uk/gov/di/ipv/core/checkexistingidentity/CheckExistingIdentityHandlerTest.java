@@ -23,8 +23,8 @@ import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.dto.ContraIndicatorMitigationDetailsDto;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
@@ -349,7 +349,7 @@ class CheckExistingIdentityHandlerTest {
 
     @Test
     void shouldReturnFailResponseForFaceToFaceVerificationIfNoMatchedProfile()
-            throws NoVcStatusForIssuerException, HttpResponseExceptionWithErrorBody {
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI))
                 .thenReturn(createVcStoreItem(F2F_CRI, M1A_F2F_VC));
@@ -358,10 +358,9 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
                 .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
-                .thenReturn(true);
+        when(userIdentityService.checkBirthDateCorrelationInCredentials(any())).thenReturn(true);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -382,7 +381,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
                 .thenReturn(false);
 
         JourneyResponse journeyResponse =
@@ -404,10 +403,9 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(criResponseItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
                 .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
-                .thenReturn(false);
+        when(userIdentityService.checkBirthDateCorrelationInCredentials(any())).thenReturn(false);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -425,7 +423,7 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
                 .thenReturn(false);
 
         JourneyResponse journeyResponse =
@@ -443,8 +441,8 @@ class CheckExistingIdentityHandlerTest {
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
-                .thenThrow(new NoVcStatusForIssuerException("Oops"));
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
+                .thenThrow(new CredentialParseException("Oops"));
 
         JourneyErrorResponse journeyResponse =
                 toResponseClass(
@@ -453,10 +451,10 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
         assertEquals(
-                ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER.getCode(),
+                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getCode(),
                 journeyResponse.getCode());
         assertEquals(
-                ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER.getMessage(),
+                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getMessage(),
                 journeyResponse.getMessage());
     }
 
@@ -544,6 +542,61 @@ class CheckExistingIdentityHandlerTest {
                 ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getMessage(),
                 journeyResponse.getMessage());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+    }
+
+    @Test
+    void
+            shouldReturn500IfCredentialParseExceptionFromCheckNameAndFamilyNameCorrelationInCredentials()
+                    throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
+                .thenThrow(
+                        new CredentialParseException("Failed to parse successful VC Store items."));
+
+        JourneyErrorResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyErrorResponse.class);
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getCode(),
+                journeyResponse.getCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getMessage(),
+                journeyResponse.getMessage());
+    }
+
+    @Test
+    void shouldReturn500IfCredentialParseExceptionFromCheckBirthDateCorrelationInCredentials()
+            throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
+        when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
+                .thenReturn(true);
+        when(userIdentityService.checkBirthDateCorrelationInCredentials(any()))
+                .thenThrow(
+                        new CredentialParseException("Failed to parse successful VC Store items."));
+
+        JourneyErrorResponse journeyResponse =
+                toResponseClass(
+                        checkExistingIdentityHandler.handleRequest(event, context),
+                        JourneyErrorResponse.class);
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getCode(),
+                journeyResponse.getCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getMessage(),
+                journeyResponse.getMessage());
     }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {

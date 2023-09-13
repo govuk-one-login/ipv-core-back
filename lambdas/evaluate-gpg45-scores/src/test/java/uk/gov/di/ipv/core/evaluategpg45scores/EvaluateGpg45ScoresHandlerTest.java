@@ -30,7 +30,7 @@ import uk.gov.di.ipv.core.library.dto.Gpg45ScoresDto;
 import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
-import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -178,10 +178,9 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
                 .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
-                .thenReturn(true);
+        when(userIdentityService.checkBirthDateCorrelationInCredentials(any())).thenReturn(true);
 
         JourneyResponse response =
                 toResponseClass(
@@ -229,10 +228,9 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
                 .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
-                .thenReturn(true);
+        when(userIdentityService.checkBirthDateCorrelationInCredentials(any())).thenReturn(true);
         mockCredentialIssuerConfig();
 
         JourneyResponse response =
@@ -255,10 +253,9 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 0, 0));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
                 .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
-                .thenReturn(true);
+        when(userIdentityService.checkBirthDateCorrelationInCredentials(any())).thenReturn(true);
 
         JourneyResponse response =
                 toResponseClass(
@@ -280,10 +277,9 @@ class EvaluateGpg45ScoresHandlerTest {
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_00, 0, 2, 0));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
                 .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
-                .thenReturn(true);
+        when(userIdentityService.checkBirthDateCorrelationInCredentials(any())).thenReturn(true);
 
         evaluateGpg45ScoresHandler.handleRequest(request, context);
 
@@ -366,8 +362,8 @@ class EvaluateGpg45ScoresHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
-                .thenThrow(new NoVcStatusForIssuerException("Bad"));
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
+                .thenThrow(new CredentialParseException("Bad"));
         when(gpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
 
@@ -379,9 +375,10 @@ class EvaluateGpg45ScoresHandlerTest {
         assertEquals(JOURNEY_ERROR, response.getJourney());
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals(
-                ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER.getCode(), response.getCode());
+                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getCode(),
+                response.getCode());
         assertEquals(
-                ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER.getMessage(),
+                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getMessage(),
                 response.getMessage());
     }
 
@@ -510,7 +507,7 @@ class EvaluateGpg45ScoresHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
                 .thenReturn(false);
         when(gpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
@@ -523,32 +520,64 @@ class EvaluateGpg45ScoresHandlerTest {
         assertEquals(JOURNEY_PYI_NO_MATCH, response.getJourney());
 
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(userIdentityService, times(1))
-                .checkNameAndFamilyNameCorrelationInCredentials(any(), any());
-        verify(userIdentityService, times(0)).checkBirthDateCorrelationInCredentials(any(), any());
+        verify(userIdentityService, times(1)).checkNameAndFamilyNameCorrelationInCredentials(any());
+        verify(userIdentityService, times(0)).checkBirthDateCorrelationInCredentials(any());
     }
 
     @Test
-    void shouldReturnPyiNoMatchIfFailedDueToBirthdateCorrelationIssues() throws Exception {
+    void
+            shouldReturn500IfCredentialParseExceptionFromCheckNameAndFamilyNameCorrelationInCredentials()
+                    throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any(), any()))
-                .thenReturn(true);
-        when(userIdentityService.checkBirthDateCorrelationInCredentials(any(), any()))
-                .thenReturn(false);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
+                .thenThrow(
+                        new CredentialParseException("Failed to parse successful VC Store items."));
         when(gpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
 
-        JourneyResponse response =
+        JourneyErrorResponse journeyResponse =
                 toResponseClass(
                         evaluateGpg45ScoresHandler.handleRequest(request, context),
-                        JourneyResponse.class);
+                        JourneyErrorResponse.class);
 
-        assertEquals(JOURNEY_PYI_NO_MATCH, response.getJourney());
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getCode(),
+                journeyResponse.getCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getMessage(),
+                journeyResponse.getMessage());
+    }
 
-        verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(userIdentityService, times(1)).checkBirthDateCorrelationInCredentials(any(), any());
+    @Test
+    void shouldReturn500IfCredentialParseExceptionFromCheckBirthDateCorrelationInCredentials()
+            throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
+                .thenReturn(true);
+        when(userIdentityService.checkBirthDateCorrelationInCredentials(any()))
+                .thenThrow(
+                        new CredentialParseException("Failed to parse successful VC Store items."));
+
+        when(gpg45ProfileEvaluator.buildScore(any()))
+                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
+
+        JourneyErrorResponse journeyResponse =
+                toResponseClass(
+                        evaluateGpg45ScoresHandler.handleRequest(request, context),
+                        JourneyErrorResponse.class);
+
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, journeyResponse.getStatusCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getCode(),
+                journeyResponse.getCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getMessage(),
+                journeyResponse.getMessage());
     }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {

@@ -69,7 +69,8 @@ public enum ErrorResponse {
     FAILED_TO_CORRELATE_DATA(1057, "Failed to correlate data"),
     MISSING_SCORE_TYPE(1058, "Missing score type in request"),
     MISSING_SCORE_THRESHOLD(1059, "Missing score type in request"),
-    UNKNOWN_SCORE_TYPE(1060, "Unknown score type in request");
+    UNKNOWN_SCORE_TYPE(1060, "Unknown score type in request"),
+    FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS(1061, "Failed to parse successful VC Store items.");
 
     @JsonProperty("code")
     private final int code;
