@@ -74,7 +74,6 @@ public class CheckExistingIdentityHandler
         implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final List<Gpg45Profile> ACCEPTED_PROFILES =
             List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
-    private static final String VOT_P2 = "P2";
     private static final int ONLY = 0;
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -90,6 +89,7 @@ public class CheckExistingIdentityHandler
             new JourneyResponse(JOURNEY_RESET_IDENTITY_PATH).toObjectMap();
     public static final String NAMES = "names";
     public static final String DATE_OF_BIRTH = "dob";
+    public static final String VOT_P2 = "P2";
 
     private final ConfigService configService;
     private final UserIdentityService userIdentityService;
