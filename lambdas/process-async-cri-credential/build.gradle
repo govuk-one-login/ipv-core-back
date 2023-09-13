@@ -16,7 +16,6 @@ dependencies {
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			"software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
 			project(":lib"),
-			project(":libs:vc-helper"),
 			project(":libs:cimit-service"),
 			project(":libs:cri-response-service")
 	implementation project(path: ':libs:verifiable-credentials')
