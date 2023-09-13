@@ -35,6 +35,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.MitigationService;
 import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
@@ -46,6 +47,7 @@ import java.text.ParseException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -89,6 +91,8 @@ class RetrieveCriCredentialHandlerTest {
     public static final String TEST_ISSUER = "test-issuer";
 
     private static final SignedJWT TEST_SIGNED_ADDRESS_VC;
+    private static final String TEST_ADDRESS_VC_ISSUER =
+            "https://staging-di-ipv-cri-address-front.london.cloudapps.digital";
     public static final String MAIN_CONNECTION = "main";
 
     @Mock private Context context;
@@ -101,6 +105,7 @@ class RetrieveCriCredentialHandlerTest {
     @Mock private CiMitService ciMitService;
     @Mock private CriOAuthSessionService criOAuthSessionService;
     @Mock private ClientOAuthSessionDetailsService mockClientOAuthSessionService;
+    @Mock private MitigationService mockMitigationService;
 
     @Mock private CriResponseService criResponseService;
     private static CriOAuthSessionItem criOAuthSessionItem;
@@ -430,9 +435,7 @@ class RetrieveCriCredentialHandlerTest {
 
         AuditExtensionsVcEvidence auditExtensionsVcEvidence =
                 (AuditExtensionsVcEvidence) argumentCaptor.getValue().getExtensions();
-        assertEquals(
-                "https://staging-di-ipv-cri-address-front.london.cloudapps.digital",
-                auditExtensionsVcEvidence.getIss());
+        assertEquals(TEST_ADDRESS_VC_ISSUER, auditExtensionsVcEvidence.getIss());
         assertNull(auditExtensionsVcEvidence.getEvidence());
         verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
     }
@@ -499,6 +502,9 @@ class RetrieveCriCredentialHandlerTest {
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
 
+        when(mockMitigationService.getMitigatingCredentialIssuers(anyString()))
+                .thenReturn(Map.of(TEST_ADDRESS_VC_ISSUER, Set.of()));
+
         handler.handleRequest(testInput, context);
 
         ArgumentCaptor<SignedJWT> persistedVcCaptor = ArgumentCaptor.forClass(SignedJWT.class);
@@ -549,6 +555,9 @@ class RetrieveCriCredentialHandlerTest {
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
+
+        when(mockMitigationService.getMitigatingCredentialIssuers(anyString()))
+                .thenReturn(Map.of(TEST_ADDRESS_VC_ISSUER, Set.of()));
 
         doThrow(new CiPostMitigationsException("Lambda execution failed"))
                 .when(ciMitService)

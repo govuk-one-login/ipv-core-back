@@ -865,6 +865,7 @@ Resources:
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CRI_OAUTH_SESSIONS_TABLE_NAME: !Ref CriOAuthSessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
+          MITIGATIONS_TABLE_NAME: !Ref MitigationsTable
           CI_STORAGE_PUT_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
             - cimit_account_id: !If
@@ -931,6 +932,8 @@ Resources:
             TableName: !Ref CriOAuthSessionsTable
         - DynamoDBWritePolicy:
             TableName: !Ref SessionsTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MitigationsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - AWSSecretsManagerGetSecretValuePolicy:
@@ -2034,6 +2037,7 @@ Resources:
           ENVIRONMENT: !Sub "${Environment}"
           POWERTOOLS_SERVICE_NAME: !Sub process-async-cri-credential-${Environment}
           SQS_AUDIT_EVENT_QUEUE_URL: !ImportValue AuditEventQueueUrl
+          MITIGATIONS_TABLE_NAME: !Ref MitigationsTable
           CI_STORAGE_PUT_LAMBDA_ARN: !Sub
             - "arn:aws:lambda:eu-west-2:${cimit_account_id}:function:putContraIndicators-${env}"
             - cimit_account_id: !If
@@ -2092,6 +2096,8 @@ Resources:
             TableName: !Ref UserIssuedCredentialsV2Table
         - DynamoDBCrudPolicy:
             TableName: !Ref CRIResponseTable
+        - DynamoDBCrudPolicy:
+            TableName: !Ref MitigationsTable
         - SSMParameterReadPolicy:
             ParameterName: !Sub ${Environment}/core/*
         - SQSSendMessagePolicy:

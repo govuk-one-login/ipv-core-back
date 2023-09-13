@@ -18,6 +18,7 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.domain.CriConstants;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
@@ -25,6 +26,7 @@ import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
+import uk.gov.di.ipv.core.library.service.MitigationService;
 import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
 import uk.gov.di.ipv.core.processasynccricredential.dto.CriResponseMessageDto;
@@ -32,12 +34,15 @@ import uk.gov.di.ipv.core.processasynccricredential.dto.CriResponseMessageDto;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -61,6 +66,8 @@ class ProcessAsyncCriCredentialHandlerTest {
     private static final String TEST_COMPONENT_ID_CLAIMED_IDENTITY = "claimed_identity";
     private static final String TEST_OAUTH_STATE = UUID.randomUUID().toString();
     private static final String TEST_OAUTH_STATE_2 = UUID.randomUUID().toString();
+
+    private static final String TEST_ISSUER = "test-issuer";
     private static final CriResponseItem TEST_CRI_RESPONSE_ITEM =
             new CriResponseItem(
                     TEST_USER_ID,
@@ -125,6 +132,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     @Mock private AuditService auditService;
     @Mock private CiMitService ciMitService;
     @Mock private CriResponseService criResponseService;
+    @Mock private MitigationService mitigationService;
 
     @InjectMocks private ProcessAsyncCriCredentialHandler handler;
 
@@ -150,13 +158,16 @@ class ProcessAsyncCriCredentialHandlerTest {
     @Test
     void shouldSendValidExpectedAsyncVerifiableCredentialToCIMITPostMitigationWhenFeatureEnabled()
             throws JsonProcessingException, SqsException, CiPutException,
-                    CiPostMitigationsException {
+                    CiPostMitigationsException, ConfigException {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
 
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
         mockCredentialIssuerConfig();
         when(configService.enabled(USE_POST_MITIGATIONS)).thenReturn(true);
+
+        when(mitigationService.getMitigatingCredentialIssuers(anyString()))
+                .thenReturn(Map.of(TEST_ISSUER, Set.of()));
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
 
@@ -260,13 +271,16 @@ class ProcessAsyncCriCredentialHandlerTest {
     @Test
     void willNotPersistVerifiableCredentialIfFailsToPostMitigatingCredentialToCIMIT()
             throws JsonProcessingException, CiPostMitigationsException, SqsException,
-                    CiPutException {
+                    CiPutException, ConfigException {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
 
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
         mockCredentialIssuerConfig();
         when(configService.enabled(USE_POST_MITIGATIONS)).thenReturn(true);
+
+        when(mitigationService.getMitigatingCredentialIssuers(anyString()))
+                .thenReturn(Map.of(TEST_ISSUER, Set.of()));
 
         doThrow(new CiPostMitigationsException("Lambda execution failed"))
                 .when(ciMitService)

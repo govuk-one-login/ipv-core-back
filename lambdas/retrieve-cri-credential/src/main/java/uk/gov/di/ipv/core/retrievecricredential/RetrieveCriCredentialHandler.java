@@ -27,6 +27,7 @@ import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
+import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -41,6 +42,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
+import uk.gov.di.ipv.core.library.service.MitigationService;
 import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
@@ -52,6 +54,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredent
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.USE_POST_MITIGATIONS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
@@ -83,6 +86,7 @@ public class RetrieveCriCredentialHandler
     private final CriOAuthSessionService criOAuthSessionService;
     private final ClientOAuthSessionDetailsService clientOAuthSessionService;
     private final CriResponseService criResponseService;
+    private final MitigationService mitigationService;
 
     public RetrieveCriCredentialHandler(
             VerifiableCredentialService verifiableCredentialService,
@@ -93,7 +97,8 @@ public class RetrieveCriCredentialHandler
             CiMitService ciMitService,
             CriOAuthSessionService criOAuthSessionService,
             ClientOAuthSessionDetailsService clientOAuthSessionService,
-            CriResponseService criResponseService) {
+            CriResponseService criResponseService,
+            MitigationService mitigationService) {
         this.verifiableCredentialService = verifiableCredentialService;
         this.ipvSessionService = ipvSessionService;
         this.configService = configService;
@@ -103,6 +108,7 @@ public class RetrieveCriCredentialHandler
         this.criOAuthSessionService = criOAuthSessionService;
         this.clientOAuthSessionService = clientOAuthSessionService;
         this.criResponseService = criResponseService;
+        this.mitigationService = mitigationService;
         VcHelper.setConfigService(this.configService);
     }
 
@@ -117,6 +123,7 @@ public class RetrieveCriCredentialHandler
         this.criOAuthSessionService = new CriOAuthSessionService(configService);
         this.clientOAuthSessionService = new ClientOAuthSessionDetailsService(configService);
         this.criResponseService = new CriResponseService(configService);
+        this.mitigationService = new MitigationService(configService);
         VcHelper.setConfigService(this.configService);
     }
 
@@ -218,6 +225,11 @@ public class RetrieveCriCredentialHandler
             updateVisitedCredentials(
                     ipvSessionItem, credentialIssuerId, null, false, OAuth2Error.SERVER_ERROR_CODE);
             return JOURNEY_ERROR;
+        } catch (ConfigException e) {
+            LogHelper.logErrorMessage("Failed to retrieve configuration.", e.getMessage());
+            updateVisitedCredentials(
+                    ipvSessionItem, credentialIssuerId, null, false, OAuth2Error.SERVER_ERROR_CODE);
+            return JOURNEY_ERROR;
         }
     }
 
@@ -267,7 +279,7 @@ public class RetrieveCriCredentialHandler
             ClientOAuthSessionItem clientOAuthSessionItem,
             IpvSessionItem ipvSessionItem)
             throws ParseException, SqsException, JsonProcessingException, CiPutException,
-                    CiPostMitigationsException {
+                    CiPostMitigationsException, ConfigException {
         final boolean postMitigatingVcs = configService.enabled(USE_POST_MITIGATIONS);
         final AuditEventUser auditEventUser =
                 new AuditEventUser(
@@ -278,8 +290,12 @@ public class RetrieveCriCredentialHandler
 
         final String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
 
+        final Map<String, Set<String>> mitigatingCredentialIssuers =
+                mitigationService.getMitigatingCredentialIssuers(userId);
+
         String issuer = null;
         for (SignedJWT vc : verifiableCredentials) {
+            issuer = vc.getJWTClaimsSet().getIssuer();
             verifiableCredentialJwtValidator.validate(vc, credentialIssuerConfig, userId);
 
             boolean isSuccessful = VcHelper.isSuccessfulVc(vc);
@@ -287,13 +303,17 @@ public class RetrieveCriCredentialHandler
             sendIpvVcReceivedAuditEvent(auditEventUser, vc, isSuccessful);
 
             submitVcToCiStorage(vc, govukSigninJourneyId, ipAddress);
-            if (postMitigatingVcs) {
+            if (postMitigatingVcs && mitigatingCredentialIssuers.containsKey(issuer)) {
                 postMitigatingVc(vc, govukSigninJourneyId, ipAddress);
             }
 
             verifiableCredentialService.persistUserCredentials(vc, credentialIssuerId, userId);
+        }
 
-            issuer = vc.getJWTClaimsSet().getIssuer();
+        if (mitigatingCredentialIssuers.containsKey(issuer)) {
+            for (String contraIndicatorCode : mitigatingCredentialIssuers.get(issuer)) {
+                mitigationService.deleteInFlightMitigation(userId, contraIndicatorCode);
+            }
         }
 
         updateVisitedCredentials(ipvSessionItem, credentialIssuerId, issuer, true, null);
