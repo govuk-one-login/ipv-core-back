@@ -320,13 +320,10 @@ CRI_KBV_J2:
     end:
       targetState: IPV_SUCCESS_PAGE
     fail-with-no-ci:
-      targetState: PYI_KBV_THIN_FILE
-      checkFeatureFlag:
-        criEscapeFlag:
-          targetState: PYI_CRI_ESCAPE
-          checkIfDisabled:
-            f2f:
-              targetState: PYI_CRI_ESCAPE_NO_F2F
+      targetState: PYI_CRI_ESCAPE
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_CRI_ESCAPE_NO_F2F
     mitigation02:
       targetState: MITIGATION_02_OPTIONS
 
@@ -381,13 +378,10 @@ CRI_KBV_J3:
     end:
       targetState: IPV_SUCCESS_PAGE
     fail-with-no-ci:
-      targetState: PYI_KBV_THIN_FILE
-      checkFeatureFlag:
-        criEscapeFlag:
-          targetState: PYI_CRI_ESCAPE
-          checkIfDisabled:
-            f2f:
-              targetState: PYI_CRI_ESCAPE_NO_F2F
+      targetState: PYI_CRI_ESCAPE
+      checkIfDisabled:
+        f2f:
+          targetState: PYI_CRI_ESCAPE_NO_F2F
     next:
       targetState: PYI_NO_MATCH
     mitigation02:
