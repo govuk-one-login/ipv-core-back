@@ -112,7 +112,7 @@ public class RetrieveCriOauthAccessTokenHandler
                     clientOAuthSessionItem.getGovukSigninJourneyId());
 
             CredentialIssuerConfig credentialIssuerConfig =
-                    getCredentialIssuerConfig(credentialIssuerId);
+                    configService.getCriConfig(criOAuthSessionItem);
 
             String apiKey =
                     credentialIssuerConfig.getRequiresApiKey()
@@ -183,11 +183,6 @@ public class RetrieveCriOauthAccessTokenHandler
             criOAuthSessionItem.setAccessToken(accessToken.toAuthorizationHeader());
             criOAuthSessionService.updateCriOAuthSessionItem(criOAuthSessionItem);
         }
-    }
-
-    @Tracing
-    private CredentialIssuerConfig getCredentialIssuerConfig(String criId) {
-        return configService.getCredentialIssuerActiveConnectionConfig(criId);
     }
 
     @Tracing

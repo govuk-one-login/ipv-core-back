@@ -11,7 +11,6 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
-import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -823,20 +822,8 @@ class UserIdentityServiceTest {
     private void mockCredentialIssuerConfig() {
         NON_EVIDENCE_CRI_TYPES.forEach(
                 credentialIssuer -> {
-                    CredentialIssuerConfig credentialIssuerConfig =
-                            new CredentialIssuerConfig(
-                                    null,
-                                    null,
-                                    null,
-                                    null,
-                                    null,
-                                    null,
-                                    credentialIssuer,
-                                    null,
-                                    false);
-                    when(mockConfigService.getCredentialIssuerActiveConnectionConfig(
-                                    credentialIssuer))
-                            .thenReturn(credentialIssuerConfig);
+                    when(mockConfigService.getComponentId(credentialIssuer))
+                            .thenReturn(credentialIssuer);
                 });
     }
 }
