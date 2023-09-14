@@ -2,7 +2,6 @@ package uk.gov.di.ipv.core.library.domain.gpg45;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -344,8 +343,7 @@ class Gpg45ProfileEvaluatorTest {
 
         JWTClaimsSet jwtClaimsSet = result.get().getJWTClaimsSet();
 
-        Assertions.assertEquals(
-                "https://review-p.integration.account.gov.uk", jwtClaimsSet.getIssuer());
+        assertEquals("https://review-p.integration.account.gov.uk", jwtClaimsSet.getIssuer());
     }
 
     @Test
@@ -361,8 +359,7 @@ class Gpg45ProfileEvaluatorTest {
 
         JWTClaimsSet jwtClaimsSet = result.get().getJWTClaimsSet();
 
-        Assertions.assertEquals(
-                "https://review-b.integration.account.gov.uk", jwtClaimsSet.getIssuer());
+        assertEquals("https://review-b.integration.account.gov.uk", jwtClaimsSet.getIssuer());
     }
 
     @Test
@@ -383,7 +380,7 @@ class Gpg45ProfileEvaluatorTest {
 
         JWTClaimsSet jwtClaimsSet = result.get().getJWTClaimsSet();
 
-        Assertions.assertEquals(
+        assertEquals(
                 "https://development-di-ipv-cri-uk-passport-stub.london.cloudapps.digital",
                 jwtClaimsSet.getIssuer());
     }

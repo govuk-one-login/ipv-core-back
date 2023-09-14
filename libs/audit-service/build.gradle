@@ -9,7 +9,7 @@ repositories {
 	mavenCentral()
 }
 
-def var = dependencies {
+dependencies {
 	implementation "com.amazonaws:aws-java-sdk-sqs:$rootProject.ext.dependencyVersions.awsJavaSdkSqs",
 			"software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters",
@@ -22,7 +22,6 @@ def var = dependencies {
 	compileOnly "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
 	annotationProcessor "org.projectlombok:lombok:$rootProject.ext.dependencyVersions.lombok"
 }
-var
 
 java {
 	sourceCompatibility = JavaVersion.VERSION_17
