@@ -14,7 +14,7 @@ dependencies {
 			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
 			"com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$rootProject.ext.dependencyVersions.jacksonDataformatYaml",
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
-			project(":lib")
+			project(":libs:common-services")
 
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"

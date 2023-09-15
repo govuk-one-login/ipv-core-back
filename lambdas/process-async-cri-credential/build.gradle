@@ -15,9 +15,10 @@ dependencies {
 			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			"software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
-			project(":lib"),
+			project(":libs:common-services"),
 			project(":libs:cimit-service"),
-			project(":libs:cri-response-service")
+			project(":libs:cri-response-service"),
+			project(":libs:audit-service")
 	implementation project(path: ':libs:verifiable-credentials')
 
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
@@ -34,7 +35,7 @@ dependencies {
 	testImplementation "com.github.tomakehurst:wiremock-jre8:2.35.0",
 			"org.junit.jupiter:junit-jupiter:5.10.0",
 			"org.mockito:mockito-junit-jupiter:5.4.0",
-			project(":lib").sourceSets.test.output
+			project(path: ':libs:common-services', configuration: 'tests')
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

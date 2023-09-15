@@ -16,7 +16,6 @@ import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.cimit.CiMitService;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
@@ -26,6 +25,7 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
