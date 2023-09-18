@@ -56,6 +56,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler.VOT_P2;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.*;
 
@@ -179,10 +180,6 @@ class CheckExistingIdentityHandlerTest {
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
-        when(configService.getCredentialIssuerActiveConnectionConfig("address"))
-                .thenReturn(addressConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig("claimedIdentity"))
-                .thenReturn(claimedIdentityConfig);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -205,6 +202,14 @@ class CheckExistingIdentityHandlerTest {
                 AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
                 auditEventArgumentCaptor.getAllValues().get(1).getEventName());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(ipvSessionService, times(2))
+                .updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+
+        IpvSessionItem session = ipvSessionItemArgumentCaptor.getValue();
+        assertEquals(VOT_P2, session.getVot());
     }
 
     @Test
@@ -233,6 +238,14 @@ class CheckExistingIdentityHandlerTest {
                 AuditEventTypes.IPV_IDENTITY_REUSE_COMPLETE,
                 auditEventArgumentCaptor.getValue().getEventName());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(ipvSessionService, times(1))
+                .updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+
+        IpvSessionItem session = ipvSessionItemArgumentCaptor.getValue();
+        assertEquals(VOT_P2, session.getVot());
     }
 
     @Test
@@ -246,10 +259,6 @@ class CheckExistingIdentityHandlerTest {
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(configService.getCredentialIssuerActiveConnectionConfig("address"))
-                .thenReturn(addressConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig("claimedIdentity"))
-                .thenReturn(claimedIdentityConfig);
 
         JourneyResponse journeyResponse =
                 toResponseClass(
@@ -517,10 +526,6 @@ class CheckExistingIdentityHandlerTest {
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
-        when(configService.getCredentialIssuerActiveConnectionConfig("address"))
-                .thenReturn(addressConfig);
-        when(configService.getCredentialIssuerActiveConnectionConfig("claimedIdentity"))
-                .thenReturn(claimedIdentityConfig);
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);

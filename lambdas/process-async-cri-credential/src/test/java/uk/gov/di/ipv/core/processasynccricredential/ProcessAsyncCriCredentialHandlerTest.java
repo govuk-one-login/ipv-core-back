@@ -13,7 +13,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
-import uk.gov.di.ipv.core.library.cimit.CiMitService;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.domain.CriConstants;
@@ -23,6 +22,7 @@ import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.fixtures.TestFixtures;
 import uk.gov.di.ipv.core.library.persistence.item.CriResponseItem;
 import uk.gov.di.ipv.core.library.service.AuditService;
+import uk.gov.di.ipv.core.library.service.CiMitService;
 import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
@@ -258,7 +258,7 @@ class ProcessAsyncCriCredentialHandlerTest {
     }
 
     @Test
-    void willnotPersistVerifiableCredentialIfFailsToPostMitigatingCredentialToCIMIT()
+    void willNotPersistVerifiableCredentialIfFailsToPostMitigatingCredentialToCIMIT()
             throws JsonProcessingException, CiPostMitigationsException, SqsException,
                     CiPutException {
         final SQSEvent testEvent = createSuccessTestEvent(TEST_OAUTH_STATE);
@@ -416,9 +416,9 @@ class ProcessAsyncCriCredentialHandlerTest {
     private void mockCredentialIssuerConfig() {
         when(configService.getCredentialIssuerActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY);
+        when(configService.getComponentId(ADDRESS_CRI))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS.getComponentId());
+        when(configService.getComponentId(CLAIMED_IDENTITY_CRI))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
     }
 }

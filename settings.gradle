@@ -1,5 +1,5 @@
 rootProject.name = 'di-ipv-core-back'
-include "lib",
+include "libs:common-services",
 		"lambdas",
 		"lambdas:issue-client-access-token",
 		"lambdas:build-client-oauth-response",
@@ -23,4 +23,5 @@ include "lib",
 		"libs:verifiable-credentials",
 		"libs:journey-uris",
 		"libs:cimit-service",
-		"libs:cri-response-service"
+		"libs:cri-response-service",
+		"libs:audit-service"

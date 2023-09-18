@@ -14,7 +14,7 @@ dependencies {
 			"com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
 			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
-			project(":lib"),
+			project(":libs:common-services"),
 			project(":libs:journey-uris"),
 			project(":libs:cri-response-service")
 
@@ -29,7 +29,7 @@ dependencies {
 	testImplementation "com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson",
 			"org.junit.jupiter:junit-jupiter:5.10.0",
 			"org.mockito:mockito-junit-jupiter:5.4.0",
-			project(":lib").sourceSets.test.output
+			project(":libs:common-services").sourceSets.test.output
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

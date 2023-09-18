@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.shaded.json.JSONArray;
 import com.nimbusds.jose.shaded.json.JSONObject;
 import com.nimbusds.jwt.SignedJWT;
-import uk.gov.di.ipv.core.library.auditing.AuditExtensionsVcEvidence;
+import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsVcEvidence;
 import uk.gov.di.ipv.core.processasynccricredential.auditing.AuditRestrictedVcNameParts;
 
 import java.text.ParseException;
