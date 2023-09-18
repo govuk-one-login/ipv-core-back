@@ -471,6 +471,6 @@ public class UserIdentityService {
                             return givenNames + " " + familyNames;
                         })
                 .map(String::trim)
-                .collect(Collectors.toList());
+                .toList();
     }
 }
