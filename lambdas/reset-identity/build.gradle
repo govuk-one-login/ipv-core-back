@@ -16,7 +16,8 @@ dependencies {
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			project(":libs:common-services"),
 			project(":libs:journey-uris"),
-			project(":libs:cri-response-service")
+			project(":libs:cri-response-service"),
+			project(":libs:user-identity-service")
 
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-tracing:$rootProject.ext.dependencyVersions.powertoolsTracing"

@@ -10,22 +10,18 @@ repositories {
 }
 
 dependencies {
-	implementation "com.amazonaws:aws-java-sdk-dynamodb:$rootProject.ext.dependencyVersions.awsJavaSdkDynamodb",
-			"com.amazonaws:aws-java-sdk-lambda:$rootProject.ext.dependencyVersions.awsJavaSdkLambda",
-			"com.amazonaws:aws-java-sdk-sqs:$rootProject.ext.dependencyVersions.awsJavaSdkSqs",
-			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
+	implementation "com.amazonaws:aws-java-sdk-lambda:$rootProject.ext.dependencyVersions.awsJavaSdkLambda",
 			"com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson",
 			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
 			"software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
-			"software.amazon.awssdk:kms:$rootProject.ext.dependencyVersions.kms",
 			"software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
 			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters",
-			project(":libs:common-services")
+			project(":libs:common-services"),
+			project(":libs:gpg45-evaluator")
 
 	testImplementation "com.github.tomakehurst:wiremock-jre8:2.35.0",
 			"org.junit.jupiter:junit-jupiter:5.10.0",
 			"org.mockito:mockito-junit-jupiter:5.4.0",
-			"uk.org.webcompere:system-stubs-jupiter:2.0.2",
 			project(":libs:common-services").sourceSets.test.output
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 

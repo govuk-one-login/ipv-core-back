@@ -1,0 +1,55 @@
+plugins {
+	// Apply the java-library plugin for API and implementation separation.
+	id 'java-library'
+	id "idea"
+	id "jacoco"
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation "com.amazonaws:aws-java-sdk-lambda:$rootProject.ext.dependencyVersions.awsJavaSdkLambda",
+			"com.nimbusds:oauth2-oidc-sdk:$rootProject.ext.dependencyVersions.nimbusdsOauth2OidcSdk",
+			"software.amazon.awssdk:dynamodb-enhanced:$rootProject.ext.dependencyVersions.dynamodbEnhanced",
+			"software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",
+			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters",
+			project(":libs:common-services"),
+			project(":libs:vc-helper")
+
+	testImplementation "org.junit.jupiter:junit-jupiter:5.9.3",
+			"org.mockito:mockito-junit-jupiter:5.4.0",
+			project(path: ':libs:common-services', configuration: 'tests')
+	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+	withSourcesJar()
+}
+
+tasks.withType(Jar).configureEach { Jar jar ->
+	jar.preserveFileTimestamps = false
+	jar.reproducibleFileOrder = true
+}
+
+tasks.named('jar') {
+	manifest {
+		attributes('Implementation-Title': project.name,
+		'Implementation-Version': project.version)
+	}
+}
+
+test {
+	useJUnitPlatform ()
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required.set(true)
+	}
+}

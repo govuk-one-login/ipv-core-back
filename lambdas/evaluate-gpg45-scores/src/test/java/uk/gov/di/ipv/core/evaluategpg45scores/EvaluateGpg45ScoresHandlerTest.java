@@ -20,16 +20,16 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
-import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
-import uk.gov.di.ipv.core.library.dto.EvidenceDto;
-import uk.gov.di.ipv.core.library.dto.Gpg45ScoresDto;
 import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
+import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
+import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
+import uk.gov.di.ipv.core.library.gpg45.dto.EvidenceDto;
+import uk.gov.di.ipv.core.library.gpg45.dto.Gpg45ScoresDto;
+import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
+import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
@@ -58,6 +58,8 @@ import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_VERIFICATION_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1B_DCMAW_VC;
+import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
+import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1B;
 
 @ExtendWith(MockitoExtension.class)
 class EvaluateGpg45ScoresHandlerTest {
@@ -76,8 +78,7 @@ class EvaluateGpg45ScoresHandlerTest {
     public static CredentialIssuerConfig addressConfig = null;
     public static CredentialIssuerConfig claimedIdentityConfig = null;
     private static final List<SignedJWT> PARSED_CREDENTIALS = new ArrayList<>();
-    private static final List<Gpg45Profile> ACCEPTED_PROFILES =
-            List.of(Gpg45Profile.M1A, Gpg45Profile.M1B);
+    private static final List<Gpg45Profile> ACCEPTED_PROFILES = List.of(M1A, M1B);
     private static final JourneyResponse JOURNEY_END = new JourneyResponse("/journey/end");
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
     private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
@@ -169,7 +170,7 @@ class EvaluateGpg45ScoresHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
-                .thenReturn(Optional.of(Gpg45Profile.M1A));
+                .thenReturn(Optional.of(M1A));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
@@ -193,7 +194,7 @@ class EvaluateGpg45ScoresHandlerTest {
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
-                .thenReturn(Optional.of(Gpg45Profile.M1B));
+                .thenReturn(Optional.of(M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
         when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
@@ -257,11 +258,9 @@ class EvaluateGpg45ScoresHandlerTest {
         assertEquals(
                 List.of(
                         new RequiredGpg45ScoresDto(
-                                Gpg45Profile.M1A,
-                                new Gpg45ScoresDto(List.of(new EvidenceDto(4, 2)), 0, 0, 2)),
+                                M1A, new Gpg45ScoresDto(List.of(new EvidenceDto(4, 2)), 0, 0, 2)),
                         new RequiredGpg45ScoresDto(
-                                Gpg45Profile.M1B,
-                                new Gpg45ScoresDto(List.of(new EvidenceDto(3, 2)), 1, 0, 2))),
+                                M1B, new Gpg45ScoresDto(List.of(new EvidenceDto(3, 2)), 1, 0, 2))),
                 updatedSessionItem.getRequiredGpg45Scores());
     }
 
@@ -402,7 +401,7 @@ class EvaluateGpg45ScoresHandlerTest {
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedM1ACreds);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
-                .thenReturn(Optional.of(Gpg45Profile.M1A));
+                .thenReturn(Optional.of(M1A));
         when(gpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -423,7 +422,7 @@ class EvaluateGpg45ScoresHandlerTest {
 
         AuditExtensionGpg45ProfileMatched extension =
                 (AuditExtensionGpg45ProfileMatched) auditEvent.getExtensions();
-        assertEquals(Gpg45Profile.M1A, extension.getGpg45Profile());
+        assertEquals(M1A, extension.getGpg45Profile());
         assertEquals(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2), extension.getGpg45Scores());
         assertEquals(
                 List.of("123ab93d-3a43-46ef-a2c1-3c6444206408", "RB000103490087", "abc1234"),

@@ -1,7 +1,7 @@
 package uk.gov.di.ipv.core.library.auditing.extension;
 
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
+import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
+import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 
 import java.util.List;
 
