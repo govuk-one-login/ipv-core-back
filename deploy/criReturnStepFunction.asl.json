@@ -92,7 +92,7 @@
         },
         {
           "Variable": "$.lambdaResult.journey",
-          "StringEquals": "/journey/next",
+          "StringEquals": "/journey/ci-score-not-breaching",
           "Next": "EvaluateGpg45Scores"
         }
       ],
