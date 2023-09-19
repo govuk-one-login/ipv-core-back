@@ -47,7 +47,7 @@ import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredenti
 import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialResponseDto;
 import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCredentialResponseException;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
-import uk.gov.di.ipv.core.library.verifiablecredential.validation.VerifiableCredentialJwtValidator;
+import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 
 import java.text.ParseException;
 import java.util.List;
