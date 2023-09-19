@@ -170,7 +170,8 @@ public class StateMachineInitializer {
     }
 
     private File getJourneyConfigFile(IpvJourneyTypes journeyType) {
-        return getFile(journeyType.getValue());
+        File file = getFile(journeyType.getValue());
+        return file;
     }
 
     private File getNestedJourneyDefinitionsConfigFile() {

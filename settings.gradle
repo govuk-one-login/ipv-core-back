@@ -26,3 +26,5 @@ include "libs:common-services",
 		"libs:audit-service",
 		"libs:gpg45-evaluator",
 		"libs:user-identity-service"
+		"libs:audit-service",
+		"madness"

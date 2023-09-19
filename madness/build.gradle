@@ -1,0 +1,50 @@
+plugins {
+	id "application"
+	id "idea"
+	id "com.diffplug.spotless"
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation "com.sparkjava:spark-core:2.9.4",
+			"com.amazonaws:aws-lambda-java-core:$rootProject.ext.dependencyVersions.awsLambdaJavaCore",
+			"com.amazonaws:aws-lambda-java-events:$rootProject.ext.dependencyVersions.awsLambdaJavaEvents",
+			"com.google.code.gson:gson:$rootProject.ext.dependencyVersions.gson",
+			project(":lambdas:build-client-oauth-response"),
+			project(":lambdas:build-client-oauth-response"),
+			project(":lambdas:build-cri-oauth-request"),
+			project(":lambdas:build-proven-user-identity-details"),
+			project(":lambdas:build-user-identity"),
+			project(":lambdas:check-existing-identity"),
+			project(":lambdas:check-gpg45-score"),
+			project(":lambdas:ci-scoring"),
+			project(":lambdas:evaluate-gpg45-scores"),
+			project(":lambdas:initialise-ipv-session"),
+			project(":lambdas:issue-client-access-token"),
+			project(":lambdas:process-async-cri-credential"),
+			project(":lambdas:process-journey-event"),
+			project(":lambdas:reset-identity"),
+			project(":lambdas:retrieve-cri-credential"),
+			project(":lambdas:retrieve-cri-oauth-access-token"),
+			project(":lambdas:validate-oauth-callback"),
+			project(":libs:audit-service"),
+			project(":libs:cimit-service"),
+			project(":libs:common-services"),
+			project(":libs:credential-issuer-config-service"),
+			project(":libs:cri-response-service"),
+			project(":libs:journey-uris"),
+			project(":libs:kms-es256-signer"),
+			project(":libs:verifiable-credentials")
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+}
+
+application {
+	mainClass = 'uk.gov.di.ipv.coreback.App'
+}
