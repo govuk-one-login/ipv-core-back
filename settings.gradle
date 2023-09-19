@@ -26,6 +26,5 @@ include "libs:common-services",
 		"libs:cimit-service",
 		"libs:cri-response-service",
 		"libs:audit-service",
-		"libs:gpg45-evaluator"
-include 'libs:user-identity-service'
-findProject(':libs:user-identity-service')?.name = 'user-identity-service'
+		"libs:gpg45-evaluator",
+		"libs:user-identity-service"

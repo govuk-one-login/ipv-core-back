@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.verifiablecredential.validation;
+package uk.gov.di.ipv.core.library.verifiablecredential.validator;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;

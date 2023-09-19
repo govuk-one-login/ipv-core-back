@@ -30,7 +30,7 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
-import uk.gov.di.ipv.core.library.verifiablecredential.validation.VerifiableCredentialJwtValidator;
+import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.processasynccricredential.domain.BaseAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.ErrorAsyncCriResponse;
 import uk.gov.di.ipv.core.processasynccricredential.domain.SuccessAsyncCriResponse;

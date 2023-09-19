@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.verifiablecredential.validation;
+package uk.gov.di.ipv.core.library.verifiablecredential.validator;
 
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.crypto.impl.ECDSA;
