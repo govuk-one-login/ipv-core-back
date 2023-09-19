@@ -41,13 +41,13 @@ import uk.gov.di.ipv.core.library.service.ConfigService;
 import uk.gov.di.ipv.core.library.service.CriOAuthSessionService;
 import uk.gov.di.ipv.core.library.service.CriResponseService;
 import uk.gov.di.ipv.core.library.service.IpvSessionService;
-import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
 import uk.gov.di.ipv.core.library.vchelper.VcHelper;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialResponse;
 import uk.gov.di.ipv.core.library.verifiablecredential.domain.VerifiableCredentialStatus;
 import uk.gov.di.ipv.core.library.verifiablecredential.dto.VerifiableCredentialResponseDto;
 import uk.gov.di.ipv.core.library.verifiablecredential.exception.VerifiableCredentialResponseException;
 import uk.gov.di.ipv.core.library.verifiablecredential.service.VerifiableCredentialService;
+import uk.gov.di.ipv.core.library.verifiablecredential.validation.VerifiableCredentialJwtValidator;
 
 import java.text.ParseException;
 import java.util.List;

@@ -8,8 +8,7 @@ import org.mockito.MockedStatic;
 import uk.gov.di.ipv.core.library.auditing.AuditEvent;
 import uk.gov.di.ipv.core.library.auditing.AuditEventTypes;
 import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
+import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -19,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile.M1A;
 
 class AuditExtensionGpg45ProfileMatchedTest {
 
@@ -44,7 +44,7 @@ class AuditExtensionGpg45ProfileMatchedTest {
     void shouldSerializeToTheCorrectJson() throws Exception {
         AuditExtensionGpg45ProfileMatched extension =
                 new AuditExtensionGpg45ProfileMatched(
-                        Gpg45Profile.M1A,
+                        M1A,
                         new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2),
                         List.of("txn1", "txn2", "txn3"));
 

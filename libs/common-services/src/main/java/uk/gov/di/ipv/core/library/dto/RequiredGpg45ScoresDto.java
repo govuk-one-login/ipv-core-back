@@ -5,7 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
-import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Profile;
+import uk.gov.di.ipv.core.library.gpg45.dto.Gpg45ScoresDto;
+import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
 
 @ExcludeFromGeneratedCoverageReport
 @DynamoDbBean
