@@ -54,6 +54,19 @@ Parameters:
       - "False"
       - "True"
     Default: "False"
+  LocalCoreFront:
+    Type: String
+    Description: |
+      Whether to expect core-front to be run on a dev machine at localhost.
+      If "True" expect localhost for core-front, if "False" expect core-front to run on AWS.
+    AllowedValues:
+      - "False"
+      - "True"
+    Default: "False"
+  LocalIpAddress:
+    Type: String
+    Description: |
+      The IP address that requests to AWS from a local core-front will come from.
 
 Conditions:
   AddProvisionedConcurrency: !Not
@@ -80,6 +93,7 @@ Conditions:
   UseIndividualCiMitStubs: !And
     - !Condition IsDevelopment
     - !Equals [ !Ref IndividualCiMitStubs, "True"]
+  UseLocalCoreFront: !Equals [ !Ref LocalCoreFront, "True"]
 
 # The AWS Account Id is used in the following mapping section because we have
 # multiple developer environments and it is undesirable to have to keep this
@@ -299,9 +313,9 @@ Resources:
       # checkov:skip=CKV_AWS_120: We are not implementing API Gateway caching at the time.
       Name: !Sub IPV Core Private API Gateway ${Environment}
       EndpointConfiguration:
-        Type: PRIVATE
+        Type: !If [UseLocalCoreFront, REGIONAL, PRIVATE]
         VPCEndpointIds:
-          - Fn::ImportValue: !Sub "${VpcStackName}-ExecuteApiGatewayEndpointId"
+          - !If [UseLocalCoreFront, !Ref AWS::NoValue, Fn::ImportValue: !Sub "${VpcStackName}-ExecuteApiGatewayEndpointId"]
       DefinitionBody:
         openapi: "3.0.3" # workaround to get `sam validate` to work
         paths: # workaround to get `sam validate` to work
@@ -319,15 +333,25 @@ Resources:
               Principal: '*'
               Resource:
                 - 'execute-api:/*'
-            - Action: 'execute-api:Invoke'
-              Effect: Deny
-              Principal: '*'
-              Resource:
-                - 'execute-api:/*'
-              Condition:
-                StringNotEquals:
-                  'aws:SourceVpce':
-                    Fn::ImportValue: !Sub "${VpcStackName}-ExecuteApiGatewayEndpointId"
+            - !If
+              - UseLocalCoreFront
+              - Action: 'execute-api:Invoke'
+                Effect: Deny
+                Principal: '*'
+                Resource:
+                  - 'execute-api:/*'
+                Condition:
+                  NotIpAddress:
+                    'aws:SourceIp': [!Ref LocalIpAddress]
+              - Action: 'execute-api:Invoke'
+                Effect: Deny
+                Principal: '*'
+                Resource:
+                  - 'execute-api:/*'
+                Condition:
+                  StringNotEquals:
+                    'aws:SourceVpce':
+                      Fn::ImportValue: !Sub "${VpcStackName}-ExecuteApiGatewayEndpointId"
       StageName: !Sub ${Environment}
       TracingEnabled: true
       AccessLogSetting:
