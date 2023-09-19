@@ -230,10 +230,10 @@ class CiScoringHandlerTest {
             throws UnrecognisedCiException, ConfigException {
         if (useContraIndicatorVC) {
             when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
-                            any(), eq(separateSession)))
+                            any(), eq(separateSession), any()))
                     .thenReturn(mockResponse);
         } else {
-            when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any()))
+            when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any(), any()))
                     .thenReturn(mockResponse);
         }
     }
@@ -242,10 +242,11 @@ class CiScoringHandlerTest {
             throws UnrecognisedCiException, ConfigException {
         if (useContraIndicatorVC) {
             when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
-                            any(), anyBoolean()))
+                            any(), anyBoolean(), any()))
                     .thenThrow(exception);
         } else {
-            when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any())).thenThrow(exception);
+            when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any(), any()))
+                    .thenThrow(exception);
         }
     }
 }

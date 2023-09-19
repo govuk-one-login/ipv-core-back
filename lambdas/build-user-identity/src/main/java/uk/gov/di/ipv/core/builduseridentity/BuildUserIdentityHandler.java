@@ -141,16 +141,19 @@ public class BuildUserIdentityHandler
                     userIdentityService.generateUserIdentity(
                             userId, userId, ipvSessionItem.getVot());
 
+            boolean hasMitigations = false;
             if (configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)
                     && configService.enabled(CoreFeatureFlag.BUNDLE_CIMIT_VC)) {
                 SignedJWT signedCiMitJwt =
                         ciMitService.getContraIndicatorsVCJwt(
                                 userId, clientOAuthSessionItem.getGovukSigninJourneyId(), null);
                 userIdentity.getVcs().add(signedCiMitJwt.serialize());
+                hasMitigations = ciMitService.getContraIndicators(signedCiMitJwt).hasMitigations();
             }
 
             AuditExtensionsUserIdentity extensions =
-                    new AuditExtensionsUserIdentity(ipvSessionItem.getVot());
+                    new AuditExtensionsUserIdentity(
+                            ipvSessionItem.getVot(), ipvSessionItem.isCiFail(), hasMitigations);
 
             auditService.sendAuditEvent(
                     new AuditEvent(

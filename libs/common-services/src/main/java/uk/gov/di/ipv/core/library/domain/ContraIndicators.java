@@ -19,6 +19,25 @@ import java.util.Set;
 public class ContraIndicators {
     private final Map<String, ContraIndicator> contraIndicatorsMap;
 
+    public Integer getContraIndicatorScore(
+            final Map<String, ContraIndicatorScore> contraIndicatorScores,
+            final boolean includeMitigation)
+            throws UnrecognisedCiException {
+        validateContraIndicators(contraIndicatorScores);
+        return calculateDetectedScore(contraIndicatorScores)
+                + (includeMitigation ? calculateCheckedScore(contraIndicatorScores) : 0);
+    }
+
+    public Optional<ContraIndicator> getLatestContraIndicator() {
+        return contraIndicatorsMap.values().stream()
+                .max(Comparator.comparing(ContraIndicator::getIssuanceDate));
+    }
+
+    public boolean hasMitigations() {
+        return contraIndicatorsMap.values().stream()
+                .anyMatch(ci -> ci.getMitigation() != null && !ci.getMitigation().isEmpty());
+    }
+
     private void validateContraIndicators(
             final Map<String, ContraIndicatorScore> contraIndicatorScores)
             throws UnrecognisedCiException {
@@ -53,19 +72,5 @@ public class ContraIndicators {
                                         .get(contraIndicator.getCode())
                                         .getCheckedScore())
                 .reduce(0, Integer::sum);
-    }
-
-    public Integer getContraIndicatorScore(
-            final Map<String, ContraIndicatorScore> contraIndicatorScores,
-            final boolean includeMitigation)
-            throws UnrecognisedCiException {
-        validateContraIndicators(contraIndicatorScores);
-        return calculateDetectedScore(contraIndicatorScores)
-                + (includeMitigation ? calculateCheckedScore(contraIndicatorScores) : 0);
-    }
-
-    public Optional<ContraIndicator> getLatestContraIndicator() {
-        return contraIndicatorsMap.values().stream()
-                .max(Comparator.comparing(ContraIndicator::getIssuanceDate));
     }
 }

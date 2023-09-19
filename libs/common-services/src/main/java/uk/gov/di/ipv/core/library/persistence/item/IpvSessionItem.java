@@ -40,6 +40,7 @@ public class IpvSessionItem implements DynamodbItem {
     private List<ContraIndicatorMitigationDetailsDto> contraIndicatorMitigationDetails;
     private String emailAddress;
     private List<RequiredGpg45ScoresDto> requiredGpg45Scores;
+    private boolean ciFail;
 
     @DynamoDbPartitionKey
     public String getIpvSessionId() {

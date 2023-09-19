@@ -111,6 +111,22 @@ class ContraIndicatorsTest {
                 () -> contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, true));
     }
 
+    @Test
+    void hasMitigationsShouldReturnTrueIfMitigationsExist() {
+        addContraIndicators(TEST_CI1, BASE_TIME, null);
+        addContraIndicators(TEST_CI2, BASE_TIME, null);
+        addContraIndicators(TEST_CI3, BASE_TIME, List.of(Mitigation.builder().build()));
+        assertTrue(contraIndicators.hasMitigations());
+    }
+
+    @Test
+    void hasMitigationsShouldReturnFalseIfNoMitigationsExist() {
+        addContraIndicators(TEST_CI1, BASE_TIME, null);
+        addContraIndicators(TEST_CI2, BASE_TIME, null);
+        addContraIndicators(TEST_CI3, BASE_TIME, null);
+        assertFalse(contraIndicators.hasMitigations());
+    }
+
     private void addContraIndicators(
             final String code, Instant issuanceDate, List<Mitigation> mitigations) {
         ContraIndicator contraIndicator =
