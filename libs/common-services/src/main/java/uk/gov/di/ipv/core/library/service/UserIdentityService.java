@@ -395,49 +395,36 @@ public class UserIdentityService {
                 .getIsSuccessfulVc();
     }
 
-    private List<IdentityClaim> getIdentityClaims(
-            List<VcStoreItem> vcStoreItems, List<VcStatusDto> currentVcStatuses)
-            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
+    private List<IdentityClaim> getIdentityClaims(List<VcStoreItem> vcStoreItems)
+            throws HttpResponseExceptionWithErrorBody {
         List<IdentityClaim> identityClaims = new ArrayList<>();
         for (VcStoreItem item : vcStoreItems) {
-            String componentId = configService.getComponentId(item.getCredentialIssuer());
-
-            if (isVcSuccessful(currentVcStatuses, componentId)) {
-                identityClaims.add(
-                        getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), true));
-            }
+            identityClaims.add(
+                    getIdentityClaim(item.getCredential(), item.getCredentialIssuer(), true));
         }
         return identityClaims;
     }
 
-    public boolean checkBirthDateCorrelationInCredentials(
-            String userId, List<VcStatusDto> currentVcStatuses)
-            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
-        if (currentVcStatuses != null) {
-            List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
-            List<IdentityClaim> identityClaims = getIdentityClaims(vcStoreItems, currentVcStatuses);
-            return identityClaims.stream()
-                            .map(IdentityClaim::getBirthDate)
-                            .flatMap(List::stream)
-                            .map(BirthDate::getValue)
-                            .distinct()
-                            .count()
-                    <= 1;
-        }
-        return true;
+    public boolean checkBirthDateCorrelationInCredentials(String userId)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        final List<VcStoreItem> successfulVCStoreItems =
+                getSuccessfulVCStoreItems(getVcStoreItems(userId));
+        List<IdentityClaim> identityClaims = getIdentityClaims(successfulVCStoreItems);
+        return identityClaims.stream()
+                        .map(IdentityClaim::getBirthDate)
+                        .flatMap(List::stream)
+                        .map(BirthDate::getValue)
+                        .distinct()
+                        .count()
+                <= 1;
     }
 
-    public boolean checkNameAndFamilyNameCorrelationInCredentials(
-            String userId, List<VcStatusDto> currentVcStatuses)
-            throws HttpResponseExceptionWithErrorBody, NoVcStatusForIssuerException {
-        if (currentVcStatuses != null) {
-            List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
-
-            List<IdentityClaim> identityClaims = getIdentityClaims(vcStoreItems, currentVcStatuses);
-
-            return checkNamesForCorrelation(getFullNamesFromCredentials(identityClaims));
-        }
-        return true;
+    public boolean checkNameAndFamilyNameCorrelationInCredentials(String userId)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
+        final List<VcStoreItem> successfulVCStoreItems =
+                getSuccessfulVCStoreItems(getVcStoreItems(userId));
+        List<IdentityClaim> identityClaims = getIdentityClaims(successfulVCStoreItems);
+        return checkNamesForCorrelation(getFullNamesFromCredentials(identityClaims));
     }
 
     public boolean checkNamesForCorrelation(List<String> userFullNames) {

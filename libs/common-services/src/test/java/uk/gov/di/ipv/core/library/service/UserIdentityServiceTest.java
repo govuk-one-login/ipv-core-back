@@ -26,7 +26,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -113,14 +112,10 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_2, Instant.now()),
                         createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_3, Instant.now()));
 
-        List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("test-issuer", true));
-
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId(any())).thenReturn("test-issuer");
+        mockCredentialIssuerConfig();
 
-        boolean isValid =
-                userIdentityService.checkBirthDateCorrelationInCredentials(
-                        USER_ID_1, currentVcStatuses);
+        boolean isValid = userIdentityService.checkBirthDateCorrelationInCredentials(USER_ID_1);
 
         assertTrue(isValid);
     }
@@ -132,14 +127,11 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_5, Instant.now()),
                         createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_5, Instant.now()));
 
-        List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("test-issuer", true));
-
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId(any())).thenReturn("test-issuer");
+        mockCredentialIssuerConfig();
 
         boolean isValid =
-                userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(
-                        USER_ID_1, currentVcStatuses);
+                userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(USER_ID_1);
 
         assertTrue(isValid);
     }
@@ -151,14 +143,10 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
                         createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_3, Instant.now()));
 
-        List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("test-issuer", true));
-
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId(any())).thenReturn("test-issuer");
+        mockCredentialIssuerConfig();
 
-        boolean isValid =
-                userIdentityService.checkBirthDateCorrelationInCredentials(
-                        USER_ID_1, currentVcStatuses);
+        boolean isValid = userIdentityService.checkBirthDateCorrelationInCredentials(USER_ID_1);
 
         assertFalse(isValid);
     }
@@ -170,14 +158,11 @@ class UserIdentityServiceTest {
                         createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_2, Instant.now()),
                         createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_5, Instant.now()));
 
-        List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("test-issuer", true));
-
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId(any())).thenReturn("test-issuer");
+        mockCredentialIssuerConfig();
 
         boolean isValid =
-                userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(
-                        USER_ID_1, currentVcStatuses);
+                userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(USER_ID_1);
 
         assertFalse(isValid);
     }
@@ -200,14 +185,11 @@ class UserIdentityServiceTest {
                                 Instant.now()),
                         createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_1, Instant.now()));
 
-        List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("test-issuer", true));
-
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId(any())).thenReturn("test-issuer");
+        mockCredentialIssuerConfig();
 
         boolean isValid =
-                userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(
-                        USER_ID_1, currentVcStatuses);
+                userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(USER_ID_1);
 
         assertTrue(isValid);
     }
@@ -227,14 +209,11 @@ class UserIdentityServiceTest {
                                 SIGNED_PASSPORT_VC_MISSING_NAME,
                                 Instant.now()));
 
-        List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("test-issuer", true));
-
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId(any())).thenReturn("test-issuer");
+        mockCredentialIssuerConfig();
 
         boolean isValid =
-                userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(
-                        USER_ID_1, currentVcStatuses);
+                userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(USER_ID_1);
 
         assertTrue(isValid);
     }
@@ -257,14 +236,10 @@ class UserIdentityServiceTest {
                                 Instant.now()),
                         createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_3, Instant.now()));
 
-        List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("test-issuer", true));
-
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId(any())).thenReturn("test-issuer");
+        mockCredentialIssuerConfig();
 
-        boolean isValid =
-                userIdentityService.checkBirthDateCorrelationInCredentials(
-                        USER_ID_1, currentVcStatuses);
+        boolean isValid = userIdentityService.checkBirthDateCorrelationInCredentials(USER_ID_1);
 
         assertTrue(isValid);
     }
@@ -284,14 +259,10 @@ class UserIdentityServiceTest {
                                 SIGNED_PASSPORT_VC_MISSING_BIRTH_DATE,
                                 Instant.now()));
 
-        List<VcStatusDto> currentVcStatuses = List.of(new VcStatusDto("test-issuer", true));
-
         when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
-        when(mockConfigService.getComponentId(any())).thenReturn("test-issuer");
+        mockCredentialIssuerConfig();
 
-        boolean isValid =
-                userIdentityService.checkBirthDateCorrelationInCredentials(
-                        USER_ID_1, currentVcStatuses);
+        boolean isValid = userIdentityService.checkBirthDateCorrelationInCredentials(USER_ID_1);
 
         assertTrue(isValid);
     }

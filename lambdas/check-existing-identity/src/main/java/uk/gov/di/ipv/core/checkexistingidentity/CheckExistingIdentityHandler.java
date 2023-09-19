@@ -26,8 +26,8 @@ import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45ProfileEvaluator;
 import uk.gov.di.ipv.core.library.domain.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.domain.gpg45.exception.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
+import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
-import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.exceptions.SqsException;
 import uk.gov.di.ipv.core.library.helpers.LogHelper;
 import uk.gov.di.ipv.core.library.helpers.RequestHelper;
@@ -171,8 +171,7 @@ public class CheckExistingIdentityHandler
             Optional<Gpg45Profile> matchedProfile =
                     gpg45ProfileEvaluator.getFirstMatchingProfile(gpg45Scores, ACCEPTED_PROFILES);
 
-            if (!vcDataCorrelates(userId, ipvSessionItem.getCurrentVcStatuses())
-                    && completedF2F(f2fRequest, f2fVc)) {
+            if (!vcDataCorrelates(userId) && completedF2F(f2fRequest, f2fVc)) {
                 return JOURNEY_FAIL;
             }
 
@@ -267,12 +266,12 @@ public class CheckExistingIdentityHandler
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
                             ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT)
                     .toObjectMap();
-        } catch (NoVcStatusForIssuerException e) {
-            LOGGER.error("No VC status found for CRI issuer", e);
+        } catch (CredentialParseException e) {
+            LOGGER.error("Failed to parse successful VC Store items.", e);
             return new JourneyErrorResponse(
                             JOURNEY_ERROR_PATH,
                             HttpStatus.SC_INTERNAL_SERVER_ERROR,
-                            ErrorResponse.NO_VC_STATUS_FOR_CREDENTIAL_ISSUER)
+                            ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS)
                     .toObjectMap();
         }
     }
@@ -370,16 +369,14 @@ public class CheckExistingIdentityHandler
     }
 
     @Tracing
-    private boolean vcDataCorrelates(String userId, List<VcStatusDto> currentVcStatuses)
-            throws NoVcStatusForIssuerException, HttpResponseExceptionWithErrorBody {
+    private boolean vcDataCorrelates(String userId)
+            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
         StringJoiner uncorrelatableData = new StringJoiner(",");
-        if (!userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(
-                userId, currentVcStatuses)) {
+        if (!userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(userId)) {
             uncorrelatableData.add(NAMES);
         }
 
-        if (!userIdentityService.checkBirthDateCorrelationInCredentials(
-                userId, currentVcStatuses)) {
+        if (!userIdentityService.checkBirthDateCorrelationInCredentials(userId)) {
             uncorrelatableData.add(DATE_OF_BIRTH);
         }
 
