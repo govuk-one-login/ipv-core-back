@@ -124,7 +124,7 @@ public class CheckExistingIdentityHandler
         this.configService = new ConfigService();
         this.userIdentityService = new UserIdentityService(configService);
         this.ipvSessionService = new IpvSessionService(configService);
-        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService);
+        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService, ipvSessionService);
         this.auditService = new AuditService(AuditService.getDefaultSqsClient(), configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
         this.criResponseService = new CriResponseService(configService);

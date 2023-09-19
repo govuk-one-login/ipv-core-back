@@ -66,8 +66,8 @@ public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<Stri
         this.configService = new ConfigService();
         this.ciMitService = new CiMitService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);
-        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService);
         this.ipvSessionService = new IpvSessionService(configService);
+        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(configService, ipvSessionService);
     }
 
     @Override
@@ -94,7 +94,8 @@ public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<Stri
                             USER_STATE_INITIAL_CI_SCORING.equals(ipvSessionItem.getUserState()),
                             ipAddress,
                             clientOAuthSessionItem.getUserId(),
-                            govukSigninJourneyId);
+                            govukSigninJourneyId,
+                            ipvSessionItem);
 
             if (contraIndicatorErrorJourneyResponse.isPresent()) {
                 StringMapMessage message = new StringMapMessage();
@@ -137,13 +138,18 @@ public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<Stri
     }
 
     private Optional<JourneyResponse> getContraIndicatorJourneyResponse(
-            boolean initialCiScoring, String ipAddress, String userId, String govukSigninJourneyId)
+            boolean initialCiScoring,
+            String ipAddress,
+            String userId,
+            String govukSigninJourneyId,
+            IpvSessionItem ipvSession)
             throws ConfigException, UnrecognisedCiException, CiRetrievalException {
         return configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)
                 ? gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
                         ciMitService.getContraIndicatorsVC(userId, govukSigninJourneyId, ipAddress),
-                        initialCiScoring)
+                        initialCiScoring,
+                        ipvSession)
                 : gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
-                        ciMitService.getCIs(userId, govukSigninJourneyId, ipAddress));
+                        ciMitService.getCIs(userId, govukSigninJourneyId, ipAddress), ipvSession);
     }
 }

@@ -122,7 +122,8 @@ public class BuildCriOauthRequestHandler
         this.criOAuthSessionService = new CriOAuthSessionService(criConfigService);
         this.clientOAuthSessionDetailsService =
                 new ClientOAuthSessionDetailsService(criConfigService);
-        this.gpg45ProfileEvaluator = new Gpg45ProfileEvaluator(new ConfigService());
+        this.gpg45ProfileEvaluator =
+                new Gpg45ProfileEvaluator(new ConfigService(), ipvSessionService);
         VcHelper.setConfigService(this.criConfigService);
     }
 

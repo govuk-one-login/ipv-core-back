@@ -21,7 +21,9 @@ import uk.gov.di.ipv.core.library.dto.Gpg45ScoresDto;
 import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -52,13 +54,15 @@ public class Gpg45ProfileEvaluator {
     private static final Gson gson = new Gson();
     private static final int NO_SCORE = 0;
     private final ConfigService configService;
+    private final IpvSessionService ipvSessionService;
 
-    public Gpg45ProfileEvaluator(ConfigService configService) {
+    public Gpg45ProfileEvaluator(ConfigService configService, IpvSessionService ipvSessionService) {
         this.configService = configService;
+        this.ipvSessionService = ipvSessionService;
     }
 
     public Optional<JourneyResponse> getJourneyResponseForStoredContraIndicators(
-            ContraIndicators contraIndicators, boolean separateSession)
+            ContraIndicators contraIndicators, boolean separateSession, IpvSessionItem ipvSession)
             throws ConfigException, UnrecognisedCiException {
         LOGGER.info(
                 new StringMapMessage()
@@ -76,8 +80,12 @@ public class Gpg45ProfileEvaluator {
                         .with(LOG_CI_SCORE.getFieldName(), ciScore));
 
         if (ciScore <= Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD))) {
+            ipvSession.setCiFail(false);
+            ipvSessionService.updateIpvSession(ipvSession);
             return Optional.empty();
         }
+        ipvSession.setCiFail(true);
+        ipvSessionService.updateIpvSession(ipvSession);
 
         final String latestContraIndicatorCode =
                 contraIndicators.getLatestContraIndicator().get().getCode();
@@ -96,7 +104,8 @@ public class Gpg45ProfileEvaluator {
     }
 
     public Optional<JourneyResponse> getJourneyResponseForStoredCis(
-            List<ContraIndicatorItem> ciItems) throws UnrecognisedCiException {
+            List<ContraIndicatorItem> ciItems, IpvSessionItem ipvSession)
+            throws UnrecognisedCiException {
         List<ContraIndicatorItem> contraIndicatorItems = new ArrayList<>(ciItems);
         LOGGER.info(
                 new StringMapMessage()
@@ -127,6 +136,8 @@ public class Gpg45ProfileEvaluator {
         int ciScoreThreshold =
                 Integer.parseInt(configService.getSsmParameter(CI_SCORING_THRESHOLD));
         if (ciScore > ciScoreThreshold) {
+            ipvSession.setCiFail(true);
+            ipvSessionService.updateIpvSession(ipvSession);
             Collections.sort(contraIndicatorItems);
             String lastCiIssuer =
                     contraIndicatorItems.get(contraIndicatorItems.size() - 1).getIss();
@@ -137,6 +148,8 @@ public class Gpg45ProfileEvaluator {
                             ? JOURNEY_RESPONSE_PYI_KBV_FAIL
                             : JOURNEY_RESPONSE_PYI_NO_MATCH);
         } else {
+            ipvSession.setCiFail(false);
+            ipvSessionService.updateIpvSession(ipvSession);
             return Optional.empty();
         }
     }

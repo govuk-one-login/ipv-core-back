@@ -145,9 +145,13 @@ public class CiMitService {
             String userId, String govukSigninJourneyId, String ipAddress)
             throws CiRetrievalException {
         SignedJWT ciSignedJWT = getContraIndicatorsVCJwt(userId, govukSigninJourneyId, ipAddress);
-        EvidenceItem contraIndicatorEvidence = parseContraIndicatorEvidence(ciSignedJWT);
 
-        return mapToContraIndicators(contraIndicatorEvidence);
+        return getContraIndicators(ciSignedJWT);
+    }
+
+    public ContraIndicators getContraIndicators(SignedJWT contraIndicatorsVc)
+            throws CiRetrievalException {
+        return mapToContraIndicators(parseContraIndicatorEvidence(contraIndicatorsVc));
     }
 
     public SignedJWT getContraIndicatorsVCJwt(
@@ -182,7 +186,7 @@ public class CiMitService {
                                 gson.toJson(
                                         new GetCiRequest(govukSigninJourneyId, ipAddress, userId)));
 
-        InvokeResult result = null;
+        InvokeResult result;
         try {
             result = lambdaClient.invoke(request);
         } catch (AWSLambdaException awsLEx) {

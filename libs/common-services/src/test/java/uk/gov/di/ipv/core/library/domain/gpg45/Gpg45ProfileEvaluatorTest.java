@@ -24,7 +24,9 @@ import uk.gov.di.ipv.core.library.dto.Gpg45ScoresDto;
 import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
+import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;
 import uk.gov.di.ipv.core.library.service.ConfigService;
+import uk.gov.di.ipv.core.library.service.IpvSessionService;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -35,8 +37,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CI_SCORING_THRESHOLD;
 import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.MITIGATION_ENABLED;
@@ -61,6 +65,8 @@ class Gpg45ProfileEvaluatorTest {
     private static final JourneyResponse JOURNEY_RESPONSE_PYI_CI3_FAIL_SAME_SESSION =
             new JourneyResponse(JOURNEY_PYI_CI3_FAIL_SAME_SESSION);
     @Mock ConfigService mockConfigService;
+    @Mock IpvSessionService mockIpvSessionService;
+    @Mock IpvSessionItem mockIpvSessionItem;
     @InjectMocks Gpg45ProfileEvaluator evaluator;
 
     private final String M1A_PASSPORT_VC =
@@ -123,7 +129,8 @@ class Gpg45ProfileEvaluatorTest {
     void getJourneyResponseForStoredCisShouldReturnEmptyOptionalIfNoCis() throws Exception {
         when(mockConfigService.getSsmParameter(CI_SCORING_THRESHOLD)).thenReturn("3");
 
-        assertTrue(evaluator.getJourneyResponseForStoredCis(List.of()).isEmpty());
+        assertTrue(
+                evaluator.getJourneyResponseForStoredCis(List.of(), mockIpvSessionItem).isEmpty());
     }
 
     @Test
@@ -141,7 +148,10 @@ class Gpg45ProfileEvaluatorTest {
         setupMockContraIndicatorScoringConfig();
 
         assertTrue(
-                evaluator.getJourneyResponseForStoredCis(List.of(contraIndicatorItem)).isEmpty());
+                evaluator
+                        .getJourneyResponseForStoredCis(
+                                List.of(contraIndicatorItem), mockIpvSessionItem)
+                        .isEmpty());
     }
 
     @Test
@@ -172,7 +182,8 @@ class Gpg45ProfileEvaluatorTest {
 
         assertEquals(
                 Optional.of(JOURNEY_RESPONSE_PYI_KBV_FAIL),
-                evaluator.getJourneyResponseForStoredCis(List.of(otherCiItem, kbvCiItem)));
+                evaluator.getJourneyResponseForStoredCis(
+                        List.of(otherCiItem, kbvCiItem), mockIpvSessionItem));
     }
 
     @Test
@@ -202,7 +213,8 @@ class Gpg45ProfileEvaluatorTest {
 
         assertEquals(
                 Optional.of(JOURNEY_RESPONSE_PYI_NO_MATCH),
-                evaluator.getJourneyResponseForStoredCis(List.of(otherCiItem, kbvCiItem)));
+                evaluator.getJourneyResponseForStoredCis(
+                        List.of(otherCiItem, kbvCiItem), mockIpvSessionItem));
     }
 
     @Test
@@ -221,7 +233,9 @@ class Gpg45ProfileEvaluatorTest {
 
         assertThrows(
                 UnrecognisedCiException.class,
-                () -> evaluator.getJourneyResponseForStoredCis(List.of(contraIndicatorItem)));
+                () ->
+                        evaluator.getJourneyResponseForStoredCis(
+                                List.of(contraIndicatorItem), mockIpvSessionItem));
     }
 
     @Test
@@ -536,9 +550,13 @@ class Gpg45ProfileEvaluatorTest {
             final ContraIndicators contraIndications = buildTestContraIndications();
             setupMockMitigationEnabledFeatureFlag(mitigationEnabled);
             setupMockContraIndicatorScoringConfig();
+            IpvSessionItem ipvSessionItem = new IpvSessionItem();
             final Optional<JourneyResponse> journeyResponse =
-                    evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, false);
+                    evaluator.getJourneyResponseForStoredContraIndicators(
+                            contraIndications, false, ipvSessionItem);
             assertTrue(journeyResponse.isEmpty());
+            assertFalse(ipvSessionItem.isCiFail());
+            verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
         }
 
         @ParameterizedTest
@@ -549,9 +567,13 @@ class Gpg45ProfileEvaluatorTest {
                     buildTestContraIndications(new TestContraIndicator(CI2));
             setupMockMitigationEnabledFeatureFlag(mitigationEnabled);
             setupMockContraIndicatorScoringConfig();
+            IpvSessionItem ipvSessionItem = new IpvSessionItem();
             final Optional<JourneyResponse> journeyResponse =
-                    evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, false);
+                    evaluator.getJourneyResponseForStoredContraIndicators(
+                            contraIndications, false, ipvSessionItem);
             assertTrue(journeyResponse.isEmpty());
+            assertFalse(ipvSessionItem.isCiFail());
+            verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
         }
 
         @ParameterizedTest
@@ -565,9 +587,13 @@ class Gpg45ProfileEvaluatorTest {
             setupMockMitigationEnabledFeatureFlag(mitigationEnabled);
             setupMockContraIndicatorScoringConfig();
             setupMockContraIndicatorTreatmentConfig();
+            IpvSessionItem ipvSessionItem = new IpvSessionItem();
             final Optional<JourneyResponse> journeyResponse =
-                    evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, false);
+                    evaluator.getJourneyResponseForStoredContraIndicators(
+                            contraIndications, false, ipvSessionItem);
             assertEquals(JOURNEY_RESPONSE_PYI_NO_MATCH, journeyResponse.get());
+            assertTrue(ipvSessionItem.isCiFail());
+            verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
         }
 
         @ParameterizedTest
@@ -581,9 +607,13 @@ class Gpg45ProfileEvaluatorTest {
             setupMockMitigationEnabledFeatureFlag(mitigationEnabled);
             setupMockContraIndicatorScoringConfig();
             setupMockContraIndicatorTreatmentConfig();
+            IpvSessionItem ipvSessionItem = new IpvSessionItem();
             final Optional<JourneyResponse> journeyResponse =
-                    evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, true);
+                    evaluator.getJourneyResponseForStoredContraIndicators(
+                            contraIndications, true, ipvSessionItem);
             assertEquals(JOURNEY_RESPONSE_PYI_CI3_FAIL_SEPARATE_SESSION, journeyResponse.get());
+            assertTrue(ipvSessionItem.isCiFail());
+            verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
         }
 
         @ParameterizedTest
@@ -597,9 +627,13 @@ class Gpg45ProfileEvaluatorTest {
             setupMockMitigationEnabledFeatureFlag(mitigationEnabled);
             setupMockContraIndicatorScoringConfig();
             setupMockContraIndicatorTreatmentConfig();
+            IpvSessionItem ipvSessionItem = new IpvSessionItem();
             final Optional<JourneyResponse> journeyResponse =
-                    evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, false);
+                    evaluator.getJourneyResponseForStoredContraIndicators(
+                            contraIndications, false, ipvSessionItem);
             assertEquals(JOURNEY_RESPONSE_PYI_CI3_FAIL_SAME_SESSION, journeyResponse.get());
+            assertTrue(ipvSessionItem.isCiFail());
+            verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
         }
 
         @Test
@@ -611,9 +645,13 @@ class Gpg45ProfileEvaluatorTest {
                             new TestContraIndicator(CI3, List.of("mitigated")));
             setupMockMitigationEnabledFeatureFlag(true);
             setupMockContraIndicatorScoringConfig();
+            IpvSessionItem ipvSessionItem = new IpvSessionItem();
             final Optional<JourneyResponse> journeyResponse =
-                    evaluator.getJourneyResponseForStoredContraIndicators(contraIndications, false);
+                    evaluator.getJourneyResponseForStoredContraIndicators(
+                            contraIndications, false, ipvSessionItem);
             assertTrue(journeyResponse.isEmpty());
+            assertFalse(ipvSessionItem.isCiFail());
+            verify(mockIpvSessionService).updateIpvSession(ipvSessionItem);
         }
     }
 }
