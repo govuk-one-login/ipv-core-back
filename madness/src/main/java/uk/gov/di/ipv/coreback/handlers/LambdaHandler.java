@@ -78,10 +78,9 @@ public class LambdaHandler {
 
                 ProcessJourneyEventHandler processJourneyEventHandler =
                         new ProcessJourneyEventHandler();
-                boolean returnToFrontend = false;
                 Map<String, Object> lambdaOutput = new HashMap<>();
-                Map<String, Object> processJourneyEventOutput = new HashMap<>();
-                while (!returnToFrontend) {
+                Map<String, Object> processJourneyEventOutput;
+                while (true) {
                     executionInput.put("journey", journey);
                     processJourneyEventOutput =
                             processJourneyEventHandler.handleRequest(executionInput, EMPTY_CONTEXT);
@@ -96,7 +95,8 @@ public class LambdaHandler {
                                         buildJourneyRequest(executionInput, journey),
                                         EMPTY_CONTEXT);
                         if (!lambdaOutput.containsKey("journey")) {
-                            returnToFrontend = true;
+                            response.status(200);
+                            return gson.toJson(lambdaOutput);
                         }
                         journey = (String) lambdaOutput.get("journey");
                     } else if ("/journey/reset-identity".equals(journey)) {
@@ -106,11 +106,12 @@ public class LambdaHandler {
                                         buildJourneyRequest(executionInput, journey),
                                         EMPTY_CONTEXT);
                         if (!lambdaOutput.containsKey("journey")) {
-                            returnToFrontend = true;
+                            response.status(200);
+                            return gson.toJson(lambdaOutput);
                         }
                         journey = (String) lambdaOutput.get("journey");
                     } else if (journey != null
-                            && journey.matches("/journey/cri/build-oauth-request/*")) {
+                            && journey.matches("/journey/cri/build-oauth-request/.*")) {
                         BuildCriOauthRequestHandler buildCriOauthRequestHandler =
                                 new BuildCriOauthRequestHandler();
                         lambdaOutput =
@@ -118,7 +119,8 @@ public class LambdaHandler {
                                         buildJourneyRequest(executionInput, journey),
                                         EMPTY_CONTEXT);
                         if (!lambdaOutput.containsKey("journey")) {
-                            returnToFrontend = true;
+                            response.status(200);
+                            return gson.toJson(lambdaOutput);
                         }
                         journey = (String) lambdaOutput.get("journey");
                     } else if ("/journey/build-client-oauth-response".equals(journey)) {
@@ -129,7 +131,8 @@ public class LambdaHandler {
                                         buildJourneyRequest(executionInput, journey),
                                         EMPTY_CONTEXT);
                         if (!lambdaOutput.containsKey("journey")) {
-                            returnToFrontend = true;
+                            response.status(200);
+                            return gson.toJson(lambdaOutput);
                         }
                         journey = (String) lambdaOutput.get("journey");
                     } else if ("/journey/ci-scoring".equals(journey)) {
@@ -139,7 +142,8 @@ public class LambdaHandler {
                                         buildJourneyRequest(executionInput, journey),
                                         EMPTY_CONTEXT);
                         if (!lambdaOutput.containsKey("journey")) {
-                            returnToFrontend = true;
+                            response.status(200);
+                            return gson.toJson(lambdaOutput);
                         }
                         journey = (String) lambdaOutput.get("journey");
                     } else if ("/journey/check-gpg45-score".equals(journey)) {
@@ -153,16 +157,15 @@ public class LambdaHandler {
                         lambdaOutput =
                                 checkGpg45ScoreHandler.handleRequest(processRequest, EMPTY_CONTEXT);
                         if (!lambdaOutput.containsKey("journey")) {
-                            returnToFrontend = true;
+                            response.status(200);
+                            return gson.toJson(lambdaOutput);
                         }
                         journey = (String) lambdaOutput.get("journey");
                     } else {
-                        returnToFrontend = true;
+                        response.status(200);
+                        return gson.toJson(processJourneyEventOutput);
                     }
                 }
-
-                response.status(200);
-                return gson.toJson(processJourneyEventOutput);
             };
 
     public static Route buildClientOauthResponse =
