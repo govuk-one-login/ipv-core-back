@@ -69,16 +69,21 @@ public class LambdaHandler {
             (Request request, Response response) -> {
                 logRequest(request);
                 String journey = request.pathInfo();
-                Map<String, String> executionInput =
-                        gson.fromJson(request.body(), MAP_STRING_STRING_TYPE);
+
+                Map<String, String> executionInput = new HashMap<>();
+                executionInput.put("ipvSessionId", request.headers("ipv-session-id"));
+                executionInput.put("featureSet", request.headers("feature-set"));
+                executionInput.put("ipAddress", request.headers("ip-address"));
+                executionInput.put("clientOAuthSessionId", request.headers("client-session-id"));
 
                 ProcessJourneyEventHandler processJourneyEventHandler =
                         new ProcessJourneyEventHandler();
                 boolean returnToFrontend = false;
                 Map<String, Object> lambdaOutput = new HashMap<>();
+                Map<String, Object> processJourneyEventOutput = new HashMap<>();
                 while (!returnToFrontend) {
                     executionInput.put("journey", journey);
-                    Map<String, Object> processJourneyEventOutput =
+                    processJourneyEventOutput =
                             processJourneyEventHandler.handleRequest(executionInput, EMPTY_CONTEXT);
 
                     journey = (String) processJourneyEventOutput.get("journey");
@@ -104,7 +109,8 @@ public class LambdaHandler {
                             returnToFrontend = true;
                         }
                         journey = (String) lambdaOutput.get("journey");
-                    } else if (journey.matches("/journey/cri/build-oauth-request/*")) {
+                    } else if (journey != null
+                            && journey.matches("/journey/cri/build-oauth-request/*")) {
                         BuildCriOauthRequestHandler buildCriOauthRequestHandler =
                                 new BuildCriOauthRequestHandler();
                         lambdaOutput =
@@ -150,12 +156,13 @@ public class LambdaHandler {
                             returnToFrontend = true;
                         }
                         journey = (String) lambdaOutput.get("journey");
+                    } else {
+                        returnToFrontend = true;
                     }
                 }
 
-                response.body(gson.toJson(lambdaOutput));
                 response.status(200);
-                return response;
+                return gson.toJson(processJourneyEventOutput);
             };
 
     public static Route buildClientOauthResponse =
@@ -317,10 +324,10 @@ public class LambdaHandler {
     private static JourneyRequest buildJourneyRequest(
             Map<String, String> executionInput, String journey) {
         return JourneyRequest.builder()
-                .ipvSessionId(executionInput.get("ipv-session-id"))
-                .ipAddress(executionInput.get("ip-address"))
+                .ipvSessionId(executionInput.get("ipvSessionId"))
+                .ipAddress(executionInput.get("ipAddress"))
                 .clientOAuthSessionId(executionInput.get("clientOAuthSessionId"))
-                .featureSet(executionInput.get("feature-set"))
+                .featureSet(executionInput.get("featureSet"))
                 .journey(journey)
                 .build();
     }

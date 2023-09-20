@@ -1,5 +1,6 @@
 package uk.gov.di.ipv.core.processjourneyevent.statemachine;
 
+import com.amazonaws.util.IOUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,10 +14,9 @@ import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyD
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.NestedJourneyInvokeState;
 import uk.gov.di.ipv.core.processjourneyevent.statemachine.states.State;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Map;
-import java.util.Objects;
 
 public class StateMachineInitializer {
     private static final ObjectMapper yamlOm = new ObjectMapper(new YAMLFactory());
@@ -169,23 +169,35 @@ public class StateMachineInitializer {
         return String.format("%s/%s", state.getName(), nestedJourneyStateName);
     }
 
-    private File getJourneyConfigFile(IpvJourneyTypes journeyType) {
-        File file = getFile(journeyType.getValue());
-        return file;
+    private String getJourneyConfigFile(IpvJourneyTypes journeyType) {
+        return getFile(journeyType.getValue());
+        //        return file;
     }
 
-    private File getNestedJourneyDefinitionsConfigFile() {
+    private String getNestedJourneyDefinitionsConfigFile() {
         return getFile("nested-journey-definitions");
     }
 
-    private File getFile(String filename) {
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-        return new File(
-                Objects.requireNonNull(
-                                classLoader.getResource(
-                                        String.format(
-                                                "statemachine/%s%s.yaml",
-                                                mode.getPathPart(), filename)))
-                        .getFile());
+    private String getFile(String filename) {
+        //        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        //        return new File(
+        //                Objects.requireNonNull(
+        //                                classLoader.getResource(
+        //                                        String.format(
+        //                                                "statemachine/%s%s.yaml",
+        //                                                mode.getPathPart(), filename)))
+        //                        .getFile());
+        ClassLoader classLoader = getClass().getClassLoader();
+        InputStream inputStream =
+                classLoader.getResourceAsStream(
+                        String.format("statemachine/%s%s.yaml", mode.getPathPart(), filename));
+        String data;
+        try {
+            data = IOUtils.toString(inputStream);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Whoops");
+        }
+        return data;
     }
 }

@@ -45,6 +45,16 @@ java {
 	targetCompatibility = JavaVersion.VERSION_17
 }
 
+sourceSets {
+	main {
+		resources {
+			srcDirs += [
+				project(':lambdas:process-journey-event').sourceSets.main.resources
+			]
+		}
+	}
+}
+
 application {
 	mainClass = 'uk.gov.di.ipv.coreback.App'
 }
