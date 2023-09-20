@@ -51,7 +51,8 @@ class CiScoringHandlerTest {
     private static final String TEST_USER_ID = "test-user-id";
     private static final String TEST_JOURNEY_ID = "test-journey-id";
     private static final String JOURNEY_ERROR = "/journey/error";
-    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
+    private static final JourneyResponse JOURNEY_CI_SCORE_NOT_BREACHING =
+            new JourneyResponse("/journey/ci-score-not-breaching");
     private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -104,7 +105,8 @@ class CiScoringHandlerTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
-    void shouldReturnJourneyNextIfNoBreachingCIs(boolean useContraIndicatorVC) throws Exception {
+    void shouldReturnJourneyCIScoreNotBreachingIfNoBreachingCIs(boolean useContraIndicatorVC)
+            throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(configService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(useContraIndicatorVC);
         mockCiJourneyResponse(useContraIndicatorVC, Optional.empty(), false);
@@ -115,7 +117,7 @@ class CiScoringHandlerTest {
                 toResponseClass(
                         ciScoringHandler.handleRequest(request, context), JourneyResponse.class);
 
-        assertEquals(JOURNEY_NEXT.getJourney(), response.getJourney());
+        assertEquals(JOURNEY_CI_SCORE_NOT_BREACHING.getJourney(), response.getJourney());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 

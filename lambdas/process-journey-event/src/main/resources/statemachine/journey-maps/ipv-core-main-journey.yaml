@@ -40,7 +40,7 @@ INITIAL_CI_SCORING:
     type: process
     lambda: ci-scoring
   events:
-    next:
+    ci-score-not-breaching:
       targetState: CHECK_EXISTING_IDENTITY
     reuse:
       targetState: IPV_IDENTITY_REUSE_PAGE

@@ -33,13 +33,14 @@ import java.util.Optional;
 
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_JOURNEY_RESPONSE;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_DESCRIPTION;
+import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_CI_SCORE_NOT_BREACHING_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
-import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_NEXT_PATH;
 
 public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String USER_STATE_INITIAL_CI_SCORING = "INITIAL_CI_SCORING";
-    private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse(JOURNEY_NEXT_PATH);
+    private static final JourneyResponse JOURNEY_CI_SCORE_NOT_BREACHING =
+            new JourneyResponse(JOURNEY_CI_SCORE_NOT_BREACHING_PATH);
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CiMitService ciMitService;
     private final ConfigService configService;
@@ -107,7 +108,7 @@ public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<Stri
                 return contraIndicatorErrorJourneyResponse.get().toObjectMap();
             }
 
-            return JOURNEY_NEXT.toObjectMap();
+            return JOURNEY_CI_SCORE_NOT_BREACHING.toObjectMap();
         } catch (HttpResponseExceptionWithErrorBody e) {
             LOGGER.error("Received HTTP response exception", e);
             return new JourneyErrorResponse(
