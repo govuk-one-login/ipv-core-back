@@ -284,6 +284,7 @@ public class LambdaHandler {
                                 apiGatewayProxyRequestEvent, EMPTY_CONTEXT);
 
                 response.status(responseEvent.getStatusCode());
+                response.type(APPLICATION_JSON);
                 return responseEvent.getBody();
             };
 
@@ -302,6 +303,7 @@ public class LambdaHandler {
                                 apiGatewayProxyRequestEvent, EMPTY_CONTEXT);
 
                 response.status(responseEvent.getStatusCode());
+                response.type(APPLICATION_JSON);
                 return responseEvent.getBody();
             };
 
