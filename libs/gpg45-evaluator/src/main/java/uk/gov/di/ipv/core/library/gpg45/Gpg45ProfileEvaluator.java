@@ -89,7 +89,9 @@ public class Gpg45ProfileEvaluator {
         ipvSessionService.updateIpvSession(ipvSession);
 
         final String latestContraIndicatorCode =
-                contraIndicators.getLatestContraIndicator().get().getCode();
+                contraIndicators.getLatestContraIndicator().isPresent()
+                        ? contraIndicators.getLatestContraIndicator().get().getCode()
+                        : "";
         Map<String, ContraIndicatorMitigation> ciMitConfig = configService.getCiMitConfig();
         if (ciMitConfig.containsKey(latestContraIndicatorCode)) {
             final ContraIndicatorMitigation contraIndicatorMitigation =
