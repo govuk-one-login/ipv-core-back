@@ -18,6 +18,9 @@ import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EVIDENCE_ACTIVITY_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_EVIDENCE_NA_VC;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_F2F_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FAILED_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FAILED_PASSPORT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
@@ -142,6 +145,26 @@ class VcHelperTest {
         assertTrue(
                 VcHelper.isSuccessfulVc(
                         SignedJWT.parse(M1B_DCMAW_VC), EXCLUDED_CREDENTIAL_ISSUERS));
+    }
+
+    @Test
+    void shouldReturnTrueOnSuccessfulF2FVc() throws Exception {
+        assertTrue(
+                VcHelper.isSuccessfulVc(SignedJWT.parse(M1A_F2F_VC), EXCLUDED_CREDENTIAL_ISSUERS));
+    }
+
+    @Test
+    void shouldReturnFalseOnSuccessfulForEvidenceTypeUnknown() throws Exception {
+        assertFalse(
+                VcHelper.isSuccessfulVc(
+                        SignedJWT.parse(M1A_EVIDENCE_NA_VC), EXCLUDED_CREDENTIAL_ISSUERS));
+    }
+
+    @Test
+    void shouldReturnFalseOnSuccessfulForEvidenceTypeActivity() throws Exception {
+        assertFalse(
+                VcHelper.isSuccessfulVc(
+                        SignedJWT.parse(M1A_EVIDENCE_ACTIVITY_VC), EXCLUDED_CREDENTIAL_ISSUERS));
     }
 
     @Test
