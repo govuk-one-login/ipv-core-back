@@ -13,6 +13,7 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorMitigation;
 import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
+import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
@@ -88,10 +89,10 @@ public class Gpg45ProfileEvaluator {
         ipvSession.setCiFail(true);
         ipvSessionService.updateIpvSession(ipvSession);
 
+        Optional<ContraIndicator> latestContraIndicator =
+                contraIndicators.getLatestContraIndicator();
         final String latestContraIndicatorCode =
-                contraIndicators.getLatestContraIndicator().isPresent()
-                        ? contraIndicators.getLatestContraIndicator().get().getCode()
-                        : "";
+                latestContraIndicator.isPresent() ? latestContraIndicator.get().getCode() : "";
         Map<String, ContraIndicatorMitigation> ciMitConfig = configService.getCiMitConfig();
         if (ciMitConfig.containsKey(latestContraIndicatorCode)) {
             final ContraIndicatorMitigation contraIndicatorMitigation =
