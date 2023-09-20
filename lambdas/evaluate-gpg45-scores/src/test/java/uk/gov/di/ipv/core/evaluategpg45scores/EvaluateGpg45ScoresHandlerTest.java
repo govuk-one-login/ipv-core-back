@@ -32,7 +32,7 @@ import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
 import uk.gov.di.ipv.core.library.gpg45.dto.EvidenceDto;
 import uk.gov.di.ipv.core.library.gpg45.dto.Gpg45ScoresDto;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;
-import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
+import uk.gov.di.ipv.core.library.exceptions.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.helpers.SecureTokenHelper;
 import uk.gov.di.ipv.core.library.persistence.item.ClientOAuthSessionItem;
 import uk.gov.di.ipv.core.library.persistence.item.IpvSessionItem;

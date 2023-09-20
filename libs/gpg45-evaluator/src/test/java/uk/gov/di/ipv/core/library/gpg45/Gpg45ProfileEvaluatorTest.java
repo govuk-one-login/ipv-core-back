@@ -19,7 +19,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
-import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
+import uk.gov.di.ipv.core.library.domain.CredentialEvidenceItem;
 import uk.gov.di.ipv.core.library.gpg45.dto.EvidenceDto;
 import uk.gov.di.ipv.core.library.gpg45.dto.Gpg45ScoresDto;
 import uk.gov.di.ipv.core.library.gpg45.enums.Gpg45Profile;

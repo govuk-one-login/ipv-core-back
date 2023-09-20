@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.gpg45.exception;
+package uk.gov.di.ipv.core.library.exceptions;
 
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 

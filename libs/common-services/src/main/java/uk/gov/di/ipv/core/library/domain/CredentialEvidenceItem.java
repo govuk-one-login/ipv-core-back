@@ -1,10 +1,10 @@
-package uk.gov.di.ipv.core.library.gpg45.domain;
+package uk.gov.di.ipv.core.library.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import uk.gov.di.ipv.core.library.exceptions.UnknownEvidenceTypeException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45Scores;
-import uk.gov.di.ipv.core.library.gpg45.exception.UnknownEvidenceTypeException;
 
 import java.util.Comparator;
 import java.util.List;

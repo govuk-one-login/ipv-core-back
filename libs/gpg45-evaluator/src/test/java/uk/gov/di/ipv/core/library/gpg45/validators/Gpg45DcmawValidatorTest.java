@@ -1,8 +1,8 @@
 package uk.gov.di.ipv.core.library.gpg45.validators;
 
 import org.junit.jupiter.api.Test;
-import uk.gov.di.ipv.core.library.gpg45.domain.CheckDetail;
-import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
+import uk.gov.di.ipv.core.library.domain.CheckDetail;
+import uk.gov.di.ipv.core.library.domain.CredentialEvidenceItem;
 
 import java.util.Collections;
 
