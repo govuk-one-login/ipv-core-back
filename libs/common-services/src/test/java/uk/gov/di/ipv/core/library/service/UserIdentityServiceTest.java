@@ -20,6 +20,7 @@ import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
 import java.time.*;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -777,6 +778,45 @@ class UserIdentityServiceTest {
                 () -> {
                     userIdentityService.isVcSuccessful(vcStatusDtos, "badIssuer");
                 });
+    }
+
+    @Test
+    void getVCSuccessStatusReturnShouldBeFalse() throws Exception {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_5, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_5, Instant.now()));
+
+        when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
+
+        Optional<Boolean> isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, "ukPassport");
+
+        assertFalse(isValid.isPresent());
+
+        isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, "dcmaw");
+
+        assertFalse(isValid.isPresent());
+    }
+
+    @Test
+    void getVCSuccessStatusReturnShouldBeTrue() throws Exception {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "address", SIGNED_VC_4, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_5, Instant.now()));
+
+        when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
+
+        Optional<Boolean> isValid =
+                userIdentityService.getVCSuccessStatus(USER_ID_1, "test-issuer");
+
+        assertTrue(isValid.isPresent());
+
+        isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, "https://issuer.example.com");
+
+        assertTrue(isValid.isPresent());
     }
 
     private VcStoreItem createVcStoreItem(

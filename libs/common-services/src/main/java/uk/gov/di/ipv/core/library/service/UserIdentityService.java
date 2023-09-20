@@ -43,6 +43,7 @@ import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DRIVING_LICENCE_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.F2F_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TYPES;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.PASSPORT_CRI;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CREDENTIAL_SUBJECT;
@@ -170,6 +171,18 @@ public class UserIdentityService {
             }
         }
         return successfulVCStoreItems;
+    }
+
+    public Optional<Boolean> getVCSuccessStatus(String userId, String criIssuer)
+            throws ParseException {
+        List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
+        for (VcStoreItem vcStoreItem : vcStoreItems) {
+            SignedJWT vc = SignedJWT.parse(vcStoreItem.getCredential());
+            if (vc.getJWTClaimsSet().getIssuer().equals(criIssuer)) {
+                return Optional.of(VcHelper.isSuccessfulVc(vc, NON_EVIDENCE_CRI_TYPES));
+            }
+        }
+        return Optional.empty();
     }
 
     private JsonNode getVCClaimNode(String credential) throws HttpResponseExceptionWithErrorBody {
