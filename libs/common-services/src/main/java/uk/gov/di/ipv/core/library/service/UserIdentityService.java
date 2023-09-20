@@ -178,7 +178,8 @@ public class UserIdentityService {
         for (VcStoreItem vcStoreItem : vcStoreItems) {
             SignedJWT vc = SignedJWT.parse(vcStoreItem.getCredential());
             if (vc.getJWTClaimsSet().getIssuer().equals(criIssuer)) {
-                return Optional.of(VcHelper.isSuccessfulVc(vc, VcHelper.getNonEvidenceCredentialIssuers()));
+                return Optional.of(
+                        VcHelper.isSuccessfulVc(vc, VcHelper.getNonEvidenceCredentialIssuers()));
             }
         }
         return Optional.empty();
