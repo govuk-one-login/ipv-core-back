@@ -12,7 +12,8 @@ public class JourneyUris {
     public static final String JOURNEY_ERROR_PATH = "/journey/error";
     public static final String JOURNEY_NOT_FOUND_PATH = "/journey/not-found";
     public static final String JOURNEY_CI_SCORING_PATH = "/journey/ci-scoring";
-    public static final String JOURNEY_CI_SCORE_NOT_BREACHING_PATH = "/journey/ci-score-not-breaching";
+    public static final String JOURNEY_CI_SCORE_NOT_BREACHING_PATH =
+            "/journey/ci-score-not-breaching";
     public static final String JOURNEY_FAIL_PATH = "/journey/fail";
     public static final String JOURNEY_FAIL_WITH_NO_CI_PATH = "/journey/fail-with-no-ci";
     public static final String JOURNEY_NEXT_PATH = "/journey/next";

@@ -36,11 +36,11 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_CI_SCORE_NOT_BREACHING_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 
-
 public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String USER_STATE_INITIAL_CI_SCORING = "INITIAL_CI_SCORING";
-    private static final JourneyResponse JOURNEY_CI_SCORE_NOT_BREACHING = new JourneyResponse(JOURNEY_CI_SCORE_NOT_BREACHING_PATH);
+    private static final JourneyResponse JOURNEY_CI_SCORE_NOT_BREACHING =
+            new JourneyResponse(JOURNEY_CI_SCORE_NOT_BREACHING_PATH);
     private final ClientOAuthSessionDetailsService clientOAuthSessionDetailsService;
     private final CiMitService ciMitService;
     private final ConfigService configService;
