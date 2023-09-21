@@ -47,11 +47,10 @@ public class AuditCriResponseHelper {
         var passport = (JSONArray) credentialSubject.get(VC_PASSPORT);
         if (passport.size() != 0) {
             var docExpiryDate = ((JSONObject) passport.get(0)).getAsString(VC_EXPIRY_DATE);
-            return new AuditRestrictedVc(
-                    MAPPER.readTree(nameParts), MAPPER.readTree(docExpiryDate));
+            return new AuditRestrictedVc(MAPPER.readTree(nameParts), docExpiryDate);
         }
         var drivingPermit = (JSONArray) credentialSubject.get(VC_DRIVING_PERMIT);
         var docExpiryDate = ((JSONObject) drivingPermit.get(0)).getAsString(VC_EXPIRY_DATE);
-        return new AuditRestrictedVc(MAPPER.readTree(nameParts), MAPPER.readTree(docExpiryDate));
+        return new AuditRestrictedVc(MAPPER.readTree(nameParts), docExpiryDate);
     }
 }
