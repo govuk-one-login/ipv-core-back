@@ -16,6 +16,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
 import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
 import uk.gov.di.ipv.core.library.exceptions.ConfigException;
+import uk.gov.di.ipv.core.library.exceptions.NoVisitedCriFoundException;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 import uk.gov.di.ipv.core.library.gpg45.domain.CheckDetail;
 import uk.gov.di.ipv.core.library.gpg45.domain.CredentialEvidenceItem;
@@ -94,7 +95,9 @@ public class Gpg45ProfileEvaluator {
         final String latestContraIndicatorCode =
                 latestContraIndicator.isPresent() ? latestContraIndicator.get().getCode() : "";
         Map<String, ContraIndicatorMitigation> ciMitConfig = configService.getCiMitConfig();
-        if (ciMitConfig.containsKey(latestContraIndicatorCode)) {
+
+        if (ciMitConfig.containsKey(latestContraIndicatorCode)
+                && !lastCriWasMitigating(ipvSession, ciMitConfig, latestContraIndicatorCode)) {
             final ContraIndicatorMitigation contraIndicatorMitigation =
                     ciMitConfig.get(latestContraIndicatorCode);
             return Optional.of(
@@ -105,6 +108,26 @@ public class Gpg45ProfileEvaluator {
         }
 
         return Optional.of(JOURNEY_RESPONSE_PYI_NO_MATCH);
+    }
+
+    private boolean lastCriWasMitigating(
+            IpvSessionItem ipvSession,
+            Map<String, ContraIndicatorMitigation> ciMitConfig,
+            String latestContraIndicatorCode) {
+
+        String lastVisitedCriId;
+        try {
+            lastVisitedCriId =
+                    ipvSession.getVisitedCredentialIssuerDetails().stream()
+                            .reduce((first, second) -> second)
+                            .orElseThrow(NoVisitedCriFoundException::new)
+                            .getCriId();
+        } catch (NoVisitedCriFoundException e) {
+            return false;
+        }
+
+        return ciMitConfig.get(latestContraIndicatorCode).getMitigatingCredentialIssuers().stream()
+                .anyMatch(criId -> criId.equals(lastVisitedCriId));
     }
 
     public Optional<JourneyResponse> getJourneyResponseForStoredCis(
