@@ -64,7 +64,7 @@ class BasicEventTest {
 
         LinkedHashMap<String, Event> checkFeatureFlag = new LinkedHashMap<>();
         checkFeatureFlag.put(
-                CoreFeatureFlag.BUNDLE_CIMIT_VC.getName(), eventWithCheckFeatureFlagConfigured);
+                CoreFeatureFlag.UNUSED_PLACEHOLDER.getName(), eventWithCheckFeatureFlagConfigured);
         defaultEvent.setCheckFeatureFlag(checkFeatureFlag);
 
         State resolve = defaultEvent.resolve(JourneyContext.emptyContext());

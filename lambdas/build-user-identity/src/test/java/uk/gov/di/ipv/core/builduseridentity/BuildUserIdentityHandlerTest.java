@@ -59,7 +59,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.BUNDLE_CIMIT_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.ADDRESS_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.DRIVING_PERMIT_JSON_1;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.PASSPORT_JSON_1;
@@ -84,7 +83,7 @@ class BuildUserIdentityHandlerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private BuildUserIdentityHandler userInfoHandler;
+    private BuildUserIdentityHandler buildUserIdentityHandler;
     private UserIdentity userIdentity;
     private IpvSessionItem ipvSessionItem;
     private ClientOAuthSessionItem clientOAuthSessionItem;
@@ -118,7 +117,7 @@ class BuildUserIdentityHandlerTest {
         ipvSessionItem.setAccessTokenMetadata(new AccessTokenMetadata());
         ipvSessionItem.setVot("P2");
 
-        userInfoHandler =
+        buildUserIdentityHandler =
                 new BuildUserIdentityHandler(
                         mockUserIdentityService,
                         mockIpvSessionService,
@@ -141,73 +140,6 @@ class BuildUserIdentityHandlerTest {
     }
 
     @Test
-    void shouldReturn200OnSuccessfulUserIdentityRequest()
-            throws HttpResponseExceptionWithErrorBody, CredentialParseException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
-        Map<String, String> headers =
-                Map.of(
-                        "Authorization",
-                        accessToken.toAuthorizationHeader(),
-                        "ip-address",
-                        TEST_IP_ADDRESS);
-        event.setHeaders(headers);
-
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockUserIdentityService.generateUserIdentity(any(), any(), any()))
-                .thenReturn(userIdentity);
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
-
-        assertEquals(200, response.getStatusCode());
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
-    void shouldReturnCredentialsOnSuccessfulUserInfoRequest()
-            throws JsonProcessingException, SqsException, HttpResponseExceptionWithErrorBody,
-                    CredentialParseException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
-        Map<String, String> headers =
-                Map.of(
-                        "Authorization",
-                        accessToken.toAuthorizationHeader(),
-                        "ip-address",
-                        TEST_IP_ADDRESS);
-        event.setHeaders(headers);
-
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockUserIdentityService.generateUserIdentity(any(), any(), any()))
-                .thenReturn(userIdentity);
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-
-        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
-        UserIdentity responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(userIdentity.getVcs().get(0), responseBody.getVcs().get(0));
-        assertEquals(userIdentity.getVcs().get(1), responseBody.getVcs().get(1));
-        assertEquals(userIdentity.getVcs().get(2), responseBody.getVcs().get(2));
-        assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
-        assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
-        assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
-
-        verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
-
-        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
-        assertEquals(
-                AuditEventTypes.IPV_IDENTITY_ISSUED, auditEventCaptor.getValue().getEventName());
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-    }
-
-    @Test
     void shouldReturnCredentialsWithCiMitVCOnSuccessfulUserInfoRequest()
             throws JsonProcessingException, SqsException, HttpResponseExceptionWithErrorBody,
                     CiRetrievalException, ParseException, CredentialParseException {
@@ -227,14 +159,17 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockConfigService.enabled(BUNDLE_CIMIT_VC)).thenReturn(true);
         when(mockCiMitService.getContraIndicatorsVCJwt(any(), any(), any()))
                 .thenReturn(SignedJWT.parse(SIGNED_CONTRA_INDICATOR_VC));
         ContraIndicators mockContraIndicators = mock(ContraIndicators.class);
         when(mockCiMitService.getContraIndicators(any())).thenReturn(mockContraIndicators);
         when(mockContraIndicators.hasMitigations()).thenReturn(true);
 
-        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(event, mockContext);
+
+        assertEquals(200, response.getStatusCode());
+
         UserIdentity responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
         assertEquals(4, userIdentity.getVcs().size());
@@ -263,52 +198,6 @@ class BuildUserIdentityHandlerTest {
     }
 
     @Test
-    void
-            shouldReturnCredentialsWithoutCiMitVCOnSuccessfulUserInfoRequestWhenBundleCimitVCFeatureFlagIsNotEnabled()
-                    throws JsonProcessingException, SqsException,
-                            HttpResponseExceptionWithErrorBody, CiRetrievalException,
-                            CredentialParseException {
-        APIGatewayProxyRequestEvent event = new APIGatewayProxyRequestEvent();
-        AccessToken accessToken = new BearerAccessToken(TEST_ACCESS_TOKEN);
-        Map<String, String> headers =
-                Map.of(
-                        "Authorization",
-                        accessToken.toAuthorizationHeader(),
-                        "ip-address",
-                        TEST_IP_ADDRESS);
-        event.setHeaders(headers);
-
-        when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
-                .thenReturn(Optional.ofNullable(ipvSessionItem));
-        when(mockUserIdentityService.generateUserIdentity(any(), any(), any()))
-                .thenReturn(userIdentity);
-        when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
-                .thenReturn(clientOAuthSessionItem);
-        when(mockConfigService.enabled(BUNDLE_CIMIT_VC)).thenReturn(false);
-
-        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
-        UserIdentity responseBody =
-                objectMapper.readValue(response.getBody(), new TypeReference<>() {});
-
-        assertEquals(3, userIdentity.getVcs().size());
-        assertEquals(userIdentity.getVcs().get(0), responseBody.getVcs().get(0));
-        assertEquals(userIdentity.getVcs().get(1), responseBody.getVcs().get(1));
-        assertEquals(userIdentity.getVcs().get(2), responseBody.getVcs().get(2));
-        assertEquals(userIdentity.getIdentityClaim(), responseBody.getIdentityClaim());
-        assertEquals(userIdentity.getAddressClaim(), responseBody.getAddressClaim());
-        assertEquals(userIdentity.getDrivingPermitClaim(), responseBody.getDrivingPermitClaim());
-
-        verify(mockIpvSessionService).revokeAccessToken(ipvSessionItem);
-
-        ArgumentCaptor<AuditEvent> auditEventCaptor = ArgumentCaptor.forClass(AuditEvent.class);
-        verify(mockAuditService).sendAuditEvent(auditEventCaptor.capture());
-        assertEquals(
-                AuditEventTypes.IPV_IDENTITY_ISSUED, auditEventCaptor.getValue().getEventName());
-        verify(mockClientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
-        verify(mockCiMitService, times(0)).getContraIndicatorsVCJwt(any(), any(), any());
-    }
-
-    @Test
     void shouldReturnErrorResponseWhenUserIdentityGenerationFails()
             throws JsonProcessingException, HttpResponseExceptionWithErrorBody,
                     CredentialParseException {
@@ -331,7 +220,8 @@ class BuildUserIdentityHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(event, mockContext);
 
         responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
@@ -365,11 +255,11 @@ class BuildUserIdentityHandlerTest {
                 .thenReturn(userIdentity);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(mockConfigService.enabled(BUNDLE_CIMIT_VC)).thenReturn(true);
         when(mockCiMitService.getContraIndicatorsVCJwt(any(), any(), any()))
                 .thenThrow(new CiRetrievalException("Lambda execution failed"));
 
-        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(event, mockContext);
         responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(500, response.getStatusCode());
@@ -389,7 +279,8 @@ class BuildUserIdentityHandlerTest {
         headers.put("ip-address", TEST_IP_ADDRESS);
         event.setHeaders(headers);
 
-        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(event, mockContext);
         responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(BearerTokenError.MISSING_TOKEN.getHTTPStatusCode(), response.getStatusCode());
@@ -407,7 +298,8 @@ class BuildUserIdentityHandlerTest {
                 Map.of("Authorization", "11111111", "ip-address", TEST_IP_ADDRESS);
         event.setHeaders(headers);
 
-        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(event, mockContext);
         responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(
@@ -425,7 +317,8 @@ class BuildUserIdentityHandlerTest {
         Map<String, String> headers = Map.of("ip-address", TEST_IP_ADDRESS);
         event.setHeaders(headers);
 
-        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(event, mockContext);
         responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(BearerTokenError.MISSING_TOKEN.getHTTPStatusCode(), response.getStatusCode());
@@ -451,7 +344,8 @@ class BuildUserIdentityHandlerTest {
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(Optional.ofNullable(null));
 
-        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(event, mockContext);
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
@@ -484,7 +378,8 @@ class BuildUserIdentityHandlerTest {
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
 
-        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(event, mockContext);
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
@@ -516,7 +411,8 @@ class BuildUserIdentityHandlerTest {
         when(mockIpvSessionService.getIpvSessionByAccessToken(TEST_ACCESS_TOKEN))
                 .thenReturn(Optional.ofNullable(ipvSessionItem));
 
-        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(event, mockContext);
         Map<String, Object> responseBody =
                 objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
@@ -553,7 +449,8 @@ class BuildUserIdentityHandlerTest {
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
-        APIGatewayProxyResponseEvent response = userInfoHandler.handleRequest(event, mockContext);
+        APIGatewayProxyResponseEvent response =
+                buildUserIdentityHandler.handleRequest(event, mockContext);
         responseBody = objectMapper.readValue(response.getBody(), new TypeReference<>() {});
 
         assertEquals(500, response.getStatusCode());

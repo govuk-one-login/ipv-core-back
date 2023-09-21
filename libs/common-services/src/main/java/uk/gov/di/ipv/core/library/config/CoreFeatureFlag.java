@@ -1,7 +1,7 @@
 package uk.gov.di.ipv.core.library.config;
 
 public enum CoreFeatureFlag implements FeatureFlag {
-    BUNDLE_CIMIT_VC("bundleCimitVC");
+    UNUSED_PLACEHOLDER("unusedPlaceHolder");
 
     private final String name;
 

@@ -23,7 +23,6 @@ import uk.gov.di.ipv.core.library.auditing.AuditEventUser;
 import uk.gov.di.ipv.core.library.auditing.extension.AuditExtensionsUserIdentity;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.dto.AccessTokenMetadata;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
@@ -141,18 +140,16 @@ public class BuildUserIdentityHandler
                     userIdentityService.generateUserIdentity(
                             userId, userId, ipvSessionItem.getVot());
 
-            boolean hasMitigations = false;
-            if (configService.enabled(CoreFeatureFlag.BUNDLE_CIMIT_VC)) {
-                SignedJWT signedCiMitJwt =
-                        ciMitService.getContraIndicatorsVCJwt(
-                                userId, clientOAuthSessionItem.getGovukSigninJourneyId(), null);
-                userIdentity.getVcs().add(signedCiMitJwt.serialize());
-                hasMitigations = ciMitService.getContraIndicators(signedCiMitJwt).hasMitigations();
-            }
+            SignedJWT signedCiMitJwt =
+                    ciMitService.getContraIndicatorsVCJwt(
+                            userId, clientOAuthSessionItem.getGovukSigninJourneyId(), null);
+            userIdentity.getVcs().add(signedCiMitJwt.serialize());
 
             AuditExtensionsUserIdentity extensions =
                     new AuditExtensionsUserIdentity(
-                            ipvSessionItem.getVot(), ipvSessionItem.isCiFail(), hasMitigations);
+                            ipvSessionItem.getVot(),
+                            ipvSessionItem.isCiFail(),
+                            ciMitService.getContraIndicators(signedCiMitJwt).hasMitigations());
 
             auditService.sendAuditEvent(
                     new AuditEvent(

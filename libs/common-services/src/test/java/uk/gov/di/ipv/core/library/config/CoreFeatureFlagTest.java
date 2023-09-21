@@ -3,11 +3,11 @@ package uk.gov.di.ipv.core.library.config;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.BUNDLE_CIMIT_VC;
+import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.UNUSED_PLACEHOLDER;
 
 class CoreFeatureFlagTest {
     @Test
     void shouldSetFeatureFlagName() {
-        assertEquals("bundleCimitVC", BUNDLE_CIMIT_VC.getName());
+        assertEquals("unusedPlaceHolder", UNUSED_PLACEHOLDER.getName());
     }
 }
