@@ -21,4 +21,4 @@ export SQS_AUDIT_EVENT_QUEUE_URL=https://sqs.eu-west-2.amazonaws.com/13035568667
 export USER_ISSUED_CREDENTIALS_TABLE_NAME=user-issued-credentials-v2-"$ENVIRONMENT"
 export LAMBDA_TASK_ROOT=handler
 
-./gradlew :sillyidea:run --no-daemon
+./bin/local-running

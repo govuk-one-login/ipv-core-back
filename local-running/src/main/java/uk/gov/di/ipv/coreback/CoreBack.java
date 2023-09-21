@@ -9,7 +9,7 @@ import java.io.IOException;
 public class CoreBack {
     public CoreBack() throws IOException {
         LambdaHandler lambdaHandler = new LambdaHandler();
-        Spark.port(5678);
+        Spark.port(Integer.parseInt(System.getenv("PORT")));
         Spark.get("/", HomeHandler.serveHomePage);
 
         Spark.post("/session/initialise", lambdaHandler.initialiseSession);

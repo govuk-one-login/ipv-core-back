@@ -27,4 +27,4 @@ include "libs:common-services",
 		"libs:gpg45-evaluator",
 		"libs:user-identity-service"
 		"libs:audit-service",
-		"sillyidea"
+		"local-running"
