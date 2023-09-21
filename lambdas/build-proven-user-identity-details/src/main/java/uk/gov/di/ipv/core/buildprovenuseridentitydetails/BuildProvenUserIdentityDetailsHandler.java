@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.Name;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
 import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
@@ -153,10 +154,12 @@ public class BuildProvenUserIdentityDetailsHandler
             throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException,
                     NoVcStatusForIssuerException {
         for (VcStoreItem item : credentialIssuerItems) {
+            CredentialIssuerConfig credentialIssuerConfig =
+                    configService.getCredentialIssuerActiveConnectionConfig(
+                            item.getCredentialIssuer());
             if (EVIDENCE_CRI_TYPES.contains(item.getCredentialIssuer())
                     && userIdentityService.isVcSuccessful(
-                            currentVcStatuses,
-                            configService.getComponentId(item.getCredentialIssuer()))) {
+                            currentVcStatuses, credentialIssuerConfig.getComponentId())) {
                 JsonNode vcSubjectNode =
                         mapper.readTree(
                                         SignedJWT.parse(item.getCredential())
@@ -198,10 +201,12 @@ public class BuildProvenUserIdentityDetailsHandler
             throws ParseException, JsonProcessingException, ProvenUserIdentityDetailsException,
                     NoVcStatusForIssuerException {
         for (VcStoreItem item : credentialIssuerItems) {
+            CredentialIssuerConfig credentialIssuerConfig =
+                    configService.getCredentialIssuerActiveConnectionConfig(
+                            item.getCredentialIssuer());
             if (item.getCredentialIssuer().equals(ADDRESS_CRI)
                     && userIdentityService.isVcSuccessful(
-                            currentVcStatuses,
-                            configService.getComponentId(item.getCredentialIssuer()))) {
+                            currentVcStatuses, credentialIssuerConfig.getComponentId())) {
                 JsonNode addressNode =
                         mapper.readTree(
                                         SignedJWT.parse(item.getCredential())

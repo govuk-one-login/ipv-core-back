@@ -172,6 +172,19 @@ public class UserIdentityService {
         return successfulVCStoreItems;
     }
 
+    public Optional<Boolean> getVCSuccessStatus(String userId, String criIssuer)
+            throws ParseException {
+        List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
+        for (VcStoreItem vcStoreItem : vcStoreItems) {
+            SignedJWT vc = SignedJWT.parse(vcStoreItem.getCredential());
+            if (vc.getJWTClaimsSet().getIssuer().equals(criIssuer)) {
+                return Optional.of(
+                        VcHelper.isSuccessfulVc(vc, VcHelper.getNonEvidenceCredentialIssuers()));
+            }
+        }
+        return Optional.empty();
+    }
+
     private JsonNode getVCClaimNode(String credential) throws HttpResponseExceptionWithErrorBody {
         try {
             return objectMapper

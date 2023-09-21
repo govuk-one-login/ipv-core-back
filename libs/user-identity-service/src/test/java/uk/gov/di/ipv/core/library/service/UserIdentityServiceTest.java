@@ -11,6 +11,7 @@ import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.IdentityClaim;
 import uk.gov.di.ipv.core.library.domain.UserIdentity;
 import uk.gov.di.ipv.core.library.domain.VectorOfTrust;
+import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.exceptions.HttpResponseExceptionWithErrorBody;
@@ -18,8 +19,11 @@ import uk.gov.di.ipv.core.library.exceptions.NoVcStatusForIssuerException;
 import uk.gov.di.ipv.core.library.persistence.DataStore;
 import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.*;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -30,7 +34,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.CORE_VTM_CLAIM;
-import static uk.gov.di.ipv.core.library.domain.CriConstants.NON_EVIDENCE_CRI_TYPES;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.domain.UserIdentity.ADDRESS_CLAIM_NAME;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC_MISSING_ADDRESS_PROPERTY;
@@ -54,8 +59,39 @@ class UserIdentityServiceTest {
     @Mock private ConfigService mockConfigService;
 
     @Mock private DataStore<VcStoreItem> mockDataStore;
+    private static CredentialIssuerConfig addressConfig = null;
+    private static CredentialIssuerConfig claimedIdentityConfig = null;
 
     private UserIdentityService userIdentityService;
+
+    static {
+        try {
+            addressConfig =
+                    new CredentialIssuerConfig(
+                            new URI("http://example.com/token"),
+                            new URI("http://example.com/credential"),
+                            new URI("http://example.com/authorize"),
+                            "ipv-core",
+                            "test-jwk",
+                            "test-encryption-jwk",
+                            "test-audience",
+                            new URI("http://example.com/redirect"),
+                            true);
+            claimedIdentityConfig =
+                    new CredentialIssuerConfig(
+                            new URI("http://example.com/token"),
+                            new URI("http://example.com/credential"),
+                            new URI("http://example.com/authorize"),
+                            "ipv-core",
+                            "test-jwk",
+                            "test-encryption-jwk",
+                            "test-claimed-identity",
+                            new URI("http://example.com/redirect"),
+                            true);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+    }
 
     @BeforeEach
     void setUp() {
@@ -791,6 +827,45 @@ class UserIdentityServiceTest {
                 });
     }
 
+    @Test
+    void getVCSuccessStatusReturnShouldBeFalse() throws Exception {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_5, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_5, Instant.now()));
+
+        when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
+
+        Optional<Boolean> isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, "ukPassport");
+
+        assertFalse(isValid.isPresent());
+
+        isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, "dcmaw");
+
+        assertFalse(isValid.isPresent());
+    }
+
+    @Test
+    void getVCSuccessStatusReturnShouldBeTrue() throws Exception {
+        List<VcStoreItem> vcStoreItems =
+                List.of(
+                        createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "fraud", SIGNED_VC_2, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "address", SIGNED_VC_4, Instant.now()),
+                        createVcStoreItem(USER_ID_1, "dcmaw", SIGNED_VC_5, Instant.now()));
+        when(userIdentityService.getVcStoreItems(USER_ID_1)).thenReturn(vcStoreItems);
+        mockCredentialIssuerConfig();
+
+        Optional<Boolean> isValid =
+                userIdentityService.getVCSuccessStatus(USER_ID_1, "test-issuer");
+
+        assertTrue(isValid.isPresent());
+
+        isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, "https://issuer.example.com");
+
+        assertTrue(isValid.isPresent());
+    }
+
     private VcStoreItem createVcStoreItem(
             String userId, String credentialIssuer, String credential, Instant dateCreated) {
         VcStoreItem vcStoreItem = new VcStoreItem();
@@ -803,10 +878,9 @@ class UserIdentityServiceTest {
     }
 
     private void mockCredentialIssuerConfig() {
-        NON_EVIDENCE_CRI_TYPES.forEach(
-                credentialIssuer -> {
-                    when(mockConfigService.getComponentId(credentialIssuer))
-                            .thenReturn(credentialIssuer);
-                });
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
+                .thenReturn(claimedIdentityConfig);
+        when(mockConfigService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
+                .thenReturn(addressConfig);
     }
 }
