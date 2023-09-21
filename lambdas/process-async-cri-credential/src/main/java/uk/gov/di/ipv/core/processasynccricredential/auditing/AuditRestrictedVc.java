@@ -8,12 +8,17 @@ import uk.gov.di.ipv.core.library.auditing.AuditRestricted;
 
 @ExcludeFromGeneratedCoverageReport
 @Getter
-public class AuditRestrictedVcNameParts implements AuditRestricted {
+public class AuditRestrictedVc implements AuditRestricted {
     @JsonProperty("nameParts")
     private final JsonNode nameParts;
 
-    public AuditRestrictedVcNameParts(
-            @JsonProperty(value = "nameParts", required = true) JsonNode nameParts) {
+    @JsonProperty("docExpiryDate")
+    private final JsonNode docExpiryDate;
+
+    public AuditRestrictedVc(
+            @JsonProperty(value = "nameParts", required = true) JsonNode nameParts,
+            @JsonProperty(value = "docExpiryDate", required = true) JsonNode docExpiryDate) {
         this.nameParts = nameParts;
+        this.docExpiryDate = docExpiryDate;
     }
 }
