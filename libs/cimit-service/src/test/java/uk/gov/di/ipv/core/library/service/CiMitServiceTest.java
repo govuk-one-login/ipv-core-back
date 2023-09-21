@@ -21,7 +21,6 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
@@ -40,7 +39,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN;
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_GET_LAMBDA_ARN;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_PUT_LAMBDA_ARN;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PUBLIC_JWK;
@@ -55,7 +53,6 @@ class CiMitServiceTest {
 
     private static final String THE_ARN_OF_THE_PUT_LAMBDA = "the:arn:of:the:put:lambda";
     private static final String THE_ARN_OF_THE_POST_LAMBDA = "the:arn:of:the:post:lambda";
-    private static final String THE_ARN_OF_THE_GET_LAMBDA = "the:arn:of:the:get:lambda";
     private static final String THE_ARN_OF_CIMIT_GET_CI_LAMBDA = "arn:of:getContraIndicators";
     private static final String GOVUK_SIGNIN_JOURNEY_ID = "a-journey-id";
     private static final String TEST_USER_ID = "a-user-id";
@@ -123,66 +120,6 @@ class CiMitServiceTest {
                                 SignedJWT.parse(SIGNED_VC_1),
                                 GOVUK_SIGNIN_JOURNEY_ID,
                                 CLIENT_SOURCE_IP));
-    }
-
-    @Test
-    void getCIsInvokesTheLambdaClientToGetTheItems() throws Exception {
-        when(configService.getEnvironmentVariable(CI_STORAGE_GET_LAMBDA_ARN))
-                .thenReturn(THE_ARN_OF_THE_GET_LAMBDA);
-        when(lambdaClient.invoke(requestCaptor.capture()))
-                .thenReturn(
-                        new InvokeResult()
-                                .withStatusCode(200)
-                                .withPayload(
-                                        ByteBuffer.wrap(
-                                                String.format(
-                                                                "{\"contraIndicators\":[{\"userId\":\"%s\",\"ci\":\"X01\"},{\"userId\":\"%<s\",\"ci\":\"Z02\"}]}",
-                                                                TEST_USER_ID)
-                                                        .getBytes(StandardCharsets.UTF_8))));
-
-        List<ContraIndicatorItem> ciItems =
-                ciMitService.getCIs(TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP);
-        InvokeRequest request = requestCaptor.getValue();
-
-        assertEquals(THE_ARN_OF_THE_GET_LAMBDA, request.getFunctionName());
-        assertEquals(
-                String.format(
-                        "{\"govuk_signin_journey_id\":\"%s\",\"ip_address\":\"%s\",\"user_id\":\"%s\"}",
-                        GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP, TEST_USER_ID),
-                new String(request.getPayload().array(), StandardCharsets.UTF_8));
-        assertEquals(
-                List.of(
-                        new ContraIndicatorItem(TEST_USER_ID, null, null, null, "X01", null, null),
-                        new ContraIndicatorItem(TEST_USER_ID, null, null, null, "Z02", null, null)),
-                ciItems);
-    }
-
-    @Test
-    void getCIsThrowsExceptionIfLambdaExecutionFails() {
-        InvokeResult result = new InvokeResult().withStatusCode(500);
-        when(configService.getEnvironmentVariable(CI_STORAGE_GET_LAMBDA_ARN))
-                .thenReturn(THE_ARN_OF_THE_GET_LAMBDA);
-        when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(result);
-
-        assertThrows(
-                CiRetrievalException.class,
-                () -> ciMitService.getCIs(TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
-    }
-
-    @Test
-    void getCIsThrowsExceptionIfLambdaThrowsError() {
-        InvokeResult result =
-                new InvokeResult()
-                        .withStatusCode(200)
-                        .withFunctionError("Unhandled")
-                        .withPayload(ByteBuffer.allocate(0));
-        when(configService.getEnvironmentVariable(CI_STORAGE_GET_LAMBDA_ARN))
-                .thenReturn(THE_ARN_OF_THE_GET_LAMBDA);
-        when(lambdaClient.invoke(requestCaptor.capture())).thenReturn(result);
-
-        assertThrows(
-                CiRetrievalException.class,
-                () -> ciMitService.getCIs(TEST_USER_ID, GOVUK_SIGNIN_JOURNEY_ID, CLIENT_SOURCE_IP));
     }
 
     @Test

@@ -15,7 +15,6 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.message.StringMapMessage;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.cimit.domain.GetCiRequest;
-import uk.gov.di.ipv.core.library.cimit.domain.GetCiResponse;
 import uk.gov.di.ipv.core.library.cimit.domain.PostCiMitigationRequest;
 import uk.gov.di.ipv.core.library.cimit.domain.PutCiRequest;
 import uk.gov.di.ipv.core.library.cimit.dto.ContraIndicatorCredentialDto;
@@ -24,7 +23,6 @@ import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
 import uk.gov.di.ipv.core.library.config.EnvironmentVariable;
-import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.cimitvc.CiMitJwt;
@@ -46,7 +44,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN;
-import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_GET_LAMBDA_ARN;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN;
 import static uk.gov.di.ipv.core.library.config.EnvironmentVariable.CI_STORAGE_PUT_LAMBDA_ARN;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR;
@@ -124,21 +121,6 @@ public class CiMitService {
             logLambdaExecutionError(result, CI_STORAGE_POST_MITIGATIONS_LAMBDA_ARN);
             throw new CiPostMitigationsException(FAILED_LAMBDA_MESSAGE);
         }
-    }
-
-    public List<ContraIndicatorItem> getCIs(
-            String userId, String govukSigninJourneyId, String ipAddress)
-            throws CiRetrievalException {
-        InvokeResult result =
-                invokeClientToGetCIResult(
-                        CI_STORAGE_GET_LAMBDA_ARN,
-                        govukSigninJourneyId,
-                        ipAddress,
-                        userId,
-                        "Retrieving CIs from CIMIT.");
-        String jsonResponse = new String(result.getPayload().array(), StandardCharsets.UTF_8);
-        GetCiResponse response = gson.fromJson(jsonResponse, GetCiResponse.class);
-        return response.getContraIndicators();
     }
 
     public ContraIndicators getContraIndicatorsVC(
