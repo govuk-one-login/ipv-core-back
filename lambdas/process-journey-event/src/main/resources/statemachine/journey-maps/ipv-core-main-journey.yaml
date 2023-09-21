@@ -517,6 +517,8 @@ MITIGATION_01_CRI_DCMAW:
       targetState: PYI_ANOTHER_WAY
     fail-with-no-ci:
       targetState: PYI_ANOTHER_WAY
+    mitigation02:
+      targetState: PYI_ANOTHER_WAY
 
 # Mitigation journey (02)
 MITIGATION_02_OPTIONS:
@@ -554,6 +556,8 @@ MITIGATION_02_CRI_DCMAW:
     temporarily-unavailable:
       targetState: PYI_ANOTHER_WAY
     fail-with-no-ci:
+      targetState: PYI_ANOTHER_WAY
+    mitigation02:
       targetState: PYI_ANOTHER_WAY
 
 MITIGATION_02_POST_DCMAW_SUCCESS_PAGE:
