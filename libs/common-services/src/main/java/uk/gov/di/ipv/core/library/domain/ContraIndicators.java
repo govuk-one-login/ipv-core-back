@@ -20,12 +20,11 @@ public class ContraIndicators {
     private final Map<String, ContraIndicator> contraIndicatorsMap;
 
     public Integer getContraIndicatorScore(
-            final Map<String, ContraIndicatorScore> contraIndicatorScores,
-            final boolean includeMitigation)
+            final Map<String, ContraIndicatorScore> contraIndicatorScores)
             throws UnrecognisedCiException {
         validateContraIndicators(contraIndicatorScores);
         return calculateDetectedScore(contraIndicatorScores)
-                + (includeMitigation ? calculateCheckedScore(contraIndicatorScores) : 0);
+                + calculateCheckedScore(contraIndicatorScores);
     }
 
     public Optional<ContraIndicator> getLatestContraIndicator() {
