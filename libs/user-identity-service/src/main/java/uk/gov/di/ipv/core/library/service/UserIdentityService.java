@@ -174,13 +174,10 @@ public class UserIdentityService {
 
     public Optional<Boolean> getVCSuccessStatus(String userId, String criIssuer)
             throws ParseException {
-        List<VcStoreItem> vcStoreItems = getVcStoreItems(userId);
-        for (VcStoreItem vcStoreItem : vcStoreItems) {
+        VcStoreItem vcStoreItem = getVcStoreItem(userId, criIssuer);
+        if (vcStoreItem != null) {
             SignedJWT vc = SignedJWT.parse(vcStoreItem.getCredential());
-            if (vc.getJWTClaimsSet().getIssuer().equals(criIssuer)) {
-                return Optional.of(
-                        VcHelper.isSuccessfulVc(vc, VcHelper.getNonEvidenceCredentialIssuers()));
-            }
+            return Optional.of(VcHelper.isSuccessfulVc(vc));
         }
         return Optional.empty();
     }

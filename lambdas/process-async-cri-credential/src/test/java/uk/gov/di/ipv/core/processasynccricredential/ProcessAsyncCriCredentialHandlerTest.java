@@ -416,9 +416,9 @@ class ProcessAsyncCriCredentialHandlerTest {
     private void mockCredentialIssuerConfig() {
         when(configService.getCredentialIssuerActiveConnectionConfig(TEST_CREDENTIAL_ISSUER_ID))
                 .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG);
-        when(configService.getCredentialIssuerActiveConnectionConfig(ADDRESS_CRI))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS);
-        when(configService.getCredentialIssuerActiveConnectionConfig(CLAIMED_IDENTITY_CRI))
-                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY);
+        when(configService.getComponentId(ADDRESS_CRI))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG_ADDRESS.getComponentId());
+        when(configService.getComponentId(CLAIMED_IDENTITY_CRI))
+                .thenReturn(TEST_CREDENTIAL_ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
     }
 }
