@@ -53,7 +53,6 @@ import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.USE_POST_MITIGATIONS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.DCMAW_CRI;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.FAILED_TO_VALIDATE_VERIFIABLE_CREDENTIAL_RESPONSE;
 import static uk.gov.di.ipv.core.library.domain.VerifiableCredentialConstants.VC_CLAIM;
@@ -268,7 +267,6 @@ public class RetrieveCriCredentialHandler
             IpvSessionItem ipvSessionItem)
             throws ParseException, SqsException, JsonProcessingException, CiPutException,
                     CiPostMitigationsException {
-        final boolean postMitigatingVcs = configService.enabled(USE_POST_MITIGATIONS);
         final AuditEventUser auditEventUser =
                 new AuditEventUser(
                         userId,
@@ -287,9 +285,7 @@ public class RetrieveCriCredentialHandler
             sendIpvVcReceivedAuditEvent(auditEventUser, vc, isSuccessful);
 
             submitVcToCiStorage(vc, govukSigninJourneyId, ipAddress);
-            if (postMitigatingVcs) {
-                postMitigatingVc(vc, govukSigninJourneyId, ipAddress);
-            }
+            postMitigatingVc(vc, govukSigninJourneyId, ipAddress);
 
             verifiableCredentialService.persistUserCredentials(vc, credentialIssuerId, userId);
 

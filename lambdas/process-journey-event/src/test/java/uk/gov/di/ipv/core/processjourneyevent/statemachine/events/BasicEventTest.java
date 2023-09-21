@@ -62,11 +62,9 @@ class BasicEventTest {
         BasicEvent defaultEvent = new BasicEvent(mockConfigService);
         defaultEvent.setTargetStateObj(new BasicState());
 
-        when(mockConfigService.enabled(CoreFeatureFlag.MITIGATION_ENABLED.getName()))
-                .thenReturn(true);
         LinkedHashMap<String, Event> checkFeatureFlag = new LinkedHashMap<>();
         checkFeatureFlag.put(
-                CoreFeatureFlag.MITIGATION_ENABLED.getName(), eventWithCheckFeatureFlagConfigured);
+                CoreFeatureFlag.UNUSED_PLACEHOLDER.getName(), eventWithCheckFeatureFlagConfigured);
         defaultEvent.setCheckFeatureFlag(checkFeatureFlag);
 
         State resolve = defaultEvent.resolve(JourneyContext.emptyContext());

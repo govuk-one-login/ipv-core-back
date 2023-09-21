@@ -44,7 +44,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.USE_POST_MITIGATIONS;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
 import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.EC_PRIVATE_KEY_JWK;
@@ -156,7 +155,6 @@ class ProcessAsyncCriCredentialHandlerTest {
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
         mockCredentialIssuerConfig();
-        when(configService.enabled(USE_POST_MITIGATIONS)).thenReturn(true);
 
         final SQSBatchResponse batchResponse = handler.handleRequest(testEvent, null);
 
@@ -266,7 +264,6 @@ class ProcessAsyncCriCredentialHandlerTest {
         when(criResponseService.getCriResponseItem(TEST_USER_ID, TEST_COMPONENT_ID))
                 .thenReturn(TEST_CRI_RESPONSE_ITEM);
         mockCredentialIssuerConfig();
-        when(configService.enabled(USE_POST_MITIGATIONS)).thenReturn(true);
 
         doThrow(new CiPostMitigationsException("Lambda execution failed"))
                 .when(ciMitService)

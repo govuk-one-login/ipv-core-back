@@ -45,18 +45,7 @@ class ContraIndicatorsTest {
     @Test
     void shouldReturnZeroScoreWhenNoContraIndicatorExistInContraIndications()
             throws UnrecognisedCiException {
-        assertEquals(
-                0, contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, false));
-    }
-
-    @Test
-    void shouldCalculateContraIndicatorScoreExcludeMitigation() throws UnrecognisedCiException {
-        addContraIndicators(
-                TEST_CI1, BASE_TIME.minusSeconds(1), List.of(Mitigation.builder().build()));
-        addContraIndicators(
-                TEST_CI2, BASE_TIME.minusSeconds(2), List.of(Mitigation.builder().build()));
-        assertEquals(
-                7, contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, false));
+        assertEquals(0, contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP));
     }
 
     @Test
@@ -65,7 +54,7 @@ class ContraIndicatorsTest {
                 TEST_CI1, BASE_TIME.minusSeconds(1), List.of(Mitigation.builder().build()));
         addContraIndicators(
                 TEST_CI2, BASE_TIME.minusSeconds(2), List.of(Mitigation.builder().build()));
-        assertEquals(1, contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, true));
+        assertEquals(1, contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP));
     }
 
     @Test
@@ -75,7 +64,7 @@ class ContraIndicatorsTest {
                 TEST_CI1, BASE_TIME.minusSeconds(1), List.of(Mitigation.builder().build()));
         addContraIndicators(TEST_CI2, BASE_TIME.minusSeconds(2), Collections.emptyList());
         addContraIndicators(TEST_CI3, BASE_TIME.minusSeconds(4), null);
-        assertEquals(6, contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, true));
+        assertEquals(6, contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP));
     }
 
     @Test
@@ -108,7 +97,7 @@ class ContraIndicatorsTest {
                 TEST_CI4_UNKNOWN, BASE_TIME.minusSeconds(2), List.of(Mitigation.builder().build()));
         assertThrows(
                 UnrecognisedCiException.class,
-                () -> contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP, true));
+                () -> contraIndicators.getContraIndicatorScore(CONTRA_INDICATOR_SCORE_MAP));
     }
 
     @Test
