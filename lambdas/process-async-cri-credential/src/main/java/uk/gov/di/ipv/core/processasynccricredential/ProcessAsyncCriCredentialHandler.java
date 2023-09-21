@@ -40,7 +40,6 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.USE_POST_MITIGATIONS;
 import static uk.gov.di.ipv.core.library.domain.ErrorResponse.UNEXPECTED_ASYNC_VERIFIABLE_CREDENTIAL;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_CRI_ISSUER;
 import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_ERROR_CODE;
@@ -163,8 +162,6 @@ public class ProcessAsyncCriCredentialHandler
             throws ParseException, SqsException, JsonProcessingException, CiPutException,
                     AsyncVerifiableCredentialException, CiPostMitigationsException {
 
-        final boolean postMitigatingVcs = configService.enabled(USE_POST_MITIGATIONS);
-
         validateOAuthState(successAsyncCriResponse);
 
         final List<SignedJWT> verifiableCredentials =
@@ -188,9 +185,7 @@ public class ProcessAsyncCriCredentialHandler
             sendIpvVcReceivedAuditEvent(auditEventUser, verifiableCredential, isSuccessful);
 
             submitVcToCiStorage(verifiableCredential);
-            if (postMitigatingVcs) {
-                postMitigatingVc(verifiableCredential);
-            }
+            postMitigatingVc(verifiableCredential);
 
             verifiableCredentialService.persistUserCredentials(
                     verifiableCredential,

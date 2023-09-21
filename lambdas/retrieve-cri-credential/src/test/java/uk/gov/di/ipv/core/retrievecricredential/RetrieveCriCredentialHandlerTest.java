@@ -62,7 +62,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static uk.gov.di.ipv.core.library.config.ConfigurationVariable.COMPONENT_ID;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.USE_POST_MITIGATIONS;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.RSA_ENCRYPTION_PUBLIC_JWK;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_CONTRA_INDICATORS;
@@ -399,7 +398,6 @@ class RetrieveCriCredentialHandlerTest {
         assertEquals("0", evidenceItem.get("verificationScore").asText());
         assertEquals("[ \"A02\", \"A03\" ]", evidenceItem.get("ci").toPrettyString());
         verify(criOAuthSessionService, times(1)).getCriOauthSessionItem(any());
-        verify(ciMitService, never()).submitMitigatingVcList(any(), any(), any());
     }
 
     @Test
@@ -449,7 +447,6 @@ class RetrieveCriCredentialHandlerTest {
                                 .verifiableCredentials(List.of(SignedJWT.parse(SIGNED_ADDRESS_VC)))
                                 .build());
         mockServiceCalls();
-        when(configService.enabled(USE_POST_MITIGATIONS)).thenReturn(true);
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
@@ -483,7 +480,7 @@ class RetrieveCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldSendVCToCIMITPostMitigationsWhenFeatureEnabled() throws Exception {
+    void shouldSendVCToCIMITPostMitigations() throws Exception {
         when(verifiableCredentialService.getVerifiableCredentialResponse(
                         testBearerAccessToken,
                         testPassportIssuer,
@@ -494,7 +491,6 @@ class RetrieveCriCredentialHandlerTest {
                                 .verifiableCredentials(List.of(TEST_SIGNED_ADDRESS_VC))
                                 .build());
         mockServiceCalls();
-        when(configService.enabled(USE_POST_MITIGATIONS)).thenReturn(true);
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
@@ -545,7 +541,6 @@ class RetrieveCriCredentialHandlerTest {
                                 .verifiableCredentials(List.of(TEST_SIGNED_ADDRESS_VC))
                                 .build());
         mockServiceCalls();
-        when(configService.enabled(USE_POST_MITIGATIONS)).thenReturn(true);
 
         IpvSessionItem ipvSessionItem = new IpvSessionItem();
         when(ipvSessionService.getIpvSession(anyString())).thenReturn(ipvSessionItem);
