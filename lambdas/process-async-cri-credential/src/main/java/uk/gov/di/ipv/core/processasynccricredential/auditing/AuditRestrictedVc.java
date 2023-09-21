@@ -13,12 +13,17 @@ public class AuditRestrictedVc implements AuditRestricted {
     private final JsonNode nameParts;
 
     @JsonProperty("docExpiryDate")
-    private final String docExpiryDate;
+    private String docExpiryDate;
 
     public AuditRestrictedVc(
             @JsonProperty(value = "nameParts", required = true) JsonNode nameParts,
             @JsonProperty(value = "docExpiryDate", required = true) String docExpiryDate) {
         this.nameParts = nameParts;
         this.docExpiryDate = docExpiryDate;
+    }
+
+    public AuditRestrictedVc(
+            @JsonProperty(value = "nameParts", required = true) JsonNode nameParts) {
+        this.nameParts = nameParts;
     }
 }

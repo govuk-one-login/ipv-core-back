@@ -8,8 +8,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.text.ParseException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.*;
+import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_DCMAW_VC_MISSING_DRIVING_PERMIT_PROPERTY;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.SIGNED_VC_1;
 import static uk.gov.di.ipv.core.processasynccricredential.helpers.AuditCriResponseHelper.getExtensionsForAudit;
 import static uk.gov.di.ipv.core.processasynccricredential.helpers.AuditCriResponseHelper.getVcNamePartsForAudit;
@@ -37,5 +37,20 @@ class AuditCriResponseHelperTest {
         assertEquals(
                 "[{\"type\":\"GivenName\",\"value\":\"Paul\"}]",
                 auditNameParts.getNameParts().toString());
+    }
+
+    @Test
+    void shouldGetPassportExpiryDateForAudit() throws ParseException, JsonProcessingException {
+        SignedJWT testVerifiableCredential = SignedJWT.parse(SIGNED_VC_1);
+        var auditNameParts = getVcNamePartsForAudit(testVerifiableCredential);
+        assertEquals("2020-01-01", auditNameParts.getDocExpiryDate());
+    }
+
+    @Test
+    void shouldNotGetExpiryDateForAudit() throws ParseException, JsonProcessingException {
+        SignedJWT testVerifiableCredential =
+                SignedJWT.parse(SIGNED_DCMAW_VC_MISSING_DRIVING_PERMIT_PROPERTY);
+        var auditNameParts = getVcNamePartsForAudit(testVerifiableCredential);
+        assertNull(auditNameParts.getDocExpiryDate());
     }
 }
