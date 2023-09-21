@@ -10,7 +10,6 @@ import software.amazon.lambda.powertools.logging.Logging;
 import software.amazon.lambda.powertools.tracing.Tracing;
 import uk.gov.di.ipv.core.library.annotations.ExcludeFromGeneratedCoverageReport;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
-import uk.gov.di.ipv.core.library.config.CoreFeatureFlag;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyErrorResponse;
 import uk.gov.di.ipv.core.library.domain.JourneyRequest;
@@ -90,22 +89,23 @@ public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<Stri
             String govukSigninJourneyId = clientOAuthSessionItem.getGovukSigninJourneyId();
             LogHelper.attachGovukSigninJourneyIdToLogs(govukSigninJourneyId);
 
-            final Optional<JourneyResponse> contraIndicatorErrorJourneyResponse =
-                    getContraIndicatorJourneyResponse(
+            final Optional<JourneyResponse> contraIndicatorJourneyResponse =
+                    gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
+                            ciMitService.getContraIndicatorsVC(
+                                    clientOAuthSessionItem.getUserId(),
+                                    govukSigninJourneyId,
+                                    ipAddress),
                             USER_STATE_INITIAL_CI_SCORING.equals(ipvSessionItem.getUserState()),
-                            ipAddress,
-                            clientOAuthSessionItem.getUserId(),
-                            govukSigninJourneyId,
                             ipvSessionItem);
 
-            if (contraIndicatorErrorJourneyResponse.isPresent()) {
+            if (contraIndicatorJourneyResponse.isPresent()) {
                 StringMapMessage message = new StringMapMessage();
                 message.with(LOG_MESSAGE_DESCRIPTION.getFieldName(), "Returning CI error response.")
                         .with(
                                 LOG_ERROR_JOURNEY_RESPONSE.getFieldName(),
-                                contraIndicatorErrorJourneyResponse.get().toString());
+                                contraIndicatorJourneyResponse.get().toString());
                 LOGGER.info(message);
-                return contraIndicatorErrorJourneyResponse.get().toObjectMap();
+                return contraIndicatorJourneyResponse.get().toObjectMap();
             }
 
             return JOURNEY_CI_SCORE_NOT_BREACHING.toObjectMap();
@@ -136,21 +136,5 @@ public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<Stri
                             ErrorResponse.UNRECOGNISED_CI_CODE)
                     .toObjectMap();
         }
-    }
-
-    private Optional<JourneyResponse> getContraIndicatorJourneyResponse(
-            boolean initialCiScoring,
-            String ipAddress,
-            String userId,
-            String govukSigninJourneyId,
-            IpvSessionItem ipvSession)
-            throws ConfigException, UnrecognisedCiException, CiRetrievalException {
-        return configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)
-                ? gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
-                        ciMitService.getContraIndicatorsVC(userId, govukSigninJourneyId, ipAddress),
-                        initialCiScoring,
-                        ipvSession)
-                : gpg45ProfileEvaluator.getJourneyResponseForStoredCis(
-                        ciMitService.getCIs(userId, govukSigninJourneyId, ipAddress), ipvSession);
     }
 }

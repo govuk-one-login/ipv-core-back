@@ -7,8 +7,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -41,7 +39,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static uk.gov.di.ipv.core.library.config.CoreFeatureFlag.USE_CONTRA_INDICATOR_VC;
 
 @ExtendWith(MockitoExtension.class)
 class CiScoringHandlerTest {
@@ -103,13 +100,12 @@ class CiScoringHandlerTest {
                         .build();
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void shouldReturnJourneyCIScoreNotBreachingIfNoBreachingCIs(boolean useContraIndicatorVC)
-            throws Exception {
+    @Test
+    void shouldReturnJourneyCIScoreNotBreachingIfNoBreachingCIs() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(configService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(useContraIndicatorVC);
-        mockCiJourneyResponse(useContraIndicatorVC, Optional.empty(), false);
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
+                        any(), eq(false), any()))
+                .thenReturn(Optional.empty());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -121,16 +117,13 @@ class CiScoringHandlerTest {
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void shouldReturnJourneyNoMatchJourneyResponseIfCiAreFoundOnVcs(boolean useContraIndicatorVC)
-            throws Exception {
+    @Test
+    void shouldReturnJourneyNoMatchJourneyResponseIfCiAreFoundOnVcs() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(configService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(useContraIndicatorVC);
-        mockCiJourneyResponse(
-                useContraIndicatorVC,
-                Optional.of(new JourneyResponse(JOURNEY_PYI_NO_MATCH)),
-                false);
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
+                        any(), eq(false), any()))
+                .thenReturn(Optional.of(new JourneyResponse(JOURNEY_PYI_NO_MATCH)));
+
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -144,7 +137,7 @@ class CiScoringHandlerTest {
     @Test
     void shouldReturn500IfFailedToRetrieveCisFromStorageSystem() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(ciMitService.getCIs(anyString(), anyString(), anyString()))
+        when(ciMitService.getContraIndicatorsVC(anyString(), anyString(), anyString()))
                 .thenThrow(CiRetrievalException.class);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -160,15 +153,14 @@ class CiScoringHandlerTest {
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = {true})
-    void shouldReturn500IfFailedToGetCimitConfig(boolean useContraIndicatorVC) throws Exception {
+    @Test
+    void shouldReturn500IfFailedToGetCimitConfig() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
-        when(configService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(useContraIndicatorVC);
-        mockCiJourneyResponseException(
-                useContraIndicatorVC, new ConfigException("Failed to get cimit config"));
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
+                        any(), anyBoolean(), any()))
+                .thenThrow(new ConfigException("Failed to get cimit config"));
 
         JourneyErrorResponse response =
                 toResponseClass(
@@ -181,13 +173,13 @@ class CiScoringHandlerTest {
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void shouldReturn500IfUnrecognisedCiReceived(boolean useContraIndicatorVC) throws Exception {
+    @Test
+    void shouldReturn500IfUnrecognisedCiReceived() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
-        when(configService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(useContraIndicatorVC);
-        mockCiJourneyResponseException(
-                useContraIndicatorVC, new UnrecognisedCiException("Unrecognised CI"));
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
+                        any(), anyBoolean(), any()))
+                .thenThrow(new UnrecognisedCiException("Unrecognised CI"));
+
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -202,15 +194,14 @@ class CiScoringHandlerTest {
         assertEquals(ErrorResponse.UNRECOGNISED_CI_CODE.getMessage(), response.getMessage());
     }
 
-    @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void shouldReturnJourneyNoMatchJourneyResponseForSeparateSessionBreachingCIs(
-            boolean useContraIndicatorVC) throws Exception {
+    @Test
+    void shouldReturnJourneyNoMatchJourneyResponseForSeparateSessionBreachingCIs()
+            throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         ipvSessionItem.setUserState(USER_STATE_INITIAL_CI_SCORING);
-        when(configService.enabled(USE_CONTRA_INDICATOR_VC)).thenReturn(useContraIndicatorVC);
-        mockCiJourneyResponse(
-                useContraIndicatorVC, Optional.of(new JourneyResponse(JOURNEY_PYI_NO_MATCH)), true);
+        when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
+                        any(), eq(true), any()))
+                .thenReturn(Optional.of(new JourneyResponse(JOURNEY_PYI_NO_MATCH)));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -223,32 +214,5 @@ class CiScoringHandlerTest {
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
         return mapper.convertValue(handlerOutput, responseClass);
-    }
-
-    private void mockCiJourneyResponse(
-            boolean useContraIndicatorVC,
-            Optional<JourneyResponse> mockResponse,
-            boolean separateSession)
-            throws UnrecognisedCiException, ConfigException {
-        if (useContraIndicatorVC) {
-            when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
-                            any(), eq(separateSession), any()))
-                    .thenReturn(mockResponse);
-        } else {
-            when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any(), any()))
-                    .thenReturn(mockResponse);
-        }
-    }
-
-    private void mockCiJourneyResponseException(boolean useContraIndicatorVC, Exception exception)
-            throws UnrecognisedCiException, ConfigException {
-        if (useContraIndicatorVC) {
-            when(gpg45ProfileEvaluator.getJourneyResponseForStoredContraIndicators(
-                            any(), anyBoolean(), any()))
-                    .thenThrow(exception);
-        } else {
-            when(gpg45ProfileEvaluator.getJourneyResponseForStoredCis(any(), any()))
-                    .thenThrow(exception);
-        }
     }
 }
