@@ -19,7 +19,7 @@ dependencies {
 			project(":libs:verifiable-credentials")
 
 	testImplementation "org.junit.jupiter:junit-jupiter:5.10.0",
-			"org.mockito:mockito-junit-jupiter:5.4.0",
+			"org.mockito:mockito-junit-jupiter:5.5.0",
 			project(path: ':libs:common-services', configuration: 'tests')
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
