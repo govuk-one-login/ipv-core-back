@@ -25,7 +25,7 @@ import uk.gov.di.ipv.core.library.domain.ContraIndicatorItem;
 import uk.gov.di.ipv.core.library.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
-import uk.gov.di.ipv.core.library.validation.VerifiableCredentialJwtValidator;
+import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;

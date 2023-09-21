@@ -18,7 +18,8 @@ dependencies {
 			project(":libs:common-services"),
 			project(":libs:cimit-service"),
 			project(":libs:cri-response-service"),
-			project(":libs:audit-service")
+			project(":libs:audit-service"),
+			project(":libs:vc-helper")
 	implementation project(path: ':libs:verifiable-credentials')
 
 	aspect "software.amazon.lambda:powertools-logging:$rootProject.ext.dependencyVersions.powertoolsLogging",

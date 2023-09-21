@@ -20,8 +20,11 @@ include "libs:common-services",
 		"integration-test",
 		"libs:credential-issuer-config-service",
 		"libs:kms-es256-signer",
+		"libs:vc-helper",
 		"libs:verifiable-credentials",
 		"libs:journey-uris",
 		"libs:cimit-service",
 		"libs:cri-response-service",
-		"libs:audit-service"
+		"libs:audit-service",
+		"libs:gpg45-evaluator",
+		"libs:user-identity-service"
