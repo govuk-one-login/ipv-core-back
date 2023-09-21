@@ -142,8 +142,7 @@ public class BuildUserIdentityHandler
                             userId, userId, ipvSessionItem.getVot());
 
             boolean hasMitigations = false;
-            if (configService.enabled(CoreFeatureFlag.USE_CONTRA_INDICATOR_VC)
-                    && configService.enabled(CoreFeatureFlag.BUNDLE_CIMIT_VC)) {
+            if (configService.enabled(CoreFeatureFlag.BUNDLE_CIMIT_VC)) {
                 SignedJWT signedCiMitJwt =
                         ciMitService.getContraIndicatorsVCJwt(
                                 userId, clientOAuthSessionItem.getGovukSigninJourneyId(), null);
