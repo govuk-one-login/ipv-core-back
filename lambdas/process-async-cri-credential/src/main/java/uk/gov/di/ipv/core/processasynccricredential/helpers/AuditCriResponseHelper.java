@@ -45,13 +45,13 @@ public class AuditCriResponseHelper {
         var nameParts = ((JSONObject) name.get(0)).getAsString(VC_NAME_PARTS);
 
         var passport = (JSONArray) credentialSubject.get(VC_PASSPORT);
-        if (passport != null && passport.size() != 0) {
+        if (passport != null && !passport.isEmpty()) {
             var docExpiryDate = ((JSONObject) passport.get(0)).getAsString(VC_EXPIRY_DATE);
             return new AuditRestrictedVc(MAPPER.readTree(nameParts), docExpiryDate);
         }
 
         var drivingPermit = (JSONArray) credentialSubject.get(VC_DRIVING_PERMIT);
-        if (drivingPermit != null && drivingPermit.size() != 0) {
+        if (drivingPermit != null && !drivingPermit.isEmpty()) {
             var docExpiryDate = ((JSONObject) drivingPermit.get(0)).getAsString(VC_EXPIRY_DATE);
             return new AuditRestrictedVc(MAPPER.readTree(nameParts), docExpiryDate);
         }
