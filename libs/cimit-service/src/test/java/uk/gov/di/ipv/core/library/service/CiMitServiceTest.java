@@ -16,12 +16,12 @@ import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import uk.gov.di.ipv.core.library.cimit.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.cimit.dto.ContraIndicatorCredentialDto;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPostMitigationsException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiPutException;
 import uk.gov.di.ipv.core.library.cimit.exception.CiRetrievalException;
 import uk.gov.di.ipv.core.library.config.ConfigurationVariable;
-import uk.gov.di.ipv.core.library.cimit.domain.ContraIndicators;
 import uk.gov.di.ipv.core.library.domain.ErrorResponse;
 import uk.gov.di.ipv.core.library.exceptions.VerifiableCredentialException;
 import uk.gov.di.ipv.core.library.verifiablecredential.validator.VerifiableCredentialJwtValidator;
@@ -64,7 +64,8 @@ class CiMitServiceTest {
 
     @Mock AWSLambda lambdaClient;
     @Mock ConfigService configService;
-    @Mock VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
+    @Mock
+    VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     @InjectMocks CiMitService ciMitService;
 
     @Test
