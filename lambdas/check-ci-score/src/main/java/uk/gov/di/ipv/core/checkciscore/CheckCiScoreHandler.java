@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.ciscoring;
+package uk.gov.di.ipv.core.checkciscore;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -35,7 +35,7 @@ import static uk.gov.di.ipv.core.library.helpers.LogHelper.LogField.LOG_MESSAGE_
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_CI_SCORE_NOT_BREACHING_PATH;
 import static uk.gov.di.ipv.core.library.journeyuris.JourneyUris.JOURNEY_ERROR_PATH;
 
-public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<String, Object>> {
+public class CheckCiScoreHandler implements RequestHandler<JourneyRequest, Map<String, Object>> {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final String USER_STATE_INITIAL_CI_SCORING = "INITIAL_CI_SCORING";
     private static final JourneyResponse JOURNEY_CI_SCORE_NOT_BREACHING =
@@ -47,7 +47,7 @@ public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<Stri
     private final IpvSessionService ipvSessionService;
 
     @SuppressWarnings("unused") // Used by tests through injection
-    public CiScoringHandler(
+    public CheckCiScoreHandler(
             CiMitService ciMitService,
             ClientOAuthSessionDetailsService clientOAuthSessionDetailsService,
             ConfigService configService,
@@ -62,7 +62,7 @@ public class CiScoringHandler implements RequestHandler<JourneyRequest, Map<Stri
 
     @SuppressWarnings("unused") // Used by AWS
     @ExcludeFromGeneratedCoverageReport
-    public CiScoringHandler() {
+    public CheckCiScoreHandler() {
         this.configService = new ConfigService();
         this.ciMitService = new CiMitService(configService);
         this.clientOAuthSessionDetailsService = new ClientOAuthSessionDetailsService(configService);

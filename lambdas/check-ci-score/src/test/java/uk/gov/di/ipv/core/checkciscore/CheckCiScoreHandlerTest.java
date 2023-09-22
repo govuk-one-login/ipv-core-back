@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.ciscoring;
+package uk.gov.di.ipv.core.checkciscore;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -41,7 +41,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class CiScoringHandlerTest {
+class CheckCiScoreHandlerTest {
     private static final String USER_STATE_INITIAL_CI_SCORING = "INITIAL_CI_SCORING";
     private static final String TEST_SESSION_ID = "test-session-id";
     private static final String TEST_CLIENT_SOURCE_IP = "test-client-source-ip";
@@ -60,7 +60,7 @@ class CiScoringHandlerTest {
     @Mock private Context context;
     @Mock private Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     @Mock private IpvSessionService ipvSessionService;
-    @InjectMocks private CiScoringHandler ciScoringHandler;
+    @InjectMocks private CheckCiScoreHandler checkCiScoreHandler;
 
     private IpvSessionItem ipvSessionItem;
     private ClientOAuthSessionItem clientOAuthSessionItem;
@@ -111,7 +111,7 @@ class CiScoringHandlerTest {
 
         JourneyResponse response =
                 toResponseClass(
-                        ciScoringHandler.handleRequest(request, context), JourneyResponse.class);
+                        checkCiScoreHandler.handleRequest(request, context), JourneyResponse.class);
 
         assertEquals(JOURNEY_CI_SCORE_NOT_BREACHING.getJourney(), response.getJourney());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
@@ -129,7 +129,7 @@ class CiScoringHandlerTest {
 
         JourneyResponse response =
                 toResponseClass(
-                        ciScoringHandler.handleRequest(request, context), JourneyResponse.class);
+                        checkCiScoreHandler.handleRequest(request, context), JourneyResponse.class);
 
         assertEquals(JOURNEY_PYI_NO_MATCH, response.getJourney());
     }
@@ -144,7 +144,7 @@ class CiScoringHandlerTest {
 
         JourneyErrorResponse response =
                 toResponseClass(
-                        ciScoringHandler.handleRequest(request, context),
+                        checkCiScoreHandler.handleRequest(request, context),
                         JourneyErrorResponse.class);
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
@@ -164,7 +164,7 @@ class CiScoringHandlerTest {
 
         JourneyErrorResponse response =
                 toResponseClass(
-                        ciScoringHandler.handleRequest(request, context),
+                        checkCiScoreHandler.handleRequest(request, context),
                         JourneyErrorResponse.class);
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
@@ -185,7 +185,7 @@ class CiScoringHandlerTest {
 
         JourneyErrorResponse response =
                 toResponseClass(
-                        ciScoringHandler.handleRequest(request, context),
+                        checkCiScoreHandler.handleRequest(request, context),
                         JourneyErrorResponse.class);
 
         assertEquals(JOURNEY_ERROR, response.getJourney());
@@ -207,7 +207,7 @@ class CiScoringHandlerTest {
 
         JourneyResponse response =
                 toResponseClass(
-                        ciScoringHandler.handleRequest(request, context), JourneyResponse.class);
+                        checkCiScoreHandler.handleRequest(request, context), JourneyResponse.class);
 
         assertEquals(JOURNEY_PYI_NO_MATCH, response.getJourney());
     }

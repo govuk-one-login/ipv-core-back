@@ -1279,7 +1279,7 @@ Resources:
         RetrieveCriOauthAccessTokenFunctionArn: !Ref RetrieveCriOauthAccessTokenFunction.Alias
         ValidateOAuthCallbackFunctionArn: !Ref ValidateOAuthCallbackFunction.Alias
         EvaluateGpg45ScoresFunctionArn: !Ref EvaluateGpg45ScoresFunction.Alias
-        CiScoringFunctionArn: !Ref CiScoringFunction.Alias
+        CheckCiScoreFunctionArn: !Ref CheckCiScoreFunction.Alias
       Events:
         IPVCorePrivateAPI:
           Type: Api
@@ -1306,7 +1306,7 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: !Ref EvaluateGpg45ScoresFunction
         - LambdaInvokePolicy:
-            FunctionName: !Ref CiScoringFunction
+            FunctionName: !Ref CheckCiScoreFunction
         - Statement:
             - Sid: CloudWatchLogsAccess
               Effect: Allow
@@ -1379,7 +1379,7 @@ Resources:
         ResetIdentityFunctionArn: !Ref ResetIdentityFunction.Alias
         BuildCriOauthRequestFunctionArn: !Ref BuildCriOauthRequestFunction.Alias
         BuildClientOauthResponseFunctionArn: !Ref BuildClientOauthResponseFunction.Alias
-        CiScoringFunctionArn: !Ref CiScoringFunction.Alias
+        CheckCiScoreFunctionArn: !Ref CheckCiScoreFunction.Alias
         CheckGpg45ScoreFunctionArn: !Ref CheckGpg45ScoreFunction.Alias
       Events:
         IPVCorePrivateAPI:
@@ -1407,7 +1407,7 @@ Resources:
         - LambdaInvokePolicy:
             FunctionName: !Ref BuildClientOauthResponseFunction
         - LambdaInvokePolicy:
-            FunctionName: !Ref CiScoringFunction
+            FunctionName: !Ref CheckCiScoreFunction
         - LambdaInvokePolicy:
             FunctionName: !Ref CheckGpg45ScoreFunction
         - Statement:
@@ -2209,26 +2209,26 @@ Resources:
       FilterPattern: ""
       LogGroupName: !Ref ProcessAsyncCriCredentialFunctionLogGroup
 
-  CiScoringFunction:
+  CheckCiScoreFunction:
     Type: AWS::Serverless::Function
     DependsOn:
-      - CiScoringFunctionLogGroup
+      - CheckCiScoreFunctionLogGroup
     Properties:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "ci-scoring-${Environment}"
-      Handler: uk.gov.di.ipv.core.ciscoring.CiScoringHandler::handleRequest
+      FunctionName: !Sub "check-ci-score-${Environment}"
+      Handler: uk.gov.di.ipv.core.checkciscore.CheckCiScoreHandler::handleRequest
       Runtime: java17
       PackageType: Zip
-      CodeUri: ../lambdas/ci-scoring
+      CodeUri: ../lambdas/check-ci-score
       MemorySize: 2048
       Tracing: Active
       Environment:
         # checkov:skip=CKV_AWS_173: These environment variables do not require encryption.
         Variables:
           ENVIRONMENT: !Sub "${Environment}"
-          POWERTOOLS_SERVICE_NAME: !Sub ci-scoring-${Environment}
+          POWERTOOLS_SERVICE_NAME: !Sub check-ci-score-${Environment}
           IPV_SESSIONS_TABLE_NAME: !Ref SessionsTable
           CLIENT_OAUTH_SESSIONS_TABLE_NAME: !Ref ClientOAuthSessionsTable
           CIMIT_GET_CONTRAINDICATORS_LAMBDA_ARN: !Sub
@@ -2307,20 +2307,20 @@ Resources:
         - ProvisionedConcurrentExecutions: !FindInMap [ EnvironmentConfiguration, !Ref AWS::AccountId, provisionedConcurrency ]
         - !Ref AWS::NoValue
 
-  CiScoringFunctionLogGroup:
+  CheckCiScoreFunctionLogGroup:
     Type: AWS::Logs::LogGroup
     # checkov:skip=CKV_AWS_158: No need for customer managed keys for short lived logs
     Properties:
       RetentionInDays: 30
-      LogGroupName: !Sub "/aws/lambda/ci-scoring-${Environment}"
+      LogGroupName: !Sub "/aws/lambda/check-ci-score-${Environment}"
 
-  CiScoringFunctionLogGroupSubscriptionFilter:
+  CheckCiScoreFunctionLogGroupSubscriptionFilter:
     Type: AWS::Logs::SubscriptionFilter
     Condition: IsNotDevelopment
     Properties:
       DestinationArn: "arn:aws:logs:eu-west-2:885513274347:destination:csls_cw_logs_destination_prodpython"
       FilterPattern: ""
-      LogGroupName: !Ref CiScoringFunctionLogGroup
+      LogGroupName: !Ref CheckCiScoreFunctionLogGroup
 
   CheckGpg45ScoreFunction:
     Type: AWS::Serverless::Function

@@ -43,7 +43,7 @@
         {
           "Variable": "$.journey",
           "StringMatches": "/journey/ci-scoring",
-          "Next": "CiScoringLambda"
+          "Next": "CheckCiScoreLambda"
         },
         {
           "Variable": "$.journey",
@@ -101,9 +101,9 @@
       },
       "Next": "ProcessNextJourney"
     },
-    "CiScoringLambda": {
+    "CheckCiScoreLambda": {
       "Type": "Task",
-      "Resource": "${CiScoringFunctionArn}",
+      "Resource": "${CheckCiScoreFunctionArn}",
       "Parameters": {
         "journey.$": "$.journey",
         "ipvSessionId.$": "$$.Execution.Input.ipvSessionId",
