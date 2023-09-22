@@ -2217,7 +2217,7 @@ Resources:
       # checkov:skip=CKV_AWS_115: We do not have enough data to allocate the concurrent execution allowance per function.
       # checkov:skip=CKV_AWS_116: Lambdas invoked via API Gateway do not support Dead Letter Queues.
       # checkov:skip=CKV_AWS_117: Lambdas will migrate to our own VPC in future work.
-      FunctionName: !Sub "ci-scoring-${Environment}"
+      FunctionName: !Sub "check-ci-score-${Environment}"
       Handler: uk.gov.di.ipv.core.CheckCiScore.CheckCiScoreHandler::handleRequest
       Runtime: java17
       PackageType: Zip
