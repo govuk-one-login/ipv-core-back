@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.CheckCiScore;
+package uk.gov.di.ipv.core.checkciscore;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
