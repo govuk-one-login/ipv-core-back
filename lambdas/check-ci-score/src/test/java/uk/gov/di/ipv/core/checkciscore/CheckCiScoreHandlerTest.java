@@ -60,7 +60,7 @@ class CheckCiScoreHandlerTest {
     @Mock private Context context;
     @Mock private Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     @Mock private IpvSessionService ipvSessionService;
-    @InjectMocks private checkCiScoreHandler checkCiScoreHandler;
+    @InjectMocks private CheckCiScoreHandler checkCiScoreHandler;
 
     private IpvSessionItem ipvSessionItem;
     private ClientOAuthSessionItem clientOAuthSessionItem;
