@@ -60,7 +60,7 @@ class CheckCiScoreHandlerTest {
     @Mock private Context context;
     @Mock private Gpg45ProfileEvaluator gpg45ProfileEvaluator;
     @Mock private IpvSessionService ipvSessionService;
-    @InjectMocks private CheckCiScoreHandler CheckCiScoreHandler;
+    @InjectMocks private checkCiScoreHandler checkCiScoreHandler;
 
     private IpvSessionItem ipvSessionItem;
     private ClientOAuthSessionItem clientOAuthSessionItem;
@@ -111,7 +111,7 @@ class CheckCiScoreHandlerTest {
 
         JourneyResponse response =
                 toResponseClass(
-                        CheckCiScoreHandler.handleRequest(request, context), JourneyResponse.class);
+                        checkCiScoreHandler.handleRequest(request, context), JourneyResponse.class);
 
         assertEquals(JOURNEY_CI_SCORE_NOT_BREACHING.getJourney(), response.getJourney());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
@@ -129,7 +129,7 @@ class CheckCiScoreHandlerTest {
 
         JourneyResponse response =
                 toResponseClass(
-                        CheckCiScoreHandler.handleRequest(request, context), JourneyResponse.class);
+                        checkCiScoreHandler.handleRequest(request, context), JourneyResponse.class);
 
         assertEquals(JOURNEY_PYI_NO_MATCH, response.getJourney());
     }
@@ -144,7 +144,7 @@ class CheckCiScoreHandlerTest {
 
         JourneyErrorResponse response =
                 toResponseClass(
-                        CheckCiScoreHandler.handleRequest(request, context),
+                        checkCiScoreHandler.handleRequest(request, context),
                         JourneyErrorResponse.class);
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
@@ -164,7 +164,7 @@ class CheckCiScoreHandlerTest {
 
         JourneyErrorResponse response =
                 toResponseClass(
-                        CheckCiScoreHandler.handleRequest(request, context),
+                        checkCiScoreHandler.handleRequest(request, context),
                         JourneyErrorResponse.class);
 
         assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
@@ -185,7 +185,7 @@ class CheckCiScoreHandlerTest {
 
         JourneyErrorResponse response =
                 toResponseClass(
-                        CheckCiScoreHandler.handleRequest(request, context),
+                        checkCiScoreHandler.handleRequest(request, context),
                         JourneyErrorResponse.class);
 
         assertEquals(JOURNEY_ERROR, response.getJourney());
@@ -207,7 +207,7 @@ class CheckCiScoreHandlerTest {
 
         JourneyResponse response =
                 toResponseClass(
-                        CheckCiScoreHandler.handleRequest(request, context), JourneyResponse.class);
+                        checkCiScoreHandler.handleRequest(request, context), JourneyResponse.class);
 
         assertEquals(JOURNEY_PYI_NO_MATCH, response.getJourney());
     }
