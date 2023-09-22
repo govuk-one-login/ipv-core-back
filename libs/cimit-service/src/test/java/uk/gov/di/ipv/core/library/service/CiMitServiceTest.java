@@ -64,8 +64,7 @@ class CiMitServiceTest {
 
     @Mock AWSLambda lambdaClient;
     @Mock ConfigService configService;
-    @Mock
-    VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
+    @Mock VerifiableCredentialJwtValidator verifiableCredentialJwtValidator;
     @InjectMocks CiMitService ciMitService;
 
     @Test
