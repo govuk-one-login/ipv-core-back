@@ -15,3 +15,21 @@ services:
     ports:
       - "5678:3000"
       - "5005:5005"
+  core-front:
+    image: core-front:latest
+    container_name: core-front
+    build:
+      context: ../../di-ipv-core-front
+      dockerfile: Dockerfile
+    environment:
+      - API_BASE_URL=http://host.docker.internal:5678
+      - SESSION_TABLE_NAME=core-front-sessions-dev-chrisw
+      - SESSION_SECRET=no-secret
+      - NODE_ENV=development
+      - EXTERNAL_WEBSITE_HOST=http://localhost:3000
+      - AWS_REGION
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_SESSION_TOKEN
+    ports:
+      - "3000:8080"
