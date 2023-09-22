@@ -14,7 +14,7 @@ public enum ConfigurationVariable {
     PUBLIC_KEY_MATERIAL_FOR_CORE_TO_VERIFY("clients/%s/publicKeyMaterialForCoreToVerify"),
     CLIENT_VALID_REDIRECT_URLS("clients/%s/validRedirectUrls"),
     CI_SCORING_CONFIG("self/ci-scoring-config"),
-    CI_SCORING_THRESHOLD("self/checkCiScoreThreshold"),
+    CI_SCORING_THRESHOLD("self/ciScoringThreshold"),
     VC_TTL("self/vcTtl"),
     CREDENTIAL_ISSUERS("credentialIssuers"),
     FEATURE_FLAGS("featureFlags/%s"),
