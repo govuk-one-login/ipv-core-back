@@ -1,8 +1,6 @@
-package uk.gov.di.ipv.core.library.domain;
+package uk.gov.di.ipv.core.library.cimit.domain;
 
 import org.junit.jupiter.api.Test;
-import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
-import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
 
 import java.time.Instant;
 import java.util.Collections;

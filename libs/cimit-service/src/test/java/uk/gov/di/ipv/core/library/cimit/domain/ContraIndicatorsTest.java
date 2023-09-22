@@ -1,9 +1,8 @@
-package uk.gov.di.ipv.core.library.domain;
+package uk.gov.di.ipv.core.library.cimit.domain;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
-import uk.gov.di.ipv.core.library.domain.cimitvc.Mitigation;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 
 import java.time.Instant;

@@ -1,4 +1,4 @@
-package uk.gov.di.ipv.core.library.domain.cimitvc;
+package uk.gov.di.ipv.core.library.cimit.domain;
 
 import lombok.Builder;
 import lombok.Getter;

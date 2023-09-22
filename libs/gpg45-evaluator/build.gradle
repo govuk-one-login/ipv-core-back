@@ -17,8 +17,9 @@ dependencies {
 			"software.amazon.lambda:powertools-parameters:$rootProject.ext.dependencyVersions.powertoolsParameters",
 			project(":libs:common-services"),
 			project(":libs:journey-uris")
+    implementation project(path: ':libs:cimit-service')
 
-	testImplementation "org.junit.jupiter:junit-jupiter:5.10.0",
+    testImplementation "org.junit.jupiter:junit-jupiter:5.10.0",
 			"org.mockito:mockito-junit-jupiter:5.4.0",
 			project(path: ':libs:common-services', configuration: 'tests')
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")

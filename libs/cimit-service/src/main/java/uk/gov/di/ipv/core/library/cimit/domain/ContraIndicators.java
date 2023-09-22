@@ -1,10 +1,10 @@
-package uk.gov.di.ipv.core.library.domain;
+package uk.gov.di.ipv.core.library.cimit.domain;
 
 import com.nimbusds.oauth2.sdk.util.CollectionUtils;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
-import uk.gov.di.ipv.core.library.domain.cimitvc.ContraIndicator;
+import uk.gov.di.ipv.core.library.domain.ContraIndicatorScore;
 import uk.gov.di.ipv.core.library.exceptions.UnrecognisedCiException;
 
 import java.util.Comparator;
