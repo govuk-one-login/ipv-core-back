@@ -22,10 +22,9 @@ WORKDIR /core-back
 
 COPY --from=build /core-back/untarred/local-running .
 
-COPY local-running/run.sh .
 ENV JAVA_TOOL_OPTIONS -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
 ENV PORT 3000
 EXPOSE $PORT
 EXPOSE 5005
 
-ENTRYPOINT ["./run.sh"]
+ENTRYPOINT ["./bin/local-running"]
