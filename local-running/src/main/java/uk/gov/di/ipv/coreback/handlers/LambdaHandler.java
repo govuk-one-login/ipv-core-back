@@ -149,7 +149,8 @@ public class LambdaHandler {
                         }
                         journey = (String) lambdaOutput.get("journey");
                     } else if ("/journey/check-gpg45-score".equals(journey)) {
-                        ProcessRequest processRequest = buildProcessRequest(request, lambdaOutput);
+                        ProcessRequest processRequest =
+                                buildProcessRequest(request, processJourneyEventOutput);
                         lambdaOutput =
                                 checkGpg45ScoreHandler.handleRequest(processRequest, EMPTY_CONTEXT);
                         if (!lambdaOutput.containsKey("journey")) {
@@ -296,15 +297,17 @@ public class LambdaHandler {
     }
 
     private ProcessRequest buildProcessRequest(
-            Request request, Map<String, Object> previousLambdaOutput) {
+            Request request, Map<String, Object> processJourneyEventOutput) {
+        Map<String, Object> lambdaInput =
+                (Map<String, Object>) processJourneyEventOutput.get("lambdaInput");
         return ProcessRequest.processRequestBuilder()
                 .ipvSessionId(request.headers("ipv-session-id"))
                 .ipAddress(request.headers("ip-address"))
                 .clientOAuthSessionId(request.headers("client-session-id"))
                 .featureSet(request.headers("feature-set"))
-                .journey((String) previousLambdaOutput.get("journey"))
-                .scoreType((String) previousLambdaOutput.get("scoreType"))
-                .scoreThreshold((int) previousLambdaOutput.get("scoreThreshold"))
+                .journey((String) processJourneyEventOutput.get("journey"))
+                .scoreType((String) lambdaInput.get("scoreType"))
+                .scoreThreshold((int) lambdaInput.get("scoreThreshold"))
                 .build();
     }
 }
