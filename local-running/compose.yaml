@@ -1,40 +1,4 @@
 services:
-  core-back:
-    image: core-back:latest
-    container_name: core-back
-    build:
-      context: ..
-      dockerfile:  local-running/Dockerfile
-    environment:
-      - PORT=3000
-      - ENVIRONMENT
-      - AWS_REGION
-      - AWS_ACCESS_KEY_ID
-      - AWS_SECRET_ACCESS_KEY
-      - AWS_SESSION_TOKEN
-    ports:
-      - "5678:3000"
-      - "5005:5005"
-
-  core-front:
-    image: core-front:latest
-    container_name: core-front
-    build:
-      context: ../../di-ipv-core-front
-      dockerfile: Dockerfile
-    environment:
-      - API_BASE_URL=http://host.docker.internal:5678
-      - SESSION_TABLE_NAME=core-front-sessions-dev-chrisw
-      - SESSION_SECRET=no-secret
-      - NODE_ENV=development
-      - EXTERNAL_WEBSITE_HOST=http://localhost:3000
-      - AWS_REGION
-      - AWS_ACCESS_KEY_ID
-      - AWS_SECRET_ACCESS_KEY
-      - AWS_SESSION_TOKEN
-    ports:
-      - "3000:8080"
-
   orch-stub:
     image: orch-stub:latest
     container_name: orch-stub
@@ -47,37 +11,54 @@ services:
       - ORCHESTRATOR_CLIENT_JWT_TTL=900
       - IPV_CORE_AUDIENCE=https://dev-chrisw.01.dev.identity.account.gov.uk
       - ORCHESTRATOR_CLIENT_SIGNING_KEY=MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgOXt0P05ZsQcK7eYusgIPsqZdaBCIJiW4imwUtnaAthWhRANCAAQT1nO46ipxVTilUH2umZPN7OPI49GU6Y8YkcqLxFKUgypUzGbYR2VJGM+QJXk0PI339EyYkt6tjgfS+RcOMQNO
-      - ORCHESTRATOR_REDIRECT_URL=http://localhost:3001/callback
+      - ORCHESTRATOR_REDIRECT_URL=http://localhost:3000/callback
       - IPV_BACKCHANNEL_TOKEN_PATH=token
-      - IPV_ENDPOINT=http://localhost:3000/
-      - IPV_BACKCHANNEL_ENDPOINT=http://host.docker.internal:5678/
+      - IPV_ENDPOINT=http://localhost:3001/
+      - IPV_BACKCHANNEL_ENDPOINT=http://host.docker.internal:3002/
       - IPV_BACKCHANNEL_USER_IDENTITY_PATH=user-identity
-      - ORCHESTRATOR_PORT=3001
+      - ORCHESTRATOR_PORT=3000
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5000
+    ports:
+      - "3000:3000"
+      - "5000:5000"
+
+  core-front:
+    image: core-front:latest
+    container_name: core-front
+    build:
+      context: ../../di-ipv-core-front
+      dockerfile: Dockerfile
+    environment:
+      - API_BASE_URL=http://host.docker.internal:3002
+      - SESSION_TABLE_NAME=core-front-sessions-dev-chrisw
+      - SESSION_SECRET=no-secret
+      - NODE_ENV=development
+      - EXTERNAL_WEBSITE_HOST=http://localhost:3001
+      - PORT=3001
+      - AWS_REGION
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_SESSION_TOKEN
     ports:
       - "3001:3001"
 
-  dcmaw-stub:
-    image: cri-stub:latest
-    container_name: dcmaw-stub
+  core-back:
+    image: core-back:latest
+    container_name: core-back
     build:
-      context: ../../di-ipv-stubs/di-ipv-credential-issuer-stub
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile:  local-running/Dockerfile
     environment:
-      - CREDENTIAL_ISSUER_NAME=DOC Checking App (Stub)
-      - CREDENTIAL_ISSUER_TYPE=DOC_CHECK_APP
-      - CLIENT_AUDIENCE=https://dcmaw-cri.stubs.account.gov.uk
-      - CLIENT_CONFIG_FILE=/etc/client-configs/client-config-core.json
-      - CREDENTIAL_ISSUER_PORT=3002
-      - MITIGATION_ENABLED=true
-      - VC_TTL_SECONDS=300
-      - VC_ISSUER=https://dcmaw-cri.stubs.account.gov.uk
-      - VC_SIGNING_KEY=MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D
-      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5007
+      - PORT=3002
+      - ENVIRONMENT
+      - AWS_REGION
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_SESSION_TOKEN
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5002
     ports:
       - "3002:3002"
-      - "5007:5007"
-    volumes:
-      - "../../di-ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
+      - "5002:5002"
 
   dcmaw-stub:
     image: cri-stub:latest
@@ -90,14 +71,60 @@ services:
       - CREDENTIAL_ISSUER_TYPE=DOC_CHECK_APP
       - CLIENT_AUDIENCE=https://dcmaw-cri.stubs.account.gov.uk
       - CLIENT_CONFIG_FILE=/etc/client-configs/client-config-core.json
-      - CREDENTIAL_ISSUER_PORT=3002
+      - CREDENTIAL_ISSUER_PORT=3003
       - MITIGATION_ENABLED=true
       - VC_TTL_SECONDS=300
       - VC_ISSUER=https://dcmaw-cri.stubs.account.gov.uk
       - VC_SIGNING_KEY=MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D
-      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5007
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5003
     ports:
-      - "3002:3002"
-      - "5007:5007"
+      - "3003:3003"
+      - "5003:5003"
+    volumes:
+      - "../../di-ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
+
+  address-stub:
+    image: cri-stub:latest
+    container_name: address-stub
+    build:
+      context: ../../di-ipv-stubs/di-ipv-credential-issuer-stub
+      dockerfile: Dockerfile
+    environment:
+      - CREDENTIAL_ISSUER_NAME=Address (Stub)
+      - CREDENTIAL_ISSUER_TYPE=USER_ASSERTED
+      - CLIENT_AUDIENCE=https://address-cri.stubs.account.gov.uk
+      - CLIENT_CONFIG_FILE=/etc/client-configs/client-config-core.json
+      - CREDENTIAL_ISSUER_PORT=3004
+      - MITIGATION_ENABLED=false
+      - VC_TTL_SECONDS=300
+      - VC_ISSUER=https://address-cri.stubs.account.gov.uk
+      - VC_SIGNING_KEY=MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5004
+    ports:
+      - "3004:3004"
+      - "5004:5004"
+    volumes:
+      - "../../di-ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
+
+  fraud-stub:
+    image: cri-stub:latest
+    container_name: fraud-stub
+    build:
+      context: ../../di-ipv-stubs/di-ipv-credential-issuer-stub
+      dockerfile: Dockerfile
+    environment:
+      - CREDENTIAL_ISSUER_NAME=Fraud Check (Stub)
+      - CREDENTIAL_ISSUER_TYPE=FRAUD
+      - CLIENT_AUDIENCE=https://fraud-cri.stubs.account.gov.uk
+      - CLIENT_CONFIG_FILE=/etc/client-configs/client-config-core.json
+      - CREDENTIAL_ISSUER_PORT=3005
+      - MITIGATION_ENABLED=false
+      - VC_TTL_SECONDS=300
+      - VC_ISSUER=https://fraud-cri.stubs.account.gov.uk
+      - VC_SIGNING_KEY=MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+    ports:
+      - "3005:3005"
+      - "5005:5005"
     volumes:
       - "../../di-ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
