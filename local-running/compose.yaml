@@ -15,6 +15,7 @@ services:
     ports:
       - "5678:3000"
       - "5005:5005"
+
   core-front:
     image: core-front:latest
     container_name: core-front
@@ -33,6 +34,7 @@ services:
       - AWS_SESSION_TOKEN
     ports:
       - "3000:8080"
+
   orch-stub:
     image: orch-stub:latest
     container_name: orch-stub
@@ -53,3 +55,49 @@ services:
       - ORCHESTRATOR_PORT=3001
     ports:
       - "3001:3001"
+
+  dcmaw-stub:
+    image: cri-stub:latest
+    container_name: dcmaw-stub
+    build:
+      context: ../../di-ipv-stubs/di-ipv-credential-issuer-stub
+      dockerfile: Dockerfile
+    environment:
+      - CREDENTIAL_ISSUER_NAME=DOC Checking App (Stub)
+      - CREDENTIAL_ISSUER_TYPE=DOC_CHECK_APP
+      - CLIENT_AUDIENCE=https://dcmaw-cri.stubs.account.gov.uk
+      - CLIENT_CONFIG_FILE=/etc/client-configs/client-config-core.json
+      - CREDENTIAL_ISSUER_PORT=3002
+      - MITIGATION_ENABLED=true
+      - VC_TTL_SECONDS=300
+      - VC_ISSUER=https://dcmaw-cri.stubs.account.gov.uk
+      - VC_SIGNING_KEY=MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5007
+    ports:
+      - "3002:3002"
+      - "5007:5007"
+    volumes:
+      - "../../di-ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
+
+  dcmaw-stub:
+    image: cri-stub:latest
+    container_name: dcmaw-stub
+    build:
+      context: ../../di-ipv-stubs/di-ipv-credential-issuer-stub
+      dockerfile: Dockerfile
+    environment:
+      - CREDENTIAL_ISSUER_NAME=DOC Checking App (Stub)
+      - CREDENTIAL_ISSUER_TYPE=DOC_CHECK_APP
+      - CLIENT_AUDIENCE=https://dcmaw-cri.stubs.account.gov.uk
+      - CLIENT_CONFIG_FILE=/etc/client-configs/client-config-core.json
+      - CREDENTIAL_ISSUER_PORT=3002
+      - MITIGATION_ENABLED=true
+      - VC_TTL_SECONDS=300
+      - VC_ISSUER=https://dcmaw-cri.stubs.account.gov.uk
+      - VC_SIGNING_KEY=MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfIoj+MoI0Nu4+YXOC41+qVEWd60t1NQWKqwTYJJNGEehRANCAAREFecgsh0TFQRZQkyVh4PpqATy72AaADcicqt3lMqGFpCrbfb/8avaKr7+fxPAB3Fe+yGEH8jcGk0Mk2MXTv1D
+      - JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5007
+    ports:
+      - "3002:3002"
+      - "5007:5007"
+    volumes:
+      - "../../di-ipv-config/stubs/di-ipv-credential-issuer-stub:/etc/client-configs:ro"
