@@ -149,11 +149,7 @@ public class LambdaHandler {
                         }
                         journey = (String) lambdaOutput.get("journey");
                     } else if ("/journey/check-gpg45-score".equals(journey)) {
-                        ProcessRequest processRequest =
-                                (ProcessRequest) buildJourneyRequest(request, journey);
-                        processRequest.setScoreThreshold((int) lambdaOutput.get("scoreThreshold"));
-                        processRequest.setScoreType((String) lambdaOutput.get("scoreType"));
-
+                        ProcessRequest processRequest = buildProcessRequest(request, lambdaOutput);
                         lambdaOutput =
                                 checkGpg45ScoreHandler.handleRequest(processRequest, EMPTY_CONTEXT);
                         if (!lambdaOutput.containsKey("journey")) {
@@ -185,7 +181,9 @@ public class LambdaHandler {
                         validateOAuthCallbackHandler.handleRequest(
                                 buildCriCallbackRequest(request), EMPTY_CONTEXT);
 
-                if (!validateLambdaOutput.containsKey("journey")) {
+                if (!validateLambdaOutput.containsKey("journey")
+                        || !"/journey/cri/access-token"
+                                .equals(validateLambdaOutput.get("journey"))) {
                     return gson.toJson(validateLambdaOutput);
                 }
 
@@ -200,7 +198,8 @@ public class LambdaHandler {
                         retrieveCriCredentialHandler.handleRequest(
                                 buildCriReturnLambdaInput(request), EMPTY_CONTEXT);
 
-                if (!retrieveCredLambdaOutput.containsKey("journey")) {
+                if (!retrieveCredLambdaOutput.containsKey("journey")
+                        || !"/journey/ci-scoring".equals(retrieveCredLambdaOutput.get("journey"))) {
                     return gson.toJson(retrieveCredLambdaOutput);
                 }
 
@@ -208,7 +207,8 @@ public class LambdaHandler {
                         ciScoringHandler.handleRequest(
                                 buildJourneyRequest(request, null), EMPTY_CONTEXT);
 
-                if (!ciScoringLambdaOutput.containsKey("journey")) {
+                if (!ciScoringLambdaOutput.containsKey("journey")
+                        || !"/journey/next".equals(ciScoringLambdaOutput.get("journey"))) {
                     return gson.toJson(ciScoringLambdaOutput);
                 }
 
@@ -292,6 +292,19 @@ public class LambdaHandler {
                 .errorDescription(requestBody.get("errorDescription"))
                 .ipAddress(request.headers("ip-address"))
                 .featureSet(request.headers("feature-set"))
+                .build();
+    }
+
+    private ProcessRequest buildProcessRequest(
+            Request request, Map<String, Object> previousLambdaOutput) {
+        return ProcessRequest.processRequestBuilder()
+                .ipvSessionId(request.headers("ipv-session-id"))
+                .ipAddress(request.headers("ip-address"))
+                .clientOAuthSessionId(request.headers("client-session-id"))
+                .featureSet(request.headers("feature-set"))
+                .journey((String) previousLambdaOutput.get("journey"))
+                .scoreType((String) previousLambdaOutput.get("scoreType"))
+                .scoreThreshold((int) previousLambdaOutput.get("scoreThreshold"))
                 .build();
     }
 }
