@@ -172,6 +172,16 @@ public class UserIdentityService {
         return successfulVCStoreItems;
     }
 
+    public Optional<Boolean> getVCSuccessStatus(String userId, String criIssuer)
+            throws ParseException {
+        VcStoreItem vcStoreItem = getVcStoreItem(userId, criIssuer);
+        if (vcStoreItem != null) {
+            SignedJWT vc = SignedJWT.parse(vcStoreItem.getCredential());
+            return Optional.of(VcHelper.isSuccessfulVc(vc));
+        }
+        return Optional.empty();
+    }
+
     private JsonNode getVCClaimNode(String credential) throws HttpResponseExceptionWithErrorBody {
         try {
             return objectMapper

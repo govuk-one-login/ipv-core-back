@@ -302,7 +302,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     }
 
     @Test
-    void shouldReceive400ResponseCodeIfMissingSessionId() throws Exception {
+    void shouldReceive400ResponseCodeIfMissingSessionId() {
         JourneyRequest input =
                 JourneyRequest.builder().ipAddress("ip-address").featureSet("12345").build();
         JourneyErrorResponse errorResponse =
@@ -314,7 +314,7 @@ class BuildProvenUserIdentityDetailsHandlerTest {
     }
 
     @Test
-    void shouldReceive500ResponseCodeWhenFailedToParseVc() throws Exception {
+    void shouldReceive500ResponseCodeWhenFailedToParseVc() {
         when(mockIpvSessionService.getIpvSession(SESSION_ID)).thenReturn(mockIpvSessionItem);
         when(mockIpvSessionItem.getClientOAuthSessionId()).thenReturn(TEST_CLIENT_OAUTH_SESSION_ID);
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -353,13 +353,6 @@ class BuildProvenUserIdentityDetailsHandlerTest {
                                 createVcStoreItem(ADDRESS_CRI, M1A_ADDRESS_VC),
                                 createVcStoreItem(FRAUD_CRI, M1A_FRAUD_VC),
                                 createVcStoreItem(KBV_CRI, M1A_VERIFICATION_VC)));
-
-        when(mockConfigService.getComponentId(CLAIMED_IDENTITY_CRI))
-                .thenReturn(ISSUER_CONFIG_CLAIMED_IDENTITY.getComponentId());
-        when(mockConfigService.getComponentId(PASSPORT_CRI))
-                .thenReturn(ISSUER_CONFIG_UK_PASSPORT.getComponentId());
-        when(mockConfigService.getComponentId(ADDRESS_CRI))
-                .thenReturn(ISSUER_CONFIG_ADDRESS.getComponentId());
 
         when(mockClientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
