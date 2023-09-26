@@ -179,14 +179,6 @@ public class StateMachineInitializer {
     }
 
     private String getFile(String filename) {
-        //                ClassLoader classLoader = getClass().getClassLoader();
-        //                return new File(
-        //                        Objects.requireNonNull(
-        //                                        classLoader.getResource(
-        //                                                String.format(
-        //                                                        "statemachine/%s%s.yaml",
-        //                                                        mode.getPathPart(), filename)))
-        //                                .getFile());
         ClassLoader classLoader = getClass().getClassLoader();
         InputStream inputStream =
                 classLoader.getResourceAsStream(
