@@ -24,6 +24,8 @@ def get_local_running_params(environment, dev_account):
         Param(f"/{environment}/core/credentialIssuers/drivingLicence/activeConnection", "local"),
         Param(f"/{environment}/core/credentialIssuers/claimedIdentity/activeConnection", "local"),
         Param(f"/{environment}/core/credentialIssuers/f2f/activeConnection", "local"),
+        Param(f"/{environment}/core/credentialIssuers/nino/activeConnection", "local"),
+        Param(f"/{environment}/core/credentialIssuers/hmrcKbv/activeConnection", "local"),
 
         Param(f"/{environment}/core/credentialIssuers/dcmaw/connections/local/authorizeUrl", "http://localhost:3003/authorize"),
         Param(f"/{environment}/core/credentialIssuers/dcmaw/connections/local/clientCallbackUrl", "http://localhost:3001/credential-issuer/callback/dcmaw"),
@@ -33,8 +35,8 @@ def get_local_running_params(environment, dev_account):
         Param(f"/{environment}/core/credentialIssuers/dcmaw/connections/local/signingKey", "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}"),
         Param(f"/{environment}/core/credentialIssuers/dcmaw/connections/local/encryptionKey", "{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}"),
         Param(f"/{environment}/core/credentialIssuers/dcmaw/connections/local/componentId", "https://dcmaw-cri.stubs.account.gov.uk"),
-
         Param(f"/{environment}/core/credentialIssuers/dcmaw/connections/local/requiresApiKey", "false"),
+
         Param(f"/{environment}/core/credentialIssuers/address/connections/local/authorizeUrl", "http://localhost:3004/authorize"),
         Param(f"/{environment}/core/credentialIssuers/address/connections/local/clientCallbackUrl", "http://localhost:3001/credential-issuer/callback/address"),
         Param(f"/{environment}/core/credentialIssuers/address/connections/local/tokenUrl", "http://host.docker.internal:3004/token"),
@@ -43,8 +45,8 @@ def get_local_running_params(environment, dev_account):
         Param(f"/{environment}/core/credentialIssuers/address/connections/local/signingKey", "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}"),
         Param(f"/{environment}/core/credentialIssuers/address/connections/local/encryptionKey", "{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}"),
         Param(f"/{environment}/core/credentialIssuers/address/connections/local/componentId", "https://address-cri.stubs.account.gov.uk"),
-
         Param(f"/{environment}/core/credentialIssuers/address/connections/local/requiresApiKey", "false"),
+
         Param(f"/{environment}/core/credentialIssuers/fraud/connections/local/authorizeUrl", "http://localhost:3005/authorize"),
         Param(f"/{environment}/core/credentialIssuers/fraud/connections/local/clientCallbackUrl", "http://localhost:3001/credential-issuer/callback/fraud"),
         Param(f"/{environment}/core/credentialIssuers/fraud/connections/local/tokenUrl", "http://host.docker.internal:3005/token"),
@@ -96,14 +98,34 @@ def get_local_running_params(environment, dev_account):
         Param(f"/{environment}/core/credentialIssuers/claimedIdentity/connections/local/requiresApiKey", "false"),
 
         Param(f"/{environment}/core/credentialIssuers/f2f/connections/local/authorizeUrl", "http://localhost:3010/authorize"),
-        Param(f"/{environment}/core/credentialIssuers/f2f/connections/local/clientCallbackUrl", "http://localhost:3001/credential-issuer/callback/dcmaw"),
+        Param(f"/{environment}/core/credentialIssuers/f2f/connections/local/clientCallbackUrl", "http://localhost:3001/credential-issuer/callback/f2f"),
         Param(f"/{environment}/core/credentialIssuers/f2f/connections/local/tokenUrl", "http://host.docker.internal:3010/token"),
         Param(f"/{environment}/core/credentialIssuers/f2f/connections/local/credentialUrl", "http://host.docker.internal:3010/credentials/issue"),
         Param(f"/{environment}/core/credentialIssuers/f2f/connections/local/clientId", f"ipv-core-dev{dev_account}"),
         Param(f"/{environment}/core/credentialIssuers/f2f/connections/local/signingKey", "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}"),
         Param(f"/{environment}/core/credentialIssuers/f2f/connections/local/encryptionKey", "{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}"),
         Param(f"/{environment}/core/credentialIssuers/f2f/connections/local/componentId", "https://f2f-cri.stubs.account.gov.uk"),
-        Param(f"/{environment}/core/credentialIssuers/f2f/connections/local/requiresApiKey", "false")
+        Param(f"/{environment}/core/credentialIssuers/f2f/connections/local/requiresApiKey", "false"),
+
+        Param(f"/{environment}/core/credentialIssuers/nino/connections/local/authorizeUrl", "http://localhost:3011/authorize"),
+        Param(f"/{environment}/core/credentialIssuers/nino/connections/local/clientCallbackUrl", "http://localhost:3001/credential-issuer/callback/nino"),
+        Param(f"/{environment}/core/credentialIssuers/nino/connections/local/tokenUrl", "http://host.docker.internal:3011/token"),
+        Param(f"/{environment}/core/credentialIssuers/nino/connections/local/credentialUrl", "http://host.docker.internal:3011/credentials/issue"),
+        Param(f"/{environment}/core/credentialIssuers/nino/connections/local/clientId", f"ipv-core-dev{dev_account}"),
+        Param(f"/{environment}/core/credentialIssuers/nino/connections/local/signingKey", "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}"),
+        Param(f"/{environment}/core/credentialIssuers/nino/connections/local/encryptionKey", "{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}"),
+        Param(f"/{environment}/core/credentialIssuers/nino/connections/local/componentId", "https://nino-cri.stubs.account.gov.uk"),
+        Param(f"/{environment}/core/credentialIssuers/nino/connections/local/requiresApiKey", "false"),
+
+        Param(f"/{environment}/core/credentialIssuers/hmrcKbv/connections/local/authorizeUrl", "http://localhost:3012/authorize"),
+        Param(f"/{environment}/core/credentialIssuers/hmrcKbv/connections/local/clientCallbackUrl", "http://localhost:3001/credential-issuer/callback/hmrcKbv"),
+        Param(f"/{environment}/core/credentialIssuers/hmrcKbv/connections/local/tokenUrl", "http://host.docker.internal:3012/token"),
+        Param(f"/{environment}/core/credentialIssuers/hmrcKbv/connections/local/credentialUrl", "http://host.docker.internal:3012/credentials/issue"),
+        Param(f"/{environment}/core/credentialIssuers/hmrcKbv/connections/local/clientId", f"ipv-core-dev{dev_account}"),
+        Param(f"/{environment}/core/credentialIssuers/hmrcKbv/connections/local/signingKey", "{\"kty\":\"EC\",\"crv\":\"P-256\",\"x\":\"RBXnILIdExUEWUJMlYeD6agE8u9gGgA3InKrd5TKhhY\",\"y\":\"kKtt9v_xq9oqvv5_E8AHcV77IYQfyNwaTQyTYxdO_UM\"}"),
+        Param(f"/{environment}/core/credentialIssuers/hmrcKbv/connections/local/encryptionKey", "{\"kty\":\"RSA\",\"e\":\"AQAB\",\"n\":\"vyapkvJXLwpYRJjbkQD99V2gcPEUKrO3dwjcAA9TPkLucQEZvYZvb7-wfSHxlvJlJcdS20r5PKKmqdPeW3Y4ir3WsVVeiht2iOZUreUO5O3V3o7ImvEjPS_2_ZKMHCwUf51a6WGOaDjO87OX_bluV2dp01n-E3kiIl6RmWCVywjn13fX3jsX0LMCM_bt3HofJqiYhhNymEwh39oR_D7EE5sLUii2XvpTYPa6L_uPwdKa4vRl4h4owrWEJaJifMorGcvqhCK1JOHqgknN_3cb_ns9Px6ynQCeFXvBDJy4q71clkBq_EZs5227Y1S222wXIwUYN8w5YORQe3M-pCIh1Q\"}"),
+        Param(f"/{environment}/core/credentialIssuers/hmrcKbv/connections/local/componentId", "https://hmrcKbv-cri.stubs.account.gov.uk"),
+        Param(f"/{environment}/core/credentialIssuers/hmrcKbv/connections/local/requiresApiKey", "false"),
     ]
 
 
@@ -119,6 +141,8 @@ def get_cloud_running_params(environment, dev_account):
         Param(f"/{environment}/core/credentialIssuers/drivingLicence/activeConnection", "stub"),
         Param(f"/{environment}/core/credentialIssuers/claimedIdentity/activeConnection", "stub"),
         Param(f"/{environment}/core/credentialIssuers/f2f/activeConnection", "stub"),
+        Param(f"/{environment}/core/credentialIssuers/nino/activeConnection", "stub"),
+        Param(f"/{environment}/core/credentialIssuers/hmrcKbv/activeConnection", "stub"),
     ]
 
 
