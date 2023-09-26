@@ -22,6 +22,7 @@ import uk.gov.di.ipv.core.library.domain.JourneyRequest;
 import uk.gov.di.ipv.core.library.domain.JourneyResponse;
 import uk.gov.di.ipv.core.library.dto.CredentialIssuerConfig;
 import uk.gov.di.ipv.core.library.dto.RequiredGpg45ScoresDto;
+import uk.gov.di.ipv.core.library.dto.VcStatusDto;
 import uk.gov.di.ipv.core.library.dto.VisitedCredentialIssuerDetailsDto;
 import uk.gov.di.ipv.core.library.exceptions.CredentialParseException;
 import uk.gov.di.ipv.core.library.gpg45.Gpg45ProfileEvaluator;
@@ -48,11 +49,14 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.ADDRESS_CRI;
+import static uk.gov.di.ipv.core.library.domain.CriConstants.CLAIMED_IDENTITY_CRI;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_ADDRESS_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_FRAUD_VC;
 import static uk.gov.di.ipv.core.library.fixtures.TestFixtures.M1A_PASSPORT_VC;
@@ -83,6 +87,7 @@ class EvaluateGpg45ScoresHandlerTest {
     private static final JourneyResponse JOURNEY_NEXT = new JourneyResponse("/journey/next");
     private static final String JOURNEY_PYI_NO_MATCH = "/journey/pyi-no-match";
     private static final String JOURNEY_FAIL_WITH_NO_CI = "/journey/fail-with-no-ci";
+    private static final String JOURNEY_ERROR = "/journey/error";
     private static final String TEST_CLIENT_OAUTH_SESSION_ID = SecureTokenHelper.generate();
     private static final ObjectMapper mapper = new ObjectMapper();
 
@@ -167,6 +172,7 @@ class EvaluateGpg45ScoresHandlerTest {
 
     @Test
     void shouldReturnJourneySessionEndIfScoresSatisfyM1AGpg45Profile() throws Exception {
+        mockCredentialIssuerConfig();
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
@@ -185,6 +191,32 @@ class EvaluateGpg45ScoresHandlerTest {
         assertEquals(JOURNEY_END.getJourney(), response.getJourney());
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
 
+        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
+                ArgumentCaptor.forClass(IpvSessionItem.class);
+        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+        IpvSessionItem updatedSessionItem = ipvSessionItemArgumentCaptor.getValue();
+
+        List<VcStatusDto> currentVcStatuses = updatedSessionItem.getCurrentVcStatuses();
+        assertEquals(5, currentVcStatuses.size());
+
+        assertTrue(currentVcStatuses.get(0).getIsSuccessfulVc());
+        assertEquals(
+                "https://review-p.integration.account.gov.uk",
+                currentVcStatuses.get(0).getCriIss());
+        assertTrue(currentVcStatuses.get(1).getIsSuccessfulVc());
+        assertEquals(
+                "https://review-a.integration.account.gov.uk",
+                currentVcStatuses.get(1).getCriIss());
+        assertTrue(currentVcStatuses.get(2).getIsSuccessfulVc());
+        assertEquals(
+                "https://review-f.integration.account.gov.uk",
+                currentVcStatuses.get(2).getCriIss());
+        assertTrue(currentVcStatuses.get(3).getIsSuccessfulVc());
+        assertEquals(
+                "https://review-k.integration.account.gov.uk",
+                currentVcStatuses.get(3).getCriIss());
+        assertTrue(currentVcStatuses.get(4).getIsSuccessfulVc());
+        assertEquals("test-dcmaw-iss", currentVcStatuses.get(4).getCriIss());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
     }
 
@@ -200,6 +232,7 @@ class EvaluateGpg45ScoresHandlerTest {
         when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
                 .thenReturn(true);
         when(userIdentityService.checkBirthDateCorrelationInCredentials(any())).thenReturn(true);
+        mockCredentialIssuerConfig();
 
         JourneyResponse response =
                 toResponseClass(
@@ -324,6 +357,31 @@ class EvaluateGpg45ScoresHandlerTest {
     }
 
     @Test
+    void shouldReturnJourneyErrorResponseIfNoVcStatusFoundForIssuer() throws Exception {
+        when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
+                .thenReturn(clientOAuthSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(any()))
+                .thenThrow(new CredentialParseException("Bad"));
+        when(gpg45ProfileEvaluator.buildScore(any()))
+                .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
+
+        JourneyErrorResponse response =
+                toResponseClass(
+                        evaluateGpg45ScoresHandler.handleRequest(request, context),
+                        JourneyErrorResponse.class);
+
+        assertEquals(JOURNEY_ERROR, response.getJourney());
+        assertEquals(HttpStatus.SC_INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getCode(),
+                response.getCode());
+        assertEquals(
+                ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getMessage(),
+                response.getMessage());
+    }
+
+    @Test
     void shouldReturnFailWithNoCiJourneyResponseIfLastVcStatusesUnsuccessful() throws Exception {
         IpvSessionItem testIpvSessionItem = new IpvSessionItem();
         testIpvSessionItem.setClientOAuthSessionId(TEST_CLIENT_OAUTH_SESSION_ID);
@@ -346,11 +404,12 @@ class EvaluateGpg45ScoresHandlerTest {
                                 true,
                                 null)));
 
+        mockCredentialIssuerConfig();
+        // This causes the address vc (which has no evidence) to be treated as an unsuccessful vc
+        when(configService.getComponentId(ADDRESS_CRI))
+                .thenReturn("https://a-component-id-that-doesn't-match-the-address-vc");
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(testIpvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(userIdentityService.getVCSuccessStatus(
-                        TEST_USER_ID, "https://review-a.integration.account.gov.uk"))
-                .thenReturn(Optional.of(false));
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.buildScore(any()))
                 .thenReturn(new Gpg45Scores(Gpg45Scores.EV_42, 0, 1, 2));
@@ -398,6 +457,7 @@ class EvaluateGpg45ScoresHandlerTest {
                         SignedJWT.parse(M1A_ADDRESS_VC),
                         SignedJWT.parse(M1A_FRAUD_VC),
                         SignedJWT.parse(M1A_VERIFICATION_VC));
+        mockCredentialIssuerConfig();
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(parsedM1ACreds);
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
@@ -510,5 +570,11 @@ class EvaluateGpg45ScoresHandlerTest {
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
         return mapper.convertValue(handlerOutput, responseClass);
+    }
+
+    private void mockCredentialIssuerConfig() {
+        when(configService.getComponentId(ADDRESS_CRI)).thenReturn(addressConfig.getComponentId());
+        when(configService.getComponentId(CLAIMED_IDENTITY_CRI))
+                .thenReturn(claimedIdentityConfig.getComponentId());
     }
 }
