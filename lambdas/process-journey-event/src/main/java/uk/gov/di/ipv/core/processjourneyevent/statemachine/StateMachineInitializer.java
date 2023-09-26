@@ -171,7 +171,6 @@ public class StateMachineInitializer {
 
     private String getJourneyConfigFile(IpvJourneyTypes journeyType) {
         return getFile(journeyType.getValue());
-        //        return file;
     }
 
     private String getNestedJourneyDefinitionsConfigFile() {
@@ -187,7 +186,6 @@ public class StateMachineInitializer {
         try {
             data = IOUtils.toString(inputStream);
         } catch (IOException e) {
-            e.printStackTrace();
             throw new RuntimeException("Whoops");
         }
         return data;

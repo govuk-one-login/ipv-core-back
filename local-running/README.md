@@ -44,6 +44,14 @@ or 02), set as env vars, and be auth'd to your AWS account. Here's how I do it.
 ENVIRONMENT=dev-chrisw DEV_ACCOUNT_NUM=01 aws-vault exec core-dev01 -- docker-compose up
 ```
 
+You can now visit the orch-stub at http://localhost:3000 and start a journey.
+
+### Debugging
+
+All of the running Java containers expose a debug port to connect to. This allows you to attach your debugger and see
+what's going on. The debug port is 2000 ports above the http port the services are listening on. Look at the Docker
+compose file to see which port to use for which service.
+
 ### How to get back to using your cloud deployment
 
 You'll need to change your SSM params to set your CRI's connections back, as well as the orch-stub's expected redirect
