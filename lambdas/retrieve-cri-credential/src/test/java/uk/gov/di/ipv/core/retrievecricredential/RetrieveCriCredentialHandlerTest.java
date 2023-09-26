@@ -621,7 +621,7 @@ class RetrieveCriCredentialHandlerTest {
     }
 
     @Test
-    void shouldReturnJourneyEvaluateResponseOnSuccessfulPendingCriResponse() {
+    void shouldReturnJourneyEvaluateResponseOnSuccessfulPendingCriResponse() throws ParseException {
         final String expectedIssuerResponse =
                 "{\"sub\":\""
                         + TEST_USER_ID
@@ -635,6 +635,7 @@ class RetrieveCriCredentialHandlerTest {
                 .thenReturn(
                         VerifiableCredentialResponse.builder()
                                 .userId(TEST_USER_ID)
+                                .verifiableCredentials(List.of(SignedJWT.parse(SIGNED_VC_1)))
                                 .credentialStatus(VerifiableCredentialStatus.PENDING)
                                 .build());
 
