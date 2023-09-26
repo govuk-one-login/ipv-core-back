@@ -37,28 +37,18 @@ public class VcHelper {
         VcHelper.configService = configService;
     }
 
-    private static Set<String> getNonEvidenceCredentialIssuers() {
-        return NON_EVIDENCE_CRI_TYPES.stream()
-                .map(credentialIssuer -> configService.getComponentId(credentialIssuer))
-                .collect(Collectors.toSet());
-    }
-
     public static boolean isSuccessfulVc(SignedJWT vc) throws ParseException {
         return isSuccessfulVc(vc, getNonEvidenceCredentialIssuers(), true);
-    }
-
-    public static boolean isSuccessfulVc(SignedJWT vc, Set<String> excludedCredentialIssuers)
-            throws ParseException {
-        return isSuccessfulVc(vc, excludedCredentialIssuers, true);
     }
 
     public static boolean isSuccessfulVcIgnoringCi(SignedJWT vc) throws ParseException {
         return isSuccessfulVc(vc, getNonEvidenceCredentialIssuers(), false);
     }
 
-    public static boolean isSuccessfulVcIgnoringCi(
-            SignedJWT vc, Set<String> excludedCredentialIssuers) throws ParseException {
-        return isSuccessfulVc(vc, excludedCredentialIssuers, false);
+    private static Set<String> getNonEvidenceCredentialIssuers() {
+        return NON_EVIDENCE_CRI_TYPES.stream()
+                .map(credentialIssuer -> configService.getComponentId(credentialIssuer))
+                .collect(Collectors.toSet());
     }
 
     private static boolean isSuccessfulVc(
