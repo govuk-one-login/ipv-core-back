@@ -163,7 +163,7 @@ def write_params(params, dry_run):
 
 def call_ssm(name, value):
     return subprocess.run(
-        ['aws', 'ssm', 'put-parameter', '--overwrite', '--no-cli-pager', '--name', name, '--value', value],
+        ['aws', 'ssm', 'put-parameter', '--overwrite', '--no-cli-pager', '--type', 'String', '--name', name, '--value', value],
         capture_output=True
     )
 
