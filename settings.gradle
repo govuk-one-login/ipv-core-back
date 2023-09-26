@@ -25,6 +25,6 @@ include "libs:common-services",
 		"libs:cri-response-service",
 		"libs:audit-service",
 		"libs:gpg45-evaluator",
-		"libs:user-identity-service"
+		"libs:user-identity-service",
 		"libs:audit-service",
 		"local-running"

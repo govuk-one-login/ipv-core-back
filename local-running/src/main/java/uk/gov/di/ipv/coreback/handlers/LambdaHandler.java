@@ -13,9 +13,9 @@ import uk.gov.di.ipv.core.buildclientoauthresponse.BuildClientOauthResponseHandl
 import uk.gov.di.ipv.core.buildcrioauthrequest.BuildCriOauthRequestHandler;
 import uk.gov.di.ipv.core.buildprovenuseridentitydetails.BuildProvenUserIdentityDetailsHandler;
 import uk.gov.di.ipv.core.builduseridentity.BuildUserIdentityHandler;
+import uk.gov.di.ipv.core.checkciscore.CheckCiScoreHandler;
 import uk.gov.di.ipv.core.checkexistingidentity.CheckExistingIdentityHandler;
 import uk.gov.di.ipv.core.checkgpg45score.CheckGpg45ScoreHandler;
-import uk.gov.di.ipv.core.ciscoring.CiScoringHandler;
 import uk.gov.di.ipv.core.evaluategpg45scores.EvaluateGpg45ScoresHandler;
 import uk.gov.di.ipv.core.initialiseipvsession.InitialiseIpvSessionHandler;
 import uk.gov.di.ipv.core.issueclientaccesstoken.IssueClientAccessTokenHandler;
@@ -50,7 +50,7 @@ public class LambdaHandler {
     private ResetIdentityHandler resetIdentityHandler;
     private BuildCriOauthRequestHandler buildCriOauthRequestHandler;
     private BuildClientOauthResponseHandler buildClientOauthResponseHandler;
-    private CiScoringHandler ciScoringHandler;
+    private CheckCiScoreHandler checkCiScoreHandler;
     private CheckGpg45ScoreHandler checkGpg45ScoreHandler;
     private BuildProvenUserIdentityDetailsHandler buildProvenUserIdentityDetailsHandler;
     private ValidateOAuthCallbackHandler validateOAuthCallbackHandler;
@@ -67,7 +67,7 @@ public class LambdaHandler {
         this.resetIdentityHandler = new ResetIdentityHandler();
         this.buildCriOauthRequestHandler = new BuildCriOauthRequestHandler();
         this.buildClientOauthResponseHandler = new BuildClientOauthResponseHandler();
-        this.ciScoringHandler = new CiScoringHandler();
+        this.checkCiScoreHandler = new CheckCiScoreHandler();
         this.checkGpg45ScoreHandler = new CheckGpg45ScoreHandler();
         this.buildProvenUserIdentityDetailsHandler = new BuildProvenUserIdentityDetailsHandler();
         this.validateOAuthCallbackHandler = new ValidateOAuthCallbackHandler();
@@ -142,7 +142,7 @@ public class LambdaHandler {
                         journey = (String) lambdaOutput.get("journey");
                     } else if ("/journey/ci-scoring".equals(journey)) {
                         lambdaOutput =
-                                ciScoringHandler.handleRequest(
+                                checkCiScoreHandler.handleRequest(
                                         buildJourneyRequest(request, journey), EMPTY_CONTEXT);
                         if (!lambdaOutput.containsKey("journey")) {
                             return gson.toJson(lambdaOutput);
@@ -205,11 +205,12 @@ public class LambdaHandler {
                 }
 
                 Map<String, Object> ciScoringLambdaOutput =
-                        ciScoringHandler.handleRequest(
+                        checkCiScoreHandler.handleRequest(
                                 buildJourneyRequest(request, null), EMPTY_CONTEXT);
 
                 if (!ciScoringLambdaOutput.containsKey("journey")
-                        || !"/journey/next".equals(ciScoringLambdaOutput.get("journey"))) {
+                        || !"/journey/ci-score-not-breaching"
+                                .equals(ciScoringLambdaOutput.get("journey"))) {
                     return gson.toJson(ciScoringLambdaOutput);
                 }
 
