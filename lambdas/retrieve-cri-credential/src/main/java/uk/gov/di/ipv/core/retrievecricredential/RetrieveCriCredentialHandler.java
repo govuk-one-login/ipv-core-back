@@ -250,14 +250,8 @@ public class RetrieveCriCredentialHandler
                 criOAuthState,
                 CriResponseService.STATUS_PENDING);
 
-        String issuer = null;
-        for (SignedJWT vc : verifiableCredentialResponse.getVerifiableCredentials()) {
-            verifiableCredentialJwtValidator.validate(vc, credentialIssuerConfig, userId);
-            issuer = vc.getJWTClaimsSet().getIssuer();
-        }
-
         // Update session to indicate no VC, but no error
-        updateVisitedCredentials(ipvSessionItem, credentialIssuerId, issuer, false, null);
+        updateVisitedCredentials(ipvSessionItem, credentialIssuerId, credentialIssuerConfig.getComponentId(), false, null);
         // Audit
         LOGGER.info(
                 new StringMapMessage()
