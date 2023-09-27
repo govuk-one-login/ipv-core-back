@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -49,6 +50,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -123,6 +125,7 @@ class CheckExistingIdentityHandlerTest {
         }
     }
 
+    @Captor ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor;
     @Mock private Context context;
     @Mock private UserIdentityService userIdentityService;
     @Mock private CriResponseService criResponseService;
@@ -177,6 +180,10 @@ class CheckExistingIdentityHandlerTest {
     @Test
     void shouldReturnJourneyReuseResponseIfScoresSatisfyM1AGpg45Profile() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(TEST_USER_ID))
+                .thenReturn(true);
+        when(userIdentityService.checkBirthDateCorrelationInCredentials(TEST_USER_ID))
+                .thenReturn(true);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1A));
@@ -203,8 +210,6 @@ class CheckExistingIdentityHandlerTest {
                 auditEventArgumentCaptor.getAllValues().get(1).getEventName());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(ipvSessionService, times(2))
                 .updateIpvSession(ipvSessionItemArgumentCaptor.capture());
 
@@ -217,6 +222,10 @@ class CheckExistingIdentityHandlerTest {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(TEST_USER_ID))
+                .thenReturn(true);
+        when(userIdentityService.checkBirthDateCorrelationInCredentials(TEST_USER_ID))
+                .thenReturn(true);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.of(Gpg45Profile.M1B));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
@@ -239,8 +248,6 @@ class CheckExistingIdentityHandlerTest {
                 auditEventArgumentCaptor.getValue().getEventName());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
 
-        ArgumentCaptor<IpvSessionItem> ipvSessionItemArgumentCaptor =
-                ArgumentCaptor.forClass(IpvSessionItem.class);
         verify(ipvSessionService, times(1))
                 .updateIpvSession(ipvSessionItemArgumentCaptor.capture());
 
@@ -253,6 +260,10 @@ class CheckExistingIdentityHandlerTest {
             throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(TEST_USER_ID))
+                .thenReturn(true);
+        when(userIdentityService.checkBirthDateCorrelationInCredentials(TEST_USER_ID))
+                .thenReturn(true);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
                 .thenReturn(Optional.empty());
@@ -274,6 +285,9 @@ class CheckExistingIdentityHandlerTest {
                 AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
                 auditEventArgumentCaptor.getValue().getEventName());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+        assertNull(ipvSessionItemArgumentCaptor.getValue().getVot());
     }
 
     @Test
@@ -283,6 +297,10 @@ class CheckExistingIdentityHandlerTest {
                 .thenReturn(Collections.emptyList());
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenCallRealMethod();
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(TEST_USER_ID))
+                .thenReturn(true);
+        when(userIdentityService.checkBirthDateCorrelationInCredentials(TEST_USER_ID))
+                .thenReturn(true);
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
 
@@ -298,6 +316,8 @@ class CheckExistingIdentityHandlerTest {
                 ArgumentCaptor.forClass(AuditEvent.class);
         verify(auditService, never()).sendAuditEvent(auditEventArgumentCaptor.capture());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+        verify(ipvSessionService, never()).updateIpvSession(any());
     }
 
     @Test
@@ -316,6 +336,8 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(
                 ErrorResponse.MISSING_IPV_SESSION_ID.getMessage(), journeyResponse.getMessage());
         verify(clientOAuthSessionDetailsService, times(0)).getClientOAuthSession(any());
+
+        verify(ipvSessionService, never()).updateIpvSession(any());
     }
 
     @Test
@@ -335,6 +357,8 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_PENDING, journeyResponse);
         verify(userIdentityService, times(0)).deleteVcStoreItems(TEST_USER_ID);
+
+        verify(ipvSessionService, never()).updateIpvSession(any());
     }
 
     @Test
@@ -354,6 +378,8 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_FAIL, journeyResponse);
         verify(userIdentityService, times(0)).deleteVcStoreItems(TEST_USER_ID);
+
+        verify(ipvSessionService, never()).updateIpvSession(any());
     }
 
     @Test
@@ -378,6 +404,8 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_FAIL, journeyResponse);
         verify(userIdentityService, times(0)).deleteVcStoreItems(TEST_USER_ID);
+
+        verify(ipvSessionService, never()).updateIpvSession(any());
     }
 
     @Test
@@ -400,6 +428,8 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_FAIL, journeyResponse);
         verify(userIdentityService, times(0)).deleteVcStoreItems(TEST_USER_ID);
+
+        verify(ipvSessionService, never()).updateIpvSession(any());
     }
 
     @Test
@@ -423,10 +453,12 @@ class CheckExistingIdentityHandlerTest {
 
         assertEquals(JOURNEY_FAIL, journeyResponse);
         verify(userIdentityService, times(0)).deleteVcStoreItems(TEST_USER_ID);
+
+        verify(ipvSessionService, never()).updateIpvSession(any());
     }
 
     @Test
-    void shouldNotReturnFailIfDataDoesNotCorrelateAndNotF2F() throws Exception {
+    void shouldResetIdentityIfDataDoesNotCorrelateAndNotF2F() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(userIdentityService.getVcStoreItem(TEST_USER_ID, F2F_CRI)).thenReturn(null);
         when(criResponseService.getFaceToFaceRequest(TEST_USER_ID)).thenReturn(null);
@@ -440,7 +472,9 @@ class CheckExistingIdentityHandlerTest {
                         checkExistingIdentityHandler.handleRequest(event, context),
                         JourneyResponse.class);
 
-        assertEquals(JOURNEY_NEXT, journeyResponse);
+        assertEquals(JOURNEY_RESET_IDENTITY, journeyResponse);
+
+        verify(ipvSessionService, never()).updateIpvSession(any());
     }
 
     @Test
@@ -465,11 +499,17 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(
                 ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getMessage(),
                 journeyResponse.getMessage());
+
+        verify(ipvSessionService, never()).updateIpvSession(any());
     }
 
     @Test
     void shouldReturn500IfFailedToParseCredentials() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(TEST_USER_ID))
+                .thenReturn(true);
+        when(userIdentityService.checkBirthDateCorrelationInCredentials(TEST_USER_ID))
+                .thenReturn(true);
         when(gpg45ProfileEvaluator.buildScore(any())).thenThrow(new ParseException("Whoops", 0));
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -491,11 +531,17 @@ class CheckExistingIdentityHandlerTest {
 
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+        verify(ipvSessionService, never()).updateIpvSession(any());
     }
 
     @Test
     void shouldReturn500IfCredentialOfUnknownType() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
+        when(userIdentityService.checkNameAndFamilyNameCorrelationInCredentials(TEST_USER_ID))
+                .thenReturn(true);
+        when(userIdentityService.checkBirthDateCorrelationInCredentials(TEST_USER_ID))
+                .thenReturn(true);
         when(gpg45ProfileEvaluator.buildScore(any())).thenThrow(new UnknownEvidenceTypeException());
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -518,14 +564,14 @@ class CheckExistingIdentityHandlerTest {
         verify(userIdentityService).getUserIssuedCredentials(TEST_USER_ID);
         verify(criResponseService).getFaceToFaceRequest(TEST_USER_ID);
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+        verify(ipvSessionService, never()).updateIpvSession(any());
     }
 
     @Test
     void shouldReturn500IfFailedToSendAuditEvent() throws Exception {
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(ipvSessionItem);
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
-        when(gpg45ProfileEvaluator.getFirstMatchingProfile(any(), eq(ACCEPTED_PROFILES)))
-                .thenReturn(Optional.of(Gpg45Profile.M1A));
 
         when(clientOAuthSessionDetailsService.getClientOAuthSession(any()))
                 .thenReturn(clientOAuthSessionItem);
@@ -547,6 +593,9 @@ class CheckExistingIdentityHandlerTest {
                 ErrorResponse.FAILED_TO_SEND_AUDIT_EVENT.getMessage(),
                 journeyResponse.getMessage());
         verify(clientOAuthSessionDetailsService, times(1)).getClientOAuthSession(any());
+
+        verify(ipvSessionService).updateIpvSession(ipvSessionItemArgumentCaptor.capture());
+        assertNull(ipvSessionItemArgumentCaptor.getValue().getVot());
     }
 
     @Test
@@ -574,6 +623,8 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(
                 ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getMessage(),
                 journeyResponse.getMessage());
+
+        verify(ipvSessionService, never()).updateIpvSession(any());
     }
 
     @Test
@@ -602,6 +653,8 @@ class CheckExistingIdentityHandlerTest {
         assertEquals(
                 ErrorResponse.FAILED_TO_PARSE_SUCCESSFUL_VC_STORE_ITEMS.getMessage(),
                 journeyResponse.getMessage());
+
+        verify(ipvSessionService, never()).updateIpvSession(any());
     }
 
     private <T> T toResponseClass(Map<String, Object> handlerOutput, Class<T> responseClass) {
