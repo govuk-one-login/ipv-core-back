@@ -547,8 +547,6 @@ MITIGATION_02_CRI_DCMAW:
     criId: dcmaw
   parent: CRI_STATE
   events:
-    next:
-      targetState: MITIGATION_02_POST_DCMAW_SUCCESS_PAGE
     not-found:
       targetState: PYI_NO_MATCH
     access-denied:
@@ -559,13 +557,3 @@ MITIGATION_02_CRI_DCMAW:
       targetState: PYI_ANOTHER_WAY
     mitigation02:
       targetState: PYI_ANOTHER_WAY
-
-MITIGATION_02_POST_DCMAW_SUCCESS_PAGE:
-  response:
-    type: page
-    pageId: page-dcmaw-success
-  events:
-    end:
-      targetState: IPV_SUCCESS_PAGE
-    next:
-      targetState: PYI_NO_MATCH
