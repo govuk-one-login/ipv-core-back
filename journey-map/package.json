@@ -1,0 +1,13 @@
+{
+  "name": "ipv-core-journey-map",
+  "version": "0.0.1",
+  "description": "Generate an interactive IPV core journey map",
+  "main": "server.js",
+  "type": "module",
+  "author": "Government Digital Service",
+  "license": "MIT",
+  "dependencies": {
+    "express": "4.18.2",
+    "yaml": "2.3.2"
+  }
+}

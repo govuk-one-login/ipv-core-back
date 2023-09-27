@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <style>
+            * {
+                margin: 0;
+                box-sizing: border-box;
+            }
+            body {
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                font-family: sans-serif;
+            }
+            #header {
+                padding: 8px 16px;
+            }
+            #diagram {
+                flex: 1 1 auto;
+            }
+            #diagram > * {
+                height: 100%;
+            }
+            form {
+                width: 250px;
+                margin-top: 16px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            form button {
+                width: 180px;
+            }
+            form label {
+                display: flex;
+                justify-content: space-between;
+            }
+            form select {
+                flex: 0 0 30%;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="header">
+            <h1>IPV Core Journey Map</h1>
+            <form id="configuration-form">
+                <label>
+                    <div>Disabled CRI:</div>
+                    <select id="disabledInput" name="disabled"></select>
+                </label>
+                <label>
+                    <div>Feature flag:</div>
+                    <select id="featureFlagInput" name="featureFlag"></select>
+                </label>
+            </form>
+        </div>
+        <div id="diagram"></div>
+        <script src="https://bumbu.me/svg-pan-zoom/dist/svg-pan-zoom.js"></script>
+        <script type="module">
+            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+            import { getOptions, render } from './index.mjs';
+            mermaid.initialize({ startOnLoad: false });
+
+            // Page elements
+            const form = document.getElementById('configuration-form');
+            const disabledInput = document.getElementById('disabledInput');
+            const featureFlagInput = document.getElementById('featureFlagInput')
+
+            // Load the journey map
+            const journeyResponse = await fetch('./journeymap.json');
+            const journeyMap = await journeyResponse.json();
+
+            // Set up the form options
+            const { disabledOptions, featureFlagOptions } = getOptions(journeyMap);
+            disabledOptions.forEach((option) => {
+                const element = document.createElement('option');
+                element.value = option;
+                element.innerText = option;
+                disabledInput.appendChild(element);
+            });
+            featureFlagOptions.forEach((option) => {
+                const element = document.createElement('option');
+                element.value = option;
+                element.innerText = option;
+                featureFlagInput.appendChild(element);
+            });
+
+            // Render the journey map SVG
+            const renderSvg = async (formData) => {
+                console.log('formData', Object.fromEntries(formData || []));
+                const diagram = render(journeyMap, Object.fromEntries(formData || []));
+                const diagramElement = document.getElementById('diagram');
+                const { svg } = await mermaid.render('diagramSvg', diagram);
+                diagramElement.innerHTML = svg;
+                svgPanZoom('#diagramSvg');
+            };
+
+            // Re-render on change
+            form.addEventListener('change', async (event) => {
+                event.preventDefault();
+                await renderSvg(new FormData(form));
+            });
+
+            await renderSvg();
+        </script>
+    </body>
+</html>
