@@ -20,12 +20,14 @@ import uk.gov.di.ipv.core.library.persistence.item.VcStoreItem;
 
 import java.time.*;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -789,6 +791,33 @@ class UserIdentityServiceTest {
                 () -> {
                     userIdentityService.isVcSuccessful(vcStatusDtos, "badIssuer");
                 });
+    }
+
+    @Test
+    void getVCSuccessStatusReturnShouldBeFalse() throws Exception {
+        when(userIdentityService.getVcStoreItem(any(), any())).thenReturn(null);
+
+        Optional<Boolean> isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, "fraud");
+
+        assertFalse(isValid.isPresent());
+
+        isValid = userIdentityService.getVCSuccessStatus(USER_ID_1, "dcmaw");
+
+        assertFalse(isValid.isPresent());
+    }
+
+    @Test
+    void getVCSuccessStatusReturnShouldBeTrue() throws Exception {
+        VcStoreItem vcStoreItem =
+                createVcStoreItem(USER_ID_1, "ukPassport", SIGNED_VC_1, Instant.now());
+        when(userIdentityService.getVcStoreItem(USER_ID_1, "test-issuer")).thenReturn(vcStoreItem);
+
+        mockCredentialIssuerConfig();
+
+        Optional<Boolean> isValid =
+                userIdentityService.getVCSuccessStatus(USER_ID_1, "test-issuer");
+
+        assertTrue(isValid.isPresent());
     }
 
     private VcStoreItem createVcStoreItem(

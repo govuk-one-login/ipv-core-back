@@ -175,6 +175,7 @@ public class RetrieveCriCredentialHandler
                 processPendingResponse(
                         userId,
                         credentialIssuerId,
+                        credentialIssuerConfig,
                         verifiableCredentialResponse,
                         criOAuthState,
                         ipvSessionItem);
@@ -223,6 +224,7 @@ public class RetrieveCriCredentialHandler
     private void processPendingResponse(
             String userId,
             String credentialIssuerId,
+            CredentialIssuerConfig credentialIssuerConfig,
             VerifiableCredentialResponse verifiableCredentialResponse,
             String criOAuthState,
             IpvSessionItem ipvSessionItem)
@@ -246,8 +248,14 @@ public class RetrieveCriCredentialHandler
                 OBJECT_MAPPER.writeValueAsString(verifiableCredentialResponseDto),
                 criOAuthState,
                 CriResponseService.STATUS_PENDING);
+
         // Update session to indicate no VC, but no error
-        updateVisitedCredentials(ipvSessionItem, credentialIssuerId, null, false, null);
+        updateVisitedCredentials(
+                ipvSessionItem,
+                credentialIssuerId,
+                credentialIssuerConfig.getComponentId(),
+                false,
+                null);
         // Audit
         LOGGER.info(
                 new StringMapMessage()
