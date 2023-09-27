@@ -1,4 +1,6 @@
-const initialStates = ['INITIAL_IPV_JOURNEY', 'CORE_SESSION_TIMEOUT'];
+const initialStates = ['INITIAL_IPV_JOURNEY'];
+const errorStates = ['ERROR'];
+const failureStates = ['PYI_KBV_FAIL', 'PYI_NO_MATCH', 'PYI_ANOTHER_WAY'];
 
 // Traverse the journey map to collect the available 'disabled' and 'featureFlag' options
 export const getOptions = (journeyMap) => {
@@ -50,12 +52,27 @@ const renderTransitions = (journeyMap, options) => {
         const definition = journeyMap[state];
         const events = definition.events || definition.exitEvents || {};
 
-        Object.entries(events).map(([eventName, def]) => {
+        const eventsByTarget = {};
+        Object.entries(events).forEach(([eventName, def]) => {
             const target = resolveEventTarget(def, options);
+
+            if (errorStates.includes(target) && !options.includeErrors) {
+                return;
+            }
+            if (failureStates.includes(target) && !options.includeFailures) {
+                return;
+            }
+
             if (!states.includes(target)) {
                 states.push(target);
             }
-            stateTransitions.push(`    ${state}-->|${eventName}|${target}`);
+            eventsByTarget[target] = eventsByTarget[target] || [];
+            eventsByTarget[target].push(eventName);
+        });
+
+        console.log(eventsByTarget);
+        Object.entries(eventsByTarget).forEach(([target, eventNames]) => {
+            stateTransitions.push(`    ${state}-->|${eventNames.join('\\n')}|${target}`);
         });
     }
 

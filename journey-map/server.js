@@ -17,7 +17,12 @@ app.get('/journeymap.json', async (req, res) => {
     const parentStates = [];
     Object.entries(journeyMap).forEach(([state, definition]) => {
         if (definition.parent) {
-            journeyMap[state] = { ...journeyMap[definition.parent], ...definition };
+            const parent = journeyMap[definition.parent];
+            definition.events = {
+                ...parent.events,
+                ...definition.events,
+            };
+            journeyMap[state] = { ...parent, ...definition };
             parentStates.push(definition.parent);
         }
     });

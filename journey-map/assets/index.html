@@ -14,7 +14,8 @@
                 font-family: sans-serif;
             }
             #header {
-                padding: 8px 16px;
+                padding: 8px 16px 16px;
+                border-bottom: 2px solid black;
             }
             #diagram {
                 flex: 1 1 auto;
@@ -53,6 +54,14 @@
                     <div>Feature flag:</div>
                     <select id="featureFlagInput" name="featureFlag"></select>
                 </label>
+                <label>
+                    <div>Include errors:</div>
+                    <input id="includeErrorsInput" name="includeErrors" type="checkbox">
+                </label>
+                <label>
+                    <div>Include failures:</div>
+                    <input id="includeFailuresInput" name="includeFailures" type="checkbox">
+                </label>
             </form>
         </div>
         <div id="diagram"></div>
@@ -88,7 +97,6 @@
 
             // Render the journey map SVG
             const renderSvg = async (formData) => {
-                console.log('formData', Object.fromEntries(formData || []));
                 const diagram = render(journeyMap, Object.fromEntries(formData || []));
                 const diagramElement = document.getElementById('diagram');
                 const { svg } = await mermaid.render('diagramSvg', diagram);
