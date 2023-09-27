@@ -167,13 +167,28 @@ public class CheckExistingIdentityHandler
                             userIdentityService.getUserIssuedCredentials(userId));
             updateSuccessfulVcStatuses(ipvSessionItem, credentials);
 
+            boolean dataCorrelates = vcDataCorrelates(userId);
+            if (!dataCorrelates && completedF2F(f2fRequest, f2fVc)) {
+                return JOURNEY_FAIL;
+            } else if (!dataCorrelates) {
+                LOGGER.info(
+                        new StringMapMessage()
+                                .with(
+                                        LOG_MESSAGE_DESCRIPTION.getFieldName(),
+                                        "VC data does not correlate so resetting identity."));
+
+                auditService.sendAuditEvent(
+                        new AuditEvent(
+                                AuditEventTypes.IPV_IDENTITY_REUSE_RESET,
+                                configService.getSsmParameter(ConfigurationVariable.COMPONENT_ID),
+                                auditEventUser));
+
+                return JOURNEY_RESET_IDENTITY;
+            }
+
             Gpg45Scores gpg45Scores = gpg45ProfileEvaluator.buildScore(credentials);
             Optional<Gpg45Profile> matchedProfile =
                     gpg45ProfileEvaluator.getFirstMatchingProfile(gpg45Scores, ACCEPTED_PROFILES);
-
-            if (!vcDataCorrelates(userId) && completedF2F(f2fRequest, f2fVc)) {
-                return JOURNEY_FAIL;
-            }
 
             if (matchedProfile.isEmpty() && completedF2F(f2fRequest, f2fVc)) {
                 var message =
