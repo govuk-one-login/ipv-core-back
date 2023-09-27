@@ -348,8 +348,7 @@ class EvaluateGpg45ScoresHandlerTest {
 
         when(ipvSessionService.getIpvSession(TEST_SESSION_ID)).thenReturn(testIpvSessionItem);
         when(userIdentityService.getUserIssuedCredentials(TEST_USER_ID)).thenReturn(CREDENTIALS);
-        when(userIdentityService.getVCSuccessStatus(
-                        TEST_USER_ID, "https://review-a.integration.account.gov.uk"))
+        when(userIdentityService.getVCSuccessStatus(TEST_USER_ID, "criIdA"))
                 .thenReturn(Optional.of(false));
         when(gpg45ProfileEvaluator.parseCredentials(any())).thenReturn(PARSED_CREDENTIALS);
         when(gpg45ProfileEvaluator.buildScore(any()))

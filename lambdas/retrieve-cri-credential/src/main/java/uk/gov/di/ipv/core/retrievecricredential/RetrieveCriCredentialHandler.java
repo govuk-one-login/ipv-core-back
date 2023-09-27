@@ -251,7 +251,12 @@ public class RetrieveCriCredentialHandler
                 CriResponseService.STATUS_PENDING);
 
         // Update session to indicate no VC, but no error
-        updateVisitedCredentials(ipvSessionItem, credentialIssuerId, credentialIssuerConfig.getComponentId(), false, null);
+        updateVisitedCredentials(
+                ipvSessionItem,
+                credentialIssuerId,
+                credentialIssuerConfig.getComponentId(),
+                false,
+                null);
         // Audit
         LOGGER.info(
                 new StringMapMessage()

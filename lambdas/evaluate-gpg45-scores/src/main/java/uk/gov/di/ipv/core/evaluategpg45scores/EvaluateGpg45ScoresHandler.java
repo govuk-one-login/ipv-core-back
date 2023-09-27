@@ -329,7 +329,7 @@ public class EvaluateGpg45ScoresHandler
                         .orElseThrow(NoVisitedCriFoundException::new);
 
         Optional<Boolean> lastVisitedCriVcStatus =
-                userIdentityService.getVCSuccessStatus(userId, lastVisitedCri.getCriIssuer());
+                userIdentityService.getVCSuccessStatus(userId, lastVisitedCri.getCriId());
 
         if (lastVisitedCriVcStatus.isPresent()
                 && Boolean.FALSE.equals(lastVisitedCriVcStatus.get())) {
